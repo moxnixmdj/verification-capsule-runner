@@ -1,9 +1,6 @@
 name: Verify PR244 Model-Independent Evidence Decision
 
 on:
-  push:
-    branches:
-      - verify/evidence-decision-pr244-20260930
   workflow_dispatch:
 
 permissions:
