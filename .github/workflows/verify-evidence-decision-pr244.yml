@@ -1,0 +1,100 @@
+name: Verify PR244 Model-Independent Evidence Decision
+
+on:
+  push:
+    branches:
+      - verify/evidence-decision-pr244-20260930
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact proof bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "7690b26800b2701dac9e187a92c5561d79d831dd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_verify.py)" = "63cf325320c7b91bf48ea2f2769c999c5a090929"
+          test "$(git hash-object canonical/tests/test_evidence_decision_synthesis.py)" = "f8a586882f8f4198e0c8407f1cb7241ff93fe917"
+          test "$(git hash-object canonical/capabilities/obsolescence/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_A_CARRIER_20260930_INPUT.json)" = "61522fe3e6af1517c2ea5ad2bbc853a957a251b1"
+          test "$(git hash-object canonical/capabilities/obsolescence/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_B_CLICK_REPAIR_20260930_INPUT.json)" = "a680bae7d1cb90b035e6048df5558c7cac1f7383"
+
+      - name: Run adversarial regressions
+        run: python canonical/tests/test_evidence_decision_synthesis.py
+
+      - name: Execute and independently verify both real decisions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util, json, pathlib, sys, hashlib
+          root=pathlib.Path(".").resolve()
+          bound=root/"canonical/runtime/bound_capabilities"
+
+          def load(name,path):
+              spec=importlib.util.spec_from_file_location(name,bound/path)
+              module=importlib.util.module_from_spec(spec)
+              sys.modules[name]=module
+              spec.loader.exec_module(module)
+              return module
+
+          producer=load("pr244_producer","evidence_decision_synthesis.py")
+          verifier=load("pr244_verifier","evidence_decision_verify.py")
+
+          tasks=[
+              (
+                  "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_A_CARRIER_20260930_INPUT.json",
+                  "canonical/astra_runtime/tmp/PR244_REAL_TASK_A_RESULT.json",
+                  "PUBLIC_GITHUB_ACTIONS",
+              ),
+              (
+                  "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_B_CLICK_REPAIR_20260930_INPUT.json",
+                  "canonical/astra_runtime/tmp/PR244_REAL_TASK_B_RESULT.json",
+                  "UPSTREAM_HISTORY_REUSE",
+              ),
+          ]
+
+          receipt={
+              "schema":"PROJECT_BRAIN_PR244_INDEPENDENT_REMOTE_VERIFICATION_V1",
+              "producer_git_blob":"7690b26800b2701dac9e187a92c5561d79d831dd",
+              "verifier_git_blob":"63cf325320c7b91bf48ea2f2769c999c5a090929",
+              "model_dependency_count":0,
+              "tasks":[],
+          }
+          for input_path, output_path, expected in tasks:
+              produced=producer.run({"input_path":input_path,"output_path":output_path},root)
+              checked=verifier.run({"input_path":input_path,"result_path":output_path},root)
+              result=json.loads((root/output_path).read_text(encoding="utf-8"))
+              assert produced["output_verified"] is True, produced
+              assert checked["verified"] is True, checked
+              assert result["status"]=="DECIDED", result
+              assert result["selected_alternative"]==expected, result
+              assert result["model_dependency_count"]==0, result
+              assert len(result["trace"])>=4, result
+              receipt["tasks"].append({
+                  "decision_id":result["decision_id"],
+                  "status":result["status"],
+                  "selected_alternative":result["selected_alternative"],
+                  "decision_confidence":result["decision_confidence"],
+                  "input_sha256":result["input_sha256"],
+                  "result_sha256":hashlib.sha256((root/output_path).read_bytes()).hexdigest(),
+                  "independent_verifier_reason":checked["reason"],
+                  "producer_independent_verifier":checked["producer_independent"],
+              })
+          receipt["status"]="VERIFIED"
+          out=root/"canonical/astra_runtime/tmp/PR244_REMOTE_VERIFICATION_RECEIPT.json"
+          out.parent.mkdir(parents=True,exist_ok=True)
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
