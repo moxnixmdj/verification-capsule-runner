@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_MODEL_INDEPENDENT_EVIDENCE_DECISION_ARM_V1",
+  "source_brain_pr": 242,
+  "source_brain_base_commit": "9bc734ad835a25dccf89c1a3f888c3c4208db00f",
+  "adapter_git_blob": "639870741e8415bf3bc1d8da87e79a917a48279c",
+  "problog_commit": "a294fa24c3cfb4bae3a2acea3a128386113889f4",
+  "pysdd_wheel_sha256": "aadde250ea13375f67feabdb7963c2cbcaa2727c80e6ba6544cb07e579a7a019",
+  "real_tasks": [
+    "space_cargo_final_design_promotion_a",
+    "qwen_cognitive_credit_eligibility_b"
+  ],
+  "real_task_oracle_labels_present_in_execution": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0,
+  "execution_count": 1
+}
