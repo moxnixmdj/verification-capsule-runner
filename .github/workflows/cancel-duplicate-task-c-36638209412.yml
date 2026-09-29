@@ -1,0 +1,25 @@
+name: Cancel Duplicate Task C Run
+
+on:
+  push:
+    branches: [frontier-task-c-bugsinpy-youtubedl1-qwen9b-20260929]
+    paths:
+      - 'CANCEL_DUPLICATE_TASK_C_RUN_36638209412'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cancel_duplicate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel only the quarantined duplicate run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o cancel_response.txt -w '%{http_code}'             -X POST             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/36638209412/cancel")
+          cat cancel_response.txt || true
+          test "$code" = "202" -o "$code" = "409"
+          echo "CANCEL_DUPLICATE_TASK_C_REQUEST_HTTP_$code"
