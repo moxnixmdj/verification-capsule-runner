@@ -1,0 +1,54 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-MURAKUMO-QWEN38-ANDROID-GRAPHICS-TASK-C-001",
+  "purpose": "Fresh real cross-domain software-systems Task C. Diagnose an Android-emulator 3D render freeze from authoritative Android graphics evidence using the exact PR227 repaired ASTRA runtime and explicit non-frontier Murakumo Qwen3.8-27B planner. No mutation of the user's emulator, APK, or game data occurs in this task.",
+  "goal": {
+    "objective": "A real Android emulator can launch an app and enter a 3D scene, but the scene can freeze or remain black while the app process/window still exists. Determine the first graphics-pipeline boundary that should be tested to distinguish an app/render-producer stall from a SurfaceFlinger/HWC/GPU-virtualization display-path failure, and design the smallest non-destructive falsification probe.",
+    "scenario": [
+      "The app process does not immediately crash.",
+      "The window/layer exists while the rendered scene is frozen or black.",
+      "Do not assume whether the app producer or compositor/GPU path is at fault.",
+      "Do not modify, reinstall, delete, repair, or redownload the app or its data."
+    ],
+    "instructions": [
+      "Research the supplied authoritative Android sources before finishing.",
+      "Explain the producer -> Surface/BufferQueue -> SurfaceFlinger -> HWC/display boundary in terms relevant to the diagnosis.",
+      "Select the smallest read-only or tracing probe that can observe whether the affected app layer continues producing/queueing new buffers during the freeze. Prefer an official SurfaceFlinger/Winscope/Perfetto mechanism when supported by the evidence.",
+      "Give two explicit predicted outcomes: one that would shift blame toward the app/render producer side, and one that would shift blame toward SurfaceFlinger/HWC/GPU virtualization or later display path.",
+      "If the preferred trace requires a debug/root-capable build, state that limitation and give the smallest weaker read-only fallback supported by the sources.",
+      "Do not prescribe destructive repair actions. The output is diagnosis plus one falsification probe, not a list of speculative fixes.",
+      "Use at least three authoritative source-backed observations and include the exact source URLs used.",
+      "Do not use ChatGPT, GPT-5.6, OpenAI-hosted models, or any hidden frontier supplier."
+    ],
+    "authoritative_urls": [
+      "https://source.android.com/docs/core/graphics",
+      "https://source.android.com/docs/core/graphics/architecture",
+      "https://source.android.com/docs/core/graphics/arch-bq-gralloc",
+      "https://source.android.com/docs/core/graphics/winscope/capture/adb",
+      "https://source.android.com/docs/core/graphics/surfaceflinger-windowmanager"
+    ],
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), first_discriminating_boundary (string), fault_domain_if_no_new_app_buffers (string), fault_domain_if_new_app_buffers_continue (string), probe (object with mechanism, command_or_capture, why_discriminating, destructive=false), debug_build_limitation (string), fallback_read_only_probe (string), evidence (array of at least 3 objects with url and observation), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown."
+  },
+  "steps": [
+    {
+      "id": "research-android-emulator-render-freeze",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": true,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "public_sources_only": true,
+    "private_brain_state_present": false,
+    "frontier_hosted_model_allowed": false,
+    "destructive_device_action_allowed": false,
+    "one_execution_before_reconciliation": true,
+    "exact_planner_model": "qwen3.8-27b-throughput-5090",
+    "exact_runtime_blob": "1e8252415c60a553bad8a05fae2d98217d0f5833"
+  }
+}
