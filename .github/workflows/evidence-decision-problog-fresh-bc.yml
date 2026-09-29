@@ -1,0 +1,189 @@
+name: Evidence Decision Fresh B+C
+
+on:
+  push:
+    branches: [frontier/evidence-decision-problog-fresh-bc-20260930]
+    paths:
+      - 'ARM_EVIDENCE_DECISION_PROBLOG_FRESH_BC_001'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact frozen candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/evidence_decision_synthesis.py)" = "99c8bd0ab0b0f5b4e6c517d189c06165a954bc5c"
+          test "$(git hash-object canonical/tasks/evidence_decision/QWEN_COGNITIVE_CREDIT_ELIGIBILITY_V1.json)" = "ec2e408b1234f5013bb11796dad1ed5650ea826c"
+          test "$(git hash-object canonical/tasks/evidence_decision/H005_RUNTIME_INHERITANCE_ELIGIBILITY_V1.json)" = "1ef29ac44a3a7cb966f3b0d8e34cee4a19ddf1b2"
+          ! grep -q '"expected' canonical/tasks/evidence_decision/QWEN_COGNITIVE_CREDIT_ELIGIBILITY_V1.json
+          ! grep -q '"expected' canonical/tasks/evidence_decision/H005_RUNTIME_INHERITANCE_ELIGIBILITY_V1.json
+          echo EXACT_FRESH_BC_CANDIDATE_PASS
+
+      - name: Install exact already-qualified ProbLog wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/problog-wheel
+          python -m pip download --quiet --no-deps --only-binary=:all: problog==2.3.0 -d /tmp/problog-wheel
+          WHEEL="$(find /tmp/problog-wheel -maxdepth 1 -name 'problog-2.3.0-py3-none-manylinux_2_28_x86_64.whl' -print -quit)"
+          test -n "$WHEEL"
+          test "$(sha256sum "$WHEEL" | awk '{print $1}')" = "8d18beae480bce9f54037dfa9cf8c058da874524c118d8ffae96fd210b68e71e"
+          python -m pip install --quiet --no-deps "$WHEEL"
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("problog")=="2.3.0"
+          print("PINNED_PROBLOG_WHEEL_PASS")
+          PY
+
+      - name: Execute fresh real Task B
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/runtime/evidence_decision_synthesis.py \
+            canonical/tasks/evidence_decision/QWEN_COGNITIVE_CREDIT_ELIGIBILITY_V1.json \
+            --out TASK_B_RESULT.json > TASK_B_STDOUT.txt
+
+      - name: Execute fresh-reuse real Task C with identical adapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/evidence_decision_synthesis.py)" = "99c8bd0ab0b0f5b4e6c517d189c06165a954bc5c"
+          python canonical/runtime/evidence_decision_synthesis.py \
+            canonical/tasks/evidence_decision/H005_RUNTIME_INHERITANCE_ELIGIBILITY_V1.json \
+            --out TASK_C_RESULT.json > TASK_C_STDOUT.txt
+
+      - name: Independent adjudication and negative canaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib
+          root=pathlib.Path(".")
+          B=json.loads((root/"TASK_B_RESULT.json").read_text())
+          C=json.loads((root/"TASK_C_RESULT.json").read_text())
+
+          # Independent canonical oracles, not present in candidate task inputs.
+          assert B["decision"]=="REJECT",B
+          assert C["decision"]=="ACCEPT",C
+          for result in (B,C):
+              assert result["schema"]=="PROJECT_BRAIN_EVIDENCE_DECISION_RESULT_V1"
+              assert result["model_dependency_count"]==0
+              assert result["input_sha256"] and result["generated_problog_sha256"]
+              assert all(x.get("provenance") for x in result["trace"] if x["kind"]=="EVIDENCE")
+          assert B["hard_constraints_triggered"],B
+          assert B["policy_path"]==["HARD_CONSTRAINT"],B
+          assert not C["hard_constraints_triggered"],C
+          assert C["policy_path"]==["SUPPORT_THRESHOLD_AND_MARGIN"],C
+          assert C["support_probability"]>=0.999999,C
+          assert C["opposition_probability"]<0.35,C
+          assert C["unresolved_conflict"] is False,C
+
+          spec=importlib.util.spec_from_file_location(
+              "eds",root/"canonical/runtime/evidence_decision_synthesis.py"
+          )
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          policy={
+            "accept_threshold":0.75,"reject_threshold":0.75,
+            "min_margin":0.20,"conflict_threshold":0.35,"evidence_floor":0.60
+          }
+          conflict={
+            "schema":"PROJECT_BRAIN_TYPED_EVIDENCE_DECISION_TASK_V1",
+            "task_id":"NEGATIVE_CONFLICT","question":"conflict","decision_id":"x",
+            "evidence":[
+              {"id":"for","probability":0.9,"statement":"for","provenance":{"source":"negative"}},
+              {"id":"against","probability":0.9,"statement":"against","provenance":{"source":"negative"}}
+            ],
+            "rules":[
+              {"id":"rs","antecedents":["for"],"strength":1.0,"stance":"SUPPORT"},
+              {"id":"ro","antecedents":["against"],"strength":1.0,"stance":"OPPOSE"}
+            ],
+            "hard_constraints":[],"policy":policy
+          }
+          c=mod.synthesize(conflict)
+          assert c["decision"]=="INSUFFICIENT_EVIDENCE",c
+          assert c["unresolved_conflict"] is True,c
+
+          hard={
+            "schema":"PROJECT_BRAIN_TYPED_EVIDENCE_DECISION_TASK_V1",
+            "task_id":"NEGATIVE_HARD","question":"hard","decision_id":"x",
+            "evidence":[
+              {"id":"support","probability":1.0,"statement":"support","provenance":{"source":"negative"}},
+              {"id":"blocker","probability":1.0,"statement":"blocker","provenance":{"source":"negative"}}
+            ],
+            "rules":[
+              {"id":"rs","antecedents":["support"],"strength":1.0,"stance":"SUPPORT"},
+              {"id":"rn","antecedents":["blocker"],"strength":1.0,"stance":"NEUTRAL"}
+            ],
+            "hard_constraints":[
+              {"id":"hc","ref":"blocker","trigger_probability":0.999,"decision":"REJECT","reason":"hard blocker"}
+            ],
+            "policy":policy
+          }
+          h=mod.synthesize(hard)
+          assert h["decision"]=="REJECT",h
+          assert h["policy_path"]==["HARD_CONSTRAINT"],h
+
+          receipt={
+            "schema":"PROJECT_BRAIN_MODEL_INDEPENDENT_EVIDENCE_DECISION_ACQUISITION_V1",
+            "verdict":"PASS",
+            "adapter_git_blob":"99c8bd0ab0b0f5b4e6c517d189c06165a954bc5c",
+            "task_b_git_blob":"ec2e408b1234f5013bb11796dad1ed5650ea826c",
+            "task_c_git_blob":"1ef29ac44a3a7cb966f3b0d8e34cee4a19ddf1b2",
+            "problog_distribution":"2.3.0",
+            "problog_wheel_sha256":"8d18beae480bce9f54037dfa9cf8c058da874524c118d8ffae96fd210b68e71e",
+            "model_dependency_count":0,
+            "spent_task_a_run":36642005503,
+            "spent_task_a_classification":"PRE_INFERENCE_SUBSTRATE_FAILURE__NO_REPLAY",
+            "real_task_b":{
+              "decision":B["decision"],
+              "oracle":"MODEL_BACKED_COGNITION_INELIGIBLE_FOR_BRAIN_COGNITIVE_CREDIT",
+              "input_sha256":B["input_sha256"],
+              "program_sha256":B["generated_problog_sha256"],
+              "support_probability":B["support_probability"],
+              "opposition_probability":B["opposition_probability"],
+              "policy_path":B["policy_path"]
+            },
+            "fresh_reuse_task_c":{
+              "decision":C["decision"],
+              "oracle":"H005_PROMOTION_AUTHORIZED_BY_GATE_TRUE",
+              "input_sha256":C["input_sha256"],
+              "program_sha256":C["generated_problog_sha256"],
+              "support_probability":C["support_probability"],
+              "opposition_probability":C["opposition_probability"],
+              "policy_path":C["policy_path"]
+            },
+            "negative_conflict":"PASS_INSUFFICIENT_EVIDENCE",
+            "negative_hard_constraint":"PASS_REJECT",
+            "same_adapter_bytes":True,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("EVIDENCE_DECISION_FRESH_BC_ADJUDICATION.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(receipt,sort_keys=True))
+          print("MODEL_INDEPENDENT_EVIDENCE_DECISION_FRESH_BC_PASS")
+          PY
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: evidence-decision-fresh-bc-evidence
+          if-no-files-found: warn
+          path: |
+            TASK_B_RESULT.json
+            TASK_B_STDOUT.txt
+            TASK_C_RESULT.json
+            TASK_C_STDOUT.txt
+            EVIDENCE_DECISION_FRESH_BC_ADJUDICATION.json
