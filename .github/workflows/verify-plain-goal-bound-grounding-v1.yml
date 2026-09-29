@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "315e45425b0bed73f48c3c13f97c07ad230aadc8"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "7e45881ebfdfd6b2b0213c4500508e4ea83a7c38"
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
           test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "03fe93ded7207f584266e420192eef2a3a8a166c"
