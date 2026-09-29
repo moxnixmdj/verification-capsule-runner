@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_ONE_SHOT_EXECUTION_ARM_V1",
+  "action_intent_pr": 235,
+  "route": "PUBLIC_ASTRA_REPAIRED_LOCAL_QWEN3_5_9B_CLICK_TASK_C_V1",
+  "mission_id": "FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-QWEN9B-001",
+  "one_execution_only": true,
+  "no_replay": true,
+  "hidden_oracle_absent_until_post_planner_verification": true,
+  "incremental_spend_usd": 0,
+  "armed_at_utc": "2026-09-29T22:18:00Z"
+}
