@@ -1,0 +1,67 @@
+name: Formal Argumentation License Probe
+
+on:
+  push:
+    branches: [diag/formal-argumentation-license-20260930]
+    paths:
+      - '.github/workflows/formal-argumentation-license-probe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Inspect exact wheel licensing metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/fa
+          python -m pip download --no-deps --only-binary=:all: formal-argumentation==0.3.0 -d /tmp/fa
+          WHEEL="$(find /tmp/fa -maxdepth 1 -name 'formal_argumentation-0.3.0-*.whl' -print -quit)"
+          test -n "$WHEEL"
+          EXPECTED='4b0a242b4bf006cd58c5cbfb313b5b20d2a2895a22ea2b4ddbc4706e8cd56bc8'
+          ACTUAL="$(sha256sum "$WHEEL" | awk '{print $1}')"
+          test "$ACTUAL" = "$EXPECTED"
+          python - "$WHEEL" <<'PY'
+          import json,sys,zipfile,re,pathlib
+          wheel=sys.argv[1]
+          with zipfile.ZipFile(wheel) as z:
+              names=z.namelist()
+              metadata_names=[n for n in names if n.endswith('.dist-info/METADATA')]
+              assert len(metadata_names)==1, metadata_names
+              meta=z.read(metadata_names[0]).decode('utf-8','replace')
+              license_lines=[
+                  line for line in meta.splitlines()
+                  if line.startswith('License:') or line.startswith('License-Expression:')
+                  or line.startswith('Classifier: License')
+              ]
+              bundled=[
+                  n for n in names
+                  if re.search(r'(^|/)(LICENSE|LICENCE|COPYING|NOTICE)(\.|$)', n, re.I)
+              ]
+              result={
+                  'schema':'PROJECT_BRAIN_PACKAGE_LICENSE_PROBE_V1',
+                  'package':'formal-argumentation',
+                  'version':'0.3.0',
+                  'wheel_sha256':'4b0a242b4bf006cd58c5cbfb313b5b20d2a2895a22ea2b4ddbc4706e8cd56bc8',
+                  'metadata_license_lines':license_lines,
+                  'bundled_license_files':bundled,
+                  'declared_reusable_license':bool(license_lines or bundled),
+                  'verdict':'LICENSE_DECLARED_OR_BUNDLED' if (license_lines or bundled) else 'NO_REUSABLE_LICENSE_DECLARATION_FOUND'
+              }
+              pathlib.Path('FORMAL_ARGUMENTATION_LICENSE_PROBE.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+              print(json.dumps(result,sort_keys=True))
+          PY
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: formal-argumentation-license-probe
+          path: FORMAL_ARGUMENTATION_LICENSE_PROBE.json
