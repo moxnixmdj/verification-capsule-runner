@@ -1,0 +1,201 @@
+name: Frontier Task B Nonfrontier Agentic Research
+
+on:
+  push:
+    branches: [frontier-task-b-gpt-oss-20260929]
+    paths:
+      - 'ARM_FRONTIER_TASK_B_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact public runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "dae3f042da75ec5289063bcf74f913f7f31bebbc"
+          python - <<'PY'
+          import json, urllib.request
+          with urllib.request.urlopen('https://api.github.com/repos/moxnixmdj/verification-capsule-runner', timeout=20) as r:
+              repo=json.load(r)
+          assert repo['private'] is False, repo
+          print('PUBLIC_RUNTIME_PREFLIGHT_PASS')
+          PY
+
+      - name: Execute real Task B once
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          timeout 480 python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/FRONTIER_NONFRONTIER_AGENTIC_RESEARCH_TASK_B_001.json > TASK_B_RUNTIME_STDOUT.txt 2> TASK_B_RUNTIME_STDERR.txt
+          code=$?
+          set -e
+          printf '%s\n' "$code" > TASK_B_RUNTIME_EXIT_CODE.txt
+          cat TASK_B_RUNTIME_STDOUT.txt
+          cat TASK_B_RUNTIME_STDERR.txt >&2
+          exit 0
+
+      - name: Independently verify Task B and supplier identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, re, urllib.request, time
+
+          root=pathlib.Path('.')
+          state_path=root/'canonical/astra_runtime/state/FRONTIER-NONFRONTIER-AGENTIC-RESEARCH-TASK-B-001.json'
+          result={
+            'schema':'PROJECT_BRAIN_NONFRONTIER_TASK_B_RESULT_V1',
+            'runtime_git_blob':'dae3f042da75ec5289063bcf74f913f7f31bebbc',
+            'execution_surface':'PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04',
+            'incremental_spend_usd':0,
+            'checks':{},
+          }
+
+          def extract_json(text):
+              text=str(text or '').strip()
+              try:
+                  return json.loads(text)
+              except Exception:
+                  a=text.find('{'); b=text.rfind('}')
+                  if a>=0 and b>=a:
+                      return json.loads(text[a:b+1])
+                  raise
+
+          # Independent live registry check.
+          req=urllib.request.Request('https://text.pollinations.ai/models',headers={'User-Agent':'ProjectBrain-Independent-TaskB-Verifier/1'})
+          with urllib.request.urlopen(req,timeout=30) as r:
+              models=json.loads(r.read(2_000_000).decode('utf-8'))
+          items=models.get('models') if isinstance(models,dict) else models
+          assert isinstance(items,list), type(items)
+          entry=None
+          for x in items:
+              if not isinstance(x,dict): continue
+              names={str(x.get('name') or ''),str(x.get('model') or '')}
+              names.update(str(a) for a in (x.get('aliases') or []))
+              if 'openai-fast' in names:
+                  entry=x; break
+          if entry is None:
+              raise SystemExit('OPENAI_FAST_NOT_IN_LIVE_REGISTRY')
+          desc=str(entry.get('description') or '')
+          tier=str(entry.get('tier') or entry.get('access') or '')
+          result['live_registry_entry']=entry
+          result['checks']['registry_identifies_gpt_oss_20b']='gpt-oss 20b' in desc.lower()
+          result['checks']['registry_tier_anonymous']=tier.lower()=='anonymous'
+
+          # Independent credential-free structured response check using the exact requested model.
+          body=json.dumps({
+            'messages':[{'role':'user','content':'Return only this JSON object: {"task_b_live_probe":"PASS"}'}],
+            'model':'openai-fast',
+            'jsonMode':True
+          }).encode()
+          req=urllib.request.Request('https://text.pollinations.ai/',data=body,headers={'Content-Type':'application/json','User-Agent':'ProjectBrain-Independent-TaskB-Verifier/1'},method='POST')
+          t=time.monotonic()
+          with urllib.request.urlopen(req,timeout=40) as r:
+              raw=r.read(30000).decode('utf-8','replace')
+          live=extract_json(raw)
+          result['live_structured_probe']={'response':live,'duration_s':round(time.monotonic()-t,3)}
+          result['checks']['credential_free_structured_probe_pass']=live.get('task_b_live_probe')=='PASS'
+
+          if not state_path.is_file():
+              result['checks']['runtime_state_complete']=False
+              result['verdict']='FAIL'
+              result['first_causal_failure']='RUNTIME_STATE_MISSING'
+              pathlib.Path('TASK_B_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+              raise SystemExit(1)
+
+          state=json.loads(state_path.read_text())
+          result['runtime_state_status']=state.get('status')
+          result['checks']['runtime_state_complete']=state.get('status')=='COMPLETE'
+          hist=state.get('history') or []
+          goal_result=(hist[-1].get('result') if hist and isinstance(hist[-1],dict) else {}) or {}
+          result['goal_result']={
+            'controller_mode':goal_result.get('controller_mode'),
+            'planner_source':goal_result.get('planner_source'),
+            'planner_transport':goal_result.get('planner_transport'),
+            'planner_model_last':goal_result.get('planner_model_last'),
+            'cycles':goal_result.get('cycles'),
+            'final_summary':goal_result.get('final_summary'),
+          }
+          result['checks']['optional_model_advisory_used']=goal_result.get('controller_mode')=='OPTIONAL_MODEL_ADVISORY'
+          result['checks']['planner_source_pollinations']=goal_result.get('planner_source')=='https://text.pollinations.ai/'
+          result['checks']['planner_model_exact_openai_fast']=goal_result.get('planner_model_last')=='openai-fast'
+
+          trace=goal_result.get('trace') or []
+          types=[]
+          for rec in trace:
+              plan=rec.get('plan') if isinstance(rec,dict) else None
+              if isinstance(plan,dict) and isinstance(plan.get('type'),str):
+                  types.append(plan['type'])
+          result['planner_action_types']=types
+          result['checks']['planner_used_local_evidence_action']=('read_file' in types or 'search_text' in types)
+          result['checks']['planner_used_live_http_evidence']=('http_get' in types)
+          result['checks']['planner_finished']=('finish' in types)
+
+          summary=goal_result.get('final_summary') or ''
+          try:
+              summary_obj=extract_json(summary)
+          except Exception:
+              summary_obj={}
+          result['planner_decision']=summary_obj
+          result['checks']['planner_summary_contract']=(
+              summary_obj.get('task_b_decision') in {'PASS','FAIL'}
+              and isinstance(summary_obj.get('evidence'),list)
+              and len(summary_obj.get('evidence'))>=2
+              and bool(str(summary_obj.get('residual_gap') or '').strip())
+          )
+          result['checks']['planner_decision_pass']=summary_obj.get('task_b_decision')=='PASS'
+
+          hard=[
+            'registry_identifies_gpt_oss_20b',
+            'registry_tier_anonymous',
+            'credential_free_structured_probe_pass',
+            'runtime_state_complete',
+            'optional_model_advisory_used',
+            'planner_source_pollinations',
+            'planner_model_exact_openai_fast',
+            'planner_used_local_evidence_action',
+            'planner_used_live_http_evidence',
+            'planner_finished',
+            'planner_summary_contract',
+            'planner_decision_pass',
+          ]
+          failures=[k for k in hard if result['checks'].get(k) is not True]
+          result['hard_failures']=failures
+          if failures:
+              result['verdict']='FAIL'
+              result['first_causal_failure']=failures[0]
+          else:
+              result['verdict']='PASS'
+              result['classification']='DEPENDENCY_FREE_REAL_TASK_B_EVIDENCE__NOT_YET_FULL_FRONTIER_CAPABILITY_PROMOTION'
+              result['residual_gap']='TASK_A_STILL_REQUIRES_DEPENDENCY_FREE_REEXECUTION_OR_REPLACEMENT_BEFORE_FRONTIER_CAPABILITY_OBSOLESCENCE'
+          pathlib.Path('TASK_B_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          if failures:
+              raise SystemExit(1)
+          print('FRONTIER_NONFRONTIER_TASK_B_PASS')
+          PY
+
+      - name: Upload exact Task B evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-nonfrontier-task-b-evidence
+          if-no-files-found: warn
+          path: |
+            TASK_B_RUNTIME_STDOUT.txt
+            TASK_B_RUNTIME_STDERR.txt
+            TASK_B_RUNTIME_EXIT_CODE.txt
+            TASK_B_RESULT.json
+            canonical/astra_runtime/state/FRONTIER-NONFRONTIER-AGENTIC-RESEARCH-TASK-B-001.json
+            canonical/astra_runtime/evidence/

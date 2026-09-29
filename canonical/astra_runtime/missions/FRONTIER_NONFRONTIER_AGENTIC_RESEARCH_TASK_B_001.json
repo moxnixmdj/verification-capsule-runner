@@ -1,0 +1,46 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-NONFRONTIER-AGENTIC-RESEARCH-TASK-B-001",
+  "purpose": "Real cross-domain Task B: independently adjudicate whether this public execution capsule plus the exact ASTRA runtime plus its live anonymous planner route is an admissible zero-incremental-cost non-frontier open-ended research path for Project Brain. This is real AI-systems research on the current causal blocker, not a synthetic benchmark.",
+  "goal": {
+    "objective": "Independently determine whether the current execution route in this public repository can serve as a zero-incremental-cost non-frontier open-ended planning/research route for Project Brain.",
+    "candidate_context": "The relevant local runtime is canonical/runtime/astra_runtime.py. A legacy anonymous planner service may be used, but do not trust any claimed model identity or tier without inspecting live evidence.",
+    "constraints": [
+      "Do not assume the answer is PASS.",
+      "Inspect the local runtime source enough to identify how open-ended planner requests are routed and what model order is requested.",
+      "Inspect the live model registry at https://text.pollinations.ai/models and identify the current openai-fast model description, aliases, and access tier.",
+      "Use live HTTP evidence rather than remembered model identities.",
+      "Do not use GPT-5.6, ChatGPT, or any private Project Brain source as an authority.",
+      "Use only the runtime's read-only allowlisted research actions.",
+      "Treat a credential-free smaller/non-frontier planner as a supplier inside Brain, not as the capability itself.",
+      "Fail if the evidence cannot establish the supplier identity/access class or if the route is not live enough to support structured planning.",
+      "Finish only after enough evidence exists."
+    ],
+    "success_evidence": [
+      "local runtime planner routing evidence",
+      "live planner model-registry evidence",
+      "a reasoned PASS or FAIL on route admissibility",
+      "the exact residual gap after the decision"
+    ],
+    "final_summary_contract": "The finish summary MUST be valid compact JSON with keys task_b_decision (PASS or FAIL), route, planner_requested, planner_registry_description, planner_registry_tier, evidence (array of at least two concise observations), residual_gap. No markdown."
+  },
+  "steps": [
+    {
+      "id": "research-and-adjudicate-nonfrontier-route",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "public_sources_only": true,
+    "private_brain_state_present": false,
+    "synthetic_benchmark": false,
+    "frontier_model_required": false,
+    "one_execution_before_reconciliation": true
+  }
+}
