@@ -1,0 +1,30 @@
+name: PR204 Semantic Verifier Admission Diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ARM_PR204_SEMANTIC_VERIFIER_DIAGNOSTIC
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+    timeout-minutes: 5
+    steps:
+      - name: Bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git python3
+      - uses: actions/checkout@v4
+      - name: Run focused generic regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 diagnostics/pr204/tests/test_semantic_verifier_evidence_admission.py
