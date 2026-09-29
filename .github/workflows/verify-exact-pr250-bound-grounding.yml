@@ -24,12 +24,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "27e645112157e2dbe218d52dab24534df2d977d6"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "7e45881ebfdfd6b2b0213c4500508e4ea83a7c38"
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
           test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "03fe93ded7207f584266e420192eef2a3a8a166c"
           test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding_gate.py)" = "46a1378086c4143f31d1a8767f5fdd159f1d1a1e"
-          test "$(git hash-object canonical/tests/test_plain_goal_grounding_runtime_precedence.py)" = "11c3c19de21a90076c391b52708331d11ec824cf"
+          test "$(git hash-object canonical/tests/test_plain_goal_grounding_runtime_precedence.py)" = "4f2ea8d9fabb7059ad404f9addec7817b9310780"
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
           echo EXACT_PR250_BLOBS_PASS
 
@@ -67,7 +67,7 @@ jobs:
           out={
             "schema":"PROJECT_BRAIN_EXACT_PR250_BOUND_GROUNDING_VERIFICATION_V1",
             "brain_pr":250,
-            "brain_head":"22293ba5b1f8fe864a05ead09631d2117a942338",
+            "brain_head":"dd0a8c487565145748e563a14502452f018b22ad",
             "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
             "tests":[
               "test_plain_goal_bound_grounding.py",
