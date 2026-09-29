@@ -1,0 +1,52 @@
+name: Verify Plain Goal Bound Grounding V1
+on:
+  push:
+    branches:
+      - verify/plain-goal-bound-grounding-v1-20260930
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact copied Git blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "f5dae1399c02b29e4755fb55b320a976fe9a14a4"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
+          test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "03fe93ded7207f584266e420192eef2a3a8a166c"
+      - name: Compile exact candidate
+        run: |
+          python -m py_compile             canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py             canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py             canonical/tests/test_plain_goal_bound_grounding.py
+      - name: Run grounding regressions
+        run: python canonical/tests/test_plain_goal_bound_grounding.py
+      - name: Record terminal evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          paths=[
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py",
+            "canonical/tests/test_plain_goal_bound_grounding.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_PLAIN_GOAL_GROUNDING_VERIFICATION_V1",
+            "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+          }
+          pathlib.Path("PLAIN_GOAL_GROUNDING_VERIFY.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plain-goal-bound-grounding-v1-verification
+          path: PLAIN_GOAL_GROUNDING_VERIFY.json
