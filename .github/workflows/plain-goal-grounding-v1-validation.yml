@@ -1,0 +1,43 @@
+name: Plain Goal Grounding V1 Public Validation
+
+on:
+  push:
+    branches: [verify/plain-goal-grounding-v1-20260930]
+    paths:
+      - 'ARM_PLAIN_GOAL_GROUNDING_V1'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact PR250 blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object verification/plain_goal_grounding/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
+          test "$(git hash-object verification/plain_goal_grounding/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
+          test "$(git hash-object verification/plain_goal_grounding/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
+          echo EXACT_BLOBS_PASS
+
+      - name: Execute two-domain model-independent validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python verification/plain_goal_grounding/validate.py
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plain-goal-grounding-v1-public-validation
+          if-no-files-found: error
+          path: verification/plain_goal_grounding/PLAIN_GOAL_GROUNDING_PUBLIC_VALIDATION.json
