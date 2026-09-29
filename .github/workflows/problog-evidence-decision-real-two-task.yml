@@ -24,43 +24,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/model_independent_evidence_decision.py)" = "639870741e8415bf3bc1d8da87e79a917a48279c"
+          test "$(git hash-object canonical/runtime/model_independent_evidence_decision.py)" = "17d14f24e0f8cee44d2af1d2aad0098795c122cd"
           test "$(git hash-object canonical/capabilities/evidence_decision_tasks/SPACE_CARGO_FINAL_DESIGN_PROMOTION_A.json)" = "755d0c00f763c24fbdbaaf7c8e0334ab05171eb5"
           test "$(git hash-object canonical/capabilities/evidence_decision_tasks/QWEN_COGNITIVE_CREDIT_ELIGIBILITY_B.json)" = "e0dc44a3033432a6fd57b428a593810d3afafc37"
           test "$(git hash-object canonical/tests/fixtures/EVIDENCE_DECISION_BALANCED_CONFLICT.json)" = "e732c40a2bef0375786f9df53cdb5e6cc5154ece"
           test "$(git hash-object canonical/tests/fixtures/EVIDENCE_DECISION_HARD_CONSTRAINT.json)" = "b7f1ed51b898b0a6a9756a9188717869a0289d2c"
           echo 'EXACT_BRAIN_CANDIDATE_BYTES_PASS'
 
-      - name: Install hash-pinned PySDD backend
+      - name: Install proven hash-pinned ProbLog 2.3.0 wheel
         shell: bash
         run: |
           set -euo pipefail
-          URL='https://files.pythonhosted.org/packages/d9/10/d6115dcb5b23285cc0a991e391117f43b830de28b6f315fd2e18e21786e8/pysdd-1.0.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
-          curl -L --fail --retry 3 --retry-delay 2 --silent --show-error -o pysdd.whl "$URL"
-          echo 'aadde250ea13375f67feabdb7963c2cbcaa2727c80e6ba6544cb07e579a7a019  pysdd.whl' | sha256sum -c -
-          python -m pip install --no-deps ./pysdd.whl
+          mkdir -p /tmp/problog-wheel
+          python -m pip download --quiet --no-deps --only-binary=:all: problog==2.3.0 -d /tmp/problog-wheel
+          WHEEL="$(find /tmp/problog-wheel -maxdepth 1 -name 'problog-2.3.0-py3-none-manylinux_2_28_x86_64.whl' -print -quit)"
+          test -n "$WHEEL"
+          ACTUAL="$(sha256sum "$WHEEL" | awk '{print $1}')"
+          EXPECTED="8d18beae480bce9f54037dfa9cf8c058da874524c118d8ffae96fd210b68e71e"
+          test "$ACTUAL" = "$EXPECTED"
+          python -m pip install --quiet --no-deps "$WHEEL"
           python - <<'PY'
-          import pysdd
-          print('PYSDD_IMPORT_PASS', pysdd.__file__)
+          import importlib.metadata
+          assert importlib.metadata.version("problog")=="2.3.0"
+          print("PROBLOG_2_3_0_HASH_PIN_PASS")
           PY
-
-      - name: Fetch exact ProbLog source
-        shell: bash
-        run: |
-          set -euo pipefail
-          git init problog_src
-          git -C problog_src remote add origin https://github.com/ML-KULeuven/problog.git
-          git -C problog_src fetch --depth 1 origin a294fa24c3cfb4bae3a2acea3a128386113889f4
-          git -C problog_src checkout --detach FETCH_HEAD
-          test "$(git -C problog_src rev-parse HEAD)" = "a294fa24c3cfb4bae3a2acea3a128386113889f4"
-          test "$(git -C problog_src hash-object problog/__init__.py)" = "d101d51b67d819284f2843a5dbf6b094dc1243bd"
-          git -C problog_src rev-parse HEAD > PROBLOG_COMMIT.txt
-          echo 'EXACT_PROBLOG_SOURCE_PASS'
+          printf '%s\n' "$ACTUAL" > PROBLOG_WHEEL_SHA256.txt
 
       - name: Execute two real decisions and negative regressions
         shell: bash
-        env:
-          PYTHONPATH: ${{ github.workspace }}/problog_src
         run: |
           set -euo pipefail
           mkdir -p evidence_decision_results
@@ -90,7 +81,9 @@ jobs:
               assert r['schema']=='PROJECT_BRAIN_TYPED_EVIDENCE_DECISION_RESULT_V1'
               assert r['status']=='COMPLETE'
               assert r['engine']=='ProbLog'
-              assert r['problog_commit']=='a294fa24c3cfb4bae3a2acea3a128386113889f4'
+              assert r['problog_commit']=='1c0df586a1cb4e276b38bbf222d0578f3db58bde'
+              assert r['problog_version']=='2.3.0'
+              assert r['problog_wheel_sha256']=='8d18beae480bce9f54037dfa9cf8c058da874524c118d8ffae96fd210b68e71e'
               assert r['model_dependency_count']==0
               assert r['terminal_decision'] in {'ACCEPT','REJECT','INSUFFICIENT_EVIDENCE'}
               assert len(r['input_sha256'])==64
@@ -101,11 +94,12 @@ jobs:
           assert rows['SYNTH_BALANCED']['trace']['decision_reason']=='UNRESOLVED_SUPPORT_CONTRADICTION'
           assert rows['SYNTH_HARD']['terminal_decision']=='REJECT'
           assert rows['SYNTH_HARD']['trace']['decision_reason']=='HARD_CONSTRAINT_FAILURE'
-          real_summary={
-            'schema':'PROJECT_BRAIN_MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION_V1',
-            'adapter_git_blob':'639870741e8415bf3bc1d8da87e79a917a48279c',
-            'problog_commit':'a294fa24c3cfb4bae3a2acea3a128386113889f4',
-            'pysdd_wheel_sha256':'aadde250ea13375f67feabdb7963c2cbcaa2727c80e6ba6544cb07e579a7a019',
+          summary={
+            'schema':'PROJECT_BRAIN_MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION_V2',
+            'adapter_git_blob':'17d14f24e0f8cee44d2af1d2aad0098795c122cd',
+            'problog_version':'2.3.0',
+            'problog_tag_commit':'1c0df586a1cb4e276b38bbf222d0578f3db58bde',
+            'problog_wheel_sha256':'8d18beae480bce9f54037dfa9cf8c058da874524c118d8ffae96fd210b68e71e',
             'model_dependency_count':0,
             'real_task_outputs':{
               'SPACE_CARGO_A':{
@@ -121,9 +115,9 @@ jobs:
             'real_task_oracle_checked':False
           }
           pathlib.Path('MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION.json').write_text(
-              json.dumps(real_summary,indent=2,sort_keys=True)+'\n'
+              json.dumps(summary,indent=2,sort_keys=True)+'\n'
           )
-          print(json.dumps(real_summary,sort_keys=True))
+          print(json.dumps(summary,sort_keys=True))
           print('MODEL_INDEPENDENT_EXECUTION_READY_FOR_EXTERNAL_ORACLE')
           PY
 
@@ -131,11 +125,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: model-independent-evidence-decision-two-task
-          if-no-files-found: error
+          name: model-independent-evidence-decision-two-task-v2
+          if-no-files-found: warn
           path: |
-            PROBLOG_COMMIT.txt
-            pysdd.whl
+            PROBLOG_WHEEL_SHA256.txt
             MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION.json
             evidence_decision_results/
             canonical/runtime/model_independent_evidence_decision.py
