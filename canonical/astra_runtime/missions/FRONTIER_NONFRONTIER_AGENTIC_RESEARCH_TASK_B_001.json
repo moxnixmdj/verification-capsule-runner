@@ -32,7 +32,8 @@
       "max_cycles": 8,
       "verify": {
         "type": "returncode_zero"
-      }
+      },
+      "allow_optional_model_planner": true
     }
   ],
   "constraints": {
@@ -42,5 +43,15 @@
     "synthetic_benchmark": false,
     "frontier_model_required": false,
     "one_execution_before_reconciliation": true
+  },
+  "replay_after_root_cause_change": {
+    "prior_run_id": 36622236168,
+    "prior_failure": "GOAL_COMPILATION_FAILED:FileNotFoundError",
+    "root_cause": "PUBLIC_CAPSULE_MISSING_BOUND_CAPABILITY_REGISTRY_V1_AND_MISSION_DID_NOT_ENABLE_OPTIONAL_MODEL_PLANNER",
+    "repair": [
+      "add exact Brain main BOUND_CAPABILITY_REGISTRY_V1.json",
+      "set allow_optional_model_planner=true on the open-ended goal step"
+    ],
+    "replay_authorized": true
   }
 }
