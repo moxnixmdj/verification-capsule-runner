@@ -1,0 +1,252 @@
+name: Frontier Biophysics Task B Local Qwen9B
+
+on:
+  push:
+    branches: [frontier-task-b-local-qwen9b-biophysics-20260929]
+    paths:
+      - 'ARM_FRONTIER_LOCAL_QWEN9B_BIOPHYSICS_TASK_B_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify frozen route
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "dae3f042da75ec5289063bcf74f913f7f31bebbc"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "8419623ab7ec7768f5a24f673d9f373646e87776"
+          python - <<'PY'
+          import json
+          m=json.load(open('LOCAL_QWEN9B_BIOPHYSICS_ROUTE_MANIFEST.json'))
+          assert m['incremental_spend_usd']==0
+          assert m['api_key_required'] is False
+          assert m['account_required'] is False
+          assert m['frontier_model_in_execution_path'] is False
+          assert m['model']['sha256']=='f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c'
+          assert m['inference_runtime']['tested_commit']=='bec4772f6a2527d371557b5d2032641e5ff7619c'
+          print('ROUTE_MANIFEST_PREFLIGHT_PASS')
+          PY
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          git -C llama.cpp rev-parse HEAD > LLAMA_CPP_COMMIT.txt
+
+      - name: Download and verify pinned Qwen3.5-9B
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+          stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf | tee MODEL_BYTES.txt
+          sha256sum models/Qwen3.5-9B-M-TS-Q4_K_M.gguf | tee MODEL_SHA256.txt
+
+      - name: Start local model and bounded bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .task_b_bridge
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --no-webui "${EXTRA[@]}"             > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          nohup python diagnostics/frontier_task_b/local_qwen9b_biophysics_bridge.py --dir .task_b_bridge --server http://127.0.0.1:8080 > LOCAL_BRIDGE_STDOUT.txt 2> LOCAL_BRIDGE_STDERR.txt &
+          echo $! > LOCAL_BRIDGE.pid
+          echo 'LOCAL_QWEN9B_AND_BRIDGE_READY'
+
+      - name: Execute fresh real biophysics Task B once
+        shell: bash
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: .task_b_bridge
+          PROJECT_BRAIN_EXTERNAL_TOOL_WAIT_SECONDS: '240'
+          PROJECT_BRAIN_AGENT_ID: SUPERWORKER-UNIFIED-1
+          PROJECT_BRAIN_TASK_ID: FRONTIER-LOCAL-QWEN9B-BIOPHYSICS-TASK-B-001
+        run: |
+          set -uo pipefail
+          set +e
+          timeout 900 python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/FRONTIER_LOCAL_QWEN9B_BIOPHYSICS_TASK_B_001.json > TASK_B_RUNTIME_STDOUT.txt 2> TASK_B_RUNTIME_STDERR.txt
+          code=$?
+          set -e
+          printf '%s\n' "$code" > TASK_B_RUNTIME_EXIT_CODE.txt
+          cat TASK_B_RUNTIME_STDOUT.txt
+          cat TASK_B_RUNTIME_STDERR.txt >&2
+          exit 0
+
+      - name: Independently verify real scientific result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,math,pathlib,urllib.parse,urllib.request
+          root=pathlib.Path('.')
+          result={'schema':'PROJECT_BRAIN_LOCAL_QWEN9B_BIOPHYSICS_TASK_B_RESULT_V1','checks':{},'incremental_spend_usd':0}
+          model=root/'models/Qwen3.5-9B-M-TS-Q4_K_M.gguf'
+          h=hashlib.sha256()
+          with model.open('rb') as f:
+              for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+          result['model_sha256']=h.hexdigest()
+          result['checks']['model_hash_exact']=h.hexdigest()=='f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c'
+          result['checks']['model_bytes_exact']=model.stat().st_size==5060174144
+          result['checks']['llama_cpp_commit_exact']=(root/'LLAMA_CPP_COMMIT.txt').read_text().strip()=='bec4772f6a2527d371557b5d2032641e5ff7619c'
+          result['checks']['astra_runtime_blob_exact']=__import__('subprocess').check_output(['git','hash-object','canonical/runtime/astra_runtime.py'],text=True).strip()=='dae3f042da75ec5289063bcf74f913f7f31bebbc'
+
+          req=urllib.request.Request('https://huggingface.co/api/models/Qwen/Qwen3.5-9B',headers={'User-Agent':'ProjectBrain-Qwen9B-Verifier/1'})
+          with urllib.request.urlopen(req,timeout=30) as r: meta=json.load(r)
+          license_value=str((meta.get('cardData') or {}).get('license') or meta.get('license') or '').lower()
+          result['official_model_license']=license_value
+          result['checks']['official_qwen_apache2']=license_value in {'apache-2.0','apache 2.0'}
+
+          live_sources={
+            'cell_cycle':'https://www.ncbi.nlm.nih.gov/books/NBK9876/',
+            'body_water':'https://www.ncbi.nlm.nih.gov/books/NBK482447/',
+            'cardiac_output':'https://www.ncbi.nlm.nih.gov/books/NBK54473/',
+          }
+          source_text={}
+          for key,url in live_sources.items():
+              req=urllib.request.Request(url,headers={'User-Agent':'ProjectBrain-Qwen9B-Verifier/1'})
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  raw=r.read(900000).decode('utf-8','replace').lower()
+              source_text[key]=raw
+          result['checks']['cell_cycle_source_support']=('24 hours' in source_text['cell_cycle'] and 'human' in source_text['cell_cycle'])
+          result['checks']['body_water_source_support']=(('50% to 60%' in source_text['body_water']) or ('50% to 60% water' in source_text['body_water']))
+          result['checks']['cardiac_output_source_support']=('20 l/min' in source_text['cardiac_output'] and '40 l/min' in source_text['cardiac_output'])
+
+          state_path=root/'canonical/astra_runtime/state/FRONTIER-LOCAL-QWEN9B-BIOPHYSICS-TASK-B-001.json'
+          state=json.loads(state_path.read_text()) if state_path.is_file() else {}
+          result['runtime_state_status']=state.get('status')
+          result['checks']['runtime_state_complete']=state.get('status')=='COMPLETE'
+          hist=state.get('history') or []
+          goal=(hist[-1].get('result') if hist and isinstance(hist[-1],dict) else {}) or {}
+          result['controller_mode']=goal.get('controller_mode')
+          result['planner_model_last']=goal.get('planner_model_last')
+          result['checks']['optional_model_advisory_used']=goal.get('controller_mode')=='OPTIONAL_MODEL_ADVISORY'
+          result['checks']['state_reports_local_model']=goal.get('planner_model_last')=='Qwen3.5-9B-M-Q4_K_M-local'
+          trace=goal.get('trace') or []
+          types=[(x.get('plan') or {}).get('type') for x in trace if isinstance(x,dict)]
+          urls=[str(((x.get('plan') or {}).get('args') or {}).get('url') or '') for x in trace if isinstance(x,dict) and (x.get('plan') or {}).get('type')=='http_get']
+          result['planner_action_types']=types
+          result['planner_http_urls']=urls
+          ncbi_hosts={'www.ncbi.nlm.nih.gov','ncbi.nlm.nih.gov','pmc.ncbi.nlm.nih.gov','pubmed.ncbi.nlm.nih.gov'}
+          unique_ncbi={u for u in urls if urllib.parse.urlparse(u).hostname in ncbi_hosts}
+          result['checks']['used_three_live_authoritative_sources']=len(unique_ncbi)>=3
+          result['checks']['planner_finished']='finish' in types
+
+          def extract_json(text):
+              text=str(text or '').strip()
+              try:return json.loads(text)
+              except Exception:
+                  a=text.find('{'); b=text.rfind('}')
+                  if a>=0 and b>=a:
+                      try:return json.loads(text[a:b+1])
+                      except Exception:return {}
+                  return {}
+          summary=extract_json(goal.get('final_summary') or '')
+          result['planner_decision']=summary
+          added=700.0-70.0
+          doublings=math.log2(700.0/70.0)
+          flow60=added/60.0
+          result['independent_calculation']={'added_mass_kg':added,'minimum_mass_doublings':doublings,'mass_flow_kg_s_for_60s':flow60}
+          def close(v,x,tol):
+              try:return abs(float(v)-x)<=tol
+              except Exception:return False
+          result['checks']['summary_contract']=(
+              summary.get('research_task_completed') is True
+              and summary.get('feasibility_verdict') in {'NOT_FEASIBLE_BY_CELLULAR_PARALLELISM_ALONE','PLAUSIBLE_UNDER_KNOWN_BIOLOGY','INSUFFICIENT_EVIDENCE'}
+              and isinstance(summary.get('evidence'),list) and len(summary.get('evidence'))>=3
+              and isinstance(summary.get('binding_limits'),list) and len(summary.get('binding_limits'))>=3
+              and isinstance(summary.get('role_of_parallelism'),str) and bool(summary.get('role_of_parallelism').strip())
+              and summary.get('frontier_capability_promoted') is False
+          )
+          result['checks']['mass_conservation_numbers']=(
+              close(summary.get('added_mass_kg'),added,0.01)
+              and close(summary.get('minimum_mass_doublings'),doublings,0.02)
+              and close(summary.get('mass_flow_kg_s_for_60s'),flow60,0.02)
+          )
+          result['checks']['scientific_verdict_matches_oracle']=summary.get('feasibility_verdict')=='NOT_FEASIBLE_BY_CELLULAR_PARALLELISM_ALONE'
+          if isinstance(summary.get('binding_limits'),list):
+              terms=' '.join(map(str,summary['binding_limits'])).lower()
+              result['checks']['binding_limits_substantive']=sum(x in terms for x in ['mass','matter','transport','cell','heat','organization','biosynth','vascular'])>=3
+          else:
+              result['checks']['binding_limits_substantive']=False
+
+          rt=(root/'canonical/runtime/astra_runtime.py').read_text()
+          bridge_pos=rt.find('bridged=_external_tool_bridge("planner"')
+          poll_pos=rt.find('endpoint="https://text.pollinations.ai/"')
+          result['checks']['bridge_precedes_hosted_fallback']=bridge_pos>=0 and poll_pos>bridge_pos
+
+          blog=root/'.task_b_bridge/LOCAL_BRIDGE_LOG.jsonl'
+          records=[json.loads(x) for x in blog.read_text().splitlines() if x.strip()] if blog.is_file() else []
+          planners=[x for x in records if x.get('kind')=='planner' and x.get('status')=='ok']
+          result['planner_call_count']=len(planners)
+          result['checks']['local_planner_bridge_used']=bool(planners) and all(x.get('planner_backend')=='LOCAL_LLAMA_SERVER' for x in planners)
+          result['checks']['local_planner_model_exact']=bool(planners) and all(x.get('planner_model')=='Qwen3.5-9B-M-Q4_K_M-local' for x in planners)
+
+          hard=[
+            'model_hash_exact','model_bytes_exact','llama_cpp_commit_exact','astra_runtime_blob_exact','official_qwen_apache2',
+            'cell_cycle_source_support','body_water_source_support','cardiac_output_source_support',
+            'local_planner_bridge_used','local_planner_model_exact','runtime_state_complete','optional_model_advisory_used',
+            'state_reports_local_model','used_three_live_authoritative_sources','planner_finished','summary_contract',
+            'mass_conservation_numbers','scientific_verdict_matches_oracle','binding_limits_substantive','bridge_precedes_hosted_fallback'
+          ]
+          failures=[k for k in hard if result['checks'].get(k) is not True]
+          result['hard_failures']=failures
+          if failures:
+              result['verdict']='FAIL'; result['first_causal_failure']=failures[0]
+          else:
+              result['verdict']='PASS'
+              result['classification']='DEPENDENCY_FREE_FRESH_REAL_CROSS_DOMAIN_TASK_B_PASS__PARENT_FRONTIER_CAPABILITY_NOT_YET_PROMOTED'
+              result['residual_gap']='DEPENDENCY_FREE_TASK_A_OR_EQUIVALENT_SECOND_REAL_TASK_STILL_REQUIRED_BEFORE_FRONTIER_IMPLEMENTATION_OBSOLESCENCE'
+          pathlib.Path('LOCAL_QWEN9B_BIOPHYSICS_TASK_B_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          if failures: raise SystemExit(1)
+          print('LOCAL_QWEN9B_BIOPHYSICS_REAL_TASK_B_PASS')
+          PY
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-local-qwen9b-biophysics-task-b-evidence
+          if-no-files-found: warn
+          path: |
+            LOCAL_QWEN9B_BIOPHYSICS_ROUTE_MANIFEST.json
+            LLAMA_CPP_COMMIT.txt
+            MODEL_BYTES.txt
+            MODEL_SHA256.txt
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
+            LOCAL_BRIDGE_STDOUT.txt
+            LOCAL_BRIDGE_STDERR.txt
+            .task_b_bridge/LOCAL_BRIDGE_LOG.jsonl
+            TASK_B_RUNTIME_STDOUT.txt
+            TASK_B_RUNTIME_STDERR.txt
+            TASK_B_RUNTIME_EXIT_CODE.txt
+            LOCAL_QWEN9B_BIOPHYSICS_TASK_B_RESULT.json
+            canonical/astra_runtime/state/FRONTIER-LOCAL-QWEN9B-BIOPHYSICS-TASK-B-001.json
+            canonical/astra_runtime/evidence/

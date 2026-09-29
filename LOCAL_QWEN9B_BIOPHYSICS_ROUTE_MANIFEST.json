@@ -1,0 +1,39 @@
+{
+  "schema": "PROJECT_BRAIN_LOCAL_NONFRONTIER_PLANNER_ROUTE_V1",
+  "route_id": "PUBLIC_ASTRA_LOCAL_QWEN3_5_9B_M_Q4KM_BIOPHYSICS_V1",
+  "execution_surface": "PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04",
+  "source_brain_pr": 218,
+  "astra_runtime_git_blob": "dae3f042da75ec5289063bcf74f913f7f31bebbc",
+  "bound_registry_git_blob": "8419623ab7ec7768f5a24f673d9f373646e87776",
+  "planner_bridge": "ASTRA_EXISTING_EXTERNAL_TOOL_BRIDGE__TASK_SCOPED_PUBLIC_SOURCE_ALLOWLIST__NO_ASTRA_CODE_CHANGE",
+  "inference_runtime": {
+    "project": "ggml-org/llama.cpp",
+    "tested_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "source": "TheStageAI Qwen3.5-9B release manifest"
+  },
+  "model": {
+    "base": "Qwen/Qwen3.5-9B",
+    "base_revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+    "base_license": "apache-2.0",
+    "quantization_repo": "TheStageAI/Qwen3.5-9B-GGUF",
+    "filename": "Qwen3.5-9B-M-TS-Q4_K_M.gguf",
+    "size_bytes": 5060174144,
+    "sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "product": "M",
+    "recommended": true,
+    "reasoning_support": "supported",
+    "model_url": "https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true"
+  },
+  "real_task": {
+    "domain": "BIOLOGY_BIOPHYSICS",
+    "user_question": "Can a roughly 70 kg organism become roughly 700 kg in seconds or minutes through massively parallel cellular growth, and what physical/physiological limits dominate?",
+    "non_procedural": true,
+    "prior_failed_task_replay": false
+  },
+  "api_key_required": false,
+  "account_required": false,
+  "external_hosted_planner_required": false,
+  "frontier_model_in_execution_path": false,
+  "incremental_spend_usd": 0,
+  "execution_policy": "ONE_FRESH_TERMINAL_RUN_THEN_RECONCILE__NO_SAME_TASK_TUNING"
+}

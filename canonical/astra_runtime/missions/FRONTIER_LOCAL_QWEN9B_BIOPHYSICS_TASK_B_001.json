@@ -1,0 +1,45 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-LOCAL-QWEN9B-BIOPHYSICS-TASK-B-001",
+  "purpose": "Fresh real cross-domain biology/biophysics Task B. Independently answer the user's rapid organism-growth feasibility question using the local non-frontier Qwen3.5-9B planner, bounded public-source research, and quantitative reasoning. This is not a model benchmark and must not produce procedural bioengineering instructions.",
+  "goal": {
+    "objective": "Determine whether a roughly 70 kg organism can become roughly 700 kg in seconds or minutes by massively parallel cellular growth under conservation laws and known mammalian physiology. Identify the dominant rate limits and explain whether adding more parallel 'super-cells' changes the conclusion.",
+    "instructions": [
+      "Do not assume the answer. Use evidence and quantitative reasoning.",
+      "This is a high-level scientific feasibility analysis only. Do not propose genetic manipulation, wet-lab protocols, or experimental biological procedures.",
+      "Use at least three live authoritative sources from the provided NCBI/PubMed URLs.",
+      "Quantify the added mass for 70 kg to 700 kg, the minimum base-2 biomass/cell-number doublings for a 10x increase, and the mean material inflow needed if the increase occurred in 60 seconds.",
+      "Compare the required timescale with typical human/mammalian cell-cycle evidence and compare material transport with human cardiac-output scale as an order-of-magnitude physiological reference.",
+      "Distinguish what cellular parallelism can accelerate from what it cannot bypass: conserved matter, transport, biosynthesis, heat rejection, tissue organization, vascularization, and mechanical integration.",
+      "If evidence is insufficient for a claim, state the uncertainty instead of inventing detail.",
+      "Do not use ChatGPT, GPT-5.6, OpenAI hosted models, paid APIs, or private Brain state."
+    ],
+    "authoritative_urls": [
+      "https://www.ncbi.nlm.nih.gov/books/NBK9876/",
+      "https://www.ncbi.nlm.nih.gov/books/NBK482447/",
+      "https://www.ncbi.nlm.nih.gov/books/NBK54473/",
+      "https://pubmed.ncbi.nlm.nih.gov/8193215/"
+    ],
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), feasibility_verdict (one of NOT_FEASIBLE_BY_CELLULAR_PARALLELISM_ALONE, PLAUSIBLE_UNDER_KNOWN_BIOLOGY, INSUFFICIENT_EVIDENCE), added_mass_kg (number), minimum_mass_doublings (number), mass_flow_kg_s_for_60s (number), evidence (array of at least 3 concise source-backed observations), binding_limits (array of at least 3), role_of_parallelism (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown."
+  },
+  "steps": [
+    {
+      "id": "research-rapid-biological-growth-feasibility",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": true,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "public_sources_only": true,
+    "private_brain_state_present": false,
+    "frontier_hosted_model_allowed": false,
+    "procedural_bioengineering_forbidden": true,
+    "one_execution_before_reconciliation": true
+  }
+}
