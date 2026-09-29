@@ -5495,8 +5495,8 @@ def run_goal(step, mission):
             grounded_count=int(grounding.get("grounded_clause_count") or 0)
             if grounded_count>0:
                 raise Blocker(
-                    "BOUND_CAPABILITY_GROUNDING_AVAILABLE:"+json.dumps({
-                      "evidence_path":str(grounding_path.relative_to(ROOT)),
+                    "BOUND_CAPABILITY_GROUNDING_AVAILABLE_COMPOSITION_REQUIRED:"+json.dumps({
+                      "evidence_path":(str(grounding_path.relative_to(ROOT)) if ROOT in grounding_path.parents else str(grounding_path)),
                       "candidate_capability_ids":grounding.get("candidate_capability_ids") or [],
                       "unresolved_clause_indexes":grounding.get("unresolved_clause_indexes") or [],
                       "grounded_clause_count":grounded_count,
