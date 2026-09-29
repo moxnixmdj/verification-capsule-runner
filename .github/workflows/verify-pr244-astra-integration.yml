@@ -1,0 +1,85 @@
+name: Verify PR244 ASTRA Bound-Capability Integration
+
+on:
+  push:
+    branches:
+      - verify/evidence-decision-pr244-20260930
+    paths:
+      - .github/workflows/verify-pr244-astra-integration.yml
+
+permissions:
+  contents: read
+
+jobs:
+  astra-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact promoted integration bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "7690b26800b2701dac9e187a92c5561d79d831dd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_verify.py)" = "63cf325320c7b91bf48ea2f2769c999c5a090929"
+          test "$(git hash-object canonical/astra_runtime/missions/ASTRA_MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASKS_001.json)" = "141767ba6de83dd15755a26ecdab9573e29a8a84"
+
+      - name: Execute exact ASTRA mission
+        shell: bash
+        run: |
+          set -euo pipefail
+          MID="ASTRA-MODEL-INDEPENDENT-EVIDENCE-DECISION-REAL-TASKS-001"
+          rm -f "canonical/astra_runtime/state/$MID.json"
+          rm -f "canonical/astra_runtime/evidence/$MID"*.json
+          rm -f canonical/astra_runtime/tmp/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_A_RESULT.json
+          rm -f canonical/astra_runtime/tmp/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_B_RESULT.json
+          python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/ASTRA_MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASKS_001.json
+
+      - name: Independently inspect ASTRA outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path(".")
+          a=json.loads((root/"canonical/astra_runtime/tmp/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_A_RESULT.json").read_text())
+          b=json.loads((root/"canonical/astra_runtime/tmp/MODEL_INDEPENDENT_EVIDENCE_DECISION_REAL_TASK_B_RESULT.json").read_text())
+          state=json.loads((root/"canonical/astra_runtime/state/ASTRA-MODEL-INDEPENDENT-EVIDENCE-DECISION-REAL-TASKS-001.json").read_text())
+          receipt_path=root/"canonical/astra_runtime/evidence/ASTRA-MODEL-INDEPENDENT-EVIDENCE-DECISION-REAL-TASKS-001__RECEIPT.json"
+          receipt=json.loads(receipt_path.read_text())
+          assert a["status"]=="DECIDED" and a["selected_alternative"]=="PUBLIC_GITHUB_ACTIONS"
+          assert b["status"]=="DECIDED" and b["selected_alternative"]=="UPSTREAM_HISTORY_REUSE"
+          assert a["model_dependency_count"]==0 and b["model_dependency_count"]==0
+          assert state["status"]=="COMPLETE" and state["next_step"]==2
+          assert receipt["status"]=="COMPLETE" and receipt["steps_completed"]==2
+          for step in state["history"]:
+              result=step["result"]
+              assert result["controller_mode"]=="MODEL_INDEPENDENT_ACTION_PLAN"
+              assert result["planner_source"] is None
+              assert result["planner_transport"] is None
+              assert result["planner_model_last"] is None
+              invokes=[x for x in result["trace"] if x["plan"]["type"]=="invoke_capability"]
+              assert len(invokes)==2
+              assert invokes[0]["result"]["model_dependency_count"]==0
+              assert invokes[1]["result"]["model_dependency_count"]==0
+              assert invokes[1]["result"]["verified"] is True
+          summary={
+              "schema":"PROJECT_BRAIN_PR244_ASTRA_INTEGRATION_VERIFICATION_V1",
+              "status":"VERIFIED",
+              "model_dependency_count":0,
+              "controller_mode":"MODEL_INDEPENDENT_ACTION_PLAN",
+              "task_a_selected":a["selected_alternative"],
+              "task_b_selected":b["selected_alternative"],
+              "state_sha256":hashlib.sha256((root/"canonical/astra_runtime/state/ASTRA-MODEL-INDEPENDENT-EVIDENCE-DECISION-REAL-TASKS-001.json").read_bytes()).hexdigest(),
+              "receipt_sha256":hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+              "astra_receipt":receipt,
+          }
+          print(json.dumps(summary,sort_keys=True))
+          PY
