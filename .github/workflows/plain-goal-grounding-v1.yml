@@ -23,3 +23,17 @@ jobs:
             canonical.tests.test_plain_goal_bound_grounding \
             canonical.tests.test_plain_goal_bound_grounding_gate \
             canonical.tests.test_plain_goal_grounding_runtime_precedence
+      - name: Run real grounding acquisition and fresh reuse
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: "1"
+        run: |
+          set -euo pipefail
+          python GROUNDING_REAL_TASK_PROOF.py
+      - name: Upload grounding evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plain-goal-grounding-real-task-evidence
+          if-no-files-found: error
+          path: GROUNDING_REAL_TASK_EVIDENCE.json
