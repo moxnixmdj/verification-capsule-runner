@@ -1,0 +1,95 @@
+name: Fresh Reuse Grounding Task B - QR Artifact
+on:
+  push:
+    branches:
+      - verify/plain-goal-grounding-fresh-reuse-qr-20260930
+permissions:
+  contents: read
+jobs:
+  task-b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact grounding candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
+      - name: Ground fresh visual-artifact goal
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          def load(name,path):
+              spec=importlib.util.spec_from_file_location(name,path)
+              mod=importlib.util.module_from_spec(spec); sys.modules[name]=mod; spec.loader.exec_module(mod); return mod
+          g=load("task_b_grounder",root/"canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py")
+          v=load("task_b_verifier",root/"canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py")
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          goal="Generate a QR code image containing PROJECT BRAIN and save it to canonical/astra_runtime/tmp/GROUNDING_TASK_B_QR.png."
+          grounding=g.ground(goal,registry)
+          ok,reason=v.verify(goal,grounding,registry)
+          assert ok,reason
+          assert grounding["model_dependency_count"]==0
+          assert "image.qr.generate.qrencode" in grounding["candidate_capability_ids"],grounding["candidate_capability_ids"]
+          assert grounding["grounded_clause_count"]>=1
+          assert grounding["whole_goal_external_discovery_forbidden_if_any_bound_grounding"] is True
+          pathlib.Path("GROUNDING_TASK_B_RESULT.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_PLAIN_GOAL_GROUNDING_FRESH_REUSE_B_V1",
+            "goal":goal,
+            "grounding":grounding,
+            "selected_bound_capability":"image.qr.generate.qrencode",
+            "external_supplier_discovery_attempted":False,
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+          },indent=2,sort_keys=True)+"\n")
+          PY
+      - name: Execute already-bound QR capability
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qrencode zbar-tools
+          mkdir -p canonical/astra_runtime/tmp
+          qrencode -o canonical/astra_runtime/tmp/GROUNDING_TASK_B_QR.png 'PROJECT BRAIN'
+          test -s canonical/astra_runtime/tmp/GROUNDING_TASK_B_QR.png
+      - name: Independently verify QR artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          decoded="$(zbarimg --quiet --raw canonical/astra_runtime/tmp/GROUNDING_TASK_B_QR.png)"
+          test "$decoded" = "PROJECT BRAIN"
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          p=pathlib.Path("canonical/astra_runtime/tmp/GROUNDING_TASK_B_QR.png")
+          raw=p.read_bytes()
+          assert raw.startswith(b"\x89PNG\r\n\x1a\n")
+          evidence=json.loads(pathlib.Path("GROUNDING_TASK_B_RESULT.json").read_text())
+          evidence["artifact"]={
+            "path":str(p),
+            "bytes":len(raw),
+            "sha256":hashlib.sha256(raw).hexdigest(),
+            "png_signature_verified":True,
+          }
+          evidence["independent_verification"]={
+            "decoder":"zbarimg",
+            "decoded_payload":"PROJECT BRAIN",
+            "verified":True,
+            "producer_independent":True,
+          }
+          pathlib.Path("GROUNDING_TASK_B_RESULT.json").write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: grounding-fresh-reuse-b-qr-artifact
+          path: |
+            GROUNDING_TASK_B_RESULT.json
+            canonical/astra_runtime/tmp/GROUNDING_TASK_B_QR.png
