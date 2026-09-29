@@ -5,10 +5,10 @@
   "goal": {
     "objective": "Diagnose the intermittent late-KeyboardInterrupt race described below in the local pre-fix Click repository and produce the smallest general source patch that preserves Click's intended standalone and non-standalone termination semantics.",
     "bug_report": "When a user presses Ctrl-C during click.prompt(), an unhandled exception can intermittently escape while Click is already handling the abort. It was observed on an Ubuntu ARM CI runner and appears timing-sensitive. The normal x64/macOS/Windows runs often succeed. Find the causal race in the pre-fix source, not a platform-specific workaround.",
-    "local_repository": "click_under_test/",
+    "local_repository": "./",
     "exact_repository_commit": "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714",
     "instructions": [
-      "Treat the local source tree as the primary evidence. Inspect the relevant exception-handling and terminal-output paths before finishing.",
+      "Treat the local pre-fix Click source tree as the primary evidence. Inspect the relevant exception-handling and terminal-output paths before finishing.",
       "Do not search GitHub issues, pull requests, commit history, release notes, or the internet for this bug or its fix. The task is to derive the repair from the pre-fix code.",
       "Do not special-case ARM, isatty, prompt(), or only the 'Aborted!' print unless the code evidence proves that is the general causal boundary.",
       "Preserve standalone_mode=False semantics rather than swallowing interrupts globally.",
