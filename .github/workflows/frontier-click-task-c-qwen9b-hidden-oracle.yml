@@ -1,0 +1,265 @@
+name: Frontier Click Task C Local Qwen9B Hidden Oracle
+
+on:
+  push:
+    branches: [frontier-task-c-click-qwen9b-hidden-20260930]
+    paths:
+      - 'ARM_FRONTIER_CLICK_TASK_C_QWEN9B_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_c:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify frozen one-shot route
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          test "$(git hash-object canonical/astra_runtime/missions/FRONTIER_TASK_C_CLICK_LATE_INTERRUPT_001.json)" = "9a5e104f12714e5e912a187011b5cd057ddde570"
+          test "$(git hash-object diagnostics/frontier_task_c/local_qwen9b_click_bridge.py)" = "9773022c00f197b98d5a2c54ab5c834f83b1e39d"
+          test "$(git hash-object LOCAL_QWEN9B_CLICK_TASK_C_ROUTE_MANIFEST.json)" = "be3a85dd96b96d8313399af599c635c8664b8c06"
+          python - <<'PY'
+          import json
+          m=json.load(open("LOCAL_QWEN9B_CLICK_TASK_C_ROUTE_MANIFEST.json"))
+          assert m["source_intent_pr"]==232
+          assert m["incremental_spend_usd"]==0
+          assert m["frontier_model_in_execution_path"] is False
+          assert m["one_execution_only"] is True
+          assert m["same_task_replay_allowed"] is False
+          assert m["model"]["sha256"]=="f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c"
+          assert m["click_pre_fix_commit"]=="cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714"
+          print("ROUTE_MANIFEST_PREFLIGHT_PASS")
+          PY
+
+      - name: Build isolated planner-visible task root
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/task_c_root /tmp/task_c_bridge /tmp/hidden_oracle
+          mkdir -p /tmp/task_c_root/canonical /tmp/task_c_root/canonical/astra_runtime/missions /tmp/task_c_bridge
+          cp -a canonical/runtime /tmp/task_c_root/canonical/
+          cp canonical/astra_runtime/missions/FRONTIER_TASK_C_CLICK_LATE_INTERRUPT_001.json /tmp/task_c_root/canonical/astra_runtime/missions/
+          git init /tmp/task_c_root/click_under_test
+          git -C /tmp/task_c_root/click_under_test remote add origin https://github.com/pallets/click.git
+          git -C /tmp/task_c_root/click_under_test fetch --depth 1 origin cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714
+          git -C /tmp/task_c_root/click_under_test checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/task_c_root/click_under_test rev-parse HEAD)" = "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714"
+          test ! -e /tmp/task_c_root/.github
+          test ! -e /tmp/task_c_root/LOCAL_QWEN9B_CLICK_TASK_C_ROUTE_MANIFEST.json
+          ! grep -R -F "00f257bb8e714064bea16425007543bbc0800445" /tmp/task_c_root >/dev/null
+          echo "ISOLATED_TASK_ROOT_READY"
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          git -C llama.cpp rev-parse HEAD > LLAMA_CPP_COMMIT.txt
+
+      - name: Download and verify pinned Qwen3.5-9B
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+          stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf > MODEL_BYTES.txt
+          sha256sum models/Qwen3.5-9B-M-TS-Q4_K_M.gguf > MODEL_SHA256.txt
+
+      - name: Start exact local model and network-denying bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --no-webui "${EXTRA[@]}" \
+            > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          nohup python diagnostics/frontier_task_c/local_qwen9b_click_bridge.py \
+            --dir /tmp/task_c_bridge --server http://127.0.0.1:8080 \
+            > LOCAL_BRIDGE_STDOUT.txt 2> LOCAL_BRIDGE_STDERR.txt &
+          echo $! > LOCAL_BRIDGE.pid
+          echo "LOCAL_QWEN9B_AND_ISOLATED_BRIDGE_READY"
+
+      - name: Execute fresh hidden-oracle Task C exactly once
+        shell: bash
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: /tmp/task_c_bridge
+          PROJECT_BRAIN_EXTERNAL_TOOL_WAIT_SECONDS: '300'
+          PROJECT_BRAIN_AGENT_ID: SUPERWORKER-UNIFIED-1
+          PROJECT_BRAIN_TASK_ID: FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001
+        run: |
+          set -uo pipefail
+          set +e
+          cd /tmp/task_c_root
+          timeout 1200 python canonical/runtime/astra_runtime.py \
+            canonical/astra_runtime/missions/FRONTIER_TASK_C_CLICK_LATE_INTERRUPT_001.json \
+            > "$GITHUB_WORKSPACE/TASK_C_RUNTIME_STDOUT.txt" \
+            2> "$GITHUB_WORKSPACE/TASK_C_RUNTIME_STDERR.txt"
+          code=$?
+          set -e
+          printf '%s\n' "$code" > "$GITHUB_WORKSPACE/TASK_C_RUNTIME_EXIT_CODE.txt"
+          state=/tmp/task_c_root/canonical/astra_runtime/state/FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001.json
+          test -f "$state"
+          cp "$state" "$GITHUB_WORKSPACE/TASK_C_STATE.json"
+          cp /tmp/task_c_bridge/LOCAL_BRIDGE_LOG.jsonl "$GITHUB_WORKSPACE/LOCAL_BRIDGE_LOG.jsonl"
+          cat "$GITHUB_WORKSPACE/TASK_C_RUNTIME_STDOUT.txt"
+          cat "$GITHUB_WORKSPACE/TASK_C_RUNTIME_STDERR.txt" >&2
+          exit 0
+
+      - name: Extract model patch without revealing oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib
+          state=json.load(open("TASK_C_STATE.json"))
+          if state.get("status")!="COMPLETE":
+              raise SystemExit("RUNTIME_NOT_COMPLETE:"+str(state.get("status")))
+          hist=state.get("history") or []
+          goal=(hist[-1].get("result") if hist and isinstance(hist[-1],dict) else {}) or {}
+          raw=str(goal.get("final_summary") or "").strip()
+          try:
+              summary=json.loads(raw)
+          except Exception:
+              a=raw.find("{"); b=raw.rfind("}")
+              if a<0 or b<a: raise
+              summary=json.loads(raw[a:b+1])
+          assert summary.get("research_task_completed") is True
+          assert summary.get("frontier_capability_promoted") is False
+          patch=summary.get("patch_unified_diff")
+          if not isinstance(patch,str) or not patch.strip():
+              raise SystemExit("PATCH_MISSING")
+          pathlib.Path("TASK_C_FINAL_SUMMARY.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
+          pathlib.Path("TASK_C_PATCH.diff").write_text(patch.rstrip()+"\n")
+          print("PATCH_EXTRACTED")
+          PY
+          grep -q '^--- a/src/click/core.py' TASK_C_PATCH.diff
+          grep -q '^+++ b/src/click/core.py' TASK_C_PATCH.diff
+          ! grep -E '^--- a/|^\+\+\+ b/' TASK_C_PATCH.diff | grep -v -E '^(--- a/src/click/core.py|\+\+\+ b/src/click/core.py)$'
+          git -C /tmp/task_c_root/click_under_test apply --check "$GITHUB_WORKSPACE/TASK_C_PATCH.diff"
+          git -C /tmp/task_c_root/click_under_test apply "$GITHUB_WORKSPACE/TASK_C_PATCH.diff"
+          test "$(git -C /tmp/task_c_root/click_under_test diff --name-only)" = "src/click/core.py"
+          git -C /tmp/task_c_root/click_under_test diff > APPLIED_TASK_C_PATCH.diff
+
+      - name: Materialize withheld upstream oracle after planner termination
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/hidden_oracle
+          curl -LsSf \
+            'https://raw.githubusercontent.com/pallets/click/00f257bb8e714064bea16425007543bbc0800445/tests/test_abort_interrupt.py' \
+            -o /tmp/hidden_oracle/test_abort_interrupt.py
+          test "$(git hash-object /tmp/hidden_oracle/test_abort_interrupt.py)" = "83a8fed3f4dd1727226ececfa70c3ec085afbb3b"
+          python -m pip install -q pytest
+          set +e
+          PYTHONPATH=/tmp/task_c_root/click_under_test/src \
+            python -m pytest -q /tmp/hidden_oracle/test_abort_interrupt.py \
+            > HIDDEN_ORACLE_PYTEST.txt 2>&1
+          code=$?
+          set -e
+          printf '%s\n' "$code" > HIDDEN_ORACLE_EXIT_CODE.txt
+          cat HIDDEN_ORACLE_PYTEST.txt
+          exit 0
+
+      - name: Independently adjudicate exact real-task result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib
+          state=json.load(open("TASK_C_STATE.json"))
+          summary=json.load(open("TASK_C_FINAL_SUMMARY.json"))
+          records=[json.loads(x) for x in pathlib.Path("LOCAL_BRIDGE_LOG.jsonl").read_text().splitlines() if x.strip()]
+          planners=[x for x in records if x.get("kind")=="planner" and x.get("status")=="ok"]
+          nonplanner=[x for x in records if x.get("kind")!="planner"]
+          hidden_code=int(pathlib.Path("HIDDEN_ORACLE_EXIT_CODE.txt").read_text().strip())
+          patch=pathlib.Path("TASK_C_PATCH.diff").read_bytes()
+          result={
+            "schema":"PROJECT_BRAIN_CLICK_TASK_C_HIDDEN_ORACLE_RESULT_V1",
+            "task":"FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001",
+            "source_intent_pr":232,
+            "incremental_spend_usd":0,
+            "frontier_model_in_execution_path":False,
+            "runtime_status":state.get("status"),
+            "planner_call_count":len(planners),
+            "planner_models":sorted({x.get("planner_model") for x in planners}),
+            "external_network_attempt_count":len(nonplanner),
+            "patch_sha256":hashlib.sha256(patch).hexdigest(),
+            "hidden_oracle_exit_code":hidden_code,
+            "checks":{
+              "runtime_complete":state.get("status")=="COMPLETE",
+              "research_task_completed":summary.get("research_task_completed") is True,
+              "no_self_promotion":summary.get("frontier_capability_promoted") is False,
+              "local_planner_used":bool(planners),
+              "local_planner_identity_exact":bool(planners) and all(x.get("planner_model")=="Qwen3.5-9B-M-Q4_K_M-local" for x in planners),
+              "no_external_network_attempts":len(nonplanner)==0,
+              "patch_only_core_py":pathlib.Path("APPLIED_TASK_C_PATCH.diff").is_file(),
+              "withheld_upstream_behavioral_oracle_pass":hidden_code==0
+            }
+          }
+          hard=[k for k,v in result["checks"].items() if v is not True]
+          result["hard_failures"]=hard
+          result["verdict"]="PASS" if not hard else "FAIL"
+          if not hard:
+              result["classification"]="FRESH_HIDDEN_ORACLE_CROSS_DOMAIN_REAL_TASK_C_PASS__FRONTIER_CAPABILITY_RECOMPUTE_REQUIRED"
+          else:
+              result["classification"]="FRESH_TASK_C_FAILED__LOCALIZE_FIRST_CAUSAL_BLOCKER_BEFORE_ANY_REPLAY"
+          pathlib.Path("CLICK_TASK_C_HIDDEN_ORACLE_RESULT.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(result,sort_keys=True))
+          if hard: raise SystemExit(1)
+          print("CLICK_TASK_C_HIDDEN_ORACLE_PASS")
+          PY
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-click-task-c-qwen9b-hidden-oracle-evidence
+          if-no-files-found: warn
+          path: |
+            LOCAL_QWEN9B_CLICK_TASK_C_ROUTE_MANIFEST.json
+            LLAMA_CPP_COMMIT.txt
+            MODEL_BYTES.txt
+            MODEL_SHA256.txt
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
+            LOCAL_BRIDGE_STDOUT.txt
+            LOCAL_BRIDGE_STDERR.txt
+            LOCAL_BRIDGE_LOG.jsonl
+            TASK_C_RUNTIME_STDOUT.txt
+            TASK_C_RUNTIME_STDERR.txt
+            TASK_C_RUNTIME_EXIT_CODE.txt
+            TASK_C_STATE.json
+            TASK_C_FINAL_SUMMARY.json
+            TASK_C_PATCH.diff
+            APPLIED_TASK_C_PATCH.diff
+            HIDDEN_ORACLE_PYTEST.txt
+            HIDDEN_ORACLE_EXIT_CODE.txt
+            CLICK_TASK_C_HIDDEN_ORACLE_RESULT.json
