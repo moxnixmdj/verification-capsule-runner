@@ -1,0 +1,29 @@
+{
+  "schema": "PROJECT_BRAIN_LOCAL_NONFRONTIER_PLANNER_ROUTE_V1",
+  "route_id": "PUBLIC_ASTRA_LOCAL_QWEN3_5_4B_Q4KM_V1",
+  "execution_surface": "PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04",
+  "astra_runtime_git_blob": "dae3f042da75ec5289063bcf74f913f7f31bebbc",
+  "bound_registry_git_blob": "8419623ab7ec7768f5a24f673d9f373646e87776",
+  "planner_bridge": "ASTRA_EXISTING_EXTERNAL_TOOL_BRIDGE__NO_ASTRA_CODE_CHANGE",
+  "inference_runtime": {
+    "project": "ggml-org/llama.cpp",
+    "release": "v0.5.0",
+    "commit": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+    "license": "MIT"
+  },
+  "model": {
+    "base": "Qwen/Qwen3.5-4B",
+    "base_license": "apache-2.0",
+    "quantization_repo": "bartowski/Qwen_Qwen3.5-4B-GGUF",
+    "quantization_revision": "ba06320255db2dbec194dad738d066be90dabf29",
+    "filename": "Qwen_Qwen3.5-4B-Q4_K_M.gguf",
+    "size_bytes": 3013027808,
+    "sha256": "13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983",
+    "model_url": "https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/ba06320255db2dbec194dad738d066be90dabf29/Qwen_Qwen3.5-4B-Q4_K_M.gguf?download=true"
+  },
+  "external_hosted_planner_required": false,
+  "api_key_required": false,
+  "account_required": false,
+  "incremental_spend_usd": 0,
+  "claim_scope": "CANDIDATE_ROUTE_ONLY__REAL_TASK_AND_INDEPENDENT_VERIFICATION_DECIDE"
+}

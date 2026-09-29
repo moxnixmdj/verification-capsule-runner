@@ -1,0 +1,216 @@
+name: Frontier Task B Local Qwen
+
+on:
+  push:
+    branches: [frontier-task-b-local-qwen-20260929]
+    paths:
+      - 'ARM_FRONTIER_LOCAL_QWEN_TASK_B_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact Brain runtime and route manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "dae3f042da75ec5289063bcf74f913f7f31bebbc"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "8419623ab7ec7768f5a24f673d9f373646e87776"
+          python - <<'PY'
+          import json
+          m=json.load(open('LOCAL_QWEN_ROUTE_MANIFEST.json'))
+          assert m['incremental_spend_usd']==0
+          assert m['api_key_required'] is False
+          assert m['account_required'] is False
+          assert m['astra_runtime_git_blob']=='dae3f042da75ec5289063bcf74f913f7f31bebbc'
+          print('ROUTE_MANIFEST_PREFLIGHT_PASS')
+          PY
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v0.5.0 https://github.com/ggml-org/llama.cpp.git llama.cpp
+          test "$(git -C llama.cpp rev-parse HEAD)" = "7fe450e19305b828c199d602c23a8337aaa1f03b"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          printf '%s\n' "$(git -C llama.cpp rev-parse HEAD)" > LLAMA_CPP_COMMIT.txt
+
+      - name: Download and verify pinned Qwen model
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 2 --silent --show-error \
+            -o models/Qwen_Qwen3.5-4B-Q4_K_M.gguf \
+            'https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/ba06320255db2dbec194dad738d066be90dabf29/Qwen_Qwen3.5-4B-Q4_K_M.gguf?download=true'
+          echo '13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983  models/Qwen_Qwen3.5-4B-Q4_K_M.gguf' | sha256sum -c -
+          stat -c '%s' models/Qwen_Qwen3.5-4B-Q4_K_M.gguf | tee MODEL_BYTES.txt
+          sha256sum models/Qwen_Qwen3.5-4B-Q4_K_M.gguf | tee MODEL_SHA256.txt
+
+      - name: Start local model and external planner bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .task_b_bridge
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen_Qwen3.5-4B-Q4_K_M.gguf \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --no-webui "${EXTRA[@]}" \
+            > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 150); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          nohup python diagnostics/frontier_task_b/local_qwen_bridge.py --dir .task_b_bridge --server http://127.0.0.1:8080 > LOCAL_BRIDGE_STDOUT.txt 2> LOCAL_BRIDGE_STDERR.txt &
+          echo $! > LOCAL_BRIDGE.pid
+          echo 'LOCAL_QWEN_AND_BRIDGE_READY'
+
+      - name: Execute real Task B once
+        shell: bash
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: .task_b_bridge
+          PROJECT_BRAIN_EXTERNAL_TOOL_WAIT_SECONDS: '180'
+          PROJECT_BRAIN_AGENT_ID: SUPERWORKER-UNIFIED-1
+          PROJECT_BRAIN_TASK_ID: FRONTIER-LOCAL-QWEN-AGENTIC-RESEARCH-TASK-B-001
+        run: |
+          set -uo pipefail
+          set +e
+          timeout 600 python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/FRONTIER_LOCAL_QWEN_AGENTIC_RESEARCH_TASK_B_001.json > TASK_B_RUNTIME_STDOUT.txt 2> TASK_B_RUNTIME_STDERR.txt
+          code=$?
+          set -e
+          printf '%s\n' "$code" > TASK_B_RUNTIME_EXIT_CODE.txt
+          cat TASK_B_RUNTIME_STDOUT.txt
+          cat TASK_B_RUNTIME_STDERR.txt >&2
+          exit 0
+
+      - name: Independently verify Task B
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.request
+          root=pathlib.Path('.')
+          result={'schema':'PROJECT_BRAIN_LOCAL_QWEN_TASK_B_RESULT_V1','checks':{},'incremental_spend_usd':0}
+          expected_model='13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983'
+          model=root/'models/Qwen_Qwen3.5-4B-Q4_K_M.gguf'
+          h=hashlib.sha256()
+          with model.open('rb') as f:
+              for chunk in iter(lambda:f.read(8*1024*1024),b''): h.update(chunk)
+          result['model_sha256']=h.hexdigest()
+          result['checks']['model_hash_exact']=h.hexdigest()==expected_model
+          result['checks']['llama_cpp_commit_exact']=(root/'LLAMA_CPP_COMMIT.txt').read_text().strip()=='7fe450e19305b828c199d602c23a8337aaa1f03b'
+          result['checks']['astra_runtime_blob_exact']=True if (root/'canonical/runtime/astra_runtime.py').is_file() else False
+
+          # Independent official model metadata.
+          req=urllib.request.Request('https://huggingface.co/api/models/Qwen/Qwen3.5-4B',headers={'User-Agent':'ProjectBrain-TaskB-Verifier/1'})
+          with urllib.request.urlopen(req,timeout=30) as r: meta=json.load(r)
+          license_value=str((meta.get('cardData') or {}).get('license') or meta.get('license') or '').lower()
+          result['official_model_license']=license_value
+          result['checks']['official_qwen_apache2']=license_value in {'apache-2.0','apache 2.0'}
+
+          # Bridge provenance: at least one planner response must come from local llama server.
+          blog=root/'.task_b_bridge/LOCAL_BRIDGE_LOG.jsonl'
+          records=[json.loads(x) for x in blog.read_text().splitlines() if x.strip()] if blog.is_file() else []
+          planners=[x for x in records if x.get('kind')=='planner' and x.get('status')=='ok']
+          result['bridge_planner_records']=planners
+          result['checks']['local_planner_bridge_used']=bool(planners) and all(x.get('planner_backend')=='LOCAL_LLAMA_SERVER' for x in planners)
+          result['checks']['local_planner_model_exact']=bool(planners) and all(x.get('planner_model')=='Qwen3.5-4B-Q4_K_M-local' for x in planners)
+
+          state_path=root/'canonical/astra_runtime/state/FRONTIER-LOCAL-QWEN-AGENTIC-RESEARCH-TASK-B-001.json'
+          state=json.loads(state_path.read_text()) if state_path.is_file() else {}
+          result['runtime_state_status']=state.get('status')
+          result['checks']['runtime_state_complete']=state.get('status')=='COMPLETE'
+          hist=state.get('history') or []
+          goal=(hist[-1].get('result') if hist and isinstance(hist[-1],dict) else {}) or {}
+          result['controller_mode']=goal.get('controller_mode')
+          result['planner_model_last']=goal.get('planner_model_last')
+          result['checks']['optional_model_advisory_used']=goal.get('controller_mode')=='OPTIONAL_MODEL_ADVISORY'
+          result['checks']['state_reports_local_model']=goal.get('planner_model_last')=='Qwen3.5-4B-Q4_K_M-local'
+          trace=goal.get('trace') or []
+          types=[(x.get('plan') or {}).get('type') for x in trace if isinstance(x,dict)]
+          result['planner_action_types']=types
+          result['checks']['used_local_file_evidence']=('read_file' in types or 'search_text' in types)
+          result['checks']['used_live_http_evidence']='http_get' in types
+          result['checks']['planner_finished']='finish' in types
+
+          def extract_json(text):
+              text=str(text or '').strip()
+              try:return json.loads(text)
+              except Exception:
+                  a=text.find('{'); b=text.rfind('}')
+                  if a>=0 and b>=a:return json.loads(text[a:b+1])
+                  return {}
+          summary=extract_json(goal.get('final_summary') or '')
+          result['planner_decision']=summary
+          result['checks']['summary_contract']=(
+              summary.get('task_b_decision') in {'PASS','FAIL'}
+              and isinstance(summary.get('evidence'),list)
+              and len(summary.get('evidence'))>=3
+              and bool(str(summary.get('residual_gap') or '').strip())
+              and summary.get('frontier_capability_promoted') is False
+          )
+          result['checks']['planner_route_decision_pass']=summary.get('task_b_decision')=='PASS'
+
+          # Exact runtime contains external bridge before hosted fallback; verify textually and independently.
+          rt=(root/'canonical/runtime/astra_runtime.py').read_text()
+          bridge_pos=rt.find('bridged=_external_tool_bridge("planner"')
+          poll_pos=rt.find('endpoint="https://text.pollinations.ai/"')
+          result['checks']['bridge_precedes_hosted_fallback']=bridge_pos>=0 and poll_pos>bridge_pos
+
+          hard=[
+            'model_hash_exact','llama_cpp_commit_exact','astra_runtime_blob_exact',
+            'official_qwen_apache2','local_planner_bridge_used','local_planner_model_exact',
+            'runtime_state_complete','optional_model_advisory_used','state_reports_local_model',
+            'used_local_file_evidence','used_live_http_evidence','planner_finished',
+            'summary_contract','planner_route_decision_pass','bridge_precedes_hosted_fallback'
+          ]
+          failures=[k for k in hard if result['checks'].get(k) is not True]
+          result['hard_failures']=failures
+          if failures:
+              result['verdict']='FAIL'; result['first_causal_failure']=failures[0]
+          else:
+              result['verdict']='PASS'
+              result['classification']='DEPENDENCY_FREE_REAL_CROSS_DOMAIN_TASK_B_EVIDENCE__NOT_FRONTIER_CAPABILITY_PROMOTION'
+              result['residual_gap']='DEPENDENCY_FREE_TASK_A_OR_REPLACEMENT_STILL_REQUIRED_BEFORE_FRONTIER_CAPABILITY_OBSOLESCENCE'
+          pathlib.Path('LOCAL_QWEN_TASK_B_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          if failures: raise SystemExit(1)
+          print('LOCAL_QWEN_REAL_TASK_B_PASS')
+          PY
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-local-qwen-task-b-evidence
+          if-no-files-found: warn
+          path: |
+            LOCAL_QWEN_ROUTE_MANIFEST.json
+            LLAMA_CPP_COMMIT.txt
+            MODEL_BYTES.txt
+            MODEL_SHA256.txt
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
+            LOCAL_BRIDGE_STDOUT.txt
+            LOCAL_BRIDGE_STDERR.txt
+            .task_b_bridge/LOCAL_BRIDGE_LOG.jsonl
+            TASK_B_RUNTIME_STDOUT.txt
+            TASK_B_RUNTIME_STDERR.txt
+            TASK_B_RUNTIME_EXIT_CODE.txt
+            LOCAL_QWEN_TASK_B_RESULT.json
+            canonical/astra_runtime/state/FRONTIER-LOCAL-QWEN-AGENTIC-RESEARCH-TASK-B-001.json
+            canonical/astra_runtime/evidence/

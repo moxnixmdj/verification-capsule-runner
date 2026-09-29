@@ -1,0 +1,48 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-LOCAL-QWEN-AGENTIC-RESEARCH-TASK-B-001",
+  "purpose": "Real cross-domain AI-systems research Task B. Determine whether the pinned local-Qwen public-runner route is an admissible dependency-free zero-incremental-cost planner supplier for Brain. This is a real current project decision, not a synthetic model benchmark.",
+  "goal": {
+    "objective": "Independently adjudicate whether the route described in LOCAL_QWEN_ROUTE_MANIFEST.json is an admissible zero-incremental-cost non-frontier open-ended planning route for Project Brain, and identify the exact remaining gap after that decision.",
+    "instructions": [
+      "Do not assume PASS.",
+      "Inspect LOCAL_QWEN_ROUTE_MANIFEST.json.",
+      "Inspect canonical/runtime/astra_runtime.py enough to establish that the optional planner can be supplied through PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR before its hosted fallback.",
+      "Use at least one live authoritative public source relevant to model identity/license or llama.cpp execution support. Prefer the official Qwen Hugging Face model page and the llama.cpp GitHub release page.",
+      "Distinguish route admissibility from frontier-capability parity. A working local planner route is not itself proof of frontier equivalence.",
+      "Treat the local model as an untrusted proposal source; ASTRA's action allowlist and independent verifier remain authoritative.",
+      "If evidence is insufficient or contradictory, return FAIL.",
+      "Do not use ChatGPT, GPT-5.6, OpenAI hosted models, private Brain state, or any paid API as evidence."
+    ],
+    "authoritative_urls": [
+      "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "https://github.com/ggml-org/llama.cpp/releases/tag/v0.5.0"
+    ],
+    "success_evidence": [
+      "local manifest evidence",
+      "ASTRA external planner bridge evidence",
+      "at least one live authoritative source",
+      "clear separation between route viability and frontier capability promotion"
+    ],
+    "final_summary_contract": "Finish with compact valid JSON only, with keys task_b_decision (PASS or FAIL), route, evidence (array with at least 3 concise observations), residual_gap, frontier_capability_promoted (must be false). No markdown."
+  },
+  "steps": [
+    {
+      "id": "research-and-adjudicate-local-qwen-route",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": true,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "public_sources_only": true,
+    "private_brain_state_present": false,
+    "frontier_hosted_model_allowed": false,
+    "one_execution_before_reconciliation": true
+  }
+}
