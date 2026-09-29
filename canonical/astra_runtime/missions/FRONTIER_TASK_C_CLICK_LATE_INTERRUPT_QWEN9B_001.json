@@ -1,0 +1,44 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-QWEN9B-001",
+  "purpose": "Fresh real hidden-oracle software-systems Task C. Diagnose and repair a real historical Click race using only the pre-fix source surface. The maintainer fix and behavioral oracle are absent from the planner environment and materialized only after planner termination.",
+  "goal": {
+    "objective": "Diagnose the intermittent late-KeyboardInterrupt race described below in the local pre-fix Click source and produce the smallest general source patch that preserves Click standalone and non-standalone termination semantics.",
+    "bug_report": "When a user presses Ctrl-C during click.prompt(), an unhandled exception can intermittently escape while Click is already handling the abort. It was observed on an Ubuntu ARM CI runner and appears timing-sensitive. Normal x64/macOS/Windows runs often succeed. Find the causal race in the pre-fix source, not a platform-specific workaround.",
+    "local_repository": "click_under_test",
+    "exact_repository_commit": "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714",
+    "exact_core_blob_sha": "de129ec2ceaa1e77cab696cad672b0a3ca84413d",
+    "bounded_primary_source": "canonical/astra_runtime/task_inputs/CLICK_COMMAND_MAIN_PRE_FIX.py",
+    "instructions": [
+      "Start by reading canonical/astra_runtime/task_inputs/CLICK_COMMAND_MAIN_PRE_FIX.py. It is generated verbatim from the exact pre-fix src/click/core.py Command.main section and fits the controller read bound.",
+      "Use the local pre-fix tree only as supporting evidence. No maintainer patch, issue discussion, post-fix commit, release note, or hidden test exists in the planner-visible environment.",
+      "Do not use http_get or external bug search. Derive the causal boundary from the supplied pre-fix source.",
+      "Do not special-case ARM, isatty, prompt(), or only the Aborted! print unless the code evidence proves that is the general causal boundary.",
+      "Preserve standalone_mode=False semantics rather than swallowing interrupts globally.",
+      "The fix must be general across abort reporting, ClickException reporting, and the final standalone exit path if the same race can occur there.",
+      "Return a minimal unified diff whose paths are exactly click_under_test/src/click/core.py. Modify production code only.",
+      "Do not claim success from reasoning. A separate post-run verifier will apply the patch to the same pre-fix source and then materialize withheld behavioral tests."
+    ],
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), causal_timeline (array of strings), patch_unified_diff (string containing a git-apply-compatible unified diff whose only target is click_under_test/src/click/core.py), preserved_semantics (array of strings), why_localized_fixes_are_insufficient (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown fences."
+  },
+  "steps": [
+    {
+      "id": "diagnose-and-repair-click-late-interrupt-race",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": true,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "hidden_oracle_not_available_to_planner": true,
+    "external_bug_search_forbidden": true,
+    "planner_network_actions_enabled": false,
+    "one_execution_before_reconciliation": true,
+    "frontier_hosted_model_allowed": false
+  }
+}
