@@ -18,20 +18,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "7e5dfd32f377dbe2732049918009f8be4fb4d50a"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "315e45425b0bed73f48c3c13f97c07ad230aadc8"
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
           test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "03fe93ded7207f584266e420192eef2a3a8a166c"
           test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding_gate.py)" = "46a1378086c4143f31d1a8767f5fdd159f1d1a1e"
+          test "$(git hash-object canonical/tests/test_plain_goal_grounding_runtime_precedence.py)" = "11c3c19de21a90076c391b52708331d11ec824cf"
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
       - name: Compile exact candidate
         run: |
           python -m py_compile             canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py             canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py             canonical/tests/test_plain_goal_bound_grounding.py \
-            canonical/tests/test_plain_goal_bound_grounding_gate.py
+            canonical/tests/test_plain_goal_bound_grounding_gate.py \
+            canonical/tests/test_plain_goal_grounding_runtime_precedence.py
       - name: Run grounding regressions
         run: |
           python canonical/tests/test_plain_goal_bound_grounding.py
           python canonical/tests/test_plain_goal_bound_grounding_gate.py
+          python canonical/tests/test_plain_goal_grounding_runtime_precedence.py
       - name: Record terminal evidence
         if: always()
         shell: bash
@@ -44,6 +47,7 @@ jobs:
             "canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py",
             "canonical/tests/test_plain_goal_bound_grounding.py",
             "canonical/tests/test_plain_goal_bound_grounding_gate.py",
+            "canonical/tests/test_plain_goal_grounding_runtime_precedence.py",
             "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
           ]
           out={
