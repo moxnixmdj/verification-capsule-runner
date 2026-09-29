@@ -1,0 +1,273 @@
+name: Frontier Click Task C Local Qwen9B Hidden Oracle
+
+on:
+  push:
+    branches: [frontier-task-c-click-qwen9b-hidden-oracle-20260930]
+    paths:
+      - 'ARM_FRONTIER_CLICK_TASK_C_QWEN9B_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_c:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify frozen one-shot route
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "8419623ab7ec7768f5a24f673d9f373646e87776"
+          python - <<'PY'
+          import json
+          m=json.load(open('LOCAL_QWEN9B_CLICK_TASK_C_ROUTE_MANIFEST.json'))
+          assert m['source_brain_pr']==235
+          assert m['source_brain_base_commit']=='e4f115ef6f3b86cb51b0206edf1f53f16c46f6e8'
+          assert m['incremental_spend_usd']==0
+          assert m['api_key_required'] is False
+          assert m['account_required'] is False
+          assert m['frontier_model_in_execution_path'] is False
+          assert m['task_surface']['hidden_oracle_absent_during_planner_execution'] is True
+          assert m['task_surface']['external_bug_search_disabled'] is True
+          assert m['model']['sha256']=='f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c'
+          assert m['inference_runtime']['tested_commit']=='bec4772f6a2527d371557b5d2032641e5ff7619c'
+          print('CLICK_TASK_C_ROUTE_PREFLIGHT_PASS')
+          PY
+
+      - name: Materialize exact pre-fix Click source and bounded primary excerpt
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/pallets/click.git click_under_test
+          git -C click_under_test fetch --depth 1 origin cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714
+          git -C click_under_test checkout --detach FETCH_HEAD
+          test "$(git -C click_under_test rev-parse HEAD)" = "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714"
+          test "$(git -C click_under_test hash-object src/click/core.py)" = "de129ec2ceaa1e77cab696cad672b0a3ca84413d"
+          python - <<'PY'
+          import pathlib,hashlib,json
+          src=pathlib.Path('click_under_test/src/click/core.py')
+          text=src.read_text(encoding='utf-8')
+          start=text.index('    def main(')
+          end=text.index('    def _main_shell_completion',start)
+          section=text[start:end]
+          assert len(section)==5656, len(section)
+          out=pathlib.Path('canonical/astra_runtime/task_inputs/CLICK_COMMAND_MAIN_PRE_FIX.py')
+          out.parent.mkdir(parents=True,exist_ok=True)
+          out.write_text(section,encoding='utf-8')
+          record={
+            'pre_fix_commit':'cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714',
+            'core_blob':'de129ec2ceaa1e77cab696cad672b0a3ca84413d',
+            'section_chars':len(section),
+            'section_sha256':hashlib.sha256(section.encode()).hexdigest(),
+            'hidden_oracle_present':False
+          }
+          pathlib.Path('CLICK_TASK_C_SOURCE_RECORD.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(record,sort_keys=True))
+          PY
+          rm -rf click_under_test/.git
+          test ! -e click_under_test/.git
+          test ! -e tests/test_abort_interrupt.py
+          echo 'PRE_FIX_TASK_SURFACE_READY_NO_ORACLE'
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          git -C llama.cpp rev-parse HEAD > LLAMA_CPP_COMMIT.txt
+
+      - name: Download and verify pinned Qwen3.5-9B
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+          stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf | tee MODEL_BYTES.txt
+          sha256sum models/Qwen3.5-9B-M-TS-Q4_K_M.gguf | tee MODEL_SHA256.txt
+
+      - name: Start local Qwen9B and network-disabled planner bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .task_c_bridge
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --no-webui "${EXTRA[@]}" \
+            > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          nohup python diagnostics/frontier_task_c/local_qwen9b_click_bridge.py \
+            --dir .task_c_bridge --server http://127.0.0.1:8080 \
+            > LOCAL_BRIDGE_STDOUT.txt 2> LOCAL_BRIDGE_STDERR.txt &
+          echo $! > LOCAL_BRIDGE.pid
+          echo 'LOCAL_QWEN9B_CLICK_TASK_C_BRIDGE_READY'
+
+      - name: Execute fresh Click Task C exactly once
+        shell: bash
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: .task_c_bridge
+          PROJECT_BRAIN_EXTERNAL_TOOL_WAIT_SECONDS: '360'
+          PROJECT_BRAIN_AGENT_ID: SUPERWORKER-UNIFIED-1
+          PROJECT_BRAIN_TASK_ID: FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-QWEN9B-001
+        run: |
+          set -uo pipefail
+          set +e
+          timeout 1800 python canonical/runtime/astra_runtime.py \
+            canonical/astra_runtime/missions/FRONTIER_TASK_C_CLICK_LATE_INTERRUPT_QWEN9B_001.json \
+            > TASK_C_RUNTIME_STDOUT.txt 2> TASK_C_RUNTIME_STDERR.txt
+          code=$?
+          set -e
+          printf '%s\n' "$code" > TASK_C_RUNTIME_EXIT_CODE.txt
+          cat TASK_C_RUNTIME_STDOUT.txt
+          cat TASK_C_RUNTIME_STDERR.txt >&2
+          exit 0
+
+      - name: Validate candidate without oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib,re,subprocess,sys,hashlib
+          root=pathlib.Path('.')
+          state_path=root/'canonical/astra_runtime/state/FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-QWEN9B-001.json'
+          state=json.loads(state_path.read_text()) if state_path.is_file() else {}
+          result={
+            'schema':'PROJECT_BRAIN_CLICK_TASK_C_PREORACLE_RESULT_V1',
+            'runtime_state_status':state.get('status'),
+            'checks':{},
+            'incremental_spend_usd':0,
+            'oracle_materialized':False
+          }
+          result['checks']['runtime_complete']=state.get('status')=='COMPLETE'
+          hist=state.get('history') or []
+          goal=(hist[-1].get('result') if hist and isinstance(hist[-1],dict) else {}) or {}
+          result['controller_mode']=goal.get('controller_mode')
+          result['planner_model_last']=goal.get('planner_model_last')
+          result['checks']['planner_model_exact']=goal.get('planner_model_last')=='Qwen3.5-9B-M-Q4_K_M-local'
+          result['checks']['bounded_controller_used']=goal.get('controller_mode') in {'OPTIONAL_MODEL_ADVISORY','OPTIONAL_MODEL_ADVISORY_FORCED_FINALIZATION'}
+
+          blog=root/'.task_c_bridge/LOCAL_BRIDGE_LOG.jsonl'
+          records=[json.loads(x) for x in blog.read_text().splitlines() if x.strip()] if blog.is_file() else []
+          planners=[x for x in records if x.get('kind')=='planner' and x.get('status')=='ok']
+          result['planner_call_count']=len(planners)
+          result['checks']['local_planner_bridge_used']=bool(planners) and all(x.get('planner_backend')=='LOCAL_LLAMA_SERVER_QWEN9B_CLICK_TASK_C' for x in planners)
+          result['checks']['local_planner_model_exact']=bool(planners) and all(x.get('planner_model')=='Qwen3.5-9B-M-Q4_K_M-local' for x in planners)
+
+          def extract_json(text):
+              text=str(text or '').strip()
+              try:return json.loads(text)
+              except Exception:
+                  a=text.find('{'); b=text.rfind('}')
+                  if a>=0 and b>=a:
+                      try:return json.loads(text[a:b+1])
+                      except Exception:return {}
+                  return {}
+
+          summary=extract_json(goal.get('final_summary') or '')
+          result['summary']=summary
+          result['checks']['summary_contract']=(
+            summary.get('research_task_completed') is True
+            and isinstance(summary.get('diagnosis'),str) and bool(summary.get('diagnosis').strip())
+            and isinstance(summary.get('causal_timeline'),list) and len(summary.get('causal_timeline'))>=2
+            and isinstance(summary.get('patch_unified_diff'),str) and bool(summary.get('patch_unified_diff').strip())
+            and isinstance(summary.get('preserved_semantics'),list) and len(summary.get('preserved_semantics'))>=1
+            and summary.get('frontier_capability_promoted') is False
+          )
+
+          patch=str(summary.get('patch_unified_diff') or '')
+          (root/'CANDIDATE_PATCH.diff').write_text(patch,encoding='utf-8')
+          paths=[]
+          for line in patch.splitlines():
+              if line.startswith('--- ') or line.startswith('+++ '):
+                  p=line[4:].split('\t',1)[0].strip()
+                  if p.startswith(('a/','b/')): p=p[2:]
+                  paths.append(p)
+          result['patch_paths']=paths
+          result['checks']['patch_only_core']=bool(paths) and all(p=='click_under_test/src/click/core.py' for p in paths)
+          result['checks']['no_delete_or_newfile']=('/dev/null' not in paths)
+
+          apply_ok=False
+          compile_ok=False
+          apply_error=''
+          if result['checks']['summary_contract'] and result['checks']['patch_only_core'] and result['checks']['no_delete_or_newfile']:
+              chk=subprocess.run(['git','apply','--check','CANDIDATE_PATCH.diff'],text=True,capture_output=True)
+              result['git_apply_check_returncode']=chk.returncode
+              result['git_apply_check_stderr']=chk.stderr[-4000:]
+              if chk.returncode==0:
+                  app=subprocess.run(['git','apply','CANDIDATE_PATCH.diff'],text=True,capture_output=True)
+                  apply_ok=app.returncode==0
+                  apply_error=app.stderr[-4000:]
+                  if apply_ok:
+                      cp=subprocess.run([sys.executable,'-m','py_compile','click_under_test/src/click/core.py'],text=True,capture_output=True)
+                      compile_ok=cp.returncode==0
+                      result['py_compile_stderr']=cp.stderr[-4000:]
+          result['checks']['patch_applies_cleanly']=apply_ok
+          result['checks']['patched_core_compiles']=compile_ok
+          result['patch_sha256']=hashlib.sha256(patch.encode()).hexdigest()
+
+          hard=[
+            'runtime_complete','planner_model_exact','bounded_controller_used',
+            'local_planner_bridge_used','local_planner_model_exact',
+            'summary_contract','patch_only_core','no_delete_or_newfile',
+            'patch_applies_cleanly','patched_core_compiles'
+          ]
+          failures=[k for k in hard if result['checks'].get(k) is not True]
+          result['hard_failures']=failures
+          result['verdict']='PREORACLE_READY' if not failures else 'FAIL_BEFORE_ORACLE'
+          pathlib.Path('CLICK_TASK_C_PREORACLE_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          if failures:
+              raise SystemExit(1)
+          print('CLICK_TASK_C_PREORACLE_READY')
+          PY
+
+      - name: Upload exact pre-oracle evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-click-task-c-qwen9b-preoracle-evidence
+          if-no-files-found: warn
+          path: |
+            LOCAL_QWEN9B_CLICK_TASK_C_ROUTE_MANIFEST.json
+            CLICK_TASK_C_SOURCE_RECORD.json
+            canonical/astra_runtime/task_inputs/CLICK_COMMAND_MAIN_PRE_FIX.py
+            LLAMA_CPP_COMMIT.txt
+            MODEL_BYTES.txt
+            MODEL_SHA256.txt
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
+            LOCAL_BRIDGE_STDOUT.txt
+            LOCAL_BRIDGE_STDERR.txt
+            .task_c_bridge/LOCAL_BRIDGE_LOG.jsonl
+            TASK_C_RUNTIME_STDOUT.txt
+            TASK_C_RUNTIME_STDERR.txt
+            TASK_C_RUNTIME_EXIT_CODE.txt
+            CANDIDATE_PATCH.diff
+            CLICK_TASK_C_PREORACLE_RESULT.json
+            canonical/astra_runtime/state/FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-QWEN9B-001.json
+            canonical/astra_runtime/evidence/
