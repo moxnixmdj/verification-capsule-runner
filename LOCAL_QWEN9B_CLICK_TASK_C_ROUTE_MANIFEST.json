@@ -1,0 +1,31 @@
+{
+  "schema": "PROJECT_BRAIN_FRESH_TASK_C_ROUTE_MANIFEST_V1",
+  "task": "FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001",
+  "source_intent_pr": 232,
+  "incremental_spend_usd": 0,
+  "user_laptop_used": false,
+  "frontier_model_in_execution_path": false,
+  "public_runner_repository": "moxnixmdj/verification-capsule-runner",
+  "astra_runtime_git_blob": "1e8252415c60a553bad8a05fae2d98217d0f5833",
+  "mission_git_blob": "0d318cb50aa76414dc5e32b505e0087f70248961",
+  "click_pre_fix_commit": "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714",
+  "hidden_oracle": {
+    "upstream_fix_commit": "00f257bb8e714064bea16425007543bbc0800445",
+    "upstream_test_blob": "83a8fed3f4dd1727226ececfa70c3ec085afbb3b",
+    "visible_to_planner": false,
+    "materialize_after_planner_termination": true
+  },
+  "model": {
+    "base_model": "Qwen/Qwen3.5-9B",
+    "quantization_repo": "TheStageAI/Qwen3.5-9B-GGUF",
+    "quantization_file": "Qwen3.5-9B-M-TS-Q4_K_M.gguf",
+    "bytes": 5060174144,
+    "sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c"
+  },
+  "inference_runtime": {
+    "project": "ggml-org/llama.cpp",
+    "tested_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c"
+  },
+  "one_execution_only": true,
+  "same_task_replay_allowed": false
+}
