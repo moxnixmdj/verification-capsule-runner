@@ -1,0 +1,22 @@
+name: Plain Goal Bound Grounding V1
+on:
+  push:
+    branches: [frontier/plain-goal-grounding-v1-20260930]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run model-independent grounding regressions
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: "1"
+        run: |
+          set -euo pipefail
+          python -m unittest -v canonical.tests.test_plain_goal_bound_grounding canonical.tests.test_plain_goal_grounding_runtime_precedence

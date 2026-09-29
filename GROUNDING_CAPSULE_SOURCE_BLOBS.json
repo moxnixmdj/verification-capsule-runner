@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_PUBLIC_GROUNDING_CAPSULE_V1",
+  "source_repo": "moxnixmdj/brain",
+  "source_ref": "22293ba5b1f8fe864a05ead09631d2117a942338",
+  "files": {
+    "canonical/runtime/astra_runtime.py": {
+      "source_git_blob": "27e645112157e2dbe218d52dab24534df2d977d6"
+    },
+    "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json": {
+      "source_git_blob": "1b4a05c1b24070a7d2125713af11231214021a97"
+    },
+    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py": {
+      "source_git_blob": "00f5d0c1c742f444ad876103f251bb4476017dc1"
+    },
+    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py": {
+      "source_git_blob": "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
+    },
+    "canonical/tests/test_plain_goal_bound_grounding.py": {
+      "source_git_blob": "03fe93ded7207f584266e420192eef2a3a8a166c"
+    },
+    "canonical/tests/test_plain_goal_grounding_runtime_precedence.py": {
+      "source_git_blob": "11c3c19de21a90076c391b52708331d11ec824cf"
+    }
+  }
+}
