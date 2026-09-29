@@ -16,7 +16,7 @@
       "Return a minimal unified diff that applies to the local repository. Modify production code only; hidden tests are supplied independently after you finish.",
       "Do not claim success merely from reasoning. The patch will be applied to the pre-fix tree and tested independently."
     ],
-    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), causal_timeline (array of strings), patch_unified_diff (string containing a git-apply-compatible unified diff against click_under_test/src/click/core.py), preserved_semantics (array of strings), why_localized_fixes_are_insufficient (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown fences."
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), causal_timeline (array of strings), patch_unified_diff (string containing a git-apply-compatible unified diff against src/click/core.py), preserved_semantics (array of strings), why_localized_fixes_are_insufficient (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown fences."
   },
   "steps": [
     {
