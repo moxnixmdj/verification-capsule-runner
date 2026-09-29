@@ -1,0 +1,72 @@
+name: Nonfrontier Planner Pollinations Qualification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/nonfrontier-planner-pollinations.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Qualify explicit non-OpenAI planner routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, urllib.request, urllib.error, urllib.parse, hashlib, pathlib, time
+
+          out={"schema":"PROJECT_BRAIN_NONFRONTIER_PLANNER_QUALIFICATION_V1","incremental_spend_usd":0,"tests":[]}
+
+          def req(name,url,data=None,headers=None):
+              t=time.monotonic()
+              request=urllib.request.Request(url,data=data,headers=headers or {},method="POST" if data is not None else "GET")
+              try:
+                  with urllib.request.urlopen(request,timeout=25) as r:
+                      raw=r.read(100000)
+                      rec={"name":name,"status":r.status,"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest(),"excerpt":raw[:1000].decode("utf-8","replace"),"duration_s":round(time.monotonic()-t,3)}
+              except urllib.error.HTTPError as e:
+                  raw=e.read(100000)
+                  rec={"name":name,"status":e.code,"bytes":len(raw),"sha256":hashlib.sha256(raw).hexdigest(),"excerpt":raw[:1000].decode("utf-8","replace"),"duration_s":round(time.monotonic()-t,3)}
+              except Exception as e:
+                  rec={"name":name,"status":None,"error":type(e).__name__+":"+str(e),"duration_s":round(time.monotonic()-t,3)}
+              out["tests"].append(rec)
+              return rec
+
+          cat=req("current_catalog","https://gen.pollinations.ai/v1/models")
+          try:
+              payload=json.loads(cat.get("excerpt","{}")) if cat.get("bytes",0)<=1000 else None
+          except Exception:
+              payload=None
+
+          legacy_prompt=urllib.parse.quote("Return exactly the token OK and nothing else.")
+          req("legacy_get_mistral","https://text.pollinations.ai/"+legacy_prompt+"?model=mistral&json=true")
+          body=json.dumps({"messages":[{"role":"user","content":"Return exactly OK"}],"model":"mistral","jsonMode":True}).encode()
+          req("legacy_post_mistral","https://text.pollinations.ai/",body,{"Content-Type":"application/json","User-Agent":"ProjectBrain-Qualification/1"})
+          body2=json.dumps({"model":"mistralai/mistral-small-4","messages":[{"role":"user","content":"Return exactly OK"}]}).encode()
+          req("current_post_mistral_noauth","https://gen.pollinations.ai/v1/chat/completions",body2,{"Content-Type":"application/json","User-Agent":"ProjectBrain-Qualification/1"})
+
+          # Full public catalog extraction, identity/pricing only.
+          try:
+              with urllib.request.urlopen("https://gen.pollinations.ai/v1/models",timeout=25) as r:
+                  data=json.load(r)
+              models=data.get("data",data if isinstance(data,list) else [])
+              wanted=[m for m in models if m.get("id")=="mistralai/mistral-small-4" or "mistral" in (m.get("aliases") or [])]
+              out["catalog_matches"]=wanted
+          except Exception as e:
+              out["catalog_error"]=type(e).__name__+":"+str(e)
+
+          pathlib.Path("NONFRONTIER_PLANNER_QUALIFICATION.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+      - name: Upload qualification
+        uses: actions/upload-artifact@v4
+        with:
+          name: nonfrontier-planner-qualification
+          path: NONFRONTIER_PLANNER_QUALIFICATION.json
