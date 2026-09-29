@@ -1,0 +1,330 @@
+name: Frontier Task C Hidden-Oracle Click Qwen9B
+
+on:
+  push:
+    branches: [frontier-task-c-click-race-20260929]
+    paths:
+      - 'ARM_FRONTIER_TASK_C_CLICK_QWEN9B_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_c:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify frozen Brain runtime capsule
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          test -f canonical/astra_runtime/missions/FRONTIER_TASK_C_CLICK_LATE_INTERRUPT_001.json
+          test -f diagnostics/frontier_task_c/local_qwen9b_hidden_bridge.py
+          echo TASK_C_RUNTIME_CAPSULE_PASS
+
+      - name: Materialize isolated pre-fix Click task tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init click_under_test
+          git -C click_under_test remote add origin https://github.com/pallets/click.git
+          git -C click_under_test fetch --depth 1 origin cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714
+          git -C click_under_test checkout --detach FETCH_HEAD
+          test "$(git -C click_under_test rev-parse HEAD)" = "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714"
+          cp -a canonical click_under_test/
+          test "$(git hash-object click_under_test/canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          git -C click_under_test rev-parse HEAD | tee CLICK_PREFX_COMMIT.txt
+          echo TASK_C_CLICK_ISOLATION_PASS
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          git -C llama.cpp rev-parse HEAD > LLAMA_CPP_COMMIT.txt
+
+      - name: Download and verify pinned Qwen3.5-9B
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+          sha256sum models/Qwen3.5-9B-M-TS-Q4_K_M.gguf | tee MODEL_SHA256.txt
+          stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf | tee MODEL_BYTES.txt
+
+      - name: Start local model and oracle-isolated planner bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p click_under_test/.task_c_bridge
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --host 127.0.0.1 --port 8080 -c 12288 -t 4 --parallel 1 --no-webui "${EXTRA[@]}" \
+            > LLAMA_SERVER_TASK_C.log 2>&1 &
+          echo $! > LLAMA_SERVER_TASK_C.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH_TASK_C.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          nohup python diagnostics/frontier_task_c/local_qwen9b_hidden_bridge.py \
+            --dir click_under_test/.task_c_bridge --server http://127.0.0.1:8080 \
+            > TASK_C_BRIDGE_STDOUT.txt 2> TASK_C_BRIDGE_STDERR.txt &
+          echo $! > TASK_C_BRIDGE.pid
+          echo TASK_C_LOCAL_QWEN9B_READY
+
+      - name: Execute fresh hidden-oracle Task C exactly once
+        shell: bash
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: .task_c_bridge
+          PROJECT_BRAIN_EXTERNAL_TOOL_WAIT_SECONDS: '240'
+          PROJECT_BRAIN_AGENT_ID: SUPERWORKER-UNIFIED-1
+          PROJECT_BRAIN_TASK_ID: FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001
+        run: |
+          set -uo pipefail
+          cd click_under_test
+          set +e
+          timeout 1200 python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/FRONTIER_TASK_C_CLICK_LATE_INTERRUPT_001.json > ../TASK_C_RUNTIME_STDOUT.txt 2> ../TASK_C_RUNTIME_STDERR.txt
+          code=$?
+          set -e
+          printf '%s\n' "$code" > ../TASK_C_RUNTIME_EXIT_CODE.txt
+          cat ../TASK_C_RUNTIME_STDOUT.txt
+          cat ../TASK_C_RUNTIME_STDERR.txt >&2
+          exit 0
+
+      - name: Apply generated patch and run withheld behavioral oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,re,sys
+          root=pathlib.Path('.')
+          state_path=root/'click_under_test/canonical/astra_runtime/state/FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001.json'
+          result={"schema":"PROJECT_BRAIN_TASK_C_CLICK_HIDDEN_ORACLE_RESULT_V1","checks":{},"incremental_spend_usd":0}
+          result["checks"]["state_exists"]=state_path.is_file()
+          state=json.loads(state_path.read_text()) if state_path.is_file() else {}
+          result["runtime_state_status"]=state.get("status")
+          result["checks"]["runtime_complete"]=state.get("status")=="COMPLETE"
+          hist=state.get("history") or []
+          goal=(hist[-1].get("result") if hist and isinstance(hist[-1],dict) else {}) or {}
+          result["controller_mode"]=goal.get("controller_mode")
+          result["planner_model_last"]=goal.get("planner_model_last")
+          result["checks"]["local_qwen9b_identity"]=goal.get("planner_model_last")=="Qwen3.5-9B-M-Q4_K_M-local"
+          result["checks"]["forced_or_normal_terminal_answer"]=bool(goal.get("final_summary"))
+
+          def extract_json(text):
+              text=str(text or "").strip()
+              try:return json.loads(text)
+              except Exception:
+                  a=text.find("{"); b=text.rfind("}")
+                  if a>=0 and b>=a:
+                      try:return json.loads(text[a:b+1])
+                      except Exception:return {}
+                  return {}
+          summary=extract_json(goal.get("final_summary") or "")
+          result["planner_summary"]=summary
+          result["checks"]["summary_contract"]=(
+              summary.get("research_task_completed") is True
+              and isinstance(summary.get("diagnosis"),str) and bool(summary.get("diagnosis").strip())
+              and isinstance(summary.get("causal_timeline"),list) and len(summary.get("causal_timeline"))>=2
+              and isinstance(summary.get("patch_unified_diff"),str) and bool(summary.get("patch_unified_diff").strip())
+              and summary.get("frontier_capability_promoted") is False
+          )
+          patch=str(summary.get("patch_unified_diff") or "")
+          pathlib.Path("GENERATED_TASK_C.patch").write_text(patch)
+          touched=set()
+          for line in patch.splitlines():
+              if line.startswith("+++ ") or line.startswith("--- "):
+                  p=line[4:].strip().split("\t",1)[0]
+                  if p!="/dev/null":
+                      p=re.sub(r"^[ab]/","",p)
+                      touched.add(p)
+          result["patch_touched_paths"]=sorted(touched)
+          result["checks"]["production_scope_only"]=bool(touched) and touched <= {"src/click/core.py"}
+
+          rt=root/'click_under_test/canonical/runtime/astra_runtime.py'
+          result["checks"]["astra_runtime_blob_exact"]=__import__("subprocess").check_output(["git","hash-object",str(rt)],text=True).strip()=="1e8252415c60a553bad8a05fae2d98217d0f5833"
+          model=root/'models/Qwen3.5-9B-M-TS-Q4_K_M.gguf'
+          h=hashlib.sha256()
+          if model.is_file():
+              with model.open("rb") as fh:
+                  for chunk in iter(lambda:fh.read(8*1024*1024),b""): h.update(chunk)
+          result["model_sha256"]=h.hexdigest()
+          result["checks"]["model_hash_exact"]=h.hexdigest()=="f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c"
+          result["checks"]["model_bytes_exact"]=model.is_file() and model.stat().st_size==5060174144
+          result["checks"]["llama_cpp_commit_exact"]=(root/'LLAMA_CPP_COMMIT.txt').read_text().strip()=="bec4772f6a2527d371557b5d2032641e5ff7619c"
+          bridge=root/'click_under_test/.task_c_bridge/TASK_C_LOCAL_BRIDGE_LOG.jsonl'
+          records=[json.loads(x) for x in bridge.read_text().splitlines() if x.strip()] if bridge.is_file() else []
+          planner_records=[x for x in records if x.get("kind")=="planner" and x.get("status")=="ok"]
+          result["planner_call_count"]=len(planner_records)
+          result["checks"]["only_local_planner_backend"]=bool(planner_records) and all(x.get("planner_backend")=="LOCAL_LLAMA_SERVER" and x.get("planner_model")=="Qwen3.5-9B-M-Q4_K_M-local" for x in planner_records)
+          result["checks"]["no_external_web_bridge_success"]=not any(x.get("kind") in {"http_get","urlopen"} and x.get("status")=="ok" for x in records)
+          pathlib.Path("TASK_C_PREVERIFY.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          hard_pre=["runtime_complete","local_qwen9b_identity","summary_contract","production_scope_only","astra_runtime_blob_exact","model_hash_exact","model_bytes_exact","llama_cpp_commit_exact","only_local_planner_backend","no_external_web_bridge_success"]
+          failures=[k for k in hard_pre if result["checks"].get(k) is not True]
+          if failures:
+              print(json.dumps({"preverify_failures":failures,"result":result},sort_keys=True))
+              raise SystemExit(2)
+          print("TASK_C_PREVERIFY_PASS")
+          PY
+
+          git -C click_under_test diff --quiet
+          git -C click_under_test apply --check ../GENERATED_TASK_C.patch
+          git -C click_under_test apply ../GENERATED_TASK_C.patch
+
+          cat > HIDDEN_CLICK_RACE_ORACLE.py <<'PY'
+          import sys
+          from unittest import mock
+
+          sys.path.insert(0, "click_under_test/src")
+          import click
+
+          class RecordingStderr:
+              def __init__(self, interrupt_at=None):
+                  self.text=""
+                  self.interrupt_at=interrupt_at
+                  self.isatty_calls=0
+              def isatty(self):
+                  self.isatty_calls += 1
+                  if self.isatty_calls == self.interrupt_at:
+                      raise KeyboardInterrupt
+                  return False
+              def write(self,value):
+                  self.text += value
+                  return len(value)
+              def flush(self):
+                  pass
+
+          def exit_code(cli, stderr):
+              with mock.patch.object(sys,"stderr",stderr):
+                  try:
+                      cli.main([], "cli")
+                  except SystemExit as e:
+                      return e.code
+                  except KeyboardInterrupt as e:
+                      raise AssertionError("KeyboardInterrupt escaped Command.main") from e
+              raise AssertionError("Command.main returned without SystemExit")
+
+          def interrupting_command():
+              @click.command()
+              def cli():
+                  raise KeyboardInterrupt
+              return cli
+
+          def prompting_command():
+              @click.command()
+              @click.option("--name", prompt="Name")
+              def cli(name):
+                  click.echo(name)
+              return cli
+
+          # 1. Original prompt-abort behavior remains and late Ctrl-C during
+          #    the abort report cannot replace intended exit code 1.
+          def interrupt_prompt(text):
+              raise KeyboardInterrupt
+          with mock.patch("click.termui.visible_prompt_func", interrupt_prompt):
+              assert exit_code(prompting_command(), RecordingStderr(interrupt_at=1)) == 1
+
+          # 2. A body interrupt has two report windows: blank-line report and
+          #    final Aborted! report. Either late interrupt must preserve code 1.
+          assert exit_code(interrupting_command(), RecordingStderr(interrupt_at=1)) == 1
+          assert exit_code(interrupting_command(), RecordingStderr(interrupt_at=2)) == 1
+
+          # 3. A late Ctrl-C while a ClickException reports must preserve that
+          #    exception's intended exit code, not leak a traceback.
+          class InterruptedReport(click.ClickException):
+              exit_code=3
+              def show(self,file=None):
+                  raise KeyboardInterrupt
+          @click.command()
+          def error_cli():
+              raise InterruptedReport("boom")
+          assert exit_code(error_cli, RecordingStderr()) == 3
+
+          # 4. A late Ctrl-C while standalone success exits must preserve 0.
+          @click.command()
+          def success_cli():
+              click.echo("done")
+          real_exit=sys.exit
+          calls=[]
+          def interrupted_exit(code=None):
+              calls.append(code)
+              if len(calls)==1:
+                  raise KeyboardInterrupt
+              real_exit(code)
+          with mock.patch.object(sys,"exit",interrupted_exit):
+              assert exit_code(success_cli, RecordingStderr()) == 0
+          assert calls == [0,0]
+
+          # 5. Non-standalone behavior must still expose the first interrupt as
+          #    Abort with KeyboardInterrupt cause, rather than swallowing it.
+          cli=interrupting_command()
+          try:
+              cli.main([], "cli", standalone_mode=False)
+          except click.Abort as e:
+              assert isinstance(e.__cause__, KeyboardInterrupt)
+          else:
+              raise AssertionError("standalone_mode=False did not propagate Abort")
+
+          print("TASK_C_HIDDEN_BEHAVIOR_ORACLE_PASS")
+          PY
+
+          python HIDDEN_CLICK_RACE_ORACLE.py | tee TASK_C_HIDDEN_ORACLE_STDOUT.txt
+
+          python - <<'PY'
+          import json,pathlib
+          result=json.loads(pathlib.Path("TASK_C_PREVERIFY.json").read_text())
+          result["checks"]["generated_patch_applied"]=True
+          result["checks"]["hidden_behavior_oracle_pass"]=True
+          result["verdict"]="PASS"
+          result["classification"]="FRESH_REAL_HIDDEN_ORACLE_SOFTWARE_TASK_C_PASS"
+          result["frontier_capability_promoted"]=False
+          pathlib.Path("TASK_C_CLICK_HIDDEN_ORACLE_RESULT.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(result,sort_keys=True))
+          print("FRONTIER_TASK_C_CLICK_HIDDEN_ORACLE_PASS")
+          PY
+
+      - name: Upload exact Task C evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-task-c-click-hidden-oracle-evidence
+          if-no-files-found: warn
+          path: |
+            CLICK_PREFX_COMMIT.txt
+            LLAMA_CPP_COMMIT.txt
+            MODEL_SHA256.txt
+            MODEL_BYTES.txt
+            LLAMA_HEALTH_TASK_C.json
+            LLAMA_SERVER_TASK_C.log
+            TASK_C_BRIDGE_STDOUT.txt
+            TASK_C_BRIDGE_STDERR.txt
+            click_under_test/.task_c_bridge/TASK_C_LOCAL_BRIDGE_LOG.jsonl
+            TASK_C_RUNTIME_STDOUT.txt
+            TASK_C_RUNTIME_STDERR.txt
+            TASK_C_RUNTIME_EXIT_CODE.txt
+            GENERATED_TASK_C.patch
+            TASK_C_PREVERIFY.json
+            TASK_C_HIDDEN_ORACLE_STDOUT.txt
+            TASK_C_CLICK_HIDDEN_ORACLE_RESULT.json
+            click_under_test/canonical/astra_runtime/state/FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001.json
+            click_under_test/canonical/astra_runtime/evidence/
