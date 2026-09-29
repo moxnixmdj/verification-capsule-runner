@@ -1,0 +1,267 @@
+name: Frontier Task C BugsInPy Local Qwen9B Hidden Oracle
+
+on:
+  push:
+    branches: [frontier-task-c-bugsinpy-youtubedl1-qwen9b-20260929]
+    paths:
+      - 'ARM_FRONTIER_BUGSINPY_YOUTUBEDL1_TASK_C_001'
+
+permissions:
+  contents: read
+
+jobs:
+  task_c:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact repaired runtime and task assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          python -m py_compile canonical/runtime/astra_runtime.py
+          test -s task_c_assets/FRONTIER_QWEN9B_BUGSINPY_YOUTUBEDL1_TASK_C_001.json
+          test -s task_c_assets/local_qwen9b_hidden_oracle_bridge.py
+          echo 'EXACT_RUNTIME_AND_TASK_ASSETS_PASS'
+
+      - name: Prepare isolated agent root and real buggy checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p task_c_root/canonical/astra_runtime/missions task_c_root/workspace
+          cp -a canonical/runtime task_c_root/canonical/
+          cp task_c_assets/FRONTIER_QWEN9B_BUGSINPY_YOUTUBEDL1_TASK_C_001.json              task_c_root/canonical/astra_runtime/missions/FRONTIER_QWEN9B_BUGSINPY_YOUTUBEDL1_TASK_C_001.json
+          git init task_c_root/workspace/youtube-dl
+          git -C task_c_root/workspace/youtube-dl remote add origin https://github.com/ytdl-org/youtube-dl.git
+          git -C task_c_root/workspace/youtube-dl fetch --depth 1 origin 99036a1298089068dcf80c0985bfcc3f8c24f281
+          git -C task_c_root/workspace/youtube-dl checkout --detach FETCH_HEAD
+          test "$(git -C task_c_root/workspace/youtube-dl rev-parse HEAD)" = "99036a1298089068dcf80c0985bfcc3f8c24f281"
+          python - <<'PY'
+          import pathlib
+          root=pathlib.Path('task_c_root').resolve()
+          assert not (root/'.github').exists()
+          assert not any(root.rglob('bug_patch.txt'))
+          assert not any(root.rglob('ARM_FRONTIER_BUGSINPY_YOUTUBEDL1_TASK_C_001'))
+          print('AGENT_ROOT_ISOLATION_PASS')
+          PY
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          git -C llama.cpp rev-parse HEAD > LLAMA_CPP_COMMIT.txt
+
+      - name: Download and verify pinned Qwen3.5-9B
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+          sha256sum models/Qwen3.5-9B-M-TS-Q4_K_M.gguf > MODEL_SHA256.txt
+
+      - name: Start exact local model and isolated bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p task_c_root/.task_c_bridge
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --host 127.0.0.1 --port 8080 -c 12288 -t 4 --parallel 1 --no-webui "${EXTRA[@]}"             > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          nohup python task_c_assets/local_qwen9b_hidden_oracle_bridge.py             --dir task_c_root/.task_c_bridge --server http://127.0.0.1:8080             > LOCAL_BRIDGE_STDOUT.txt 2> LOCAL_BRIDGE_STDERR.txt &
+          echo $! > LOCAL_BRIDGE.pid
+          echo 'LOCAL_QWEN9B_AND_ISOLATED_BRIDGE_READY'
+
+      - name: Execute fresh real bug task exactly once
+        shell: bash
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: .task_c_bridge
+          PROJECT_BRAIN_EXTERNAL_TOOL_WAIT_SECONDS: '300'
+          PROJECT_BRAIN_AGENT_ID: SUPERWORKER-UNIFIED-1
+          PROJECT_BRAIN_TASK_ID: FRONTIER-QWEN9B-BUGSINPY-YOUTUBEDL1-TASK-C-001
+        run: |
+          set -uo pipefail
+          set +e
+          cd task_c_root
+          timeout 1200 python canonical/runtime/astra_runtime.py             canonical/astra_runtime/missions/FRONTIER_QWEN9B_BUGSINPY_YOUTUBEDL1_TASK_C_001.json             > ../TASK_C_RUNTIME_STDOUT.txt 2> ../TASK_C_RUNTIME_STDERR.txt
+          code=$?
+          cd ..
+          set -e
+          printf '%s\n' "$code" > TASK_C_RUNTIME_EXIT_CODE.txt
+          cat TASK_C_RUNTIME_STDOUT.txt
+          cat TASK_C_RUNTIME_STDERR.txt >&2
+          test "$code" = 0
+
+      - name: Extract and apply model patch without exposing oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('task_c_root/canonical/astra_runtime/state/FRONTIER-QWEN9B-BUGSINPY-YOUTUBEDL1-TASK-C-001.json')
+          state=json.loads(p.read_text())
+          assert state.get('status')=='COMPLETE', state.get('status')
+          hist=state.get('history') or []
+          assert hist
+          result=hist[-1].get('result') or {}
+          assert result.get('planner_model_last')=='Qwen3.5-9B-M-Q4_K_M-local'
+          raw=result.get('final_summary') or result.get('stdout') or ''
+          def parse(x):
+              if isinstance(x,dict): return x
+              s=str(x).strip()
+              try: return json.loads(s)
+              except Exception:
+                  a=s.find('{'); b=s.rfind('}')
+                  if a>=0 and b>=a: return json.loads(s[a:b+1])
+                  raise
+          obj=parse(raw)
+          assert obj.get('research_task_completed') is True
+          assert obj.get('frontier_capability_promoted') is False
+          patch=obj.get('patch')
+          assert isinstance(patch,str) and 'diff --git ' in patch and len(patch)<12000
+          changed=obj.get('changed_files')
+          assert isinstance(changed,list) and changed
+          pathlib.Path('MODEL_FINAL.json').write_text(json.dumps(obj,indent=2,sort_keys=True)+'\n')
+          pathlib.Path('MODEL_PATCH.diff').write_text(patch if patch.endswith('\n') else patch+'\n')
+          print('MODEL_PATCH_EXTRACTED')
+          PY
+          cd task_c_root/workspace/youtube-dl
+          git apply --check ../../../MODEL_PATCH.diff
+          git apply ../../../MODEL_PATCH.diff
+          changed="$(git diff --name-only)"
+          test "$changed" = "youtube_dl/utils.py"
+          git diff --check
+          git diff > ../../../APPLIED_MODEL_PATCH.diff
+          cd ../../..
+          echo 'MODEL_PATCH_SCOPE_AND_APPLY_PASS'
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.7'
+
+      - name: Fetch withheld fixed-revision test only after model termination
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error             'https://raw.githubusercontent.com/ytdl-org/youtube-dl/1cc47c667419e0eadc0a6989256ab7b276852adf/test/test_utils.py'             -o task_c_root/workspace/youtube-dl/test/test_utils.py
+          test -s task_c_root/workspace/youtube-dl/test/test_utils.py
+          echo 'WITHHELD_UPSTREAM_TEST_FETCHED_POST_MODEL'
+
+      - name: Run withheld behavioral oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd task_c_root/workspace/youtube-dl
+          python -m unittest -q test.test_utils.TestUtil.test_match_str | tee ../../../WITHHELD_UPSTREAM_TEST.txt
+          python - <<'PY' | tee ../../../WITHHELD_EXTRA_TEST.txt
+          from youtube_dl.utils import match_str
+          cases=[
+            ('flag',{'flag':True},True),
+            ('flag',{'flag':False},False),
+            ('flag',{'flag':None},False),
+            ('flag',{},False),
+            ('!flag',{'flag':True},False),
+            ('!flag',{'flag':False},True),
+            ('!flag',{'flag':None},True),
+            ('!flag',{},True),
+            ('x',{'x':0},True),
+            ('!x',{'x':0},False),
+            ('x',{'x':''},True),
+            ('!x',{'x':''},False),
+          ]
+          for filt,dct,expected in cases:
+              actual=bool(match_str(filt,dct))
+              assert actual is expected,(filt,dct,actual,expected)
+          print('WITHHELD_BOOLEAN_ORACLE_PASS',len(cases))
+          PY
+          cd ../../..
+          echo 'FRESH_REAL_BUG_TASK_C_PASS'
+
+      - name: Emit terminal evidence manifest
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          root=pathlib.Path('.')
+          def sha(path):
+              p=root/path
+              if not p.is_file(): return None
+              return hashlib.sha256(p.read_bytes()).hexdigest()
+          state_path=root/'task_c_root/canonical/astra_runtime/state/FRONTIER-QWEN9B-BUGSINPY-YOUTUBEDL1-TASK-C-001.json'
+          state=json.loads(state_path.read_text()) if state_path.is_file() else {}
+          evidence={
+            'schema':'PROJECT_BRAIN_FRESH_BUGSINPY_TASK_C_RESULT_V1',
+            'task':'BugsInPy youtube-dl bug 1',
+            'buggy_commit':'99036a1298089068dcf80c0985bfcc3f8c24f281',
+            'fixed_commit_oracle':'1cc47c667419e0eadc0a6989256ab7b276852adf',
+            'runtime_blob':'1e8252415c60a553bad8a05fae2d98217d0f5833',
+            'model_sha256':'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c',
+            'llama_cpp_commit':'bec4772f6a2527d371557b5d2032641e5ff7619c',
+            'runtime_state_status':state.get('status'),
+            'model_final_sha256':sha('MODEL_FINAL.json'),
+            'model_patch_sha256':sha('MODEL_PATCH.diff'),
+            'applied_patch_sha256':sha('APPLIED_MODEL_PATCH.diff'),
+            'withheld_upstream_test_sha256':sha('WITHHELD_UPSTREAM_TEST.txt'),
+            'withheld_extra_test_sha256':sha('WITHHELD_EXTRA_TEST.txt'),
+            'incremental_spend_usd':0,
+            'same_task_replay':False,
+          }
+          passed=(
+            state.get('status')=='COMPLETE'
+            and (root/'WITHHELD_UPSTREAM_TEST.txt').is_file()
+            and (root/'WITHHELD_EXTRA_TEST.txt').is_file()
+          )
+          evidence['verdict']='PASS' if passed else 'FAIL'
+          evidence['classification']='FRESH_REAL_SOFTWARE_BUG_HIDDEN_ORACLE_PASS' if passed else 'FRESH_REAL_SOFTWARE_BUG_TASK_FAILED'
+          pathlib.Path('TASK_C_RESULT.json').write_text(json.dumps(evidence,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(evidence,sort_keys=True))
+          if passed: print('FRESH_REAL_BUG_TASK_C_PASS')
+          PY
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontier-bugsinpy-youtubedl1-task-c-evidence
+          if-no-files-found: warn
+          path: |
+            MODEL_SHA256.txt
+            LLAMA_CPP_COMMIT.txt
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
+            LOCAL_BRIDGE_STDOUT.txt
+            LOCAL_BRIDGE_STDERR.txt
+            task_c_root/.task_c_bridge/LOCAL_BRIDGE_LOG.jsonl
+            TASK_C_RUNTIME_STDOUT.txt
+            TASK_C_RUNTIME_STDERR.txt
+            TASK_C_RUNTIME_EXIT_CODE.txt
+            MODEL_FINAL.json
+            MODEL_PATCH.diff
+            APPLIED_MODEL_PATCH.diff
+            WITHHELD_UPSTREAM_TEST.txt
+            WITHHELD_EXTRA_TEST.txt
+            TASK_C_RESULT.json
+            task_c_root/canonical/astra_runtime/state/FRONTIER-QWEN9B-BUGSINPY-YOUTUBEDL1-TASK-C-001.json
+            task_c_root/canonical/astra_runtime/evidence/
