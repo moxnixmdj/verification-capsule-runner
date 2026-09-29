@@ -19,4 +19,7 @@ jobs:
           ASTRA_DISABLE_MODEL_PLANNER: "1"
         run: |
           set -euo pipefail
-          python -m unittest -v canonical.tests.test_plain_goal_bound_grounding canonical.tests.test_plain_goal_grounding_runtime_precedence
+          python -m unittest -v \
+            canonical.tests.test_plain_goal_bound_grounding \
+            canonical.tests.test_plain_goal_bound_grounding_gate \
+            canonical.tests.test_plain_goal_grounding_runtime_precedence
