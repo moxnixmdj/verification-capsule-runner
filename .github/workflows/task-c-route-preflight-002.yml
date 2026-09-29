@@ -1,0 +1,75 @@
+name: Task C Live Planner Route Preflight 002
+
+on:
+  push:
+    branches: [route-preflight-task-c-20260929]
+    paths:
+      - 'ARM_TASK_C_ROUTE_PREFLIGHT_002'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Probe surviving anonymous planner routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import concurrent.futures, json, time, urllib.request, urllib.error, pathlib, datetime
+          routes = {
+            "murakumo-mishima": {
+              "url":"https://api.murakumo.cloud/v1/chat/completions",
+              "headers":{"content-type":"application/json"},
+              "body":{"model":"mishima","messages":[{"role":"user","content":"Reply with exactly: MURAKUMO_OK"}],"max_tokens":32,"temperature":0}
+            },
+            "persorai-glm52": {
+              "url":"https://persorai.com/v1/chat/completions",
+              "headers":{"content-type":"application/json","authorization":"Bearer project-brain-preflight"},
+              "body":{"model":"@cf/zai-org/glm-5.2","messages":[{"role":"user","content":"Reply with exactly: PERSORAI_OK"}],"max_tokens":32,"temperature":0}
+            },
+            "llm7-deepseek-v4-flash": {
+              "url":"https://api.llm7.io/v1/chat/completions",
+              "headers":{"content-type":"application/json"},
+              "body":{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Reply with exactly: LLM7_OK"}],"max_tokens":32,"temperature":0}
+            }
+          }
+          def probe(name,spec):
+              t=time.monotonic(); out={"route":name,"status":"FAILED"}
+              try:
+                  req=urllib.request.Request(spec["url"],data=json.dumps(spec["body"]).encode(),headers=spec["headers"],method="POST")
+                  with urllib.request.urlopen(req,timeout=120) as r:
+                      raw=r.read(200000).decode("utf-8","replace"); out["http_status"]=int(r.status)
+                  data=json.loads(raw); msg=((data.get("choices") or [{}])[0].get("message") or {})
+                  content=str(msg.get("content") or "").strip()
+                  out["response_model"]=data.get("model"); out["content_preview"]=content[:300]
+                  if out["http_status"]==200 and content:
+                      out["status"]="READY"
+                  else: out["error"]="NO_USABLE_ASSISTANT_OUTPUT"
+              except urllib.error.HTTPError as e:
+                  out["http_status"]=int(e.code); out["error"]="HTTPError:"+str(e.code)+":"+e.read(3000).decode("utf-8","replace")
+              except Exception as e: out["error"]=type(e).__name__+":"+str(e)
+              out["wall_s"]=round(time.monotonic()-t,3); return out
+          with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+              results=list(ex.map(lambda kv: probe(*kv), routes.items()))
+          ready=sorted([r for r in results if r["status"]=="READY"],key=lambda r:r["wall_s"])
+          report={"schema":"PROJECT_BRAIN_TASK_C_ROUTE_PREFLIGHT_V2","observed_at_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"carrier":"PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04","incremental_spend_usd":0,"results":sorted(results,key=lambda r:r["route"]),"selected_route":ready[0]["route"] if ready else None,"ready_count":len(ready),"selection_rule":"FASTEST_LIVE_HTTP_200_WITH_NONEMPTY_ASSISTANT_OUTPUT"}
+          pathlib.Path("TASK_C_ROUTE_PREFLIGHT_002.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(report,sort_keys=True))
+          if not ready: raise SystemExit(2)
+          print("TASK_C_ROUTE_PREFLIGHT_002_PASS selected="+ready[0]["route"])
+          PY
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: task-c-route-preflight-002
+          path: TASK_C_ROUTE_PREFLIGHT_002.json
+          if-no-files-found: error
