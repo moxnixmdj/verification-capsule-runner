@@ -7,7 +7,7 @@
   "frontier_model_in_execution_path": false,
   "public_runner_repository": "moxnixmdj/verification-capsule-runner",
   "astra_runtime_git_blob": "1e8252415c60a553bad8a05fae2d98217d0f5833",
-  "mission_git_blob": "0d318cb50aa76414dc5e32b505e0087f70248961",
+  "mission_git_blob": "9a5e104f12714e5e912a187011b5cd057ddde570",
   "click_pre_fix_commit": "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714",
   "hidden_oracle": {
     "upstream_fix_commit": "00f257bb8e714064bea16425007543bbc0800445",
