@@ -1,0 +1,99 @@
+name: Verify Exact PR255 Grounded Composition
+
+on:
+  push:
+    branches:
+      - verify/exact-pr255-grounded-composition-20260930
+    paths:
+      - '.github/workflows/verify-exact-pr255-grounded-composition.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact PR255 blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "fad69b9cea170a090428c471aaf7107bdbae377b"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "77749a5a191ef79d2f552f0983b5d2ed604a4440"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "a1db73b07b264d2b6aa650765661b688b57bb3d1"
+          test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "b77805b699740e9e9cea6058086fa80642b42d50"
+          test "$(git hash-object canonical/tests/test_grounded_composition_runtime_scope.py)" = "8ecaba6c44374ec4250ca6a4b7ef196fa2b3067a"
+          echo EXACT_PR255_BLOBS_PASS
+
+      - name: Compile exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile             canonical/runtime/astra_runtime.py             canonical/runtime/capability_planner.py             canonical/runtime/goal_compiler.py             canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py             canonical/runtime/bound_capabilities/grounded_executable_composition.py             canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py             canonical/tests/test_grounded_executable_composition.py             canonical/tests/test_grounded_composition_runtime_scope.py
+
+      - name: Run adversarial composition regressions
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: '1'
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_grounded_executable_composition.py
+          python canonical/tests/test_grounded_composition_runtime_scope.py
+
+      - name: Record exact-head receipt
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,pathlib,subprocess
+          paths=[
+            "canonical/runtime/astra_runtime.py",
+            "canonical/runtime/capability_planner.py",
+            "canonical/runtime/goal_compiler.py",
+            "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition.py",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py",
+            "canonical/tests/test_grounded_executable_composition.py",
+            "canonical/tests/test_grounded_composition_runtime_scope.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_EXACT_PR255_GROUNDED_COMPOSITION_VERIFICATION_V1",
+            "brain_pr":255,
+            "brain_head":"1d958cc3ea8f18c42a3bf190c6d4cfeda2556487",
+            "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
+            "tests":[
+              "test_grounded_executable_composition.py",
+              "test_grounded_composition_runtime_scope.py"
+            ],
+            "properties":[
+              "dependency ordering through native capability graph",
+              "effect-equivalent ambiguity preserved",
+              "non-equivalent ambiguity rejected",
+              "unresolved clauses rejected",
+              "tampered rendered action rejected",
+              "ungrounded registry inheritance fenced"
+            ],
+            "model_dependency_count":0,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("EXACT_PR255_GROUNDED_COMPOSITION_VERIFICATION.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload exact-head evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: exact-pr255-grounded-composition-verification
+          path: EXACT_PR255_GROUNDED_COMPOSITION_VERIFICATION.json
