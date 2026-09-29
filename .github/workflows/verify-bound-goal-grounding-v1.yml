@@ -1,0 +1,185 @@
+name: Verify Bound Goal Grounding V1
+
+on:
+  push:
+    branches: [verify/bound-goal-grounding-v1-20260930]
+    paths:
+      - 'ARM_VERIFY_BOUND_GOAL_GROUNDING_V1'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact candidate bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "319d2955afa3f89b492dc19d2f0fa77e89d64b7b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "7d472f2588b833c90c8f8cd3b17874c45ff6dec2"
+          test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "0a4ccc6171bd0eb91d0cddb207104bc27ecab6f6"
+          test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding_real_registry.py)" = "bfffc6ebf01ae716a2f80462724942a78f82dc5a"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "4031529959a1a5985cf9860442f18eb720f0c886"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
+          echo EXACT_CANDIDATE_BYTES_PASS
+
+      - name: Run deterministic grounding regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          for path in [
+            root/"canonical/tests/test_plain_goal_bound_grounding.py",
+            root/"canonical/tests/test_plain_goal_bound_grounding_real_registry.py",
+          ]:
+              spec=importlib.util.spec_from_file_location("t_"+path.stem,path)
+              mod=importlib.util.module_from_spec(spec)
+              sys.modules[spec.name]=mod
+              spec.loader.exec_module(mod)
+              for name in sorted(x for x in dir(mod) if x.startswith("test_")):
+                  getattr(mod,name)()
+                  print("PASS",path.name,name)
+          PY
+
+      - name: Execute two fresh real grounding tasks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          p=root/"canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py"
+          spec=importlib.util.spec_from_file_location("ground",p)
+          g=importlib.util.module_from_spec(spec); sys.modules[spec.name]=g; spec.loader.exec_module(g)
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())
+          registry=registry.get("capabilities",registry)
+          tasks={
+            "TASK_A_PYPI_PROVENANCE":(
+              "Audit a PyPI wheel release by fetching authoritative JSON metadata, checking the downloaded artifact SHA256 provenance, and preserving a verified report"
+            ),
+            "TASK_B_PYTHON_RELEASE":(
+              "Check the current stable Python release from the official rendered web page and independently verify the release version over HTTP"
+            ),
+          }
+          for name,goal in tasks.items():
+              out=g.ground(goal,registry)
+              pathlib.Path(name+".json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+              print(name,json.dumps({"status":out["status"],"ids":[x["capability_id"] for x in out["candidates"]]},sort_keys=True))
+          PY
+
+      - name: Independently verify fresh task grounding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          vp=root/"canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py"
+          spec=importlib.util.spec_from_file_location("verify",vp)
+          v=importlib.util.module_from_spec(spec); sys.modules[spec.name]=v; spec.loader.exec_module(v)
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())
+          registry=registry.get("capabilities",registry)
+          cases={
+            "TASK_A_PYPI_PROVENANCE.json":{
+              "required":{"http.json.fetch_from_state","pypi.provenance.audit_live_artifact"},
+              "forbidden":{"auto.pypi.bson-modern","auto.pypi.msgpack"},
+            },
+            "TASK_B_PYTHON_RELEASE.json":{
+              "required":{"web.browser.rendered.capture.chromedriver","web.release.verify.independent_http"},
+              "forbidden":{"auto.pypi.bson-modern","auto.pypi.msgpack"},
+            },
+          }
+          receipt={"schema":"PROJECT_BRAIN_BOUND_GROUNDING_REAL_TASK_VERIFICATION_V1","cases":{},"model_dependency_count":0}
+          for path,expect in cases.items():
+              out=json.loads(pathlib.Path(path).read_text())
+              ok,reason=v.verify(out,registry)
+              ids={x["capability_id"] for x in out.get("candidates",[])}
+              required_ok=expect["required"] <= ids
+              forbidden_ok=not (expect["forbidden"] & ids)
+              external_blocked=out.get("external_discovery_allowed") is False
+              passed=ok and required_ok and forbidden_ok and external_blocked
+              receipt["cases"][path]={
+                "producer_independent_verifier":ok,
+                "verifier_reason":reason,
+                "required_present":required_ok,
+                "forbidden_absent":forbidden_ok,
+                "external_discovery_blocked":external_blocked,
+                "candidate_ids":sorted(ids),
+                "pass":passed,
+              }
+              if not passed:
+                  raise SystemExit("GROUNDING_REAL_TASK_FAIL:"+path+":"+json.dumps(receipt["cases"][path],sort_keys=True))
+          receipt["all_pass"]=all(x["pass"] for x in receipt["cases"].values())
+          pathlib.Path("BOUND_GROUNDING_REAL_TASK_VERIFICATION.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - name: Prove ASTRA blocks external discovery when bound grounding exists
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: '1'
+        run: |
+          set -euo pipefail
+          cat > BOUND_GROUNDING_RUNTIME_MISSION.json <<'JSON'
+          {
+            "schema":"PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+            "mission_id":"BOUND-GROUNDING-RUNTIME-GATE-FRESH-PYPI-001",
+            "goal":"Audit a PyPI wheel release by fetching authoritative JSON metadata, checking the downloaded artifact SHA256 provenance, and preserving a verified report",
+            "steps":[{"id":"grounding-gate","adapter":"goal","goal_ref":"goal","allow_optional_model_planner":false,"verify":{"type":"returncode_zero"}}]
+          }
+          JSON
+          rm -f canonical/astra_runtime/evidence/BOUND-GROUNDING-RUNTIME-GATE-FRESH-PYPI-001__PLAIN_GOAL_CAPABILITY_DISCOVERY.json
+          set +e
+          python canonical/runtime/astra_runtime.py BOUND_GROUNDING_RUNTIME_MISSION.json > RUNTIME_GATE_STDOUT.txt 2> RUNTIME_GATE_STDERR.txt
+          code=$?
+          set -e
+          echo "$code" > RUNTIME_GATE_EXIT_CODE.txt
+          test "$code" != "0"
+          grep -q 'BOUND_CAPABILITY_GROUNDING_AVAILABLE' RUNTIME_GATE_STDERR.txt
+          test -f canonical/astra_runtime/evidence/BOUND-GROUNDING-RUNTIME-GATE-FRESH-PYPI-001__BOUND_CAPABILITY_GROUNDING.json
+          test ! -f canonical/astra_runtime/evidence/BOUND-GROUNDING-RUNTIME-GATE-FRESH-PYPI-001__PLAIN_GOAL_CAPABILITY_DISCOVERY.json
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("canonical/astra_runtime/evidence/BOUND-GROUNDING-RUNTIME-GATE-FRESH-PYPI-001__BOUND_CAPABILITY_GROUNDING.json")
+          x=json.loads(p.read_text())
+          ids={r["capability_id"] for r in x["candidates"]}
+          assert {"http.json.fetch_from_state","pypi.provenance.audit_live_artifact"} <= ids
+          assert x["external_discovery_allowed"] is False
+          receipt={
+            "schema":"PROJECT_BRAIN_BOUND_GROUNDING_RUNTIME_GATE_VERIFICATION_V1",
+            "runtime_exit_code":int(pathlib.Path("RUNTIME_GATE_EXIT_CODE.txt").read_text()),
+            "grounding_evidence_path":str(p),
+            "candidate_ids":sorted(ids),
+            "external_discovery_attempted":False,
+            "model_dependency_count":0,
+            "pass":True
+          }
+          pathlib.Path("BOUND_GROUNDING_RUNTIME_GATE_VERIFICATION.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - name: Upload exact verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bound-goal-grounding-v1-verification
+          if-no-files-found: warn
+          path: |
+            TASK_A_PYPI_PROVENANCE.json
+            TASK_B_PYTHON_RELEASE.json
+            BOUND_GROUNDING_REAL_TASK_VERIFICATION.json
+            BOUND_GROUNDING_RUNTIME_GATE_VERIFICATION.json
+            RUNTIME_GATE_STDOUT.txt
+            RUNTIME_GATE_STDERR.txt
+            RUNTIME_GATE_EXIT_CODE.txt
+            canonical/astra_runtime/evidence/BOUND-GROUNDING-RUNTIME-GATE-FRESH-PYPI-001__BOUND_CAPABILITY_GROUNDING.json
