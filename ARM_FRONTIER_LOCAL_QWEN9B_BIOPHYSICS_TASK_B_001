@@ -1,0 +1,10 @@
+{
+  "schema": "PROJECT_BRAIN_EXECUTION_ARM_V1",
+  "execution_id": "FRONTIER-LOCAL-QWEN9B-BIOPHYSICS-TASK-B-001",
+  "frozen_stage_commit": "a47a26d37fc261b2ced30eeb2cef03a21a20ebb0",
+  "source_brain_pr": 218,
+  "execution_count_authorized": 1,
+  "same_task_replay_allowed": false,
+  "incremental_spend_usd": 0,
+  "statement": "This file is the one-shot trigger for the fresh dependency-free Qwen3.5-9B biophysics Task B."
+}
