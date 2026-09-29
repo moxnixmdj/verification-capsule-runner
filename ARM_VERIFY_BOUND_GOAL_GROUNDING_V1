@@ -1,0 +1,17 @@
+{
+  "schema": "PROJECT_BRAIN_BOUND_GOAL_GROUNDING_VERIFICATION_ARM_V1",
+  "execution_count_authorized": 1,
+  "rerun_authorized": false,
+  "brain_branch": "capability/bound-goal-grounding-v1-20260930",
+  "brain_base": "f4abfcdd5e44f83e2c591b22817f39ec0e0800b3",
+  "exact_blobs": {
+    "grounding": "319d2955afa3f89b492dc19d2f0fa77e89d64b7b",
+    "verifier": "7d472f2588b833c90c8f8cd3b17874c45ff6dec2",
+    "synthetic_tests": "0a4ccc6171bd0eb91d0cddb207104bc27ecab6f6",
+    "real_registry_tests": "bfffc6ebf01ae716a2f80462724942a78f82dc5a",
+    "astra_runtime": "4031529959a1a5985cf9860442f18eb720f0c886",
+    "registry": "1b4a05c1b24070a7d2125713af11231214021a97"
+  },
+  "model_dependency_count": 0,
+  "spent_serialization_task_replay": false
+}
