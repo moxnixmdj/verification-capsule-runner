@@ -1,0 +1,144 @@
+name: Model-Independent Evidence Decision Real Two-Task
+
+on:
+  push:
+    branches: [problog-evidence-decision-real-two-task-20260930]
+    paths:
+      - 'ARM_PROBLOG_EVIDENCE_DECISION_TWO_TASK_001'
+
+permissions:
+  contents: read
+
+jobs:
+  evidence_decision:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact Brain candidate bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/model_independent_evidence_decision.py)" = "639870741e8415bf3bc1d8da87e79a917a48279c"
+          test "$(git hash-object canonical/capabilities/evidence_decision_tasks/SPACE_CARGO_FINAL_DESIGN_PROMOTION_A.json)" = "755d0c00f763c24fbdbaaf7c8e0334ab05171eb5"
+          test "$(git hash-object canonical/capabilities/evidence_decision_tasks/QWEN_COGNITIVE_CREDIT_ELIGIBILITY_B.json)" = "e0dc44a3033432a6fd57b428a593810d3afafc37"
+          test "$(git hash-object canonical/tests/fixtures/EVIDENCE_DECISION_BALANCED_CONFLICT.json)" = "e732c40a2bef0375786f9df53cdb5e6cc5154ece"
+          test "$(git hash-object canonical/tests/fixtures/EVIDENCE_DECISION_HARD_CONSTRAINT.json)" = "b7f1ed51b898b0a6a9756a9188717869a0289d2c"
+          echo 'EXACT_BRAIN_CANDIDATE_BYTES_PASS'
+
+      - name: Install hash-pinned PySDD backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://files.pythonhosted.org/packages/d9/10/d6115dcb5b23285cc0a991e391117f43b830de28b6f315fd2e18e21786e8/pysdd-1.0.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl'
+          curl -L --fail --retry 3 --retry-delay 2 --silent --show-error -o pysdd.whl "$URL"
+          echo 'aadde250ea13375f67feabdb7963c2cbcaa2727c80e6ba6544cb07e579a7a019  pysdd.whl' | sha256sum -c -
+          python -m pip install --no-deps ./pysdd.whl
+          python - <<'PY'
+          import pysdd
+          print('PYSDD_IMPORT_PASS', pysdd.__file__)
+          PY
+
+      - name: Fetch exact ProbLog source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init problog_src
+          git -C problog_src remote add origin https://github.com/ML-KULeuven/problog.git
+          git -C problog_src fetch --depth 1 origin a294fa24c3cfb4bae3a2acea3a128386113889f4
+          git -C problog_src checkout --detach FETCH_HEAD
+          test "$(git -C problog_src rev-parse HEAD)" = "a294fa24c3cfb4bae3a2acea3a128386113889f4"
+          test "$(git -C problog_src hash-object problog/__init__.py)" = "d101d51b67d819284f2843a5dbf6b094dc1243bd"
+          git -C problog_src rev-parse HEAD > PROBLOG_COMMIT.txt
+          echo 'EXACT_PROBLOG_SOURCE_PASS'
+
+      - name: Execute two real decisions and negative regressions
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/problog_src
+        run: |
+          set -euo pipefail
+          mkdir -p evidence_decision_results
+          python canonical/runtime/model_independent_evidence_decision.py \
+            canonical/capabilities/evidence_decision_tasks/SPACE_CARGO_FINAL_DESIGN_PROMOTION_A.json \
+            --output evidence_decision_results/SPACE_CARGO_A.json
+          python canonical/runtime/model_independent_evidence_decision.py \
+            canonical/capabilities/evidence_decision_tasks/QWEN_COGNITIVE_CREDIT_ELIGIBILITY_B.json \
+            --output evidence_decision_results/QWEN_CREDIT_B.json
+          python canonical/runtime/model_independent_evidence_decision.py \
+            canonical/tests/fixtures/EVIDENCE_DECISION_BALANCED_CONFLICT.json \
+            --output evidence_decision_results/SYNTH_BALANCED.json
+          python canonical/runtime/model_independent_evidence_decision.py \
+            canonical/tests/fixtures/EVIDENCE_DECISION_HARD_CONSTRAINT.json \
+            --output evidence_decision_results/SYNTH_HARD.json
+
+      - name: Verify route integrity without real-task oracle labels
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib,hashlib
+          root=pathlib.Path('evidence_decision_results')
+          names=['SPACE_CARGO_A','QWEN_CREDIT_B','SYNTH_BALANCED','SYNTH_HARD']
+          rows={n:json.loads((root/(n+'.json')).read_text()) for n in names}
+          for n,r in rows.items():
+              assert r['schema']=='PROJECT_BRAIN_TYPED_EVIDENCE_DECISION_RESULT_V1'
+              assert r['status']=='COMPLETE'
+              assert r['engine']=='ProbLog'
+              assert r['problog_commit']=='a294fa24c3cfb4bae3a2acea3a128386113889f4'
+              assert r['model_dependency_count']==0
+              assert r['terminal_decision'] in {'ACCEPT','REJECT','INSUFFICIENT_EVIDENCE'}
+              assert len(r['input_sha256'])==64
+              assert len(r['generated_program_sha256'])==64
+              assert len(r['trace_sha256'])==64
+              assert isinstance(r['trace']['evidence'],list) and r['trace']['evidence']
+          assert rows['SYNTH_BALANCED']['terminal_decision']=='INSUFFICIENT_EVIDENCE'
+          assert rows['SYNTH_BALANCED']['trace']['decision_reason']=='UNRESOLVED_SUPPORT_CONTRADICTION'
+          assert rows['SYNTH_HARD']['terminal_decision']=='REJECT'
+          assert rows['SYNTH_HARD']['trace']['decision_reason']=='HARD_CONSTRAINT_FAILURE'
+          real_summary={
+            'schema':'PROJECT_BRAIN_MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION_V1',
+            'adapter_git_blob':'639870741e8415bf3bc1d8da87e79a917a48279c',
+            'problog_commit':'a294fa24c3cfb4bae3a2acea3a128386113889f4',
+            'pysdd_wheel_sha256':'aadde250ea13375f67feabdb7963c2cbcaa2727c80e6ba6544cb07e579a7a019',
+            'model_dependency_count':0,
+            'real_task_outputs':{
+              'SPACE_CARGO_A':{
+                'terminal_decision':rows['SPACE_CARGO_A']['terminal_decision'],
+                'result_sha256':hashlib.sha256((root/'SPACE_CARGO_A.json').read_bytes()).hexdigest()
+              },
+              'QWEN_CREDIT_B':{
+                'terminal_decision':rows['QWEN_CREDIT_B']['terminal_decision'],
+                'result_sha256':hashlib.sha256((root/'QWEN_CREDIT_B.json').read_bytes()).hexdigest()
+              }
+            },
+            'negative_regressions_passed':True,
+            'real_task_oracle_checked':False
+          }
+          pathlib.Path('MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION.json').write_text(
+              json.dumps(real_summary,indent=2,sort_keys=True)+'\n'
+          )
+          print(json.dumps(real_summary,sort_keys=True))
+          print('MODEL_INDEPENDENT_EXECUTION_READY_FOR_EXTERNAL_ORACLE')
+          PY
+
+      - name: Upload exact execution evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: model-independent-evidence-decision-two-task
+          if-no-files-found: error
+          path: |
+            PROBLOG_COMMIT.txt
+            pysdd.whl
+            MODEL_INDEPENDENT_EVIDENCE_DECISION_EXECUTION.json
+            evidence_decision_results/
+            canonical/runtime/model_independent_evidence_decision.py
+            canonical/capabilities/evidence_decision_tasks/
+            canonical/tests/fixtures/EVIDENCE_DECISION_BALANCED_CONFLICT.json
+            canonical/tests/fixtures/EVIDENCE_DECISION_HARD_CONSTRAINT.json
