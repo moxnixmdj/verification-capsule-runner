@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_LOCAL_NONFRONTIER_PLANNER_ROUTE_V2",
+  "route_id": "PUBLIC_ASTRA_REPAIRED_LOCAL_QWEN3_5_9B_CLICK_TASK_C_V1",
+  "execution_surface": "PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04",
+  "source_brain_pr": 235,
+  "source_brain_base_commit": "e4f115ef6f3b86cb51b0206edf1f53f16c46f6e8",
+  "astra_runtime_git_blob": "1e8252415c60a553bad8a05fae2d98217d0f5833",
+  "bound_registry_git_blob": "8419623ab7ec7768f5a24f673d9f373646e87776",
+  "planner_bridge": "TASK_SCOPED_LOCAL_QWEN9B_PLANNER_ONLY__NETWORK_ACTIONS_DISABLED",
+  "inference_runtime": {
+    "project": "ggml-org/llama.cpp",
+    "tested_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c"
+  },
+  "model": {
+    "base": "Qwen/Qwen3.5-9B",
+    "quantization_repo": "TheStageAI/Qwen3.5-9B-GGUF",
+    "filename": "Qwen3.5-9B-M-TS-Q4_K_M.gguf",
+    "size_bytes": 5060174144,
+    "sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "license": "apache-2.0",
+    "model_url": "https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true"
+  },
+  "task_surface": {
+    "upstream_repository": "pallets/click",
+    "pre_fix_commit": "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714",
+    "pre_fix_core_blob": "de129ec2ceaa1e77cab696cad672b0a3ca84413d",
+    "hidden_oracle_absent_during_planner_execution": true,
+    "external_bug_search_disabled": true
+  },
+  "api_key_required": false,
+  "account_required": false,
+  "external_hosted_planner_required": false,
+  "frontier_model_in_execution_path": false,
+  "incremental_spend_usd": 0,
+  "execution_policy": "ONE_FRESH_TERMINAL_RUN_THEN_RECONCILE__NO_REPLAY_NO_TUNING"
+}
