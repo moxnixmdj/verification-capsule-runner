@@ -1,0 +1,120 @@
+name: Task C Live Planner Route Preflight
+
+on:
+  push:
+    branches: [route-preflight-task-c-20260929]
+    paths:
+      - 'ARM_TASK_C_ROUTE_PREFLIGHT_001'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Probe live anonymous planner routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import concurrent.futures, json, time, urllib.request, urllib.error, pathlib
+
+          routes = {
+            "murakumo-main": {
+              "url": "https://api.murakumo.cloud/v1/chat/completions",
+              "headers": {"content-type": "application/json"},
+              "body": {
+                "model": "murakumo-main",
+                "messages": [{"role":"user","content":"Return exactly this JSON object and nothing else: {\\\"ok\\\":\\\"murakumo\\\"}"}],
+                "max_tokens": 64,
+                "temperature": 0
+              }
+            },
+            "vireonix-auto": {
+              "url": "https://vireonix.ai/v1/chat/completions",
+              "headers": {"content-type": "application/json"},
+              "body": {
+                "model": "auto",
+                "messages": [{"role":"user","content":"Return exactly this JSON object and nothing else: {\\\"ok\\\":\\\"vireonix\\\"}"}],
+                "max_tokens": 64,
+                "temperature": 0
+              }
+            },
+            "llmfaucet-smart": {
+              "url": "https://api.llmfaucet.dev/v1/chat/completions",
+              "headers": {"content-type": "application/json", "authorization": "Bearer free"},
+              "body": {
+                "model": "auto:smart",
+                "messages": [{"role":"user","content":"Return exactly this JSON object and nothing else: {\\\"ok\\\":\\\"llmfaucet\\\"}"}],
+                "max_tokens": 64,
+                "temperature": 0
+              }
+            }
+          }
+
+          def probe(name, spec):
+              start=time.monotonic()
+              out={"route":name,"status":"FAILED","http_status":None,"wall_s":None}
+              try:
+                  req=urllib.request.Request(
+                      spec["url"],
+                      data=json.dumps(spec["body"]).encode(),
+                      headers=spec["headers"],
+                      method="POST",
+                  )
+                  with urllib.request.urlopen(req, timeout=120) as r:
+                      raw=r.read(200000).decode("utf-8","replace")
+                      out["http_status"]=int(r.status)
+                  data=json.loads(raw)
+                  msg=((data.get("choices") or [{}])[0].get("message") or {})
+                  content=msg.get("content")
+                  tool_calls=msg.get("tool_calls")
+                  out["response_model"]=data.get("model")
+                  out["content_preview"]=str(content or "")[:500]
+                  out["tool_calls_present"]=bool(tool_calls)
+                  if out["http_status"]==200 and (isinstance(content,str) and content.strip() or tool_calls):
+                      out["status"]="READY"
+                  else:
+                      out["error"]="NO_USABLE_ASSISTANT_OUTPUT"
+              except urllib.error.HTTPError as e:
+                  out["http_status"]=int(e.code)
+                  out["error"]="HTTPError:"+str(e.code)+":"+e.read(4000).decode("utf-8","replace")
+              except Exception as e:
+                  out["error"]=type(e).__name__+":"+str(e)
+              out["wall_s"]=round(time.monotonic()-start,3)
+              return out
+
+          with concurrent.futures.ThreadPoolExecutor(max_workers=len(routes)) as ex:
+              futs={ex.submit(probe,n,s):n for n,s in routes.items()}
+              results=[f.result() for f in concurrent.futures.as_completed(futs)]
+          ready=[r for r in results if r["status"]=="READY"]
+          ready.sort(key=lambda r:r["wall_s"])
+          report={
+            "schema":"PROJECT_BRAIN_TASK_C_ROUTE_PREFLIGHT_V1",
+            "observed_at_utc":__import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+            "carrier":"PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04",
+            "incremental_spend_usd":0,
+            "results":sorted(results,key=lambda r:r["route"]),
+            "selected_route":ready[0]["route"] if ready else None,
+            "ready_count":len(ready),
+            "selection_rule":"FASTEST_HTTP_200_WITH_USABLE_ASSISTANT_OUTPUT",
+          }
+          pathlib.Path("TASK_C_ROUTE_PREFLIGHT.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(report,sort_keys=True))
+          if not ready:
+              raise SystemExit(2)
+          print("TASK_C_ROUTE_PREFLIGHT_PASS selected="+ready[0]["route"])
+          PY
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: task-c-route-preflight
+          path: TASK_C_ROUTE_PREFLIGHT.json
+          if-no-files-found: error
