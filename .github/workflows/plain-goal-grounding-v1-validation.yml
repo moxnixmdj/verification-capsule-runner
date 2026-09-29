@@ -1,10 +1,8 @@
 name: Plain Goal Grounding V1 Public Validation
 
 on:
-  push:
-    branches: [verify/plain-goal-grounding-v1-20260930]
-    paths:
-      - 'ARM_PLAIN_GOAL_GROUNDING_V1'
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
