@@ -1,0 +1,49 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-QWEN9B-BUGSINPY-YOUTUBEDL1-TASK-C-001",
+  "purpose": "Fresh one-shot real historical software-defect task from BugsInPy. Inspect the buggy youtube-dl source snapshot, diagnose the unary filter semantic defect, and return the smallest source patch. The gold patch and fixed-revision tests are withheld from the agent.",
+  "goal": {
+    "objective": "Repair the unary filter behavior in the provided youtube-dl buggy checkout. Boolean-valued fields are currently treated only as present/missing, producing wrong truth semantics. Preserve the existing presence semantics for non-boolean values and produce the smallest correct patch.",
+    "workspace": "workspace/youtube-dl",
+    "observations_available": [
+      "The checkout is pinned to buggy commit 99036a1298089068dcf80c0985bfcc3f8c24f281.",
+      "The relevant implementation is in youtube_dl/utils.py.",
+      "The existing visible test suite may be inspected.",
+      "No network research is required or allowed for this one-shot task."
+    ],
+    "instructions": [
+      "Inspect the relevant implementation and visible tests before finishing.",
+      "Reason about both positive unary filters such as field and negative unary filters such as !field.",
+      "For boolean values, unary filtering must respect True versus False rather than mere non-None presence.",
+      "For non-boolean values, preserve the historical present-versus-missing behavior.",
+      "Return a minimal unified diff relative to the workspace repository root.",
+      "Do not modify tests, vendored files, metadata, or unrelated code.",
+      "Do not guess a gold patch or claim tests passed; you cannot see the withheld verification.",
+      "Do not use network access, external models, or hidden frontier services."
+    ],
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), patch (string containing a unified diff applicable with git apply from the workspace root), changed_files (array), why_minimal (string), expected_behavior (array with at least 4 concise cases covering boolean true, boolean false, missing/None, and non-boolean present), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown."
+  },
+  "steps": [
+    {
+      "id": "diagnose-and-patch-youtubedl-unary-filter",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": true,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "network_for_agent": false,
+    "private_brain_state_present": false,
+    "frontier_hosted_model_allowed": false,
+    "one_execution_before_reconciliation": true,
+    "exact_planner_model": "Qwen3.5-9B-M-Q4_K_M-local",
+    "exact_runtime_blob": "1e8252415c60a553bad8a05fae2d98217d0f5833",
+    "gold_patch_visible_to_agent": false,
+    "fixed_revision_tests_visible_to_agent": false
+  }
+}
