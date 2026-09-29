@@ -1,0 +1,70 @@
+name: Verify Grounded Composition Adapter V1
+on:
+  push:
+    branches:
+      - verify/grounded-composition-adapter-v1-20260930
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact PR254 candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "28a617197d1661380ad176c64bd94cac882df4f2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_capability_composition.py)" = "5305138c9f86f239e867dd338c351e2d314a9685"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/tests/test_grounded_capability_composition.py)" = "359313e4d85b37883f3d771136f556da533758e7"
+          test "$(git hash-object canonical/tests/test_grounded_capability_composition_runtime.py)" = "54a98a963e9e002a18475e03813fc149c0cb5791"
+          test "$(git hash-object canonical/tests/test_plain_goal_grounding_runtime_precedence.py)" = "fe5d318684b68373ba851919cdc4770071704b37"
+      - name: Compile exact candidate
+        run: |
+          python -m py_compile             canonical/runtime/astra_runtime.py             canonical/runtime/bound_capabilities/grounded_capability_composition.py             canonical/runtime/capability_proposal_generators.py             canonical/runtime/capability_planner.py             canonical/tests/test_grounded_capability_composition.py             canonical/tests/test_grounded_capability_composition_runtime.py             canonical/tests/test_plain_goal_grounding_runtime_precedence.py
+      - name: Run inherited planner and generator regressions
+        run: |
+          python canonical/tests/test_capability_planner.py
+          python canonical/tests/test_auto_multi_capability_proposal.py
+          python canonical/tests/test_auto_fanin_capability_proposal.py
+      - name: Run grounded composition regressions
+        run: |
+          python canonical/tests/test_grounded_capability_composition.py
+          python canonical/tests/test_grounded_capability_composition_runtime.py
+          python canonical/tests/test_plain_goal_grounding_runtime_precedence.py
+      - name: Record terminal evidence
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,pathlib,subprocess
+          paths=[
+            "canonical/runtime/astra_runtime.py",
+            "canonical/runtime/bound_capabilities/grounded_capability_composition.py",
+            "canonical/runtime/capability_proposal_generators.py",
+            "canonical/runtime/capability_planner.py",
+            "canonical/tests/test_grounded_capability_composition.py",
+            "canonical/tests/test_grounded_capability_composition_runtime.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_GROUNDED_COMPOSITION_EXACT_REGRESSION_V1",
+            "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
+            "model_dependency_count":0,
+            "new_planner_implemented":False,
+            "incremental_spend_usd":0,
+          }
+          pathlib.Path("GROUNDED_COMPOSITION_REGRESSION.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: grounded-composition-adapter-v1-regression
+          path: GROUNDED_COMPOSITION_REGRESSION.json
