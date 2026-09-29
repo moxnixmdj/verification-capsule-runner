@@ -1,0 +1,81 @@
+name: Murakumo Listed Qwen27B Preflight
+
+on:
+  push:
+    branches:
+      - probe/murakumo-qwen27b-listed-20260929
+    paths:
+      - ARM_MURAKUMO_LISTED_QWEN27B_PREFLIGHT_001
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe live-listed exact model
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,time,urllib.request,pathlib
+          base="https://api.murakumo.cloud"
+          model="qwen3.8-27b-uncensored"
+          out={"schema":"PROJECT_BRAIN_MURAKUMO_LISTED_QWEN27B_PREFLIGHT_V1","model_requested":model,"checks":{}}
+          req=urllib.request.Request(base+"/v1/models",headers={"User-Agent":"ProjectBrain-RoutePreflight/1"})
+          with urllib.request.urlopen(req,timeout=30) as r:
+              models=json.load(r)
+          ids=[str(x.get("id") or "") for x in (models.get("data") or []) if isinstance(x,dict)]
+          out["model_ids"]=ids
+          out["checks"]["exact_model_listed"]=model in ids
+          body=json.dumps({
+              "model":model,
+              "messages":[
+                  {"role":"system","content":"Return JSON only. Follow the user contract exactly."},
+                  {"role":"user","content":"Return exactly one JSON object with keys probe and arithmetic. probe must be MURAKUMO_LISTED_PIN_PASS. arithmetic must be 29*31 as an integer. No markdown."}
+              ],
+              "max_tokens":128,
+              "temperature":0
+          }).encode()
+          req=urllib.request.Request(
+              base+"/v1/chat/completions",data=body,
+              headers={"Content-Type":"application/json","User-Agent":"ProjectBrain-RoutePreflight/1"},
+              method="POST"
+          )
+          t=time.monotonic()
+          with urllib.request.urlopen(req,timeout=420) as r:
+              raw=r.read(2_000_000); status=r.status
+          out["chat_http_status"]=status
+          out["chat_wall_s"]=round(time.monotonic()-t,3)
+          resp=json.loads(raw.decode("utf-8"))
+          out["response_model"]=resp.get("model")
+          content=str((((resp.get("choices") or [{}])[0].get("message") or {}).get("content") or "")).strip()
+          out["content"]=content
+          try:
+              parsed=json.loads(content)
+          except Exception:
+              a=content.find("{"); b=content.rfind("}")
+              parsed=json.loads(content[a:b+1]) if a>=0 and b>=a else {}
+          out["parsed"]=parsed
+          out["checks"]["chat_http_200"]=status==200
+          out["checks"]["exact_model_returned"]=str(resp.get("model") or "")==model
+          out["checks"]["json_contract"]=parsed.get("probe")=="MURAKUMO_LISTED_PIN_PASS" and parsed.get("arithmetic")==899
+          out["checks"]["no_auth_used"]=True
+          failures=[k for k,v in out["checks"].items() if v is not True]
+          out["failures"]=failures
+          out["verdict"]="PASS" if not failures else "FAIL"
+          pathlib.Path("MURAKUMO_LISTED_QWEN27B_PREFLIGHT.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          if failures: raise SystemExit(1)
+          print("MURAKUMO_LISTED_QWEN27B_PREFLIGHT_PASS")
+          PY
+      - name: Upload preflight
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: murakumo-listed-qwen27b-preflight
+          path: MURAKUMO_LISTED_QWEN27B_PREFLIGHT.json
+          if-no-files-found: error
