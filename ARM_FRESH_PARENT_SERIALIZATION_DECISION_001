@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_FRESH_PARENT_SERIALIZATION_ARM_V1",
+  "authorized_execution_count": 1,
+  "rerun_authorized": false,
+  "brain_pr": 246,
+  "brain_head": "b9f54301738c8254f674f97ac78f584195462021",
+  "brain_base": "502db4bc7edae5be9164bfa046f7394681f881ba",
+  "mission_blob": "ead58b94d7eea8e308d7234b5a1c5d12ebc44b6f",
+  "fixture_blob": "ccd85c0ccc38cc55fb167030d871d70321bcf46d",
+  "astra_runtime_blob": "1e8252415c60a553bad8a05fae2d98217d0f5833",
+  "goal_compiler_blob": "195d5dd5f4fabb8a897fb6407433e691a8fdaf26",
+  "registry_blob": "1b4a05c1b24070a7d2125713af11231214021a97",
+  "model_planner_disabled": true
+}
