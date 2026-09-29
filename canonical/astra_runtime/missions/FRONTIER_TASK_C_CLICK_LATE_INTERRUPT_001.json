@@ -13,10 +13,10 @@
       "Do not special-case ARM, isatty, prompt(), or only the 'Aborted!' print unless the code evidence proves that is the general causal boundary.",
       "Preserve standalone_mode=False semantics rather than swallowing interrupts globally.",
       "The fix must be general across abort reporting, ClickException reporting, and the final standalone exit path if the same race can occur there.",
-      "Return a minimal unified diff whose paths are rooted at click_under_test/. Modify production code only; hidden tests are supplied independently after you finish.",
+      "Return a minimal unified diff that is applied from the click_under_test repository root, so file headers must be a/src/click/core.py and b/src/click/core.py. Modify production code only; hidden tests are supplied independently after you finish.",
       "Do not claim success merely from reasoning. The patch will be applied to the pre-fix tree and tested independently."
     ],
-    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), causal_timeline (array of strings), patch_unified_diff (string containing a git-apply-compatible unified diff against click_under_test/src/click/core.py), preserved_semantics (array of strings), why_localized_fixes_are_insufficient (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown fences."
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), causal_timeline (array of strings), patch_unified_diff (string containing a git-apply-compatible unified diff whose only changed path is src/click/core.py when applied from click_under_test), preserved_semantics (array of strings), why_localized_fixes_are_insufficient (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown fences."
   },
   "steps": [
     {
