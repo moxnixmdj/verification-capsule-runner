@@ -1,0 +1,41 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "FRONTIER-TASK-C-CLICK-LATE-INTERRUPT-001",
+  "purpose": "Fresh real software-systems Task C for the open-ended agentic technical research capability. Diagnose and repair a real historical Click race condition using only the pre-fix source tree and a de-identified bug report. The maintainer fix and hidden behavioral tests are withheld from the planner.",
+  "goal": {
+    "objective": "Diagnose the intermittent late-KeyboardInterrupt race described below in the local pre-fix Click repository and produce the smallest general source patch that preserves Click's intended standalone and non-standalone termination semantics.",
+    "bug_report": "When a user presses Ctrl-C during click.prompt(), an unhandled exception can intermittently escape while Click is already handling the abort. It was observed on an Ubuntu ARM CI runner and appears timing-sensitive. The normal x64/macOS/Windows runs often succeed. Find the causal race in the pre-fix source, not a platform-specific workaround.",
+    "local_repository": "click_under_test/",
+    "exact_repository_commit": "cbb5b2df1ee3492115f8c2ee5cbb09e2271fc714",
+    "instructions": [
+      "Treat the local source tree as the primary evidence. Inspect the relevant exception-handling and terminal-output paths before finishing.",
+      "Do not search GitHub issues, pull requests, commit history, release notes, or the internet for this bug or its fix. The task is to derive the repair from the pre-fix code.",
+      "Do not special-case ARM, isatty, prompt(), or only the 'Aborted!' print unless the code evidence proves that is the general causal boundary.",
+      "Preserve standalone_mode=False semantics rather than swallowing interrupts globally.",
+      "The fix must be general across abort reporting, ClickException reporting, and the final standalone exit path if the same race can occur there.",
+      "Return a minimal unified diff that applies to the local repository. Modify production code only; hidden tests are supplied independently after you finish.",
+      "Do not claim success merely from reasoning. The patch will be applied to the pre-fix tree and tested independently."
+    ],
+    "final_summary_contract": "Finish with compact valid JSON only. Keys: research_task_completed (true), diagnosis (string), causal_timeline (array of strings), patch_unified_diff (string containing a git-apply-compatible unified diff against click_under_test/src/click/core.py), preserved_semantics (array of strings), why_localized_fixes_are_insufficient (string), residual_uncertainty (string), frontier_capability_promoted (must be false). No markdown fences."
+  },
+  "steps": [
+    {
+      "id": "diagnose-and-repair-click-late-interrupt-race",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": true,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "public_sources_only": true,
+    "hidden_oracle_not_available_to_planner": true,
+    "external_bug_search_forbidden": true,
+    "one_execution_before_reconciliation": true,
+    "frontier_hosted_model_allowed": false
+  }
+}
