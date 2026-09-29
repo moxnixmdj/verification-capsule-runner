@@ -1,0 +1,92 @@
+name: Verify Exact PR250 Bound Grounding
+
+on:
+  push:
+    branches:
+      - verify/plain-goal-bound-grounding-v1-exact-pr250-20260930
+    paths:
+      - '.github/workflows/verify-exact-pr250-bound-grounding.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact PR250 blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "27e645112157e2dbe218d52dab24534df2d977d6"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py)" = "d4aa64dc995845fcf8045f14f476f84b7f1d9cb8"
+          test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "03fe93ded7207f584266e420192eef2a3a8a166c"
+          test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding_gate.py)" = "46a1378086c4143f31d1a8767f5fdd159f1d1a1e"
+          test "$(git hash-object canonical/tests/test_plain_goal_grounding_runtime_precedence.py)" = "11c3c19de21a90076c391b52708331d11ec824cf"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
+          echo EXACT_PR250_BLOBS_PASS
+
+      - name: Compile exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile             canonical/runtime/astra_runtime.py             canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py             canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py             canonical/tests/test_plain_goal_bound_grounding.py             canonical/tests/test_plain_goal_bound_grounding_gate.py             canonical/tests/test_plain_goal_grounding_runtime_precedence.py
+
+      - name: Run exact deterministic and fresh grounding proofs
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: '1'
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_plain_goal_bound_grounding.py
+          python canonical/tests/test_plain_goal_bound_grounding_gate.py
+          python canonical/tests/test_plain_goal_grounding_runtime_precedence.py
+
+      - name: Record exact-head verification receipt
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,pathlib,subprocess
+          paths=[
+            "canonical/runtime/astra_runtime.py",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding_verify.py",
+            "canonical/tests/test_plain_goal_bound_grounding.py",
+            "canonical/tests/test_plain_goal_bound_grounding_gate.py",
+            "canonical/tests/test_plain_goal_grounding_runtime_precedence.py",
+            "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_EXACT_PR250_BOUND_GROUNDING_VERIFICATION_V1",
+            "brain_pr":250,
+            "brain_head":"22293ba5b1f8fe864a05ead09631d2117a942338",
+            "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
+            "tests":[
+              "test_plain_goal_bound_grounding.py",
+              "test_plain_goal_bound_grounding_gate.py",
+              "test_plain_goal_grounding_runtime_precedence.py"
+            ],
+            "fresh_real_task_A":"Python unittest audit grounding in real bound registry",
+            "fresh_real_task_B":"Rendered browser capture grounding in real bound registry",
+            "external_supplier_discovery_precedence_checked":True,
+            "model_dependency_count":0,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("EXACT_PR250_BOUND_GROUNDING_VERIFICATION.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload exact-head evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: exact-pr250-bound-grounding-verification
+          path: EXACT_PR250_BOUND_GROUNDING_VERIFICATION.json
