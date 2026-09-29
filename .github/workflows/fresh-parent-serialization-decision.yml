@@ -1,0 +1,109 @@
+name: Fresh Parent Serialization Decision
+
+on:
+  push:
+    branches: [frontier/fresh-parent-serialization-decision-20260930]
+    paths:
+      - 'ARM_FRESH_PARENT_SERIALIZATION_DECISION_001'
+
+permissions:
+  contents: read
+
+jobs:
+  fresh-parent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact model-independent capsule
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "1e8252415c60a553bad8a05fae2d98217d0f5833"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "1b4a05c1b24070a7d2125713af11231214021a97"
+          test "$(git hash-object canonical/astra_runtime/missions/FRESH_PARENT_SERIALIZATION_DECISION_20260930_001.json)" = "ead58b94d7eea8e308d7234b5a1c5d12ebc44b6f"
+          test "$(git hash-object canonical/capabilities/obsolescence/FRESH_PARENT_SERIALIZATION_DECISION_FIXTURE_20260930.json)" = "ccd85c0ccc38cc55fb167030d871d70321bcf46d"
+          echo EXACT_CAPSULE_PASS
+
+      - name: Execute fresh parent task exactly once with models disabled
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: '1'
+        run: |
+          set -uo pipefail
+          MID="FRESH-PARENT-SERIALIZATION-DECISION-20260930-001"
+          rm -f "canonical/astra_runtime/state/$MID.json"
+          rm -f "canonical/astra_runtime/evidence/$MID"*.json
+          rm -f canonical/astra_runtime/tmp/FRESH_PARENT_SERIALIZATION_DECISION_RESULT.json
+          set +e
+          timeout 900 python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/FRESH_PARENT_SERIALIZATION_DECISION_20260930_001.json > FRESH_PARENT_STDOUT.txt 2> FRESH_PARENT_STDERR.txt
+          code=$?
+          set -e
+          printf '%s\n' "$code" > FRESH_PARENT_EXIT_CODE.txt
+          cat FRESH_PARENT_STDOUT.txt
+          cat FRESH_PARENT_STDERR.txt >&2
+          exit 0
+
+      - name: Classify terminal result without changing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,re
+          root=pathlib.Path(".")
+          mid="FRESH-PARENT-SERIALIZATION-DECISION-20260930-001"
+          exit_code=int((root/"FRESH_PARENT_EXIT_CODE.txt").read_text().strip())
+          state_path=root/"canonical/astra_runtime/state"/f"{mid}.json"
+          blocker_path=root/"canonical/astra_runtime/evidence"/f"{mid}__BLOCKER.json"
+          result_path=root/"canonical/astra_runtime/tmp/FRESH_PARENT_SERIALIZATION_DECISION_RESULT.json"
+          state=json.loads(state_path.read_text()) if state_path.is_file() else None
+          blocker=json.loads(blocker_path.read_text()) if blocker_path.is_file() else None
+          result=json.loads(result_path.read_text()) if result_path.is_file() else None
+          blob=json.dumps({"state":state,"blocker":blocker,"result":result},sort_keys=True)
+          forbidden=re.findall(r'(?i)(planner_model_last|MODEL_API|LOCAL_MODEL|MODEL_ARTIFACT)',blob)
+          model_free=not forbidden
+          if exit_code==0 and state and state.get("status")=="COMPLETE" and result_path.is_file() and model_free:
+              classification="PARENT_FRESH_TASK_PASS_MODEL_INDEPENDENT"
+          else:
+              classification="PARENT_FRESH_TASK_FAIL_FIRST_CAUSAL_GAP_PRESERVED"
+          out={
+            "schema":"PROJECT_BRAIN_FRESH_PARENT_SERIALIZATION_TERMINAL_V1",
+            "classification":classification,
+            "exit_code":exit_code,
+            "model_free_evidence_path":model_free,
+            "state_status":state.get("status") if isinstance(state,dict) else None,
+            "blocker":blocker,
+            "result":result,
+            "runtime_blob":"1e8252415c60a553bad8a05fae2d98217d0f5833",
+            "goal_compiler_blob":"195d5dd5f4fabb8a897fb6407433e691a8fdaf26",
+            "registry_blob":"1b4a05c1b24070a7d2125713af11231214021a97",
+            "mission_blob":"ead58b94d7eea8e308d7234b5a1c5d12ebc44b6f",
+            "fixture_blob":"ccd85c0ccc38cc55fb167030d871d70321bcf46d",
+            "incremental_spend_usd":0,
+            "rerun_authorized":False
+          }
+          raw=(json.dumps(out,indent=2,sort_keys=True)+"\n").encode()
+          (root/"FRESH_PARENT_TERMINAL_RESULT.json").write_bytes(raw)
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload exact terminal evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fresh-parent-serialization-terminal-evidence
+          if-no-files-found: warn
+          path: |
+            FRESH_PARENT_EXIT_CODE.txt
+            FRESH_PARENT_STDOUT.txt
+            FRESH_PARENT_STDERR.txt
+            FRESH_PARENT_TERMINAL_RESULT.json
+            canonical/astra_runtime/state/FRESH-PARENT-SERIALIZATION-DECISION-20260930-001.json
+            canonical/astra_runtime/evidence/FRESH-PARENT-SERIALIZATION-DECISION-20260930-001__BLOCKER.json
+            canonical/astra_runtime/evidence/FRESH-PARENT-SERIALIZATION-DECISION-20260930-001__RECEIPT.json
+            canonical/astra_runtime/tmp/FRESH_PARENT_SERIALIZATION_DECISION_RESULT.json
