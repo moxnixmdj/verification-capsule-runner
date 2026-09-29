@@ -1,0 +1,69 @@
+name: Task C Exact Qwen27 Preflight
+
+on:
+  push:
+    branches: [route-preflight-task-c-20260929]
+    paths:
+      - 'ARM_TASK_C_QWEN27_PREFLIGHT_003'
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Probe exact Murakumo Qwen3.8-27B selector
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,time,urllib.request,urllib.error,pathlib,datetime
+          start=time.monotonic()
+          body=json.dumps({
+            "model":"qwen3.8-27b-throughput-5090",
+            "messages":[{"role":"user","content":"Return exactly: QWEN27_TASK_C_READY"}],
+            "max_tokens":32,
+            "temperature":0
+          }).encode()
+          req=urllib.request.Request(
+            "https://api.murakumo.cloud/v1/chat/completions",
+            data=body,
+            headers={"content-type":"application/json"},
+            method="POST",
+          )
+          report={"schema":"PROJECT_BRAIN_TASK_C_QWEN27_PREFLIGHT_V1","observed_at_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"route":"MURAKUMO_QWEN3_8_27B","incremental_spend_usd":0}
+          try:
+              with urllib.request.urlopen(req,timeout=420) as r:
+                  raw=r.read(1000000).decode("utf-8","replace")
+                  report["http_status"]=int(r.status)
+              obj=json.loads(raw)
+              msg=((obj.get("choices") or [{}])[0].get("message") or {})
+              content=msg.get("content")
+              if not isinstance(content,str) or not content.strip():
+                  content=msg.get("reasoning_content")
+              report["response_model"]=obj.get("model")
+              report["content_preview"]=str(content or "")[:500]
+              report["wall_s"]=round(time.monotonic()-start,3)
+              report["ready"]=bool(report["http_status"]==200 and isinstance(content,str) and content.strip())
+          except urllib.error.HTTPError as e:
+              report["http_status"]=int(e.code); report["error"]="HTTPError:"+str(e.code)+":"+e.read(4000).decode("utf-8","replace"); report["wall_s"]=round(time.monotonic()-start,3); report["ready"]=False
+          except Exception as e:
+              report["error"]=type(e).__name__+":"+str(e); report["wall_s"]=round(time.monotonic()-start,3); report["ready"]=False
+          pathlib.Path("TASK_C_QWEN27_PREFLIGHT.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(report,sort_keys=True))
+          if not report["ready"]: raise SystemExit(2)
+          print("TASK_C_QWEN27_PREFLIGHT_PASS")
+          PY
+      - name: Upload preflight evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: task-c-qwen27-preflight
+          path: TASK_C_QWEN27_PREFLIGHT.json
+          if-no-files-found: error
