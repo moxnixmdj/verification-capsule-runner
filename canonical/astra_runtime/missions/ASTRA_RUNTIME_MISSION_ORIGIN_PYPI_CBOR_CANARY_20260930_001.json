@@ -1,0 +1,28 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "ASTRA-RUNTIME-MISSION-ORIGIN-PYPI-CBOR-CANARY-20260930-001",
+  "purpose": "Fresh non-parent canary for the canonical astra_runtime mission-file entrypoint. Force an unbound Python-library CBOR capability so autonomous PyPI acquisition must receive a valid canonical origin mission path.",
+  "goal": "Create canonical/astra_runtime/tmp/MISSION_ORIGIN_CBOR_CANARY_SOURCE.json containing exactly three records with fields id and text: 1 alpha, 2 beta, 3 gamma. Using a zero-cost Python library, encode those exact records as CBOR and save canonical/astra_runtime/tmp/MISSION_ORIGIN_CBOR_CANARY_OUTPUT.cbor. Using that Python library, independently decode the CBOR artifact and verify the decoded records are exactly identical to canonical/astra_runtime/tmp/MISSION_ORIGIN_CBOR_CANARY_SOURCE.json in values, order, field names, and record count.",
+  "steps": [
+    {
+      "id": "run-fresh-pypi-cbor-acquisition-canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "max_controller_actions": 20,
+      "verify": {"type": "stdout_contains", "text": "COMPOUND_GOAL_COMPLETE"}
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "fresh_mission_identity": true,
+    "non_parent_canary": true,
+    "parent_capability_credit_authorized": false,
+    "external_python_library_acquisition_allowed": true,
+    "manual_binding": false,
+    "manual_supplier": false,
+    "model_controller_required": false,
+    "canonical_mission_entrypoint_required": true,
+    "same_parent_task_replay": false
+  }
+}
