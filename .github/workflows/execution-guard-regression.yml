@@ -1,0 +1,30 @@
+name: Execution Guard Regression
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'execution_guard/**'
+      - '.github/workflows/run-*-once.yml'
+      - '.github/workflows/execution-guard-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'execution_guard/**'
+      - '.github/workflows/run-*-once.yml'
+      - '.github/workflows/execution-guard-regression.yml'
+permissions:
+  contents: read
+jobs:
+  guard-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: execution_guard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m unittest -v execution_guard/test_guard.py
+      - name: Audit launcher cutover
+        run: python execution_guard/audit.py --root . --inventory execution_guard/inventory.json

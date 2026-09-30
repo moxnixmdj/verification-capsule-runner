@@ -1,0 +1,16 @@
+{
+  "schema":"BRAIN_EXECUTION_LAUNCHER_INVENTORY_V1",
+  "repository":"moxnixmdj/verification-capsule-runner",
+  "observed_base":"e9db4d4e616702b069e2011ea4f4b33e0c600d81",
+  "launchers":[
+    {"workflow":".github/workflows/run-canonical-climate-taska-once.yml","science_command":"python run_canonical_climate_taska_once.py","binding":"canonical/execution_guard/bindings/canonical-climate-taska.json"},
+    {"workflow":".github/workflows/run-openended-sqlite-taska-once.yml","science_command":"PYTHONPATH=. python run_openended_sqlite_taska_once.py","binding":"canonical/execution_guard/bindings/openended-sqlite-taska.json"},
+    {"workflow":".github/workflows/run-parent-astronomy-eros-kepler-once.yml","science_command":"python run_parent_astronomy_eros_kepler_once.py","binding":"canonical/execution_guard/bindings/parent-astronomy-eros-kepler.json"},
+    {"workflow":".github/workflows/run-pr301-parent-demography-taskb-once.yml","science_command":"python run_pr301_parent_demography_taskb_once.py","binding":"canonical/execution_guard/bindings/pr301-parent-demography-taskb.json"},
+    {"workflow":".github/workflows/run-pr304-parent-chemistry-taskb-once.yml","science_command":"python run_pr304_parent_chemistry_taskb_once.py","binding":"canonical/execution_guard/bindings/pr304-parent-chemistry-taskb.json"},
+    {"workflow":".github/workflows/run-pr335-parent-openended-sqlite-taska-once.yml","science_command":"python run_pr335_parent_openended_sqlite_taska_once.py","binding":"canonical/execution_guard/bindings/pr335-parent-openended-sqlite-taska.json"},
+    {"workflow":".github/workflows/run-pr337-parent-climate-open-taska-once.yml","science_command":"python run_pr337_parent_climate_open_taska_once.py","binding":"canonical/execution_guard/bindings/pr337-parent-climate-open-taska.json"},
+    {"workflow":".github/workflows/run-thermophysics-parent-once.yml","science_command":"python run_thermophysics_parent_once.py","binding":"canonical/execution_guard/bindings/thermophysics-parent.json"},
+    {"workflow":".github/workflows/verify-pr298-typed-scalar-expression-once.yml","science_command":"python verify_pr298_typed_scalar_expression.py","binding":"canonical/execution_guard/bindings/pr298-typed-scalar-expression.json"}
+  ]
+}
