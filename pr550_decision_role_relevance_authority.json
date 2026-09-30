@@ -1,0 +1,30 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 550,
+  "brain_candidate_head": "3b8ab760e12c1cac8949240ebf8e15ec94937121",
+  "brain_base": "81f2f813f03b5d80ac2e44080bd19d967bd06463",
+  "scope": "MODEL_INDEPENDENT_DECISION_ROLE_RELEVANCE_AND_OPERAND_COVERAGE_V1__THRESHOLD_SAFE",
+  "qualification_only": true,
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "spent_materials_task_c_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0,
+  "prestart_correction": {
+    "prior_public_run_id": 36702509398,
+    "prior_failure_phase": "PRESTART",
+    "prior_guard_admission_spent": false,
+    "corrected_brain_head": "2508568cc2b3feab67e7ae9969aea2041e2352d9",
+    "corrected_module_blob": "f0b9095ed2439645ebc9d9ec2f66fb8ec1de3669"
+  },
+  "prior_guarded_candidate_falsification": {
+    "run_id": 36703021647,
+    "job_id": 109846639942,
+    "prior_brain_head": "2508568cc2b3feab67e7ae9969aea2041e2352d9",
+    "prior_module_blob": "f0b9095ed2439645ebc9d9ec2f66fb8ec1de3669",
+    "guard_admission_spent": true,
+    "first_failed_regression": "NUMERIC_THRESHOLD_COMPARISON_PRESERVES_INCUMBENT_RELEVANCE",
+    "repair": "NUMERIC_START_REGEX_ESCAPE_NORMALIZATION_ONLY"
+  }
+}
