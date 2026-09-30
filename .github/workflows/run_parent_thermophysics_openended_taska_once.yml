@@ -1,0 +1,44 @@
+name: Run Fresh Thermophysics Parent Task A Once
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    if: github.head_ref == 'execute/parent-thermophysics-water-viscosity-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Require final one-shot arm marker
+        run: test -f ARM_PARENT_THERMOPHYSICS_TASK_A_20260930_V1
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute canonical thermophysics parent mission exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_parent_thermophysics_openended_taska_once.py
+      - name: Upload terminal producer and independent-oracle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-thermophysics-openended-taska-terminal
+          path: parent-thermophysics-openended-taska-terminal.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
