@@ -1,0 +1,10 @@
+{
+  "command_sha256": "cd8c732bd43be930511a59a7f3ec6e7ff0ddace30f0040318bde1f45a1bdde29",
+  "duration_sec": 0.05,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "nextjs-performance-20260930-v1",
+  "stderr": "",
+  "stdout": "--- Advanced hold filter ---\n/app/.next/static/chunks/app/inventory/page-29c8e55680a71633.js\n--- priority score ---\n/app/.next/static/chunks/app/pick-batches/page-7acbe07c111f0c59.js\n--- inventory-holds-export ---\n/app/.next/static/chunks/app/inventory/page-29c8e55680a71633.js\n--- eta-route ---\n/app/.next/static/chunks/app/shipments/page-a09dd8af7485e668.js\n",
+  "step": 8
+}
