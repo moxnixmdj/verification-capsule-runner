@@ -1,0 +1,10 @@
+{
+  "command_sha256": "d2e62ab46f5c92ddfb564e69421c9f99bd1983fa80b7db1c9f8d48c6f5ff7818",
+  "duration_sec": 0.057,
+  "exit_code": 127,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "nextjs-performance-final-20260930-v1",
+  "stderr": "/tmp/bridge-command.sh: line 1: python3: command not found\n",
+  "stdout": "",
+  "step": 0
+}
