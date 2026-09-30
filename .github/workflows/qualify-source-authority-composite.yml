@@ -1,0 +1,26 @@
+name: Qualify Source Authority Composite
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py
+      - canonical/runtime/bound_capabilities/source_authority_binding_ror.py
+      - canonical/runtime/bound_capabilities/source_authority_binding_wikidata.py
+      - canonical/runtime/bound_capabilities/source_authority_binding_composite.py
+      - canonical/tests/test_source_authority_binding_composite_qualification.py
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run exact composite authority qualification
+        run: python canonical/tests/test_source_authority_binding_composite_qualification.py
