@@ -1,0 +1,40 @@
+name: Run PR337 Frozen Climate Task A Once
+
+on:
+  push:
+    branches:
+      - execute/pr337-frozen-carrier-0ac7-once-20260930-v1
+    paths:
+      - .github/workflows/run-pr337-frozen-carrier-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen PR337 open-ended climate Task A exactly once
+        id: producer
+        continue-on-error: true
+        run: python run_pr337_parent_climate_open_taska_once.py
+      - name: Upload terminal producer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr337-parent-climate-open-taska-producer-terminal-frozen-carrier
+          path: pr337-parent-climate-open-taska-producer-report.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
