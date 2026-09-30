@@ -1,0 +1,10 @@
+{
+  "command_sha256": "d04be8e8ba056ad8a07417a3874de792ecbbc4e4aa5e8fd9d901403911eb01e8",
+  "duration_sec": 0.132,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20261001-v1",
+  "stderr": "tar: src/App.tsx: time stamp 2026-09-30 22:15:01.0101478 is 2807.668075318 s in the future\ntar: src/main.tsx: time stamp 2026-09-30 22:15:03.3734527 is 2810.031240525 s in the future\ntar: src/components/LeadForm.tsx: time stamp 2026-09-30 22:15:06.053538 is 2812.681637243 s in the future\ntar: src/lib/submitLead.ts: time stamp 2026-09-30 22:16:59.090385 is 2925.690725734 s in the future\ntar: src/lib/validation.ts: time stamp 2026-09-30 22:21:19.6893911 is 3186.289641746 s in the future\ntar: src/lib/payload.ts: time stamp 2026-09-30 22:21:29.8340566 is 3196.434274313 s in the future\ntar: src/lib/tracking.ts: time stamp 2026-09-30 22:21:17.3580852 is 3183.958270166 s in the future\ntar: src/scripts/submit.ts: time stamp 2026-09-30 22:15:11.030811 is 2817.630707999 s in the future\ntar: vite.config.ts: time stamp 2026-09-30 22:15:13.0624301 is 2819.66227821 s in the future\ntar: tests/pipeline-smoke.test.ts: time stamp 2026-09-30 22:17:50.9055974 is 2977.505374145 s in the future\n",
+  "stdout": "CANDIDATE_APPLIED sha256=ba1e7ad0280a477400f26e40c4b9bf670566452480f510a8d5e6468fe9a86bbb files=10\n",
+  "step": 0
+}
