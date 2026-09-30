@@ -1,0 +1,10 @@
+{
+  "command_sha256": "2d2b315030cf77db7d6c98469657b5acc0bf2f182c7201c5a6a805ee9c5f877c",
+  "duration_sec": 4.489,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "interleaved-vigenere-dev-20260930-v1",
+  "stderr": "",
+  "stdout": "ANCHORS [(10, 14, 1, 242, 'puefswdhrqgbtv'), (10, 12, 1, 5, 'gfktwbxrgtjp'), (10, 12, 1, 172, 'gfktwbxrgtjp'), (10, 12, 1, 321, 'tzqbhakungjp'), (10, 12, 1, 406, 'Ceguzzananjp'), (10, 12, 1, 427, 'gfktwbxrgtjp'), (10, 13, 4, 416, 'gtadyfceekkcz'), (10, 12, 8, 276, 'glbekuofxwny'), (10, 12, 28, 325, 'aummkkxcxpwa'), (10, 11, 104, 53, 'muvhkiehpnb'), (10, 11, 116, 352, 'Fznwqlvpgsd'), (10, 11, 127, 7, 'vyukatecwlc'), (10, 11, 127, 174, 'vyukatecwlc'), (10, 11, 127, 429, 'vyukatecwlc'), (10, 11, 133, 232, 'wsqhiwamlwp'), (10, 11, 238, 327, 'dsxjxuognqe'), (10, 11, 244, 162, 'hiwsxuhnvkx'), (10, 11, 282, 263, 'Ekgfdbzugps'), (10, 11, 282, 421, 'puzwvfcvnss'), (10, 11, 299, 127, 'Hafhgwmcvcg')]\nCOMPLETE_CANDIDATES 1\nTOP [((30612.699999999975, 457, -8), (15, 8, 17, 19, 7, 17, 14, 14, 19, 4), (242, 'correspondence'))]\nSOLVE_SEC 4.349453449249268 ALPHA_ACCURACY 2537 2537 1.0 EXACT True\nDEC_HEAD 'Prior to the modern age, cryptography was effectively synonymous with the conversion of plaintext into ciphertext. A long crescendo carried the audience through the slow movement and out into the brisk air of the public square. Soil chemistry varies enormously across short distances, especially where bedrock geology shifts within a single watershed. Several independent groups are racing to replicate the methodology with archived data from older surveys. The history of computing is far longer tha'\n",
+  "step": 4
+}
