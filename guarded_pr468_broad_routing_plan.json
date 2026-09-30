@@ -1,0 +1,53 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify Brain PR468 generic multi-clause broad-objective routing repair against the exact falsified HTTP/2 parent goal shape, fresh cross-domain broad objectives, and fail-closed negative controls, with no parent task execution.",
+  "frozen": {
+    "gate_id": "BRAIN-PR468-BROAD-ROUTING-INDEPENDENT-QUALIFICATION-20260930-V1",
+    "problem_sha256": "26cdf1e7088da2dab53059bca1f081fd2c03941fad64608526b5f7e88d9032af",
+    "task_sha256": "e25968b620c4005d444514e93c34ed5bbdf0098ea4eea77386c858a11cca28ff",
+    "runtime_sha256": "619e17191eb876b95f9b194566ba4ca6f5c5d2420b42c6888df96921d20fa49c",
+    "canonical_base": "3fb7a6099fd221139863109a3b879f81f9441360",
+    "authorization_sha256": "d64ec4e909a9d73b884f4ff383855d29907b89792bff0be9562a8e2dd19f32fa"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "25738e959dec0be46058e4bd7720fb8ed1b599bb"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "6eb2b20e860da466ad8b793c20060ded1fbf389b"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "e98a26325fd60990afc7b81158110c897eed6b5d"
+    },
+    {
+      "path": "independent_pr468_broad_routing_verifier.py",
+      "git_blob_sha1": "137f61b76a05887cf248139708e70b931e722f0d"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "python",
+    "independent_pr468_broad_routing_verifier.py"
+  ],
+  "authority": {
+    "brain_pr": 468,
+    "brain_pr_head": "3fb7a6099fd221139863109a3b879f81f9441360",
+    "parent_task_execution": false,
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0
+  }
+}
