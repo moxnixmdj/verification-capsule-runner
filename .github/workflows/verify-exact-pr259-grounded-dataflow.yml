@@ -1,0 +1,106 @@
+name: Verify Exact PR259 Grounded Dataflow
+
+on:
+  push:
+    branches:
+      - verify/exact-pr259-grounded-dataflow-20260930
+    paths:
+      - '.github/workflows/verify-exact-pr259-grounded-dataflow.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact PR259 closure blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "941c8c46839458b29a31bf78f24fc2902ee479b2"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "c5d29ff0bea8c85334cb073ca0dba256db8ae633"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "00f5d0c1c742f444ad876103f251bb4476017dc1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "594d9c8a3c3c68421ec2c00fdbe46340eabfe1fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "b2c97bec0d6843d251b36a51133a66cfbed57c96"
+          test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "b77805b699740e9e9cea6058086fa80642b42d50"
+          test "$(git hash-object canonical/tests/test_grounded_composition_runtime_scope.py)" = "8ecaba6c44374ec4250ca6a4b7ef196fa2b3067a"
+          test "$(git hash-object canonical/tests/test_grounded_composition_real_registry.py)" = "be895a78129464faeb6446a2573f4552d53ae183"
+          echo EXACT_PR259_BLOBS_PASS
+
+      - name: Compile exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile             canonical/runtime/astra_runtime.py             canonical/runtime/capability_planner.py             canonical/runtime/goal_compiler.py             canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py             canonical/runtime/bound_capabilities/grounded_executable_composition.py             canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py             canonical/tests/test_grounded_executable_composition.py             canonical/tests/test_grounded_composition_runtime_scope.py             canonical/tests/test_grounded_composition_real_registry.py
+
+      - name: Run exact adversarial and real-registry regressions
+        shell: bash
+        env:
+          ASTRA_DISABLE_MODEL_PLANNER: '1'
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_grounded_executable_composition.py
+          python canonical/tests/test_grounded_composition_runtime_scope.py
+          python canonical/tests/test_grounded_composition_real_registry.py
+
+      - name: Record exact-head receipt
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,pathlib,subprocess
+          paths=[
+            "canonical/runtime/astra_runtime.py",
+            "canonical/runtime/capability_planner.py",
+            "canonical/runtime/goal_compiler.py",
+            "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition.py",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py",
+            "canonical/tests/test_grounded_executable_composition.py",
+            "canonical/tests/test_grounded_composition_runtime_scope.py",
+            "canonical/tests/test_grounded_composition_real_registry.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_EXACT_PR259_GROUNDED_DATAFLOW_VERIFICATION_V1",
+            "brain_pr":259,
+            "brain_head":"f584ceb670e57619b6a3689d4ff25c4abb00915a",
+            "brain_base":"a9816671c2792f22d4aed6d58a4785ac5101936e",
+            "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
+            "tests":[
+              "test_grounded_executable_composition.py",
+              "test_grounded_composition_runtime_scope.py",
+              "test_grounded_composition_real_registry.py"
+            ],
+            "properties":[
+              "dependency ordering",
+              "effect-equivalent ambiguity preservation",
+              "non-equivalent ambiguity rejection",
+              "unresolved clause rejection",
+              "tampered action rejection",
+              "ungrounded registry inheritance fence",
+              "real-registry producer-to-verifier effect-result dataflow",
+              "old compiler cannot solve fresh chain"
+            ],
+            "model_dependency_count":0,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("EXACT_PR259_GROUNDED_DATAFLOW_VERIFICATION.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: exact-pr259-grounded-dataflow-verification
+          path: EXACT_PR259_GROUNDED_DATAFLOW_VERIFICATION.json
