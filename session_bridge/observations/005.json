@@ -1,0 +1,10 @@
+{
+  "command_sha256": "2323c0245b57064c88788474bb9cd7895fb893d5b6a45ca43464cd780c081731",
+  "duration_sec": 30.21,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "interleaved-vigenere-dev-20260930-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/tmp/stress_cracker.py\", line 40, in <module>\n    cp=subprocess.run(['python3',CR,str(sample_ct)],capture_output=True,text=True,timeout=30)\n  File \"/usr/local/lib/python3.13/subprocess.py\", line 556, in run\n    stdout, stderr = process.communicate(input, timeout=timeout)\n                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/subprocess.py\", line 1222, in communicate\n    stdout, stderr = self._communicate(input, endtime, timeout)\n                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/subprocess.py\", line 2155, in _communicate\n    self._check_timeout(endtime, orig_timeout, stdout, stderr)\n    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/subprocess.py\", line 1269, in _check_timeout\n    raise TimeoutExpired(\n    ...<2 lines>...\n            stderr=b''.join(stderr_seq) if stderr_seq else None)\nsubprocess.TimeoutExpired: Command '['python3', '/app/cracker.py', '/app/data/sample_ciphertext.txt']' timed out after 30 seconds\n",
+  "stdout": "",
+  "step": 5
+}
