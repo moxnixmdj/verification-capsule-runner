@@ -1,0 +1,40 @@
+name: Run PR337 Open-Ended Climate Task A Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_PR337_OPENENDED_CLIMATE_TASKA_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Execute frozen Brain PR337 open-ended Task A exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_pr337_parent_climate_taska_once.py
+      - name: Upload terminal Task A evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr337-openended-climate-taska-terminal
+          path: |
+            pr337-parent-climate-taska-terminal.json
+            canonical/astra_runtime/tmp/PARENT_CLIMATE_MAUNA_LOA_CO2_ACCELERATION_RESULT.json
+            canonical/astra_runtime/evidence/**
+          if-no-files-found: warn
+      - name: Preserve producer failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
