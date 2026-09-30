@@ -1,0 +1,26 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "MISSION-IDENTITY-AUTO-ACQUISITION-CANARY-20260930-V1",
+  "purpose": "Fresh non-parent canary for canonical runtime mission identity propagation into autonomous acquisition. No parent capability credit.",
+  "goal": "Encode the literal text \"mission-identity-canary\" into the synthetic FROBNITZ artifact format and save it to canonical/astra_runtime/tmp/mission_identity_canary.frob.",
+  "steps": [
+    {
+      "id": "fresh-non-parent-auto-acquisition-mission-identity-canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "max_controller_actions": 4,
+      "max_cycles": 1,
+      "allow_optional_model_planner": false,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_controller_required": false,
+    "parent_task": false,
+    "capability_credit": false,
+    "purpose": "CARRIER_PATH_VALIDATION_ONLY"
+  }
+}\n
