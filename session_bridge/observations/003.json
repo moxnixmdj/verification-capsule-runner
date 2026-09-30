@@ -1,0 +1,10 @@
+{
+  "command_sha256": "bdb19fbf53df19cb532d0ab4c0480e7691a10b7719723e9f4248f032b90f0cc9",
+  "duration_sec": 0.079,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "",
+  "stdout": "===== /app/src/data/lead_input.json =====\n{\n  \"fullName\": \"Jane Carter\",\n  \"email\": \"jane.carter@example.com\",\n  \"phone\": \"+14045550129\",\n  \"service\": \"window_replacement\",\n  \"city\": \"Atlanta\",\n  \"state\": \"GA\",\n  \"consent\": true,\n  \"source\": \"google_ads\",\n  \"campaign\": \"spring-window-leads\",\n  \"utmMedium\": \"cpc\",\n  \"gclid\": \"GCLID-SAMPLE-001\",\n  \"landingPage\": \"/window-replacement?gclid=GCLID-SAMPLE-001\",\n  \"receivedAt\": \"2025-01-02T15:30:00Z\"\n}\n\n\n===== /app/output =====\n[missing]\n",
+  "step": 3
+}
