@@ -1,0 +1,51 @@
+name: Isolate Numerical Stability Parent Prestart
+
+on:
+  push:
+    branches:
+      - observe/fresh-numerical-stability-prestart-isolation-20260930-v1
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  isolate:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_HEAD: 8a80f9bd07c24670da09bdd1959c6a9ed2d6faac
+      TARGET_PR: "109"
+      TASK_PATH: canonical/tasks/PARENT_OPENENDED_FLOATING_POINT_SUMMATION_STABILITY_REAL_TASK_20260930_002.json
+      MISSION_PATH: canonical/astra_runtime/missions/PARENT_OPENENDED_FLOATING_POINT_SUMMATION_STABILITY_REAL_TASK_20260930_002.json
+      EXPECTED_TASK_BLOB: f07448644ca7f88fdfa438144f2b971596cab06f
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_HEAD }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Diagnose prestart only
+        shell: bash
+        run: |
+          set -u
+          report=""
+          add(){ report="$report$1\n"; }
+          for p in canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py canonical/runtime/astra_runtime.py "$TASK_PATH" "$MISSION_PATH"; do
+            if [ -f "$p" ]; then add "FILE:$p=PASS"; else add "FILE:$p=FAIL"; fi
+          done
+          actual=$(git hash-object "$TASK_PATH" 2>/dev/null || true)
+          [ "$actual" = "$EXPECTED_TASK_BLOB" ] && add "TASK_BLOB=PASS:$actual" || add "TASK_BLOB=FAIL:$actual"
+          grep -Fq '"exactly_one_execution": true' "$TASK_PATH" && add "TASK_EXACTLY_ONCE=PASS" || add "TASK_EXACTLY_ONCE=FAIL"
+          grep -Fq '"no_same_task_replay": true' "$MISSION_PATH" && add "MISSION_NO_REPLAY=PASS" || add "MISSION_NO_REPLAY=FAIL"
+          grep -Fq 'broad_objective_decomposition_available' canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py && add "BROAD_HOOK=PASS" || add "BROAD_HOOK=FAIL"
+          if grep -Fq 'PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001' canonical/runtime/astra_runtime.py; then add "STALE_SQLITE_DISPATCHER=FAIL_PRESENT"; else add "STALE_SQLITE_DISPATCHER=PASS_ABSENT"; fi
+          python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py >pycompile.log 2>&1
+          [ $? -eq 0 ] && add "PY_COMPILE=PASS" || add "PY_COMPILE=FAIL:$(tail -n 8 pycompile.log | tr '\n\r' '  ')"
+          python canonical/tests/test_broad_objective_decomposition.py >unit.log 2>&1
+          [ $? -eq 0 ] && add "BROAD_TEST=PASS" || add "BROAD_TEST=FAIL:$(tail -n 15 unit.log | tr '\n\r' '  ')"
+          old=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" --jq '.body // ""')
+          clean=$(printf '%s\n' "$old" | sed '/<!-- PARENT_PRESTART_ISOLATION_BEGIN -->/,/<!-- PARENT_PRESTART_ISOLATION_END -->/d')
+          new=$(printf '%s\n\n<!-- PARENT_PRESTART_ISOLATION_BEGIN -->\n%b<!-- PARENT_PRESTART_ISOLATION_END -->\n' "$clean" "$report")
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" -f body="$new" >/dev/null
