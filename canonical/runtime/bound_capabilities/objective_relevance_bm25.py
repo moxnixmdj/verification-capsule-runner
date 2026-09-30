@@ -8,6 +8,7 @@ status, authority, or evidence sufficiency.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import math
 import pathlib
@@ -27,6 +28,19 @@ def _canon(value):
 def _tokens(value):
     return [x for x in WORD_RE.findall(_canon(value).lower()) if len(x)>1 and x not in GENERIC]
 
+
+def _focus(objective):
+    path=pathlib.Path(__file__).resolve().with_name("research_query_focus.py")
+    spec=importlib.util.spec_from_file_location("project_brain_research_query_focus_relevance",path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("RESEARCH_QUERY_FOCUS_LOAD_FAILED")
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    result=module.focus(objective)
+    if result.get("status")!="FOCUSED":
+        return None
+    return result
+
 def _candidate_text(candidate):
     c=dict(candidate or {})
     title=_canon(c.get("title"))
@@ -35,6 +49,18 @@ def _candidate_text(candidate):
     # Repeating titles is a standard field-weight approximation while keeping
     # one simple BM25 corpus and no learned parameters.
     return " ".join(x for x in (title,title,record_title,snippet) if x)
+
+
+def _decision_role_admission(objective,candidate):
+    path=pathlib.Path(__file__).resolve().with_name("decision_role_relevance_admission.py")
+    spec=importlib.util.spec_from_file_location(
+        "project_brain_decision_role_relevance_admission",path
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError("DECISION_ROLE_RELEVANCE_ADMISSION_LOAD_FAILED")
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.evaluate(objective,_candidate_text(candidate))
 
 def _bm25_scores(query_tokens, docs, k1=1.5, b=0.75):
     n=len(docs)
@@ -70,6 +96,19 @@ def _bm25_scores(query_tokens, docs, k1=1.5, b=0.75):
         out.append((score,contributions))
     return out
 
+def _top_candidate_admission(query_tokens,matched_terms):
+    qn=len(list(query_tokens or []))
+    mn=len(list(matched_terms or []))
+    required=1 if qn<=3 else max(2,(qn+3)//4)
+    return {
+        "method":"FOCUSED_QUERY_TOKEN_COVERAGE_V1",
+        "query_token_count":qn,
+        "matched_term_count":mn,
+        "required_matched_term_count":required,
+        "matched_term_coverage":round((mn/qn) if qn else 0.0,6),
+        "verified":bool(qn and mn>=required),
+    }
+
 def rank(objective,candidates,limit=None):
     objective=_canon(objective)
     base={
@@ -87,7 +126,10 @@ def rank(objective,candidates,limit=None):
         return {**base,"status":"RELEVANCE_UNRESOLVED","reason":"OBJECTIVE_REQUIRED","ranked_candidates":[]}
     if not isinstance(candidates,list) or not candidates:
         return {**base,"status":"RELEVANCE_UNRESOLVED","reason":"CANDIDATES_REQUIRED","ranked_candidates":[]}
-    q=_tokens(objective)
+    focus=_focus(objective)
+    if not focus:
+        return {**base,"status":"RELEVANCE_UNRESOLVED","reason":"RESEARCH_QUERY_FOCUS_UNRESOLVED","ranked_candidates":[]}
+    q=_tokens(focus.get("query"))
     if not q:
         return {**base,"status":"RELEVANCE_UNRESOLVED","reason":"NO_DISCRIMINATIVE_OBJECTIVE_TOKENS","ranked_candidates":[]}
 
@@ -95,12 +137,26 @@ def rank(objective,candidates,limit=None):
     scored=_bm25_scores(q,docs)
     rows=[]
     for index,(candidate,(score,parts)) in enumerate(zip(candidates,scored)):
+        subject_admission=_top_candidate_admission(q,sorted(parts))
+        role_admission=_decision_role_admission(objective,candidate)
+        combined_verified=bool(
+            subject_admission.get("verified") is True
+            and role_admission.get("verified") is True
+        )
+        combined_admission={
+            **subject_admission,
+            "method":"FOCUSED_QUERY_TOKEN_COVERAGE_PLUS_BOUNDED_DECISION_ROLE_V1",
+            "subject_coverage":subject_admission,
+            "decision_role":role_admission,
+            "verified":combined_verified,
+        }
         rows.append({
             "original_index":index,
             "candidate":candidate,
             "lexical_relevance_score":round(float(score),12),
             "matched_terms":sorted(parts),
             "term_contributions":{k:round(float(v),12) for k,v in sorted(parts.items())},
+            "candidate_admission":combined_admission,
         })
     rows.sort(key=lambda x:(-x["lexical_relevance_score"],x["original_index"]))
     positive=[x for x in rows if x["lexical_relevance_score"]>0]
@@ -112,17 +168,30 @@ def rank(objective,candidates,limit=None):
             "query_tokens":q,
             "ranked_candidates":rows,
         }
+    raw_top=positive[0]
+    admitted=[
+        x for x in positive
+        if (x.get("candidate_admission") or {}).get("verified") is True
+    ]
+    top=admitted[0] if admitted else raw_top
+    admission=top.get("candidate_admission") or {}
     if limit is not None:
         rows=rows[:max(1,min(int(limit),len(rows)))]
     return {
         **base,
         "status":"LEXICAL_RELEVANCE_RANKED",
         "verification_method":"DETERMINISTIC_BM25",
+        "admission_method":"FOCUSED_QUERY_TOKEN_COVERAGE_PLUS_BOUNDED_DECISION_ROLE_V1",
         "query_tokens":q,
+        "query_focus":focus,
         "candidate_count":len(candidates),
         "positive_relevance_count":len(positive),
+        "role_admitted_positive_count":len(admitted),
         "ranked_candidates":rows,
-        "top_candidate_original_index":positive[0]["original_index"],
+        "raw_top_candidate_original_index":raw_top["original_index"],
+        "top_candidate_original_index":top["original_index"],
+        "top_candidate_admission":admission,
+        "admission_claim_scope":"BOUNDED_FOCUSED_QUERY_TOKEN_COVERAGE_PLUS_EXPLICIT_COMPARISON_DECISION_ROLE_LEXICAL_ADMISSION_ONLY",
         "output_verified":True,
     }
 
