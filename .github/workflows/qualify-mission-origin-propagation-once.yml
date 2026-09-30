@@ -1,0 +1,46 @@
+name: Qualify Canonical Mission-Origin Propagation Once
+
+on:
+  pull_request:
+    branches: [main]
+    types: [ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mission-origin-propagation-canary-20260930-001
+  cancel-in-progress: false
+
+jobs:
+  qualify-once:
+    if: github.head_ref == 'canary/canonical-mission-origin-propagation-20260930-v1' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute non-parent mission-origin canary exactly once
+        id: canary
+        continue-on-error: true
+        run: python run_mission_origin_propagation_canary_once.py
+      - name: Upload terminal canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-origin-propagation-canary-terminal
+          path: mission-origin-propagation-canary-terminal.json
+          if-no-files-found: error
+      - name: Preserve canary failure
+        if: steps.canary.outcome != 'success'
+        run: exit 1
