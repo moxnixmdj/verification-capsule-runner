@@ -1,0 +1,25 @@
+name: Qualify Brain PR468 Multi-Clause Broad Routing
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - qualification/pr468/**
+      - .github/workflows/qualify-brain-pr468.yml
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+      - name: Verify exact candidate and generic routing semantics
+        run: |
+          python -m py_compile qualification/pr468/plain_goal_bound_grounding.py qualification/pr468/broad_objective_decompose.py qualification/pr468/verify_multiclause_routing.py
+          python qualification/pr468/verify_multiclause_routing.py
