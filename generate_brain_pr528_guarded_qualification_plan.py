@@ -5,14 +5,14 @@ ROOT=pathlib.Path(__file__).resolve().parent
 SOURCE="canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py"
 FRONT="canonical/runtime/bound_capabilities/open_research_source_frontend.py"
 TEST="canonical/tests/test_scholarly_provenance_admission_materialization.py"
-GOAL="Independently qualify Brain PR528 generic scholarly provenance admission and selected-source live materialization without executing any parent task."
+GOAL="Independently qualify Brain PR528 generic scholarly provenance admission and selected-source live materialization, v2 after a documented pre-child receipt-path carrier failure, without executing any parent task."
 def sha256_file(rel): return hashlib.sha256((ROOT/rel).read_bytes()).hexdigest()
 norm=" ".join(unicodedata.normalize("NFKC",GOAL).strip().lower().split())
 plan={
  "schema":"BRAIN_GUARDED_LAUNCH_PLAN_V1",
  "goal_text":GOAL,
  "frozen":{
-   "gate_id":"BRAIN-PR528-SCHOLARLY-ADMISSION-MATERIALIZATION-QUALIFICATION-20260930-V1",
+   "gate_id":"BRAIN-PR528-SCHOLARLY-ADMISSION-MATERIALIZATION-QUALIFICATION-20260930-V2",
    "problem_sha256":hashlib.sha256(("goal_text_v1\0"+norm).encode()).hexdigest(),
    "task_sha256":sha256_file(SOURCE),
    "runtime_sha256":sha256_file(FRONT),
