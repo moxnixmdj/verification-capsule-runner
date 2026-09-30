@@ -114,15 +114,6 @@ def qualify(case):
 
 cases=[
  {
-  "id":"PYPI_SYMPY_NON_ROR_ADMISSION",
-  "objective":"SymPy Python symbolic mathematics library",
-  "candidate":{
-    "url":"https://pypi.org/project/sympy/",
-    "title":"sympy · PyPI",
-    "snippet":"Python library for symbolic mathematics"
-  }
- },
- {
   "id":"SQLITE_LOCKING_NON_ROR_ADMISSION",
   "objective":"SQLite database locking concurrency rollback journal transactions",
   "candidate":{
@@ -130,11 +121,31 @@ cases=[
     "title":"File Locking And Concurrency In SQLite Version 3",
     "snippet":"SQLite locking concurrency rollback journal database transactions"
   }
+ },
+ {
+  "id":"RFC_HTTP_SEMANTICS_NON_ROR_ADMISSION",
+  "objective":"HTTP semantics request response status methods protocol",
+  "candidate":{
+    "url":"https://www.rfc-editor.org/rfc/rfc9110.html",
+    "title":"RFC 9110 HTTP Semantics",
+    "snippet":"HTTP semantics request response status methods protocol"
+  }
  }
 ]
 
 report={"schema":"PROJECT_BRAIN_PR426_GENERIC_EXTRACTION_QUALIFICATION_V1","checks":[],"model_dependency_count":0,"incremental_spend_usd":0}
 for case in cases: report["checks"].append(qualify(case))
+
+# Fresh page relevance remains a separate fail-closed condition: discovery metadata
+# can rank a candidate while the freshly retrieved body contains no usable units.
+pypi_objective="SymPy Python symbolic mathematics library"
+pypi_target={"url":"https://pypi.org/project/sympy/","title":"sympy · PyPI","snippet":"Python library for symbolic mathematics"}
+pypi_prov=prov.verify(pypi_target,timeout=25)
+pypi_rel=bm25.rank(pypi_objective,[pypi_target,{"url":"https://example.com/x","title":"gardening tomatoes","snippet":"soil irrigation"}])
+pypi_result=extractor.extract(pypi_objective,pypi_target,pypi_prov,pypi_rel,timeout=25)
+if pypi_result.get("reason")!="NO_OBJECTIVE_GROUNDED_EVIDENCE_UNITS":
+    raise RuntimeError("FRESH_BODY_RELEVANCE_NEGATIVE_CONTROL_FAILED:"+json.dumps(pypi_result,sort_keys=True)[:800])
+report["checks"].append({"id":"METADATA_RELEVANT_BUT_FRESH_BODY_UNGROUNDED_FAIL_CLOSED","pass":True})
 
 # Fail closed: a receipt that selects a different candidate cannot admit the target.
 objective=cases[0]["objective"]; target=cases[0]["candidate"]
