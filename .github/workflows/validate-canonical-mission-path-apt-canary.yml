@@ -1,0 +1,37 @@
+name: Validate canonical mission-path propagation through APT acquisition
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  mission-path-canary:
+    if: github.head_ref == 'verify/canonical-mission-path-apt-canary-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh zero-cost Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute fresh non-parent canonical-entrypoint canary
+        run: python run_mission_path_apt_canary.py
+      - name: Upload terminal canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-path-apt-canary-terminal
+          path: mission-path-apt-canary-terminal.json
+          if-no-files-found: error
