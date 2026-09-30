@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import importlib.util,json,pathlib,sys,hashlib
+          import importlib.util,json,pathlib,sys,hashlib,traceback
           root=pathlib.Path(".").resolve()
           def load(name,path):
               spec=importlib.util.spec_from_file_location(name,root/path)
@@ -45,36 +45,106 @@ jobs:
             ", synthesize the decision to "+output_path+
             ". Then independently verify the decision result at "+output_path+"."
           )
-          grounding=grounder.ground(
-              goal,registry,compiler=compiler,proposal_binder=proposal,root=root,
-              enforce_bindability=True,
-          )
-          composition=composer.compose(
-              goal,grounding,registry,compiler,root,
-              verified_initial_facts=["structured.decision_evidence.available"],
-          )
-          planned=planner.plan_actions(composition["problem"])
-          actions=[x for x in planned["actions"] if x.get("type")!="finish"]
 
+          # 1. Pure producer/verifier semantics first. This must survive any later
+          # compiler/composer diagnostic failure.
           problem=json.loads((root/input_path).read_text())
           synthesized=producer.synthesize(problem)
           direct_ok,direct_reason=verifier.verify(problem,synthesized)
 
+          # 2. Inspect the direct compound compiler path without executing it.
+          compile_error=None
+          compiled=None
+          compiled_actions=[]
+          try:
+              compiled=compiler.compile_goal(goal,registry,root)
+              compiled_actions=[
+                  x for x in (compiled.get("controller_actions") or [])
+                  if isinstance(x,dict) and x.get("type")!="finish"
+              ]
+          except Exception as exc:
+              compile_error={"type":type(exc).__name__,"message":str(exc)}
+
+          # 3. Inspect the grounded-composition path separately. Ambiguity here
+          # must not erase the direct semantic/binding evidence above.
+          grounding_error=None
+          composition_error=None
+          grounding=None
+          composition=None
+          planned_actions=[]
+          try:
+              grounding=grounder.ground(
+                  goal,registry,compiler=compiler,proposal_binder=proposal,root=root,
+                  enforce_bindability=True,
+              )
+              try:
+                  composition=composer.compose(
+                      goal,grounding,registry,compiler,root,
+                      verified_initial_facts=["structured.decision_evidence.available"],
+                  )
+                  planned=planner.plan_actions(composition["problem"])
+                  planned_actions=[x for x in planned["actions"] if x.get("type")!="finish"]
+              except Exception as exc:
+                  composition_error={"type":type(exc).__name__,"message":str(exc)}
+          except Exception as exc:
+              grounding_error={"type":type(exc).__name__,"message":str(exc)}
+
+          def binding_summary(actions):
+              rows=[]
+              for i,a in enumerate(actions):
+                  if not isinstance(a,dict):
+                      continue
+                  args=a.get("args") if isinstance(a.get("args"),dict) else {}
+                  cid=args.get("capability_id")
+                  if cid in {"decision.synthesis.typed.stdlib","decision.synthesis.verify.stdlib"}:
+                      rows.append({
+                          "index":i,
+                          "capability_id":cid,
+                          "input_path":args.get("input_path"),
+                          "result_path":args.get("result_path"),
+                          "output_path":args.get("output_path"),
+                      })
+              return rows
+
+          direct_bindings=binding_summary(compiled_actions)
+          grounded_bindings=binding_summary(planned_actions)
+
+          classification="UNRESOLVED"
+          if not direct_ok:
+              classification="PRODUCER_VERIFIER_SEMANTIC_MISMATCH"
+          elif direct_ok and direct_bindings:
+              verifier_rows=[x for x in direct_bindings if x["capability_id"]=="decision.synthesis.verify.stdlib"]
+              if verifier_rows:
+                  vr=verifier_rows[-1]
+                  if vr.get("input_path")!=input_path or vr.get("result_path")!=output_path:
+                      classification="DIRECT_COMPOUND_COMPILER_BINDING_MISMATCH"
+                  elif composition_error:
+                      classification="GROUNDED_COMPOSITION_DIAGNOSTIC_AMBIGUITY_AFTER_DIRECT_PATH_PROVEN_CORRECT"
+                  else:
+                      classification="DIRECT_AND_GROUNDED_BINDINGS_REQUIRE_FURTHER_DIAGNOSIS"
+
           report={
-            "schema":"PROJECT_BRAIN_SPENT_REQUAL_STATIC_DIAGNOSTIC_V1",
+            "schema":"PROJECT_BRAIN_SPENT_REQUAL_STATIC_DIAGNOSTIC_V2",
             "non_crediting":True,
             "no_controller_execution":True,
             "spent_run_id":36656793034,
-            "grounding_unresolved":grounding["unresolved_clause_indexes"],
-            "composition_ready":composition["composition_ready"],
-            "planned_actions":actions,
+            "classification":classification,
             "direct_pure_verify":{"ok":direct_ok,"reason":direct_reason},
             "direct_selected":synthesized.get("selected_alternative"),
             "direct_status":synthesized.get("status"),
             "input_hash_in_result":synthesized.get("input_sha256"),
             "input_hash_direct":hashlib.sha256(json.dumps(problem,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest(),
+            "direct_compile_error":compile_error,
+            "direct_compiler_bindings":direct_bindings,
+            "grounding_error":grounding_error,
+            "grounding_unresolved":None if grounding is None else grounding.get("unresolved_clause_indexes"),
+            "composition_error":composition_error,
+            "composition_ready":None if composition is None else composition.get("composition_ready"),
+            "grounded_planned_bindings":grounded_bindings,
           }
-          pathlib.Path("SPENT_COMPOSITION_REQUAL_STATIC_DIAGNOSTIC.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          pathlib.Path("SPENT_COMPOSITION_REQUAL_STATIC_DIAGNOSTIC.json").write_text(
+              json.dumps(report,indent=2,sort_keys=True)+"\n"
+          )
           print(json.dumps(report,sort_keys=True))
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
