@@ -1,0 +1,53 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the exact installed Project Brain claim-spec and operand-binding capability over its bounded operator surface and fail-closed controls without executing any parent scientific task.",
+  "frozen": {
+    "gate_id": "BRAIN-CLAIM-SPEC-OPERAND-BINDING-GUARDED-REQUALIFICATION-20260930-V1",
+    "problem_sha256": "cef83ee099fe15642eb39cabdca246f3c9f289669148bb7446a0c714ad62cd5d",
+    "task_sha256": "16e6f5c5234ed3947da175982de79be8c9ff00a7a4f434bf8cf1591788c47785",
+    "runtime_sha256": "441bb82da219f733f357fa3d78fbbf32537e4c0d346b5eb85204376adaed6e6d",
+    "canonical_base": "bab96da313ac8c9b4476e8d466f1fe1fcbb5f240",
+    "authorization_sha256": "5cec147b343807d9f4b27f520bce1b0ad65bfefebae0d8fb9007dbd12e17766e"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py",
+      "git_blob_sha1": "48fd058430d8d361fc75beced567c7b6d1166531"
+    },
+    {
+      "path": "canonical/tests/test_objective_claim_operand_binding.py",
+      "git_blob_sha1": "467a9f4f9b835ca8f65fd19b9335770e7b0ef31b"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py",
+      "git_blob_sha1": "d66a7eb30774f66160b698d8082947776888293d"
+    },
+    {
+      "path": "verify_pr447_claim_spec_operand_binding.py",
+      "git_blob_sha1": "16aff25975ac126839c57caac08cf97e1bb663fd"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_objective_claim_operand_binding.py && python verify_pr447_claim_spec_operand_binding.py"
+  ],
+  "authority": {
+    "brain_pr": 454,
+    "brain_action_intent_commit": "3fe4922f4149d056603352ec2cdce5a10180f463",
+    "prior_unguarded_run_id": 36685279194,
+    "prior_unguarded_evidence_authority": "DIAGNOSTIC_ONLY"
+  }
+}
