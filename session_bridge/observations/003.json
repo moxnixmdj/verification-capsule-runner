@@ -1,0 +1,10 @@
+{
+  "command_sha256": "9936dd7047923eebdf52812307ecddc92e79d026e1806748b5de413e8fdbe682",
+  "duration_sec": 0.375,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20261001-v1",
+  "stderr": "",
+  "stdout": "\n> react-lead-form@1.0.0 submit\n> tsx src/scripts/submit.ts\n\nLead accepted\n",
+  "step": 3
+}
