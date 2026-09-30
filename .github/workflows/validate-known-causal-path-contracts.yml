@@ -1,0 +1,116 @@
+name: Validate Known Causal Path Contract Closure
+
+on:
+  push:
+    branches: [verify/close-known-causal-path-contracts-20260930]
+    paths:
+      - 'ARM_VALIDATE_KNOWN_CAUSAL_PATH_CONTRACTS_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact candidate stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+          test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "00d521e155060629cf0a8babbdf2626278e183ba"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          echo EXACT_THREE_CONTRACT_STACK_PASS
+      - name: Run grounded composition regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_grounded_executable_composition.py
+      - name: Independently recompute provider-backed path audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib,re
+          root=pathlib.Path(".").resolve()
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          providers={}
+          for cid,entry in registry.items():
+              if entry.get("status")!="VERIFIED_BOUND_CAPABILITY":
+                  continue
+              for effect in entry.get("provides") or []:
+                  providers.setdefault(str(effect),[]).append(cid)
+
+          def placeholders(value,out=None):
+              if out is None: out=[]
+              if isinstance(value,list):
+                  for x in value: placeholders(x,out)
+              elif isinstance(value,dict):
+                  for x in value.values(): placeholders(x,out)
+              elif isinstance(value,str):
+                  out.extend(re.findall(r"\$\{input\.([A-Za-z0-9_]+)\}",value))
+              return sorted(set(out))
+
+          violations=[]
+          for cid,entry in registry.items():
+              if entry.get("status")!="VERIFIED_BOUND_CAPABILITY":
+                  continue
+              has_upstream=any(
+                  any(p!=cid for p in providers.get(str(req),[]))
+                  for req in entry.get("requires") or []
+              )
+              if not has_upstream:
+                  continue
+              paths=[
+                  x for x in placeholders(entry.get("action_template") or {})
+                  if x.endswith("_path") or x.endswith("_paths")
+              ]
+              if not paths:
+                  continue
+              declared=set((entry.get("proposal_bindings") or {}).keys())
+              missing=sorted(set(paths)-declared)
+              if missing:
+                  violations.append({"capability_id":cid,"missing":missing})
+          assert violations==[],violations
+
+          expected={
+            "knowledge.status.assert":{
+              "assessment_path":{"type":"effect_result","effect":"knowledge.assessment.available","field":"output_path","container":"scalar"}
+            },
+            "knowledge.support.materialize":{
+              "assessment_path":{"type":"effect_result","effect":"knowledge.assessment.available","field":"output_path","container":"scalar"},
+              "output_path":{"type":"auto_path","suffix":".json"}
+            },
+            "plain_goal.bound_capability.grounding.verify.stdlib":{
+              "result_path":{"type":"effect_result","effect":"plain_goal.bound_capability.grounding","field":"output_path","container":"scalar"}
+            }
+          }
+          for cid,want in expected.items():
+              got=registry[cid].get("proposal_bindings")
+              assert got==want,(cid,got,want)
+
+          receipt={
+            "schema":"PROJECT_BRAIN_KNOWN_CAUSAL_PATH_CONTRACT_CLOSURE_VALIDATION_V1",
+            "candidate_brain_pr":275,
+            "provider_backed_path_binding_violations":[],
+            "known_contracts_closed":sorted(expected),
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+            "verdict":"PASS"
+          }
+          pathlib.Path("KNOWN_CAUSAL_PATH_CONTRACT_CLOSURE_VALIDATION.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          print("KNOWN_CAUSAL_PATH_CONTRACT_CLOSURE_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: known-causal-path-contract-closure-validation
+          path: KNOWN_CAUSAL_PATH_CONTRACT_CLOSURE_VALIDATION.json
