@@ -1,0 +1,34 @@
+name: Qualify Source Frontend Relevance Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - canonical/runtime/bound_capabilities/objective_relevance_bm25.py
+      - canonical/runtime/bound_capabilities/broad_objective_decompose.py
+      - canonical/runtime/astra_runtime.py
+      - canonical/tests/test_source_frontend_relevance_integration.py
+      - .github/workflows/qualify-source-frontend-relevance-integration.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify exact independently-qualified BM25 producer blob
+        run: |
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790"
+      - name: Run source frontend relevance integration regression
+        run: python canonical/tests/test_source_frontend_relevance_integration.py
+      - name: Verify runtime frontier marker
+        run: |
+          grep -q "OPEN_ENDED_RESEARCH_RELEVANT_SOURCE_READY__" canonical/runtime/astra_runtime.py
+          grep -q "EVIDENCE_ACQUISITION_REQUIRED" canonical/runtime/astra_runtime.py
