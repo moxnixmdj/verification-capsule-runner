@@ -1,0 +1,10 @@
+{
+  "command_sha256": "a6beaf18c9ff208b9e1aa3050e461a8c00bd5cdf1e58905f2f72b0ecb725c27c",
+  "duration_sec": 0.053,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "",
+  "stdout": "/app/src/App.tsx\n/app/src/components/LeadForm.tsx\n/app/src/data/lead_input.json\n/app/src/lib/payload.ts\n/app/src/lib/submitLead.ts\n/app/src/lib/tracking.ts\n/app/src/lib/validation.ts\n/app/src/main.tsx\n/app/src/scripts/submit.ts\n/app/src/spec/business_calendar.json\n/app/src/spec/lead_policy.json\n/app/src/spec/lead_schema.json\n",
+  "step": 5
+}
