@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.util, json, pathlib, sys
 
 ROOT=pathlib.Path(__file__).resolve().parent
-CAND=ROOT/"pr474_candidate"
+CAND=ROOT/"pr474_snapshot"/"canonical"/"runtime"/"bound_capabilities"
 
 def load(path,name):
     spec=importlib.util.spec_from_file_location(name,path)
