@@ -1,0 +1,41 @@
+{
+  "schema": "PROJECT_BRAIN_GENERIC_JSON_SOURCE_PREFLIGHT_MANIFEST_V1",
+  "task_id": "PARENT-CHEMISTRY-AMMONIUM-CHLORIDE-MASS-BALANCE-REAL-TASK-20260930-001",
+  "task_git_blob": "d423431ec9770283e62dfa590fe3f45c623f3f53",
+  "values_must_not_be_recorded": true,
+  "sources": [
+    {
+      "name": "ammonia",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonia/property/MolecularWeight/JSON",
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
+      "expected_type": "string"
+    },
+    {
+      "name": "hydrogen_chloride",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/hydrogen%20chloride/property/MolecularWeight/JSON",
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
+      "expected_type": "string"
+    },
+    {
+      "name": "ammonium_chloride",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonium%20chloride/property/MolecularWeight/JSON",
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
+      "expected_type": "string"
+    }
+  ]
+}
