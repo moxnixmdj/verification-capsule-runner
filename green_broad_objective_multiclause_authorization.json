@@ -1,0 +1,12 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "GREEN_QUALIFICATION_OF_PR468_MULTI_CLAUSE_BROAD_OBJECTIVE_ROUTING",
+  "brain_base": "73f8331cddf556af0daece3aa32998ac992981d0",
+  "brain_pr": 468,
+  "authoritative_parent_run": 36688193204,
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
