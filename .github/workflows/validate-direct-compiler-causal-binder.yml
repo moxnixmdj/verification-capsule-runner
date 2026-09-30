@@ -1,0 +1,39 @@
+name: Validate Direct Compiler Causal Binder Unification
+
+on:
+  push:
+    branches: [verify/unify-direct-compiler-proposal-binding-20260930]
+    paths:
+      - 'ARM_VALIDATE_DIRECT_COMPILER_CAUSAL_BINDER_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact candidate and shared binder stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "902008041849ee7e8686dacc2580a3b9b3393933"
+          test "$(git hash-object canonical/tests/test_goal_compiler.py)" = "5aae0b0b1ccb46b02c7ff9ee3e87a63a2065d4c9"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+      - name: Run direct causal binding regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_goal_compiler.py GoalCompilerTests.test_direct_compound_compiler_uses_effect_result_binding_authority
+      - name: Run full goal compiler regression file
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_goal_compiler.py
