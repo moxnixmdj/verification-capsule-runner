@@ -1,0 +1,50 @@
+name: Observe Numerical Stability Parent C013 Terminal
+
+on:
+  push:
+    branches:
+      - observe/numerical-stability-parent-c013-terminal-20260930-v1
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_HEAD: c01341d5a3a0713071db09a64e8d2f8ea7d667ca
+      TARGET_WORKFLOW: Execute Fresh Numerical Stability Parent Once
+      TARGET_PR: "109"
+    steps:
+      - name: Observe exact hardened head
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          run_id=""
+          for i in $(seq 1 90); do
+            run_id=$(gh api "repos/$repo/actions/runs?head_sha=$TARGET_HEAD&per_page=100" --jq ".workflow_runs[] | select(.name == \"$TARGET_WORKFLOW\") | .id" | head -n1 || true)
+            [ -n "$run_id" ] && break
+            sleep 4
+          done
+          if [ -z "$run_id" ]; then
+            status="NO_RUN"; conclusion=""
+          else
+            status=""
+            conclusion=""
+            for i in $(seq 1 180); do
+              status=$(gh api "repos/$repo/actions/runs/$run_id" --jq '.status')
+              conclusion=$(gh api "repos/$repo/actions/runs/$run_id" --jq '.conclusion // ""')
+              [ "$status" = "completed" ] && break
+              sleep 4
+            done
+          fi
+          receipt=$(printf 'TARGET_HEAD=%s\nRUN_ID=%s\nSTATUS=%s\nCONCLUSION=%s' "$TARGET_HEAD" "$run_id" "$status" "$conclusion")
+          old=$(gh api "repos/$repo/pulls/$TARGET_PR" --jq '.body // ""')
+          clean=$(printf '%s\n' "$old" | sed '/<!-- C013_OBSERVER_BEGIN -->/,/<!-- C013_OBSERVER_END -->/d')
+          new=$(printf '%s\n\n<!-- C013_OBSERVER_BEGIN -->\n%s\n<!-- C013_OBSERVER_END -->\n' "$clean" "$receipt")
+          gh api --method PATCH "repos/$repo/pulls/$TARGET_PR" -f body="$new" >/dev/null
