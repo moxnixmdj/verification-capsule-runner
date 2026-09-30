@@ -117,7 +117,7 @@ plan={
     "brain_carrier_prestart_rejection_run":36688442377,
     "brain_carrier_prestart_steps":0,
     "prior_unguarded_pr":456,
-    "no_prior_physical_spend":true
+    "no_prior_physical_spend":True
   }
 }
 (ROOT/"guarded_http2_parent_task_a_plan.json").write_text(json.dumps(plan,indent=2,sort_keys=True)+"\n",encoding="utf-8")
