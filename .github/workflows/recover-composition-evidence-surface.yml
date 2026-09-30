@@ -66,7 +66,7 @@ jobs:
           ]
           missing=[x for x in required if x not in plain]
           assert not missing,missing
-          assert "result.get("composition_mode")=="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH"" in plain
+          assert "composition_mode" in plain and "MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH" in plain
           assert "AssertionError:" in plain
 
           task=json.loads(task_path.read_text(encoding="utf-8"))
