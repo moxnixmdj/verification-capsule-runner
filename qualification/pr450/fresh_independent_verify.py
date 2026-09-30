@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib, importlib.util, json, pathlib
 from decimal import Decimal
 
-ROOT=pathlib.Path(__file__).resolve().parent
+ROOT=pathlib.Path(__file__).resolve().parents[2]
 CAP=ROOT/"canonical/runtime/bound_capabilities"
 REPORT=ROOT/"guarded-pr450-claim-spec-qualification-report.json"
 
