@@ -1,0 +1,52 @@
+name: Verify Numeric Relation jq Reuse V1
+
+on:
+  push:
+    branches:
+      - verify/numeric-relation-jq-reuse-20260930-v1
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact PR293 candidate bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "b446257ca01ee858ada2fb52d0c7925f2ea4391f"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+          test "$(git hash-object canonical/runtime/bound_capabilities/jq_query.py)" = "f0b644274c1ffbff7ea5adb81e07e00435d2ac4c"
+          test "$(git hash-object canonical/tests/test_numeric_relation_jq_reuse.py)" = "37e42b6b4be726bd80c29b39f861e64e570e3492"
+
+      - name: Run deterministic compiler regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_numeric_relation_jq_reuse.py
+
+      - name: Run fresh non-geophysics real reuse and independent oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python verify_numeric_relation_jq_reuse.py
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ always() }}
+        with:
+          name: numeric-relation-jq-reuse-v1
+          path: |
+            numeric-relation-fresh-report.json
+            canonical/astra_runtime/tmp/NUMERIC_RELATION_*_INPUT.json
+            canonical/astra_runtime/tmp/NUMERIC_RELATION_*_RESULT.json
+          if-no-files-found: warn
