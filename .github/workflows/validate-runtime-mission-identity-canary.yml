@@ -1,0 +1,33 @@
+name: Validate Runtime Mission Identity Canary
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_RUNTIME_MISSION_IDENTITY_CANARY_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate canonical mission identity propagation
+        run: python run_runtime_mission_identity_canary.py
+      - name: Upload canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-mission-identity-canary
+          path: runtime-mission-identity-canary-report.json
+          if-no-files-found: error
