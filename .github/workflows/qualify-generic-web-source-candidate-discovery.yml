@@ -1,0 +1,75 @@
+name: Qualify Generic Web Source Candidate Discovery
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/generic-web-source-candidate-discovery-ddgs-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify exact candidate bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' 'ccd60c0117b412583e63a93123d61bad1048d101d45566118f49b8ed8f6d766c' canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py | sha256sum -c -
+          printf '%s  %s\n' '52d492f695c40cd3a0832dcd7ce82882bdc4f9c87322ea51006a162e5896a81a' canonical/tests/test_web_source_candidate_discovery_ddgs.py | sha256sum -c -
+      - name: Run deterministic fail-closed tests
+        run: python canonical/tests/test_web_source_candidate_discovery_ddgs.py
+      - name: Install exact DDGS release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ddgs-wheel
+          python -m pip download --disable-pip-version-check --no-deps --only-binary=:all: 'ddgs==9.16.0' -d /tmp/ddgs-wheel
+          printf '%s  %s\n' '175d9198c958a263f51a06a54368ba0b41294942c0cd29f4aa71be03dbcd5f4a' /tmp/ddgs-wheel/ddgs-9.16.0-py3-none-any.whl | sha256sum -c -
+          python -m pip install --disable-pip-version-check /tmp/ddgs-wheel/ddgs-9.16.0-py3-none-any.whl
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("ddgs") == "9.16.0"
+          print("DDGS_VERSION_AND_WHEEL_HASH_PASS")
+          PY
+      - name: Live cross-domain source-candidate oracle
+        shell: bash
+        run: |
+          python - <<'PY'
+          import importlib.util, pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py")
+          s=importlib.util.spec_from_file_location("srcdisc",p)
+          m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+          objectives=[
+            "Determine whether SQLite online backup can remain logically consistent while the source database changes concurrently",
+            "Assess how NIST documents floating-point numerical accuracy and reproducibility",
+            "Compare NASA technical documentation for planetary ephemeris data access methods",
+          ]
+          passed=[]
+          for objective in objectives:
+              try:
+                  out=m.discover(objective,max_results=10)
+              except Exception as exc:
+                  print("LIVE_QUERY_ERROR",type(exc).__name__,str(exc)[:500])
+                  continue
+              assert out["status"]=="SOURCE_CANDIDATES_DISCOVERED", out
+              assert out["candidate_count"]>=1, out
+              assert out["authority_claim_made"] is False
+              assert out["invented_source_urls"]==[] and out["invented_facts"]==[]
+              assert out["model_dependency_count"]==0 and out["incremental_spend_usd"]==0
+              assert all(x["authority_status"]=="CANDIDATE_UNVERIFIED" for x in out["candidates"])
+              assert all(x["url"].startswith(("http://","https://")) for x in out["candidates"])
+              passed.append((objective,out["candidate_count"],[x["host"] for x in out["candidates"][:3]]))
+          print("LIVE_PASSES",passed)
+          assert len(passed)>=2, passed
+          print("INDEPENDENT_WEB_SOURCE_CANDIDATE_DISCOVERY_PASS")
+          PY
