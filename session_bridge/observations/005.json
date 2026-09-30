@@ -1,0 +1,10 @@
+{
+  "command_sha256": "54cffcb9daf1e2b39dadfcf6eac542a4da5239de0f1b92ffad68e6190374fdd0",
+  "duration_sec": 1.872,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v1",
+  "stderr": "",
+  "stdout": "50000 encoded_bytes 1874970 seconds 0.116\n100000 encoded_bytes 3722733 seconds 0.231\n150000 encoded_bytes 5565028 seconds 0.363\n300000 encoded_bytes 11083555 seconds 0.773\n",
+  "step": 5
+}
