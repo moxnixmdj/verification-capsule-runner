@@ -25,7 +25,7 @@ plan={
   {"path":GROUND,"git_blob_sha1":"46e8e7466479ea298c34e5fa682d49c374510ce9"},
   {"path":TEST,"git_blob_sha1":"4717bd5ebf4b4e6521abf331e93e9675c1b8a785"},
   {"path":AUTH,"git_blob_sha1":"6e37f2b04c6a5201362ac162713364dcebf59e6a"},
-  {"path":ORACLE,"git_blob_sha1":"3c10a071d8e3a8e854d1760c5b2624cf96635388"},
+  {"path":ORACLE,"git_blob_sha1":"c9da0a2a9b81f6a31241769fd7023ae28b2bbc2f"},
   {"path":"execution_guard/github_actions_guarded_run_live.py","git_blob_sha1":"30ea2fd2cc548444477c7b234a59129ff8386235"},
   {"path":"execution_guard/actions_admission.py","git_blob_sha1":"6c46abef66c036f5382d5792b11a82a289b4dd94"},
   {"path":"execution_guard/github_ref_store_live.py","git_blob_sha1":"a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"}
@@ -34,7 +34,7 @@ plan={
  "authority":{
   "kind":"NON_PARENT_GUARDED_INDEPENDENT_ADVERSARIAL_QUALIFICATION",
   "brain_pr":496,
-  "brain_head_sha":"3fcc2dd04b482b3267a5141d4714c5ee8b7dc553",
+  "brain_head_sha":"d472da3082c8a26d16b91aad0997cb369ee5180e",
   "falsification_run":36689999285,
   "parent_task_execution":False,
   "parent_task_replay":False,
