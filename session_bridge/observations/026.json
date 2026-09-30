@@ -1,0 +1,10 @@
+{
+  "command_sha256": "f1c354bb0b8681560a7b024437f24dfc08261feed3dc50eb029d93c5b0fcdc2d",
+  "duration_sec": 1.549,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "risk-scorer-replay-20260930-v1",
+  "stderr": "",
+  "stdout": "OUTPUT_CONTRACT_PASS 5\nSCORER_ORACLE_CROSSCHECK_PASS 1744\nADVERSARIAL_REPLAY_GATE_PASS\nFINAL_PREVERIFIER_GATE_PASS\n",
+  "step": 26
+}
