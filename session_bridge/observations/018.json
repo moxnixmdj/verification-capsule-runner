@@ -1,0 +1,10 @@
+{
+  "command_sha256": "346571fdf3392ceea88dee0f6cc11a1d9947179f0baf2e1b8bd7591c783fa6ab",
+  "duration_sec": 1.882,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "risk-scorer-replay-20260930-v1",
+  "stderr": "cat: docs/review_semantics.md: No such file or directory\n",
+  "stdout": "SCHEMA_VALID_RANDOM_CASES 5000 MISMATCHES 0\n\n=== REVIEW SEMANTICS ===\n",
+  "step": 18
+}
