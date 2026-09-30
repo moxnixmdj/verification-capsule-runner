@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "brain_pr": 468,
+  "authoritative_parent_run": 36688193204,
+  "scope": "EXACT_MULTICLAUSE_BROAD_OBJECTIVE_ROUTING_REPAIR_ONLY",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0,
+  "status": "AUTHORIZED_FOR_GUARDED_NON_PARENT_QUALIFICATION"
+}
