@@ -1,0 +1,78 @@
+name: Canonical Mission Path Propagation Canary
+
+on:
+  push:
+    branches:
+      - verify/canonical-mission-path-propagation-canary-20260930-v1
+    paths:
+      - .github/workflows/run-mission-path-propagation-canary.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-mission-path-canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+
+      - name: Execute exact canonical CLI mission and preserve evidence
+        shell: bash
+        run: |
+          set +e
+          python3 canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/MISSION_PATH_PROPAGATION_CANARY_20260930_V1.json > mission-path-canary.log 2>&1
+          rc=$?
+          set -e
+          cat mission-path-canary.log
+
+          if grep -Eq 'APT_ORIGIN_MISSION_PATH_INVALID|PYPI_ORIGIN_MISSION_PATH_INVALID' mission-path-canary.log; then
+            echo "MISSION_PATH_PROPAGATION_INVALID" >&2
+            exit 86
+          fi
+
+          if [ "$rc" -ne 0 ]; then
+            echo "CANONICAL_CLI_EXIT_CODE=$rc" >&2
+            exit "$rc"
+          fi
+
+          test -s canonical/astra_runtime/tmp/MISSION_PATH_CANARY.png
+          file canonical/astra_runtime/tmp/MISSION_PATH_CANARY.png | tee mission-path-canary-output.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          p = Path("canonical/astra_runtime/tmp/MISSION_PATH_CANARY.png")
+          b = p.read_bytes()
+          evidence = {
+              "schema": "PROJECT_BRAIN_MISSION_PATH_PROPAGATION_CANARY_EVIDENCE_V1",
+              "mission_id": "MISSION-PATH-PROPAGATION-CANARY-20260930-V1",
+              "canonical_cli": "python3 canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/MISSION_PATH_PROPAGATION_CANARY_20260930_V1.json",
+              "model_planner_disabled": True,
+              "output_path": str(p),
+              "output_bytes": len(b),
+              "output_sha256": hashlib.sha256(b).hexdigest(),
+              "parent_capability_credit": False,
+          }
+          Path("mission-path-canary-evidence.json").write_text(
+              json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          print(json.dumps(evidence, sort_keys=True))
+          PY
+
+      - name: Upload canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-path-propagation-canary-20260930-v1
+          path: |
+            mission-path-canary.log
+            mission-path-canary-output.txt
+            mission-path-canary-evidence.json
+            canonical/astra_runtime/tmp/MISSION_PATH_CANARY.png
+            canonical/astra_runtime/state/**
+            canonical/astra_runtime/evidence/**
+          if-no-files-found: warn
