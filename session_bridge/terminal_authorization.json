@@ -1,0 +1,61 @@
+{
+  "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+  "session_id": "html-js-filter-20260930-v1",
+  "submission_authorized": true,
+  "known_relevant_failures": [],
+  "acceptance_criteria": [
+    {
+      "criterion": "script_and_active_embed_removal",
+      "status": "PASS",
+      "evidence": "dev observation 001: 20 adversarial cases passed"
+    },
+    {
+      "criterion": "event_handler_and_active_url_neutralization",
+      "status": "PASS",
+      "evidence": "dev observations 001/002: encoded javascript/vbscript/data HTML URL vectors and on* handlers removed"
+    },
+    {
+      "criterion": "mutation_parser_boundary",
+      "status": "PASS",
+      "evidence": "dev observation 002: 15 mutation/cross-parser vectors passed with iterative parse/sanitize stabilization"
+    },
+    {
+      "criterion": "legitimate_html_preservation",
+      "status": "PASS",
+      "evidence": "dev observations 001/002: tables, headings, data attributes, safe links/images/styles, SVG shapes and MathML content retained"
+    },
+    {
+      "criterion": "idempotent_in_place_filter",
+      "status": "PASS",
+      "evidence": "dev observation 001: second filter pass byte-identical to first sanitized output"
+    },
+    {
+      "criterion": "syntax_and_runtime",
+      "status": "PASS",
+      "evidence": "dev observations 001/002 exit 0; python3 -m py_compile filter.py passed"
+    },
+    {
+      "criterion": "browser_oracle_reserved",
+      "status": "PASS",
+      "evidence": "dev observation 002 recorded BROWSER_AVAILABLE=NONE; no local-browser claim made and independent separate browser verifier remains untouched"
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "python3 authored adversarial sanitizer probe corpus && python3 -m py_compile filter.py",
+      "exit_code": 0,
+      "evidence": "dev observation 001 exit_code 0"
+    },
+    {
+      "command": "mutation/cross-parser probe corpus && original adversarial corpus && py_compile",
+      "exit_code": 0,
+      "evidence": "dev observation 002 exit_code 0"
+    }
+  ],
+  "provenance": {
+    "development_session": "html-js-filter-dev-20260930-v1",
+    "development_verifier_consumed": false,
+    "solution_or_tests_read": false,
+    "candidate_replayed_without_verifier_feedback": true
+  }
+}
