@@ -43,7 +43,7 @@ report={
  "schema":"PROJECT_BRAIN_PR496_INDEPENDENT_ADVERSARIAL_QUALIFICATION_V1",
  "status":"PASS",
  "source_brain_pr":496,
- "source_brain_head":"3fcc2dd04b482b3267a5141d4714c5ee8b7dc553",
+ "source_brain_head":"d472da3082c8a26d16b91aad0997cb369ee5180e",
  "parent_task_execution":False,
  "parent_task_replay":False,
  "model_dependency_count":0,
