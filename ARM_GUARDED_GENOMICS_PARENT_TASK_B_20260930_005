@@ -6,3 +6,4 @@ mission_blob_sha1=03e718a9c779c26d26e7af140f2f65549c1a7f6e
 authorization_blob_sha1=2cefd24591faf06ae307d7a4ece412e7b7836a6b
 exactly_one_execution=true
 replay_allowed=false
+arm_revision=2
