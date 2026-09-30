@@ -1,0 +1,32 @@
+name: Verify Source Authority Binding RDAP
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact candidate blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_authority_binding_rdap.py)" = "5c506f75c726672107a96aba9448c14c75e06bfc"
+          test "$(git hash-object canonical/tests/test_source_authority_binding_rdap.py)" = "5fbe9e7285f93d7fbd8fb71a38f2e5ec8f12ab8b"
+      - name: Run deterministic regression suite
+        run: python canonical/tests/test_source_authority_binding_rdap.py
+      - name: Run fresh cross-domain live RDAP qualification
+        run: python verify_source_authority_binding_rdap.py
+      - name: Upload qualification report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: source-authority-binding-rdap-report
+          path: source-authority-binding-rdap-report.json
+          if-no-files-found: error
