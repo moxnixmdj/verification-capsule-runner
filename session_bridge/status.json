@@ -1,6 +1,7 @@
 {
-  "next_step": 2,
+  "final_step": 2,
+  "reward": "0",
   "session_id": "html-js-filter-20260930-v1",
-  "status": "READY_FOR_COMMAND",
-  "task": "html-js-filter"
+  "status": "COMPLETE",
+  "verifier_status": "VERIFIER_COMPLETED"
 }
