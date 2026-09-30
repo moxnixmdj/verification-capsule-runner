@@ -1,0 +1,40 @@
+name: Run PR317 Open-Ended Climate Parent Task B Once
+
+on:
+  push:
+    branches:
+      - arm/pr317-open-ended-climate-taskb-20260930-v1
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen PR317 open-ended parent task exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_pr317_open_ended_climate_once.py
+      - name: Upload terminal open-ended task evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr317-open-ended-climate-terminal
+          path: |
+            pr317-open-ended-climate-taskb-report.json
+            canonical/astra_runtime/tmp/PARENT_CLIMATE_MAUNA_LOA_CO2_ACCELERATION_RESULT.json
+            canonical/astra_runtime/evidence/**
+          if-no-files-found: warn
+      - name: Preserve semantic failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
