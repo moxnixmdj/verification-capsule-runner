@@ -139,7 +139,10 @@ def owner():
 
 def cmd_run(ns):
     spec=load_binding(ns.binding); store=github_store(); ref=run_ref(); a=reserve_live(store,spec,owner(),ref)
-    env=os.environ.copy()\n    for secret_name in ("GITHUB_TOKEN","GH_TOKEN","GITHUB_PAT","GITHUB_APP_TOKEN","BRAIN_EXECUTION_GUARD_TOKEN"):\n        env.pop(secret_name,None)\n    env.update(BRAIN_EXECUTION_ATTEMPT_ID=a,BRAIN_EXECUTION_GUARD_RUN_REF=ref,BRAIN_EXECUTION_GUARD_GATE_ID=spec.gate_id)
+    env=os.environ.copy()
+    for secret_name in ("GITHUB_TOKEN","GH_TOKEN","GITHUB_PAT","GITHUB_APP_TOKEN","BRAIN_EXECUTION_GUARD_TOKEN"):
+        env.pop(secret_name,None)
+    env.update(BRAIN_EXECUTION_ATTEMPT_ID=a,BRAIN_EXECUTION_GUARD_RUN_REF=ref,BRAIN_EXECUTION_GUARD_GATE_ID=spec.gate_id)
     print(enc({"schema":"BRAIN_EXECUTION_GUARD_LAUNCH_V1","status":"ADMISSION_ACKNOWLEDGED_BEFORE_CHILD_START","attempt_id":a,"run_ref":ref,"gate_id":spec.gate_id}),flush=True)
     return subprocess.run(ns.command,env=env,check=False).returncode
 
