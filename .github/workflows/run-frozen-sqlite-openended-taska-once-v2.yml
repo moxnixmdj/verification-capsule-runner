@@ -1,0 +1,45 @@
+name: Run Frozen SQLite Open-Ended Task A Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_FROZEN_SQLITE_OPENENDED_TASKA_20260930_V2
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen parent task exactly once through canonical ASTRA CLI
+        id: producer
+        continue-on-error: true
+        run: python run_frozen_sqlite_openended_taska_once.py
+      - name: Upload terminal producer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frozen-sqlite-openended-taska-producer-terminal
+          path: |
+            frozen-sqlite-openended-taska-producer-terminal.json
+            frozen-sqlite-openended-taska.stdout
+            frozen-sqlite-openended-taska.stderr
+            canonical/astra_runtime/state/PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001.json
+            canonical/astra_runtime/evidence/PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001*
+          if-no-files-found: warn
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
