@@ -39,6 +39,7 @@ jobs:
               assert x["candidate_count"]>=1, x
               assert x["query"]==q
               assert all(c.get("authority_status")=="UNVERIFIED" for c in x["candidates"])
+              assert any(c.get("discovery_backend") in {"BING_RSS","DUCKDUCKGO_HTML"} for c in x["candidates"]), x
               assert x["model_dependency_count"]==0
               report.append({
                   "query":q,
