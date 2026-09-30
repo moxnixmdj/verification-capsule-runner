@@ -1,0 +1,94 @@
+name: Validate Composition Explicit Decision Provenance
+
+on:
+  push:
+    branches: [verify/composition-explicit-decision-provenance-20260930]
+    paths:
+      - 'ARM_VALIDATE_COMPOSITION_EXPLICIT_DECISION_PROVENANCE_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact candidate and inherited blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "36dcf586ab9f234d6ed1276c4a32f5a997e9e88e"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "d7c73c24d2038c40bfb38ea6f10749a15a2d5415"
+          test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "e06c5552e04b8cb07fb00c5575eec0f8f758bbf3"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "c19466687fd2d17e45dc6ba263b42301bed432d1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          echo EXACT_CANDIDATE_BYTES_PASS
+
+      - name: Run focused composition regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/tests/test_grounded_executable_composition.py
+
+      - name: Verify producer emits source provenance and registry consumes it
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys,tempfile
+          root=pathlib.Path(".").resolve()
+          p=root/"canonical/runtime/bound_capabilities/evidence_decision_synthesis.py"
+          spec=importlib.util.spec_from_file_location("decision_source_provenance_validation",p)
+          mod=importlib.util.module_from_spec(spec); sys.modules[spec.name]=mod; spec.loader.exec_module(mod)
+          problem={
+            "schema":"PROJECT_BRAIN_TYPED_DECISION_PROBLEM_V1",
+            "decision_id":"PROVENANCE-VALIDATION",
+            "question":"Choose A",
+            "alternatives":[{"id":"A","label":"A"}],
+            "constraints":[{"id":"a","alternative":"A","required":True,"state":"SATISFIED","description":"ok","provenance":[{"source":"test","ref":"a"}]}],
+            "evidence":[{"id":"a1","alternative":"A","relation":"SUPPORTS","confidence":1.0,"strength":1.0,"independence_group":"g1","claim":"ok","provenance":[{"source":"test","ref":"a1"}]}],
+            "policy":{"minimum_support_ratio":0.5,"maximum_conflict_ratio":0.5,"minimum_independent_support_groups":1,"minimum_net_margin":0.0}
+          }
+          with tempfile.TemporaryDirectory() as td:
+              td=pathlib.Path(td)
+              (td/"source.json").write_text(json.dumps(problem),encoding="utf-8")
+              out=mod.run({"input_path":"source.json","output_path":"result.json"},td)
+              assert out["input_path"]=="source.json",out
+              assert out["output_path"]=="result.json",out
+              assert out["output_verified"] is True,out
+
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          prod=registry["decision.synthesis.typed.stdlib"]
+          ver=registry["decision.synthesis.verify.stdlib"]
+          assert "input_path" in prod["result_fields"],prod
+          assert ver["proposal_bindings"]=={
+            "input_path":{"type":"effect_result","effect":"decision.synthesis.typed","field":"input_path","container":"scalar"},
+            "result_path":{"type":"effect_result","effect":"decision.synthesis.typed","field":"output_path","container":"scalar"},
+          },ver
+          receipt={
+            "schema":"PROJECT_BRAIN_COMPOSITION_EXPLICIT_DECISION_PROVENANCE_VALIDATION_V1",
+            "candidate_brain_pr":271,
+            "producer_input_path_emitted":True,
+            "verifier_source_binding":"decision.synthesis.typed.input_path",
+            "verifier_result_binding":"decision.synthesis.typed.output_path",
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+            "verdict":"PASS"
+          }
+          pathlib.Path("COMPOSITION_EXPLICIT_DECISION_PROVENANCE_VALIDATION.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print("EXPLICIT_DECISION_PROVENANCE_PASS")
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: composition-explicit-decision-provenance-validation
+          path: COMPOSITION_EXPLICIT_DECISION_PROVENANCE_VALIDATION.json
