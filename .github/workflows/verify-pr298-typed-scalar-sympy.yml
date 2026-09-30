@@ -24,9 +24,9 @@ jobs:
           set -euo pipefail
           test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "23f7b79fca15593eb563bdcdba17c8b972f006db"
-          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "f1c72b7a1d2aebf146d2702a49e425605fa17217"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "4d7f94219893400344a258552e1d808b2dc963dd"
           test "$(git hash-object canonical/runtime/bound_capabilities/numeric_expression_sympy.py)" = "443e3386f11156e55635556b6e8f8ad7d7733592"
-          test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "50beabfde103f8f3e75dc0139ab75ac88cd9c08d"
+          test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "82af4e1b2a68a63e415c756f121269d89689d7af"
       - name: Run deterministic compiler and safety regressions
         run: python canonical/tests/test_numeric_expression_sympy_binding.py
       - name: Run fresh economics typed-expression task and independent oracle
