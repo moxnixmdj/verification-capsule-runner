@@ -1,0 +1,46 @@
+name: Guarded HTTP2 Parent Task A
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - build_guarded_http2_parent_plan.py
+      - guarded_http2_parent_task_a_plan.json
+      - canonical/action_intents/2026-09-30_EXECUTE_GUARDED_HTTP2_PARENT_TASK_A_V1.json
+      - canonical/astra_runtime/missions/PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003.json
+      - canonical/tasks/PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003.json
+      - canonical/runtime/**
+      - execution_guard/**
+      - .github/workflows/guarded-http2-parent-task-a.yml
+
+permissions:
+  contents: write
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Build frozen guarded launch plan from exact mirrored Brain bytes
+        run: python build_guarded_http2_parent_plan.py
+      - name: Admit exactly once, then execute frozen HTTP2 parent task
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_http2_parent_task_a_plan.json --receipt guarded-http2-parent-admission.json
+      - name: Upload guarded parent execution evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-http2-parent-task-a-evidence
+          path: |
+            guarded-http2-parent-admission.json
+            guarded_http2_parent_task_a_plan.json
+            canonical/astra_runtime/state/PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003.json
+            canonical/astra_runtime/evidence/PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003__*
+          if-no-files-found: warn
