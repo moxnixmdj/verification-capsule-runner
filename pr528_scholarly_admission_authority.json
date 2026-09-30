@@ -1,10 +1,10 @@
 {
   "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
   "status": "AUTHORIZED",
-  "brain_pr": 528,
-  "brain_candidate_head": "6d4064312705eaa11ce5817287934e6c5d87d5f4",
+  "brain_pr": 529,
+  "brain_candidate_head": "4df38e5aa55cfd86a1fda6fbe11666ab6221da2c",
   "brain_base": "3e2435efb9398a062ee40a7bdbb3e3610724b330",
-  "scope": "SCHOLARLY_PROVENANCE_RELEVANCE_ADMISSION_SELECTED_ONLY_LIVE_MATERIALIZATION_AND_WEAK_RELEVANCE_FAIL_CLOSED",
+  "scope": "FROZEN_SCHOLARLY_PROVENANCE_RELEVANCE_ADMISSION_SELECTED_ONLY_LIVE_MATERIALIZATION_METADATA_REFINED_RETRY_AND_WEAK_RELEVANCE_FAIL_CLOSED",
   "parent_task_execution": false,
   "parent_task_replay": false,
   "spent_seismology_replay": false,

@@ -198,10 +198,10 @@ check("weak_relevance_not_admitted",outB.get("relevance_verified_candidate_count
 check("weak_relevance_stops_before_actions",touch==[],touch)
 
 report={
- "schema":"BRAIN_PR528_SCHOLARLY_ADMISSION_INDEPENDENT_QUALIFICATION_V1",
+ "schema":"BRAIN_PR529_FROZEN_SCHOLARLY_ADMISSION_INDEPENDENT_QUALIFICATION_V1",
  "status":"PASS" if not fail else "FAIL",
- "brain_pr":528,
- "brain_candidate_head":"6d4064312705eaa11ce5817287934e6c5d87d5f4",
+ "brain_pr":529,
+ "brain_candidate_head":"4df38e5aa55cfd86a1fda6fbe11666ab6221da2c",
  "failures":fail,
  "cases":cases,
  "parent_task_execution":False,
