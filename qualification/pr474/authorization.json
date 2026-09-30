@@ -1,0 +1,13 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "QUALIFY_BRAIN_PR474_CORRECTED_BROAD_RESEARCH_ROUTING",
+  "brain_pr": 474,
+  "brain_candidate_head": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+  "canonical_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "spent_parent_run_id": 36688193204,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
