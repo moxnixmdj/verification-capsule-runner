@@ -1,4 +1,4 @@
-name: Verify Multi-Clause Broad Objective Repair
+name: Guarded Verify PR468 Multi-Clause Broad Routing
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - verify/multiclause-broad-objective-repair-20260930-v1
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   qualify:
@@ -19,116 +19,25 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
-          persist-credentials: false
+          fetch-depth: 0
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
 
-      - name: Verify exact candidate bytes
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "1efaec4ba51ecb5c40072b3190853f4de89d8f77"
-          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "25738e959dec0be46058e4bd7720fb8ed1b599bb"
-          test "$(git hash-object canonical/tests/test_broad_objective_semantic_decomposition.py)" = "cf7c5ceab23724ec0d6b5c7ff5462c591da64804"
-          python -m py_compile canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
-          echo EXACT_CANDIDATE_BYTES_OK
+      - name: Atomically admit exact non-parent qualification once
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_pr468_broad_routing_plan.json --receipt pr468-broad-routing-admission.json
 
-      - name: Run regression suite
-        shell: bash
-        run: |
-          set -euo pipefail
-          python canonical/tests/test_broad_objective_semantic_decomposition.py
-
-      - name: Fresh cross-domain non-parent qualification
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p _qual
-          python - <<'PY'
-          import importlib.util, json, pathlib
-          root=pathlib.Path(".").resolve()
-          def load(rel,name):
-              p=root/rel
-              spec=importlib.util.spec_from_file_location(name,p)
-              mod=importlib.util.module_from_spec(spec)
-              spec.loader.exec_module(mod)
-              return mod
-          dec=load("canonical/runtime/bound_capabilities/broad_objective_decompose.py","qual_dec")
-          grd=load("canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py","qual_grd")
-          objectives=[
-              (
-                  "materials",
-                  "Assess whether ceramic thermal conductivity declines faster above 900 kelvin than below 900 kelvin. "
-                  "Use authoritative primary technical evidence and a real executable check. "
-                  "Autonomously discover and verify relevant sources, choose and run a zero-cost verification method, "
-                  "identify material scope limitations, independently verify the consequential result, and produce a decision-quality answer."
-              ),
-              (
-                  "aerospace",
-                  "Determine whether reported reusable launch vehicle turnaround time improved more in a recent operating period than in the preceding period. "
-                  "Use authoritative primary technical evidence and a real executable check. "
-                  "Autonomously discover and verify relevant sources, identify scope limitations, independently verify the consequential result, "
-                  "and produce a decision-quality answer with provenance."
-              ),
-              (
-                  "energy",
-                  "Evaluate whether grid-scale battery round-trip efficiency changes materially between two temperature regimes. "
-                  "Use authoritative primary technical evidence and a real executable check. "
-                  "Autonomously discover and verify relevant sources, choose and run a zero-cost verification method, "
-                  "identify interpretation limitations, independently verify the consequential result, and produce a decision-quality answer."
-              ),
-          ]
-          results=[]
-          for label,objective in objectives:
-              direct=dec.decompose(objective)
-              grounded=grd.ground(objective,{})
-              assert direct["status"]=="DECOMPOSED", (label,direct)
-              assert len(grounded["clauses"])>1, (label,grounded)
-              assert grounded["grounded_clause_count"]==0, (label,grounded)
-              assert len(grounded["unresolved_clause_indexes"])==len(grounded["clauses"]), (label,grounded)
-              assert grounded["broad_objective_decomposition_available"] is True, (label,grounded)
-              assert grounded["broad_objective_decomposition"]["status"]=="DECOMPOSED", (label,grounded)
-              assert grounded["model_dependency_count"]==0, (label,grounded)
-              results.append({
-                  "label":label,
-                  "clause_count":len(grounded["clauses"]),
-                  "question_shape":direct["question_shape"],
-                  "role_count":direct["role_count"],
-                  "broad_available":True,
-                  "model_dependency_count":0,
-              })
-          negatives=[
-              "Assess whether two measured values differ. Run python verify_values.py",
-              "Determine whether values differ using https://example.com/data and extract JSON path value",
-          ]
-          neg=[]
-          for objective in negatives:
-              out=dec.decompose(objective)
-              assert out["status"]=="UNSUPPORTED", out
-              assert out["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE", out
-              neg.append({"status":out["status"],"reason":out["reason"]})
-          evidence={
-              "schema":"PROJECT_BRAIN_INDEPENDENT_BROAD_OBJECTIVE_REPAIR_QUALIFICATION_V1",
-              "status":"PASS",
-              "candidate_blobs":{
-                  "broad_objective_decompose.py":"1efaec4ba51ecb5c40072b3190853f4de89d8f77",
-                  "plain_goal_bound_grounding.py":"25738e959dec0be46058e4bd7720fb8ed1b599bb",
-              },
-              "fresh_non_parent_objectives":results,
-              "fail_closed_negative_controls":neg,
-              "model_dependency_count":0,
-              "incremental_spend_usd":0,
-          }
-          pathlib.Path("_qual/evidence.json").write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-          print(json.dumps(evidence,sort_keys=True))
-          PY
-
-      - name: Preserve qualification evidence
+      - name: Preserve guarded qualification evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: multiclause-broad-objective-repair-qualification
-          path: _qual/evidence.json
-          if-no-files-found: error
+          name: guarded-pr468-broad-routing-evidence
+          path: |
+            pr468-broad-routing-admission.json
+            pr468-broad-routing-independent-report.json
+            guarded_pr468_broad_routing_plan.json
+            pr468_broad_routing_authorization.json
+          if-no-files-found: warn
