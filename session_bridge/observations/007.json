@@ -1,0 +1,10 @@
+{
+  "command_sha256": "578d9472899c5499a50552b53d36725a4963349098a08db6acbeca15e2c643e2",
+  "duration_sec": 0.088,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "nextjs-performance-20260930-v1",
+  "stderr": "TypeError: fetch failed\n    at node:internal/deps/undici/undici:15270:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async [stdin]:17:13 {\n  [cause]: Error: connect ECONNREFUSED 127.0.0.1:4100\n      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1638:16) {\n    errno: -111,\n    code: 'ECONNREFUSED',\n    syscall: 'connect',\n    address: '127.0.0.1',\n    port: 4100\n  }\n}\n",
+  "stdout": "",
+  "step": 7
+}
