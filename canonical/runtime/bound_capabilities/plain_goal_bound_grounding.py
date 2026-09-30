@@ -43,6 +43,20 @@ class GroundingError(RuntimeError):
     pass
 
 
+def _load_broad_objective_decomposer():
+    path=pathlib.Path(__file__).resolve().with_name("broad_objective_decompose.py")
+    if not path.is_file():
+        return None
+    spec=importlib.util.spec_from_file_location(
+        "project_brain_broad_objective_decompose",path
+    )
+    if spec is None or spec.loader is None:
+        return None
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _tokens(value):
     if isinstance(value,(list,tuple,set)):
         value=" ".join(str(x) for x in value)
@@ -334,7 +348,8 @@ def _constraints(clause):
 
 def ground(
     goal,registry,max_candidates_per_clause=8,*,
-    compiler=None,proposal_binder=None,root=None,enforce_bindability=False
+    compiler=None,proposal_binder=None,root=None,enforce_bindability=False,
+    research_role_ids=None
 ):
     if not isinstance(registry,dict):
         raise GroundingError("REGISTRY_INVALID")
@@ -342,7 +357,80 @@ def ground(
         compiler is None or proposal_binder is None or root is None
     ):
         raise GroundingError("INPUT_BINDABILITY_RUNTIME_REQUIRED")
+
+    canonical_goal=" ".join(str(goal or "").strip().split())
+    broad_module=_load_broad_objective_decomposer()
+    broad_candidate=None
+    if broad_module is not None:
+        candidate=broad_module.decompose(canonical_goal)
+        if isinstance(candidate,dict) and candidate.get("status")=="DECOMPOSED":
+            broad_candidate=candidate
+
+    # Broad research objectives are scope-bearing parents. They must be
+    # decomposed before lexical capability matching, otherwise a narrow child
+    # such as source discovery can falsely satisfy the whole objective merely
+    # because words like "authoritative" or "provenance" overlap.
+    if broad_candidate is not None:
+        role_descriptions=[
+            str(item.get("description") or "").strip()
+            for item in (broad_candidate.get("roles") or [])
+            if isinstance(item,dict) and str(item.get("description") or "").strip()
+        ]
+        role_goal=" Then ".join(role_descriptions)
+        role_ids=[
+            str(item.get("role") or "").strip()
+            for item in (broad_candidate.get("roles") or [])
+            if isinstance(item,dict) and str(item.get("description") or "").strip()
+        ]
+        role_grounding=ground(
+            role_goal,registry,max_candidates_per_clause,
+            compiler=compiler,proposal_binder=proposal_binder,root=root,
+            enforce_bindability=enforce_bindability,
+            research_role_ids=role_ids,
+        ) if role_goal else None
+        clauses=decompose(canonical_goal)
+        records=[]
+        for index,clause in enumerate(clauses):
+            text=clause["text"]
+            records.append({
+                "index":index,
+                "start":clause.get("start"),
+                "end":clause.get("end"),
+                "text":text,
+                "status":"UNRESOLVED",
+                "candidates":[],
+                "constraints":_constraints(text),
+                "output_contract":_output_contract(text),
+                "rejected_unbindable_candidates":[],
+            })
+        return {
+            "schema":SCHEMA,
+            "goal":canonical_goal,
+            "goal_sha256":hashlib.sha256(canonical_goal.encode("utf-8")).hexdigest(),
+            "clauses":records,
+            "grounded_clause_count":0,
+            "unresolved_clause_indexes":[x["index"] for x in records],
+            "candidate_capability_ids":[],
+            "broad_objective_decomposition":broad_candidate,
+            "broad_objective_decomposition_available":True,
+            "broad_objective_role_goal":role_goal,
+            "broad_objective_role_grounding":role_grounding,
+            "broad_objective_role_grounding_available":bool(role_grounding),
+            "external_discovery_allowed_for_unresolved_only":False,
+            "whole_goal_external_discovery_forbidden_if_any_bound_grounding":True,
+            "broad_objective_narrow_child_whole_goal_match_forbidden":True,
+            "input_contract_bindability_enforced":bool(enforce_bindability),
+            "model_dependency_count":0,
+        }
+
     clauses=decompose(goal)
+    if research_role_ids is not None:
+        if (
+            not isinstance(research_role_ids,list)
+            or len(research_role_ids)!=len(clauses)
+            or any(not isinstance(x,str) or not x.strip() for x in research_role_ids)
+        ):
+            raise GroundingError("RESEARCH_ROLE_IDS_INVALID")
     records=[]
     all_candidates=set()
     provider_slots={}
@@ -353,6 +441,15 @@ def ground(
         for cid,entry in sorted(registry.items()):
             if not _verified_zero_spend(entry):
                 continue
+            if research_role_ids is not None:
+                required_role=str(research_role_ids[index]).strip()
+                declared_roles=[
+                    str(x).strip()
+                    for x in (entry.get("research_roles") or [])
+                    if isinstance(x,str) and str(x).strip()
+                ]
+                if required_role not in declared_roles:
+                    continue
             lexical=_lexical_method(text,cid,entry)
             semantic=_similarity_method(text,cid,entry)
             if lexical["score"]<=0 or semantic["score"]<=0:
@@ -451,6 +548,9 @@ def ground(
     grounded=[x for x in records if x["status"]!="UNRESOLVED"]
     unresolved=[x["index"] for x in records if x["status"]=="UNRESOLVED"]
     canonical_goal=" ".join(str(goal or "").strip().split())
+    broad=None
+    broad_role_goal=None
+    broad_role_grounding=None
     return {
         "schema":SCHEMA,
         "goal":canonical_goal,
@@ -459,6 +559,11 @@ def ground(
         "grounded_clause_count":len(grounded),
         "unresolved_clause_indexes":unresolved,
         "candidate_capability_ids":sorted(all_candidates),
+        "broad_objective_decomposition":broad,
+        "broad_objective_decomposition_available":bool(broad),
+        "broad_objective_role_goal":broad_role_goal,
+        "broad_objective_role_grounding":broad_role_grounding,
+        "broad_objective_role_grounding_available":bool(broad_role_grounding),
         "external_discovery_allowed_for_unresolved_only":True,
         "whole_goal_external_discovery_forbidden_if_any_bound_grounding":bool(grounded),
         "input_contract_bindability_enforced":bool(enforce_bindability),
