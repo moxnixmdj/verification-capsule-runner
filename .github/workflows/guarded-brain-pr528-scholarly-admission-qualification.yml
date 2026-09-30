@@ -26,6 +26,8 @@ jobs:
           python -m py_compile canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py canonical/runtime/bound_capabilities/open_research_source_frontend.py canonical/tests/test_scholarly_provenance_admission_materialization.py
       - name: Generate frozen guard plan
         run: python generate_brain_pr528_guarded_qualification_plan.py
+      - name: Prepare receipt directory
+        run: mkdir -p _terminal
       - name: Atomically admit and run independent qualification
         env:
           GITHUB_TOKEN: ${{ github.token }}
