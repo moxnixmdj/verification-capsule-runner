@@ -2,7 +2,7 @@ name: Guarded Brain PR528 Scholarly Admission Qualification
 on:
   pull_request:
     branches: [main]
-    types: [opened]
+    types: [opened, synchronize, reopened]
 permissions:
   contents: write
 jobs:
