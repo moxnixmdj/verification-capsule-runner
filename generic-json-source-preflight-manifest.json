@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_GENERIC_JSON_SOURCE_PREFLIGHT_MANIFEST_V1",
+  "task_id": "PARENT-DEMOGRAPHY-FRANCE-GROWTH-CROSSCHECK-REAL-TASK-20260930-001",
+  "sources": [
+    {
+      "name": "population_2020",
+      "url": "https://api.worldbank.org/v2/country/FRA/indicator/SP.POP.TOTL?format=json&date=2020",
+      "json_path": [
+        1,
+        0,
+        "value"
+      ],
+      "expected_type": "number"
+    },
+    {
+      "name": "population_2023",
+      "url": "https://api.worldbank.org/v2/country/FRA/indicator/SP.POP.TOTL?format=json&date=2023",
+      "json_path": [
+        1,
+        0,
+        "value"
+      ],
+      "expected_type": "number"
+    },
+    {
+      "name": "official_growth_2023",
+      "url": "https://api.worldbank.org/v2/country/FRA/indicator/SP.POP.GROW?format=json&date=2023",
+      "json_path": [
+        1,
+        0,
+        "value"
+      ],
+      "expected_type": "number"
+    }
+  ]
+}
