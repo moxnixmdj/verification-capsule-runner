@@ -1,0 +1,191 @@
+name: Composition PR277 Causal Seam Diagnostic
+
+on:
+  push:
+    branches:
+      - diagnostic/composition-pr277-causal-seam-20260930
+    paths:
+      - 'ARM_COMPOSITION_PR277_CAUSAL_DIAGNOSTIC_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact failed-route bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "d7c73c24d2038c40bfb38ea6f10749a15a2d5415"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_verify.py)" = "63cf325320c7b91bf48ea2f2769c999c5a090929"
+          test "$(git hash-object canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json)" = "496363bf99d3f7c16d99288aed027534a71d796d"
+          echo EXACT_FAILED_ROUTE_BYTES_PASS
+
+      - name: Direct producer verifier diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          def load(name,rel):
+              spec=importlib.util.spec_from_file_location(name,root/rel)
+              mod=importlib.util.module_from_spec(spec)
+              sys.modules[name]=mod
+              spec.loader.exec_module(mod)
+              return mod
+          producer=load("diag_decision_producer","canonical/runtime/bound_capabilities/evidence_decision_synthesis.py")
+          verifier=load("diag_decision_verifier","canonical/runtime/bound_capabilities/evidence_decision_verify.py")
+          input_path="canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json"
+          output_path="canonical/astra_runtime/tmp/DIAG_DIRECT_DECISION_OUTPUT.json"
+          prod=producer.run({"input_path":input_path,"output_path":output_path},root)
+          ver=verifier.run({"input_path":input_path,"result_path":output_path},root)
+          evidence={
+            "schema":"PROJECT_BRAIN_COMPOSITION_PR277_CAUSAL_DIAGNOSTIC_V1",
+            "phase":"DIRECT_PRODUCER_VERIFIER",
+            "producer_result":prod,
+            "verifier_result":ver,
+            "direct_pair_pass":bool(ver.get("verified")),
+          }
+          pathlib.Path("PR277_CAUSAL_DIAGNOSTIC_DIRECT.json").write_text(
+            json.dumps(evidence,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(evidence,sort_keys=True))
+          PY
+
+      - name: Full composition path capture diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys,traceback
+          root=pathlib.Path(".").resolve()
+          spec=importlib.util.spec_from_file_location("diag_runtime",root/"canonical/runtime/astra_runtime.py")
+          runtime=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=runtime
+          spec.loader.exec_module(runtime)
+
+          captured=[]
+          original=runtime._verify_action_expectation
+          def capture(action,result):
+              try:
+                  original(action,result)
+              except Exception as exc:
+                  captured.append({
+                    "action":action,
+                    "result":result,
+                    "exception_type":type(exc).__name__,
+                    "exception":str(exc),
+                  })
+                  return
+          runtime._verify_action_expectation=capture
+
+          input_path="canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json"
+          output_path="canonical/astra_runtime/tmp/DIAG_COMPOSED_DECISION_OUTPUT.json"
+          goal=(
+            "Using typed decision evidence at "+input_path+
+            ", synthesize the decision to "+output_path+
+            ". Then independently verify the decision result at "+output_path+"."
+          )
+          mission={"mission_id":"COMPOSITION-PR277-CAUSAL-DIAGNOSTIC-20260930","goal":goal}
+          step={
+            "adapter":"goal",
+            "goal_ref":"goal",
+            "verified_initial_facts":["structured.decision_evidence.available"],
+            "max_controller_actions":8,
+          }
+          result=None
+          top_error=None
+          try:
+              result=runtime.run_goal(step,mission)
+          except Exception as exc:
+              top_error={"type":type(exc).__name__,"message":str(exc),"traceback":traceback.format_exc()[-8000:]}
+          trace=(result or {}).get("trace") or []
+          invoked=[
+            x.get("result") for x in trace
+            if isinstance(x,dict) and isinstance(x.get("result"),dict)
+          ]
+          producers=[x for x in invoked if x.get("adapter")=="evidence_decision_synthesis"]
+          verifiers=[x for x in invoked if x.get("adapter")=="evidence_decision_verify"]
+          evidence={
+            "schema":"PROJECT_BRAIN_COMPOSITION_PR277_CAUSAL_DIAGNOSTIC_V1",
+            "phase":"FULL_COMPOSITION_CAPTURE",
+            "captured_expectation_failures":captured,
+            "producer_results":producers,
+            "verifier_results":verifiers,
+            "top_error":top_error,
+            "result_summary":{
+              "controller_mode":(result or {}).get("controller_mode"),
+              "planning_mode":(result or {}).get("planning_mode"),
+              "composition_mode":(result or {}).get("composition_mode"),
+              "model_dependency_count":(result or {}).get("model_dependency_count"),
+              "cycles":(result or {}).get("cycles"),
+            },
+          }
+          pathlib.Path("PR277_CAUSAL_DIAGNOSTIC_COMPOSED.json").write_text(
+            json.dumps(evidence,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(evidence,sort_keys=True))
+          PY
+
+      - name: Classify first causal seam
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib
+          direct=json.loads(pathlib.Path("PR277_CAUSAL_DIAGNOSTIC_DIRECT.json").read_text())
+          composed=json.loads(pathlib.Path("PR277_CAUSAL_DIAGNOSTIC_COMPOSED.json").read_text())
+          if not direct["direct_pair_pass"]:
+              classification="PRODUCER_VERIFIER_OR_TASK_SEMANTIC_CONTRACT"
+          elif composed["captured_expectation_failures"]:
+              classification="COMPOSITION_PLANNER_RUNTIME_BINDING_OR_EXECUTION_SEAM"
+          elif composed["top_error"]:
+              classification="OTHER_COMPOSED_RUNTIME_SEAM"
+          else:
+              classification="NO_FAILURE_REPRODUCED_DIAGNOSTIC_INCONCLUSIVE"
+          out={
+            "schema":"PROJECT_BRAIN_COMPOSITION_PR277_CAUSAL_CLASSIFICATION_V1",
+            "classification":classification,
+            "direct_pair_pass":direct["direct_pair_pass"],
+            "captured_failure_count":len(composed["captured_expectation_failures"]),
+            "first_captured_failure":(
+              composed["captured_expectation_failures"][0]
+              if composed["captured_expectation_failures"] else None
+            ),
+            "top_error":composed["top_error"],
+            "progress_credit":False,
+            "replay_of_spent_task":False,
+          }
+          pathlib.Path("PR277_CAUSAL_CLASSIFICATION.json").write_text(
+            json.dumps(out,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr277-causal-seam-diagnostic
+          if-no-files-found: warn
+          path: |
+            PR277_CAUSAL_DIAGNOSTIC_DIRECT.json
+            PR277_CAUSAL_DIAGNOSTIC_COMPOSED.json
+            PR277_CAUSAL_CLASSIFICATION.json
+            canonical/astra_runtime/tmp/DIAG_DIRECT_DECISION_OUTPUT.json
+            canonical/astra_runtime/tmp/DIAG_COMPOSED_DECISION_OUTPUT.json
+            canonical/astra_runtime/evidence/
