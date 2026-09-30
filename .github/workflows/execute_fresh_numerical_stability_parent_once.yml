@@ -7,12 +7,15 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   execute-once:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_PR: "109"
       TASK_ID: PARENT-OPENENDED-FLOATING-POINT-SUMMATION-STABILITY-REAL-TASK-20260930-002
       TASK_PATH: canonical/tasks/PARENT_OPENENDED_FLOATING_POINT_SUMMATION_STABILITY_REAL_TASK_20260930_002.json
       MISSION_PATH: canonical/astra_runtime/missions/PARENT_OPENENDED_FLOATING_POINT_SUMMATION_STABILITY_REAL_TASK_20260930_002.json
@@ -26,22 +29,75 @@ jobs:
       - name: Fail-closed prestart qualification
         shell: bash
         run: |
-          set -euo pipefail
-          test -f canonical/runtime/bound_capabilities/broad_objective_decompose.py
-          test -f canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
-          test -f canonical/runtime/astra_runtime.py
-          test -f "$TASK_PATH"
-          test -f "$MISSION_PATH"
-          test "$(git hash-object "$TASK_PATH")" = "$EXPECTED_TASK_BLOB"
+          set +e
+          mkdir -p _terminal
+          failed=0
+          report=""
+          add() { report="$report$1\n"; }
+          check_file() {
+            if [ -f "$1" ]; then add "FILE:$1=PASS"; else add "FILE:$1=FAIL"; failed=1; fi
+          }
+
+          check_file canonical/runtime/bound_capabilities/broad_objective_decompose.py
+          check_file canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+          check_file canonical/runtime/astra_runtime.py
+          check_file "$TASK_PATH"
+          check_file "$MISSION_PATH"
+
+          actual_blob=$(git hash-object "$TASK_PATH" 2>/dev/null || true)
+          if [ "$actual_blob" = "$EXPECTED_TASK_BLOB" ]; then add "TASK_BLOB=PASS:$actual_blob"; else add "TASK_BLOB=FAIL:$actual_blob"; failed=1; fi
+
           grep -Fq '"exactly_one_execution": true' "$TASK_PATH"
+          if [ $? -eq 0 ]; then add "TASK_EXACTLY_ONCE=PASS"; else add "TASK_EXACTLY_ONCE=FAIL"; failed=1; fi
+
           grep -Fq '"no_same_task_replay": true' "$MISSION_PATH"
+          if [ $? -eq 0 ]; then add "MISSION_NO_REPLAY=PASS"; else add "MISSION_NO_REPLAY=FAIL"; failed=1; fi
+
           grep -Fq 'broad_objective_decomposition_available' canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+          if [ $? -eq 0 ]; then add "BROAD_HOOK=PASS"; else add "BROAD_HOOK=FAIL"; failed=1; fi
+
           if grep -Fq 'PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001' canonical/runtime/astra_runtime.py; then
-            echo "STALE_SQLITE_ONE_SHOT_DISPATCHER_PRESENT"
+            add "STALE_SQLITE_DISPATCHER=FAIL_PRESENT"
+            failed=1
+          else
+            add "STALE_SQLITE_DISPATCHER=PASS_ABSENT"
+          fi
+
+          python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py > _terminal/prestart_pycompile.log 2>&1
+          if [ $? -eq 0 ]; then add "PY_COMPILE=PASS"; else add "PY_COMPILE=FAIL"; failed=1; fi
+
+          python - <<'PY' > _terminal/prestart_bridge.log 2>&1
+import importlib.util, pathlib
+root=pathlib.Path(".").resolve()
+def load(path,name):
+    spec=importlib.util.spec_from_file_location(name,root/path)
+    mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod
+dec=load("canonical/runtime/bound_capabilities/broad_objective_decompose.py","prestart_dec")
+gr=load("canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py","prestart_gr")
+probe="Assess whether an engineering reliability metric improved faster in a recent interval than in a preceding interval"
+d=dec.decompose(probe)
+assert d["status"]=="DECOMPOSED"
+assert d["model_dependency_count"]==0
+assert d["invented_source_urls"]==[] and d["invented_facts"]==[]
+g=gr.ground(probe,{})
+assert g["broad_objective_decomposition_available"] is True
+assert g["broad_objective_decomposition"]["status"]=="DECOMPOSED"
+print("BROAD_OBJECTIVE_BRIDGE_PRESTART_PASS")
+PY
+          if [ $? -eq 0 ]; then add "BROAD_BRIDGE_SYNTHETIC=PASS"; else add "BROAD_BRIDGE_SYNTHETIC=FAIL"; failed=1; fi
+
+          printf '%b' "$report" | tee _terminal/prestart_report.txt
+          old=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" --jq '.body // ""' 2>/dev/null || true)
+          if [ -n "$old" ]; then
+            clean=$(printf '%s\n' "$old" | sed '/<!-- LIVE_PRESTART_BEGIN -->/,/<!-- LIVE_PRESTART_END -->/d')
+            new=$(printf '%s\n\n<!-- LIVE_PRESTART_BEGIN -->\n%b<!-- LIVE_PRESTART_END -->\n' "$clean" "$report")
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" -f body="$new" >/dev/null 2>&1 || true
+          fi
+
+          if [ "$failed" -ne 0 ]; then
+            echo "PARENT_PRESTART_FAILED"
             exit 31
           fi
-          python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
-          python canonical/tests/test_broad_objective_decomposition.py
           echo "PARENT_PRESTART_QUALIFIED"
 
       - name: Execute frozen parent exactly once
@@ -49,11 +105,32 @@ jobs:
         shell: bash
         run: |
           set +e
-          mkdir -p _terminal
           python canonical/runtime/astra_runtime.py "$MISSION_PATH" 2>&1 | tee _terminal/producer.log
           code=${PIPESTATUS[0]}
           printf 'exit_code=%s\n' "$code" >> "$GITHUB_OUTPUT"
           printf '%s\n' "$code" > _terminal/producer_exit_code.txt
+          exit 0
+
+      - name: Publish producer receipt
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          code="${{ steps.producer.outputs.exit_code }}"
+          if [ -z "$code" ]; then code="NOT_STARTED"; fi
+          complete="false"
+          if [ -f _terminal/producer.log ] && grep -Fq 'COMPOUND_GOAL_COMPLETE' _terminal/producer.log; then complete="true"; fi
+          signal=""
+          if [ -f _terminal/producer.log ]; then
+            signal=$(grep -E -m3 'PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1|CAPABILITY_ACQUISITION_REQUIRED|GOAL_ARCHITECTURAL_GAP|NO_COMPATIBLE_|COMPOUND_GOAL_COMPLETE|Blocker:' _terminal/producer.log | tr '\n\r' '  ' | cut -c1-5000)
+          fi
+          receipt=$(printf 'PRODUCER_EXIT_CODE=%s\nSEMANTIC_COMPLETE=%s\nFIRST_SIGNAL=%s' "$code" "$complete" "$signal")
+          old=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" --jq '.body // ""' 2>/dev/null || true)
+          if [ -n "$old" ]; then
+            clean=$(printf '%s\n' "$old" | sed '/<!-- LIVE_PRODUCER_BEGIN -->/,/<!-- LIVE_PRODUCER_END -->/d')
+            new=$(printf '%s\n\n<!-- LIVE_PRODUCER_BEGIN -->\n%s\n<!-- LIVE_PRODUCER_END -->\n' "$clean" "$receipt")
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" -f body="$new" >/dev/null 2>&1 || true
+          fi
           exit 0
 
       - name: Preserve terminal evidence
@@ -64,12 +141,8 @@ jobs:
           mkdir -p _terminal/snapshot
           cp "$TASK_PATH" _terminal/snapshot/task.json
           cp "$MISSION_PATH" _terminal/snapshot/mission.json
-          if [ -d canonical/astra_runtime/evidence ]; then
-            cp -R canonical/astra_runtime/evidence _terminal/snapshot/evidence
-          fi
-          if [ -d canonical/astra_runtime/state ]; then
-            cp -R canonical/astra_runtime/state _terminal/snapshot/state
-          fi
+          if [ -d canonical/astra_runtime/evidence ]; then cp -R canonical/astra_runtime/evidence _terminal/snapshot/evidence; fi
+          if [ -d canonical/astra_runtime/state ]; then cp -R canonical/astra_runtime/state _terminal/snapshot/state; fi
           find canonical/astra_runtime -maxdepth 3 -type f \( -name '*PARENT-OPENENDED-FLOATING-POINT-SUMMATION-STABILITY-REAL-TASK-20260930-002*' -o -name '*BLOCKER*' -o -name '*controller*' \) -print > _terminal/relevant_paths.txt || true
           while IFS= read -r p; do
             [ -f "$p" ] || continue
