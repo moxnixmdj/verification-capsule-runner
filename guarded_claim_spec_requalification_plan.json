@@ -1,0 +1,54 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Guarded admissibility requalification of exact merged claim-spec operand-binding capability bytes for canonical child-capability credit; no parent task execution or replay.",
+  "frozen": {
+    "gate_id": "CLAIM-SPEC-OPERAND-BINDING-ADMISSIBILITY-REQUALIFICATION-20260930-V1",
+    "problem_sha256": "84a1f39dc9ef2f9a5e4b022b367a5bc787fede770ec56081a879764cfcb8a949",
+    "task_sha256": "f20396e83552ae6c18e40ed9c476ad60571b61234849862146095249449597c4",
+    "runtime_sha256": "cb18579aec519deeb2faf06bb718c71688d63b15df9fd61d7729d2bb386e2269",
+    "canonical_base": "bab96da313ac8c9b4476e8d466f1fe1fcbb5f240",
+    "authorization_sha256": "f8710f32441010c7c8e5c96b79182545213631b7bed641e9cac513295e22e89d"
+  },
+  "pinned_files": [
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py",
+      "git_blob_sha1": "48fd058430d8d361fc75beced567c7b6d1166531"
+    },
+    {
+      "path": "canonical/tests/test_objective_claim_operand_binding.py",
+      "git_blob_sha1": "467a9f4f9b835ca8f65fd19b9335770e7b0ef31b"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py",
+      "git_blob_sha1": "d66a7eb30774f66160b698d8082947776888293d"
+    },
+    {
+      "path": "verify_pr447_claim_spec_operand_binding.py",
+      "git_blob_sha1": "16aff25975ac126839c57caac08cf97e1bb663fd"
+    },
+    {
+      "path": "guarded_claim_spec_qualification_entry.py",
+      "sha256": "f20396e83552ae6c18e40ed9c476ad60571b61234849862146095249449597c4"
+    },
+    {
+      "path": "guarded_claim_spec_requalification_authorization.json",
+      "sha256": "f8710f32441010c7c8e5c96b79182545213631b7bed641e9cac513295e22e89d"
+    }
+  ],
+  "command": [
+    "python",
+    "guarded_claim_spec_qualification_entry.py"
+  ]
+}
