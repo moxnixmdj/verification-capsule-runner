@@ -1,1 +1,42 @@
-name: Run ca16 World Bank Open-Ended Task A Once\n\non:\n  pull_request:\n    branches: [main]\n    types: [opened]\n\npermissions:\n  contents: read\n\njobs:\n  execute-once:\n    if: github.head_ref == 'execute/ca16-worldbank-openended-taska-once-20260930-v1'\n    runs-on: ubuntu-24.04\n    timeout-minutes: 12\n    env:\n      ASTRA_DISABLE_MODEL_PLANNER: '1'\n      PYTHONUNBUFFERED: '1'\n    steps:\n      - name: Checkout exact PR head, never merge ref\n        uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n      - uses: actions/setup-python@v5\n        with:\n          python-version: '3.13'\n      - name: Refresh Ubuntu package metadata\n        run: sudo apt-get update\n      - name: Execute canonical runtime mission exactly once\n        id: parent_task\n        continue-on-error: true\n        run: python run_ca16_worldbank_openended_taska_once.py\n      - name: Upload terminal producer and oracle evidence\n        if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: ca16-worldbank-openended-taska-terminal\n          path: ca16-worldbank-openended-taska-terminal.json\n          if-no-files-found: error\n      - name: Preserve semantic failure\n        if: steps.parent_task.outcome != 'success'\n        run: exit 1\n
+name: Run ca16 World Bank Open-Ended Task A Once
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    if: github.head_ref == 'execute/ca16-worldbank-openended-taska-once-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute canonical runtime mission exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_ca16_worldbank_openended_taska_once.py
+      - name: Upload terminal producer and oracle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ca16-worldbank-openended-taska-terminal
+          path: ca16-worldbank-openended-taska-terminal.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
