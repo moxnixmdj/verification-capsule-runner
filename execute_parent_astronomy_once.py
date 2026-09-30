@@ -3,7 +3,7 @@ import hashlib, importlib.util, json, math, pathlib, sys, traceback, urllib.requ
 
 ROOT=pathlib.Path(__file__).resolve().parent
 TASK_PATH=ROOT/"canonical/tasks/PARENT_ASTRONOMY_EROS_KEPLER_REAL_TASK_20260930_001.json"
-TASK_BLOB="74b9ccf55be72a41820cbea0decc0edd41b06538"
+TASK_BLOB="4cb0fbb4f46cf3c7302688197117cbaffe2d3943"
 EXPECTED_RUNTIME_BLOBS={
   "canonical/runtime/astra_runtime.py":"85642a89a0d99c5e6cafa2e116ffdc24f04de32c",
   "canonical/runtime/goal_compiler.py":"b446257ca01ee858ada2fb52d0c7925f2ea4391f",
