@@ -1,0 +1,48 @@
+name: Diagnose Brain PR578 drift guard
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    if: github.head_ref == 'diag/brain-pr578-drift-guard-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Reproduce trusted validator without remote lease API
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/moxnixmdj/brain.git /tmp/brain
+          git -C /tmp/brain fetch -q origin pull/578/head:pr578
+          git -C /tmp/brain checkout -q pr578
+          test "$(git -C /tmp/brain rev-parse HEAD)" = "0678662e25355205b77b89e6a3a70b0b2850fdd0"
+          git -C /tmp/brain cat-file -e d4c51207d8c3d4079f3f2d2d57c22cf9e044b8b5^{commit}
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/brain/canonical/runtime/enforce_goal_hierarchy.py')
+          s=p.read_text()
+          old='''    try:
+        peers=_open_pr_intents()
+    except Exception as exc:
+        fail("BLOCKER_LEASE_DEDUPE_CHECK_FAILED:"+str(exc))
+        return
+'''
+          new='''    peers=[]  # DIAGNOSTIC ONLY: open-PR lease uniqueness verified separately via GitHub connector.
+'''
+          if old not in s:
+              raise SystemExit('LEASE_PATCH_ANCHOR_NOT_FOUND')
+          p.write_text(s.replace(old,new,1))
+          PY
+          cd /tmp/brain
+          set +e
+          python3 canonical/runtime/enforce_goal_hierarchy.py \
+            --base d4c51207d8c3d4079f3f2d2d57c22cf9e044b8b5 \
+            --head 0678662e25355205b77b89e6a3a70b0b2850fdd0 | tee /tmp/guard-output.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          cat /tmp/guard-output.txt
+          exit "$rc"
