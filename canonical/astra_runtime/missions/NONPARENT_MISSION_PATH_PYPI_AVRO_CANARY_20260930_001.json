@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "NONPARENT-MISSION-PATH-PYPI-AVRO-CANARY-20260930-001",
+  "purpose": "Fresh non-parent canary for the canonical Astra CLI mission-identity seam. Force the plain-goal auto-acquisition path and prove that _runtime_mission_path reaches the supplier layer without APT_ORIGIN_MISSION_PATH_INVALID or PYPI_ORIGIN_MISSION_PATH_INVALID.",
+  "goal": "Using a Python library from PyPI, serialize the literal token ZETA-42 into canonical/astra_runtime/tmp/mission_path_canary.avro.",
+  "steps": [
+    {
+      "id": "mission-path-auto-acquisition-canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "non_parent_canary": true,
+    "parent_capability_credit_authorized": false,
+    "same_parent_task_replay": false,
+    "canonical_cli_entrypoint_required": true,
+    "auto_acquisition_path_required": true,
+    "mission_path_error_forbidden": true
+  }
+}
