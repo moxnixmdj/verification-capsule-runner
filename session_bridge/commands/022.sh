@@ -189,7 +189,7 @@ python -m parityctl rebuild --packet data/incidents/parity-2026-10 --out output
 SH
 chmod +x rebuild_parity_report.sh
 rm -rf output
-./rebuild_parity_report.sh
+sh rebuild_parity_report.sh
 echo '=== SCORES ===';cat output/parity_scores.csv
 echo '=== SUMMARY ===';cat output/parity_summary.json
 python - <<'PY'
@@ -203,7 +203,7 @@ c.close()
 PY
 rm -rf /tmp/parity-a;mkdir /tmp/parity-a
 cp output/* /tmp/parity-a/
-./rebuild_parity_report.sh
+sh rebuild_parity_report.sh
 cmp /tmp/parity-a/parity_scores.csv output/parity_scores.csv
 cmp /tmp/parity-a/parity_summary.json output/parity_summary.json
 cmp /tmp/parity-a/scorer_audit.sqlite output/scorer_audit.sqlite
