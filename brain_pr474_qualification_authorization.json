@@ -1,0 +1,14 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "GREEN_EXACT_BYTE_QUALIFICATION_OF_BRAIN_PR474_BROAD_MULTICLAUSE_ROUTING",
+  "brain_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "brain_pr": 474,
+  "brain_head": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+  "authoritative_parent_run": 36688193204,
+  "spent_parent_task": "PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
