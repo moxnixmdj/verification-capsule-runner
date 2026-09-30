@@ -92,6 +92,44 @@ class QualifiedSourceFrontendTests(unittest.TestCase):
         self.assertEqual(out["model_dependency_count"],0)
         self.assertEqual(out["incremental_spend_usd"],0)
 
+    def test_accepts_existing_qualified_ddgs_discovery_schema(self):
+        objective="Assess the normative requirements for accessible web content under WCAG 2.2."
+        good=candidate("https://www.w3.org/TR/WCAG22/","Web Content Accessibility Guidelines (WCAG) 2.2")
+
+        def discover(goal,limit=12,timeout=15):
+            return {
+                "status":"SOURCE_CANDIDATES_DISCOVERED",
+                "objective":goal,
+                "candidates":[good],
+                "model_dependency_count":0,
+                "incremental_spend_usd":0,
+            }
+
+        def provenance(c,timeout=15):
+            return {"status":"RETRIEVAL_PROVENANCE_VERIFIED","final_url":c["url"],"final_host":c["host"]}
+
+        def authority(c,timeout=20):
+            return {
+                "status":"AUTHORITY_IDENTITY_VERIFIED","authority_status":"VERIFIED",
+                "candidate_host":c["host"],"official_host":"www.w3.org",
+            }
+
+        def primary(goal,c,p,a,timeout=20):
+            return {
+                "status":"PRIMARY_RELEVANCE_VERIFIED",
+                "primary_source_status":"VERIFIED_OFFICIAL_FIRST_PARTY_TECHNICAL_DOCUMENT",
+                "relevance_status":"VERIFIED_DIRECT_OBJECTIVE_COVERAGE",
+                "evidence_sufficiency_status":"UNVERIFIED",
+            }
+
+        out=self.m.run(
+            objective,decomposition(objective),
+            discovery_fn=discover,provenance_fn=provenance,
+            authority_fn=authority,primary_relevance_fn=primary,
+        )
+        self.assertEqual(out["status"],"QUALIFIED_SOURCE_AVAILABLE",out)
+        self.assertEqual(out["qualified_source_count"],1,out)
+
     def test_bibliographic_identity_does_not_skip_live_retrieval_gate(self):
         objective="Assess a technical claim."
         c=candidate("https://doi.org/10.0000/example","Example paper")
