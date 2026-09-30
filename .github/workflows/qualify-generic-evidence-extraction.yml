@@ -1,0 +1,38 @@
+name: Qualify Generic Non-ROR Evidence Extraction
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py
+      - canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - canonical/runtime/bound_capabilities/objective_relevance_bm25.py
+      - canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py
+      - canonical/tests/test_objective_evidence_unit_extract_v2.py
+      - canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py
+      - canonical/tests/test_open_research_source_frontend_generic_extraction.py
+      - canonical/tests/test_generic_evidence_extraction_live_qualification.py
+      - .github/workflows/qualify-generic-evidence-extraction.yml
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run authored extractor regressions
+        run: python canonical/tests/test_objective_evidence_unit_extract_v2.py
+      - name: Run authored generic BM25 regressions
+        run: python canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py
+      - name: Run parent-effective non-ROR integration regression
+        run: python canonical/tests/test_open_research_source_frontend_generic_extraction.py
+      - name: Run independent fresh live generic qualification
+        run: python canonical/tests/test_generic_evidence_extraction_live_qualification.py
+      - name: Verify exact scope markers
+        run: |
+          grep -q "Organization/ROR identity is deliberately not an admission prerequisite" canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py
+          grep -q "authority_identity_required_for_admission.*False" canonical/runtime/bound_capabilities/open_research_source_frontend.py
+          grep -q "MODEL_INDEPENDENT_CLAIM_SUPPORT_AND_RELATION_EVALUATION_FROM_EXTRACTED_EVIDENCE_V1" canonical/runtime/bound_capabilities/open_research_source_frontend.py
