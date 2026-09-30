@@ -63,6 +63,25 @@ ok("concrete_execution_recipe_still_rejected",
    exp["status"]=="UNSUPPORTED" and exp["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE",
    {"reason":exp.get("reason")})
 
+generic_method=(
+    "Assess whether a thermal property differs between two operating regimes. "
+    "Use authoritative primary technical evidence and a real executable check. "
+    "Autonomously discover and verify relevant sources, choose and run a zero-cost "
+    "verification method, identify material scope limitations, independently verify "
+    "the consequential result, and produce a decision-quality answer."
+)
+generic_out=b.decompose(generic_method)
+assert generic_out["status"]=="DECOMPOSED", generic_out
+
+concrete_out=b.decompose("Assess whether two measured values differ. Run python verify_values.py")
+assert concrete_out["status"]=="UNSUPPORTED", concrete_out
+assert concrete_out["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE", concrete_out
+
+url_out=b.decompose("Assess whether two measured values differ using https://example.com/data")
+assert url_out["status"]=="UNSUPPORTED", url_out
+assert url_out["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE", url_out
+print("PR474_EXPLICIT_RECIPE_BOUNDARY_PASS")
+
 unsupported=g.ground("Create output.json with one record",{})
 ok("nonresearch_action_not_reinterpreted",
    unsupported["broad_objective_decomposition_available"] is False
