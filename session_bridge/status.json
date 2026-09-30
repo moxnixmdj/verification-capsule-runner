@@ -1,6 +1,5 @@
 {
-  "next_step": 0,
-  "runtime_boundary": "COMMANDS_EXECUTE_ONLY_INSIDE_BUILT_TASK_CONTAINER",
+  "next_step": 1,
   "session_id": "bun-sourcemap-leak-20260930-v1",
   "status": "READY_FOR_COMMAND",
   "task": "bun-sourcemap-leak"
