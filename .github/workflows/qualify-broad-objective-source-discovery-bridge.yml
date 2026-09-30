@@ -1,0 +1,103 @@
+name: Qualify Broad Objective Source Discovery Bridge
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/broad-objective-source-discovery-bridge-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify exact Brain closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "b7f7dfaab03983e0dee0168ec59b248e45841bf1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "816c37742b23739e74a9455a97dd6aea9e767206"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "da42f0615380027f963044f80e55ddfa1d73ced1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "6eb2b20e860da466ad8b793c20060ded1fbf389b"
+          test "$(git hash-object canonical/tests/test_broad_objective_source_discovery_runtime_bridge.py)" = "2238b6684706ed11d136dd8e2e19b771c102666b"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "a22761070ba4d45d3eae7b684d5c66cfb0601669"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "4b61fe911471854ec15c7900816f61e9e55f602e"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+      - name: Run deterministic bridge regressions
+        run: python canonical/tests/test_broad_objective_source_discovery_runtime_bridge.py
+      - name: Live end-to-end broad-goal route oracle
+        shell: bash
+        run: |
+          python - <<'PY'
+          import importlib.util, json, pathlib, tempfile
+          p=pathlib.Path("canonical/runtime/astra_runtime.py")
+          s=importlib.util.spec_from_file_location("astra_bridge_live",p)
+          r=importlib.util.module_from_spec(s); s.loader.exec_module(r)
+
+          goals=[
+            "Assess whether HTTP cache freshness is distinct from validation according to technical documentation",
+            "Determine whether Python technical documentation distinguishes object identity from equality comparison",
+            "Compare whether two documented cryptographic properties, preimage resistance and collision resistance, are defined as distinct security properties",
+          ]
+          passed=[]
+          with tempfile.TemporaryDirectory() as td:
+              old=r.EVID_DIR
+              r.EVID_DIR=pathlib.Path(td)
+              try:
+                  for i,goal in enumerate(goals,1):
+                      mid=f"NONPARENT-BROAD-SOURCE-BRIDGE-CANARY-{i}"
+                      mission={"mission_id":mid,"goal":goal}
+                      step={
+                        "id":"live-broad-source-bridge",
+                        "adapter":"goal",
+                        "goal_ref":"goal",
+                        "max_controller_actions":32,
+                      }
+                      try:
+                          r._run_goal_unstamped(step,mission)
+                      except r.Blocker as exc:
+                          msg=str(exc)
+                          print("CANARY_BLOCKER",i,msg[:1500])
+                          if "BROAD_OBJECTIVE_SOURCE_AUTHORITY_VERIFICATION_REQUIRED:" not in msg:
+                              continue
+                          assert "CAPABILITY_ACQUISITION_REQUIRED" not in msg, msg
+                          assert "AutoAcquisitionFailure" not in msg, msg
+                          ep=pathlib.Path(td)/f"{mid}__BROAD_OBJECTIVE_SOURCE_CANDIDATES.json"
+                          assert ep.is_file(), ep
+                          evidence=json.loads(ep.read_text(encoding="utf-8"))
+                          discovery=evidence["source_candidate_discovery"]
+                          assert discovery["status"]=="CANDIDATES_DISCOVERED", discovery
+                          assert int(discovery["candidate_count"])>=1, discovery
+                          assert evidence["authority_verification_required"] is True
+                          assert evidence["primary_source_verification_required"] is True
+                          assert evidence["package_capability_acquisition_attempted"] is False
+                          assert int(evidence["model_dependency_count"])==0
+                          assert int(evidence["incremental_spend_usd"])==0
+                          assert discovery.get("authority_verification")=="NOT_PERFORMED"
+                          assert discovery.get("primary_source_verification")=="NOT_PERFORMED"
+                          assert all(
+                              str(x.get("authority_status") or "")=="UNVERIFIED"
+                              for x in discovery.get("candidates") or []
+                          )
+                          passed.append({
+                            "goal":goal,
+                            "candidate_count":discovery["candidate_count"],
+                            "hosts":[x.get("host") for x in (discovery.get("candidates") or [])[:4]],
+                          })
+                      else:
+                          raise AssertionError("broad goal unexpectedly completed without authority verification")
+              finally:
+                  r.EVID_DIR=old
+          print("LIVE_BRIDGE_PASSES",json.dumps(passed,sort_keys=True))
+          assert len(passed)>=2, passed
+          print("INDEPENDENT_BROAD_OBJECTIVE_SOURCE_DISCOVERY_BRIDGE_PASS")
+          PY
