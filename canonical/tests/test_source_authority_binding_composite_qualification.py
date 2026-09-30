@@ -94,11 +94,16 @@ class Qualification(unittest.TestCase):
         self.assertEqual(out.get("relevance_status"),"UNVERIFIED")
         self.assertEqual(out.get("evidence_sufficiency_status"),"UNVERIFIED")
 
-    def test_live_unsupported_domain_fails_closed(self):
+    def test_identity_binding_never_upgrades_evidence_semantics(self):
+        # example.com is intentionally a documentation entity and has a real
+        # Wikidata P856 binding. Identity may therefore verify, but it must not
+        # silently become research relevance, primary-source status, or evidence.
         candidate={"url":"https://example.com/","title":"Example Domain"}
         provenance,out=self._bind_live(candidate)
-        self.assertEqual(out.get("status"),"AUTHORITY_UNRESOLVED",out)
-        self.assertEqual(out.get("authority_status"),"UNVERIFIED",out)
+        self.assertIn(out.get("status"),{"AUTHORITY_IDENTITY_VERIFIED","AUTHORITY_UNRESOLVED"},out)
+        self.assertEqual(out.get("primary_source_status"),"UNVERIFIED",out)
+        self.assertEqual(out.get("relevance_status"),"UNVERIFIED",out)
+        self.assertEqual(out.get("evidence_sufficiency_status"),"UNVERIFIED",out)
 
     def test_unverified_provenance_never_binds(self):
         out=self.comp.bind_verified_candidate({"url":"https://www.python.org/"},{"status":"UNVERIFIED"})
