@@ -1,0 +1,322 @@
+{
+  "schema": "PROJECT_BRAIN_FRONTIER_CAPABILITY_OBSOLESCENCE_QUEUE_V1",
+  "status": "CANONICAL_OBSOLESCENCE_QUEUE",
+  "phase": "POST_KNOWLEDGE_OBSOLESCENCE__CAPABILITY_OBSOLESCENCE",
+  "p_real": 1,
+  "theory": {
+    "operational_decomposition": "FRONTIER_INTELLIGENCE = KNOWLEDGE + CAPABILITIES",
+    "knowledge_side": "ARCHITECTURALLY_SOLVED_FOR_CURRENT_PROGRAM_UNLESS_FALSIFIED",
+    "knowledge_solution": "OBTAIN_MAXIMUM_RELEVANT_KNOWLEDGE_JIT_FROM_EXTERNAL_VERIFIABLE_SOURCES_INSTEAD_OF_REPLICATING_A_GIANT_PERMANENT_PARAMETER_STORE",
+    "active_side": "CAPABILITIES",
+    "capability_question": "FOR_EACH_FRONTIER_CAPABILITY_FIND_THE_FASTEST_AND_CHEAPEST_REALIZABLE_ROUTE_TO_EQUAL_OR_BETTER_USEFUL_CAPABILITY",
+    "obsolete_definition": "FRONTIER_IMPLEMENTATION_NO_LONGER_NECESSARY_BECAUSE_A_VERIFIED_ROUTE_PROVIDES_EQUAL_OR_BETTER_USEFUL_CAPABILITY_UNDER_REQUIRED_CONDITIONS"
+  },
+  "optimization": {
+    "priority": [
+      "CORRECTNESS_AND_REAL_CAPABILITY_STRENGTH",
+      "MINIMUM_WALL_CLOCK_TIME",
+      "MINIMUM_INCREMENTAL_COST",
+      "MINIMUM_COMPUTE_AND_COMPLEXITY"
+    ],
+    "hard_incremental_spend_usd": 0,
+    "preferred_outcome": "CAPABILITY_GREATER_THAN_OR_EQUAL_TO_FRONTIER",
+    "parity_role": "MINIMUM_ACCEPTANCE_BAR_NOT_TERMINAL_GOAL"
+  },
+  "queue_semantics": "CAPABILITIES_TO_OBSOLETE__NOT_CAPABILITIES_TO_COPY_OR_ACCUMULATE",
+  "capability_families_seed": [
+    "GOAL_DECOMPOSITION_AND_PLANNING",
+    "RESEARCH_AND_KNOWLEDGE_SYNTHESIS",
+    "SOFTWARE_ENGINEERING",
+    "TECHNICAL_SCIENTIFIC_REASONING",
+    "UNKNOWN_DOMAIN_ADAPTATION",
+    "TOOL_SELECTION_AND_TOOL_LEARNING",
+    "VISION_AND_PERCEPTION",
+    "COMPUTER_AND_BROWSER_USE",
+    "DATA_ANALYSIS_AND_ARTIFACT_CREATION",
+    "LONG_HORIZON_CONTINUATION_AND_RECOVERY",
+    "JUDGMENT_UNDER_AMBIGUITY",
+    "MULTI_CAPABILITY_COMPOSITION",
+    "SELF_CRITIQUE_FALSIFICATION_AND_VERIFICATION",
+    "MEMORY_RETRIEVAL_AND_REUSE",
+    "COORDINATION_AND_PARALLEL_WORK",
+    "CREATIVE_AND_NOVEL_PROBLEM_SOLVING"
+  ],
+  "per_capability_record_schema": [
+    "capability_id",
+    "real_useful_behavior",
+    "frontier_reference_evidence",
+    "frontier_bar",
+    "current_brain_route",
+    "candidate_routes",
+    "winning_route",
+    "capability_strength_result",
+    "wall_clock_result",
+    "incremental_cost_result",
+    "compute_result",
+    "independent_verification",
+    "obsolescence_status",
+    "residual_gap",
+    "inheritance_path"
+  ],
+  "allowed_statuses": [
+    "UNMAPPED",
+    "FRONTIER_BAR_UNCERTAIN",
+    "ROUTE_DISCOVERY",
+    "ROUTE_RACE",
+    "CANDIDATE_MATCH",
+    "OBSOLETE_VERIFIED",
+    "RESIDUAL_GAP_VERIFIED",
+    "REOPENED_BY_REGRESSION"
+  ],
+  "immediate_frontier": {
+    "selected_capability": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+    "parent_frontier_capability": null,
+    "objective": "Run one genuinely open-ended model-independent technical/scientific objective with no prewired research plan; require autonomous decomposition plus material source/tool discovery, then stop on the first real causal gap.",
+    "selection_metric": "VERIFIED_PARENT_CAPABILITY_GAIN_PER_WALL_CLOCK__CORRECTNESS_FIRST__HARD_ZERO_INCREMENTAL_SPEND",
+    "exact_blocker": "PARENT_OPEN_ENDED_SCOPE_UNPROVEN__NO_ADMISSIBLE_MODEL_INDEPENDENT_OPEN_ENDED_REAL_TASK_A",
+    "evidence_path": "canonical/capabilities/obsolescence/PARENT_OPEN_ENDED_SCOPE_ADMISSIBILITY_CORRECTION_20260930_V1.json",
+    "repair_status": "STRUCTURED_DEMOGRAPHY_VALID_SUPPORTING_EVIDENCE__OPEN_ENDED_PARENT_PROMOTION_ADMISSIBILITY_REVOKED",
+    "prohibition": "NO_PROMOTION_FROM_PREWIRED_TASKS__NO_SPENT_TASK_REPLAY__NO_MODEL_COGNITION__NO_TASK_SPECIFIC_RESEARCH_RECIPE",
+    "next_action": "RUN_GENUINELY_OPEN_ENDED_MODEL_INDEPENDENT_PARENT_REAL_TASK_A__NO_PREWIRED_RESEARCH_PLAN__AUTONOMOUS_DECOMPOSITION_AND_SOURCE_TOOL_DISCOVERY_REQUIRED__STOP_ON_FIRST_CAUSAL_GAP",
+    "progress_scoreboard_path": "canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json",
+    "acquired_subcapabilities": [
+      "MODEL_INDEPENDENT_EVIDENCE_TO_DECISION_SYNTHESIS_V1",
+      "MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1",
+      "MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1",
+      "MODEL_INDEPENDENT_TWO_SCALAR_NUMERIC_RELATION_EXECUTION_V1",
+      "MODEL_INDEPENDENT_TYPED_SCALAR_NUMERIC_EXPRESSION_EXECUTION_V1"
+    ],
+    "latest_fresh_real_run_id": 36652169397,
+    "latest_fresh_reuse_run_id": 36652623916,
+    "latest_composition_requalification_run_id": 36659637634,
+    "latest_composition_recovery_run_id": 36660108447,
+    "recursive_obs_law": "canonical/laws/RECURSIVE_OBSOLESCENCE_CONTROL_LAW_V3.md",
+    "recursive_obs_receipt_schema": "canonical/governance/RECURSIVE_OBS_RECEIPT_SCHEMA_V4.json",
+    "latest_parent_real_task_run_id": 36667844172,
+    "latest_parent_real_task_artifact_id": 11076359417,
+    "latest_parent_real_task_artifact_digest": "sha256:48cf6ffa11abef1cee2443d5ca69b4a4f6cf5608c31af883b5b987d533ed6326",
+    "latest_numeric_relation_qualification_run_id": 36664102642,
+    "latest_numeric_relation_qualification_artifact_id": 11075158049,
+    "latest_numeric_relation_qualification_artifact_digest": "sha256:b47bbe491db198bcbd4c09b7a9e8cfeac95062989300eca8f8784c117a1222d1",
+    "latest_typed_scalar_expression_qualification_run_id": 36666659921,
+    "latest_typed_scalar_expression_qualification_artifact_id": 11076347530,
+    "latest_typed_scalar_expression_qualification_artifact_digest": "sha256:1bf6628bff366eb6fa3d277042798c956eec1c5fca7d7bace1237d13ce832cc0",
+    "admissible_open_ended_model_independent_parent_tasks_verified": 0,
+    "structured_model_independent_parent_tasks_verified": 1
+  },
+  "promotion_claim": false,
+  "completed_obsolescence_records": [
+    {
+      "capability_id": "EXACT_SYMBOLIC_COMPUTATION_V1",
+      "parent_family": "TECHNICAL_SCIENTIFIC_REASONING",
+      "status": "OBSOLETE_VERIFIED",
+      "adjudication_path": "canonical/capabilities/obsolescence/EXACT_SYMBOLIC_COMPUTATION_V1_ADJUDICATION.json",
+      "scope": "BOUNDED_EXACT_SYMBOLIC_OPERATION_CLASSES",
+      "exact_correctness": 1,
+      "producer": "SymPy 1.14.0",
+      "independent_verifier": "Wolfram Language",
+      "capability_route_process_wall_s": 0.59,
+      "incremental_spend_usd": 0
+    }
+  ],
+  "task_semantic_conjunctive_role_v1": {
+    "status": "FALSIFIED_AS_IMPLEMENTED__NOT_MERGED",
+    "source_pr": 66,
+    "workflow_run_id": 36461774649,
+    "exact_oracle_top12_recall": 0.6666666666666666,
+    "payload_noise_removed": true,
+    "compatibility_gate_validly_exercised": false
+  },
+  "executable_evidence_source_diagnostic_001": {
+    "status": "COMPLETE_RECONCILED",
+    "oracle_family_recall": 1,
+    "recall_at_10": 0.5,
+    "recall_at_20": 0.75,
+    "all_supplier_families_surfaced": true
+  },
+  "command_manpage_semantics_diagnostic_001": {
+    "status": "COMPLETE_RECONCILED",
+    "coverage_improved_fraction": 1,
+    "high_semantic_coverage_fraction": 0.75,
+    "one_generic_repair_authorized": true
+  },
+  "executable_semantic_repair_reconciliation_v1": {
+    "status": "FALSIFIED_BOTH_IMPLEMENTATIONS__NOT_MERGED",
+    "prs": [
+      72,
+      73
+    ],
+    "run72": {
+      "workflow_run_id": 36468338181,
+      "oracle_family_recall": 0.75,
+      "top20_oracle_recall": 0.5
+    },
+    "run73": {
+      "workflow_run_id": 36471956894,
+      "oracle_family_recall": 0.25,
+      "top20_oracle_recall": 0.25
+    },
+    "reconciliation_path": "canonical/capabilities/obsolescence/TOOL_DISCOVERY_SELECTION_LEARNING_EXECUTABLE_SEMANTIC_REPAIRS_FALSIFICATION_RECONCILIATION_V1.json"
+  },
+  "direct_generator_existing_evidence_v1": {
+    "status": "PROVEN_EXISTING_EVIDENCE_RECOVERED",
+    "source_pr": 70,
+    "workflow_run_id": 36466410064,
+    "oracle_family_recall": 1,
+    "recall_at_20": 0.75
+  },
+  "direct_generator_integration_delta_001": {
+    "status": "COMPLETE_RECONCILED_PENDING_MERGE",
+    "workflow_run_id": 36474588105,
+    "artifact_id": 10992813288,
+    "artifact_digest": "sha256:62067bfbc6e300a81724030fca3d733b836d66835653c4a2f30ec395cd83a450",
+    "all_oracles_survive_generator_and_top100": true
+  },
+  "evidence_acquisition_latency_profile_001": {
+    "status": "EXECUTION_SURFACE_QUARANTINED__STRUCTURAL_CAUSE_RECONCILED_PENDING_MERGE",
+    "source_pr": 82,
+    "profile_runs": [
+      36486220580,
+      36486527162
+    ],
+    "reconciliation_path": "canonical/capabilities/obsolescence/TOOL_DISCOVERY_SELECTION_LEARNING_EVIDENCE_ACQUISITION_STRUCTURAL_CAUSE_RECONCILIATION_V1.json"
+  },
+  "tool_discovery_selection_learning_full_metadata_xapian_v1": {
+    "status": "VERIFIED_DISCOVERY_ROUTE_INHERITED__PARENT_INTEGRATION_RESIDUAL_REOPENED",
+    "source_pr": 89,
+    "authoritative_deployment": "805a36d4-04cf-4938-bfac-74d29418081f",
+    "runtime_git_blob": "b9e7423ab24bf2da98869b02d782e791a779892a",
+    "heldout_oracle_family_recall": 1,
+    "heldout_top20_oracle_recall": 1,
+    "validator_wall_s": 16.233238,
+    "incremental_spend_usd": 0,
+    "terminal_reconciliation_path": "canonical/capabilities/obsolescence/TOOL_DISCOVERY_SELECTION_LEARNING_HELDOUT_VALIDATION_005_TERMINAL_RECONCILIATION_V1.json",
+    "parent_capability_obsolescence_claim": false,
+    "next_action": "BIND_IXIMIUZ_LABS_CUSTOM_MCP_THROUGH_CHATGPT_DEVELOPER_MODE__THEN_GUARDED_FREE_TIER_EGRESS_AND_DEBIAN_APT_XAPIAN_QR_EXACT_RUNTIME_CLOSURE_PREFLIGHT__NO_HELDOUT_004_START"
+  },
+  "deferred_frontier_candidate": {
+    "capability": "MULTI_TOOL_ORCHESTRATION_AND_PLANNING",
+    "source_pr": 111,
+    "evidence_path": "canonical/capabilities/obsolescence/POST_TOOL_DISCOVERY_FRONTIER_RECOMPUTATION_20260929_V1.json",
+    "status": "DEFERRED_NOT_FALSIFIED",
+    "reopen_condition": "Recompute globally only after TOOL_DISCOVERY_SELECTION_AND_LEARNING reaches terminal OBSOLETE_OR_RETAIN adjudication under the mandatory mission sequence; closing one local seam is not sufficient while another verified residual remains."
+  },
+  "chatgpt_linux_h004_carrier_qualification_clean_v1": {
+    "status": "REJECTED_BEFORE_HELDOUT_START",
+    "evidence_path": "canonical/capabilities/obsolescence/H004_CHATGPT_LINUX_READONLY_CARRIER_QUALIFICATION_CLEAN_20260929_V1.json",
+    "carrier": "CHATGPT_BUILTIN_LINUX_CONTAINER",
+    "first_failed_predicate": "NORMAL_APT_PACKAGES_METADATA_REQUIRED",
+    "heldout_004_freshness": "UNSPENT",
+    "next_action": "QUALIFY_NEXT_ALREADY_DISCOVERED_HARD_ZERO_REMOTE_LINUX_ROUTE__REQUIRE_CALLABLE_COMMAND_TRANSPORT_AND_FAITHFUL_APT_SURFACE__PREFLIGHT_EXACT_RUNTIME_CLOSURE_PATHS_HASHES_AND_IMPORTS__NO_HELDOUT_004_START"
+  },
+  "railway_anonymous_h004_carrier_qualification_v1": {
+    "status": "TRANSPORT_REJECTED_BEFORE_VM_ALLOCATION",
+    "evidence_path": "canonical/capabilities/obsolescence/H004_RAILWAY_ANONYMOUS_TRANSPORT_QUALIFICATION_20260929_V1.json",
+    "hard_zero_contract_proven": true,
+    "anonymous_vm_allocated": false,
+    "first_failed_predicate": "DIRECT_CALLABLE_COMMAND_TRANSPORT_FROM_AUTHORIZED_SURFACE",
+    "heldout_004_freshness": "UNSPENT",
+    "next_action": "DISCOVER_AND_QUALIFY_ONE_HARD_ZERO_REMOTE_LINUX_ROUTE_WITH_DIRECT_CALLABLE_COMMAND_TRANSPORT__THEN_FAITHFUL_APT_XAPIAN_QR_SURFACE_AND_EXACT_RUNTIME_CLOSURE_PATH_HASH_IMPORT_PREFLIGHT__NO_HELDOUT_004_START"
+  },
+  "iximiuz_mcp_h004_external_dependency_v1": {
+    "status": "TECHNICALLY_VALID_ROUTE__CURRENT_CHATGPT_BINDING_PATH_UNAVAILABLE__REJECTED_FOR_CURRENT_SURFACE",
+    "evidence_path": "canonical/capabilities/obsolescence/H004_IXIMIUZ_MCP_EXTERNAL_DEPENDENCY_20260929_V1.json",
+    "remote_mcp_endpoint": "https://labs.iximiuz.com/mcp",
+    "chatgpt_custom_connector_path_proven": true,
+    "basic_plan_hard_zero_contract_proven": true,
+    "free_tier_required_egress_proven": false,
+    "heldout_004_freshness": "UNSPENT",
+    "next_action": "DISCOVER_AND_QUALIFY_ONE_HARD_ZERO_REMOTE_LINUX_ROUTE_WITH_DIRECT_CALLABLE_COMMAND_TRANSPORT__THEN_FAITHFUL_APT_XAPIAN_QR_SURFACE_AND_EXACT_RUNTIME_CLOSURE_PATH_HASH_IMPORT_PREFLIGHT__NO_HELDOUT_004_START",
+    "access_path_rejection": "canonical/capabilities/obsolescence/H004_IXIMIUZ_ACCESS_PATH_REJECTION_20260929_V1.json"
+  },
+  "github_actions_h004_hardzero_budget_route_v1": {
+    "status": "DOMINANT_IF_ZERO_BUDGET_VERIFIED__ACCOUNT_STATE_UNVERIFIED",
+    "evidence_path": "canonical/capabilities/obsolescence/H004_GITHUB_ACTIONS_HARDZERO_BUDGET_ROUTE_20260929_V1.json",
+    "private_actions_minutes_used": 2000,
+    "private_actions_minutes_included": 2000,
+    "hard_zero_control": "ACTIONS_BUDGET_0_USD_BLOCKS_METERED_OVERAGE",
+    "exact_private_source_reuse": true,
+    "same_container_debian_trixie_plan": true,
+    "heldout_004_freshness": "UNSPENT",
+    "next_action": "VERIFY_GITHUB_ACTIONS_ZERO_DOLLAR_BUDGET_ACTIVE__IF_PASS_STAGE_ONE_SINGLEFLIGHT_PRIVATE_ACTIONS_DEBIAN_TRIXIE_CARRIER_WITH_SAME_CONTAINER_PREFLIGHT_AND_EXACT_H004_ONE_SHOT__IF_FAIL_RESUME_HARD_ZERO_PROVIDER_DISCOVERY"
+  },
+  "h004_public_capsule_v1": {
+    "status": "SEALED_PUBLICATION_SAFE__EXECUTION_BLOCKED_ONLY_ON_PUBLIC_REPOSITORY_AUTHORITY_BOUNDARY",
+    "capsule_path": "canonical/astra_runtime/verification_capsules/H004_PUBLIC_GITHUB_ACTIONS_ONESHOT_001.json",
+    "readiness_path": "canonical/capabilities/obsolescence/H004_PUBLIC_CAPSULE_EXECUTION_READINESS_20260929_V1.json",
+    "sealed_file_count": 22,
+    "workflow_template": ".github/workflows/h004-public-oneshot-template.yml",
+    "public_standard_runner_hard_zero_contract_proven": true,
+    "publication_safety_pass": true,
+    "source_tree_import_closure_static_pass": true,
+    "repository_create_action_available": false,
+    "visibility_mutation_action_available": false,
+    "heldout_004_freshness": "UNSPENT",
+    "next_action": "CREATE_ONE_EMPTY_PUBLIC_GITHUB_REPOSITORY__APP_ACCESS_EXPECTED_AUTOMATIC_FROM_ALL_REPOSITORIES_INSTALLATION__THEN_COPY_EXACT_SEALED_CAPSULE_AND_WORKFLOW__CREATE_ARM_FILE_LAST__CAPTURE_FIRST_TERMINAL_RESULT__RECONCILE_WITHOUT_REPLAY",
+    "github_app_repository_selection": "all",
+    "separate_app_grant_required": false
+  },
+  "h004_first_terminal_v1": {
+    "status": "SPENT_FAIL_ADMISSIBLE",
+    "run_id": 36602685401,
+    "arm_commit": "0119eb5350e313def53777a047294b7bae7e0f39",
+    "acceptance_gate_pass": false,
+    "error_leaf": "SEMANTIC_VERIFIER_ACQUISITION_FAILED:[]",
+    "total_wall_s": 50.223201,
+    "execution_count": 1,
+    "same_gate_replay_allowed": false,
+    "reconciliation_path": "canonical/capabilities/obsolescence/H004_FIRST_TERMINAL_RECONCILIATION_20260929_V1.json"
+  },
+  "generic_semantic_verifier_evidence_admission_repair_v1": {
+    "status": "VERIFIED_MERGED_PR204",
+    "evidence_path": "canonical/capabilities/obsolescence/GENERIC_SEMANTIC_VERIFIER_EVIDENCE_ADMISSION_REPAIR_20260929_V1.json",
+    "runtime_blob": "a6b028c25d79d2dff59c87e3b3ad91d9fe934dae",
+    "regression_run_id": 36603922229,
+    "tests_passed": 6,
+    "heldout_executions": 0,
+    "next_action": "FREEZE_NEW_ORTHOGONAL_FRESH_TOOL_LEARNING_GATE_AGAINST_REPAIRED_RUNTIME__NO_H004_REPLAY__THEN_EXECUTE_NEW_GATE_EXACTLY_ONCE_ON_QUALIFIED_PUBLIC_CARRIER"
+  },
+  "h005_fresh_gate_v1": {
+    "status": "BLOCKED_UNSPENT__EXECUTION_SURFACE_INCOMPATIBLE",
+    "mission_path": "canonical/astra_runtime/missions/XAPIAN_APT_E2E_INTEGRATION_HELDOUT_005.json",
+    "runner_path": "canonical/experiments/run_xapian_apt_e2e_integration_heldout_005.py",
+    "mission_blob": "d6690ec5839c1b7621be3ae113b60919b55e30c7",
+    "runner_blob": "ae74f974ecf62f2b5c87a036c13df54d6e521c22",
+    "orthogonal_dimensions": [
+      "domain",
+      "execution_surface"
+    ],
+    "execution_count": 0,
+    "next_action": "CLOSE_H005_AS_BLOCKED_UNSPENT__FREEZE_NEW_ORTHOGONAL_GATE_WITH_REALIZABLE_SECOND_DIMENSION__PREFER_DIFFERENT_EXTERNAL_VERIFICATION_MECHANISM_ON_ALREADY_QUALIFIED_DEBIAN_CARRIER",
+    "blocker": "UBUNTU_DIRECT_SURFACE_LACKS_DISTINCT_CONTENTS_ALL_TARGET"
+  },
+  "execution_governance": {
+    "real_task_first": true,
+    "progress_metric": "VERIFIED_REUSABLE_CAPABILITY_OUTPUT",
+    "maximum_support_actions_before_frontier_recompute": 2,
+    "pre_freeze_realizability_required": true,
+    "capability_acquisition_engine_law": "canonical/laws/CAPABILITY_ACQUISITION_ENGINE_LAW_V4.md",
+    "capability_obsolescence_strategy": "canonical/laws/CAPABILITY_OBSOLESCENCE_ARBITRAGE_STRATEGY_V4.md",
+    "real_output_scoreboard": "canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json",
+    "recursive_obs_required": true,
+    "recursive_obs_law": "canonical/laws/RECURSIVE_OBSOLESCENCE_CONTROL_LAW_V3.md",
+    "recursive_obs_receipt_schema": "canonical/governance/RECURSIVE_OBS_RECEIPT_SCHEMA_V4.json",
+    "goal_hierarchy_action_gate": "canonical/gates/GOAL_HIERARCHY_ACTION_GATE_V6.json",
+    "critical_path_pre_action_gate": "canonical/gates/CRITICAL_PATH_PRE_ACTION_GATE_V7.json",
+    "deletion_first_order": [
+      "DELETE",
+      "BYPASS",
+      "REUSE",
+      "SUBSTITUTE",
+      "COMPOSE",
+      "REPAIR",
+      "BUILD"
+    ],
+    "recursive_obs_exact_base_commit_binding_required": true,
+    "recursive_obs_action_intent_template": "canonical/governance/ACTION_INTENT_WITH_RECURSIVE_OBS_TEMPLATE_V3.json",
+    "live_challenger_frontier_required": true,
+    "selected_route_execution_preflight_required": true,
+    "max_external_route_frontier_age_hours": 24,
+    "max_selected_route_preflight_age_hours": 2
+  }
+}
