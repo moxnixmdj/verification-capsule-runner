@@ -1,0 +1,63 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify Brain PR 468 generic multi-clause broad-objective routing repair using exact mirrored candidate bytes, authored regressions, and fresh cross-domain oracle cases; execute no parent task and preserve fail-closed concrete-recipe rejection.",
+  "frozen": {
+    "gate_id": "BRAIN-QUALIFY-PR468-MULTICLAUSE-BROAD-ROUTING-20260930-V1",
+    "problem_sha256": "025a974b8f4159f378171fe26665fa1e1a11aa07ed704680bf410f2668cf28d2",
+    "task_sha256": "a6a998a9bb52d87b6aeff6a4c8da10312070e9e235ecebeaceb36331a050ffa4",
+    "runtime_sha256": "04ca52efb5735a9747c996b8cc77231866b2bbd7bd5292c65f629e5273099af6",
+    "canonical_base": "73f8331cddf556af0daece3aa32998ac992981d0",
+    "authorization_sha256": "fc2e74a67caf393a437448237f71033ee03845672558850f3e9aa12623705cd0"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "1efaec4ba51ecb5c40072b3190853f4de89d8f77",
+      "sha256": "c110537cf6efdd46167a28f2c45e4f9315870a55c3ae19da38e3af8692031f3a"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "25738e959dec0be46058e4bd7720fb8ed1b599bb",
+      "sha256": "04ca52efb5735a9747c996b8cc77231866b2bbd7bd5292c65f629e5273099af6"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "cf7c5ceab23724ec0d6b5c7ff5462c591da64804",
+      "sha256": "a6a998a9bb52d87b6aeff6a4c8da10312070e9e235ecebeaceb36331a050ffa4"
+    },
+    {
+      "path": "verify_pr468_multiclause_broad_routing.py",
+      "git_blob_sha1": "a2f209b8fe23b6d092491491e6e31be6d9a3de51",
+      "sha256": "fc2e74a67caf393a437448237f71033ee03845672558850f3e9aa12623705cd0"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235",
+      "sha256": "ba9c3f9e0526e566f2a494d71254c4f4f74c9d12dce110e26e571773f1982b5d"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94",
+      "sha256": "37de44f958c3fb5ba2d06cbc42e92641109df80e2c28d3f837b87b08b42c3bab"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3",
+      "sha256": "0f0ddb8e99a8dbfbfc099f68c352981b76c3daa7950619a6c5ff685c5f2d5c4a"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "set -euo pipefail; mkdir -p _terminal; { python -m py_compile canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py verify_pr468_multiclause_broad_routing.py; python canonical/tests/test_broad_objective_semantic_decomposition.py; python verify_pr468_multiclause_broad_routing.py; } 2>&1 | tee _terminal/qualification.log"
+  ],
+  "metadata": {
+    "brain_pr": 468,
+    "parent_execution": false,
+    "parent_task_replay": false,
+    "candidate_grounding_blob": "25738e959dec0be46058e4bd7720fb8ed1b599bb",
+    "candidate_decomposer_blob": "1efaec4ba51ecb5c40072b3190853f4de89d8f77",
+    "authored_tests_blob": "cf7c5ceab23724ec0d6b5c7ff5462c591da64804",
+    "independent_oracle_blob": "a2f209b8fe23b6d092491491e6e31be6d9a3de51"
+  }
+}
