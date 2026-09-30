@@ -7,3 +7,5 @@ authorization_blob_sha1=2cefd24591faf06ae307d7a4ece412e7b7836a6b
 exactly_one_execution=true
 replay_allowed=false
 arm_revision=2
+arm_revision=3
+base_trigger_commit=967241564500a12b3faba70509f9775c17a7a7eb
