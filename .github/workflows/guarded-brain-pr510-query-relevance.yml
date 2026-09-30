@@ -1,0 +1,48 @@
+name: Guarded Brain PR510 Query Relevance Focus Qualification
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+jobs:
+  qualify:
+    if: github.head_ref == 'qualify/brain-pr510-query-relevance-focus-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Prestart exact candidate closure
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "c913c20203b638caff050e7461a4b0023852ee10"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "a6fa0f32eab09791ec6a8cdabe961519d073be58"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790"
+          test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "3ded762075ed222228a14877af631f1e2e6d9e4c"
+          test "$(git hash-object canonical/tests/test_open_web_source_candidate_discovery.py)" = "cdde67e65f5c7fcf3793c5e10973fb409b8c4f66"
+          test "$(git hash-object canonical/tests/test_open_research_query_focus_regression.py)" = "d92ff787afa66bd4317ba127305ccd1937f1be16"
+          test "$(git hash-object pr510_query_relevance_authority.json)" = "fc6e0f59a829b0009eb4aa4b3217b35e8f57cd15"
+          test "$(git hash-object verify_brain_pr510_query_relevance.py)" = "8a5c35add5b98054c8a119de94cba9d8179afe90"
+          python -m py_compile canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py canonical/runtime/bound_capabilities/open_research_source_frontend.py canonical/runtime/bound_capabilities/objective_relevance_bm25.py canonical/runtime/bound_capabilities/broad_objective_decompose.py verify_brain_pr510_query_relevance.py
+      - name: Generate exact frozen qualification plan
+        run: python generate_brain_pr510_query_relevance_plan.py
+      - name: Atomically admit and qualify PR510 exact bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan brain_pr510_query_relevance_plan.json --receipt brain-pr510-query-relevance-guard-receipt.json
+      - name: Upload guarded qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brain-pr510-query-relevance-qualification
+          path: |
+            brain-pr510-query-relevance-guard-receipt.json
+            pr510-independent-query-relevance-report.json
+            brain_pr510_query_relevance_plan.json
+            pr510_query_relevance_authority.json
+          if-no-files-found: warn
