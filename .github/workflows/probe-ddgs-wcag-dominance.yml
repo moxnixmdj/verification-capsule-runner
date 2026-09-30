@@ -1,0 +1,45 @@
+name: Probe DDGS WCAG Dominance
+on:
+  push:
+    branches:
+      - probe/ddgs-wcag-dominance-20260930-v1
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Verify exact qualified DDGS discovery blob
+        run: test "$(git hash-object canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py)" = "29ac520725afeb1b76f765ca4524c2ac31c4acc3"
+      - name: Install exact DDGS release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ddgs-wheel
+          python -m pip download --disable-pip-version-check --no-deps --only-binary=:all: 'ddgs==9.16.0' -d /tmp/ddgs-wheel
+          printf '%s  %s\n' '175d9198c958a263f51a06a54368ba0b41294942c0cd29f4aa71be03dbcd5f4a' /tmp/ddgs-wheel/ddgs-9.16.0-py3-none-any.whl | sha256sum -c -
+          python -m pip install --disable-pip-version-check /tmp/ddgs-wheel/ddgs-9.16.0-py3-none-any.whl
+      - name: Probe fresh WCAG objective
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,urllib.parse
+          p=pathlib.Path("canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py")
+          spec=importlib.util.spec_from_file_location("ddgs_probe",p)
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          objective="Assess whether WCAG 2.2 defines normative requirements for accessible web content and conformance."
+          out=m.discover(objective,max_results=16)
+          print(json.dumps(out,indent=2,sort_keys=True))
+          hosts=[x["host"] for x in out["candidates"]]
+          w3=[x for x in out["candidates"] if (urllib.parse.urlsplit(x["url"]).hostname or "").lower().endswith("w3.org")]
+          print("TOP_HOSTS",hosts[:10])
+          print("W3_COUNT",len(w3))
+          if w3:
+              print("W3_BEST",json.dumps(w3[0],sort_keys=True))
+          PY
