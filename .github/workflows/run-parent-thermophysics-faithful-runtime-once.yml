@@ -1,0 +1,240 @@
+name: Thermophysics Parent Task A Once
+
+on:
+  push:
+    branches:
+      - execute/parent-thermophysics-faithful-runtime-20260930-v1
+    paths:
+      - ARM_PARENT_THERMOPHYSICS_TASK_A_002
+
+permissions:
+  contents: read
+
+concurrency:
+  group: parent-thermophysics-task-a-002-once
+  cancel-in-progress: false
+
+jobs:
+  run-parent-task:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    steps:
+      - name: Checkout exact armed head
+        uses: actions/checkout@v4
+
+      - name: Verify frozen canonical closure before spend
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "6cb668bcc5a00665ea541fc5b6adf494f37ad1c9"
+          test "$(git hash-object canonical/astra_runtime/missions/PARENT_THERMOPHYSICS_WATER_VISCOSITY_OPEN_RESEARCH_TASK_A_20260930_002.json)" = "982b883b353b937d8500bd9b70c1929c33313393"
+          test "$(git hash-object canonical/tasks/PARENT_THERMOPHYSICS_WATER_VISCOSITY_OPEN_RESEARCH_TASK_A_20260930_002.json)" = "dc92f7b8e76889c754576dd1a5036e7a7c62b8eb"
+          test "$(cat ARM_PARENT_THERMOPHYSICS_TASK_A_002)" = "ARM_EXACTLY_ONCE__BRAIN_FC07395C__THERMOPHYSICS_TASK_A_002"
+          test ! -e canonical/astra_runtime/tmp/PARENT_THERMOPHYSICS_WATER_VISCOSITY_RESULT.json
+          printf '%s\n' "$GITHUB_SHA" > armed_head_sha.txt
+          printf '%s\n' "fc07395c387563cbb2b3dfdc3b14fd80239a080b" > brain_authority_sha.txt
+
+      - name: Execute producer exactly once through canonical ASTRA CLI
+        shell: bash
+        run: |
+          set +e
+          python3 canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/PARENT_THERMOPHYSICS_WATER_VISCOSITY_OPEN_RESEARCH_TASK_A_20260930_002.json > producer.log 2>&1
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > producer_rc.txt
+          cat producer.log
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          p=Path("producer.log")
+          ev={
+            "schema":"PROJECT_BRAIN_PARENT_EXECUTION_CARRIER_EVIDENCE_V1",
+            "brain_authority_sha":"fc07395c387563cbb2b3dfdc3b14fd80239a080b",
+            "mission_blob_sha":"982b883b353b937d8500bd9b70c1929c33313393",
+            "task_blob_sha":"dc92f7b8e76889c754576dd1a5036e7a7c62b8eb",
+            "runtime_blob_sha":"6cb668bcc5a00665ea541fc5b6adf494f37ad1c9",
+            "mission_id":"PARENT-THERMOPHYSICS-WATER-VISCOSITY-OPEN-RESEARCH-TASK-A-20260930-002",
+            "canonical_cli":"python3 canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/PARENT_THERMOPHYSICS_WATER_VISCOSITY_OPEN_RESEARCH_TASK_A_20260930_002.json",
+            "model_planner_disabled":True,
+            "incremental_spend_usd":0,
+            "producer_log_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+            "producer_returncode":int(Path("producer_rc.txt").read_text().strip()),
+          }
+          Path("carrier-evidence.json").write_text(json.dumps(ev,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(ev,sort_keys=True))
+          PY
+
+      - name: Independent oracle only after producer success
+        shell: bash
+        run: |
+          set -euo pipefail
+          rc="$(cat producer_rc.txt)"
+          if [ "$rc" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          import json
+          Path("oracle-evidence.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_THERMOPHYSICS_INDEPENDENT_ORACLE_V1",
+            "status":"NOT_RUN__PRODUCER_FAILED",
+            "producer_returncode":int(Path("producer_rc.txt").read_text().strip())
+          },indent=2,sort_keys=True)+"\n")
+          PY
+            exit 0
+          fi
+
+          result="canonical/astra_runtime/tmp/PARENT_THERMOPHYSICS_WATER_VISCOSITY_RESULT.json"
+          test -s "$result"
+
+          python3 - <<'PY'
+          import json, pathlib, urllib.request, urllib.parse, hashlib, math, re
+          p=pathlib.Path("canonical/astra_runtime/tmp/PARENT_THERMOPHYSICS_WATER_VISCOSITY_RESULT.json")
+          data=json.loads(p.read_text())
+          required=["status","research_plan","source_provenance","method","viscosity_20c","viscosity_40c","ratio_40c_to_20c","decision","limitations","independent_verification","model_dependency_count"]
+          missing=[k for k in required if k not in data]
+          if missing:
+              raise SystemExit("MISSING_REQUIRED_FIELDS:"+",".join(missing))
+          if int(data.get("model_dependency_count",-1)) != 0:
+              raise SystemExit("MODEL_DEPENDENCY_NONZERO")
+
+          def num(v):
+              if isinstance(v,(int,float)): return float(v)
+              if isinstance(v,dict):
+                  for k in ("value","value_pa_s","pa_s","value_mpa_s","mpa_s"):
+                      if k in v and isinstance(v[k],(int,float)):
+                          x=float(v[k])
+                          if "mpa" in k: x/=1000.0
+                          return x
+              if isinstance(v,str):
+                  m=re.search(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?",v)
+                  if m: return float(m.group(0))
+              raise ValueError(f"not numeric: {v!r}")
+
+          v20=num(data["viscosity_20c"])
+          v40=num(data["viscosity_40c"])
+          ratio=num(data["ratio_40c_to_20c"])
+          recomputed=v40/v20
+          if not math.isfinite(recomputed) or abs(recomputed-ratio) > max(1e-6,abs(recomputed)*1e-3):
+              raise SystemExit(f"RATIO_MISMATCH declared={ratio} recomputed={recomputed}")
+
+          urls=[]
+          def walk(x):
+              if isinstance(x,dict):
+                  for v in x.values(): walk(v)
+              elif isinstance(x,list):
+                  for v in x: walk(v)
+              elif isinstance(x,str):
+                  urls.extend(re.findall(r"https?://[^\s\]\)\}\>,\"']+",x))
+          walk(data["source_provenance"])
+          urls=list(dict.fromkeys(urls))
+          if not urls:
+              raise SystemExit("NO_SOURCE_URL_IN_PROVENANCE")
+
+          fetched=[]
+          for u in urls[:6]:
+              req=urllib.request.Request(u,headers={"User-Agent":"Project-Brain-Independent-Oracle/1.0"})
+              try:
+                  with urllib.request.urlopen(req,timeout=20) as r:
+                      b=r.read(2_000_000)
+                      fetched.append({"url":u,"status":getattr(r,"status",None),"bytes":len(b),"sha256":hashlib.sha256(b).hexdigest()})
+              except Exception as e:
+                  fetched.append({"url":u,"error":type(e).__name__+":"+str(e)[:160]})
+          if not any(x.get("status") and 200 <= x["status"] < 400 and x.get("bytes",0)>0 for x in fetched):
+              raise SystemExit("NO_PRODUCER_CITED_SOURCE_REFETCH_SUCCEEDED")
+
+          out={
+            "schema":"PROJECT_BRAIN_THERMOPHYSICS_INDEPENDENT_ORACLE_V1",
+            "status":"PARTIAL_PASS__DECLARED_NUMERICS_RECOMPUTED_AND_SOURCE_PROVENANCE_REFETCHED__REFERENCE_PROPERTY_CROSSCHECK_PENDING",
+            "producer_result_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+            "viscosity_20c_declared":v20,
+            "viscosity_40c_declared":v40,
+            "ratio_declared":ratio,
+            "ratio_independently_recomputed":recomputed,
+            "threshold_ratio_lt_half":recomputed < 0.5,
+            "source_refetches":fetched,
+            "producer_modules_imported":False
+          }
+          pathlib.Path("oracle-evidence.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+          python3 -m pip install --quiet "iapws==1.5.4"
+          python3 - <<'PY'
+          import json, pathlib, hashlib, math
+          from iapws import IAPWS97
+          p=pathlib.Path("canonical/astra_runtime/tmp/PARENT_THERMOPHYSICS_WATER_VISCOSITY_RESULT.json")
+          data=json.loads(p.read_text())
+          def num(v):
+              if isinstance(v,(int,float)): return float(v)
+              if isinstance(v,dict):
+                  for k in ("value","value_pa_s","pa_s","value_mpa_s","mpa_s"):
+                      if k in v and isinstance(v[k],(int,float)):
+                          x=float(v[k])
+                          if "mpa" in k: x/=1000.0
+                          return x
+              if isinstance(v,str):
+                  import re
+                  m=re.search(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?",v)
+                  if m:return float(m.group(0))
+              raise ValueError
+          v20=num(data["viscosity_20c"]); v40=num(data["viscosity_40c"])
+          i20=IAPWS97(T=293.15,P=0.101325).mu
+          i40=IAPWS97(T=313.15,P=0.101325).mu
+          r=i40/i20
+          rel20=abs(v20-i20)/i20
+          rel40=abs(v40-i40)/i40
+          if rel20>0.05 or rel40>0.05:
+              raise SystemExit(f"INDEPENDENT_PROPERTY_CROSSCHECK_MISMATCH rel20={rel20} rel40={rel40}")
+          op=pathlib.Path("oracle-evidence.json")
+          o=json.loads(op.read_text())
+          o.update({
+            "status":"PASS__INDEPENDENT_SOURCE_REFETCH_NUMERIC_RECOMPUTATION_AND_IAPWS_REFERENCE_CROSSCHECK",
+            "iapws97_20c_pa_s":i20,
+            "iapws97_40c_pa_s":i40,
+            "iapws97_ratio_40c_to_20c":r,
+            "producer_vs_iapws_relerr_20c":rel20,
+            "producer_vs_iapws_relerr_40c":rel40,
+            "decision_reference_ratio_lt_half":r<0.5
+          })
+          op.write_text(json.dumps(o,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(o,sort_keys=True))
+          PY
+
+      - name: Upload immutable terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-thermophysics-task-a-002-terminal
+          path: |
+            armed_head_sha.txt
+            brain_authority_sha.txt
+            producer.log
+            producer_rc.txt
+            carrier-evidence.json
+            oracle-evidence.json
+            canonical/astra_runtime/tmp/PARENT_THERMOPHYSICS_WATER_VISCOSITY_RESULT.json
+            canonical/astra_runtime/state/**
+            canonical/astra_runtime/evidence/**
+          if-no-files-found: warn
+
+      - name: Fail closed on producer or oracle failure
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f producer_rc.txt
+          rc="$(cat producer_rc.txt)"
+          if [ "$rc" -ne 0 ]; then
+            echo "PARENT_PRODUCER_FAILED_RETURN_CODE=$rc" >&2
+            exit "$rc"
+          fi
+          test -s oracle-evidence.json
+          python3 - <<'PY'
+          import json
+          o=json.load(open("oracle-evidence.json"))
+          if not str(o.get("status","")).startswith("PASS__"):
+              raise SystemExit("INDEPENDENT_ORACLE_NOT_PASS:"+str(o.get("status")))
+          print("PARENT_PRODUCER_AND_INDEPENDENT_ORACLE_PASS")
+          PY
