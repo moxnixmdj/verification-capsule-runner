@@ -1,0 +1,10 @@
+{
+  "command_sha256": "86dbb88bbb9c313eff808d3c97c1978d44b72c863e19603a14d24f113e3c0e48",
+  "duration_sec": 0.237,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v2-auth",
+  "stderr": "2026-09-30 21:49:12,396 [INFO] worker: assignment ready partitions=[0, 1] committed={0: None, 1: None} checkpoints={0: 100, 1: 200} rebuilt=[0, 1]\n2026-09-30 21:49:12,396 [INFO] worker: assignment ready partitions=[0, 1] committed={0: 100, 1: 200} checkpoints={0: 100, 1: 200} rebuilt=[]\n2026-09-30 21:49:12,396 [INFO] worker: assignment ready partitions=[0] committed={0: 104} checkpoints={0: 105} rebuilt=[]\n2026-09-30 21:49:12,396 [INFO] worker: assignment ready partitions=[0] committed={0: 100} checkpoints={0: 100} rebuilt=[0]\n",
+  "stdout": "RESTART_PROTOCOL_PROBE_PASS\n",
+  "step": 8
+}
