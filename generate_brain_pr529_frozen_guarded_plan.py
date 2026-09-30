@@ -5,10 +5,12 @@ ROOT=pathlib.Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT/"execution_guard"))
 from actions_admission import problem_sha256
 
-GOAL=("Independently qualify immutable Brain PR529 at exact commit "
-      "4df38e5aa55cfd86a1fda6fbe11666ab6221da2c for scholarly provenance admission, "
-      "focused-subject coverage admission, selected-only bibliographic live materialization, "
-      "one metadata-anchored retrieval retry, and extraction enforcement. No parent execution or replay.")
+GOAL=("Recovery qualification of immutable Brain PR529 at exact commit "
+      "4df38e5aa55cfd86a1fda6fbe11666ab6221da2c after guarded run 36697278972 reserved the prior "
+      "qualification but failed before child start because the receipt directory did not exist. "
+      "Qualify scholarly provenance admission, focused-subject coverage admission, selected-only "
+      "bibliographic live materialization, one metadata-anchored retrieval retry, and extraction enforcement. "
+      "No parent execution or replay.")
 
 PINNED={
 "canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py":"8f6f80403dc48268ecbf244ae633ea2928204148",
@@ -33,7 +35,7 @@ plan={
  "schema":"BRAIN_GUARDED_LAUNCH_PLAN_V1",
  "goal_text":GOAL,
  "frozen":{
-   "gate_id":"BRAIN-PR529-FROZEN-SOURCE-ADMISSION-QUALIFICATION-20260930-V1",
+   "gate_id":"BRAIN-PR529-FROZEN-SOURCE-ADMISSION-QUALIFICATION-RECOVERY-AFTER-PRECHILD-CARRIER-FAILURE-20260930-V2",
    "problem_sha256":problem_sha256(GOAL),
    "task_sha256":sha256_file("canonical/tests/test_scholarly_provenance_admission_materialization.py"),
    "runtime_sha256":sha256_file("canonical/runtime/bound_capabilities/open_research_source_frontend.py"),
