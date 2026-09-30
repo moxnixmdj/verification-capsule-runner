@@ -1,0 +1,17 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "EXACT_BYTE_ADVERSARIAL_QUALIFICATION_OF_BRAIN_PR496_EXPLICIT_RECIPE_FAILCLOSED_REPAIR",
+  "brain_pr": 496,
+  "brain_base": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+  "broad_blob": "3ded762075ed222228a14877af631f1e2e6d9e4c",
+  "grounding_blob": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+  "test_blob": "4717bd5ebf4b4e6521abf331e93e9675c1b8a785",
+  "authoritative_red_run": 36689999285,
+  "authoritative_red_job": 109804684560,
+  "authoritative_red_failure": "EXPLICIT_RECIPE_3_WAS_ADMITTED",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
