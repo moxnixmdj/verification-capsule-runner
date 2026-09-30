@@ -23,8 +23,8 @@ jobs:
           set -euo pipefail
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "23f7b79fca15593eb563bdcdba17c8b972f006db"
           test "$(git hash-object canonical/runtime/bound_capabilities/numeric_expression_sympy.py)" = "443e3386f11156e55635556b6e8f8ad7d7733592"
-          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "f1c72b7a1d2aebf146d2702a49e425605fa17217"
-          test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "9d0b043d6a02958ddd3887d8dbdcffcbfd6250b0"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "4d7f94219893400344a258552e1d808b2dc963dd"
+          test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "12ff8c9feb266f9253cea13a8d7ce34f14cb5841"
       - name: Run compiler and safety regressions
         run: python canonical/tests/test_numeric_expression_sympy_binding.py
       - name: Run fresh non-astronomy qualification and independent oracle
