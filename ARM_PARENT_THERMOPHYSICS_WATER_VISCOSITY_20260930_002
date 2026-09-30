@@ -1,0 +1,10 @@
+PROJECT_BRAIN_ONE_SHOT_PARENT_TASK_ARM_V1
+task_id=PARENT-THERMOPHYSICS-WATER-VISCOSITY-OPEN-RESEARCH-TASK-A-20260930-002
+brain_main=fc07395c387563cbb2b3dfdc3b14fd80239a080b
+task_blob=dc92f7b8e76889c754576dd1a5036e7a7c62b8eb
+mission_blob=982b883b353b937d8500bd9b70c1929c33313393
+execution_entrypoint=canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/PARENT_THERMOPHYSICS_WATER_VISCOSITY_OPEN_RESEARCH_TASK_A_20260930_002.json
+exactly_once=true
+rerun_forbidden=true
+incremental_spend_usd=0
+user_device_used=false
