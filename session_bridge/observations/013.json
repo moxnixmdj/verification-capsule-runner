@@ -1,0 +1,10 @@
+{
+  "command_sha256": "783131b1701879dec639b1dc5ba135bfd1b257ab153e33dd80fe0a01c2205bd2",
+  "duration_sec": 0.896,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "",
+  "stdout": "\n> react-lead-form@1.0.0 test\n> vitest run --run tests/submitLead.test.ts\n\n\n RUN  v1.3.0 /app\n\n \u2713 tests/submitLead.test.ts  (6 tests) 22ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  21:19:55\n   Duration  366ms (transform 83ms, setup 0ms, collect 73ms, tests 22ms, environment 0ms, prepare 108ms)\n\n",
+  "step": 13
+}
