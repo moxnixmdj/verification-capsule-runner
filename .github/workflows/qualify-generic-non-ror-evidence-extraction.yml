@@ -1,0 +1,20 @@
+name: Qualify Generic Non-ROR Evidence Extraction
+on:
+  push:
+    branches:
+      - qualify/generic-non-ror-evidence-extraction-20260930-v1
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Authored generic extraction regressions
+        run: python -m unittest -v canonical.tests.test_objective_evidence_unit_extract_v2 canonical.tests.test_objective_evidence_unit_extract_v2_generic_bm25
+      - name: Independent live non-ROR cross-domain qualification
+        run: python -m unittest -v canonical.tests.test_generic_non_ror_evidence_extraction_live_qualification
