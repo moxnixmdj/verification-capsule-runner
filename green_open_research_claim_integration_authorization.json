@@ -1,0 +1,9 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "GREEN_QUALIFICATION_OF_OPEN_RESEARCH_CLAIM_PIPELINE_INTEGRATION",
+  "brain_base": "f0f87c981d77b552caa21844e6bcc7b83116f339",
+  "parent_task_execution": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
