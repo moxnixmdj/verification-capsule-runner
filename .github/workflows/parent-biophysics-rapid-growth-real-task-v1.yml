@@ -1,0 +1,148 @@
+name: Parent Biophysics Rapid Growth One Shot
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  parent_biophysics_one_shot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact staged Brain bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "b446257ca01ee858ada2fb52d0c7925f2ea4391f"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "d7c73c24d2038c40bfb38ea6f10749a15a2d5415"
+          test "$(git hash-object canonical/runtime/bound_capabilities/jq_query.py)" = "f0b644274c1ffbff7ea5adb81e07e00435d2ac4c"
+          test "$(git hash-object canonical/runtime/bound_capabilities/browser_chromedriver.py)" = "6edaad1d9d23700a55d988c891d4ef41b8191c4b"
+          test "$(git hash-object canonical/tasks/PARENT_BIOPHYSICS_RAPID_GROWTH_REAL_TASK_20260930_003.json)" = "66b39811e7bbc6681e87089f22e2c98c7a376145"
+          echo EXACT_BRAIN_AND_TASK_BYTES_PASS
+
+      - name: Preflight carrier and frozen authoritative sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v jq
+          command -v chromedriver
+          (command -v google-chrome || command -v chromium || command -v chromium-browser)
+          python - <<'PY'
+          import json,urllib.request
+          task=json.load(open("canonical/tasks/PARENT_BIOPHYSICS_RAPID_GROWTH_REAL_TASK_20260930_003.json"))
+          for src in task["sources"]:
+              req=urllib.request.Request(src["url"],headers={"User-Agent":"Project-Brain-parent-biophysics-preflight/1.0"})
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  raw=r.read(300000)
+                  assert r.status==200
+                  assert len(raw)>1000
+                  print(src["id"],r.status,len(raw),r.geturl())
+          print("SOURCE_PREFLIGHT_PASS")
+          PY
+
+      - name: Execute frozen parent task exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,importlib.util,json,pathlib,sys,traceback
+          root=pathlib.Path(".").resolve()
+          task_path=root/"canonical/tasks/PARENT_BIOPHYSICS_RAPID_GROWTH_REAL_TASK_20260930_003.json"
+          task=json.loads(task_path.read_text(encoding="utf-8"))
+          byid={x["id"]:x for x in task["sources"]}
+          output_rel=task["required_output"]["output_path"]
+          page_dir="canonical/astra_runtime/tmp/parent_biophysics_pages"
+          goal=(
+            "Open authoritative page "+byid["NCBI_CELL_CYCLE"]["url"]+
+            " and save rendered page evidence to "+page_dir+"/cell_cycle.json and screenshot to "+page_dir+"/cell_cycle.png. "
+            "From that rendered source, determine the typical mammalian cell-cycle timing and one reported human-cell-line cycle timing, preserving the supporting source text and URL. "
+            "Open authoritative page "+byid["NCBI_BODY_FLUIDS"]["url"]+
+            " and save rendered page evidence to "+page_dir+"/body_fluids.json and screenshot to "+page_dir+"/body_fluids.png. "
+            "From that rendered source, determine the adult human body-water mass-fraction range, preserving supporting source text and URL. "
+            "Open authoritative page "+byid["NCBI_CARDIAC_OUTPUT"]["url"]+
+            " and save rendered page evidence to "+page_dir+"/cardiac_output.json and screenshot to "+page_dir+"/cardiac_output.png. "
+            "From that rendered source, determine resting, healthy maximal-demand, and exceptional-athlete cardiac-output scales in L/min, preserving supporting source text and URL. "
+            "Open authoritative page "+byid["PUBMED_GROWTH_COST"]["url"]+
+            " and save rendered page evidence to "+page_dir+"/growth_cost.json and screenshot to "+page_dir+"/growth_cost.png. "
+            "From that rendered source, determine the consensus apparent biomass-production efficiency and the dry-biomass energy scale used in the review, preserving supporting source text and URL. "
+            "For an organism growing from 70 kg to 700 kg in 60 seconds, calculate added mass, mass ratio, minimum population doublings, the growth-time bounds implied by the discovered cell-cycle timings, required external mass rate, the adult-like added water and dry-mass scale implied by the discovered water range, dry-biomass energy scale, metabolizable-input scale using the discovered production efficiency, production-overhead heat scale, and 60-second heat-power scale. "
+            "Treat body composition and biomass energetics as order-of-magnitude bounds, and treat cardiac output only as contextual internal transport scale rather than construction-feedstock throughput. "
+            "Determine whether 60-second tenfold organism-scale growth is compatible with known mammalian biology, explicitly distinguish known-biological infeasibility from absolute physical impossibility, explain what massive cellular parallelism can and cannot remove, and do not provide procedural bioengineering instructions. "
+            "Write a complete JSON scientific result with the required task fields to "+output_rel+"."
+          )
+          terminal={
+            "schema":"PROJECT_BRAIN_PARENT_TASK_TERMINAL_V1",
+            "task_id":task["task_id"],
+            "task_git_blob":"66b39811e7bbc6681e87089f22e2c98c7a376145",
+            "goal":goal,
+            "goal_sha256":hashlib.sha256(goal.encode()).hexdigest(),
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+            "execution_count":1,
+            "model_planner_disabled":True,
+          }
+          try:
+              spec=importlib.util.spec_from_file_location("parent_biophysics_brain_runtime",root/"canonical/runtime/astra_runtime.py")
+              runtime=importlib.util.module_from_spec(spec)
+              sys.modules[spec.name]=runtime
+              spec.loader.exec_module(runtime)
+              mission={"mission_id":task["task_id"],"goal":goal}
+              step={"adapter":"goal","goal_ref":"goal","verified_initial_facts":["network.http.available"],"max_controller_actions":32}
+              result=runtime.run_goal(step,mission)
+              terminal["brain_result"]=result
+              terminal["controller_mode"]=result.get("controller_mode")
+              terminal["planner_model_last"]=result.get("planner_model_last")
+              terminal["planning_mode"]=result.get("planning_mode")
+              terminal["observed_model_dependency_count"]=result.get("model_dependency_count")
+              out=root/output_rel
+              model_free=(
+                  str(result.get("controller_mode") or "").startswith("MODEL_INDEPENDENT")
+                  and result.get("planner_model_last") is None
+                  and result.get("model_dependency_count",0)==0
+              )
+              if result.get("returncode")==0 and model_free and out.is_file():
+                  terminal["semantic_status"]="PASS_PENDING_INDEPENDENT_ORACLE"
+                  terminal["scientific_output"]=json.loads(out.read_text(encoding="utf-8"))
+              else:
+                  terminal["semantic_status"]="FAIL"
+                  terminal["first_causal_gap"]="BRAIN_RETURNED_WITHOUT_REQUIRED_MODEL_FREE_SCIENTIFIC_OUTPUT"
+          except Exception as exc:
+              terminal["semantic_status"]="FAIL"
+              terminal["first_causal_gap"]=type(exc).__name__+":"+str(exc)
+              terminal["exception_type"]=type(exc).__name__
+              terminal["exception_message"]=str(exc)
+              terminal["traceback"]=traceback.format_exc()
+          pathlib.Path("PARENT_BIOPHYSICS_TERMINAL.json").write_text(json.dumps(terminal,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print("PARENT_BIOPHYSICS_TERMINAL_EVIDENCE_PRESERVED")
+          print("semantic_status="+terminal["semantic_status"])
+          if terminal.get("first_causal_gap"):
+              print("first_causal_gap="+terminal["first_causal_gap"])
+          PY
+
+      - name: Upload exact terminal evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: parent-biophysics-rapid-growth-real-task-v1
+          if-no-files-found: warn
+          path: |
+            PARENT_BIOPHYSICS_TERMINAL.json
+            canonical/astra_runtime/evidence/
+            canonical/astra_runtime/tmp/PARENT_BIOPHYSICS_RAPID_GROWTH_RESULT_20260930.json
+            canonical/astra_runtime/tmp/parent_biophysics_pages/
