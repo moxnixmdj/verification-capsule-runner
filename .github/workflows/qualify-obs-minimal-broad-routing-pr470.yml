@@ -1,4 +1,4 @@
-name: OBS Minimal Broad Routing PR470 Qualification
+name: OBS Minimal Broad Routing PR474 Qualification
 on:
   pull_request:
     branches: [main]
@@ -7,12 +7,12 @@ on:
       - canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
       - canonical/runtime/bound_capabilities/broad_objective_decompose.py
       - canonical/tests/test_broad_objective_semantic_decomposition.py
-      - .github/workflows/qualify-obs-minimal-broad-routing-pr470.yml
+      - .github/workflows/qualify-obs-minimal-broad-routing-pr474.yml
 permissions:
   contents: read
 jobs:
   qualify:
-    if: github.head_ref == 'verify/obs-minimal-broad-routing-pr470-20260930-v1'
+    if: github.head_ref == 'verify/obs-minimal-broad-routing-pr474-20260930-v1'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
