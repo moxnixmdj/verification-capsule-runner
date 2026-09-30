@@ -1,0 +1,10 @@
+{
+  "command_sha256": "6d42df77b9242ce00e538b963a900b5644c1bab3c942b973eccd1c94c5b48de5",
+  "duration_sec": 0.225,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20261001-v2",
+  "stderr": "2026-09-30 21:43:43,268 [ERROR] worker: processing failed for t1 at 0:0: simulated commit loss\n",
+  "stdout": "FAULT_TESTS_PASS\n",
+  "step": 7
+}
