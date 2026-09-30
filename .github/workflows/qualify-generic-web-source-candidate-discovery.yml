@@ -24,8 +24,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          printf '%s  %s\n' 'ccd60c0117b412583e63a93123d61bad1048d101d45566118f49b8ed8f6d766c' canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py | sha256sum -c -
-          printf '%s  %s\n' '52d492f695c40cd3a0832dcd7ce82882bdc4f9c87322ea51006a162e5896a81a' canonical/tests/test_web_source_candidate_discovery_ddgs.py | sha256sum -c -
+          test "$(git hash-object canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py)" = "29ac520725afeb1b76f765ca4524c2ac31c4acc3"
+          test "$(git hash-object canonical/tests/test_web_source_candidate_discovery_ddgs.py)" = "6a9f91303b3b48e7fc2c56aa32bb9eb9c69888d2"
       - name: Run deterministic fail-closed tests
         run: python canonical/tests/test_web_source_candidate_discovery_ddgs.py
       - name: Install exact DDGS release
