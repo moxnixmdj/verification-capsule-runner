@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "NONPARENT-CARRIER-VERIFIER-CLOSURE-CANARY-20260930-001",
+  "purpose": "Fresh non-parent qualification of the repaired public carrier verifier closure before any new parent task is spent.",
+  "goal": "Verify exact canonical Brain verifier/probe/promotion closure is present and importable on the public carrier.",
+  "steps": [
+    {
+      "id": "verify-carrier-verifier-closure",
+      "adapter": "shell",
+      "command": "set -euo pipefail\ntest \"$(git hash-object canonical/runtime/python_codec_probe.py)\" = \"fc8b5005a9888422e3cb61f6cf0bd147c740ec84\"\ntest \"$(git hash-object canonical/runtime/verify_pending_cli_binding.py)\" = \"a6b028c25d79d2dff59c87e3b3ad91d9fe934dae\"\ntest \"$(git hash-object canonical/runtime/promote_pending_binding.py)\" = \"f100c0d1ce5a4b07af0175035c3122d816459b0b\"\nPYTHONPATH=canonical/runtime python - <<'PY'\nimport python_codec_probe\nimport verify_pending_cli_binding\nimport promote_pending_binding\nprint('CARRIER_VERIFIER_CLOSURE_OK')\nPY",
+      "verify": {
+        "type": "stdout_contains",
+        "text": "CARRIER_VERIFIER_CLOSURE_OK"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "non_parent_canary": true,
+    "parent_capability_credit_authorized": false,
+    "no_network_required": true,
+    "same_parent_task_replay": false
+  }
+}
