@@ -26,6 +26,8 @@ jobs:
           test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
           test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
+          test "$(git hash-object canonical/runtime/bound_capabilities/sqlite_table_stdlib.py)" = "d729d19ba5c0808273268426e7450f1db74a5c07"
+          test "$(git hash-object canonical/runtime/bound_capabilities/sqlite_verify_cli.py)" = "339c6e5cd3e1804a43dd3632deb713b61f6344a4"
       - name: Create fresh source records
         shell: bash
         run: |
