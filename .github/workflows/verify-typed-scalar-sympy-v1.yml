@@ -56,7 +56,7 @@ jobs:
           result=runtime.run_goal(step,mission)
           assert result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN",result
           assert result.get("planner_model_last") is None,result
-          assert result.get("model_dependency_count")==0,result
+          assert result.get("planning_mode")=="DETERMINISTIC_COMPOUND_ACTION_PLAN",result
 
           trace=result.get("trace") or []
           numeric=[
