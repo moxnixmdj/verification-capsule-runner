@@ -1,0 +1,33 @@
+name: Qualify PR410 Objective Relevance BM25
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Verify exact PR410 producer and regression blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790"
+          test "$(git hash-object canonical/tests/test_objective_relevance_bm25.py)" = "a4736194a063d05d60f0fc3ca13314956cb5e3de"
+      - name: Run candidate regressions
+        run: python canonical/tests/test_objective_relevance_bm25.py
+      - name: Install independent BM25 verifier
+        run: python -m pip install --disable-pip-version-check --quiet rank-bm25==0.2.2
+      - name: Run fresh cross-domain independent qualification
+        run: python verify_pr410_objective_relevance_bm25.py
+      - name: Upload qualification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr410-objective-relevance-bm25-report
+          path: pr410-objective-relevance-bm25-report.json
+          if-no-files-found: error
