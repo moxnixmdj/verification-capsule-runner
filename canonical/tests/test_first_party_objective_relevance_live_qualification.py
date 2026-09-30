@@ -4,7 +4,7 @@ import importlib.util, json, pathlib, subprocess, urllib.parse, urllib.request, 
 
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 P=ROOT/"canonical/runtime/bound_capabilities/first_party_objective_relevance_verify.py"
-EXPECTED_BLOB="0f5883819eb1b779f7f8410ecc965062742f647e"
+EXPECTED_BLOB="e35cdb2495accc43fd677df495bf120a561b47a3"
 ROR="https://api.ror.org/v2/organizations"
 
 def load():
