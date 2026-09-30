@@ -61,7 +61,7 @@ def fetch_value(url):
 
 v2010=fetch_value(url_2010)
 v2020=fetch_value(url_2020)
-expected=(v2020/v2010)**(1.0/3.0)
+expected=(v2020/v2010)**(1.0/10.0)
 failures=[]
 observed=float(producer["value"])
 if not math.isclose(observed,expected,rel_tol=1e-12,abs_tol=1e-12):
@@ -91,7 +91,7 @@ report={
   "schema":"PROJECT_BRAIN_PR298_TYPED_SCALAR_SYMPY_FRESH_VERIFICATION_V2",
   "status":"PASS" if not failures else "FAIL",
   "task_id":"FRESH-DEMOGRAPHY-TYPED-SCALAR-EXPRESSION-20260930-V2",
-  "domain":"ECONOMICS_PUBLIC_STATISTICS",
+  "domain":"DEMOGRAPHY_PUBLIC_STATISTICS",
   "source_task_replay":False,
   "selected_capability":"math.numeric_expression.sympy",
   "expression":"(pop_2020 / pop_2010) ** (1 / 10)",
