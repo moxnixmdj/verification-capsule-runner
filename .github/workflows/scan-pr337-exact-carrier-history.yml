@@ -1,0 +1,71 @@
+name: Scan PR337 Exact Carrier History
+
+on:
+  push:
+    branches:
+      - execute/pr337-frozen-carrier-0ac7-once-20260930-v1
+    paths:
+      - .github/workflows/scan-pr337-exact-carrier-history.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SINK_ISSUE: "63"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find newest historical commit matching all frozen runtime blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/scan.json
+          import json, subprocess
+          expected={
+            "canonical/runtime/astra_runtime.py":"6cb668bcc5a00665ea541fc5b6adf494f37ad1c9",
+            "canonical/runtime/goal_compiler.py":"4b61fe911471854ec15c7900816f61e9e55f602e",
+            "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json":"a22761070ba4d45d3eae7b684d5c66cfb0601669",
+            "canonical/runtime/bound_capabilities/numeric_expression_sympy.py":"443e3386f11156e55635556b6e8f8ad7d7733592",
+            "canonical/runtime/bound_capabilities/jq_query.py":"f0b644274c1ffbff7ea5adb81e07e00435d2ac4c",
+            "canonical/runtime/capability_proposal_generators.py":"71f2bbfda66a65d8d75e035b9ae073671ebd56e2",
+            "canonical/runtime/capability_planner.py":"64ff65cb184f50d3336326f33cccfcc0a53301a8",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py":"6385b469f1287c971217dcac58af2ffebd81f9fd",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition.py":"8328e12804f64cab1c0d9509966cb1d2d8fb1f82",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py":"ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          }
+          commits=subprocess.check_output(["git","rev-list","--all","--date-order"],text=True).splitlines()
+          found=None
+          checked=0
+          nearest=[]
+          for c in commits:
+            checked+=1
+            mism=[]
+            for p,e in expected.items():
+              try:
+                o=subprocess.check_output(["git","rev-parse",f"{c}:{p}"],text=True,stderr=subprocess.DEVNULL).strip()
+              except subprocess.CalledProcessError:
+                o=None
+              if o!=e:
+                mism.append({"path":p,"expected":e,"observed":o})
+            if not mism:
+              found=c
+              break
+            if len(nearest)<5:
+              nearest.append({"commit":c,"mismatch_count":len(mism),"first_mismatch":mism[0] if mism else None})
+          print(json.dumps({"schema":"PR337_EXACT_CARRIER_HISTORY_SCAN_V1","found_commit":found,"commits_checked":checked,"nearest":nearest},indent=2))
+          PY
+          {
+            echo "READ_ONLY_CARRIER_HISTORY_SCAN"
+            echo
+            echo '~~~json'
+            cat /tmp/scan.json
+            echo '~~~'
+          } > /tmp/body.txt
+          gh issue edit "$SINK_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/body.txt
