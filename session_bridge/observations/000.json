@@ -1,0 +1,10 @@
+{
+  "command_sha256": "0f52f8693a6fcf9aa0aa0ad0a3fc578a1e86c1e366a6cac287255be2fa2bbe4d",
+  "duration_sec": 0.056,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v2-auth",
+  "stderr": "",
+  "stdout": "/app/entrypoint.sh\n/app/run-slot.sh\n/app/src/worker/__init__.py\n/app/src/worker/config.py\n/app/src/worker/requirements.txt\n/app/src/worker/worker.py\n/app/supervisor.conf\n",
+  "step": 0
+}
