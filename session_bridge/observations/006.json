@@ -1,0 +1,10 @@
+{
+  "command_sha256": "aa7d9a222a80cd4275c4c6e57b578da87b1e00b7273c238136897f95c988e00c",
+  "duration_sec": 14.154,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "interleaved-vigenere-dev-20260930-v1",
+  "stderr": "",
+  "stdout": "SAMPLE 0 True len 3081\nCASE 100 rc 0 sec 2.324 exact True alpha 1498 / 1498 1.0\nCASE 101 rc 0 sec 1.955 exact True alpha 1244 / 1244 1.0\nCASE 102 rc 0 sec 1.929 exact True alpha 1243 / 1243 1.0\nCASE 103 rc 0 sec 1.898 exact True alpha 1325 / 1325 1.0\nCASE 104 rc 0 sec 2.098 exact True alpha 1383 / 1383 1.0\nCLI_ERRORS 2 2\nSTRESS_PASS True\n",
+  "step": 6
+}
