@@ -4,7 +4,6 @@ import importlib.util
 import json
 import os
 import pathlib
-import subprocess
 import sys
 
 ROOT=pathlib.Path(__file__).resolve().parent
@@ -13,7 +12,7 @@ TASK_PATH=ROOT/"canonical/tasks/PARENT_CLIMATE_MAUNA_LOA_CO2_ACCELERATION_OPEN_R
 REPORT=ROOT/"pr337-parent-climate-open-taska-producer-report.json"
 BRAIN_BASE="797d5fbea5f230a31044006755beb98ae387134b"
 BRAIN_PR=337
-BRAIN_HEAD="aa1f60088b645439ff1eb15284dee828cb6b0671"
+BRAIN_HEAD="0af30865752f71da09af7b324ab1ab734855290f"
 TASK_ID="PARENT-CLIMATE-MAUNA-LOA-CO2-ACCELERATION-OPEN-RESEARCH-TASK-A-20260930-001"
 EXPECTED_BLOBS={
   "canonical/runtime/astra_runtime.py": "6cb668bcc5a00665ea541fc5b6adf494f37ad1c9",
@@ -30,18 +29,8 @@ EXPECTED_BLOBS={
 }
 
 def git_blob_sha(path):
-    rel=path.relative_to(ROOT).as_posix()
-    proc=subprocess.run(
-        ["git","rev-parse","HEAD:"+rel],
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if proc.returncode!=0:
-        return None
-    value=proc.stdout.strip().lower()
-    return value if len(value)==40 else None
+    raw=path.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest()
 
 def emit(report):
     REPORT.write_text(json.dumps(report,indent=2,sort_keys=True,default=str)+"\\n",encoding="utf-8")
