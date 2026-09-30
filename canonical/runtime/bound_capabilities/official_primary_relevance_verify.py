@@ -173,23 +173,34 @@ def _technical_document_signal(url,title):
 
 def _relevance(objective,title,page_text):
     objective_tokens=_salient(objective)
+    objective_set=set(objective_tokens)
     source_tokens=_tokens((title or "")+" "+(page_text or ""))
     source_set=set(source_tokens)
     matched=[x for x in objective_tokens if x in source_set]
-    objective_pairs=[]
-    for a,b in zip(objective_tokens,objective_tokens[1:]):
-        if a!=b:
-            objective_pairs.append((a,b))
-    source_pairs=set(zip(source_tokens,source_tokens[1:]))
-    matched_pairs=[list(x) for x in objective_pairs if x in source_pairs]
+
+    local_pairs=[]
+    seen=set()
+    window=8
+    for i,left in enumerate(source_tokens):
+        if left not in objective_set:
+            continue
+        for right in source_tokens[i+1:i+1+window]:
+            if right not in objective_set or right==left:
+                continue
+            key=tuple(sorted((left,right)))
+            if key in seen:
+                continue
+            seen.add(key)
+            local_pairs.append([left,right])
+
     return {
         "salient_objective_terms":objective_tokens,
         "matched_salient_terms":matched,
         "matched_salient_count":len(matched),
-        "matched_adjacent_concepts":matched_pairs,
-        "matched_adjacent_concept_count":len(matched_pairs),
-        "verified":len(matched)>=3 and len(matched_pairs)>=1,
-        "method":"DIRECT_NORMALIZED_TOKEN_AND_ADJACENT_CONCEPT_COVERAGE",
+        "matched_adjacent_concepts":local_pairs,
+        "matched_adjacent_concept_count":len(local_pairs),
+        "verified":len(matched)>=3 and len(local_pairs)>=1,
+        "method":"DIRECT_NORMALIZED_TOKEN_COVERAGE_WITH_LOCAL_SOURCE_COOCCURRENCE",
     }
 
 
