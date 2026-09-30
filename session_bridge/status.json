@@ -1,6 +1,7 @@
 {
+  "next_step": 0,
+  "runtime_boundary": "COMMANDS_EXECUTE_ONLY_INSIDE_BUILT_TASK_CONTAINER",
   "session_id": "payments-pipeline-fix-20261001-v2",
-  "status": "BUILDING_RUNTIME",
-  "task": "payments-pipeline-fix",
-  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e"
+  "status": "READY_FOR_COMMAND",
+  "task": "payments-pipeline-fix"
 }
