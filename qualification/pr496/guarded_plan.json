@@ -1,0 +1,63 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently guard-qualify exact Brain PR496 broad explicit-recipe fail-closed repair, proving generic research-method wording remains admissible while every concrete run or execute operand including absolute paths and unknown CLI commands fails closed, without executing any parent task.",
+  "frozen": {
+    "gate_id": "BRAIN-QUALIFY-PR496-EXPLICIT-RECIPE-FAILCLOSED-V2-20260930-V1",
+    "problem_sha256": "b5df7db1d9479d20e5972b5b8ef69a90232bf77f470dc6c9cd2ca1c0057978c1",
+    "task_sha256": "cff1a3529af9488267cd20a955eee9af690d3b918afae908738b80cceb4ffc34",
+    "runtime_sha256": "2eee35752736e46e49aa91033fe6281ab05a7a5fd96c4c9a113b7bd25a54d22c",
+    "canonical_base": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+    "authorization_sha256": "6bdeb293aba8728724efd4e565cd95e2782fda6567a013e41d195a0446425746"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "3ded762075ed222228a14877af631f1e2e6d9e4c",
+      "sha256": "2eee35752736e46e49aa91033fe6281ab05a7a5fd96c4c9a113b7bd25a54d22c"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "4717bd5ebf4b4e6521abf331e93e9675c1b8a785",
+      "sha256": "cff1a3529af9488267cd20a955eee9af690d3b918afae908738b80cceb4ffc34"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+      "sha256": "3db9e931016b66b35ee1529ef36bd9fde1ee7962296763e4321ad5f87c0b567f"
+    },
+    {
+      "path": "qualification/pr496/authorization.json",
+      "sha256": "6bdeb293aba8728724efd4e565cd95e2782fda6567a013e41d195a0446425746"
+    },
+    {
+      "path": "qualification/pr496/independent_oracle.py",
+      "sha256": "5b8c567eea26a81726b7bb22fd0d2d2cc20899fa53c3c95b55ad7815b2600fbf"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python qualification/pr496/independent_oracle.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_pr": 496,
+    "parent_task_execution": false,
+    "parent_task_replay": false,
+    "authoritative_red_run": 36689999285,
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0
+  }
+}
