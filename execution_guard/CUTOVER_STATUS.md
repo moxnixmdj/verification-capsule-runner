@@ -1,36 +1,34 @@
 # Global execution guard cutover status
 
-Status: **READY FOR LIVE CUTOVER**
+Status: **LIVE ON RUNNER MAIN**
 
-Current design:
+Live runner commit that performed cutover: `f2335a12a5137f683b0660ec20aba6e45dc388cc` (PR #156).
+
+Operational state:
 - atomic publication primitive: GitHub CREATE ref under `execution-guard/live-v1/<sha256(key)>`
-- no protected coordination branch required for concurrent admission
+- protected-coordination-branch dependency removed
 - stable problem identity: `goal_text_v1_nfkc_lower_collapse_ws`
-- gate identity and stable problem identity are both reserved before protected child execution
-- ambiguous transport/rate-limit/write state fails closed with no automatic retry
-- child starts only after gate + problem + current-run acknowledgement refs are confirmed
+- gate + stable problem + current-run acknowledgement are persisted before a protected child may start
+- ambiguous transport, rate-limit, malformed response, or unconfirmed write fails closed; no automatic retry
+- six reviewed historical spent problem identities are live as deny refs
+- eight obsolete direct parent/scientific one-shot workflow entrypoints are deleted
+- launcher regression audit rejects direct parent/Task-A/Task-B and direct ASTRA mission execution in workflow YAML
+- future protected launchers must use `github_actions_guarded_run_live.py`
 
-Verified before merge:
-- original candidate: 28/28 tests PASS
-- hardened historical reconciliation: 31/31 PASS
+Verification:
+- original candidate: 28/28 PASS
+- hardened historical suite: 31/31 PASS
 - final local suite: 39/39 PASS
 - 24 competing processes: exactly one admitted side effect
-- compact production implementation self-test: PASS
-- live GitHub atomic-ref qualification: two simultaneous creates of one ref -> one success, one HTTP 422 Reference already exists
-- six reviewed historical spent problem identities are already present as live deny refs
-- PR335 stale SQLite parent task was explicitly unexecuted and is intentionally NOT seeded spent
-
-Cutover changes in this PR:
-- install `actions_admission.py`, `github_ref_store_live.py`, and `github_actions_guarded_run_live.py`
-- delete the superseded mutable-branch Contents adapter
-- delete eight obsolete direct parent/scientific one-shot workflows
-- make launcher audit fail on any direct parent/Task-A/Task-B or direct ASTRA mission execution
-- add lightweight PR/push regression workflow
-- record the six live historical spent-problem refs and the future-launch contract
+- compact production self-test: PASS
+- live GitHub qualification: concurrent create of one reservation ref -> one success, one HTTP 422 Reference already exists
+- PR #156 exact-head Execution Guard Regression job: PASS (compile + repository-wide bypass audit)
+- post-merge tree confirms all eight legacy launcher paths absent
 
 Guarantee scope:
-- at-most-one successful guard admission per unchanged gate/problem key through this adapter
-- not an exactly-once external execution guarantee
-- repository-admin deletion/force-move of guard refs and direct commits that bypass repository review remain outside the adapter guarantee while repository rules are unprotected
+- at-most-one successful guard admission per unchanged gate/problem identity through this adapter
+- not an exactly-once external provider execution guarantee
+- repository-admin deletion/force-move of guard refs or a future direct bypass commit remains outside the adapter guarantee while repository rules are unprotected
 
-No scientific task is executed by this cutover. No capability credit is authorized by it.
+PR335's stale SQLite parent task was never executed and is intentionally not seeded as spent.
+No scientific task was executed by the cutover. No Brain capability credit was created.
