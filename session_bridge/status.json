@@ -1,6 +1,7 @@
 {
-  "next_step": 23,
+  "final_step": 23,
+  "reward": "0",
   "session_id": "react-lead-form-20260930-v1",
-  "status": "READY_FOR_COMMAND",
-  "task": "react-lead-form"
+  "status": "COMPLETE",
+  "verifier_status": "VERIFIER_COMPLETED"
 }
