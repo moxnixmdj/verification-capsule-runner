@@ -283,6 +283,57 @@ def main():
             return 0
 
         if command.strip() == "echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT":
+            auth_path = ROOT / "session_bridge" / "terminal_authorization.json"
+            blocked_reason = None
+            auth = None
+            if not auth_path.exists():
+                blocked_reason = "TERMINAL_AUTHORIZATION_MISSING"
+            else:
+                try:
+                    auth = json.loads(auth_path.read_text(encoding="utf-8"))
+                except Exception:
+                    blocked_reason = "TERMINAL_AUTHORIZATION_INVALID_JSON"
+
+            if blocked_reason is None:
+                if auth.get("schema") != "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1":
+                    blocked_reason = "TERMINAL_AUTHORIZATION_SCHEMA_INVALID"
+                elif auth.get("session_id") != CONFIG["session_id"]:
+                    blocked_reason = "TERMINAL_AUTHORIZATION_SESSION_MISMATCH"
+                elif auth.get("submission_authorized") is not True:
+                    blocked_reason = "TERMINAL_AUTHORIZATION_FALSE"
+                elif auth.get("known_relevant_failures") not in ([], None):
+                    blocked_reason = "KNOWN_RELEVANT_FAILURES_REMAIN"
+                else:
+                    criteria = auth.get("acceptance_criteria")
+                    checks = auth.get("verification_commands")
+                    if not isinstance(criteria, list) or not criteria:
+                        blocked_reason = "ACCEPTANCE_CRITERIA_EVIDENCE_MISSING"
+                    elif any(not isinstance(x, dict) or x.get("status") != "PASS" or not x.get("evidence") for x in criteria):
+                        blocked_reason = "ACCEPTANCE_CRITERIA_NOT_ALL_PASS"
+                    elif not isinstance(checks, list) or not checks:
+                        blocked_reason = "VERIFICATION_COMMANDS_MISSING"
+                    elif any(not isinstance(x, dict) or x.get("exit_code") != 0 or not x.get("command") for x in checks):
+                        blocked_reason = "VERIFICATION_COMMANDS_NOT_ALL_PASS"
+
+            if blocked_reason is not None:
+                commit_obs(f"session_bridge/observations/{step:03d}.json", {
+                    "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+                    "session_id": CONFIG["session_id"],
+                    "step": step,
+                    "command_sha256": hashlib.sha256(command.encode()).hexdigest(),
+                    "exit_code": 1,
+                    "stdout": "",
+                    "stderr": "SUBMISSION_BLOCKED__" + blocked_reason + "\n",
+                }, f"bridge: block premature submission step {step}")
+                commit_obs("session_bridge/status.json", {
+                    "status": "READY_FOR_COMMAND",
+                    "session_id": CONFIG["session_id"],
+                    "task": CONFIG["task"],
+                    "next_step": step + 1,
+                    "last_submission_blocker": blocked_reason,
+                }, f"bridge: continue after blocked submission step {step}")
+                continue
+
             commit_obs(f"session_bridge/observations/{step:03d}.json", {
                 "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
                 "session_id": CONFIG["session_id"],
@@ -291,7 +342,8 @@ def main():
                 "exit_code": 0,
                 "stdout": "SUBMISSION_ACCEPTED_FOR_INDEPENDENT_VERIFICATION\n",
                 "stderr": "",
-            }, f"bridge: accept submission step {step}")
+                "completion_authorization": auth,
+            }, f"bridge: accept authorized submission step {step}")
             final = verify(task_dir)
             commit_obs("session_bridge/final_verification.json", final, "bridge: independent verifier result")
             commit_obs("session_bridge/status.json", {
