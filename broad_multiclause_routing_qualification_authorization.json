@@ -1,0 +1,26 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 474,
+  "brain_head_sha": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+  "canonical_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "scope": "EXACT_BYTE_BROAD_MULTICLAUSE_ROUTING_AND_EXPLICIT_RECIPE_BOUNDARY_QUALIFICATION",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "spent_parent_task": "PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003",
+  "producer_blobs": {
+    "broad_objective_decompose": "1efaec4ba51ecb5c40072b3190853f4de89d8f77",
+    "plain_goal_bound_grounding": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+    "authored_regressions": "2df7c6ec85083458a69675f6ff86eca9c00ea278"
+  },
+  "qualification_requirements": [
+    "authored regressions pass",
+    "fresh cross-domain multi-clause objectives route to broad decomposition",
+    "generic choose-and-run-method wording is admitted",
+    "concrete command/script/url recipes fail closed",
+    "partial grounding never activates whole-goal broad decomposition",
+    "zero model dependency"
+  ],
+  "incremental_spend_usd": 0
+}
