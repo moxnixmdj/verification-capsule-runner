@@ -1,6 +1,7 @@
 {
-  "next_step": 3,
+  "final_step": 3,
+  "reward": "0",
   "session_id": "nextjs-performance-final-20260930-v1",
-  "status": "READY_FOR_COMMAND",
-  "task": "nextjs-performance"
+  "status": "COMPLETE",
+  "verifier_status": "VERIFIER_COMPLETED"
 }
