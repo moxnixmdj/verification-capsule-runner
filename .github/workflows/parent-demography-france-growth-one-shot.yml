@@ -1,0 +1,178 @@
+name: Parent Demography France Growth One Shot
+on:
+  push:
+    branches:
+      - verify/parent-demography-cagr-20260930-v1
+permissions:
+  contents: read
+jobs:
+  task:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain and frozen task bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "4b61fe911471854ec15c7900816f61e9e55f602e"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "a22761070ba4d45d3eae7b684d5c66cfb0601669"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/jq_query.py)" = "f0b644274c1ffbff7ea5adb81e07e00435d2ac4c"
+          test "$(git hash-object canonical/runtime/bound_capabilities/numeric_expression_sympy.py)" = "443e3386f11156e55635556b6e8f8ad7d7733592"
+          test "$(git hash-object canonical/tasks/PARENT_DEMOGRAPHY_FRANCE_GROWTH_CROSSCHECK_REAL_TASK_20260930_001.json)" = "dd101ea930f1405e3a9424a03a11808053f99e6d"
+      - name: Compile frozen Task B without executing sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          task=json.loads((root/"canonical/tasks/PARENT_DEMOGRAPHY_FRANCE_GROWTH_CROSSCHECK_REAL_TASK_20260930_001.json").read_text())
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          p=root/"canonical/runtime/goal_compiler.py"
+          spec=importlib.util.spec_from_file_location("parent_demography_compile_gate",p)
+          m=importlib.util.module_from_spec(spec);sys.modules[spec.name]=m;spec.loader.exec_module(m)
+          compiled=m.compile_goal(task["goal_text"],registry,root)
+          parts=compiled.get("compiled_parts") or []
+          modes=[x.get("mode") for x in parts]
+          required=[
+            "AUTHORITATIVE_JSON_KNOWLEDGE_FETCH",
+            "VERIFIED_BOUND_NUMERIC_EXPRESSION",
+            "VERIFIED_BOUND_NUMERIC_RELATION",
+          ]
+          assert all(x in modes for x in required),(required,modes)
+          assert modes.count("AUTHORITATIVE_JSON_KNOWLEDGE_FETCH")==3,modes
+          expr=[x for x in parts if x.get("mode")=="VERIFIED_BOUND_NUMERIC_EXPRESSION"]
+          rel=[x for x in parts if x.get("mode")=="VERIFIED_BOUND_NUMERIC_RELATION"]
+          assert len(expr)==1 and len(rel)==1,(expr,rel)
+          assert set(expr[0]["variable_names"])=={"population_2023","population_2020"},expr
+          assert len(set(expr[0]["producer_result_cycles"]))==2,expr
+          assert rel[0]["producer_result_cycles"][0]==expr[0]["result_cycle"],(expr,rel)
+          pathlib.Path("PARENT_DEMOGRAPHY_COMPILE_GATE.json").write_text(
+            json.dumps({"pass":True,"modes":modes,"compiled_parts":parts},indent=2,sort_keys=True)+"\n"
+          )
+          print("PARENT_DEMOGRAPHY_COMPILE_GATE_PASS")
+          PY
+      - name: Execute frozen parent Task B exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p canonical/astra_runtime/tmp
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys,traceback
+          root=pathlib.Path(".").resolve()
+          task_path=root/"canonical/tasks/PARENT_DEMOGRAPHY_FRANCE_GROWTH_CROSSCHECK_REAL_TASK_20260930_001.json"
+          task=json.loads(task_path.read_text())
+          runtime_path=root/"canonical/runtime/astra_runtime.py"
+          spec=importlib.util.spec_from_file_location("parent_demography_runtime",runtime_path)
+          runtime=importlib.util.module_from_spec(spec);sys.modules[spec.name]=runtime;spec.loader.exec_module(runtime)
+          mission={"mission_id":task["task_id"],"goal":task["goal_text"]}
+          step={"adapter":"goal","goal_ref":"goal","verified_initial_facts":["network.http.available"],"max_controller_actions":20}
+          report={
+            "schema":"PROJECT_BRAIN_PARENT_DEMOGRAPHY_ONE_SHOT_V1",
+            "task_id":task["task_id"],
+            "task_sha":"dd101ea930f1405e3a9424a03a11808053f99e6d",
+            "brain_main":"144a1baadbb927645b1e183a85e4675f5cf44f1f",
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+            "execution_count":1,
+          }
+          try:
+              result=runtime.run_goal(step,mission)
+              report["producer_status"]="COMPLETED"
+              report["result"]=result
+              parts=(result.get("goal_compilation") or {}).get("compiled_parts") or []
+              rel=[x for x in parts if x.get("mode")=="VERIFIED_BOUND_NUMERIC_RELATION"]
+              if len(rel)!=1:
+                  raise RuntimeError("FINAL_RELATION_ARTIFACT_NOT_UNIQUE")
+              relation_path=root/rel[0]["output_path"]
+              if not relation_path.is_file():
+                  raise RuntimeError("FINAL_RELATION_ARTIFACT_MISSING")
+              report["producer_relation_path"]=rel[0]["output_path"]
+              report["producer_relation"]=json.loads(relation_path.read_text())
+          except Exception as exc:
+              report["producer_status"]="BLOCKED"
+              report["first_causal_blocker"]=type(exc).__name__+":"+str(exc)
+              report["traceback_tail"]=traceback.format_exc().splitlines()[-24:]
+          pathlib.Path("PARENT_DEMOGRAPHY_ONE_SHOT.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          PY
+      - name: Independent oracle if producer completed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,math,pathlib,urllib.request,hashlib
+          rp=pathlib.Path("PARENT_DEMOGRAPHY_ONE_SHOT.json")
+          report=json.loads(rp.read_text())
+          if report.get("producer_status")!="COMPLETED":
+              report["independent_oracle"]={"executed":False,"reason":"PRODUCER_BLOCKED"}
+              rp.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+              raise SystemExit(0)
+          task=json.loads(pathlib.Path("canonical/tasks/PARENT_DEMOGRAPHY_FRANCE_GROWTH_CROSSCHECK_REAL_TASK_20260930_001.json").read_text())
+          values={}
+          for name,spec in task["sources"].items():
+              req=urllib.request.Request(spec["url"],headers={"User-Agent":"ProjectBrain-Demography-Oracle/1"})
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  data=json.loads(r.read(2_000_000).decode("utf-8"))
+              cur=data
+              for key in spec["json_path"]:
+                  cur=cur[key]
+              values[name]=float(cur)
+          implied=100.0*(((values["population_2023"]/values["population_2020"])**(1.0/3.0))-1.0)
+          official=values["official_growth_2023"]
+          delta=abs(implied-official)
+          threshold=float(task["scientific_contract"]["comparison_threshold_percentage_points"])
+          predicate=delta<=threshold
+          produced=report["producer_relation"]
+          checks={
+            "left":abs(float(produced["left"])-implied)<=1e-10,
+            "right":abs(float(produced["right"])-official)<=1e-10,
+            "threshold":abs(float(produced["threshold"])-threshold)<=1e-15,
+            "absolute_difference":abs(float(produced["absolute_difference"])-delta)<=1e-10,
+            "relation":produced["relation"]=="ABS_DIFF_LTE",
+            "predicate":bool(produced["predicate"])==bool(predicate),
+            "model_dependency_count":int(report["model_dependency_count"])==0,
+          }
+          report["independent_oracle"]={
+            "executed":True,
+            "verified":all(checks.values()),
+            "checks":checks,
+            "population_2020":values["population_2020"],
+            "population_2023":values["population_2023"],
+            "official_growth_2023":official,
+            "implied_growth_pct":implied,
+            "absolute_difference":delta,
+            "threshold":threshold,
+            "predicate":predicate,
+            "producer_modules_imported":False,
+          }
+          report["verified_parent_task"]=bool(report["independent_oracle"]["verified"])
+          rp.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: parent-demography-france-growth-one-shot
+          path: |
+            PARENT_DEMOGRAPHY_COMPILE_GATE.json
+            PARENT_DEMOGRAPHY_ONE_SHOT.json
+            canonical/astra_runtime/tmp/*.json
+          if-no-files-found: ignore
+      - name: Fail closed if blocked or oracle failed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          r=json.load(open("PARENT_DEMOGRAPHY_ONE_SHOT.json"))
+          assert r.get("producer_status")=="COMPLETED",r
+          assert (r.get("independent_oracle") or {}).get("verified") is True,r
+          assert r.get("verified_parent_task") is True,r
+          print("PARENT_DEMOGRAPHY_TASK_B_VERIFIED")
+          PY
