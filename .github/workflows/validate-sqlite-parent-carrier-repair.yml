@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   validate-carrier:
-    if: github.head_ref == 'repair/sqlite-parent-carrier-closure-20260930-v1'
+    if: github.head_ref == 'repair/sqlite-parent-canonical-mission-byte-lock-20260930-v1'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -30,7 +30,7 @@ jobs:
           test "$(git hash-object canonical/runtime/verify_pending_cli_binding.py)" = "a6b028c25d79d2dff59c87e3b3ad91d9fe934dae"
           test "$(git hash-object canonical/runtime/promote_pending_binding.py)" = "f100c0d1ce5a4b07af0175035c3122d816459b0b"
           test "$(git hash-object canonical/tasks/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json)" = "5d09c9eebcb09612525836e7926bdf297f4bad32"
-          test "$(git hash-object canonical/astra_runtime/missions/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json)" = "28eddc71a72a8a9db95ef4b59c49a43246414577"
+          test "$(git hash-object canonical/astra_runtime/missions/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json)" = "b5ec618073db26ea657c7d1405378f773b253647"
           node --check canonical/runtime/node_codec_runner.js
           python -m py_compile run_openended_sqlite_taska_once.py
           PYTHONPATH=canonical/runtime python - <<'PY'
