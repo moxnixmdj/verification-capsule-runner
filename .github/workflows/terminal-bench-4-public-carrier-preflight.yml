@@ -1,0 +1,34 @@
+name: Terminal-Bench 4 Public Carrier Preflight
+
+on:
+  push:
+    branches:
+      - carrier/tb4-public-preflight-20260930
+    paths:
+      - .github/workflows/terminal-bench-4-public-carrier-preflight.yml
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Prove standard public Linux carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          uname -a
+          docker version
+          docker info
+          docker run --rm hello-world
+      - name: Prove Harbor CLI installability
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 --version
+          pipx install harbor
+          harbor --version
+          harbor --help >/dev/null
+          echo TERMINAL_BENCH_CARRIER_READY
