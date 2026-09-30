@@ -1,0 +1,64 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the bounded model-independent claim-spec and operand-binding capability from Brain PR450 on fresh cross-domain evidence without executing any parent task or using model cognition.",
+  "frozen": {
+    "gate_id": "CLAIM_SPEC_OPERAND_BINDING_FRESH_QUALIFICATION_20260930_V1",
+    "problem_sha256": "443bb379e2b558f1d171547a4d367ec88cdca9f050ff6a87b361f679aa346b71",
+    "task_sha256": "93a9b820776ca7d6bbcc734ed46394ac1d10169d3b79271329ec07b8e034098f",
+    "runtime_sha256": "20ddc686d157e6f2544626582a468e391e42f490369e19276c67fda0a336af88",
+    "canonical_base": "0ef3f48e07ea0f05857c13aa5fed58437d979504",
+    "authorization_sha256": "ee9969da2901decd81a27da639731cd728a39af990718acde8d4d49473bac1af"
+  },
+  "hash_semantics": {
+    "task_sha256": "SHA256 of exact verifier Git-blob identity descriptor git-blob-sha1:a409faf878596d28c822a5fc9bec8cac77a3e952",
+    "runtime_sha256": "SHA256 of ordered exact Git-blob identity descriptors for candidate 48fd0584..., evaluator d66a7eb3..., authored tests 467a9f4f...",
+    "authorization_sha256": "SHA256 of exact action-intent Git-blob identity descriptor git-blob-sha1:7f3b4e55df1a19d011c68d7cb524bf6612bc7ba0",
+    "byte_binding": "Every corresponding file is independently verified by git_blob_sha1 before admission."
+  },
+  "pinned_files": [
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py",
+      "git_blob_sha1": "48fd058430d8d361fc75beced567c7b6d1166531"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py",
+      "git_blob_sha1": "d66a7eb30774f66160b698d8082947776888293d"
+    },
+    {
+      "path": "canonical/tests/test_objective_claim_operand_binding.py",
+      "git_blob_sha1": "467a9f4f9b835ca8f65fd19b9335770e7b0ef31b"
+    },
+    {
+      "path": "qualification/pr450/fresh_independent_verify.py",
+      "git_blob_sha1": "a409faf878596d28c822a5fc9bec8cac77a3e952"
+    },
+    {
+      "path": "qualification/pr450/brain_action_intent.json",
+      "git_blob_sha1": "7f3b4e55df1a19d011c68d7cb524bf6612bc7ba0"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_objective_claim_operand_binding.py && python qualification/pr450/fresh_independent_verify.py"
+  ],
+  "constraints": {
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0,
+    "parent_task_execution": false,
+    "parent_task_replay": false,
+    "prior_unguarded_case_sets": "INADMISSIBLE_AND_NOT_REUSED_AS_FRESH_QUALIFICATION"
+  }
+}
