@@ -1,0 +1,20 @@
+name: Qualify Evidence Extraction V2
+on:
+  push:
+    branches:
+      - qualify/evidence-extraction-v2-20260930
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Authored RED-GREEN regressions and integration contract
+        run: python -m unittest -v canonical.tests.test_objective_evidence_unit_extract_v2 canonical.tests.test_open_research_evidence_extraction_integration_v2 canonical.tests.test_astra_open_research_evidence_transition_v2
+      - name: Independent live cross-domain qualification
+        run: python -m unittest -v canonical.tests.test_evidence_extraction_v2_live_qualification
