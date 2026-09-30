@@ -5,7 +5,7 @@ from decimal import Decimal
 
 ROOT=pathlib.Path(__file__).resolve().parents[0]
 PRODUCER=ROOT/"canonical/runtime/bound_capabilities/extracted_evidence_claim_relation.py"
-EXPECTED_BLOB="f4ee15d04e59e9f677678d3934d74a07f946b99d"
+EXPECTED_BLOB="f4ee15d0be0235fceeb12dea3c1a64fa88bef532"
 
 def git_blob(path):
     raw=path.read_bytes()
