@@ -1,0 +1,70 @@
+{
+  "command_sha256": "9d63d591b0e3e148a793294de92874f91512f1d3d1cbad931ce32a5c97f6bc43",
+  "completion_authorization": {
+    "acceptance_criteria": [
+      {
+        "criterion": "client_exact_runtime_output",
+        "evidence": "v1 observation 002 and 004: bun dist/client-entry.js == Hello, Ada!",
+        "status": "PASS"
+      },
+      {
+        "criterion": "server_exact_runtime_output",
+        "evidence": "v1 observation 002 and 004: bun dist/server-entry.js == PUBLIC_RESPONSE: Hello, Ada!",
+        "status": "PASS"
+      },
+      {
+        "criterion": "public_trace_deobfuscation",
+        "evidence": "v1 observations 002/004: PUBLIC_RENDER_PROBE resolves to /app/src/client/render.ts",
+        "status": "PASS"
+      },
+      {
+        "criterion": "mixed_map_private_redaction",
+        "evidence": "v1 observation 004: MIXED_MAP_REDACTION_PASS with private source replaced by [private] and sourcesContent null",
+        "status": "PASS"
+      },
+      {
+        "criterion": "manifest_relative_public_provenance",
+        "evidence": "v1 observation 004: MANIFEST_AND_LEAK_SCAN_PASS; exact artifact set, relative public-only provenance",
+        "status": "PASS"
+      },
+      {
+        "criterion": "no_private_or_local_path_leakage",
+        "evidence": "v1 observation 004: scanned all shipped artifact text against private paths, private literals and /app; pass",
+        "status": "PASS"
+      },
+      {
+        "criterion": "no_third_party_dependency_added",
+        "evidence": "implementation edits only scripts/release.ts and uses Bun plus node:fs/promises/node:path built-ins",
+        "status": "PASS"
+      }
+    ],
+    "known_relevant_failures": [],
+    "provenance": {
+      "candidate_reused_without_verifier_feedback": true,
+      "prior_pre_verifier_session": "bun-sourcemap-leak-20260930-v1",
+      "prior_verifier_consumed": false,
+      "reason_for_restart": "terminal authorization file was absent from frozen checkout; step 005 was blocked before verifier execution"
+    },
+    "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+    "session_id": "bun-sourcemap-leak-20260930-v2",
+    "submission_authorized": true,
+    "verification_commands": [
+      {
+        "command": "bun run release plus exact client/server smoke plus trace probe",
+        "evidence": "v1 observation 002 exit_code 0",
+        "exit_code": 0
+      },
+      {
+        "command": "mixed public/private source-map synthetic probe plus exact manifest/leak scan plus final runtime smoke",
+        "evidence": "v1 observation 004 exit_code 0",
+        "exit_code": 0
+      }
+    ]
+  },
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "bun-sourcemap-leak-20260930-v2",
+  "stderr": "",
+  "stdout": "SUBMISSION_ACCEPTED_FOR_INDEPENDENT_VERIFICATION\n",
+  "step": 2
+}
