@@ -1,0 +1,29 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "CANARY-RUNTIME-MISSION-ORIGIN-PROPAGATION-20260930-001",
+  "purpose": "Non-parent, zero-credit qualification of canonical astra_runtime mission-path propagation into autonomous capability acquisition. This canary must not consume or replay any frontier parent task.",
+  "goal": "Use an apt-provided command-line executable named exactly projectbrain-origin-canary-x9q7 to transform the literal text MISSION_ORIGIN_CANARY_20260930 into canonical/astra_runtime/tmp/mission_origin_canary.txt.",
+  "steps": [
+    {
+      "id": "mission-origin-propagation-canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "no_frontier_model_cognition": true,
+    "plain_goal_compilation_required": true,
+    "exactly_one_execution": true,
+    "same_task_replay_forbidden": true,
+    "stop_on_first_causal_gap": true,
+    "canary_only": true,
+    "parent_capability_credit_authorized": false,
+    "frontier_capability_credit_authorized": false
+  }
+}
