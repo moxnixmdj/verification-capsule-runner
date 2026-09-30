@@ -15,17 +15,17 @@ compiler=load("pr298_goal_compiler",RUNTIME/"goal_compiler.py")
 runtime=load("pr298_astra_runtime",RUNTIME/"astra_runtime.py")
 registry=json.loads((RUNTIME/"BOUND_CAPABILITY_REGISTRY_V1.json").read_text(encoding="utf-8"))["capabilities"]
 
-url_2020="https://api.worldbank.org/v2/country/EGY/indicator/NY.GDP.MKTP.CD?format=json&date=2020"
-url_2023="https://api.worldbank.org/v2/country/EGY/indicator/NY.GDP.MKTP.CD?format=json&date=2023"
+url_2010="https://api.worldbank.org/v2/country/NGA/indicator/SP.POP.TOTL?format=json&date=2010"
+url_2010="https://api.worldbank.org/v2/country/NGA/indicator/SP.POP.TOTL?format=json&date=2020"
 goal=(
     "Using the authoritative JSON source "+url_2020+", "
     "extract JSON path 1.0.value and save the knowledge evidence to "
-    "canonical/astra_runtime/tmp/EGYPT_GDP_2020.json. "
-    "Using the authoritative JSON source "+url_2023+", "
+    "canonical/astra_runtime/tmp/NIGERIA_POP_2010.json. "
+    "Using the authoritative JSON source "+url_2020+", "
     "extract JSON path 1.0.value and save the knowledge evidence to "
-    "canonical/astra_runtime/tmp/EGYPT_GDP_2023.json. "
+    "canonical/astra_runtime/tmp/NIGERIA_POP_2020.json. "
     "Calculate the annualized growth factor using annual_factor = "
-    "(gdp_2023 / gdp_2020) ** (1 / 3)."
+    "(pop_2020 / pop_2010) ** (1 / 10)."
 )
 
 compiled=compiler.compile_goal(goal,registry,ROOT)
@@ -36,12 +36,12 @@ if len(exprs)!=1:
 expr=exprs[0]
 if expr.get("selected_capability")!="math.numeric_expression.sympy":
     raise SystemExit("WRONG_SELECTED_CAPABILITY:"+str(expr.get("selected_capability")))
-if set(expr.get("variable_names") or [])!={"gdp_2020","gdp_2023"}:
+if set(expr.get("variable_names") or [])!={"pop_2010","pop_2020"}:
     raise SystemExit("VARIABLE_NAMES_INVALID:"+repr(expr.get("variable_names")))
 if expr.get("model_dependency_count")!=0:
     raise SystemExit("MODEL_DEPENDENCY_PRESENT")
 
-mission={"mission_id":"FRESH-ECONOMICS-TYPED-SCALAR-EXPRESSION-20260930-V1","goal":goal}
+mission={"mission_id":"FRESH-DEMOGRAPHY-TYPED-SCALAR-EXPRESSION-20260930-V2","goal":goal}
 step={"id":"fresh_economic_expression","controller_actions":compiled["controller_actions"],"max_controller_actions":16}
 run=runtime._run_model_independent_goal(step,mission,goal)
 if run.get("returncode")!=0 or run.get("final_summary")!="COMPOUND_GOAL_COMPLETE":
@@ -59,8 +59,8 @@ def fetch_value(url):
         raise RuntimeError("ORACLE_VALUE_NOT_NUMERIC")
     return float(value)
 
-v2020=fetch_value(url_2020)
-v2023=fetch_value(url_2023)
+v2020=fetch_value(url_2010)
+v2023=fetch_value(url_2010)
 expected=(v2023/v2020)**(1.0/3.0)
 failures=[]
 observed=float(producer["value"])
@@ -88,21 +88,21 @@ for name,expression,variables in [
         negative[name]=type(exc).__name__+":"+str(exc)
 
 report={
-  "schema":"PROJECT_BRAIN_PR298_TYPED_SCALAR_SYMPY_FRESH_VERIFICATION_V1",
+  "schema":"PROJECT_BRAIN_PR298_TYPED_SCALAR_SYMPY_FRESH_VERIFICATION_V2",
   "status":"PASS" if not failures else "FAIL",
-  "task_id":"FRESH-ECONOMICS-TYPED-SCALAR-EXPRESSION-20260930-V1",
+  "task_id":"FRESH-DEMOGRAPHY-TYPED-SCALAR-EXPRESSION-20260930-V2",
   "domain":"ECONOMICS_PUBLIC_STATISTICS",
   "source_task_replay":False,
   "selected_capability":"math.numeric_expression.sympy",
-  "expression":"(gdp_2023 / gdp_2020) ** (1 / 3)",
-  "source_urls":[url_2020,url_2023],
+  "expression":"(pop_2020 / pop_2010) ** (1 / 10)",
+  "source_urls":[url_2010,url_2010],
   "producer":producer,
   "compiler_expression_part":expr,
   "independent_oracle":{
-    "gdp_2020":v2020,
-    "gdp_2023":v2023,
+    "pop_2010":v2020,
+    "pop_2020":v2023,
     "annual_factor":expected,
-    "method":"fresh direct World Bank refetch plus independent Python arithmetic",
+    "method":"fresh distinct World Bank demography refetch plus independent Python arithmetic",
     "producer_adapter_imported_for_oracle":False
   },
   "negative_unsafe_expression_checks":negative,
