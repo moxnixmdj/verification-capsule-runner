@@ -1,0 +1,149 @@
+name: PR261 Fresh Reuse - YAML to JSON
+on:
+  push:
+    branches:
+      - verify/pr261-fresh-reuse-yaml-json-20260930
+permissions:
+  contents: read
+jobs:
+  task:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact merged PR261 execution bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "c19466687fd2d17e45dc6ba263b42301bed432d1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
+          test "$(git hash-object canonical/runtime/bound_capabilities/yq_yaml_json.py)" = "8dce9a679d51153e0e779e4fcc5380a1ce106637"
+      - name: Create fresh YAML input
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p canonical/astra_runtime/tmp
+          cat > canonical/astra_runtime/tmp/PR261_FRESH_REUSE_INPUT.yaml <<'YAML'
+          project:
+            name: Brain
+            version: 3
+          flags:
+            model_independent: true
+            spend_usd: 0
+          items:
+            - alpha
+            - beta
+          YAML
+      - name: Execute direct grounding-to-plan fresh reuse
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          runtime_path=root/"canonical/runtime/astra_runtime.py"
+          spec=importlib.util.spec_from_file_location("pr261_yaml_fresh_runtime",runtime_path)
+          runtime=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=runtime
+          spec.loader.exec_module(runtime)
+
+          src="canonical/astra_runtime/tmp/PR261_FRESH_REUSE_INPUT.yaml"
+          out="canonical/astra_runtime/tmp/PR261_FRESH_REUSE_OUTPUT.json"
+          goal=f"Convert YAML from {src} to JSON and save it to {out}."
+          mission={"mission_id":"PR261-FRESH-REUSE-YAML-JSON-20260930","goal":goal}
+          verified=["yaml.file.available"]
+
+          grounding_path,grounding=runtime._ground_plain_goal_to_bound_capabilities(mission,goal)
+          assert grounding["input_contract_bindability_enforced"] is True,grounding
+          assert grounding["unresolved_clause_indexes"]==[],grounding
+          ids=[
+              c["capability_id"]
+              for clause in grounding["clauses"]
+              for c in clause["candidates"]
+          ]
+          assert "yaml.to_json.yq" in ids,(ids,grounding)
+
+          composition_path,composition=runtime._compose_grounding_to_capability_problem(
+              mission,goal,grounding,verified_initial_facts=verified
+          )
+          assert composition["composition_ready"] is True,composition
+          assert composition["verified_initial_facts"]==verified,composition
+          assert composition["required_external_initials"]==verified,composition
+          assert composition["initial_facts"]==verified,composition
+          assert composition["model_dependency_count"]==0,composition
+
+          step={
+              "adapter":"goal",
+              "goal_ref":"goal",
+              "verified_initial_facts":verified,
+              "capability_problem":composition["problem"],
+              "max_controller_actions":8,
+          }
+          result=runtime._run_capability_planned_goal(step,mission,goal)
+          assert result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN",result
+          assert result.get("planner_model_last") is None,result
+          assert result.get("planning_mode")=="DETERMINISTIC_CAPABILITY_GRAPH",result
+          assert pathlib.Path(out).is_file(),result
+
+          evidence={
+              "schema":"PROJECT_BRAIN_PR261_FRESH_REUSE_YAML_JSON_V1",
+              "goal":goal,
+              "result":result,
+              "grounding":grounding,
+              "composition":composition,
+              "grounding_evidence_path":str(grounding_path),
+              "composition_evidence_path":str(composition_path),
+              "input_path":src,
+              "output_path":out,
+              "model_dependency_count":0,
+              "incremental_spend_usd":0,
+          }
+          pathlib.Path("PR261_FRESH_REUSE_YAML_JSON.json").write_text(
+              json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+      - name: Independently verify JSON semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib
+          src=pathlib.Path("canonical/astra_runtime/tmp/PR261_FRESH_REUSE_INPUT.yaml")
+          out=pathlib.Path("canonical/astra_runtime/tmp/PR261_FRESH_REUSE_OUTPUT.json")
+          observed=json.loads(out.read_text(encoding="utf-8"))
+          expected={
+              "project":{"name":"Brain","version":3},
+              "flags":{"model_independent":True,"spend_usd":0},
+              "items":["alpha","beta"],
+          }
+          assert observed==expected,(observed,expected)
+          evp=pathlib.Path("PR261_FRESH_REUSE_YAML_JSON.json")
+          evidence=json.loads(evp.read_text(encoding="utf-8"))
+          evidence["independent_verification"]={
+              "verified":True,
+              "producer_independent":True,
+              "semantic_value_match":True,
+              "input_sha256":hashlib.sha256(src.read_bytes()).hexdigest(),
+              "output_sha256":hashlib.sha256(out.read_bytes()).hexdigest(),
+          }
+          evp.write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print("PR261_FRESH_REUSE_YAML_JSON_VERIFIED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr261-fresh-reuse-yaml-json
+          path: |
+            PR261_FRESH_REUSE_YAML_JSON.json
+            canonical/astra_runtime/evidence/PR261-FRESH-REUSE-YAML-JSON-20260930__BOUND_CAPABILITY_GROUNDING.json
+            canonical/astra_runtime/evidence/PR261-FRESH-REUSE-YAML-JSON-20260930__GROUNDED_EXECUTABLE_COMPOSITION.json
+            canonical/astra_runtime/tmp/PR261_FRESH_REUSE_INPUT.yaml
+            canonical/astra_runtime/tmp/PR261_FRESH_REUSE_OUTPUT.json
