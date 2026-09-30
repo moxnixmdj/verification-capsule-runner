@@ -71,9 +71,14 @@ def _safe_url(raw):
     return urllib.parse.urlunsplit((u.scheme,u.netloc,u.path,u.query,""))
 
 
+def _site_host(value):
+    host=(value or "").lower().strip(".")
+    return host[4:] if host.startswith("www.") else host
+
+
 def _same_site(left,right):
-    a=(left or "").lower().strip(".")
-    b=(right or "").lower().strip(".")
+    a=_site_host(left)
+    b=_site_host(right)
     return bool(a and b and (a==b or a.endswith("."+b) or b.endswith("."+a)))
 
 
