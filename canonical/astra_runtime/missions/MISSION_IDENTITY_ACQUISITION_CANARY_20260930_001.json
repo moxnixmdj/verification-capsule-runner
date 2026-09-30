@@ -1,0 +1,28 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "MISSION-IDENTITY-ACQUISITION-CANARY-20260930-001",
+  "purpose": "Fresh non-parent canary proving canonical ASTRA mission identity reaches autonomous capability acquisition without changing runtime acquisition semantics.",
+  "goal": "Using a Python library acquired autonomously if needed, encode the JSON value {\"canary\":\"mission-identity\",\"n\":7} into canonical CBOR binary at artifacts/mission_identity_canary.cbor, decode it back, and prove exact round-trip equality without model assistance.",
+  "steps": [
+    {
+      "id": "mission-identity-acquisition-canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "max_controller_actions": 8,
+      "max_cycles": 2,
+      "allow_optional_model_planner": false,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "model_planner_disabled": true,
+    "non_parent_canary": true,
+    "parent_promotion_authorized": false,
+    "runtime_semantics_mutation_authorized": false,
+    "mission_identity_propagation_only": true
+  }
+}
