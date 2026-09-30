@@ -1,0 +1,31 @@
+name: Qualify Universal Primary Gate Deletion
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - canonical/runtime/astra_runtime.py
+      - canonical/tests/test_delete_universal_primary_source_gate_closure.py
+      - canonical/tests/test_delete_primary_gate_independent_qualification.py
+      - canonical/action_intents/2026-09-30_DELETE_UNIVERSAL_PRIMARY_SOURCE_GATE_V1.json
+      - .github/workflows/qualify-delete-universal-primary-gate.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Syntax check
+        run: python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - name: Brain closure regression
+        run: python canonical/tests/test_delete_universal_primary_source_gate_closure.py
+      - name: Independent runtime qualification
+        run: python canonical/tests/test_delete_primary_gate_independent_qualification.py
