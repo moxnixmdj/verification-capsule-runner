@@ -1,0 +1,154 @@
+name: Mini SWE 04d809c deterministic reexecution
+on:
+  push:
+    branches:
+      - verify/mini-swe-04d809c-deterministic-reexecution-20260930
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Fetch exact pinned upstream source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/SWE-agent/mini-swe-agent.git /tmp/mini-swe-agent
+          git -C /tmp/mini-swe-agent fetch --depth=1 origin 04d809ceab9df28f9adaed044884180159172930
+          git -C /tmp/mini-swe-agent checkout --detach 04d809ceab9df28f9adaed044884180159172930
+          test "$(git -C /tmp/mini-swe-agent rev-parse HEAD)" = "04d809ceab9df28f9adaed044884180159172930"
+      - name: Verify Brain-vendored blob identity set
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/mini-swe-agent
+          test "$(git hash-object LICENSE.md)" = "503821c9dbe06f13a48e54088eb6cd203adb407f"
+          test "$(git hash-object pyproject.toml)" = "0bd3e1329252af4399805959d78d5984f2bbf2b0"
+          test "$(git hash-object src/minisweagent/__init__.py)" = "8dbc904c36c3ed31b3c7d9697e44dbf0cf6c0e87"
+          test "$(git hash-object src/minisweagent/agents/__init__.py)" = "e625b5d4b3485835fe9592079ddc1fcfea71f20e"
+          test "$(git hash-object src/minisweagent/agents/default.py)" = "ca310e37d7c61888c576f73f5e1790ac769407b1"
+          test "$(git hash-object src/minisweagent/environments/__init__.py)" = "08ae2c65c061c086360ea8949f4a92d2bf38bcb6"
+          test "$(git hash-object src/minisweagent/environments/local.py)" = "2b12d33ec90c8db7bb8a36002ba09706be6e7f45"
+          test "$(git hash-object src/minisweagent/exceptions.py)" = "b11e404c98f62ace8c5c75b9a683105d49984a6c"
+          test "$(git hash-object src/minisweagent/models/__init__.py)" = "408dbf531ce7e1e1cf1b950fccf30b496ab67c05"
+          test "$(git hash-object src/minisweagent/utils/__init__.py)" = "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          test "$(git hash-object src/minisweagent/utils/log.py)" = "d1c7acb7f002c435f8859e19f5d2d59d2b01883f"
+          test "$(git hash-object src/minisweagent/utils/serialize.py)" = "ccd5947bc9dbea7795555ca72670ccf6860d219f"
+          test "$(git hash-object src/minisweagent/config/default.yaml)" = "7753df3e42e7c9e792da9d063311221b299ba4d6"
+          test "$(git hash-object src/minisweagent/config/benchmarks/swebench.yaml)" = "106decd160e72e5164e29d15d23da354c29c309d"
+      - name: Install only deterministic-loop dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q "pydantic>=2" jinja2 python-dotenv platformdirs rich
+      - name: Reexecute exact agent loop with deterministic substrate
+        shell: bash
+        env:
+          PYTHONPATH: /tmp/mini-swe-agent/src
+          MSWEA_SILENT_STARTUP: "1"
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import pathlib
+          import tempfile
+          from minisweagent.agents.default import DefaultAgent
+          from minisweagent.environments.local import LocalEnvironment
+
+          class DeterministicModel:
+              def __init__(self):
+                  self.calls = 0
+              def format_message(self, *, role, content, extra=None):
+                  return {"role": role, "content": content, "extra": dict(extra or {})}
+              def get_template_vars(self, **kwargs):
+                  return {"model_name": "brain-deterministic-substrate"}
+              def query(self, messages):
+                  self.calls += 1
+                  if self.calls == 1:
+                      return {
+                          "role": "assistant",
+                          "content": "Inspect and create proof artifact.",
+                          "extra": {
+                              "cost": 0.0,
+                              "actions": [{
+                                  "command": "printf 'brain-mini-swe-proof\\n' > proof.txt && cat proof.txt"
+                              }],
+                          },
+                      }
+                  if self.calls == 2:
+                      return {
+                          "role": "assistant",
+                          "content": "Submit after observing proof.",
+                          "extra": {
+                              "cost": 0.0,
+                              "actions": [{
+                                  "command": "printf 'COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT\\nverified-mini-swe-loop\\n'"
+                              }],
+                          },
+                      }
+                  raise AssertionError("unexpected extra model call")
+              def format_observation_messages(self, message, outputs, template_vars=None):
+                  assert len(outputs) == 1
+                  return [{
+                      "role": "user",
+                      "content": outputs[0]["output"],
+                      "extra": {"returncode": outputs[0]["returncode"]},
+                  }]
+              def serialize(self):
+                  return {"info": {"model": {"type": "deterministic-test-substrate"}}}
+
+          with tempfile.TemporaryDirectory() as td:
+              work = pathlib.Path(td)
+              traj = work / "trajectory.json"
+              env = LocalEnvironment(cwd=str(work), timeout=5)
+              model = DeterministicModel()
+              agent = DefaultAgent(
+                  model,
+                  env,
+                  system_template="You are executing a deterministic ownership test.",
+                  instance_template="Task: {{ task }}",
+                  step_limit=4,
+                  cost_limit=0,
+                  wall_time_limit_seconds=30,
+                  max_consecutive_format_errors=2,
+                  output_path=traj,
+              )
+              result = agent.run("Create proof.txt, observe it, then submit.")
+              assert result["exit_status"] == "Submitted", result
+              assert result["submission"].strip() == "verified-mini-swe-loop", result
+              assert model.calls == 2
+              assert (work / "proof.txt").read_text() == "brain-mini-swe-proof\n"
+              data = json.loads(traj.read_text())
+              assert data["trajectory_format"] == "mini-swe-agent-1.1"
+              assert data["info"]["model_stats"]["api_calls"] == 2
+              assert data["info"]["model_stats"]["instance_cost"] == 0
+              assert data["info"]["exit_status"] == "Submitted"
+              assert data["info"]["submission"].strip() == "verified-mini-swe-loop"
+              assert any(m.get("role") == "exit" for m in data["messages"])
+              pathlib.Path("MINI_SWE_04D809C_DETERMINISTIC_REEXECUTION.json").write_text(
+                  json.dumps({
+                      "schema": "PROJECT_BRAIN_MINI_SWE_AGENT_REEXECUTION_V1",
+                      "upstream_commit": "04d809ceab9df28f9adaed044884180159172930",
+                      "brain_blob_identity_count": 14,
+                      "brain_blob_identity_match_count": 14,
+                      "deterministic_model_calls": model.calls,
+                      "exit_status": result["exit_status"],
+                      "submission": result["submission"].strip(),
+                      "artifact_text": (work / "proof.txt").read_text(),
+                      "trajectory_format": data["trajectory_format"],
+                      "model_dependency_for_test": "DETERMINISTIC_FAKE_GENERAL_SUBSTRATE",
+                      "capability_credit": 0,
+                      "incremental_spend_usd": 0,
+                      "verified": True,
+                  }, indent=2, sort_keys=True) + "\n"
+              )
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mini-swe-04d809c-deterministic-reexecution
+          path: MINI_SWE_04D809C_DETERMINISTIC_REEXECUTION.json
