@@ -1,0 +1,10 @@
+{
+  "command_sha256": "12ccd583ac72654e3dfb52092542b5d95f8181df5e3ff57d458f7f5d50d15a0e",
+  "duration_sec": 0.861,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20261001-v1",
+  "stderr": "",
+  "stdout": "\n> react-lead-form@1.0.0 build\n> vite build\n\nvite v5.0.0 building for production...\ntransforming...\n\u2713 35 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                  0.39 kB \u2502 gzip:  0.29 kB\ndist/assets/index-NALzBdaL.js  157.10 kB \u2502 gzip: 50.97 kB\n\u2713 built in 569ms\n",
+  "step": 2
+}
