@@ -1,0 +1,41 @@
+name: Guarded Brain PR528 Scholarly Admission Qualification
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/brain-pr528-scholarly-admission-materialization-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Verify exact Brain PR528 blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "ba58cb020ab817896362b65e0de9b1fce3de8f50"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "eefe76faacb0c420ccab73db2395742e40ea35f2"
+          test "$(git hash-object canonical/tests/test_scholarly_provenance_admission_materialization.py)" = "26d2a1e5ea7be3e569011ec732dde0498ea933c8"
+          python -m py_compile canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py canonical/runtime/bound_capabilities/open_research_source_frontend.py canonical/tests/test_scholarly_provenance_admission_materialization.py
+      - name: Generate frozen guard plan
+        run: python generate_brain_pr528_guarded_qualification_plan.py
+      - name: Atomically admit and run independent qualification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan brain_pr528_guarded_qualification_plan.json --receipt _terminal/guarded-admission.json
+      - name: Preserve qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brain-pr528-scholarly-admission-qualification
+          path: |
+            _terminal/
+            brain_pr528_guarded_qualification_plan.json
+          if-no-files-found: warn
