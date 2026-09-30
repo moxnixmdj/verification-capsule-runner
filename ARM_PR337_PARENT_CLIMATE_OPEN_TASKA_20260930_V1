@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_PUBLIC_ONESHOT_ARM_V1",
+  "status": "ARMED_EXACTLY_ONCE",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 337,
+  "brain_base": "797d5fbea5f230a31044006755beb98ae387134b",
+  "brain_head": "aa1f60088b645439ff1eb15284dee828cb6b0671",
+  "task_id": "PARENT-CLIMATE-MAUNA-LOA-CO2-ACCELERATION-OPEN-RESEARCH-TASK-A-20260930-001",
+  "task_blob": "6f0e889e23cfba6c511b3a54cb86acba48bc9d3a",
+  "workflow": "run-pr337-parent-climate-open-taska-once.yml",
+  "incremental_spend_usd": 0,
+  "model_planner_disabled": true,
+  "same_task_replay_forbidden": true,
+  "stop_on_first_causal_gap": true,
+  "note": "This path exists only to trigger the already-frozen one-shot producer workflow. Do not re-arm this task after any execution attempt."
+}
