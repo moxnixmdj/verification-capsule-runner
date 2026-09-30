@@ -1,0 +1,42 @@
+name: Guarded PR468 Broad Routing Qualification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+      - canonical/runtime/bound_capabilities/broad_objective_decompose.py
+      - canonical/tests/test_broad_objective_semantic_decomposition.py
+      - independent_pr468_broad_routing_verifier.py
+      - guarded_pr468_broad_routing_plan.json
+      - .github/workflows/guarded-pr468-broad-routing.yml
+
+permissions:
+  contents: write
+
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/guarded-pr468-broad-routing-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Guard and independently qualify exact PR468 bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_pr468_broad_routing_plan.json --receipt guarded-pr468-broad-routing-admission.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-pr468-broad-routing-qualification
+          path: |
+            guarded-pr468-broad-routing-admission.json
+            guarded_pr468_broad_routing_plan.json
+            pr468_broad_routing_qualification.json
+          if-no-files-found: warn
