@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 510,
+  "brain_head_sha": "135bb413448cb9a0c2fc1f39943d1cd800fbb9ef",
+  "brain_base_sha": "0d795dad885e706e6eb1cfd4d20cd2b2edd5cf12",
+  "scope": "OPEN_RESEARCH_DECISION_QUERY_AND_RELEVANCE_ALIGNMENT_EXACT_BYTE_QUALIFICATION",
+  "producer_blobs": {
+    "open_web_source_candidate_discovery": "c913c20203b638caff050e7461a4b0023852ee10",
+    "open_research_source_frontend": "a6fa0f32eab09791ec6a8cdabe961519d073be58",
+    "objective_relevance_bm25": "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790",
+    "broad_objective_decompose": "3ded762075ed222228a14877af631f1e2e6d9e4c",
+    "authored_discovery_tests": "cdde67e65f5c7fcf3793c5e10973fb409b8c4f66",
+    "authored_query_focus_tests": "d92ff787afa66bd4317ba127305ccd1937f1be16"
+  },
+  "authoritative_parent_evidence_run": 36690682680,
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "spent_genomics_task_b_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
