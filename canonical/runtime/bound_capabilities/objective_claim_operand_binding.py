@@ -31,7 +31,10 @@ _STOP={
  "with","assess","investigate","verify","source","evidence","states","contains",
  "includes","says","exact","text","claim",
 }
-_WORD=re.compile(r"[a-z0-9][a-z0-9._+-]*")
+_NON_UNIT_FOLLOWERS={
+ "was","were","is","are","be","been","being","and","or","to","from","in","on","at","by",
+}
+_WORD=re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]*")
 _NUM_SURFACE=(
  r"[-+]?(?:(?:\d{1,3}(?:,\d{3})+)|\d+|\.\d+)"
  r"(?:\.\d+)?(?:[eE][-+]?\d+)?"
@@ -117,7 +120,7 @@ def _parse_objective(objective):
         if not m:
             continue
         left=_clean_entity(m.group(1)); right=_clean_entity(m.group(2))
-        threshold=_canon(m.group(threshold_group)) if threshold_group else None
+        threshold=_canon(m.group(threshold_group)).rstrip(".,;:") if threshold_group else None
         row=(op,left,right,threshold)
         if left and right and row not in matches:
             matches.append(row)
@@ -171,19 +174,30 @@ def _bind_role(units,entity_tokens):
         if not overlap:
             continue
         coverage=len(overlap)/len(target)
-        # Same scoring shape as Brain's prior scalar semantic binder:
-        # exact token evidence dominates; shorter evidence units break weak
-        # lexical ties only after overlap and coverage.
         scored.append((len(overlap),coverage,-len(row["tokens"]),row,sorted(overlap)))
     if not scored:
         return None,"NO_EVIDENCE_UNIT_FOR_ENTITY"
-    scored.sort(key=lambda x:(-x[0],-x[1],-x[2],x[3]["evidence_unit_id"]))
-    best=scored[0]
-    tied=[x for x in scored if x[:3]==best[:3]]
-    if len(tied)!=1:
+
+    # Fail closed on referent ambiguity, not merely score ties. If multiple
+    # evidence units fully anchor the entity phrase, none may win because it is
+    # shorter or lexically cleaner. A unique partial anchor is admissible only
+    # when it clears the existing minimum evidence threshold and no competing
+    # row reaches the same admissibility class.
+    full=[x for x in scored if x[1] == 1.0]
+    if len(full) > 1:
         return None,"AMBIGUOUS_EVIDENCE_UNIT_FOR_ENTITY"
-    if best[1] < 0.5 and best[0] < 2:
-        return None,"INSUFFICIENT_ENTITY_ANCHOR_COVERAGE"
+    if len(full) == 1:
+        best=full[0]
+    else:
+        admissible=[x for x in scored if not (x[1] < 0.5 and x[0] < 2)]
+        if not admissible:
+            return None,"INSUFFICIENT_ENTITY_ANCHOR_COVERAGE"
+        admissible.sort(key=lambda x:(-x[0],-x[1],-x[2],x[3]["evidence_unit_id"]))
+        best=admissible[0]
+        tied=[x for x in admissible if x[:2]==best[:2]]
+        if len(tied)!=1:
+            return None,"AMBIGUOUS_EVIDENCE_UNIT_FOR_ENTITY"
+
     return {
       "evidence_unit_id":best[3]["evidence_unit_id"],
       "text":best[3]["text"],
@@ -195,6 +209,8 @@ def _numbers(text):
     rows=[]
     for index,m in enumerate(_NUM.finditer(text)):
         unit=_canon(m.group(2)).lower().rstrip(".,;:")
+        if unit in _NON_UNIT_FOLLOWERS:
+            unit=""
         rows.append({
           "numeric_literal_index":index,
           "surface":m.group(0).strip(),
