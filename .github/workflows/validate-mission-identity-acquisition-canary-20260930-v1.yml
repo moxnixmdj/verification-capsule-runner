@@ -1,0 +1,40 @@
+name: Validate Canonical Mission Identity Acquisition Canary
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_MISSION_IDENTITY_ACQUISITION_CANARY_20260930_V1
+      - canonical/astra_runtime/missions/MISSION_IDENTITY_ACQUISITION_CANARY_20260930_001.json
+      - run_mission_identity_acquisition_canary_20260930_v1.py
+      - .github/workflows/validate-mission-identity-acquisition-canary-20260930-v1.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate-mission-identity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run fresh non-parent acquisition canary through canonical ASTRA entrypoint
+        run: python run_mission_identity_acquisition_canary_20260930_v1.py
+      - name: Upload canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-identity-acquisition-canary-20260930-v1
+          path: |
+            mission-identity-acquisition-canary-20260930-v1-report.json
+            canonical/astra_runtime/state/MISSION-IDENTITY-ACQUISITION-CANARY-20260930-001.json
+            canonical/astra_runtime/evidence/MISSION-IDENTITY-ACQUISITION-CANARY-20260930-001__PLAIN_GOAL_CAPABILITY_DISCOVERY.json
+            canonical/astra_runtime/evidence/MISSION-IDENTITY-ACQUISITION-CANARY-20260930-001__BLOCKER.json
+          if-no-files-found: warn
