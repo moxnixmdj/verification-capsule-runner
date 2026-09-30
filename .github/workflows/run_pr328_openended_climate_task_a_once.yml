@@ -1,4 +1,4 @@
-name: Run PR328 Open-Ended Climate Task A Once
+name: Run PR337 Canonical Open-Ended Climate Task A Once
 
 on:
   pull_request:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - name: Execute frozen PR328 open-ended Task A exactly once
+      - name: Execute frozen canonical PR337 open-ended Task A exactly once
         id: parent_task
         continue-on-error: true
         run: python run_pr328_openended_climate_task_a_once.py
