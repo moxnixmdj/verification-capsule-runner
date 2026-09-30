@@ -1,0 +1,46 @@
+name: Run Fresh Thermophysics Parent Task A Once
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    if: github.head_ref == 'execute/thermophysics-water-viscosity-parent-taska-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen thermophysics parent task exactly once
+        id: parent
+        continue-on-error: true
+        run: python run_thermophysics_water_viscosity_parent_taska_once.py
+      - name: Upload terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermophysics-water-viscosity-parent-taska-terminal
+          path: |
+            thermophysics-water-viscosity-parent-taska-terminal.json
+            canonical/astra_runtime/tmp/PARENT_THERMOPHYSICS_WATER_VISCOSITY_RESULT.json
+            canonical/astra_runtime/state/PARENT-THERMOPHYSICS-WATER-VISCOSITY-OPEN-RESEARCH-TASK-A-20260930-002.json
+            canonical/astra_runtime/evidence/PARENT-THERMOPHYSICS-WATER-VISCOSITY-OPEN-RESEARCH-TASK-A-20260930-002*
+          if-no-files-found: warn
+      - name: Preserve semantic failure
+        if: steps.parent.outcome != 'success'
+        run: exit 1
