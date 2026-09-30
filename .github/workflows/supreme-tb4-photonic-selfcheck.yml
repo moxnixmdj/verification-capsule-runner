@@ -48,13 +48,18 @@ jobs:
           git hash-object supreme_tb4_photonic/routing_result_1.json | tee supreme_tb4_photonic/evidence/candidate.gitblob
 
       - name: Run public environment checker
+        id: public_checker
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           sudo mkdir -p /app
           sudo cp terminal-bench/tasks/photonic-waveguide-routing/environment/layout_spec.json /app/layout_spec.json
           sudo cp supreme_tb4_photonic/routing_result_1.json /app/routing_result_1.json
+          set +e
           python3 terminal-bench/tasks/photonic-waveguide-routing/environment/check_routing.py --layout 1 | tee supreme_tb4_photonic/evidence/environment-check.log
+          code=${PIPESTATUS[0]}
+          python3 supreme_tb4_photonic/diagnose_pairs.py
+          exit "$code"
 
       - name: Run adversarial negative checks
         shell: bash
