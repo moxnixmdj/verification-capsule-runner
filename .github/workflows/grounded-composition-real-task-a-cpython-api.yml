@@ -1,0 +1,154 @@
+name: Grounded Composition Real Task A - CPython API Consistency
+on:
+  push:
+    branches:
+      - verify/grounded-composition-real-task-a-cpython-api-20260930
+permissions:
+  contents: read
+jobs:
+  task-a:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact PR254 composition bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "28a617197d1661380ad176c64bd94cac882df4f2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_capability_composition.py)" = "5305138c9f86f239e867dd338c351e2d314a9685"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+      - name: Execute fresh real multi-step composition task
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          path=root/"canonical/runtime/astra_runtime.py"
+          spec=importlib.util.spec_from_file_location("task_a_runtime",path)
+          runtime=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=runtime
+          spec.loader.exec_module(runtime)
+
+          goal=(
+            "Assess consistency using "
+            "https://api.github.com/repos/python/cpython and "
+            "https://api.github.com/repositories/81598961."
+          )
+          mission={
+            "mission_id":"GROUNDED-COMPOSITION-REAL-TASK-A-CPYTHON-API-20260930",
+            "goal":goal,
+          }
+          step={
+            "adapter":"goal",
+            "goal_ref":"goal",
+            "verified_initial_facts":["network.http.available"],
+            "max_controller_actions":12,
+          }
+          result=runtime.run_goal(step,mission)
+          assert result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN",result
+          assert result.get("planner_model_last") is None,result
+          gc=result.get("grounding_composition") or {}
+          assert gc.get("route")=="THIN_TARGET_EFFECT_ADAPTER_PLUS_MULTI_VERIFIED_CAPABILITY_V1",gc
+          assert gc.get("target_effects")==["knowledge.assessment.available"],gc
+          assert gc.get("model_dependency_count")==0,gc
+          assert gc.get("external_capability_acquisition_attempted") is False,gc
+          pg=result.get("proposal_generation") or {}
+          expanded=pg.get("expanded_instance_plan") or []
+          assert len(expanded)==3,expanded
+          assert expanded[-1].endswith("knowledge-consistency-assess"),expanded
+          assert sum("knowledge-json-fetch-external" in x for x in expanded)==2,expanded
+          plan=(result.get("capability_plan") or {}).get("plan") or []
+          assert plan==["knowledge.json.fetch.external","knowledge.consistency.assess"],plan
+          assessment_steps=[
+            item for item in (result.get("trace") or [])
+            if isinstance(item,dict)
+            and isinstance(item.get("result"),dict)
+            and item["result"].get("type")=="assess_knowledge_consistency"
+          ]
+          assert len(assessment_steps)==1,assessment_steps
+          assessment_path=assessment_steps[0]["result"]["output_path"]
+          evidence={
+            "schema":"PROJECT_BRAIN_GROUNDED_COMPOSITION_REAL_TASK_A_V1",
+            "goal":goal,
+            "result":result,
+            "assessment_path":assessment_path,
+            "model_dependency_count":0,
+            "external_supplier_discovery_attempted":False,
+            "incremental_spend_usd":0,
+          }
+          pathlib.Path("GROUNDED_COMPOSITION_TASK_A.json").write_text(
+            json.dumps(evidence,indent=2,sort_keys=True)+"\n",
+            encoding="utf-8",
+          )
+          PY
+      - name: Independently re-fetch and verify assessment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib,urllib.request,hashlib
+          urls=[
+            "https://api.github.com/repos/python/cpython",
+            "https://api.github.com/repositories/81598961",
+          ]
+          vals=[]
+          finals=[]
+          for url in urls:
+              req=urllib.request.Request(url,headers={
+                  "User-Agent":"ProjectBrain-Independent-Composition-Verifier/1",
+                  "Accept":"application/vnd.github+json",
+              })
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  raw=r.read()
+                  assert 200 <= int(r.status) < 300
+                  vals.append(json.loads(raw.decode("utf-8")))
+                  finals.append(r.geturl())
+          expected="SUPPORTED" if vals[0]==vals[1] else "CONFLICTED"
+
+          evidence_path=pathlib.Path("GROUNDED_COMPOSITION_TASK_A.json")
+          evidence=json.loads(evidence_path.read_text(encoding="utf-8"))
+          assessment_path=pathlib.Path(evidence["assessment_path"])
+          assessment=json.loads(assessment_path.read_text(encoding="utf-8"))
+          assert assessment["status"]==expected,(assessment["status"],expected)
+          assert assessment["evidence_count"]==2,assessment
+          assert assessment["fresh_evidence_count"]==2,assessment
+          assert assessment["distinct_fresh_source_identities"]==2,assessment
+          assert assessment["invalid"]==[],assessment["invalid"]
+
+          trace=evidence["result"]["trace"]
+          fetches=[
+            item["result"] for item in trace
+            if isinstance(item,dict)
+            and isinstance(item.get("result"),dict)
+            and item["result"].get("type")=="fetch_json_knowledge"
+          ]
+          assert len(fetches)==2,fetches
+          assert {x["final_url"] for x in fetches}==set(finals),(fetches,finals)
+
+          evidence["independent_verification"]={
+            "verified":True,
+            "producer_independent":True,
+            "fresh_refetch_count":2,
+            "expected_status":expected,
+            "observed_status":assessment["status"],
+            "route_values_equal":vals[0]==vals[1],
+            "source_urls":urls,
+            "assessment_sha256":hashlib.sha256(assessment_path.read_bytes()).hexdigest(),
+          }
+          evidence_path.write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n")
+          print("TASK_A_VERIFIED",expected)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: grounded-composition-real-task-a-cpython-api
+          path: |
+            GROUNDED_COMPOSITION_TASK_A.json
+            canonical/astra_runtime/evidence/GROUNDED-COMPOSITION-REAL-TASK-A-CPYTHON-API-20260930__BOUND_CAPABILITY_GROUNDING.json
+            canonical/astra_runtime/evidence/GROUNDED-COMPOSITION-REAL-TASK-A-CPYTHON-API-20260930__GROUNDED_CAPABILITY_COMPOSITION.json
+            canonical/astra_runtime/tmp/*.json
