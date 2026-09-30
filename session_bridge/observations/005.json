@@ -1,0 +1,10 @@
+{
+  "command_sha256": "62b888242254385187798df6d477a1dec16a3825ea60c120b9576f8181768945",
+  "duration_sec": 0.066,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20261001-v2",
+  "stderr": "/usr/local/bin/python3: No module named pytest\n",
+  "stdout": "",
+  "step": 5
+}
