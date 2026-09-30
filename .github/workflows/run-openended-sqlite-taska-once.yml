@@ -1,9 +1,8 @@
-name: Run Genuine Open-Ended SQLite Task A Once
+name: Run Canonical SQLite Parent Once
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
     paths:
       - ARM_OPENENDED_SQLITE_TASKA_20260930_V1
 
@@ -16,24 +15,30 @@ jobs:
     timeout-minutes: 15
     env:
       ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - name: Refresh Ubuntu package metadata
         run: sudo apt-get update
-      - name: Execute frozen genuine open-ended Task A exactly once
+      - name: Require explicit one-shot arm marker
+        run: test -f ARM_OPENENDED_SQLITE_TASKA_20260930_V1
+      - name: Execute canonical SQLite parent exactly once
         id: task
         continue-on-error: true
-        run: PYTHONPATH=. python run_openended_sqlite_taska_once.py
-      - name: Upload terminal Task A evidence
+        run: python run_openended_sqlite_taska_once.py
+      - name: Upload terminal evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: openended-sqlite-taska-terminal
           path: openended-sqlite-taska-terminal.json
           if-no-files-found: error
-      - name: Preserve semantic failure
+      - name: Preserve terminal semantic failure
         if: steps.task.outcome != 'success'
         run: exit 1
