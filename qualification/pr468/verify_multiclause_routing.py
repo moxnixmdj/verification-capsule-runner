@@ -3,7 +3,7 @@ import hashlib, importlib.util, pathlib
 
 ROOT=pathlib.Path(__file__).resolve().parent
 EXPECTED_GROUNDING_BLOB="25738e959dec0be46058e4bd7720fb8ed1b599bb"
-EXPECTED_BROAD_BLOB="6eb2b20e860da466ad8b793c20060ded1fbf389b"
+EXPECTED_BROAD_BLOB="1efaec4ba51ecb5c40072b3190853f4de89d8f77"
 
 def git_blob_sha(path):
     raw=path.read_bytes()
