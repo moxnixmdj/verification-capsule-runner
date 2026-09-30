@@ -1,0 +1,39 @@
+name: Run PR301 Parent Demography Task B Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_PR301_PARENT_DEMOGRAPHY_TASKB_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen PR301 parent Task B exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_pr301_parent_demography_taskb_once.py
+      - name: Upload terminal parent Task B evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr301-parent-demography-taskb-terminal
+          path: pr301-parent-demography-taskb-report.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
