@@ -16,10 +16,22 @@ _BROAD_PREFIX=re.compile(
     r"^(?:determine|assess|evaluate|investigate|estimate|quantify|compare|analy[sz]e)\b",
     re.IGNORECASE,
 )
+_GENERIC_METHOD_RUN=re.compile(
+    r"\b(?:run|execute)\s+(?:(?:an?|the)\s+)?"
+    r"(?:(?:zero[- ]cost|no[- ]cost|free)\s+)?"
+    r"(?:(?:independently|autonomously)\s+(?:chosen|selected)\s+)?"
+    r"(?:verification|validation|evaluation|analysis|research|checking)\s+"
+    r"(?:method|approach|procedure|strategy|check)\b"
+    r"(?=\s*(?:[.,;:]|$|\band\b))",
+    re.IGNORECASE,
+)
 _EXPLICIT_ACTION=re.compile(
-    r"\b(?:using\s+https?://|https?://|save\s+.+?\.(?:json|csv|md|txt)|"
-    r"extract\s+json\s+path|create\s+.+?\.(?:json|csv|md|txt)|"
-    r"run\s+|execute\s+|open\s+https?://)\b",
+    r"(?:\busing\s+https?://|\bhttps?://|"
+    r"\bsave\s+.+?\.(?:json|csv|md|txt)|"
+    r"\bextract\s+json\s+path|"
+    r"\bcreate\s+.+?\.(?:json|csv|md|txt)|"
+    r"\b(?:run|execute)\s+\S+|"
+    r"\bopen\s+https?://)",
     re.IGNORECASE,
 )
 
@@ -98,7 +110,8 @@ def decompose(objective):
             "roles":[],
             "model_dependency_count":0,
         }
-    if _EXPLICIT_ACTION.search(text):
+    recipe_text=_GENERIC_METHOD_RUN.sub("",text)
+    if _EXPLICIT_ACTION.search(recipe_text):
         return {
             "schema":SCHEMA,
             "status":"UNSUPPORTED",
