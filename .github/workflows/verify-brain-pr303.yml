@@ -1,0 +1,14 @@
+name: Verify Brain PR303 Governance
+on:
+  pull_request:
+    paths:
+      - 'brain_pr303/**'
+      - '.github/workflows/verify-brain-pr303.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain PR303 bytes
+        run: python3 brain_pr303/verify_pr303.py
