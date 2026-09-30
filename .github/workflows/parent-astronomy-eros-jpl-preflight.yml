@@ -1,0 +1,49 @@
+name: Parent Astronomy Eros JPL Source Preflight
+on:
+  push:
+    branches:
+      - probe/parent-astronomy-eros-jpl-20260930-v1
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact current execution bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "b446257ca01ee858ada2fb52d0c7925f2ea4391f"
+          test "$(git hash-object canonical/runtime/bound_capabilities/jq_query.py)" = "f0b644274c1ffbff7ea5adb81e07e00435d2ac4c"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+      - name: Preflight frozen JPL source without computing task answer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, urllib.request
+          url="https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=Eros&full-prec=true"
+          req=urllib.request.Request(url,headers={"User-Agent":"ProjectBrain-Astronomy-Preflight/1"})
+          with urllib.request.urlopen(req,timeout=30) as r:
+              assert 200 <= int(r.status) < 300
+              data=json.loads(r.read().decode("utf-8"))
+          obj=data.get("object") or {}
+          assert "Eros" in str(obj.get("fullname") or obj.get("des") or obj), obj
+          orbit=data.get("orbit") or {}
+          elements=orbit.get("elements")
+          assert isinstance(elements,list) and len(elements)>7
+          e6=elements[6]; e7=elements[7]
+          assert str(e6.get("name") or "").lower() in {"a","a."} or str(e6.get("label") or "").lower().startswith("semi"), e6
+          assert str(e7.get("name") or "").lower() in {"per","p"} or "period" in str(e7.get("label") or "").lower(), e7
+          assert str(e6.get("units") or "").lower()=="au", e6
+          assert str(e7.get("units") or "").lower()=="d", e7
+          assert e6.get("value") not in (None,"")
+          assert e7.get("value") not in (None,"")
+          print("JPL_EROS_FROZEN_SOURCE_PREFLIGHT_PASS")
+          PY
