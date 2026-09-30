@@ -1,0 +1,79 @@
+name: Run Frozen SQLite Open-Ended Task A via Canonical ASTRA CLI Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_SQLITE_OPENENDED_CANONICAL_CLI_TASKA_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  execute-canonical-cli-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Fail-closed carrier closure preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          check_blob() {
+            local path="$1"
+            local expected="$2"
+            local observed
+            observed="$(git hash-object "$path")"
+            printf '%s  %s\n' "$observed" "$path"
+            test "$observed" = "$expected"
+          }
+          check_blob canonical/tasks/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json 5d09c9eebcb09612525836e7926bdf297f4bad32
+          check_blob canonical/astra_runtime/missions/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json c7fa8a9303fdbff1065892d8f8b9b8e540378eea
+          check_blob canonical/runtime/astra_runtime.py 6cb668bcc5a00665ea541fc5b6adf494f37ad1c9
+          check_blob canonical/runtime/goal_compiler.py 4b61fe911471854ec15c7900816f61e9e55f602e
+          check_blob canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json a22761070ba4d45d3eae7b684d5c66cfb0601669
+          check_blob canonical/runtime/capability_planner.py 64ff65cb184f50d3336326f33cccfcc0a53301a8
+          check_blob canonical/runtime/capability_proposal_generators.py 71f2bbfda66a65d8d75e035b9ae073671ebd56e2
+          check_blob canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py 6385b469f1287c971217dcac58af2ffebd81f9fd
+          check_blob canonical/runtime/bound_capabilities/grounded_executable_composition.py 8328e12804f64cab1c0d9509966cb1d2d8fb1f82
+          check_blob canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py ab9f6fc19937d23edb24dc26a2affed96cea0a9a
+
+      - name: Refresh zero-cost Ubuntu capability catalog
+        run: sudo apt-get update
+
+      - name: Execute frozen parent Task A exactly once through canonical ASTRA CLI
+        id: task
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -uo pipefail
+          mission='canonical/astra_runtime/missions/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json'
+          set +e
+          python canonical/runtime/astra_runtime.py "$mission" 2>&1 | tee sqlite-openended-canonical-cli-terminal.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "$rc" > sqlite-openended-canonical-cli-returncode.txt
+          exit "$rc"
+
+      - name: Upload terminal producer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlite-openended-canonical-cli-terminal
+          path: |
+            sqlite-openended-canonical-cli-terminal.log
+            sqlite-openended-canonical-cli-returncode.txt
+            canonical/astra_runtime/state/PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001.json
+            canonical/astra_runtime/evidence/PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001*.json
+          if-no-files-found: warn
+
+      - name: Preserve first causal failure
+        if: steps.task.outcome != 'success'
+        run: exit 1
