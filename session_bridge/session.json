@@ -1,0 +1,15 @@
+{
+  "session_id": "nextjs-performance-20260930-v1",
+  "task": "nextjs-performance",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "observation_branch": "bridge-observations/nextjs-performance-20260930-v1",
+  "session_timeout_sec": 9000,
+  "max_steps": 80,
+  "poll_interval_sec": 3,
+  "command_timeout_sec": 600,
+  "build_timeout_sec": 1200,
+  "verifier_build_timeout_sec": 1200,
+  "verifier_timeout_sec": 900,
+  "observation_char_limit": 120000,
+  "verifier_output_char_limit": 120000
+}
