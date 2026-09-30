@@ -1,0 +1,22 @@
+{
+  "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+  "session_id": "EXAMPLE_SESSION_ID",
+  "submission_authorized": false,
+  "known_relevant_failures": [
+    "REMOVE_ALL_BEFORE_AUTHORIZATION"
+  ],
+  "acceptance_criteria": [
+    {
+      "criterion": "EXPLICIT_TASK_CRITERION",
+      "status": "PENDING",
+      "evidence": "COMMAND_OR_TEST_EVIDENCE"
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "TASK_RELEVANT_VERIFICATION_COMMAND",
+      "exit_code": 1
+    }
+  ],
+  "authorized_by": "CENTRAL_INTEGRATOR_AFTER_COMPLETION_AUDIT"
+}
