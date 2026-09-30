@@ -5,14 +5,121 @@ on:
       - qualify/open-research-qualified-source-chain-20260930-v1
 permissions:
   contents: read
+  issues: write
 jobs:
   qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.13'
-      - name: Run qualified source frontend tests
+      - name: Verify exact qualification bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/qualified_source_frontend.py)" = "686101e731a6aa7ceced688ca51acab755356e37"
+          test "$(git hash-object canonical/tests/test_qualified_source_frontend.py)" = "f85d1d1b3d5a72be42edaa1459fa6a4535644e89"
+          test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "6eb2b20e860da466ad8b793c20060ded1fbf389b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "816c37742b23739e74a9455a97dd6aea9e767206"
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "1dc26e68d18010b66211d1d83f7b2024c8ad1fcf"
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_authority_binding_wikidata.py)" = "a293ffae6e9f62b6087aab804718bc30a92b2105"
+          test "$(git hash-object canonical/runtime/bound_capabilities/official_primary_relevance_verify.py)" = "7adeddec64cb99c14d6ab364a922be3752addbf0"
+      - name: Run authored composition tests
         run: python -m unittest -v canonical.tests.test_qualified_source_frontend
+      - name: Run fresh live WCAG source-chain qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys,urllib.parse,urllib.request
+
+          root=pathlib.Path(".").resolve()
+          bound=root/"canonical/runtime/bound_capabilities"
+
+          def load(name):
+              p=bound/(name+".py")
+              spec=importlib.util.spec_from_file_location("qual_"+name,p)
+              mod=importlib.util.module_from_spec(spec)
+              sys.modules[spec.name]=mod
+              spec.loader.exec_module(mod)
+              return mod
+
+          decomposer=load("broad_objective_decompose")
+          frontend=load("qualified_source_frontend")
+
+          objective=(
+              "Assess whether WCAG 2.2 defines normative requirements for accessible "
+              "web content and conformance."
+          )
+          decomposition=decomposer.decompose(objective)
+          assert decomposition["status"]=="DECOMPOSED",decomposition
+
+          out=frontend.run(objective,decomposition,limit=20,timeout=20)
+          pathlib.Path("qualified-source-chain-report.json").write_text(
+              json.dumps(out,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+
+          assert out["status"]=="QUALIFIED_SOURCE_AVAILABLE",out
+          assert out["qualified_source_count"]>=1,out
+          assert out["evidence_sufficiency_verification"]=="NOT_PERFORMED",out
+          assert out["next_required_capability"]=="MODEL_INDEPENDENT_EVIDENCE_ACQUISITION_FROM_QUALIFIED_SOURCE",out
+          assert out["model_dependency_count"]==0,out
+          assert out["incremental_spend_usd"]==0,out
+
+          urls=[x["candidate"]["url"] for x in out["qualified_sources"]]
+          w3=[u for u in urls if (urllib.parse.urlsplit(u).hostname or "").lower().endswith("w3.org")]
+          assert w3,("NO_W3C_QUALIFIED_SOURCE",urls)
+
+          # Producer-independent live content check on at least one qualified W3C source.
+          checked=False
+          for url in w3:
+              req=urllib.request.Request(url,headers={"User-Agent":"ProjectBrain-QualifiedSourceChain-Independent/1.0"})
+              try:
+                  with urllib.request.urlopen(req,timeout=25) as r:
+                      raw=r.read(1_500_000).decode("utf-8","replace").lower()
+              except Exception:
+                  continue
+              if (
+                  "web content accessibility guidelines" in raw
+                  and ("conformance" in raw or "success criteria" in raw)
+              ):
+                  checked=True
+                  break
+          assert checked,("INDEPENDENT_W3C_CONTENT_CHECK_FAILED",w3)
+
+          print(json.dumps({
+              "schema":"PROJECT_BRAIN_QUALIFIED_SOURCE_CHAIN_LIVE_ORACLE_V1",
+              "status":"PASS",
+              "objective":objective,
+              "qualified_source_count":out["qualified_source_count"],
+              "qualified_urls":urls,
+              "next_required_capability":out["next_required_capability"],
+              "model_dependency_count":0,
+              "incremental_spend_usd":0,
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: qualified-source-chain-report
+          path: qualified-source-chain-report.json
+          if-no-files-found: ignore
+      - name: Emit durable PASS receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="QUALIFICATION_PASS_OPEN_RESEARCH_QUALIFIED_SOURCE_CHAIN_20260930_V1"
+          body="PASS. Head SHA: $SHA. Workflow run: $RUN_ID. Exact qualified-source composition plus canonical discovery/provenance and independently qualified P856 authority + official-primary-relevance gates passed a fresh live WCAG 2.2 objective. At least one live w3.org source was discovered, retrieval-provenance verified, authority-bound, classified as first-party technical documentation/specification, directly objective-relevant, and independently re-fetched. Evidence sufficiency remains UNVERIFIED by design. Next technical capability: MODEL_INDEPENDENT_EVIDENCE_ACQUISITION_FROM_QUALIFIED_SOURCE. model_dependency_count=0; incremental_spend_usd=0."
+          existing=$(gh api "repos/$REPO/issues?state=all&per_page=100" --jq '.[] | select(.title=="'"$title"'") | .number' | head -n1 || true)
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$REPO/issues/$existing" -f body="$body" >/dev/null
+          else
+            gh api --method POST "repos/$REPO/issues" -f title="$title" -f body="$body" >/dev/null
+          fi
