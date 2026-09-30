@@ -17,7 +17,7 @@ jobs:
       - name: Verify exact PR429 blobs
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py)" = "a68f8c08e5bc8f42178b21e1ff65ed0fa44c73b9"
+          test "$(git hash-object canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py)" = "d66a7eb30774f66160b698d8082947776888293d"
           test "$(git hash-object canonical/tests/test_generic_evidence_claim_relation.py)" = "590a1e50f11bc2903b56d41a00c5354ec2501c44"
       - name: Run deterministic fail-closed regressions
         run: python canonical/tests/test_generic_evidence_claim_relation.py
