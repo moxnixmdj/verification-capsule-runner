@@ -1,0 +1,10 @@
+{
+  "command_sha256": "7eaf67cbca559fb98f59112d2bf834eed21a18b15c8e6f6e81272273e1b5c260",
+  "duration_sec": 0.2,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "bun-sourcemap-leak-20260930-v2",
+  "stderr": "$ bun scripts/release.ts\n$ bun scripts/release.ts\n",
+  "stdout": "MIXED_MAP_REDACTION_PASS\nMANIFEST_AND_LEAK_SCAN_PASS\nFINAL_PROSPECTIVE_PROBES_PASS\n",
+  "step": 1
+}
