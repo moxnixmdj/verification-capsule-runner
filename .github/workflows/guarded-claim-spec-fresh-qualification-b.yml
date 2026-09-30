@@ -1,0 +1,37 @@
+name: Guarded Claim Spec Fresh Qualification B
+
+on:
+  push:
+    branches:
+      - guarded/claim-spec-fresh-qualification-b-20260930-v1
+
+permissions:
+  contents: write
+
+jobs:
+  guarded-qualification-b:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Guarded admission and fresh Qualification B
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python execution_guard/github_actions_guarded_run_live.py \
+            --plan guarded_claim_spec_fresh_qualification_b_plan.json \
+            --receipt guarded-claim-spec-fresh-qualification-b-launch-receipt.json
+      - name: Upload guarded Qualification B evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-claim-spec-fresh-qualification-b
+          path: |
+            guarded-claim-spec-fresh-qualification-b-launch-receipt.json
+            guarded-claim-spec-fresh-qualification-b-summary.json
+            guarded-claim-spec-fresh-qualification-b-report.json
+          if-no-files-found: warn
