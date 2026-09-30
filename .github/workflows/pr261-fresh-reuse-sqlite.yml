@@ -1,0 +1,162 @@
+name: PR261 Fresh Reuse - SQLite Artifact
+on:
+  push:
+    branches:
+      - verify/pr261-fresh-reuse-sqlite-20260930
+permissions:
+  contents: read
+jobs:
+  task:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact merged PR261 execution bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "c19466687fd2d17e45dc6ba263b42301bed432d1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
+      - name: Create fresh source records
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p canonical/astra_runtime/tmp
+          cat > canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE_RECORDS.json <<'JSON'
+          [
+            {"name":"Ada","score":7},
+            {"name":"Linus","score":9},
+            {"name":"Grace","score":8}
+          ]
+          JSON
+      - name: Execute materially distinct fresh reuse
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          path=root/"canonical/runtime/astra_runtime.py"
+          spec=importlib.util.spec_from_file_location("pr261_sqlite_fresh_runtime",path)
+          runtime=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=runtime
+          spec.loader.exec_module(runtime)
+
+          source="canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE_RECORDS.json"
+          db="canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE.db"
+          goal=(
+              f"Create a SQLite database table from JSON records in {source} and save it to {db}. "
+              f"Independently verify the SQLite table in {db} against JSON records in {source}."
+          )
+          mission={
+              "mission_id":"PR261-FRESH-REUSE-SQLITE-20260930",
+              "goal":goal,
+          }
+          step={
+              "adapter":"goal",
+              "goal_ref":"goal",
+              "verified_initial_facts":[],
+              "max_controller_actions":12,
+          }
+          result=runtime.run_goal(step,mission)
+          assert result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN",result
+          assert result.get("planner_model_last") is None,result
+          assert result.get("composition_mode")=="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH",result
+          assert result.get("model_dependency_count")==0,result
+
+          grounding_path=pathlib.Path(result["grounding_evidence_path"])
+          composition_path=pathlib.Path(result["composition_evidence_path"])
+          grounding=json.loads(grounding_path.read_text(encoding="utf-8"))
+          composition=json.loads(composition_path.read_text(encoding="utf-8"))
+          assert grounding["input_contract_bindability_enforced"] is True,grounding
+          assert grounding["unresolved_clause_indexes"]==[],grounding
+          assert composition["composition_ready"] is True,composition
+          assert composition["verified_initial_facts"]==[],composition
+          assert composition["required_external_initials"]==[],composition
+          assert composition["initial_facts"]==[],composition
+
+          trace=result.get("trace") or []
+          invocations=[
+              x["result"] for x in trace
+              if isinstance(x,dict) and isinstance(x.get("result"),dict)
+          ]
+          types=[x.get("capability_id") for x in invocations]
+          assert "sqlite.table.create_from_json_records" in types,types
+          assert "sqlite.table.verify_against_json_records" in types,types
+
+          evidence={
+              "schema":"PROJECT_BRAIN_PR261_FRESH_REUSE_SQLITE_V1",
+              "goal":goal,
+              "result":result,
+              "grounding":grounding,
+              "composition":composition,
+              "source_path":source,
+              "sqlite_path":db,
+              "model_dependency_count":0,
+              "incremental_spend_usd":0,
+          }
+          pathlib.Path("PR261_FRESH_REUSE_SQLITE.json").write_text(
+              json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+      - name: Independently read SQLite and compare with source JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,sqlite3
+          source=pathlib.Path("canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE_RECORDS.json")
+          db=pathlib.Path("canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE.db")
+          expected=json.loads(source.read_text(encoding="utf-8"))
+          assert db.is_file() and db.stat().st_size>0
+          con=sqlite3.connect(db)
+          try:
+              tables=[r[0] for r in con.execute(
+                  "select name from sqlite_master where type='table' and name not like 'sqlite_%' order by name"
+              )]
+              assert len(tables)==1,tables
+              table=tables[0]
+              cols=[r[1] for r in con.execute(f'pragma table_info("{table}")')]
+              assert set(cols)=={"name","score"},cols
+              rows=[
+                  dict(zip(cols,row))
+                  for row in con.execute(
+                      f'select {",".join(chr(34)+c+chr(34) for c in cols)} from "{table}"'
+                  )
+              ]
+          finally:
+              con.close()
+          norm=lambda xs: sorted(xs,key=lambda x:(x["name"],int(x["score"])))
+          assert norm(rows)==norm(expected),(rows,expected)
+
+          ep=pathlib.Path("PR261_FRESH_REUSE_SQLITE.json")
+          evidence=json.loads(ep.read_text(encoding="utf-8"))
+          evidence["independent_verification"]={
+              "verified":True,
+              "producer_independent":True,
+              "table":table,
+              "row_count":len(rows),
+              "source_sha256":hashlib.sha256(source.read_bytes()).hexdigest(),
+              "sqlite_sha256":hashlib.sha256(db.read_bytes()).hexdigest(),
+          }
+          ep.write_text(json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print("PR261_FRESH_REUSE_SQLITE_VERIFIED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr261-fresh-reuse-sqlite
+          path: |
+            PR261_FRESH_REUSE_SQLITE.json
+            canonical/astra_runtime/evidence/PR261-FRESH-REUSE-SQLITE-20260930__BOUND_CAPABILITY_GROUNDING.json
+            canonical/astra_runtime/evidence/PR261-FRESH-REUSE-SQLITE-20260930__GROUNDED_EXECUTABLE_COMPOSITION.json
+            canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE_RECORDS.json
+            canonical/astra_runtime/tmp/PR261_FRESH_REUSE_SQLITE.db
