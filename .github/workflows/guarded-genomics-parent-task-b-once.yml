@@ -1,8 +1,9 @@
 name: Guarded Genomics Parent Task B Once
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - execute/guarded-genomics-parent-b-20260930-v1
     paths:
       - ARM_GUARDED_GENOMICS_PARENT_TASK_B_20260930_005
 
@@ -16,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 1
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
