@@ -283,16 +283,25 @@ def main():
             return 0
 
         if command.strip() == "echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT":
-            auth_path = ROOT / "session_bridge" / "terminal_authorization.json"
             blocked_reason = None
             auth = None
-            if not auth_path.exists():
-                blocked_reason = "TERMINAL_AUTHORIZATION_MISSING"
+            # Authorization is deliberately fetched from the live control branch,
+            # just like commands. The session may only be authorized after its
+            # runtime evidence exists; the initial checkout must not freeze a
+            # permanently-missing authorization file.
+            cp = git("fetch", "--quiet", "origin", CONFIG["control_branch"], check=False)
+            if cp.returncode != 0:
+                blocked_reason = "TERMINAL_AUTHORIZATION_CONTROL_FETCH_FAILED"
             else:
-                try:
-                    auth = json.loads(auth_path.read_text(encoding="utf-8"))
-                except Exception:
-                    blocked_reason = "TERMINAL_AUTHORIZATION_INVALID_JSON"
+                rel = "session_bridge/terminal_authorization.json"
+                cp = git("show", f"FETCH_HEAD:{rel}", check=False)
+                if cp.returncode != 0:
+                    blocked_reason = "TERMINAL_AUTHORIZATION_MISSING"
+                else:
+                    try:
+                        auth = json.loads(cp.stdout)
+                    except Exception:
+                        blocked_reason = "TERMINAL_AUTHORIZATION_INVALID_JSON"
 
             if blocked_reason is None:
                 if auth.get("schema") != "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1":
