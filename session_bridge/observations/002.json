@@ -1,0 +1,10 @@
+{
+  "command_sha256": "3b0608b6a32d68f1b92e8062f9a5fac70a58f3144f7cb74416d83b0076e5e066",
+  "duration_sec": 10.224,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20261001-v2",
+  "stderr": "%3|1790804166.950|FAIL|rdkafka#consumer-1| [thrd:kafka:9092/bootstrap]: kafka:9092/bootstrap: Failed to resolve 'kafka:9092': Name or service not known (after 10ms in state CONNECT)\n%3|1790804168.947|FAIL|rdkafka#consumer-1| [thrd:kafka:9092/bootstrap]: kafka:9092/bootstrap: Failed to resolve 'kafka:9092': Name or service not known (after 7ms in state CONNECT, 1 identical error(s) suppressed)\nTraceback (most recent call last):\n  File \"<stdin>\", line 4, in <module>\ncimpl.KafkaException: KafkaError{code=_TRANSPORT,val=-195,str=\"Failed to get metadata: Local: Broker transport failure\"}\n",
+  "stdout": "Wed Sep 30 21:36:06 UTC 2026\nunix:///tmp/supervisor.sock no such file\n\n--- worker stdout ---\n\n--- worker stderr ---\n\n--- env ---\n\n--- kafka metadata ---\n",
+  "step": 2
+}
