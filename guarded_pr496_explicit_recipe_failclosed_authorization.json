@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "brain_pr": 496,
+  "brain_head_sha": "d472da3082c8a26d16b91aad0997cb369ee5180e",
+  "purpose": "EXACT_BYTE_GUARDED_INDEPENDENT_ADVERSARIAL_QUALIFICATION",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "prior_parent_task": "PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005",
+  "prior_parent_task_execution_count": 0,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0,
+  "runtime_identity_semantics": "SHA256(broad_objective_decompose.py + NUL + plain_goal_bound_grounding.py)",
+  "task_identity_semantics": "SHA256(independent verifier bytes)"
+}
