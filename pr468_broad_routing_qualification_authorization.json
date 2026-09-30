@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "qualification_id": "QUALIFY-BRAIN-PR468-BROAD-MULTICLAUSE-ROUTING-20260930-V1",
+  "source_brain_pr": 468,
+  "source_brain_head_sha": "ba4724a93b9479b38a316a8c26ed0a22b55e501f",
+  "source_brain_base_sha": "73f8331cddf556af0daece3aa32998ac992981d0",
+  "causal_gap": "OPEN_ENDED_RESEARCH_BROAD_OBJECTIVE_DECOMPOSITION_NOT_ACTIVATED",
+  "candidate_blobs": {
+    "broad_objective_decompose": "15f5be3c890f14ccd96e232bb94ae92482d2fa18",
+    "plain_goal_bound_grounding": "25738e959dec0be46058e4bd7720fb8ed1b599bb",
+    "authored_regressions": "cf7c5ceab23724ec0d6b5c7ff5462c591da64804"
+  },
+  "scope": "INDEPENDENT_NON_PARENT_QUALIFICATION_ONLY",
+  "parent_task_execution": false,
+  "spent_http2_task_replayed": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0,
+  "success_criterion": "Exact candidate bytes pass authored regressions and independent cross-domain routing/fail-closed checks under atomic guard."
+}
