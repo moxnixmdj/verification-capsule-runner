@@ -1,0 +1,10 @@
+{
+  "command_sha256": "e9ce285c58568ca8ca4b7cc89cdaa6ab37fdc8ffa4519352ac7a99189ccd7aa4",
+  "duration_sec": 0.125,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/tmp/restart_protocol_probe.py\", line 46, in <module>\n    w.partition_states.clear(); w._load_assignment(c,[TP(0,0),TP(1,0)],s)\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/src/worker/worker.py\", line 304, in _load_assignment\n    sorted(rebuilt_needed),\n           ^^^^^^^^^^^^^^\nNameError: name 'rebuilt_needed' is not defined. Did you mean: 'rebuild_needed'?\n",
+  "stdout": "",
+  "step": 7
+}
