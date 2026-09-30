@@ -1,14 +1,15 @@
 {
   "schema": "PROJECT_BRAIN_QUALIFICATION_AUTHORITY_V1",
-  "purpose": "Independent non-parent qualification of exact current Brain PR468 generic broad multi-clause routing repair",
-  "brain_pr": 468,
-  "brain_pr_base": "73f8331cddf556af0daece3aa32998ac992981d0",
-  "brain_pr_head": "ba4724a93b9479b38a316a8c26ed0a22b55e501f",
+  "purpose": "Independent guarded non-parent qualification of exact current Brain PR474 corrected generic broad multi-clause routing repair",
+  "brain_pr": 474,
+  "brain_pr_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "brain_pr_head": "2b2ad1272c28229b3a26fc48f3515138313fd774",
   "candidate_blobs": {
     "canonical/runtime/bound_capabilities/broad_objective_decompose.py": "1efaec4ba51ecb5c40072b3190853f4de89d8f77",
-    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py": "25738e959dec0be46058e4bd7720fb8ed1b599bb"
+    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py": "46e8e7466479ea298c34e5fa682d49c374510ce9"
   },
   "parent_task_execution": false,
+  "spent_parent_task_replay": false,
   "model_dependency_count": 0,
   "incremental_spend_usd": 0
 }

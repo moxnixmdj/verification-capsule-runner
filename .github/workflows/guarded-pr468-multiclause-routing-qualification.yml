@@ -1,10 +1,11 @@
-name: Guarded PR468 Multiclause Routing Qualification
+name: Guarded PR474 Corrected Broad Routing Qualification
 
 on:
   push:
     branches:
       - qualify/brain-pr468-multiclause-routing-v1
     paths:
+      - qualification/pr468/**
       - .github/workflows/guarded-pr468-multiclause-routing-qualification.yml
 
 permissions:
@@ -25,22 +26,22 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Generate exact guarded qualification plan
+      - name: Generate exact guarded PR474 qualification plan
         run: python qualification/pr468/generate_guarded_plan.py
 
-      - name: Admit once and independently qualify exact PR468 bytes
+      - name: Admit once and independently qualify exact PR474 bytes
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_pr468_multiclause_routing_plan.json --receipt guarded-pr468-admission.json
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_pr474_multiclause_routing_plan.json --receipt guarded-pr474-admission.json
 
-      - name: Upload exact qualification evidence
+      - name: Upload exact guarded qualification evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: guarded-pr468-multiclause-routing-evidence
+          name: guarded-pr474-corrected-broad-routing-evidence
           path: |
-            guarded-pr468-admission.json
-            guarded_pr468_multiclause_routing_plan.json
+            guarded-pr474-admission.json
+            guarded_pr474_multiclause_routing_plan.json
             qualification/pr468/authority.json
             qualification/pr468/pr468-independent-report.json
           if-no-files-found: warn
