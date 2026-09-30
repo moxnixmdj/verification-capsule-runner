@@ -1,0 +1,10 @@
+{
+  "command_sha256": "c0cf029f8ac7785958320f997ec173f33f5e03c10d04155c3f0ada19a5d64167",
+  "duration_sec": 0.294,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v2-auth",
+  "stderr": "2026-09-30 21:49:25,062 [INFO] worker: assignment ready partitions=[0, 1] committed={0: None, 1: None} checkpoints={0: 100, 1: 200} rebuilt=[0, 1]\n2026-09-30 21:49:25,062 [INFO] worker: assignment ready partitions=[0, 1] committed={0: 100, 1: 200} checkpoints={0: 100, 1: 200} rebuilt=[]\n2026-09-30 21:49:25,063 [INFO] worker: assignment ready partitions=[0] committed={0: 104} checkpoints={0: 105} rebuilt=[]\n2026-09-30 21:49:25,063 [INFO] worker: assignment ready partitions=[0] committed={0: 100} checkpoints={0: 100} rebuilt=[0]\n",
+  "stdout": "===== FINAL FILES =====\nworker/worker.py\n7e16ad8a3a0e981e86450212f82a910b1eb5309a9239f3e48dacb3eaa829a662  worker/worker.py\nworker/config.py\n6796efb6f2ffbe3f7be81127520a9a059e448ba2b8635c3539d7ba565a61a1da  worker/config.py\nworker/requirements.txt\nb5c784f34d35b8e47f92a6208e6e9fa7a0c46fbf8733d5d78b424b09bb37b1a1  worker/requirements.txt\nworker/__init__.py\n63b800abbf1b909111eb7bd75d9c117c981a068f28156699752ad5f896521e0f  worker/__init__.py\nworker/state.py\n765ad076653069b523a10cbab223a76842906808c71a68c01e3bf49b67fa0a98  worker/state.py\n===== COMPILE =====\nPY_COMPILE_PASS\n===== RESTART PROTOCOL =====\nRESTART_PROTOCOL_PROBE_PASS\n===== STATE CORE =====\nSTATE_CORE_FINAL_PASS\n===== FINAL GUARD GREP =====\nFINAL_COMPLETION_GATE_PASS\n",
+  "step": 10
+}
