@@ -1,0 +1,46 @@
+name: Guarded Brain PR537 Refined Provenance Qualification
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+jobs:
+  qualify:
+    if: github.head_ref == 'qualify/brain-pr537-refined-provenance-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Prestart exact frozen Brain candidate closure
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "8f6f80403dc48268ecbf244ae633ea2928204148"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "96c63f6586df27a2bf2f508f1f83215676cdd4c8"
+          test "$(git hash-object canonical/tests/test_scholarly_provenance_admission_materialization.py)" = "f574fe6c9b7444b4938677b00e3ccbb9c485b58d"
+          test "$(git hash-object canonical/action_intents/2026-09-30_REPAIR_METADATA_REFINED_PROVENANCE_PRESERVATION_V1.json)" = "06e1c53a108e6b58f5d9231475f6eeb2701b3268"
+          test "$(git hash-object pr537_refined_provenance_authority.json)" = "1aa3068e9517322edf75faca1135debb8fe141ee"
+          test "$(git hash-object verify_brain_pr537_refined_provenance.py)" = "683a47746a40b10653d4ddd494b85d4345f6a34d"
+          python -m py_compile canonical/runtime/bound_capabilities/open_research_source_frontend.py canonical/tests/test_scholarly_provenance_admission_materialization.py verify_brain_pr537_refined_provenance.py
+      - name: Generate frozen qualification plan
+        run: python generate_brain_pr537_refined_provenance_plan.py
+      - name: Atomically admit and qualify frozen PR537 candidate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan brain_pr537_refined_provenance_plan.json --receipt brain-pr537-refined-provenance-guard-receipt.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brain-pr537-refined-provenance-qualification
+          path: |
+            brain-pr537-refined-provenance-guard-receipt.json
+            brain_pr537_refined_provenance_plan.json
+            pr537-independent-refined-provenance-report.json
+            pr537_refined_provenance_authority.json
+          if-no-files-found: warn
