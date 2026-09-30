@@ -1,0 +1,12 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "QUALIFY_BRAIN_PR496_EXPLICIT_RECIPE_FAILCLOSED_EXACT_BYTES",
+  "brain_pr": 496,
+  "brain_head": "691d5368eb280b42db2b1fdd79381e9f85af29af",
+  "brain_base": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
