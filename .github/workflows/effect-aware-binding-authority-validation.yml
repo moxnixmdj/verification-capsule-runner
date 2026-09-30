@@ -5,7 +5,7 @@ on:
     branches:
       - verify/effect-aware-binding-authority-20260930
     paths:
-      - 'ARM_EFFECT_AWARE_BINDING_AUTHORITY_20260930'
+      - 'ARM_EFFECT_AWARE_BINDING_AUTHORITY_V2_20260930'
 
 permissions:
   contents: read
@@ -24,8 +24,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "34ea2e77567c912209e5b341fd93ad28ab58ee16"
-          test "$(git hash-object canonical/tests/test_goal_compiler_effect_binding_authority.py)" = "5d27d0a48aa540c247a7fbbb0dc916eabceeb7ab"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "ef457d52f4fe3cbe5d18ea5f9b5a8828cd3ca1d8"
+          test "$(git hash-object canonical/tests/test_goal_compiler_effect_binding_authority.py)" = "9ece8bbb0b404e0700e5b4d0c0ca19fef1c66a8d"
           test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
           test "$(git hash-object canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json)" = "496363bf99d3f7c16d99288aed027534a71d796d"
