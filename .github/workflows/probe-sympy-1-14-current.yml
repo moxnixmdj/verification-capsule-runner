@@ -1,0 +1,41 @@
+name: Probe SymPy 1.14 Current
+
+on:
+  push:
+    branches:
+      - probe/sympy-1-14-current-20260930
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Materialize exact inherited supplier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input 'sympy==1.14.0'
+          python - <<'PY'
+          import sympy as sp
+          assert sp.__version__ == '1.14.0'
+          a=sp.Float('7.1', 30)
+          b=sp.Float('7.0', 30)
+          assert bool(sp.Le(sp.Abs(a-b), sp.Float('0.2',30))) is True
+          M=(a+b)/2
+          E=sp.Pow(sp.Integer(10), sp.Float('1.5',30)*M + sp.Float('4.8',30))
+          assert E.evalf(20).is_real
+          label='ABOVE_OR_EQUAL_1E14_J' if bool(sp.Ge(E,sp.Integer(10)**14)) else 'BELOW_1E14_J'
+          print({
+            'sympy_version':sp.__version__,
+            'abs_le':True,
+            'energy_numeric':str(E.evalf(20)),
+            'label':label,
+            'string_sympify_used':False,
+          })
+          PY
