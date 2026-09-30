@@ -1,0 +1,49 @@
+name: Observe Fresh Numerical Stability Parent Terminal V2
+
+on:
+  push:
+    branches:
+      - observe/fresh-numerical-stability-parent-terminal-20260930-v2
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_HEAD: 8a80f9bd07c24670da09bdd1959c6a9ed2d6faac
+      TARGET_WORKFLOW: Execute Fresh Numerical Stability Parent Once
+      TARGET_PR: "109"
+    steps:
+      - name: Publish terminal receipt without touching parent branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          run_id=""
+          for i in $(seq 1 30); do
+            run_id=$(gh api "repos/$repo/actions/runs?head_sha=$TARGET_HEAD&per_page=100" --jq ".workflow_runs[] | select(.name == \"$TARGET_WORKFLOW\") | .id" | head -n1 || true)
+            [ -n "$run_id" ] && break
+            sleep 5
+          done
+          [ -n "$run_id" ] || { echo "target run not found"; exit 2; }
+          for i in $(seq 1 120); do
+            status=$(gh api "repos/$repo/actions/runs/$run_id" --jq '.status')
+            conclusion=$(gh api "repos/$repo/actions/runs/$run_id" --jq '.conclusion // ""')
+            [ "$status" = "completed" ] && break
+            sleep 5
+          done
+          mkdir -p _observe
+          gh run view "$run_id" --log > _observe/run.log 2>&1 || true
+          signal=$(grep -E -m1 'PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1|CAPABILITY_ACQUISITION_REQUIRED|GOAL_ARCHITECTURAL_GAP|NO_COMPATIBLE_|COMPOUND_GOAL_COMPLETE|PARENT_PRESTART_QUALIFIED|PARENT_PRODUCER_FAILED_EXIT_' _observe/run.log || true)
+          signal=$(printf '%s' "$signal" | tr '\n\r' '  ' | cut -c1-1800)
+          receipt=$(printf 'MONITOR_STATUS=%s\nRUN_ID=%s\nCONCLUSION=%s\nFIRST_SIGNAL=%s' "$status" "$run_id" "$conclusion" "$signal")
+          old=$(gh api "repos/$repo/pulls/$TARGET_PR" --jq '.body // ""')
+          clean=$(printf '%s\n' "$old" | sed '/<!-- PARENT_TERMINAL_OBSERVER_BEGIN -->/,/<!-- PARENT_TERMINAL_OBSERVER_END -->/d')
+          new=$(printf '%s\n\n<!-- PARENT_TERMINAL_OBSERVER_BEGIN -->\n%s\n<!-- PARENT_TERMINAL_OBSERVER_END -->\n' "$clean" "$receipt")
+          gh api --method PATCH "repos/$repo/pulls/$TARGET_PR" -f body="$new" >/dev/null
