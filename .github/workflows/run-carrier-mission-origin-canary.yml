@@ -1,0 +1,103 @@
+name: Validate Carrier Mission Origin Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_CARRIER_MISSION_ORIGIN_CANARY_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  carrier-origin-canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute canonical CLI mission-origin canary
+        run: |
+          set +e
+          PYTHONPATH=. python canonical/runtime/astra_runtime.py canonical/astra_runtime/missions/CARRIER_MISSION_ORIGIN_CANARY_20260930_001.json > carrier-origin.stdout 2> carrier-origin.stderr
+          runtime_rc=$?
+          set -e
+          export RUNTIME_RC="$runtime_rc"
+          python - <<'PY'
+          import hashlib, json, os, pathlib, sys
+
+          root=pathlib.Path(".")
+          mid="CARRIER-MISSION-ORIGIN-CANARY-20260930-001"
+          mission_rel="canonical/astra_runtime/missions/CARRIER_MISSION_ORIGIN_CANARY_20260930_001.json"
+          mission=root/mission_rel
+          state_path=root/"canonical"/"astra_runtime"/"state"/f"{mid}.json"
+          discovery_path=root/"canonical"/"astra_runtime"/"evidence"/f"{mid}__PLAIN_GOAL_CAPABILITY_DISCOVERY.json"
+          stdout=(root/"carrier-origin.stdout").read_text(encoding="utf-8",errors="replace")
+          stderr=(root/"carrier-origin.stderr").read_text(encoding="utf-8",errors="replace")
+          evidence_text=""
+          evid_dir=root/"canonical"/"astra_runtime"/"evidence"
+          if evid_dir.is_dir():
+              for p in sorted(evid_dir.glob(mid+"*")):
+                  if p.is_file():
+                      evidence_text += "\n"+p.read_text(encoding="utf-8",errors="replace")
+          state=json.loads(state_path.read_text(encoding="utf-8")) if state_path.is_file() else {}
+          corpus=stdout+"\n"+stderr+"\n"+evidence_text+json.dumps(state,sort_keys=True)
+          forbidden=[
+              "APT_ORIGIN_MISSION_PATH_INVALID",
+              "PYPI_ORIGIN_MISSION_PATH_INVALID",
+          ]
+          origin_errors=[x for x in forbidden if x in corpus]
+          mission_sha=hashlib.sha256(mission.read_bytes()).hexdigest()
+          path_bound=(
+              state.get("mission_path")==mission_rel
+              and state.get("mission_sha256")==mission_sha
+          )
+          acquisition_reached=discovery_path.is_file()
+          passed=path_bound and acquisition_reached and not origin_errors
+          report={
+              "schema":"PROJECT_BRAIN_CARRIER_MISSION_ORIGIN_CANARY_TERMINAL_V1",
+              "mission_id":mid,
+              "parent_task":False,
+              "heldout_gate":False,
+              "source_task_replay":False,
+              "incremental_spend_usd":0,
+              "model_planner_disabled":True,
+              "runtime_returncode":int(os.environ.get("RUNTIME_RC","999")),
+              "mission_path_expected":mission_rel,
+              "mission_path_observed":state.get("mission_path"),
+              "mission_sha256":mission_sha,
+              "state_mission_sha256":state.get("mission_sha256"),
+              "path_bound":path_bound,
+              "autonomous_acquisition_reached":acquisition_reached,
+              "origin_errors":origin_errors,
+              "status":"PASS_CARRIER_MISSION_ORIGIN" if passed else "FAIL_CARRIER_MISSION_ORIGIN",
+              "runtime_status":state.get("status"),
+              "runtime_blocker":state.get("blocker"),
+              "acceptance":"Acquisition reached through canonical CLI with exact mission path identity and without APT/PyPI origin-path-invalid errors.",
+          }
+          pathlib.Path("carrier-mission-origin-canary-terminal.json").write_text(
+              json.dumps(report,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print(json.dumps(report,indent=2,sort_keys=True))
+          if not passed:
+              sys.exit(2)
+          PY
+      - name: Upload terminal canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: carrier-mission-origin-canary-terminal
+          path: |
+            carrier-mission-origin-canary-terminal.json
+            carrier-origin.stdout
+            carrier-origin.stderr
+            canonical/astra_runtime/state/CARRIER-MISSION-ORIGIN-CANARY-20260930-001.json
+            canonical/astra_runtime/evidence/CARRIER-MISSION-ORIGIN-CANARY-20260930-001*
+          if-no-files-found: warn
