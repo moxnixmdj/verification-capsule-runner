@@ -1,0 +1,10 @@
+{
+  "command_sha256": "784f8f52a3300871d7138aba1bf92431a828117732545b044832a048169b6d27",
+  "duration_sec": 0.377,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "",
+  "stdout": "PHONE_ONLY_FB={\"status\":\"rejected\",\"reason\":\"invalid_lead\"}\nGOOGLE_NO_GCLID={\"status\":\"accepted\",\"payload\":{\"fullName\":\"No Gclid\",\"email\":\"nogclid@example.com\",\"phone\":\"+14045550116\",\"service\":\"consultation\",\"city\":\"Denver\",\"state\":\"CO\",\"consent\":true,\"source\":\"google_ads\",\"campaign\":\"c\",\"utmMedium\":\"cpc\",\"submittedAt\":\"2025-01-02T10:00:00Z\",\"status\":\"ready_for_crm\"}}\n",
+  "step": 20
+}
