@@ -1,0 +1,41 @@
+name: Qualify Brain PR474 Corrected Broad Routing
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  qualify-once:
+    if: github.head_ref == 'qualify/brain-pr474-corrected-broad-routing-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Guard-admit exact PR474 qualification once
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan qualification/pr474/guarded_plan.json --receipt qualification/pr474/guard_receipt.json
+      - name: Preserve qualification evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p qualification/pr474/terminal
+          cp qualification/pr474/guarded_plan.json qualification/pr474/terminal/guarded_plan.json
+          cp qualification/pr474/guard_receipt.json qualification/pr474/terminal/guard_receipt.json 2>/dev/null || true
+          git hash-object qualification/pr474/canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py > qualification/pr474/terminal/grounding_blob.txt
+          git hash-object qualification/pr474/canonical/runtime/bound_capabilities/broad_objective_decompose.py > qualification/pr474/terminal/decomposer_blob.txt
+          git hash-object qualification/pr474/canonical/tests/test_broad_objective_semantic_decomposition.py > qualification/pr474/terminal/authored_test_blob.txt
+          git hash-object qualification/pr474/independent_oracle.py > qualification/pr474/terminal/oracle_blob.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: brain-pr474-corrected-broad-routing-qualification
+          path: qualification/pr474/terminal/
+          if-no-files-found: error
