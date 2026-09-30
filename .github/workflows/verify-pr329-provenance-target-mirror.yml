@@ -14,8 +14,8 @@ jobs:
         with:
           python-version: '3.13'
       - name: Run exact PR329 runtime provenance regressions
-        run: python canonical/tests/test_runtime_cognition_provenance.py
+        run: PYTHONPATH=. python canonical/tests/test_runtime_cognition_provenance.py
       - name: Run exact PR329 target mirror regressions
-        run: python canonical/tests/test_frontier_target_mirror.py
+        run: PYTHONPATH=. python canonical/tests/test_frontier_target_mirror.py
       - name: Run exact PR329 target mirror firewall regressions
-        run: python canonical/tests/test_frontier_target_mirror_firewall.py
+        run: PYTHONPATH=. python canonical/tests/test_frontier_target_mirror_firewall.py
