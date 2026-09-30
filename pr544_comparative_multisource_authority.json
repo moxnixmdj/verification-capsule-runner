@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 544,
+  "brain_candidate_head": "0d77d4a65dcf0d96d815c8592ac90f8c40cf34b6",
+  "brain_base": "81f2f813f03b5d80ac2e44080bd19d967bd06463",
+  "scope": "COMPARATIVE_OPERAND_AWARE_MULTI_SOURCE_RETRIEVAL_AND_MERGED_EVIDENCE_BINDING",
+  "qualification_only": true,
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "materials_task_c_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}

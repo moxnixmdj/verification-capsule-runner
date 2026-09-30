@@ -1,0 +1,27 @@
+name: Verify Comparative Operand Multisource V1
+on:
+  push:
+    branches:
+      - verify/comparative-operand-multisource-v1-20260930
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Verify exact candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "f04bbf9182f75ea0b0442e2bc1eca7ce39dcbbfb"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_claim_operand_binding.py)" = "48fd058430d8d361fc75beced567c7b6d1166531"
+          test "$(git hash-object canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py)" = "1da4cca5d8f24892527e496d69d6e0d854220659"
+          test "$(git hash-object canonical/tests/test_comparative_operand_multisource_retrieval.py)" = "5eaa4473633d88c2b9d6d24dbaf9606429995aea"
+          python -m py_compile             canonical/runtime/bound_capabilities/open_research_source_frontend.py             canonical/runtime/bound_capabilities/objective_claim_operand_binding.py             canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py             canonical/tests/test_comparative_operand_multisource_retrieval.py
+      - name: Run adversarial comparative multisource regression
+        run: python canonical/tests/test_comparative_operand_multisource_retrieval.py
