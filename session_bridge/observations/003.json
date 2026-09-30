@@ -1,0 +1,10 @@
+{
+  "command_sha256": "804d758293c8671f1c8b1b9370fc8e455d0c9d0c23088a961877aa85151412e4",
+  "duration_sec": 0.06,
+  "exit_code": 127,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "bun-sourcemap-leak-20260930-v1",
+  "stderr": "/tmp/bridge-command.sh: line 17: node: command not found\n",
+  "stdout": "",
+  "step": 3
+}
