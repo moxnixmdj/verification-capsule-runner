@@ -1,0 +1,10 @@
+{
+  "command_sha256": "4c5a8f466aec891497912d74a4445daa84988b12644164b72c3d2293542268b6",
+  "duration_sec": 0.519,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20261001-v2",
+  "stderr": "2026-09-30 21:46:22,701 [ERROR] worker: processing failed for t1 at 0:0: simulated commit loss\n2026-09-30 21:46:22,834 [INFO] worker: migrating partition 0 state from 10 to committed 17\n2026-09-30 21:46:22,834 [INFO] worker: bootstrapping new group partition 0 through snapshot 12\n",
+  "stdout": "UNIT_TESTS_PASS\nFAULT_TESTS_PASS\nSTARTUP_TESTS_PASS\n",
+  "step": 9
+}
