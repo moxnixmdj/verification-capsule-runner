@@ -9,7 +9,9 @@ observable instead of being guessed.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
+import math
 import pathlib
 import re
 import sys
@@ -20,6 +22,36 @@ class GoalCompilationFailure(RuntimeError):
         self.code=code
         self.detail=detail
         super().__init__(code if detail is None else f"{code}:{detail}")
+
+
+def _load_sibling_runtime_module(filename,module_name):
+    path=pathlib.Path(__file__).resolve().with_name(filename)
+    spec=importlib.util.spec_from_file_location(module_name,path)
+    if spec is None or spec.loader is None:
+        raise GoalCompilationFailure("RUNTIME_HELPER_LOAD_FAILED",filename)
+    module=importlib.util.module_from_spec(spec)
+    sys.modules[module_name]=module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _uses_effect_result_bindings(entry):
+    bindings=(entry or {}).get("proposal_bindings") or {}
+    return isinstance(bindings,dict) and any(
+        isinstance(spec,dict) and spec.get("type")=="effect_result"
+        for spec in bindings.values()
+    )
+
+
+def _planner_capability(planner,cid,entry,action=None):
+    return planner.Capability(
+        str(cid),
+        frozenset(str(x) for x in (entry.get("requires") or [])),
+        frozenset(str(x) for x in (entry.get("provides") or [])),
+        float(entry.get("cost",1)),
+        action or {},
+        frozenset(str(x) for x in (entry.get("result_fields") or [])),
+    )
 
 
 STOPWORDS={
@@ -395,6 +427,12 @@ def _render_template(value, inputs):
     if isinstance(value,list):
         return [_render_template(v,inputs) for v in value]
     if isinstance(value,str):
+        exact=re.fullmatch(r"\$\{input\.([A-Za-z0-9_]+)\}",value)
+        if exact:
+            key=exact.group(1)
+            if key not in inputs:
+                raise GoalCompilationFailure("GOAL_INPUT_BINDING_REQUIRED",key)
+            return json.loads(json.dumps(inputs[key]))
         out=value
         for key,val in inputs.items():
             out=out.replace("${input."+str(key)+"}",str(val))
@@ -572,7 +610,10 @@ def _compile_verified_browser_interaction(goal, registry, root):
     }
 
 
-def _compile_single_goal(goal, registry, root, context_paths=None, future_clauses=None):
+def _compile_single_goal(
+    goal, registry, root, context_paths=None, future_clauses=None,
+    proposal_binder=None, effect_providers=None
+):
     ranked=[]
     for cid,entry in sorted((registry or {}).items()):
         if not isinstance(entry,dict) or entry.get("status")!="VERIFIED_BOUND_CAPABILITY":
@@ -583,8 +624,25 @@ def _compile_single_goal(goal, registry, root, context_paths=None, future_clause
         if score<=0:
             continue
         try:
-            inputs=_bind_inputs(goal,root,entry,context_paths=context_paths,future_clauses=future_clauses)
-        except GoalCompilationFailure:
+            if _uses_effect_result_bindings(entry):
+                if proposal_binder is None:
+                    continue
+                instance_id=(
+                    "direct-"+hashlib.sha256(
+                        (str(cid)+"\n"+str(goal)).encode("utf-8")
+                    ).hexdigest()[:16]
+                )
+                inputs,_=proposal_binder._bind_planned_inputs(
+                    goal,root,sys.modules[__name__],instance_id,cid,entry,
+                    effect_providers or {}
+                )
+            else:
+                inputs=_bind_inputs(
+                    goal,root,entry,
+                    context_paths=context_paths,
+                    future_clauses=future_clauses
+                )
+        except Exception:
             continue
         ranked.append((score,specificity,cid,entry,inputs,evidence))
     ranked.sort(key=lambda x:(-x[0],-x[1],x[2]))
@@ -3425,6 +3483,97 @@ def _compile_authoritative_json_knowledge_fetch(clause,action_cycle):
     }
 
 
+def _compile_two_scalar_absolute_difference_relation(clause,compiled_parts,registry):
+    """Lower one bounded numeric relation onto existing native JSON + jq machinery.
+
+    Supported semantic form is intentionally generic and narrow: determine/check/
+    verify/assess whether two causally prior scalar results differ by at most a
+    literal finite numeric threshold. The compiler never binds domain names or
+    source-specific literals. Runtime jq type checks fail closed on non-numbers.
+    """
+    text=str(clause or "").strip()
+    m=re.match(
+        r"^(?:determine|check|verify|assess)\s+whether\s+(?:the\s+)?two\s+.+?\s+"
+        r"differ\s+by\s+(?:at\s+most|no\s+more\s+than|less\s+than\s+or\s+equal\s+to)\s+"
+        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)$",
+        text,re.IGNORECASE,
+    )
+    if not m:
+        return None
+    threshold=float(m.group(1))
+    if not math.isfinite(threshold) or threshold < 0:
+        raise GoalCompilationFailure("NUMERIC_RELATION_THRESHOLD_INVALID")
+
+    jq_entry=(registry or {}).get("json.query.jq")
+    if not isinstance(jq_entry,dict) or jq_entry.get("status")!="VERIFIED_BOUND_CAPABILITY":
+        raise GoalCompilationFailure("NUMERIC_RELATION_VERIFIED_JQ_REQUIRED")
+
+    producers=[
+        part for part in (compiled_parts or [])
+        if isinstance(part,dict)
+        and part.get("mode") in {"AUTHORITATIVE_JSON_KNOWLEDGE_FETCH","EXTERNAL_JSON_KNOWLEDGE_FETCH"}
+        and isinstance(part.get("result_cycle"),int)
+    ]
+    if len(producers)!=2:
+        raise GoalCompilationFailure(
+            "NUMERIC_RELATION_REQUIRES_EXACTLY_TWO_PRIOR_SCALARS",
+            str(len(producers)),
+        )
+
+    digest=hashlib.sha256(
+        (text+"\\n"+str(producers[0]["result_cycle"])+"\\n"+str(producers[1]["result_cycle"])).encode("utf-8")
+    ).hexdigest()[:12].upper()
+    input_path=f"canonical/astra_runtime/tmp/NUMERIC_RELATION_{digest}_INPUT.json"
+    output_path=f"canonical/astra_runtime/tmp/NUMERIC_RELATION_{digest}_RESULT.json"
+    materialize={
+      "type":"write_json_records",
+      "args":{
+        "output_path":input_path,
+        "fields":["left","right","threshold"],
+        "records":[{
+          "left":{"$result":{"cycle":producers[0]["result_cycle"],"field":"value"}},
+          "right":{"$result":{"cycle":producers[1]["result_cycle"],"field":"value"}},
+          "threshold":threshold,
+        }],
+      },
+      "expect":{"type":"field_equals","field":"verified","value":True},
+    }
+    filt=(
+      '.[0] as $r '
+      '| if (($r.left|type)!="number" or ($r.right|type)!="number" or ($r.threshold|type)!="number") '
+      'then error("NUMERIC_RELATION_INPUT_NOT_NUMBER") '
+      'else (($r.left-$r.right)|fabs) as $d '
+      '| {left:$r.left,right:$r.right,threshold:$r.threshold,'
+      'absolute_difference:$d,relation:"ABS_DIFF_LTE",predicate:($d <= $r.threshold)} end'
+    )
+    compute={
+      "type":"invoke_capability",
+      "args":{
+        "capability_id":"json.query.jq",
+        "input_path":input_path,
+        "filter":filt,
+        "output_path":output_path,
+        "raw_output":False,
+        "require_nonempty":True,
+        "timeout_s":60,
+      },
+      "expect":{"type":"field_equals","field":"output_verified","value":True},
+    }
+    return {
+      "actions":[materialize,compute],
+      "output_path":output_path,
+      "evidence":{
+        "selected_capability":"json.query.jq",
+        "relation":"ABS_DIFF_LTE",
+        "threshold":threshold,
+        "input_path":input_path,
+        "output_path":output_path,
+        "producer_result_cycles":[producers[0]["result_cycle"],producers[1]["result_cycle"]],
+        "model_dependency_count":0,
+      },
+    }
+
+
 def _compile_learned_value_record(clause,compiled_parts):
     text=str(clause or "").strip()
     m=re.match(
@@ -3521,6 +3670,16 @@ def _compile_compound_goal(goal, clauses, registry, root):
     compiled_parts=[]
     context_paths=[]
     consumed_indices=set()
+    proposal_binder=_load_sibling_runtime_module(
+        "capability_proposal_generators.py",
+        "project_brain_direct_compiler_proposal_binder",
+    )
+    planner=_load_sibling_runtime_module(
+        "capability_planner.py",
+        "project_brain_direct_compiler_capability_planner",
+    )
+    effect_providers={}
+    runtime_effect_providers={}
     for index,clause in enumerate(clauses):
         if index in consumed_indices:
             continue
@@ -3566,6 +3725,19 @@ def _compile_compound_goal(goal, clauses, registry, root):
                 "index":index,"subgoal":clause,
                 "mode":"AUTHORITATIVE_JSON_KNOWLEDGE_FETCH",
                 **knowledge_fetch["evidence"],
+            })
+            continue
+
+        numeric_relation=_compile_two_scalar_absolute_difference_relation(
+            clause,compiled_parts,registry
+        )
+        if numeric_relation is not None:
+            actions.extend(numeric_relation["actions"])
+            context_paths.append(numeric_relation["output_path"])
+            compiled_parts.append({
+                "index":index,"subgoal":clause,
+                "mode":"VERIFIED_BOUND_NUMERIC_RELATION",
+                **numeric_relation["evidence"],
             })
             continue
 
@@ -4173,7 +4345,9 @@ def _compile_compound_goal(goal, clauses, registry, root):
             part=_compile_single_goal(
                 clause,registry,root,
                 context_paths=context_paths,
-                future_clauses=clauses[index+1:]
+                future_clauses=clauses[index+1:],
+                proposal_binder=proposal_binder,
+                effect_providers=effect_providers,
             )
         except GoalCompilationFailure as exc:
             raise GoalCompilationFailure(
@@ -4201,21 +4375,39 @@ def _compile_compound_goal(goal, clauses, registry, root):
                     "GOAL_VERIFICATION_CAPABILITY_REQUIRED",
                     json.dumps({"index":index,"subgoal":clause,"rejected_capability":cid},sort_keys=True)
                 )
-        action=_render_template(entry["action_template"],part["inputs"])
+        runtime_inputs=part["inputs"]
+        if _uses_effect_result_bindings(entry):
+            consumer=_planner_capability(planner,cid,entry)
+            try:
+                runtime_inputs=planner._resolve_effect_bindings(
+                    part["inputs"],consumer,runtime_effect_providers
+                )
+            except Exception as exc:
+                raise GoalCompilationFailure(
+                    "GOAL_CAUSAL_BINDING_LOWERING_FAILED",
+                    str(cid)+":"+type(exc).__name__+":"+str(exc),
+                ) from exc
+        action=_render_template(entry["action_template"],runtime_inputs)
         actions.append(action)
-        for key,value in part["inputs"].items():
+        for key,value in runtime_inputs.items():
             if (
                 isinstance(key,str) and key.endswith("_path")
                 and isinstance(value,str) and pathlib.Path(value).suffix
                 and value not in context_paths
             ):
                 context_paths.append(value)
+        producer_cap=_planner_capability(planner,cid,entry,action)
+        producer_cycle=len(actions)-1
+        for effect in entry.get("provides") or []:
+            effect=str(effect)
+            effect_providers[effect]=(cid,entry)
+            runtime_effect_providers[effect]=(producer_cycle,producer_cap)
         compiled_parts.append({
             "index":index,
             "subgoal":clause,
             "mode":"VERIFIED_CAPABILITY",
             "selected_capability":cid,
-            "inputs":part["inputs"],
+            "inputs":runtime_inputs,
             "target_effects":part["target_effects"],
             "score":part["score"],
         })
