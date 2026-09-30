@@ -1,0 +1,46 @@
+name: Diagnose PR337 Carrier Hash Function
+
+on:
+  push:
+    branches:
+      - execute/pr337-frozen-carrier-0ac7-once-20260930-v1
+    paths:
+      - .github/workflows/diagnose-pr337-carrier-hash.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare hash encodings
+        shell: bash
+        run: |
+          python - <<'PY' > /tmp/hash.json
+          import hashlib,json,pathlib
+          p=pathlib.Path("canonical/runtime/astra_runtime.py")
+          raw=p.read_bytes()
+          prefix=b"blob "+str(len(raw)).encode()
+          correct=hashlib.sha1(prefix+b"\0"+raw).hexdigest()
+          wrong=hashlib.sha1(prefix+b"\\0"+raw).hexdigest()
+          print(json.dumps({
+            "git_rev_parse":"$(git rev-parse HEAD:canonical/runtime/astra_runtime.py)",
+            "correct_nul":correct,
+            "backslash_zero":wrong,
+            "expected":"6cb668bcc5a00665ea541fc5b6adf494f37ad1c9",
+            "harness_line":[x.strip() for x in pathlib.Path("run_pr337_parent_climate_open_taska_once.py").read_text().splitlines() if "hashlib.sha1" in x][0]
+          },indent=2))
+          PY
+          {
+            echo "PR337_CARRIER_HASH_DIAGNOSTIC"
+            echo
+            echo '~~~json'
+            cat /tmp/hash.json
+            echo '~~~'
+          } >/tmp/body
+          gh issue edit 63 --repo "$GITHUB_REPOSITORY" --body-file /tmp/body
