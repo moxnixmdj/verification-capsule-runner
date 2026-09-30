@@ -1,0 +1,28 @@
+name: Qualify Claim Spec Operand Binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/objective_claim_operand_binding.py
+      - canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py
+      - canonical/tests/test_objective_claim_operand_binding.py
+      - qualify_claim_spec_operand_binding.py
+      - .github/workflows/qualify-claim-spec-operand-binding.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run authored regressions
+        run: python canonical/tests/test_objective_claim_operand_binding.py
+      - name: Run independent fresh cross-domain qualification
+        run: python qualify_claim_spec_operand_binding.py
