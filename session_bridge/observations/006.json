@@ -1,0 +1,10 @@
+{
+  "command_sha256": "61971f44d33e9c74580c9cf0f040224acb172927e95051ca15bb2ba683c0e7fd",
+  "duration_sec": 0.186,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-dev-20261001-v1",
+  "stderr": "",
+  "stdout": "CONCURRENT_64_PASS 22\nEMPTY_ENV_CLEAN_ROOM_PASS\n===== SOURCE HASHES =====\nf4c33460b39655002f13c5bed45f54afd26e4052751b89d17cc0897132466ff5  /app/_stage_a.py\n7b2a4594b6290aff81f47a65b522f3ac6fbe5bdc0fc6eb5bd3a3277a472fd078  /app/_stage_b.py\nc4692f6162f653fa29036d28c386d8544763220dd4a81ee92d705cc9ad9be41f  /app/_stage_c.py\n85a5f04dab53def7c5969df97f3af1dd87bf6909db9f1f14ecb8fec954f87372  /app/_stage_d.py\n5fdc1f5550bfb082053027bcb57f84022f5bda0fd1c581d54b71153d43c32401  /app/_stage_e.py\n392dbe188db4ecfe5c89c6d9a6d4a81e56084e80db7f0bb678111c7804db4fdd  /app/app.py\ne7d4ab3aeaaa872312971e902a9b80fd38b5bbc08eacb717aaee943ff450f0e2  /app/checkpoint.py\n85429dd0430288290f2adf4403df0412e99025327aabc8d35f6c39c62690e74a  /app/config.py\n644bd953da5f289a4d9d060ce252a052a7ab087dd1e0b8f80b74b4a3c312c505  /app/log_writer.py\n2ee6e72e18c8581822bdb121112413ff11318d8da394959b3390ae86adddfe7a  /app/metrics.py\na5732c957e5a2c4d19ba8c7349a4d9c81c4802426d7e0a105ea5e8cb51a119b2  /app/recovery.py\n27e7ecbfb4e7d08dda6deebc795c74424c93b95757bec32cc0b04e2c40dc8cf5  /app/segment_manager.py\n26db8cd82b56a0f65e4eb717aa7660499fef2d5b8bf343dc13b700dde749a6ae  /app/serializer.py\n25f9b7881532630dd301650c16f5392cee08e6af94c11c7f75d7cafed6e374aa  /app/wal.py\n38d11fbc49b3028c1b66e4bd294f333a2098e48cc8a63ee89a122f368f5c3245  /app/wal_index.py\n===== ARTIFACT TREE =====\n_stage_a.py\n_stage_b.py\n_stage_c.py\n_stage_d.py\n_stage_e.py\napp.py\ncheckpoint.py\nconfig.py\nlog_writer.py\nmetrics.py\nrecovery.py\nsegment_manager.py\nserializer.py\nwal.py\nwal_index.py\n",
+  "step": 6
+}
