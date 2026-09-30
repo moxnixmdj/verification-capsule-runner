@@ -5,14 +5,199 @@ on:
       - qualify/official-primary-relevance-20260930-v1
 permissions:
   contents: read
+  issues: write
 jobs:
   qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.13'
-      - name: Run primary relevance tests
+      - name: Verify exact candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/official_primary_relevance_verify.py)" = "7adeddec64cb99c14d6ab364a922be3752addbf0"
+          test "$(git hash-object canonical/tests/test_official_primary_relevance_verify.py)" = "3abba7beb3b63cc1c1a1cefa58676f66d89be8eb"
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_authority_binding_wikidata.py)" = "a293ffae6e9f62b6087aab804718bc30a92b2105"
+      - name: Run authored qualification tests
         run: python -m unittest -v canonical.tests.test_official_primary_relevance_verify
+      - name: Independent fresh live oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import html,importlib.util,json,pathlib,re,urllib.parse,urllib.request
+          from html.parser import HTMLParser
+
+          UA="ProjectBrain-Independent-Primary-Relevance-Oracle/1.0"
+
+          def safe_host(raw):
+              try:
+                  u=urllib.parse.urlsplit(str(raw or ""))
+              except Exception:
+                  return ""
+              h=(u.hostname or "").lower().strip(".")
+              return h[4:] if h.startswith("www.") else h
+
+          def same_site(a,b):
+              a=safe_host("https://"+a) if "://" not in str(a) else safe_host(a)
+              b=safe_host("https://"+b) if "://" not in str(b) else safe_host(b)
+              return bool(a and b and (a==b or a.endswith("."+b) or b.endswith("."+a)))
+
+          def fetch_json(url):
+              req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"application/json"})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                  return json.loads(r.read(2_500_000).decode("utf-8","replace"))
+
+          def p856(label,wanted_host):
+              search="https://www.wikidata.org/w/api.php?"+urllib.parse.urlencode({
+                  "action":"wbsearchentities","search":label,"language":"en","format":"json","limit":10
+              })
+              data=fetch_json(search)
+              for item in data.get("search") or []:
+                  qid=str(item.get("id") or "")
+                  if not re.fullmatch(r"Q[1-9][0-9]*",qid):
+                      continue
+                  ent=fetch_json("https://www.wikidata.org/wiki/Special:EntityData/"+qid+".json")
+                  obj=(ent.get("entities") or {}).get(qid) or {}
+                  for claim in ((obj.get("claims") or {}).get("P856") or []):
+                      try:
+                          url=claim["mainsnak"]["datavalue"]["value"]
+                      except Exception:
+                          continue
+                      host=(urllib.parse.urlsplit(url).hostname or "").lower()
+                      if same_site(host,wanted_host):
+                          return {"qid":qid,"official_url":url,"official_host":host}
+              raise AssertionError("NO_INDEPENDENT_P856_MATCH:"+label+":"+wanted_host)
+
+          class Text(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.parts=[]; self.skip=0
+              def handle_starttag(self,tag,attrs):
+                  if tag.lower() in {"script","style","noscript","svg"}: self.skip+=1
+              def handle_endtag(self,tag):
+                  if tag.lower() in {"script","style","noscript","svg"} and self.skip: self.skip-=1
+              def handle_data(self,data):
+                  if not self.skip: self.parts.append(data)
+
+          def fetch_page(url):
+              req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"text/html,*/*;q=0.2"})
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  raw=r.read(1_500_000)
+                  final=r.geturl()
+                  ctype=str(r.headers.get("Content-Type") or "")
+              parser=Text()
+              parser.feed(raw.decode("utf-8","replace"))
+              text=" ".join(html.unescape(" ".join(parser.parts)).split())
+              return {"final_url":final,"content_type":ctype,"text":text}
+
+          producer_path=pathlib.Path("canonical/runtime/bound_capabilities/official_primary_relevance_verify.py")
+          spec=importlib.util.spec_from_file_location("producer",producer_path)
+          producer=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(producer)
+
+          cases=[
+              {
+                  "label":"Python (programming language)",
+                  "url":"https://docs.python.org/3/library/math.html",
+                  "host":"docs.python.org",
+                  "title":"math — Mathematical functions — Python documentation",
+                  "objective":"Determine whether ordinary sequential summation in 64-bit binary floating-point arithmetic can yield materially less accurate results than a numerically stable summation strategy under severe cancellation.",
+                  "anchors":["fsum","floating-point","precision"],
+              },
+              {
+                  "label":"World Wide Web Consortium",
+                  "url":"https://www.w3.org/TR/WCAG22/",
+                  "host":"www.w3.org",
+                  "title":"Web Content Accessibility Guidelines (WCAG) 2.2",
+                  "objective":"Determine the normative requirements for accessible web content under WCAG 2.2.",
+                  "anchors":["web content accessibility guidelines","success criteria","conformance"],
+              },
+          ]
+
+          report=[]
+          for case in cases:
+              registry=p856(case["label"],case["host"])
+              live=fetch_page(case["url"])
+              low=live["text"].lower()
+              missing=[x for x in case["anchors"] if x.lower() not in low]
+              assert not missing,(case["url"],"MISSING_INDEPENDENT_ANCHORS",missing)
+
+              final_host=(urllib.parse.urlsplit(live["final_url"]).hostname or "").lower()
+              provenance={
+                  "status":"RETRIEVAL_PROVENANCE_VERIFIED",
+                  "final_url":live["final_url"],
+                  "final_host":final_host,
+              }
+              authority={
+                  "status":"AUTHORITY_IDENTITY_VERIFIED",
+                  "authority_status":"VERIFIED",
+                  "candidate_host":case["host"],
+                  "official_host":registry["official_host"],
+                  "official_url":registry["official_url"],
+                  "entity_id":registry["qid"],
+                  "authority_claim_scope":"HOST_TO_DECLARED_OFFICIAL_WEBSITE_IDENTITY_ONLY",
+              }
+              candidate={
+                  "url":case["url"],
+                  "host":case["host"],
+                  "title":case["title"],
+                  "source_class":"OPEN_WEB_SEARCH_CANDIDATE",
+              }
+              out=producer.verify(case["objective"],candidate,provenance,authority,timeout=25)
+              assert out["status"]=="PRIMARY_RELEVANCE_VERIFIED",out
+              assert out["primary_source_status"]=="VERIFIED_OFFICIAL_FIRST_PARTY_TECHNICAL_DOCUMENT",out
+              assert out["relevance_status"]=="VERIFIED_DIRECT_OBJECTIVE_COVERAGE",out
+              assert out["evidence_sufficiency_status"]=="UNVERIFIED",out
+              assert out["model_dependency_count"]==0,out
+              assert out["incremental_spend_usd"]==0,out
+              report.append({"url":case["url"],"entity_id":registry["qid"],"status":out["status"],"relevance":out["relevance"]})
+
+          # Same authority, real technical document, deliberately unrelated objective.
+          pyreg=p856("Python (programming language)","docs.python.org")
+          socket_url="https://docs.python.org/3/library/socket.html"
+          socket_live=fetch_page(socket_url)
+          socket_host=(urllib.parse.urlsplit(socket_live["final_url"]).hostname or "").lower()
+          negative=producer.verify(
+              "Determine whether floating-point summation under severe cancellation loses numerical accuracy.",
+              {"url":socket_url,"host":"docs.python.org","title":"socket — Low-level networking interface"},
+              {"status":"RETRIEVAL_PROVENANCE_VERIFIED","final_url":socket_live["final_url"],"final_host":socket_host},
+              {
+                  "status":"AUTHORITY_IDENTITY_VERIFIED","authority_status":"VERIFIED",
+                  "candidate_host":"docs.python.org","official_host":pyreg["official_host"],
+                  "official_url":pyreg["official_url"],"entity_id":pyreg["qid"],
+                  "authority_claim_scope":"HOST_TO_DECLARED_OFFICIAL_WEBSITE_IDENTITY_ONLY",
+              },
+              timeout=25,
+          )
+          assert negative["status"]=="UNVERIFIED",negative
+          assert negative["primary_source_status"]=="VERIFIED_OFFICIAL_FIRST_PARTY_TECHNICAL_DOCUMENT",negative
+          assert negative["relevance_status"]=="UNVERIFIED",negative
+
+          print(json.dumps({
+              "schema":"PROJECT_BRAIN_OFFICIAL_PRIMARY_RELEVANCE_INDEPENDENT_ORACLE_V1",
+              "status":"PASS","positive_cases":report,
+              "negative_case":{"url":socket_url,"status":negative["status"],"reason":negative["reason"]},
+              "model_dependency_count":0,"incremental_spend_usd":0,
+          },sort_keys=True))
+          PY
+      - name: Emit durable PASS receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="QUALIFICATION_PASS_OFFICIAL_PRIMARY_RELEVANCE_20260930_V1"
+          body="PASS. Head SHA: $SHA. Workflow run: $RUN_ID. Exact candidate blobs 7adeddec64cb99c14d6ab364a922be3752addbf0 / 3abba7beb3b63cc1c1a1cefa58676f66d89be8eb with authority dependency a293ffae6e9f62b6087aab804718bc30a92b2105. Authored tests plus independent live Python-docs and W3C-spec positives and unrelated Python socket negative passed. Claim scope: authority-bound first-party technical docs/spec/reference with direct objective coverage only. General scholarly primary-source status and evidence sufficiency remain UNVERIFIED. model_dependency_count=0; incremental_spend_usd=0."
+          existing=$(gh api "repos/$REPO/issues?state=all&per_page=100" --jq '.[] | select(.title=="'"$title"'") | .number' | head -n1 || true)
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$REPO/issues/$existing" -f body="$body" >/dev/null
+          else
+            gh api --method POST "repos/$REPO/issues" -f title="$title" -f body="$body" >/dev/null
+          fi
