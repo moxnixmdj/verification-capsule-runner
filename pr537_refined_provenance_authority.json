@@ -1,0 +1,13 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 537,
+  "brain_candidate_head": "2c4f2d9bc02d07dcd61d7fc6d01f38c679941813",
+  "brain_base": "71fbeb1e21683a165066c23b211781eee8fab61b",
+  "scope": "METADATA_REFINED_PROVENANCE_CLASS_PRESERVATION_AND_SELECTED_BIBLIOGRAPHIC_MATERIALIZATION",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "materials_task_c_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
