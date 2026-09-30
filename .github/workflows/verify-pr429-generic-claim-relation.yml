@@ -1,0 +1,32 @@
+name: Verify PR429 Generic Claim Relation
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact PR429 blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py)" = "a68f8c08e5bc8f42178b21e1ff65ed0fa44c73b9"
+          test "$(git hash-object canonical/tests/test_generic_evidence_claim_relation.py)" = "590a1e50f11bc2903b56d41a00c5354ec2501c44"
+      - name: Run deterministic fail-closed regressions
+        run: python canonical/tests/test_generic_evidence_claim_relation.py
+      - name: Run fresh cross-domain independent qualification
+        run: python verify_pr429_generic_claim_relation.py
+      - name: Upload exact qualification report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr429-generic-claim-relation-report
+          path: pr429-generic-claim-relation-report.json
+          if-no-files-found: error
