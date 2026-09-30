@@ -1,0 +1,10 @@
+{
+  "command_sha256": "d2d881a2fe593944c612b70f09d0ab8388c97d6aa383e90a4b94f2d8a345ac9a",
+  "duration_sec": 0.077,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v2-auth",
+  "stderr": "",
+  "stdout": "TopicPartition repr TopicPartition{topic=x,partition=0,offset=1,leader_epoch=None,error=None}\nTopicPartition attrs ['error', 'leader_epoch', 'metadata', 'offset', 'partition', 'topic']\nmetadata attr None\nConsumer.commit doc .. py:function:: commit([message=None], [offsets=None], [asynchronous=True])\n\n  Commit a message or a list of offsets.\n\n  The ``message`` and ``offsets`` parameters are mutually exclusive. If neither is set, the current partition assignment's offsets are used instead. Use this method to commit offsets if you have 'enable.auto.commit' set to False.\n\n  :param confluent_kafka.Message message: Commit the message's offset+1. Note: By convention, committed offsets reflect the next message to be consumed, **not** the last message consumed.\n  :param list(TopicPartition) offsets: List of topic+partitions+offsets to commit.\n  :param bool asynchronous: If true, asynchronously commit, returning None immediately. If False, the commit() call will block until the commit succeeds or fails and the committed offsets will be returned (on success). Note that specific partitions may have failed and the .err field of each partition should be checked for success.\n  :rtype: None|list(TopicPartition)\n  :raises: KafkaException\n  :raises: RuntimeError if called on a closed consumer\n\n\nConsumer.committed doc .. py:function:: committed(partitions, [timeout=None])\n\n  Retrieve committed offsets for the specified partitions.\n\n  :param list(TopicPartition) partitions: List of topic+partitions to query for stored offsets.\n  :param float timeout: Request timeout (seconds).\n  :returns: List of topic+partitions with offset and possibly error set.\n  :rtype: list(TopicPartition)\n  :raises: KafkaException\n  :raises: RuntimeError if called on a closed consumer\n\n\nConsumer.on_commit None\n",
+  "step": 3
+}
