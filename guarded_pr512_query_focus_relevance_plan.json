@@ -1,13 +1,13 @@
 {
   "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
-  "goal_text": "Independently qualify hardened exact Brain PR512 head 5e8384431607b3a287b1b1282b87e64a792555f5 research-query focus and focused lexical relevance bytes across fresh cross-domain cases without executing or replaying any parent scientific task.",
+  "goal_text": "Independently qualify current exact Brain PR512 head 5e8384431607b3a287b1b1282b87e64a792555f5 research-query focus and focused lexical relevance bytes across fresh cross-domain cases without executing or replaying any parent scientific task.",
   "frozen": {
     "gate_id": "BRAIN-PR512-QUERY-FOCUS-RELEVANCE-GUARDED-QUALIFICATION-20260930-V2",
-    "problem_sha256": "dc21827867e3f21f5c5064f2fc3ff892593d0bb0517765bd20626b62f5e97985",
-    "task_sha256": "7ad14219e4144d2143e915551ca3259edf9300cdc3a4e8662b541f57d108f913",
-    "runtime_sha256": "f709129d536bb6d629cfd95e5c9b34b0183267599eb383f0c1d3496fa0cc1153",
+    "problem_sha256": "8c3ac91c90a47fd362d618e23401c2870db12baf18926ad2a6f8b8eccbf80478",
+    "task_sha256": "9a33e2803361a6fca29042a469ed9b1967ff36a6f728743667372ccc53ae2833",
+    "runtime_sha256": "81eab3891d751226ca8edd1eedc73fb165bd4e0454eb028c193d668849b83b0c",
     "canonical_base": "0d795dad885e706e6eb1cfd4d20cd2b2edd5cf12",
-    "authorization_sha256": "c041313e6314cd1f36140ee3bce4ab60a63933e198e7d7291d1b2013c3d567c8"
+    "authorization_sha256": "89dc89e8244aadd574c2a4b31528d9675a46fd9e391733f90c3957581ed0cbb1"
   },
   "pinned_files": [
     {
