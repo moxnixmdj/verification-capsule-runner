@@ -1,0 +1,42 @@
+name: Qualify Mission Origin Through Verified PyPI Acquisition
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  mission-origin-orjson-canary:
+    if: github.head_ref == 'qualify/mission-origin-pypi-orjson-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require explicit arm marker
+        run: test -f ARM_MISSION_ORIGIN_PYPI_ORJSON_CANARY_20260930_V1
+      - name: Execute fresh canonical-entrypoint ORJSON acquisition canary once
+        id: canary
+        continue-on-error: true
+        run: python run_mission_origin_pypi_orjson_canary.py
+      - name: Upload terminal canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-origin-pypi-orjson-canary-terminal
+          path: mission-origin-pypi-orjson-canary-terminal.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.canary.outcome != 'success'
+        run: exit 1

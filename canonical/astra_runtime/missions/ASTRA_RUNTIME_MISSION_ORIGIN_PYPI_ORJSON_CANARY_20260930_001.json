@@ -1,0 +1,29 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "ASTRA-RUNTIME-MISSION-ORIGIN-PYPI-ORJSON-CANARY-20260930-001",
+  "purpose": "Fresh non-parent qualification of canonical mission-origin propagation into autonomous PyPI acquisition. The target format is absent from the verified registry, so no existing bound codec may intercept the acquisition seam.",
+  "goal": "Using a zero-cost Python library, encode the contents of canonical/astra_runtime/tmp/ORJSON_ORIGIN_CANARY_SOURCE.txt as ORJSON binary bytes at canonical/astra_runtime/tmp/ORJSON_ORIGIN_CANARY_OUTPUT.orjson.",
+  "steps": [
+    {
+      "id": "force-fresh-orjson-pypi-acquisition",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "max_controller_actions": 12,
+      "verify": {"type": "returncode_zero"}
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "fresh_mission_identity": true,
+    "non_parent_canary": true,
+    "parent_capability_credit_authorized": false,
+    "external_python_library_acquisition_allowed": true,
+    "manual_binding": false,
+    "manual_supplier": false,
+    "model_controller_required": false,
+    "canonical_mission_entrypoint_required": true,
+    "target_format_absent_from_prestart_registry": "orjson",
+    "acceptance_scope": "MISSION_ORIGIN_PROPAGATION_AND_VERIFIED_ACQUISITION_ONLY"
+  }
+}
