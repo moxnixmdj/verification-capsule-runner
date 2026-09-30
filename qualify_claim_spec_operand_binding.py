@@ -5,7 +5,7 @@ from decimal import Decimal
 
 ROOT=pathlib.Path(__file__).resolve().parent
 PRODUCER=ROOT/"canonical/runtime/bound_capabilities/objective_claim_operand_binding.py"
-EXPECTED_PRODUCER_BLOB="76b7bdabdeb7054361f9c9e8be13a49b78fdb28a"
+EXPECTED_PRODUCER_BLOB="7dbf30f79096510eb5f9b4dece0088c211e5ca98"
 
 def git_blob(path):
     raw=path.read_bytes()
