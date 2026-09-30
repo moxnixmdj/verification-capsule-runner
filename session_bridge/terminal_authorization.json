@@ -1,0 +1,72 @@
+{
+  "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v2-auth",
+  "submission_authorized": true,
+  "known_relevant_failures": [],
+  "acceptance_criteria": [
+    {
+      "criterion": "candidate_compiles",
+      "status": "PASS",
+      "evidence": "observation 010: PY_COMPILE_PASS"
+    },
+    {
+      "criterion": "restart_and_assignment_protocol",
+      "status": "PASS",
+      "evidence": "observations 008 and 010: RESTART_PROTOCOL_PROBE_PASS after the observation-007 typo was repaired"
+    },
+    {
+      "criterion": "state_transition_and_duplicate_semantics",
+      "status": "PASS",
+      "evidence": "observations 004, 006, and 010: state core/self-test passes with duplicate suppression retained"
+    },
+    {
+      "criterion": "bounded_durable_state",
+      "status": "PASS",
+      "evidence": "observation 006: 200k operations, recent processed set bounded at 8192, snapshot 323028 bytes"
+    },
+    {
+      "criterion": "scale_envelope",
+      "status": "PASS",
+      "evidence": "observation 009: worst checkpoint 393415 bytes and 1.2M replay CPU envelope completed with 16000 balances"
+    },
+    {
+      "criterion": "cold_bootstrap_hot_respawn_and_checkpoint_gap_recovery",
+      "status": "PASS",
+      "evidence": "observations 008 and 010: authored restart protocol covers cold bootstrap, hot respawn, snapshot-ahead and snapshot-behind cases"
+    },
+    {
+      "criterion": "final_zero_gap_completion_gate",
+      "status": "PASS",
+      "evidence": "observation 010: FINAL_COMPLETION_GATE_PASS; no unresolved TODO/FIXME or terminal command in worker artifacts"
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "python3 -m py_compile worker/__init__.py worker/config.py worker/state.py worker/worker.py",
+      "exit_code": 0,
+      "evidence": "observation 010"
+    },
+    {
+      "command": "python3 /tmp/restart_protocol_probe.py",
+      "exit_code": 0,
+      "evidence": "observations 008 and 010"
+    },
+    {
+      "command": "bounded state core and duplicate-suppression probes",
+      "exit_code": 0,
+      "evidence": "observations 004, 006, and 010"
+    },
+    {
+      "command": "1.2M-record scale envelope and worst-case checkpoint probe",
+      "exit_code": 0,
+      "evidence": "observation 009"
+    }
+  ],
+  "provenance": {
+    "verifier_consumed_before_authorization": false,
+    "solution_or_tests_read_by_configured_cognition": false,
+    "observation_007_failure_resolved_before_authorization": true,
+    "candidate_history_replayed_without_verifier_feedback": true,
+    "incremental_spend_usd": 0
+  }
+}
