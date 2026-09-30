@@ -1,0 +1,10 @@
+{
+  "command_sha256": "9af0378804cbce03c06170c21d9dcfd0e173e5814732bd31f0c65df9e3c5230d",
+  "duration_sec": 0.084,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "",
+  "stdout": "ASSET=dist/assets/index-BrpSl11l.js\n\nNEEDLE browser-external INDEX -1\n\nNEEDLE readFileSync INDEX -1\n\nNEEDLE existsSync INDEX -1\n\nNEEDLE .join INDEX 4162\ntion\")for(e=s.call(e),o=0;!(u=e.next()).done;)u=u.value,s=r+Ml(u,o++),i+=Tr(u,t,n,s,l);else if(u===\"object\")throw t=String(e),Error(\"Objects are not valid as a React child (found: \"+(t===\"[object Object]\"?\"object with keys {\"+Object.keys(e).join(\", \")+\"}\":t)+\"). If you meant to render a collection of children, use an array instead.\");return i}function fr(e,t,n){if(e==null)return e;var r=[],l=0;return Tr(e,r,\"\",\"\",function(u){return t.call(n,u,l++)}),r}function Fc(e){if(e._status===-1){var t=e._result;t=t(),t.then(function(n){(e._status===0||e._status===-1)&&(e._status=1,e._result=n)},function(n){(e._status===0||e._status===-1)&&(e._status=2,e._result=n)}),e._status===-1&&(e._status=0,e._result=t)}if(e._status===1)return e._result.default;throw e._res\n",
+  "step": 14
+}
