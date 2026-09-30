@@ -13,7 +13,7 @@ extractor=load("pr426_extract","canonical/runtime/bound_capabilities/objective_e
 bm25=load("qualified_bm25","canonical/runtime/bound_capabilities/objective_relevance_bm25.py")
 prov=load("qualified_provenance","canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py")
 
-BLOCK={"h1","h2","h3","h4","h5","h6","p","li","dt","dd","blockquote","td","th","pre"}
+BLOCK={"h1","h2","h3","h4","h5","h6","p","li","dt","dd","blockquote","td","th","pre","main","article","section","div"}
 SUPPRESS={"script","style","noscript","svg","nav","footer","header","form"}
 
 def canon(x): return " ".join(str(x or "").split())
