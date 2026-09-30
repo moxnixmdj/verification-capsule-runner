@@ -1,0 +1,10 @@
+{
+  "command_sha256": "4a01feb451b67d9ee62fb54c11b2d41e3f5e05e5535fd58e89ddcffaa61e823c",
+  "duration_sec": 0.072,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-dev-20261001-v1",
+  "stderr": "",
+  "stdout": "STATE {'a': {'v': [1]}, 'b': {'v': [2]}, 'c': {'v': [3]}, 'd': 'gap'}\nREPLAYED [{'segment_id': 2, 'lsn': 1, 'key': 'a', 'value': {'v': [1]}}, {'segment_id': 2, 'lsn': 2, 'key': 'b', 'value': {'v': [2]}}, {'segment_id': 2, 'lsn': 3, 'key': 'c', 'value': {'v': [3]}}, {'segment_id': 5, 'lsn': 4, 'key': 'd', 'value': 'gap'}]\nSTATS {'segments_scanned': 3, 'replayed_entries': 4, 'last_lsn': 4}\nINPUT_UNCHANGED True\nLSNS [1, 2, 3, 4]\nSIDS [2, 2, 2, 5]\nSHUFFLED ({'a': {'v': [1]}, 'b': {'v': [2]}, 'c': {'v': [3]}, 'd': 'gap'}, [{'segment_id': 2, 'lsn': 1, 'key': 'a', 'value': {'v': [1]}}, {'segment_id': 2, 'lsn': 2, 'key': 'b', 'value': {'v': [2]}}, {'segment_id': 2, 'lsn': 3, 'key': 'c', 'value': {'v': [3]}}, {'segment_id': 5, 'lsn': 4, 'key': 'd', 'value': 'gap'}], {'segments_scanned': 3, 'replayed_entries': 4, 'last_lsn': 4})\n",
+  "step": 2
+}
