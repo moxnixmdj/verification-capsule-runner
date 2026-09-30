@@ -1,0 +1,218 @@
+name: Parent Geophysics Energy Real Task V2
+
+on:
+  push:
+    branches:
+      - verify/parent-geophysics-energy-20260930-v2
+    paths:
+      - 'ARM_PARENT_GEOPHYSICS_ENERGY_REAL_TASK_20260930_V2'
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact Brain and frozen task bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "902008041849ee7e8686dacc2580a3b9b3393933"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          test "$(git hash-object canonical/tasks/PARENT_GEOPHYSICS_ENERGY_REAL_TASK_20260930_002.json)" = "6354394ce589cb399b61141dfc7b49ae25236a3b"
+          echo EXACT_PARENT_TASK_BYTES_PASS
+
+      - name: Execute frozen parent task through Brain exactly once and preserve first terminal state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys,traceback,hashlib
+          root=pathlib.Path(".").resolve()
+          task_path=root/"canonical/tasks/PARENT_GEOPHYSICS_ENERGY_REAL_TASK_20260930_002.json"
+          task=json.loads(task_path.read_text(encoding="utf-8"))
+          usgs=task["sources"][0]["url"]
+          emsc=task["sources"][1]["url"]
+          output_rel=task["required_output"]["output_path"]
+          goal=(
+            "Using the authoritative JSON source "+usgs+
+            ", extract JSON path features.0.properties.mag and save the knowledge evidence to "
+            "canonical/astra_runtime/tmp/PARENT_GEOPHYSICS_USGS_MAG.json. "
+            "Using the authoritative JSON source "+emsc+
+            ", extract JSON path features.0.properties.mag and save the knowledge evidence to "
+            "canonical/astra_runtime/tmp/PARENT_GEOPHYSICS_EMSC_MAG.json. "
+            "Determine whether the two magnitudes differ by at most 0.2. "
+            "If they do, set the reconciled magnitude to their arithmetic mean; otherwise stop with SOURCE_CONFLICT. "
+            "Calculate the seismic energy in joules using E_J = 10 ** (1.5 * M + 4.8). "
+            "Decide ABOVE_OR_EQUAL_1E14_J if E_J is at least 100000000000000 joules, otherwise BELOW_1E14_J. "
+            "Write the complete scientific result with both source URLs, both magnitudes, their absolute difference, "
+            "source_agreement, reconciled_magnitude, energy_joules, decision, provenance, and model_dependency_count to "
+            +output_rel+"."
+          )
+
+          terminal={
+            "schema":"PROJECT_BRAIN_PARENT_TASK_TERMINAL_V1",
+            "task_id":task["task_id"],
+            "task_git_blob":"6354394ce589cb399b61141dfc7b49ae25236a3b",
+            "goal":goal,
+            "goal_sha256":hashlib.sha256(goal.encode()).hexdigest(),
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+            "execution_count":1,
+          }
+          try:
+              spec=importlib.util.spec_from_file_location(
+                  "parent_geophysics_brain_runtime",
+                  root/"canonical/runtime/astra_runtime.py",
+              )
+              runtime=importlib.util.module_from_spec(spec)
+              sys.modules[spec.name]=runtime
+              spec.loader.exec_module(runtime)
+              mission={"mission_id":task["task_id"],"goal":goal}
+              step={
+                "adapter":"goal",
+                "goal_ref":"goal",
+                "verified_initial_facts":["network.http.available"],
+                "max_controller_actions":16,
+              }
+              result=runtime.run_goal(step,mission)
+              terminal["brain_result"]=result
+              terminal["controller_mode"]=result.get("controller_mode")
+              terminal["planner_model_last"]=result.get("planner_model_last")
+              terminal["planning_mode"]=result.get("planning_mode")
+              out=root/output_rel
+              if (
+                  result.get("returncode")==0
+                  and result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN"
+                  and result.get("planner_model_last") is None
+                  and out.is_file()
+              ):
+                  terminal["semantic_status"]="PASS"
+                  terminal["scientific_output"]=json.loads(out.read_text(encoding="utf-8"))
+              else:
+                  terminal["semantic_status"]="FAIL"
+                  terminal["first_causal_gap"]="BRAIN_RETURNED_WITHOUT_REQUIRED_VERIFIED_SCIENTIFIC_OUTPUT"
+          except Exception as exc:
+              terminal["semantic_status"]="FAIL"
+              terminal["first_causal_gap"]=type(exc).__name__+":"+str(exc)
+              terminal["exception_type"]=type(exc).__name__
+              terminal["exception_message"]=str(exc)
+              terminal["traceback"]=traceback.format_exc()
+
+          pathlib.Path("PARENT_GEOPHYSICS_TERMINAL.json").write_text(
+              json.dumps(terminal,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("PARENT_TASK_TERMINAL_EVIDENCE_PRESERVED")
+          print("semantic_status="+terminal["semantic_status"])
+          if terminal.get("first_causal_gap"):
+              print("first_causal_gap="+terminal["first_causal_gap"])
+          PY
+
+      - name: Independently re-fetch and recompute only if Brain semantically completed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,math,pathlib,urllib.request,hashlib
+          terminal=json.loads(pathlib.Path("PARENT_GEOPHYSICS_TERMINAL.json").read_text())
+          task=json.loads(pathlib.Path("canonical/tasks/PARENT_GEOPHYSICS_ENERGY_REAL_TASK_20260930_002.json").read_text())
+          oracle={
+            "schema":"PROJECT_BRAIN_PARENT_GEOPHYSICS_INDEPENDENT_ORACLE_V1",
+            "source_task_replayed":False,
+            "producer_runtime_imported":False,
+          }
+          if terminal["semantic_status"]!="PASS":
+              oracle["status"]="NOT_RUN_DUE_TO_BRAIN_SEMANTIC_FAILURE"
+              oracle["first_causal_gap"]=terminal.get("first_causal_gap")
+          else:
+              mags={}
+              source_receipts={}
+              for src in task["sources"]:
+                  req=urllib.request.Request(src["url"],headers={"User-Agent":"Project-Brain-independent-geophysics-oracle/1.0"})
+                  with urllib.request.urlopen(req,timeout=20) as r:
+                      raw=r.read()
+                      assert r.status==200
+                  obj=json.loads(raw.decode("utf-8"))
+                  cur=obj
+                  for key in src["magnitude_json_path"]:
+                      cur=cur[key]
+                  mags[src["id"]]=float(cur)
+                  source_receipts[src["id"]]={
+                    "url":src["url"],
+                    "body_sha256":hashlib.sha256(raw).hexdigest(),
+                    "magnitude":float(cur),
+                  }
+              delta=abs(mags["USGS"]-mags["EMSC"])
+              agree=delta<=float(task["scientific_contract"]["source_agreement_max_abs_magnitude_delta"])
+              if agree:
+                  M=(mags["USGS"]+mags["EMSC"])/2.0
+                  E=10.0**(1.5*M+4.8)
+                  decision=(
+                    "ABOVE_OR_EQUAL_1E14_J"
+                    if E>=float(task["scientific_contract"]["decision_threshold_joules"])
+                    else "BELOW_1E14_J"
+                  )
+              else:
+                  M=None; E=None; decision="SOURCE_CONFLICT"
+              expected={
+                "usgs_magnitude":mags["USGS"],
+                "emsc_magnitude":mags["EMSC"],
+                "absolute_magnitude_delta":delta,
+                "source_agreement":agree,
+                "reconciled_magnitude":M,
+                "energy_joules":E,
+                "decision":decision,
+              }
+              observed=terminal["scientific_output"]
+              def close(a,b,rel=1e-10,abs_tol=1e-10):
+                  return math.isclose(float(a),float(b),rel_tol=rel,abs_tol=abs_tol)
+              checks={
+                "usgs_magnitude":close(observed["usgs_magnitude"],expected["usgs_magnitude"]),
+                "emsc_magnitude":close(observed["emsc_magnitude"],expected["emsc_magnitude"]),
+                "absolute_magnitude_delta":close(observed["absolute_magnitude_delta"],expected["absolute_magnitude_delta"]),
+                "source_agreement":observed["source_agreement"] is expected["source_agreement"],
+                "decision":observed["decision"]==expected["decision"],
+                "model_dependency_count":observed["model_dependency_count"]==0,
+              }
+              if agree:
+                  checks["reconciled_magnitude"]=close(observed["reconciled_magnitude"],expected["reconciled_magnitude"])
+                  checks["energy_joules"]=close(observed["energy_joules"],expected["energy_joules"],rel=1e-9)
+              else:
+                  checks["reconciled_magnitude"]=observed["reconciled_magnitude"] is None
+                  checks["energy_joules"]=observed["energy_joules"] is None
+              oracle.update({
+                "status":"PASS" if all(checks.values()) else "FAIL",
+                "source_receipts":source_receipts,
+                "expected":expected,
+                "checks":checks,
+                "model_dependency_count":0,
+              })
+          pathlib.Path("PARENT_GEOPHYSICS_ORACLE.json").write_text(
+              json.dumps(oracle,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("PARENT_GEOPHYSICS_ORACLE_STATUS="+oracle["status"])
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ always() }}
+        with:
+          name: parent-geophysics-energy-real-task-v2
+          path: |
+            PARENT_GEOPHYSICS_TERMINAL.json
+            PARENT_GEOPHYSICS_ORACLE.json
+            canonical/astra_runtime/tmp/PARENT_GEOPHYSICS_ENERGY_RESULT_20260930.json
+            canonical/astra_runtime/evidence/
+          if-no-files-found: warn
