@@ -1,0 +1,26 @@
+name: Qualify PR413 Objective Relevance Admission
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - canonical/runtime/bound_capabilities/first_party_objective_relevance_verify.py
+      - canonical/tests/test_first_party_objective_relevance_verify.py
+      - canonical/tests/test_pr413_objective_relevance_live_qualification.py
+      - .github/workflows/qualify-pr413-objective-relevance.yml
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify exact Brain PR413 producer blob
+        run: test "$(git hash-object canonical/runtime/bound_capabilities/first_party_objective_relevance_verify.py)" = "6ff13c32704c0b3283c42a51f718e875110a13ca"
+      - name: Authored fail-closed regressions
+        run: python canonical/tests/test_first_party_objective_relevance_verify.py
+      - name: Independent live cross-domain qualification
+        run: python canonical/tests/test_pr413_objective_relevance_live_qualification.py
