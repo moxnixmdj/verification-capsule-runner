@@ -1,0 +1,10 @@
+{
+  "command_sha256": "12f632f0be3deab3282c01b75f72653139ad66f96b49372e3e1cd2d83e92ac3a",
+  "duration_sec": 2.757,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "html-js-filter-dev-20260930-v1",
+  "stderr": "",
+  "stdout": "MUTATION_AND_CROSS_PARSER_PROBES_PASS 15 8\nADVERSARIAL_SANITIZER_PROBES_PASS 20\nBROWSER_AVAILABLE=NONE\n",
+  "step": 2
+}
