@@ -1,0 +1,28 @@
+name: Preflight Parent Meteorology NASA POWER
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify frozen task bytes and exact source readiness
+        run: python preflight_parent_meteorology_power.py
+      - name: Upload source preflight
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-meteorology-nasa-power-source-preflight
+          path: PARENT_METEOROLOGY_NASA_POWER_PREFLIGHT.json
+          if-no-files-found: error
