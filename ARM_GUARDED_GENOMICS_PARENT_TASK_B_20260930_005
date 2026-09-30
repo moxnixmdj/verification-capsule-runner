@@ -1,0 +1,8 @@
+ARM_GUARDED_GENOMICS_PARENT_TASK_B_20260930_005
+task_id=PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005
+brain_execution_lease_pr=497
+task_blob_sha1=5f1a8fea0d29c2a60dcc7a038ecd557829e602e7
+mission_blob_sha1=03e718a9c779c26d26e7af140f2f65549c1a7f6e
+authorization_blob_sha1=2cefd24591faf06ae307d7a4ece412e7b7836a6b
+exactly_one_execution=true
+replay_allowed=false
