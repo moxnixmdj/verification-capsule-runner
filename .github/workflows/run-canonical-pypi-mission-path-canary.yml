@@ -1,0 +1,45 @@
+name: Run Canonical PyPI Mission Path Canary
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_CANONICAL_PYPI_MISSION_PATH_CANARY_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Execute exact canonical Brain PyPI mission-path canary
+        id: producer
+        continue-on-error: true
+        run: python run_canonical_pypi_mission_path_canary.py
+      - name: Upload terminal canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-pypi-mission-path-canary
+          path: |
+            canonical-pypi-mission-path-canary-report.json
+            canonical/astra_runtime/state/ASTRA-RUNTIME-MISSION-PATH-PYPI-CANARY-CBOR-001.json
+            canonical/astra_runtime/evidence/ASTRA-RUNTIME-MISSION-PATH-PYPI-CANARY-CBOR-001*
+            canonical/astra_runtime/tmp/MISSION_PATH_PYPI_CANARY*
+            canonical/astra_runtime/pending_bindings/*
+            canonical/astra_runtime/missions/ASTRA_AUTO_VERIFY*
+            canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json
+          if-no-files-found: warn
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
