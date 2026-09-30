@@ -18,11 +18,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "fc262d7180189ecc8f61561a7ce6a1f4cdc66ea1"
-          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "ac38fb339cd5148f8d28817e2b41e9f0567d797b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "3b35cf65100a51276b528f542a066b078dc7116f"
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "dd18074197d28abd267859dfe709baa28b4a8dfe"
-          test "$(git hash-object canonical/tests/test_grounding_proposal_binding_contract.py)" = "cf158ac3e8982083563db6c0a558a57c677e8a2b"
+          test "$(git hash-object canonical/tests/test_grounding_proposal_binding_contract.py)" = "e0844d07a11bed7f9a353199db80cd095605814f"
+          test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "1b8efc0073179dae16ef22185475f7a065ac3cea"
+          test "$(git hash-object canonical/tests/test_plain_goal_bound_grounding.py)" = "03fe93ded7207f584266e420192eef2a3a8a166c"
           test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
       - name: Compile exact candidate
         run: |
           python -m py_compile             canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py             canonical/runtime/bound_capabilities/grounded_executable_composition.py             canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py
