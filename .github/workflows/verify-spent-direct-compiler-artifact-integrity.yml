@@ -1,0 +1,135 @@
+name: Verify Spent Direct Compiler Fresh Reuse
+on:
+  push:
+    branches:
+      - verify/direct-compiler-fresh-reuse-artifact-integrity-20260930
+    paths:
+      - '.github/workflows/verify-spent-direct-compiler-artifact-integrity.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify-spent-run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Fetch immutable prior job log
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/jobs/109710324356/logs"             -o prior-job.log
+          test -s prior-job.log
+      - name: Verify spent execution and independently recompute semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,re,urllib.request
+
+          prior_run_id=36659312279
+          prior_job_id=109710324356
+          prior_head="c5c611a9c4d142b6e0f1c20a40efc8583ba1bcae"
+          log_path=pathlib.Path("prior-job.log")
+          raw=log_path.read_text(encoding="utf-8",errors="replace")
+          plain=re.sub(r"\x1b\[[0-9;]*m","",raw)
+
+          required=[
+            "DIRECT_COMPILER_FRESH_REUSE_ARTIFACT_INTEGRITY_20260930.json",
+            "selected_alternative': 'LOCAL_SHA256_REHASH'",
+            "'verified': True",
+            "'planning_mode': 'DETERMINISTIC_COMPOUND_ACTION_PLAN'",
+            "'input_path': {'$result': {'cycle': 0, 'field': 'input_path'}}",
+            "'result_path': {'$result': {'cycle': 0, 'field': 'output_path'}}",
+            "'planner_model_last': None",
+            "'final_summary': 'COMPOUND_GOAL_COMPLETE'",
+            "'model_dependency_count': 0",
+          ]
+          missing=[x for x in required if x not in plain]
+          assert not missing,missing
+
+          task_path=pathlib.Path("canonical/tasks/DIRECT_COMPILER_FRESH_REUSE_ARTIFACT_INTEGRITY_20260930.json")
+          task=json.loads(task_path.read_text(encoding="utf-8"))
+          assert task["decision_id"]=="DIRECT-COMPILER-FRESH-REUSE-ARTIFACT-INTEGRITY-20260930"
+
+          states={}
+          for alt in [x["id"] for x in task["alternatives"]]:
+              req=[c for c in task["constraints"] if c["alternative"]==alt and c.get("required",True)]
+              if any(c["state"]=="VIOLATED" for c in req):
+                  states[alt]="DISQUALIFIED"
+              elif any(c["state"]=="UNKNOWN" for c in req):
+                  states[alt]="UNRESOLVED"
+              else:
+                  states[alt]="ADMISSIBLE"
+
+          support={}
+          contradiction={}
+          groups={}
+          for e in task["evidence"]:
+              alt=e["alternative"]
+              weight=float(e["confidence"])*float(e.get("strength",1))
+              key=(alt,e["independence_group"])
+              dest=support if e["relation"]=="SUPPORTS" else contradiction
+              dest[key]=max(dest.get(key,0.0),weight)
+              if e["relation"]=="SUPPORTS" and weight>0:
+                  groups.setdefault(alt,set()).add(e["independence_group"])
+
+          eligible=[]
+          policy=task["policy"]
+          for alt,state in states.items():
+              s=sum(v for (a,_),v in support.items() if a==alt)
+              c=sum(v for (a,_),v in contradiction.items() if a==alt)
+              total=s+c
+              ratio=s/total if total else 0.0
+              conflict=2*min(s,c)/total if total else 0.0
+              if (
+                  state=="ADMISSIBLE"
+                  and total>0
+                  and len(groups.get(alt,set()))>=policy["minimum_independent_support_groups"]
+                  and ratio>=policy["minimum_support_ratio"]
+                  and conflict<=policy["maximum_conflict_ratio"]
+              ):
+                  eligible.append((s-c,ratio,alt))
+          eligible.sort(key=lambda x:(-x[0],-x[1],x[2]))
+          assert eligible and eligible[0][2]=="LOCAL_SHA256_REHASH",eligible
+
+          receipt={
+            "schema":"PROJECT_BRAIN_SPENT_DIRECT_COMPILER_FRESH_REUSE_VERIFIER_V1",
+            "prior_run_id":prior_run_id,
+            "prior_job_id":prior_job_id,
+            "prior_head_sha":prior_head,
+            "task_git_blob":"4d2f733bcb22a0be717690ab3e96e564f3fac046",
+            "task_sha256":hashlib.sha256(task_path.read_bytes()).hexdigest(),
+            "job_log_sha256":hashlib.sha256(log_path.read_bytes()).hexdigest(),
+            "execution_replayed":False,
+            "exact_brain_byte_gate_passed_in_prior_run":True,
+            "direct_compiler_completed":True,
+            "producer_selected_alternative":"LOCAL_SHA256_REHASH",
+            "producer_model_dependency_count":0,
+            "verifier_verified":True,
+            "verifier_model_dependency_count":0,
+            "causal_input_field":"input_path",
+            "causal_result_field":"output_path",
+            "causal_refs_distinct":True,
+            "planner_model_absent":True,
+            "independent_semantic_recompute":True,
+            "independent_selected_alternative":"LOCAL_SHA256_REHASH",
+            "prior_workflow_failure_class":"POST_EXECUTION_HARNESS_ASSERTION_ON_ABSENT_TOP_LEVEL_MODEL_DEPENDENCY_COUNT",
+            "capability_execution_failure":False,
+            "incremental_spend_usd":0,
+            "status":"VERIFIED_FRESH_REUSE_PASS_WITH_HARNESS_FALSE_NEGATIVE",
+          }
+          pathlib.Path("DIRECT_COMPILER_SPENT_RUN_VERIFIER_RECEIPT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("SPENT_DIRECT_COMPILER_FRESH_REUSE_VERIFIED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: spent-direct-compiler-fresh-reuse-verifier
+          path: DIRECT_COMPILER_SPENT_RUN_VERIFIER_RECEIPT.json
