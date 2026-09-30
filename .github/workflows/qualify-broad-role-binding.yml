@@ -1,0 +1,26 @@
+name: Qualify Broad Research Role Binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/broad_objective_decompose.py
+      - canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py
+      - canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+      - canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json
+      - canonical/tests/test_broad_objective_role_binding.py
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run exact role-binding qualification
+        run: python canonical/tests/test_broad_objective_role_binding.py
