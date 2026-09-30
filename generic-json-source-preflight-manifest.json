@@ -1,0 +1,39 @@
+{
+  "schema": "PROJECT_BRAIN_GENERIC_JSON_SOURCE_PREFLIGHT_MANIFEST_V1",
+  "task_id": "PARENT-CHEMISTRY-AMMONIA-STOICHIOMETRY-CROSSCHECK-REAL-TASK-20260930-001",
+  "sources": [
+    {
+      "name": "nitrogen_mw",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/nitrogen/property/MolecularFormula,MolecularWeight/JSON",
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
+      "expected_type": "string"
+    },
+    {
+      "name": "hydrogen_mw",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/hydrogen/property/MolecularFormula,MolecularWeight/JSON",
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
+      "expected_type": "string"
+    },
+    {
+      "name": "ammonia_mw",
+      "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonia/property/MolecularFormula,MolecularWeight/JSON",
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
+      "expected_type": "string"
+    }
+  ]
+}
