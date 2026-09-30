@@ -5,7 +5,7 @@ import argparse,json,pathlib,re
 GUARD_TOKEN="guard.py run"
 DISCOVERY=re.compile(r"\b(?:python|python3|PYTHONPATH=\.\s+python)\s+[^\s]+\.py\b",re.I)
 RISK_NAME=re.compile(r"(?:once|one.?shot)",re.I)
-RISK_TEXT=re.compile(r"(?:ASTRA_DISABLE_MODEL_PLANNER|exactly once|terminal .*evidence|fresh .*qualification)",re.I)
+RISK_TEXT=re.compile(r"(?:ASTRA_DISABLE_MODEL_PLANNER|exactly once|execution_count)",re.I)
 
 def norm(s): return " ".join(s.strip().split())
 def audit(root:pathlib.Path,inventory_path:pathlib.Path)->list[str]:
