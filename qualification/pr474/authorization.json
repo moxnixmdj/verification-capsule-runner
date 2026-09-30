@@ -1,0 +1,19 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 474,
+  "brain_head_sha": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+  "brain_base_sha": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "exact_candidate_blobs": {
+    "canonical/runtime/bound_capabilities/broad_objective_decompose.py": "1efaec4ba51ecb5c40072b3190853f4de89d8f77",
+    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+    "canonical/tests/test_broad_objective_semantic_decomposition.py": "2df7c6ec85083458a69675f6ff86eca9c00ea278"
+  },
+  "canonical_runtime_blob": "426ffe58e405dc4f1ba2eb4e838e03a1df771964",
+  "purpose": "EXACT_BYTE_GUARDED_QUALIFICATION_OF_GENERIC_BROAD_MULTI_CLAUSE_ROUTING_REPAIR",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "spent_parent_run_id": 36688193204,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
