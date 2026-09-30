@@ -1,0 +1,53 @@
+name: Execute PR302 Parent Meteorology Once
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  task:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen parent meteorology task exactly once
+        run: python execute_parent_meteorology_power_once.py
+      - name: Upload terminal and independent oracle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-meteorology-nasa-power-real-task-v1
+          path: |
+            PARENT_METEOROLOGY_TERMINAL.json
+            PARENT_METEOROLOGY_ORACLE.json
+            canonical/astra_runtime/tmp/PARENT_METEOROLOGY_*.json
+            canonical/astra_runtime/tmp/NUMERIC_EXPRESSION_*.json
+            canonical/astra_runtime/tmp/NUMERIC_RELATION_*.json
+          if-no-files-found: warn
+      - name: Fail closed unless parent task and oracle pass
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          t=pathlib.Path("PARENT_METEOROLOGY_TERMINAL.json")
+          o=pathlib.Path("PARENT_METEOROLOGY_ORACLE.json")
+          if not t.is_file() or not o.is_file():
+              raise SystemExit("EVIDENCE_MISSING")
+          terminal=json.loads(t.read_text())
+          oracle=json.loads(o.read_text())
+          if terminal.get("semantic_status")!="PASS":
+              raise SystemExit("PARENT_SEMANTIC_FAIL:"+str(terminal.get("first_causal_gap")))
+          if oracle.get("status")!="PASS":
+              raise SystemExit("INDEPENDENT_ORACLE_FAIL:"+str(oracle))
+          print("PARENT_TASK_AND_ORACLE_PASS")
+          PY
