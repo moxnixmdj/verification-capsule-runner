@@ -87,9 +87,6 @@ def _bm25_scores(query_tokens, docs, k1=1.5, b=0.75):
 def _top_candidate_admission(query_tokens,matched_terms):
     qn=len(list(query_tokens or []))
     mn=len(list(matched_terms or []))
-    # Fail closed on weak subject coverage without using an absolute BM25 score.
-    # Short queries need one anchor; broader queries need at least two anchors
-    # and one quarter of the focused subject vocabulary.
     required=1 if qn<=3 else max(2,(qn+3)//4)
     return {
         "method":"FOCUSED_QUERY_TOKEN_COVERAGE_V1",
