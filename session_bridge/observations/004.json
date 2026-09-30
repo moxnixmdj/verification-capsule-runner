@@ -1,0 +1,10 @@
+{
+  "command_sha256": "242599f693d47a1621629f8267b915007af568dc5350ffc4ed91b4dc2d44b9df",
+  "duration_sec": 0.125,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-dev-20261001-v1",
+  "stderr": "",
+  "stdout": "ENGINE_BASIC_PASS\n",
+  "step": 4
+}
