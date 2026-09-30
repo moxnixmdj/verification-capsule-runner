@@ -10,10 +10,10 @@ from __future__ import annotations
 import hashlib
 import html
 import json
-import pathlib
 import re
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 
 SCHEMA = "PROJECT_BRAIN_OPEN_WEB_SOURCE_CANDIDATE_DISCOVERY_V1"
@@ -105,6 +105,41 @@ def _fetch(url, timeout):
         ctype = str(resp.headers.get("Content-Type") or "")
         return body, ctype, int(getattr(resp, "status", 200))
 
+
+def _bing_rss(query, limit, timeout):
+    endpoint = "https://www.bing.com/search?" + urllib.parse.urlencode({
+        "q": query,
+        "format": "rss",
+    })
+    body, ctype, status = _fetch(endpoint, timeout)
+    root = ET.fromstring(body.decode("utf-8", "replace"))
+    out = []
+    for item in root.findall(".//item"):
+        url = _safe_url(item.findtext("link"))
+        if not url:
+            continue
+        host = (urllib.parse.urlsplit(url).hostname or "").lower()
+        if host.endswith("bing.com"):
+            continue
+        out.append({
+            "url": url,
+            "host": host,
+            "title": _canon(item.findtext("title")),
+            "snippet": _canon(item.findtext("description")),
+            "source_class": "OPEN_WEB_SEARCH_CANDIDATE",
+            "discovery_backend": "BING_RSS",
+            "authority_status": "UNVERIFIED",
+        })
+        if len(out) >= limit:
+            break
+    return out, {
+        "backend": "BING_RSS",
+        "endpoint": "https://www.bing.com/search?format=rss",
+        "http_status": status,
+        "content_type": ctype,
+        "candidate_count": len(out),
+    }
+
 def _ddg(query, limit, timeout):
     endpoint = "https://html.duckduckgo.com/html/?" + urllib.parse.urlencode({"q": query})
     body, ctype, status = _fetch(endpoint, timeout)
@@ -183,7 +218,7 @@ def discover(objective, limit=12, timeout=15):
     traces = []
     errors = []
 
-    for name, fn in (("DUCKDUCKGO_HTML", _ddg), ("CROSSREF", _crossref)):
+    for name, fn in (("BING_RSS", _bing_rss), ("DUCKDUCKGO_HTML", _ddg), ("CROSSREF", _crossref)):
         try:
             found, trace = fn(query, limit, timeout)
             candidates.extend(found)
@@ -234,7 +269,8 @@ if __name__ == "__main__":
 
 
 def run(args,root):
-    """Bound-capability adapter for generic source-candidate discovery."""
+    """Bound-capability adapter for qualified source-candidate discovery."""
+    import pathlib
     args=dict(args or {})
     objective=str(args.get("goal") or args.get("objective") or "").strip()
     result=discover(
