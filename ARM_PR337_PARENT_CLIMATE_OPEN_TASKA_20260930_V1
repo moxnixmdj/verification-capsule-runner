@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_ONESHOT_ARM_V1",
+  "action": "EXECUTE_EXACTLY_ONCE",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_base": "797d5fbea5f230a31044006755beb98ae387134b",
+  "brain_pr": 337,
+  "brain_head": "0af30865752f71da09af7b324ab1ab734855290f",
+  "task_id": "PARENT-CLIMATE-MAUNA-LOA-CO2-ACCELERATION-OPEN-RESEARCH-TASK-A-20260930-001",
+  "task_blob": "6f0e889e23cfba6c511b3a54cb86acba48bc9d3a",
+  "runtime_blob": "6cb668bcc5a00665ea541fc5b6adf494f37ad1c9",
+  "runner_blob": "fc84d0e32989f8ca6d860c2a649d1c8d949e418a",
+  "workflow_blob": "7a01c05a01f57806cbb65997744980bd5862a7fa",
+  "model_planner_disabled": true,
+  "incremental_spend_usd": 0,
+  "replay_allowed": false
+}
