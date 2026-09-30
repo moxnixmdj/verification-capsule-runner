@@ -1,0 +1,10 @@
+{
+  "command_sha256": "03525ae3a5e5af8d57ffd11395a9daa4940098ba26a404fe8f2f016b2d49108f",
+  "duration_sec": 0.045,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "risk-scorer-replay-20260930-v1",
+  "stderr": "",
+  "stdout": "=== TREE ===\n/app/docs/migration_ticket.md\n/app/docs/probe_examples.md\n/app/docs/review_ops_digest.md\n/app/docs/stale_model_card.md\n/app/parityctl/__init__.py\n/app/parityctl/__main__.py\n/app/parityctl/cli.py\n/app/rebuild_parity_report.sh\n=== REVIEW-LIKE FILES ===\n/app/data/incidents/parity-2026-10/sources/thresholds.json\n/app/data/incidents/parity-2026-10/sources/review_events.csv\n/app/docs/migration_ticket.md\n/app/docs/review_ops_digest.md\n",
+  "step": 19
+}
