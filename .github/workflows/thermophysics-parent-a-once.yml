@@ -1,0 +1,42 @@
+name: Execute Thermophysics Parent A Once
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+permissions:
+  contents: read
+concurrency:
+  group: thermophysics-parent-a-20260930-002
+  cancel-in-progress: false
+jobs:
+  execute-once:
+    if: github.head_ref == 'execute/thermophysics-parent-a-once-20260930-v1' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen thermophysics parent task exactly once
+        id: parent
+        continue-on-error: true
+        run: python run_thermophysics_parent_a_once.py
+      - name: Upload terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermophysics-parent-a-terminal
+          path: thermophysics-parent-a-terminal.json
+          if-no-files-found: error
+      - name: Preserve terminal producer failure
+        if: steps.parent.outcome != 'success'
+        run: exit 1
