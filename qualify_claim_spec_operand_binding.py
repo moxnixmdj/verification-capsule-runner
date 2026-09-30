@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# synchronize-latest-pr447-capsule-v2
 from __future__ import annotations
 import hashlib, importlib.util, pathlib, re, unittest
 from decimal import Decimal
