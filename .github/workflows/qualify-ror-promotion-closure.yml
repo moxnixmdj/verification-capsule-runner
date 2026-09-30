@@ -1,0 +1,29 @@
+name: Qualify ROR Promotion Closure
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/source_authority_binding_ror.py
+      - canonical/tests/test_source_authority_binding_ror.py
+      - canonical/tests/test_ror_promotion_closure.py
+      - canonical/capabilities/obsolescence/MODEL_INDEPENDENT_ROR_SOURCE_AUTHORITY_IDENTITY_PROMOTION_20260930_V1.json
+      - canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json
+      - .github/workflows/qualify-ror-promotion-closure.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Deterministic canonical regressions
+        run: python canonical/tests/test_source_authority_binding_ror.py
+      - name: Independent installation closure
+        run: python canonical/tests/test_ror_promotion_closure.py
