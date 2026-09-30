@@ -3,14 +3,16 @@ name: Run ca16 World Bank Open-Ended Task A Once
 on:
   pull_request:
     branches: [main]
-    types: [synchronize]
+    types: [opened]
+    paths:
+      - ARM_CA16_WORLDBANK_OPENENDED_TASKA_20260930_V1
 
 permissions:
   contents: read
 
 jobs:
   execute-once:
-    if: github.head_ref == 'execute/ca16-worldbank-openended-taska-once-20260930-v1'
+    if: github.head_ref == 'arm/ca16-worldbank-openended-taska-once-20260930-v1'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     env:
