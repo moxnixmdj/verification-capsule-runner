@@ -1,4 +1,4 @@
-name: Verify PR293 Numeric Relation JQ Reuse
+name: Verify Parent Runtime Closure Prestart Gate
 
 on:
   push:
@@ -25,12 +25,12 @@ jobs:
         run: sudo apt-get update
       - name: Run deterministic compiler regressions
         run: python canonical/tests/test_numeric_relation_jq_reuse.py
-      - name: Run fresh cross-domain numeric relation task and independent oracle
-        run: python verify_numeric_relation_jq_reuse.py
+      - name: Verify complete parent runtime path before any one-shot task
+        run: python verify_parent_runtime_closure_prestart.py
       - name: Upload verification report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pr293-numeric-relation-jq-reuse-report
-          path: numeric-relation-fresh-report.json
+          name: parent-runtime-closure-prestart-report
+          path: parent-runtime-closure-prestart-report.json
           if-no-files-found: error
