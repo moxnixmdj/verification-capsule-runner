@@ -1,0 +1,60 @@
+name: Qualify Open Web Source Candidate Discovery
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ARM_OPEN_WEB_SOURCE_CANDIDATE_DISCOVERY_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run authored qualification suite
+        run: python -m unittest -v canonical.tests.test_open_web_source_candidate_discovery
+      - name: Independent fresh-objective oracle
+        run: |
+          python - <<'PY'
+          import importlib.util, json, pathlib, urllib.parse
+          p=pathlib.Path("canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py")
+          spec=importlib.util.spec_from_file_location("candidate_discovery_oracle_target",p)
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          cases=[
+              "PostgreSQL transaction isolation official documentation",
+              "aluminum fatigue crack growth experimental measurements",
+              "WebAssembly core specification official",
+          ]
+          report=[]
+          for q in cases:
+              x=m.discover(q,limit=8,timeout=20)
+              assert x["status"]=="CANDIDATES_DISCOVERED", x
+              assert x["candidate_count"]>=1, x
+              assert x["query"]==q
+              assert all(c.get("authority_status")=="UNVERIFIED" for c in x["candidates"])
+              assert x["model_dependency_count"]==0
+              report.append({
+                  "query":q,
+                  "candidate_count":x["candidate_count"],
+                  "hosts":[c["host"] for c in x["candidates"][:5]],
+                  "backends":sorted(set(c["discovery_backend"] for c in x["candidates"])),
+              })
+          pathlib.Path("open-web-source-candidate-discovery-oracle.json").write_text(
+              json.dumps({"status":"PASS","cases":report},indent=2)+"\n",encoding="utf-8"
+          )
+          print(json.dumps(report,indent=2))
+          PY
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-web-source-candidate-discovery-qualification
+          path: open-web-source-candidate-discovery-oracle.json
+          if-no-files-found: warn
