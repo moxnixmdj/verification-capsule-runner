@@ -30,7 +30,7 @@ EXPECTED_BLOBS={
 
 def git_blob_sha(path):
     raw=path.read_bytes()
-    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest()
+    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\x00"+raw).hexdigest()
 
 def emit(report):
     REPORT.write_text(json.dumps(report,indent=2,sort_keys=True,default=str)+"\\n",encoding="utf-8")
