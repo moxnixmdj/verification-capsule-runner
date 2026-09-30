@@ -10,19 +10,34 @@
     "ammonia": {
       "authority": "NIH PubChem",
       "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonia/property/MolecularWeight/JSON",
-      "json_path": ["PropertyTable", "Properties", 0, "MolecularWeight"],
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
       "units": "g/mol"
     },
     "hydrogen_chloride": {
       "authority": "NIH PubChem",
       "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/hydrogen%20chloride/property/MolecularWeight/JSON",
-      "json_path": ["PropertyTable", "Properties", 0, "MolecularWeight"],
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
       "units": "g/mol"
     },
     "ammonium_chloride": {
       "authority": "NIH PubChem",
       "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonium%20chloride/property/MolecularWeight/JSON",
-      "json_path": ["PropertyTable", "Properties", 0, "MolecularWeight"],
+      "json_path": [
+        "PropertyTable",
+        "Properties",
+        0,
+        "MolecularWeight"
+      ],
       "units": "g/mol"
     }
   },
@@ -36,7 +51,14 @@
   "goal_text": "Using the authoritative JSON source https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonia/property/MolecularWeight/JSON, extract JSON path PropertyTable.Properties.0.MolecularWeight and save the knowledge evidence to canonical/astra_runtime/tmp/PARENT_CHEMISTRY_AMMONIA_MW.json. Using the authoritative JSON source https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/hydrogen%20chloride/property/MolecularWeight/JSON, extract JSON path PropertyTable.Properties.0.MolecularWeight and save the knowledge evidence to canonical/astra_runtime/tmp/PARENT_CHEMISTRY_HYDROGEN_CHLORIDE_MW.json. Using the authoritative JSON source https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ammonium%20chloride/property/MolecularWeight/JSON, extract JSON path PropertyTable.Properties.0.MolecularWeight and save the knowledge evidence to canonical/astra_runtime/tmp/PARENT_CHEMISTRY_AMMONIUM_CHLORIDE_MW.json. Calculate the predicted ammonium chloride molecular weight using predicted_product_mw = ammonia_mw + hydrogen_chloride_mw. Determine whether the predicted and official molecular weight scalars differ by at most 0.05.",
   "required_result": {
     "producer_result": "The final bounded numeric relation artifact emitted by the compiled controller plan.",
-    "required_fields": ["left", "right", "threshold", "absolute_difference", "relation", "predicate"],
+    "required_fields": [
+      "left",
+      "right",
+      "threshold",
+      "absolute_difference",
+      "relation",
+      "predicate"
+    ],
     "threshold": 0.05
   },
   "execution_constraints": {
