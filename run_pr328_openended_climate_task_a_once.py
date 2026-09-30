@@ -11,13 +11,13 @@ RUNTIME = ROOT / "canonical" / "runtime"
 TASK_PATH = ROOT / "canonical/tasks/PARENT_CLIMATE_MAUNA_LOA_CO2_ACCELERATION_OPEN_RESEARCH_TASK_A_20260930_001.json"
 REPORT = ROOT / "pr328-openended-climate-task-a-terminal.json"
 
-BRAIN_BASE = "aa8f55bd9ead298ec0380bd9dbf45bc8d7c41a8e"
-BRAIN_PR = 328
-BRAIN_HEAD = "ccc9209c4d29bc7a04fc4ff2aaf5c459e91ea832"
+BRAIN_BASE = "797d5fbea5f230a31044006755beb98ae387134b"
+BRAIN_PR = 337
+BRAIN_HEAD = "38421b41da15f82d81d0595bc4c25624398258c6"
 TASK_ID = "PARENT-CLIMATE-MAUNA-LOA-CO2-ACCELERATION-OPEN-RESEARCH-TASK-A-20260930-001"
 
 EXPECTED_BLOBS = {
-    "canonical/runtime/astra_runtime.py": "a73410e38d4c67d92188e934e0c0c3f0b2b329ee",
+    "canonical/runtime/astra_runtime.py": "6cb668bcc5a00665ea541fc5b6adf494f37ad1c9",
     "canonical/runtime/goal_compiler.py": "4b61fe911471854ec15c7900816f61e9e55f602e",
     "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json": "a22761070ba4d45d3eae7b684d5c66cfb0601669",
     "canonical/runtime/capability_planner.py": "64ff65cb184f50d3336326f33cccfcc0a53301a8",
@@ -152,8 +152,7 @@ step = {
     "max_controller_actions": 64,
 }
 try:
-    run = runtime._run_model_independent_goal(step, mission, goal)
-    run = runtime._stamp_cognition_provenance(run)
+    run = runtime.run_goal(step, mission)
 except Exception as exc:
     report.update({
         "status": "FAIL_FIRST_CAUSAL_GAP",
@@ -170,7 +169,12 @@ except Exception as exc:
 report["runtime_result"] = run
 report["model_dependency_count"] = run.get("model_dependency_count")
 report["cognition_dependency_class"] = run.get("cognition_dependency_class")
-if run.get("model_dependency_count") != 0 or run.get("cognition_dependency_class") != "MODEL_INDEPENDENT":
+report["cognition_provenance_authority"] = run.get("cognition_provenance_authority")
+if (
+    run.get("model_dependency_count") != 0
+    or run.get("cognition_dependency_class") != "MODEL_INDEPENDENT"
+    or run.get("cognition_provenance_authority") != "ASTRA_RUNTIME_DERIVED_V1"
+):
     report.update({
         "status": "FAIL_FIRST_CAUSAL_GAP",
         "parent_task_completed": False,
