@@ -1,0 +1,14 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "GUARDED_ADVERSARIAL_EXACT_BYTE_QUALIFICATION_OF_BRAIN_PR496",
+  "brain_pr": 496,
+  "brain_candidate_head": "d472da3082c8a26d16b91aad0997cb369ee5180e",
+  "brain_base": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+  "authoritative_falsification_run": 36689999285,
+  "authoritative_falsification_job": 109804684560,
+  "parent_task_execution": false,
+  "same_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
