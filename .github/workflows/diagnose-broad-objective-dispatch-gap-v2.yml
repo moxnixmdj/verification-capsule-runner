@@ -1,0 +1,56 @@
+name: Diagnose Broad Objective Dispatch Gap V2
+on:
+  pull_request:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect decisive compiler and grounding surfaces
+        run: |
+          python3 - <<'PY'
+          import ast,json,pathlib,re
+          gp=pathlib.Path("canonical/runtime/goal_compiler.py")
+          s=gp.read_text(); t=ast.parse(s)
+          funcs={n.name:n for n in t.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}
+          for name in ["_compile_single_goal","_compile_compound_goal"]:
+              n=funcs[name]
+              lines=s.splitlines()
+              if name=="_compile_compound_goal":
+                  start=max(n.lineno-1,n.end_lineno-260)
+                  print("### COMPOUND_TAIL",start+1,n.end_lineno)
+                  print("\n".join(lines[start:n.end_lineno]))
+                  print("### COMPOUND_KEY_LINES")
+                  for i in range(n.lineno-1,n.end_lineno):
+                      line=lines[i]
+                      if any(k in line.lower() for k in ("ground","proposal","planner","discover","no_verified","unresolved","single_goal")):
+                          print(f"{i+1}: {line}")
+              else:
+                  print("###",name,n.lineno,n.end_lineno)
+                  print("\n".join(lines[n.lineno-1:n.end_lineno]))
+          pg=pathlib.Path("canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py")
+          ps=pg.read_text(); pt=ast.parse(ps)
+          pfuncs={n.name:n for n in pt.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}
+          for name in ["decompose","_lexical_method","_similarity_method","_binding_affordance","_admit_bindable_candidates","ground"]:
+              n=pfuncs.get(name)
+              if n:
+                  print("\n### GROUND",name,n.lineno,n.end_lineno)
+                  print("\n".join(ps.splitlines()[n.lineno-1:n.end_lineno]))
+          reg=json.loads(pathlib.Path("canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          keys=("web","browser","search","http","json","source","discover","semantic","knowledge","query")
+          print("\n### RELEVANT_REGISTRY")
+          for cid,entry in sorted(reg.items()):
+              blob=" ".join([cid,str(entry.get("description") or ""),str(entry.get("requires") or ""),str(entry.get("provides") or "")]).lower()
+              if any(k in blob for k in keys):
+                  print(json.dumps({
+                      "id":cid,"status":entry.get("status"),"description":entry.get("description"),
+                      "requires":entry.get("requires"),"provides":entry.get("provides"),
+                      "result_fields":entry.get("result_fields"),"input_schema":entry.get("input_schema"),
+                      "action_type":(entry.get("action_template") or {}).get("type") if isinstance(entry.get("action_template"),dict) else None,
+                      "spend":entry.get("incremental_spend_usd",0)
+                  },sort_keys=True))
+          PY
