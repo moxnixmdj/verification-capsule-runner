@@ -15,7 +15,7 @@ EXPECTED_BLOBS={
   "canonical/runtime/goal_compiler.py":"f1c72b7a1d2aebf146d2702a49e425605fa17217",
   "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json":"23f7b79fca15593eb563bdcdba17c8b972f006db",
   "canonical/runtime/bound_capabilities/numeric_expression_sympy.py":"443e3386f11156e55635556b6e8f8ad7d7733592",
-  "canonical/tests/test_numeric_expression_sympy_binding.py":"9d0b043d6a02958ddd3887d8dbdcffcbfd6250b0",
+  "canonical/tests/test_numeric_expression_sympy_binding.py":"50beabfde103f8f3e75dc0139ab75ac88cd9c08d",
 }
 BRAIN_BASE="7e4fceab972c4e2c0364ae4b7db934bc319ce2c0"
 BRAIN_PR=298
