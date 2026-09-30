@@ -1,0 +1,1 @@
+ARM exactly one producer execution for canonical Brain PR337 climate Task A after pinning exact hardened runtime blob 6cb668bcc5a00665ea541fc5b6adf494f37ad1c9. Previous carrier attempts recorded execution_count=0 and task_executed=false. No replay after this arm crosses execution boundary.
