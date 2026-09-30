@@ -1,0 +1,188 @@
+name: Fresh Grounding Real Task - Click Repository Identity
+
+on:
+  push:
+    branches:
+      - fresh-grounding-click-20260930
+    paths:
+      - ARM_FRESH_GROUNDING_CLICK_20260930
+
+permissions:
+  contents: read
+
+jobs:
+  task:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact merged PR261 runtime capsule
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "c19466687fd2d17e45dc6ba263b42301bed432d1"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "82514d06b45c72f04cdaea316d872609559a53a4"
+
+      - name: Execute fresh real task exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+
+          root=pathlib.Path(".").resolve()
+          path=root/"canonical/runtime/astra_runtime.py"
+          spec=importlib.util.spec_from_file_location("fresh_click_grounding_runtime",path)
+          runtime=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=runtime
+          spec.loader.exec_module(runtime)
+
+          goal=(
+            "Fetch JSON from https://api.github.com/repos/pallets/click. "
+            "Fetch JSON from https://api.github.com/repositories/19103692. "
+            "Assess knowledge consistency."
+          )
+          mission={
+            "mission_id":"GROUNDING-REPAIR-FRESH-REAL-TASK-CLICK-20260930",
+            "goal":goal,
+          }
+          step={
+            "adapter":"goal",
+            "goal_ref":"goal",
+            "verified_initial_facts":["network.http.available"],
+            "max_controller_actions":12,
+          }
+
+          result=runtime.run_goal(step,mission)
+          assert result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN",result
+          assert result.get("planner_model_last") is None,result
+          assert result.get("composition_mode")=="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH",result
+          assert result.get("model_dependency_count")==0,result
+
+          grounding_path=pathlib.Path(result["grounding_evidence_path"])
+          composition_path=pathlib.Path(result["composition_evidence_path"])
+          grounding=json.loads(grounding_path.read_text(encoding="utf-8"))
+          composition=json.loads(composition_path.read_text(encoding="utf-8"))
+
+          assert grounding["input_contract_bindability_enforced"] is True,grounding
+          assert grounding["grounded_clause_count"]>=3,grounding
+          assert grounding["unresolved_clause_indexes"]==[],grounding
+          assert composition["composition_ready"] is True,composition
+          assert composition["model_dependency_count"]==0,composition
+          assert composition["verified_initial_facts"]==["network.http.available"],composition
+          assert composition["required_external_initials"]==["network.http.available"],composition
+
+          trace=result.get("trace") or []
+          fetches=[
+            x["result"] for x in trace
+            if isinstance(x,dict) and isinstance(x.get("result"),dict)
+            and x["result"].get("type")=="fetch_json_knowledge"
+          ]
+          assessments=[
+            x["result"] for x in trace
+            if isinstance(x,dict) and isinstance(x.get("result"),dict)
+            and x["result"].get("type")=="assess_knowledge_consistency"
+          ]
+          assert len(fetches)==2,fetches
+          assert len(assessments)==1,assessments
+          assert all(x.get("verified") is True for x in fetches),fetches
+          assert assessments[0].get("verified") is True,assessments
+
+          evidence={
+            "schema":"PROJECT_BRAIN_GROUNDING_REPAIR_FRESH_REAL_TASK_CLICK_V1",
+            "goal":goal,
+            "result":result,
+            "grounding":grounding,
+            "composition":composition,
+            "fetches":fetches,
+            "assessment_result":assessments[0],
+            "assessment_path":assessments[0]["output_path"],
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+          }
+          pathlib.Path("GROUNDING_REPAIR_FRESH_REAL_TASK_CLICK.json").write_text(
+            json.dumps(evidence,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("FRESH_CLICK_TASK_EXECUTION_COMPLETE")
+          PY
+
+      - name: Independently verify captured assessment and live repository identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,urllib.request
+
+          ep=pathlib.Path("GROUNDING_REPAIR_FRESH_REAL_TASK_CLICK.json")
+          ev=json.loads(ep.read_text(encoding="utf-8"))
+          ap=pathlib.Path(ev["assessment_path"])
+          assessment=json.loads(ap.read_text(encoding="utf-8"))
+
+          assert assessment["evidence_count"]==2,assessment
+          assert assessment["fresh_evidence_count"]==2,assessment
+          assert assessment["invalid"]==[],assessment
+          records=assessment["records"]
+          assert len(records)==2,records
+          source_urls={x["source_url"] for x in records}
+          assert source_urls=={
+            "https://api.github.com/repos/pallets/click",
+            "https://api.github.com/repositories/19103692",
+          },source_urls
+          assert len({x["source_identity"] for x in records})==2,records
+
+          canonical={
+            json.dumps(x["value"],sort_keys=True,separators=(",",":"),ensure_ascii=False)
+            for x in records
+          }
+          expected_status="SUPPORTED" if len(canonical)==1 else "CONFLICTED"
+          assert assessment["status"]==expected_status,(expected_status,assessment["status"])
+
+          live=[]
+          for url in sorted(source_urls):
+              req=urllib.request.Request(url,headers={
+                  "User-Agent":"ProjectBrain-Independent-Click-Verifier/1",
+                  "Accept":"application/vnd.github+json",
+              })
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  assert 200 <= int(r.status) < 300
+                  live.append(json.loads(r.read().decode("utf-8")))
+
+          for obj in live:
+              assert obj["id"]==19103692,obj.get("id")
+              assert obj["full_name"]=="pallets/click",obj.get("full_name")
+              assert obj["default_branch"]=="main",obj.get("default_branch")
+
+          ev["independent_verification"]={
+            "verified":True,
+            "producer_independent":True,
+            "captured_assessment_status_verified":True,
+            "observed_status":assessment["status"],
+            "live_repo_id":19103692,
+            "live_full_name":"pallets/click",
+            "live_default_branch":"main",
+            "assessment_sha256":hashlib.sha256(ap.read_bytes()).hexdigest(),
+          }
+          ep.write_text(json.dumps(ev,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print("FRESH_CLICK_REAL_TASK_VERIFIED")
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: fresh-grounding-click-real-task-evidence
+          if-no-files-found: warn
+          path: |
+            GROUNDING_REPAIR_FRESH_REAL_TASK_CLICK.json
+            canonical/astra_runtime/evidence/GROUNDING-REPAIR-FRESH-REAL-TASK-CLICK-20260930__BOUND_CAPABILITY_GROUNDING.json
+            canonical/astra_runtime/evidence/GROUNDING-REPAIR-FRESH-REAL-TASK-CLICK-20260930__GROUNDED_EXECUTABLE_COMPOSITION.json
+            canonical/astra_runtime/tmp/*.json
