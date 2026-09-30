@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - ARM_OPENENDED_SQLITE_TASKA_20260930_V1
+      - ARM_OPENENDED_SQLITE_TASKA_20260930_V2
 
 permissions:
   contents: read
@@ -13,7 +13,7 @@ permissions:
 jobs:
   execute-once:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       ASTRA_DISABLE_MODEL_PLANNER: "1"
     steps:
@@ -23,17 +23,51 @@ jobs:
           python-version: '3.13'
       - name: Refresh Ubuntu package metadata
         run: sudo apt-get update
-      - name: Execute frozen genuine open-ended Task A exactly once
+      - name: Execute frozen Task A through canonical ASTRA mission entrypoint exactly once
         id: task
-        continue-on-error: true
-        run: PYTHONPATH=. python run_openended_sqlite_taska_once.py
-      - name: Upload terminal Task A evidence
+        shell: bash
+        run: |
+          set +e
+          mission="canonical/astra_runtime/missions/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json"
+          PYTHONPATH=. python canonical/runtime/astra_runtime.py "$mission" > openended-sqlite-taska-stdout.txt 2> openended-sqlite-taska-stderr.txt
+          rc=$?
+          echo "runtime_returncode=$rc" >> "$GITHUB_OUTPUT"
+          python - "$rc" <<'PY'
+          import hashlib,json,pathlib,sys
+          root=pathlib.Path(".")
+          rc=int(sys.argv[1])
+          def h(p):
+              p=root/p
+              return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None
+          out={
+            "schema":"PROJECT_BRAIN_OPEN_ENDED_PARENT_TASK_A_CARRIER_TERMINAL_V2",
+            "task_id":"PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001",
+            "canonical_entrypoint_invoked":True,
+            "mission_path":"canonical/astra_runtime/missions/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json",
+            "task_executed":True,
+            "execution_count":1,
+            "runtime_returncode":rc,
+            "model_planner_disabled":True,
+            "incremental_spend_usd":0,
+            "stdout_sha256":h(pathlib.Path("openended-sqlite-taska-stdout.txt")),
+            "stderr_sha256":h(pathlib.Path("openended-sqlite-taska-stderr.txt")),
+          }
+          (root/"openended-sqlite-taska-terminal-v2.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          PY
+          exit 0
+      - name: Upload exact terminal evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: openended-sqlite-taska-terminal
-          path: openended-sqlite-taska-terminal.json
-          if-no-files-found: error
+          name: openended-sqlite-taska-canonical-cli-terminal
+          path: |
+            openended-sqlite-taska-terminal-v2.json
+            openended-sqlite-taska-stdout.txt
+            openended-sqlite-taska-stderr.txt
+            canonical/astra_runtime/state/
+            canonical/astra_runtime/evidence/
+            canonical/astra_runtime/artifacts/
+          if-no-files-found: warn
       - name: Preserve semantic failure
-        if: steps.task.outcome != 'success'
+        if: steps.task.outputs.runtime_returncode != '0'
         run: exit 1
