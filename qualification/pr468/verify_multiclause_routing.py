@@ -70,14 +70,14 @@ generic_method=(
     "verification method, identify material scope limitations, independently verify "
     "the consequential result, and produce a decision-quality answer."
 )
-generic_out=b.decompose(generic_method)
+generic_out=d.decompose(generic_method)
 assert generic_out["status"]=="DECOMPOSED", generic_out
 
-concrete_out=b.decompose("Assess whether two measured values differ. Run python verify_values.py")
+concrete_out=d.decompose("Assess whether two measured values differ. Run python verify_values.py")
 assert concrete_out["status"]=="UNSUPPORTED", concrete_out
 assert concrete_out["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE", concrete_out
 
-url_out=b.decompose("Assess whether two measured values differ using https://example.com/data")
+url_out=d.decompose("Assess whether two measured values differ using https://example.com/data")
 assert url_out["status"]=="UNSUPPORTED", url_out
 assert url_out["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE", url_out
 print("PR474_EXPLICIT_RECIPE_BOUNDARY_PASS")
