@@ -1,0 +1,10 @@
+{
+  "command_sha256": "168cbcfbfe3f977dea13615de34ad8a8f6e14e2de459b9bcf463b15b406435ed",
+  "duration_sec": 4.775,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v1",
+  "stderr": "",
+  "stdout": "EXACT_APPLY_1_2M_SEC 1.984\nEXACT_CHECKPOINT_BYTES 44904389 ENCODE_SEC 1.964\nEXACT_1_2M_ROUNDTRIP_PASS\nOLD_DUPLICATE_EXACTLY_SUPPRESSED_PASS\n",
+  "step": 13
+}
