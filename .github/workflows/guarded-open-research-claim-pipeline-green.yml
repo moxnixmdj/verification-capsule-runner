@@ -1,0 +1,44 @@
+name: Guarded Open Research Claim Pipeline Green
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/astra_runtime.py
+      - canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - canonical/runtime/bound_capabilities/objective_claim_operand_binding.py
+      - canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py
+      - canonical/tests/test_open_research_claim_relation_integration.py
+      - verify_open_research_claim_pipeline_integration.py
+      - green_open_research_claim_integration_authorization.json
+      - guarded_open_research_claim_pipeline_green_plan.json
+      - .github/workflows/guarded-open-research-claim-pipeline-green.yml
+
+permissions:
+  contents: write
+
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/guarded-open-research-claim-pipeline-integration-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Admit once then qualify exact integrated bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_open_research_claim_pipeline_green_plan.json --receipt guarded-open-research-green-admission.json
+      - name: Upload guarded green evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-open-research-claim-pipeline-green
+          path: |
+            guarded-open-research-green-admission.json
+            guarded_open_research_claim_pipeline_green_plan.json
+          if-no-files-found: warn
