@@ -1,0 +1,39 @@
+name: Execute Frozen SQLite Open-Ended Task A Canonical CLI Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_OPENENDED_SQLITE_TASKA_CANONICAL_CLI_20260930_V2
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen SQLite Task A once through canonical ASTRA CLI
+        id: task
+        continue-on-error: true
+        run: PYTHONPATH=. python run_openended_sqlite_taska_canonical_cli_once.py
+      - name: Upload immutable terminal Task A evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openended-sqlite-taska-canonical-cli-terminal
+          path: openended-sqlite-taska-canonical-cli-terminal.json
+          if-no-files-found: error
+      - name: Preserve first causal failure
+        if: steps.task.outcome != 'success'
+        run: exit 1
