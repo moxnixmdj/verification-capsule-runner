@@ -1,0 +1,65 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the exact current-base Project Brain open-research claim pipeline integration: generic extracted evidence must reach the already-verified objective claim-spec operand binder and relation evaluator, unsupported objectives must fail closed, and truth or sufficiency must remain unclaimed.",
+  "frozen": {
+    "gate_id": "BRAIN-OPEN-RESEARCH-CLAIM-PIPELINE-INTEGRATION-GREEN-20260930-V1",
+    "problem_sha256": "6af84ab42b3640f86959b55f00597e06df650a2c2f1f663d21ffb00ad70e8763",
+    "task_sha256": "2a82cb4dd3a4c5cdfe908e22a8b71a88499d2b4c5d5b371986462493c412619d",
+    "runtime_sha256": "12addfdde1d36652abdbd6be94987e79c90cbc09b39663dc777e6ea6929debc7",
+    "canonical_base": "f0f87c981d77b552caa21844e6bcc7b83116f339",
+    "authorization_sha256": "292c6b1a28db772add83f4aeb95052a7318cdf9d745bdcbfe4a00b6d159c3f19"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/astra_runtime.py",
+      "git_blob_sha1": "426ffe58e405dc4f1ba2eb4e838e03a1df771964"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/open_research_source_frontend.py",
+      "git_blob_sha1": "1ec11496aa84f261fc2c7e8e689ba687581d8b3c"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py",
+      "git_blob_sha1": "48fd058430d8d361fc75beced567c7b6d1166531"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py",
+      "git_blob_sha1": "d66a7eb30774f66160b698d8082947776888293d"
+    },
+    {
+      "path": "canonical/tests/test_open_research_claim_relation_integration.py",
+      "git_blob_sha1": "7e519760ec5fdfcee6ded8ca99e955e07ccbd08f"
+    },
+    {
+      "path": "verify_open_research_claim_pipeline_integration.py",
+      "git_blob_sha1": "9b9d57207756c1e9d90c31d8d9982581e2d44ffc"
+    },
+    {
+      "path": "green_open_research_claim_integration_authorization.json",
+      "git_blob_sha1": "eef192852d4369a50efb4a66a6240434b336b88e"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_open_research_claim_relation_integration.py && python verify_open_research_claim_pipeline_integration.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_repair_branch": "repair/currentbase-open-research-claim-pipeline-integration-20260930-v1",
+    "parent_task_execution": false,
+    "red_run_id": 36687982814
+  }
+}
