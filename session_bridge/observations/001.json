@@ -1,0 +1,10 @@
+{
+  "command_sha256": "94c42415391571e4a34904c246516b961712afc77fe30cd83b854b5ad895fe32",
+  "duration_sec": 0.189,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-dev-20261001-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"<stdin>\", line 21, in <module>\nAssertionError\n",
+  "stdout": "",
+  "step": 1
+}
