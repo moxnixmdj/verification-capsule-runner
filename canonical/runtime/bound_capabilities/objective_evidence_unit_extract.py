@@ -29,10 +29,12 @@ from html.parser import HTMLParser
 SCHEMA = "PROJECT_BRAIN_OBJECTIVE_EVIDENCE_UNIT_EXTRACTION_V2"
 UA = "ProjectBrain-EvidenceUnitExtraction/2.0"
 
-_BLOCK_TAGS = {
+_BOUNDARY_TAGS = {
+    "html","body","main","article","section","aside","div",
     "h1","h2","h3","h4","h5","h6",
-    "p","li","dt","dd","blockquote","td","th","pre",
-    "main","article","section","div",
+    "p","li","dt","dd","blockquote","pre",
+    "table","thead","tbody","tfoot","tr","td","th",
+    "figure","figcaption","address","details","summary","hr","br",
 }
 _SUPPRESS = {"script","style","noscript","svg","nav","footer","header","form"}
 _STOP = {
@@ -117,50 +119,65 @@ def _tokens(text):
             out.append(token)
     return out
 
-class _Blocks(HTMLParser):
+class _VisibleRuns(HTMLParser):
+    """Capture visible text once, independent of nested container choice.
+
+    Data is accumulated into one current run. Structural boundaries flush the
+    run; nested containers never receive duplicate copies of descendant text.
+    Unknown/custom and inline elements are transparent, so their visible text
+    remains capturable without maintaining an exhaustive tag whitelist.
+    """
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.suppress = 0
-        self.stack = []
-        self.blocks = []
+        self.parts = []
+        self.current = []
+        self.current_tag = "text"
+
+    def _flush(self):
+        text = _canon(" ".join(self.current))
+        if text:
+            self.parts.append((self.current_tag, text))
+        self.current = []
 
     def handle_starttag(self, tag, attrs):
         low = tag.lower()
         if low in _SUPPRESS:
+            if not self.suppress:
+                self._flush()
             self.suppress += 1
+            return
         if self.suppress:
             return
-        if low in _BLOCK_TAGS:
-            self.stack.append([low, []])
+        if low in _BOUNDARY_TAGS:
+            self._flush()
+            self.current_tag = low
 
     def handle_endtag(self, tag):
         low = tag.lower()
         if low in _SUPPRESS:
             if self.suppress:
                 self.suppress -= 1
+            if not self.suppress:
+                self.current_tag = "text"
             return
-        if self.suppress or low not in _BLOCK_TAGS or not self.stack:
+        if self.suppress:
             return
-        idx = None
-        for i in range(len(self.stack) - 1, -1, -1):
-            if self.stack[i][0] == low:
-                idx = i
-                break
-        if idx is None:
-            return
-        tag_name, parts = self.stack.pop(idx)
-        text = _canon(" ".join(parts))
-        if text:
-            self.blocks.append((tag_name, text))
+        if low in _BOUNDARY_TAGS:
+            self._flush()
+            self.current_tag = "text"
 
     def handle_data(self, data):
-        if self.suppress or not self.stack:
+        if self.suppress:
             return
         text = _canon(data)
-        if not text:
-            return
-        for frame in self.stack:
-            frame[1].append(text)
+        if text:
+            self.current.append(text)
+
+    def close(self):
+        super().close()
+        if not self.suppress:
+            self._flush()
 
 def _split_long(text, max_chars=900):
     text = _canon(text)
@@ -194,7 +211,7 @@ def _split_long(text, max_chars=900):
 
 def _extract_blocks(raw, content_type):
     decoded = raw.decode("utf-8", "replace")
-    parser = _Blocks()
+    parser = _VisibleRuns()
     if "html" in str(content_type or "").lower() or "<html" in decoded[:2000].lower():
         try:
             parser.feed(decoded)
