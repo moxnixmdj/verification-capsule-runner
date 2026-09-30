@@ -1,0 +1,180 @@
+{
+  "schema": "PROJECT_BRAIN_TYPED_DECISION_PROBLEM_V1",
+  "decision_id": "DIRECT-COMPILER-FRESH-REUSE-ARTIFACT-INTEGRITY-20260930",
+  "question": "Which verification strategy should protect an immutable local evidence artifact when the required properties are offline operation, exact content integrity, deterministic reproducibility, and zero incremental spend?",
+  "alternatives": [
+    {
+      "id": "LOCAL_SHA256_REHASH",
+      "label": "Recompute SHA-256 from the local artifact bytes and compare against the recorded digest"
+    },
+    {
+      "id": "FILE_MTIME_AND_SIZE",
+      "label": "Trust file modification time and byte size without hashing content"
+    },
+    {
+      "id": "REMOTE_ETAG_ONLY",
+      "label": "Trust a remote HTTP ETag as the sole integrity check"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "SHA_OFFLINE",
+      "alternative": "LOCAL_SHA256_REHASH",
+      "state": "SATISFIED",
+      "required": true,
+      "description": "Verification must work without network access.",
+      "provenance": [
+        {
+          "source": "Python standard library",
+          "ref": "hashlib.sha256 operates on local bytes"
+        }
+      ]
+    },
+    {
+      "id": "SHA_CONTENT",
+      "alternative": "LOCAL_SHA256_REHASH",
+      "state": "SATISFIED",
+      "required": true,
+      "description": "Verification must depend on exact artifact content.",
+      "provenance": [
+        {
+          "source": "SHA-256 contract",
+          "ref": "digest is computed from artifact bytes"
+        }
+      ]
+    },
+    {
+      "id": "SHA_DETERMINISTIC",
+      "alternative": "LOCAL_SHA256_REHASH",
+      "state": "SATISFIED",
+      "required": true,
+      "description": "The same bytes must produce the same verification value.",
+      "provenance": [
+        {
+          "source": "SHA-256 contract",
+          "ref": "deterministic hash function"
+        }
+      ]
+    },
+    {
+      "id": "SHA_ZERO_SPEND",
+      "alternative": "LOCAL_SHA256_REHASH",
+      "state": "SATISFIED",
+      "required": true,
+      "description": "Verification must require zero incremental paid service.",
+      "provenance": [
+        {
+          "source": "Python standard library",
+          "ref": "hashlib is local and included"
+        }
+      ]
+    },
+    {
+      "id": "MTIME_CONTENT",
+      "alternative": "FILE_MTIME_AND_SIZE",
+      "state": "VIOLATED",
+      "required": true,
+      "description": "Metadata alone must establish exact content integrity.",
+      "provenance": [
+        {
+          "source": "Filesystem semantics",
+          "ref": "different bytes can share file size and timestamps can be changed"
+        }
+      ]
+    },
+    {
+      "id": "ETAG_OFFLINE",
+      "alternative": "REMOTE_ETAG_ONLY",
+      "state": "VIOLATED",
+      "required": true,
+      "description": "Verification must work without network access.",
+      "provenance": [
+        {
+          "source": "HTTP semantics",
+          "ref": "remote ETag retrieval requires a reachable server"
+        }
+      ]
+    },
+    {
+      "id": "ETAG_CONTENT",
+      "alternative": "REMOTE_ETAG_ONLY",
+      "state": "UNKNOWN",
+      "required": true,
+      "description": "Verifier must know the ETag is a cryptographic digest of exact bytes.",
+      "provenance": [
+        {
+          "source": "HTTP semantics",
+          "ref": "ETag generation semantics are server-defined"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E_SHA_LOCAL_BYTES",
+      "alternative": "LOCAL_SHA256_REHASH",
+      "relation": "SUPPORTS",
+      "confidence": 1,
+      "strength": 1,
+      "independence_group": "local_content_binding",
+      "claim": "SHA-256 is computed directly from the artifact bytes being verified.",
+      "provenance": [
+        {
+          "source": "Python hashlib",
+          "ref": "sha256(bytes)"
+        }
+      ]
+    },
+    {
+      "id": "E_SHA_OFFLINE",
+      "alternative": "LOCAL_SHA256_REHASH",
+      "relation": "SUPPORTS",
+      "confidence": 1,
+      "strength": 1,
+      "independence_group": "offline_execution",
+      "claim": "Local SHA-256 recomputation requires no remote service.",
+      "provenance": [
+        {
+          "source": "Python standard library",
+          "ref": "hashlib"
+        }
+      ]
+    },
+    {
+      "id": "E_MTIME_WEAK",
+      "alternative": "FILE_MTIME_AND_SIZE",
+      "relation": "CONTRADICTS",
+      "confidence": 1,
+      "strength": 1,
+      "independence_group": "metadata_not_content",
+      "claim": "File metadata is not an exact digest of file contents.",
+      "provenance": [
+        {
+          "source": "Filesystem model",
+          "ref": "mtime and size are metadata"
+        }
+      ]
+    },
+    {
+      "id": "E_ETAG_REMOTE",
+      "alternative": "REMOTE_ETAG_ONLY",
+      "relation": "CONTRADICTS",
+      "confidence": 1,
+      "strength": 1,
+      "independence_group": "network_dependency",
+      "claim": "Remote ETag-only verification violates the offline requirement.",
+      "provenance": [
+        {
+          "source": "HTTP model",
+          "ref": "ETag is supplied by a remote HTTP server"
+        }
+      ]
+    }
+  ],
+  "policy": {
+    "minimum_support_ratio": 0.6,
+    "maximum_conflict_ratio": 0.5,
+    "minimum_independent_support_groups": 2,
+    "minimum_net_margin": 0.1
+  }
+}
