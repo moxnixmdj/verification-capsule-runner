@@ -1,0 +1,10 @@
+{
+  "command_sha256": "c660f0cfd4f0a737c0cb52e0888ac764b86cd07b3b85a9e4ada37825ec2457d8",
+  "duration_sec": 0.051,
+  "exit_code": 127,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "/tmp/bridge-command.sh: line 1: python: command not found\n",
+  "stdout": "",
+  "step": 1
+}
