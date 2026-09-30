@@ -1,0 +1,201 @@
+name: Adjudicate Preserved Composition Requalification Evidence
+
+on:
+  push:
+    branches:
+      - verify/adjudicate-composition-requal-preserved-evidence-20260930
+    paths:
+      - 'ARM_ADJUDICATE_COMPOSITION_REQUAL_PRESERVED_EVIDENCE_20260930'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact preserved evidence inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/tasks/COMPOSITION_REQUAL_EVIDENCE_SURFACE_20260930.json)" = "70db3e3ba900df9479ed330b611a0f0bfa7c8647"
+          test "$(git hash-object canonical/capabilities/obsolescence/GROUNDED_COMPOSITION_EVIDENCE_SURFACE_REQUALIFICATION_PRIMARY_EVIDENCE_20260930_V1.json)" = "2dbc842af4eeee1899dbbe6b1e9d70b61408d59e"
+          echo EXACT_PRESERVED_INPUTS_PASS
+
+      - name: Adjudicate original job log and independently recompute decision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,pathlib,re,urllib.request
+
+          repo="moxnixmdj/verification-capsule-runner"
+          run_id=36659637634
+          job_id=109711314434
+          token=os.environ["GH_TOKEN"]
+
+          def api_json(url):
+              req=urllib.request.Request(
+                  url,
+                  headers={
+                      "Authorization":"Bearer "+token,
+                      "Accept":"application/vnd.github+json",
+                      "X-GitHub-Api-Version":"2022-11-28",
+                      "User-Agent":"project-brain-preserved-evidence-adjudicator",
+                  },
+              )
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  return json.loads(r.read().decode("utf-8"))
+
+          def api_bytes(url):
+              req=urllib.request.Request(
+                  url,
+                  headers={
+                      "Authorization":"Bearer "+token,
+                      "Accept":"application/vnd.github+json",
+                      "X-GitHub-Api-Version":"2022-11-28",
+                      "User-Agent":"project-brain-preserved-evidence-adjudicator",
+                  },
+              )
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  return r.read()
+
+          job=api_json(f"https://api.github.com/repos/{repo}/actions/jobs/{job_id}")
+          assert int(job["id"])==job_id,job
+          assert int(job["run_id"])==run_id,job
+          assert job["conclusion"]=="failure",job
+          steps={x["name"]:x for x in job.get("steps") or []}
+          assert steps["Verify exact repaired route bytes"]["conclusion"]=="success",steps
+          assert steps["Execute fresh model-independent composition requalification exactly once"]["conclusion"]=="failure",steps
+          assert steps["Independently recompute decision and final oracle"]["status"]=="completed",steps
+          assert steps["Independently recompute decision and final oracle"]["conclusion"]=="skipped",steps
+
+          raw=api_bytes(f"https://api.github.com/repos/{repo}/actions/jobs/{job_id}/logs")
+          text=raw.decode("utf-8","replace")
+          text=re.sub(r"\x1b\[[0-9;]*[A-Za-z]","",text)
+
+          required=[
+              'File "<stdin>", line 31, in <module>',
+              "'returncode': 0",
+              "'stdout': 'COMPOUND_GOAL_COMPLETE'",
+              "'planner_model_last': None",
+              "'planning_mode': 'DETERMINISTIC_COMPOUND_ACTION_PLAN'",
+              "'selected_alternative': 'PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION'",
+              "'verified': True, 'reason': 'VERIFIED'",
+              "'producer_independent': True",
+              "'input_path': {'$result': {'cycle': 0, 'field': 'input_path'}}, 'result_path': {'$result': {'cycle': 0, 'field': 'output_path'}}",
+          ]
+          missing=[x for x in required if x not in text]
+          assert not missing,missing
+
+          workflow=pathlib.Path(".github/workflows/composition-requal-evidence-surface.yml").read_text(encoding="utf-8")
+          marker='          import importlib.util,json,pathlib,sys'
+          start=workflow.index(marker)
+          end=workflow.index("\n          PY",start)
+          block=[
+              line[10:] if line.startswith("          ") else line
+              for line in workflow[start:end].splitlines()
+          ]
+          assert block[30]=='assert result.get("composition_mode")=="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH",result',block[30]
+          assert "composition_mode" not in text.split('AssertionError:',1)[1].split("##[error]",1)[0], "unexpected composition_mode in runtime result"
+
+          task_path=pathlib.Path("canonical/tasks/COMPOSITION_REQUAL_EVIDENCE_SURFACE_20260930.json")
+          problem=json.loads(task_path.read_text(encoding="utf-8"))
+          preserved=json.loads(pathlib.Path(
+              "canonical/capabilities/obsolescence/GROUNDED_COMPOSITION_EVIDENCE_SURFACE_REQUALIFICATION_PRIMARY_EVIDENCE_20260930_V1.json"
+          ).read_text(encoding="utf-8"))
+
+          states={}
+          for alt in [x["id"] for x in problem["alternatives"]]:
+              req=[c for c in problem["constraints"] if c["alternative"]==alt and c.get("required",True)]
+              if any(c["state"]=="VIOLATED" for c in req):
+                  states[alt]="DISQUALIFIED"
+              elif any(c["state"]=="UNKNOWN" for c in req):
+                  states[alt]="UNRESOLVED"
+              else:
+                  states[alt]="ADMISSIBLE"
+
+          support={}
+          contradiction={}
+          groups={}
+          for e in problem["evidence"]:
+              alt=e["alternative"]
+              weight=float(e["confidence"])*float(e.get("strength",1))
+              key=(alt,e["independence_group"])
+              dest=support if e["relation"]=="SUPPORTS" else contradiction
+              dest[key]=max(dest.get(key,0.0),weight)
+              if e["relation"]=="SUPPORTS" and weight>0:
+                  groups.setdefault(alt,set()).add(e["independence_group"])
+
+          eligible=[]
+          policy=problem["policy"]
+          for alt,state in states.items():
+              s=sum(v for (a,_),v in support.items() if a==alt)
+              c=sum(v for (a,_),v in contradiction.items() if a==alt)
+              total=s+c
+              ratio=s/total if total else 0.0
+              conflict=2*min(s,c)/total if total else 0.0
+              if (
+                  state=="ADMISSIBLE"
+                  and total>0
+                  and len(groups.get(alt,set()))>=policy["minimum_independent_support_groups"]
+                  and ratio>=policy["minimum_support_ratio"]
+                  and conflict<=policy["maximum_conflict_ratio"]
+              ):
+                  eligible.append((s-c,ratio,alt))
+          eligible.sort(key=lambda x:(-x[0],-x[1],x[2]))
+          assert eligible and eligible[0][2]=="PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION",eligible
+
+          sem=preserved["preserved_semantic_execution"]
+          assert sem["returncode"]==0,sem
+          assert sem["controller_mode"]=="MODEL_INDEPENDENT_ACTION_PLAN",sem
+          assert sem["planner_model_last"] is None,sem
+          assert sem["planning_mode"]=="DETERMINISTIC_COMPOUND_ACTION_PLAN",sem
+          assert sem["producer"]["selected_alternative"]==eligible[0][2],sem
+          assert sem["producer"]["model_dependency_count"]==0,sem
+          assert sem["verifier"]["verified"] is True,sem
+          assert sem["verifier"]["producer_independent"] is True,sem
+          assert sem["verifier"]["selected_alternative"]==eligible[0][2],sem
+          assert sem["verifier"]["model_dependency_count"]==0,sem
+          assert sem["direct_compiler_causal_bindings"]["verifier_input_path"]=={"$result":{"cycle":0,"field":"input_path"}},sem
+          assert sem["direct_compiler_causal_bindings"]["verifier_result_path"]=={"$result":{"cycle":0,"field":"output_path"}},sem
+
+          receipt={
+              "schema":"PROJECT_BRAIN_PRESERVED_EVIDENCE_ADJUDICATION_V1",
+              "source_run_id":run_id,
+              "source_job_id":job_id,
+              "source_workflow_conclusion":"failure",
+              "semantic_task_result":"PASS",
+              "harness_failure_class":"OBSOLETE_POST_SUCCESS_ASSERTION",
+              "failed_harness_python_line":31,
+              "exact_route_bytes_step":"PASS",
+              "independent_decision_recomputation":"PASS",
+              "selected_alternative":"PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION",
+              "producer_independent_verifier":"PASS",
+              "causal_source_result_binding":"PASS",
+              "model_dependency_count":0,
+              "source_task_replayed":False,
+              "task_input_sha256":hashlib.sha256(
+                  json.dumps(problem,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+              ).hexdigest(),
+              "verdict":"FRESH_REAL_TASK_SEMANTIC_PASS__PRIMARY_EVIDENCE_RECOVERED_AND_INDEPENDENTLY_ADJUDICATED",
+          }
+          pathlib.Path("COMPOSITION_REQUAL_PRESERVED_EVIDENCE_ADJUDICATION.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("PRESERVED_EVIDENCE_ADJUDICATION_PASS")
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: composition-requal-preserved-evidence-adjudication
+          path: COMPOSITION_REQUAL_PRESERVED_EVIDENCE_ADJUDICATION.json
