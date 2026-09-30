@@ -1,0 +1,58 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the exact Project Brain multi-clause broad-objective routing repair: a fully unresolved multi-sentence research objective must enter the existing model-independent broad research decomposition, partial grounding must remain unchanged, unsupported non-research action goals must remain unresolved, and no parent task is executed.",
+  "frozen": {
+    "gate_id": "BRAIN-BROAD-OBJECTIVE-MULTICLAUSE-ROUTING-GREEN-20260930-V1",
+    "problem_sha256": "ff34bc8d009f68bbae2609d01f73360bf9c671527b214260b3c67c3d7f268778",
+    "task_sha256": "ece10a9f383503f7e70cac623e15b999fa7123870a7c6f78ee625190a47ac16a",
+    "runtime_sha256": "2fd6cbc0d4b0988ab22b4b2e46b701017e3ad3705705de4de80e125700f01f2c",
+    "canonical_base": "ae98b379c0372238e583c05767d3cb9fe70aef8a",
+    "authorization_sha256": "621c825e11406aa5d34eb808d06a9c17c439d1a6ed867edd5a954eb7c9499148"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "25738e959dec0be46058e4bd7720fb8ed1b599bb"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "6eb2b20e860da466ad8b793c20060ded1fbf389b"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "e98a26325fd60990afc7b81158110c897eed6b5d"
+    },
+    {
+      "path": "verify_broad_objective_multiclause_routing.py",
+      "git_blob_sha1": "c9c7fdc48f2c5686a92360879b4564a65cdd9cd3"
+    },
+    {
+      "path": "green_broad_objective_multiclause_authorization.json",
+      "git_blob_sha1": "ba88e03a167e5adff130a3eceb770fd6f3f83b07"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python verify_broad_objective_multiclause_routing.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_pr": 468,
+    "authoritative_parent_run": 36688193204,
+    "parent_task_execution": false,
+    "parent_task_replay": false
+  }
+}
