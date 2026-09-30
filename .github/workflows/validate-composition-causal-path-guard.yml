@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "fae87f01444c59a0d5c16dae5a0ea9272d441cb8"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
           test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "2492bf47e557b9c2bc90c7cd6345473e734b3cc3"
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "36dcf586ab9f234d6ed1276c4a32f5a997e9e88e"
           test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "d7c73c24d2038c40bfb38ea6f10749a15a2d5415"
@@ -43,7 +43,7 @@ jobs:
           receipt={
             "schema":"PROJECT_BRAIN_COMPOSITION_CAUSAL_PATH_GUARD_VALIDATION_V1",
             "candidate_brain_pr":273,
-            "composer_blob":"fae87f01444c59a0d5c16dae5a0ea9272d441cb8",
+            "composer_blob":"8328e12804f64cab1c0d9509966cb1d2d8fb1f82",
             "test_blob":"2492bf47e557b9c2bc90c7cd6345473e734b3cc3",
             "explicit_effect_result_path_regression":"PASS",
             "undeclared_provider_backed_path_regression":"PASS",
