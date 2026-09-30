@@ -1,0 +1,10 @@
+{
+  "command_sha256": "7e5d9a2387ff60eb5119e3ffabe96a33c19d1fcff94101604913c8fae83f4605",
+  "duration_sec": 0.166,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "html-js-filter-dev-20260930-v1",
+  "stderr": "",
+  "stdout": "===== APP =====\n\n===== PYTHON =====\nPython 3.12.14\nbs4 AVAILABLE 4.13.4\nhtml5lib UNAVAILABLE ModuleNotFoundError No module named 'html5lib'\nlxml AVAILABLE 6.1.1\nbleach UNAVAILABLE ModuleNotFoundError No module named 'bleach'\n",
+  "step": 0
+}
