@@ -1,0 +1,39 @@
+name: Guarded PR512 Query Focus Relevance Qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/research_query_focus.py
+      - canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py
+      - canonical/runtime/bound_capabilities/objective_relevance_bm25.py
+      - canonical/tests/test_open_research_query_focus_relevance.py
+      - verify_pr512_query_focus_relevance.py
+      - guarded_pr512_query_focus_relevance_plan.json
+      - .github/workflows/guarded-pr512-query-focus-relevance.yml
+permissions:
+  contents: write
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.13"
+      - name: Admit once and qualify exact PR512 bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_pr512_query_focus_relevance_plan.json --receipt guarded-pr512-query-focus-relevance-admission.json
+      - name: Upload guarded qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-pr512-query-focus-relevance-evidence
+          path: |
+            guarded-pr512-query-focus-relevance-admission.json
+            guarded_pr512_query_focus_relevance_plan.json
+            pr512-query-focus-relevance-report.json
+          if-no-files-found: warn
