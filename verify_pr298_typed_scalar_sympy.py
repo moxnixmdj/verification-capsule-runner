@@ -16,9 +16,9 @@ runtime=load("pr298_astra_runtime",RUNTIME/"astra_runtime.py")
 registry=json.loads((RUNTIME/"BOUND_CAPABILITY_REGISTRY_V1.json").read_text(encoding="utf-8"))["capabilities"]
 
 url_2010="https://api.worldbank.org/v2/country/NGA/indicator/SP.POP.TOTL?format=json&date=2010"
-url_2010="https://api.worldbank.org/v2/country/NGA/indicator/SP.POP.TOTL?format=json&date=2020"
+url_2020="https://api.worldbank.org/v2/country/NGA/indicator/SP.POP.TOTL?format=json&date=2020"
 goal=(
-    "Using the authoritative JSON source "+url_2020+", "
+    "Using the authoritative JSON source "+url_2010+", "
     "extract JSON path 1.0.value and save the knowledge evidence to "
     "canonical/astra_runtime/tmp/NIGERIA_POP_2010.json. "
     "Using the authoritative JSON source "+url_2020+", "
@@ -42,7 +42,7 @@ if expr.get("model_dependency_count")!=0:
     raise SystemExit("MODEL_DEPENDENCY_PRESENT")
 
 mission={"mission_id":"FRESH-DEMOGRAPHY-TYPED-SCALAR-EXPRESSION-20260930-V2","goal":goal}
-step={"id":"fresh_economic_expression","controller_actions":compiled["controller_actions"],"max_controller_actions":16}
+step={"id":"fresh_demography_expression","controller_actions":compiled["controller_actions"],"max_controller_actions":16}
 run=runtime._run_model_independent_goal(step,mission,goal)
 if run.get("returncode")!=0 or run.get("final_summary")!="COMPOUND_GOAL_COMPLETE":
     raise SystemExit("CANDIDATE_RUNTIME_DID_NOT_COMPLETE:"+json.dumps(run,sort_keys=True))
@@ -59,9 +59,9 @@ def fetch_value(url):
         raise RuntimeError("ORACLE_VALUE_NOT_NUMERIC")
     return float(value)
 
-v2020=fetch_value(url_2010)
-v2023=fetch_value(url_2010)
-expected=(v2023/v2020)**(1.0/3.0)
+v2010=fetch_value(url_2010)
+v2020=fetch_value(url_2020)
+expected=(v2020/v2010)**(1.0/3.0)
 failures=[]
 observed=float(producer["value"])
 if not math.isclose(observed,expected,rel_tol=1e-12,abs_tol=1e-12):
@@ -95,12 +95,12 @@ report={
   "source_task_replay":False,
   "selected_capability":"math.numeric_expression.sympy",
   "expression":"(pop_2020 / pop_2010) ** (1 / 10)",
-  "source_urls":[url_2010,url_2010],
+  "source_urls":[url_2010,url_2020],
   "producer":producer,
   "compiler_expression_part":expr,
   "independent_oracle":{
-    "pop_2010":v2020,
-    "pop_2020":v2023,
+    "pop_2010":v2010,
+    "pop_2020":v2020,
     "annual_factor":expected,
     "method":"fresh distinct World Bank demography refetch plus independent Python arithmetic",
     "producer_adapter_imported_for_oracle":False
