@@ -1,0 +1,14 @@
+{
+  "authoritative_parent_attempt": "c8a9972496fd4f5391995fc51ed15111",
+  "authoritative_parent_run": 36688193204,
+  "brain_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "brain_candidate_head": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+  "incremental_spend_usd": 0,
+  "model_dependency_count": 0,
+  "parent_task_execution": false,
+  "purpose": "GREEN_QUALIFICATION_OF_BRAIN_PR474_BROAD_MULTICLAUSE_ROUTING",
+  "same_task_replay": false,
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "spent_parent_task": "PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003",
+  "status": "AUTHORIZED"
+}
