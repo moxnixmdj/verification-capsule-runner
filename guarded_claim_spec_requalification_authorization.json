@@ -1,0 +1,18 @@
+{
+  "schema": "PROJECT_BRAIN_GUARDED_CAPABILITY_REQUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED_ONCE_THROUGH_LIVE_EXECUTION_GUARD",
+  "brain_canonical_base": "bab96da313ac8c9b4476e8d466f1fe1fcbb5f240",
+  "capability_id": "MODEL_INDEPENDENT_CLAIM_SPEC_AND_OPERAND_BINDING_FROM_OBJECTIVE_AND_GENERIC_EVIDENCE_V1",
+  "purpose": "Repair admissibility provenance only for exact already-merged child-capability bytes.",
+  "exact_blobs": {
+    "producer": "48fd058430d8d361fc75beced567c7b6d1166531",
+    "authored_regressions": "467a9f4f9b835ca8f65fd19b9335770e7b0ef31b",
+    "inherited_relation_evaluator": "d66a7eb30774f66160b698d8082947776888293d",
+    "independent_qualifier": "16aff25975ac126839c57caac08cf97e1bb663fd"
+  },
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "capability_scope_expansion": false,
+  "incremental_spend_usd": 0,
+  "retry_policy": "NO_AUTOMATIC_RETRY__AMBIGUOUS_OR_DENIED_ADMISSION_FAILS_CLOSED"
+}
