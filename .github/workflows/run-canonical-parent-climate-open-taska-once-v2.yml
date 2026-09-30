@@ -1,0 +1,40 @@
+name: Run Canonical Climate Task A Once V2
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_CANONICAL_PARENT_CLIMATE_OPEN_TASKA_20260930_V2
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute canonical open-ended climate Task A exactly once
+        id: producer
+        continue-on-error: true
+        run: python run_canonical_parent_climate_open_taska_once_v2.py
+      - name: Upload terminal producer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-parent-climate-open-taska-v2-producer-terminal
+          path: canonical-parent-climate-open-taska-v2-producer-report.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
