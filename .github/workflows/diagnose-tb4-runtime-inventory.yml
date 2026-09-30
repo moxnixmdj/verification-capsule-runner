@@ -1,0 +1,51 @@
+name: Inventory TB4 pretrain runtime
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-tb4-runtime-inventory.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact task environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init terminal-bench
+          git -C terminal-bench remote add origin https://github.com/harbor-framework/terminal-bench.git
+          git -C terminal-bench fetch --depth=1 origin 452bf305c6daa62fc59061d22133a7cbc7c1572e
+          git -C terminal-bench checkout --detach FETCH_HEAD
+          test "$(git -C terminal-bench hash-object tasks/pretrain-shard-corruption/instruction.md)" = "82c66df8e3e8b7dd5d1bb0dfea8c5913378f9c7f"
+          docker build --tag tb4-pretrain-inventory:4.0.0 terminal-bench/tasks/pretrain-shard-corruption/environment
+          mkdir -p tb4_pretrain_inventory/evidence
+
+      - name: Inventory files and local git state only
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none tb4-pretrain-inventory:4.0.0 bash -lc '
+            echo "=== FILES ==="
+            find /app -xdev -type f -printf "%p\t%s bytes\n" | sort
+            echo "=== DIRS ==="
+            find /app -xdev -type d -printf "%p\n" | sort
+            echo "=== SYMLINKS ==="
+            find /app -xdev -type l -printf "%p -> %l\n" | sort
+            echo "=== GIT STATUS ==="
+            git -C /app status --short --untracked-files=all
+            echo "=== GIT LOG ==="
+            git -C /app log --oneline --decorate --all --stat
+          ' | tee tb4_pretrain_inventory/evidence/inventory.txt
+
+      - name: Upload evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tb4-pretrain-runtime-inventory
+          path: tb4_pretrain_inventory/evidence/
