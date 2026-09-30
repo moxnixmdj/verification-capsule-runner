@@ -1,0 +1,78 @@
+name: Run PR337 AST-Fixed Carrier Once
+
+on:
+  push:
+    branches:
+      - execute/pr337-frozen-carrier-0ac7-once-20260930-v1
+    paths:
+      - .github/workflows/run-pr337-ast-fixed-carrier-once.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen Task A with carrier-verifier constant corrected in memory
+        id: producer
+        continue-on-error: true
+        shell: bash
+        run: |
+          python - <<'PY'
+          import ast, pathlib
+          path=pathlib.Path("run_pr337_parent_climate_open_taska_once.py")
+          tree=ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+          class Fix(ast.NodeTransformer):
+              def __init__(self):
+                  self.n=0
+              def visit_Constant(self,node):
+                  if isinstance(node.value,bytes) and node.value == b"\\0":
+                      self.n += 1
+                      return ast.copy_location(ast.Constant(value=b"\0"),node)
+                  return node
+          fix=Fix()
+          tree=fix.visit(tree)
+          ast.fix_missing_locations(tree)
+          if fix.n != 1:
+              raise SystemExit("CARRIER_HASH_CONSTANT_COUNT_INVALID:"+str(fix.n))
+          code=compile(tree,str(path),"exec")
+          g={"__name__":"__main__","__file__":str(path)}
+          exec(code,g,g)
+          PY
+      - name: Upload immutable terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr337-parent-climate-open-taska-terminal-ast-fixed-carrier
+          path: pr337-parent-climate-open-taska-producer-report.json
+          if-no-files-found: error
+      - name: Publish terminal report
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "PR337_AST_FIXED_CARRIER_TERMINAL"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "trigger_sha=${GITHUB_SHA}"
+            echo
+            echo '~~~json'
+            cat pr337-parent-climate-open-taska-producer-report.json
+            echo '~~~'
+          } >/tmp/body
+          gh issue edit 63 --repo "$GITHUB_REPOSITORY" --body-file /tmp/body
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
