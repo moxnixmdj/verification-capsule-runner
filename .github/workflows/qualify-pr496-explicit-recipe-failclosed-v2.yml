@@ -2,7 +2,7 @@ name: Guarded Qualify Brain PR496 Explicit Recipe Fail-Closed V2
 on:
   pull_request:
     branches: [main]
-    types: [opened]
+    types: [opened, synchronize]
 permissions:
   contents: write
 jobs:
@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/setup-python@a26af69be951213d495a4c3e4e4022e16d87065
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.13'
       - name: Guarded exact-byte adversarial qualification
