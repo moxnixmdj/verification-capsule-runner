@@ -7,7 +7,7 @@ from actions_admission import problem_sha256
 AUTH="pr550_decision_role_relevance_authority.json"
 ORACLE="verify_brain_pr550_decision_role_relevance.py"
 FILES={
-  "canonical/runtime/bound_capabilities/decision_role_relevance_admission.py": "3036734a9f63945a7b76a5ca7cac86618fbc3677",
+  "canonical/runtime/bound_capabilities/decision_role_relevance_admission.py": "f0b9095ed2439645ebc9d9ec2f66fb8ec1de3669",
   "canonical/runtime/bound_capabilities/objective_relevance_bm25.py": "0abb5225fe9fba2443f2df46b2e41bd1c7dd7436",
   "canonical/tests/test_decision_role_relevance_admission.py": "dcfd4bf6da7a7ef01d1f21dff541d9b79b3c8f26",
   "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py": "48fd058430d8d361fc75beced567c7b6d1166531",
@@ -15,15 +15,15 @@ FILES={
   "canonical/tests/test_objective_relevance_bm25.py": "a4736194a063d05d60f0fc3ca13314956cb5e3de"
 }
 FILES.update({
- AUTH:"5c9737540e4085dd60f8e967dc7f25475a4d7291",
- ORACLE:"dd83ad952e930a9cafdb4477a2f7e4be279b81e0",
+ AUTH:"da2b77e92963d5ed01ccd3af47c5e77cd14d1e57",
+ ORACLE:"d074b26860b7db4ce6b2992cf5138bc8c0bb2576",
  "execution_guard/github_actions_guarded_run_live.py":"30ea2fd2cc548444477c7b234a59129ff8386235",
  "execution_guard/actions_admission.py":"6c46abef66c036f5382d5792b11a82a289b4dd94",
  "execution_guard/github_ref_store_live.py":"a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
 })
 def sha256(p): return hashlib.sha256((ROOT/p).read_bytes()).hexdigest()
 GOAL=(
- "Independently qualify exact Brain PR550 candidate 6d4186a1e24de7b4a72eb188864115c6925aaa8d: threshold-safe bounded decision-property "
+ "Independently qualify exact Brain PR550 candidate 2508568cc2b3feab67e7ae9969aea2041e2352d9: threshold-safe bounded decision-property "
  "and operand-role relevance admission over incumbent BM25, including Task-C causal shape, cross-domain role "
  "cases, hard identifiers, protocol identifiers, numeric-threshold compatibility, broad-objective backward "
  "compatibility, and zero model cognition. No parent execution and no Task-C replay."
@@ -48,7 +48,7 @@ plan={
  ],
  "authority":{
   "kind":"NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
-  "brain_pr":550,"brain_candidate_head":"6d4186a1e24de7b4a72eb188864115c6925aaa8d",
+  "brain_pr":550,"brain_candidate_head":"2508568cc2b3feab67e7ae9969aea2041e2352d9",
   "qualification_only":True,"parent_task_execution":False,"parent_task_replay":False,
   "spent_materials_task_c_replay":False,"model_dependency_count":0,"incremental_spend_usd":0
  }
