@@ -20,7 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object canonical/runtime/bound_capabilities/qualified_source_frontend.py)" = "686101e731a6aa7ceced688ca51acab755356e37"
-          test "$(git hash-object canonical/tests/test_qualified_source_frontend.py)" = "f85d1d1b3d5a72be42edaa1459fa6a4535644e89"
+          test "$(git hash-object canonical/tests/test_qualified_source_frontend.py)" = "c479e7f9cb86f7d8fa6991f74df3959caca8740b"
           test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "6eb2b20e860da466ad8b793c20060ded1fbf389b"
           test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "816c37742b23739e74a9455a97dd6aea9e767206"
           test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "1dc26e68d18010b66211d1d83f7b2024c8ad1fcf"
