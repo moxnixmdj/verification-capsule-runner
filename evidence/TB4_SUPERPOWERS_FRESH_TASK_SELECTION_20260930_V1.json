@@ -1,0 +1,44 @@
+{
+  "schema": "PROJECT_BRAIN_TB4_FRESH_TASK_SELECTION_RECEIPT_V1",
+  "status": "FROZEN_BEFORE_PROMPT_EXPOSURE",
+  "created_utc": "2026-09-30",
+  "benchmark": {
+    "name": "Terminal-Bench 4.0",
+    "tag": "v4.0.0",
+    "release_commit": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+    "task_count": 66
+  },
+  "capability_target": "ADVANCED_AGENTIC_SOFTWARE_ENGINEERING_SUPERPOWERS_V1",
+  "selection_rule": "Among TB4 v4.0.0 task directory names not previously spent or exposed by Project Brain, choose lexicographically smallest SHA256(task_name).",
+  "exclusions": [
+    "bun-sourcemap-leak",
+    "html-js-filter",
+    "photonic-waveguide-routing",
+    "session-window-debug"
+  ],
+  "selected_task": {
+    "task_name": "layout-config-recreation2",
+    "task_name_sha256": "02c9cd7b0a460089515a0a62c103c74f0338efcd6e7fb1ef876246a709192b99"
+  },
+  "deterministic_fallback_order": [
+    "biped-contact-dynamics",
+    "shadow-relay",
+    "rs-archive-clone",
+    "formal-crypto"
+  ],
+  "contamination_control": {
+    "instruction_read_before_freeze": false,
+    "task_specific_tests_read_before_freeze": false,
+    "task_specific_solution_read_before_freeze": false,
+    "task_specific_online_hints_read_before_freeze": false,
+    "reuse_after_verifier_exposure_for_fresh_credit": false
+  },
+  "execution_route": {
+    "cognition": "LOCAL_CHATGPT_AUTHENTICATED_CODEX_GPT_6_ASTRA_WITH_BRAIN_OWNED_SUPERPOWERS_6_4_2",
+    "verification": "PUBLIC_GITHUB_ACTIONS_UBUNTU_24_04_DOCKER_HARBOR",
+    "credential_export": "FORBIDDEN",
+    "incremental_spend_usd": 0
+  },
+  "stop_rule": "Freeze candidate output before reading task-specific verifier logic or solution. On verifier failure, mark task spent and preserve zero capability credit.",
+  "capability_credit_before_execution": 0
+}
