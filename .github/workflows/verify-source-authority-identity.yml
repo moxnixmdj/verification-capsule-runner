@@ -1,0 +1,135 @@
+name: Verify source authority identity
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py
+      - canonical/runtime/bound_capabilities/source_candidate_authority_verify.py
+      - canonical/tests/test_source_candidate_authority_verify.py
+      - .github/workflows/verify-source-authority-identity.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Syntax and authored regressions
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py
+          python -m py_compile canonical/runtime/bound_capabilities/source_candidate_authority_verify.py
+          python -m unittest -v canonical.tests.test_source_candidate_authority_verify
+      - name: Live three-domain producer qualification
+        run: |
+          python - <<'PY'
+          import importlib.util, json, pathlib
+          root=pathlib.Path(".").resolve()
+          def load(name,path):
+              spec=importlib.util.spec_from_file_location(name,root/path)
+              mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); return mod
+          discovery=load("source_discovery",pathlib.Path("canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py"))
+          verifier=load("authority_verify",pathlib.Path("canonical/runtime/bound_capabilities/source_candidate_authority_verify.py"))
+          objectives=[
+              "Python urllib request library official documentation",
+              "USGS earthquake catalog official API documentation",
+              "lithium ion battery calendar aging temperature experimental study",
+          ]
+          report={"schema":"SOURCE_AUTHORITY_IDENTITY_LIVE_QUALIFICATION_V1","objectives":[]}
+          for objective in objectives:
+              d=discovery.discover(objective,limit=12,timeout=20)
+              if d["status"]!="CANDIDATES_DISCOVERED":
+                  raise SystemExit("DISCOVERY_FAIL:"+objective+":"+json.dumps(d,sort_keys=True)[:1000])
+              v=verifier.verify_discovery(d,timeout=20,max_candidates=12)
+              if v["model_dependency_count"]!=0 or v["incremental_spend_usd"]!=0:
+                  raise SystemExit("POLICY_FAIL:"+objective)
+              if v["primary_evidence_verification"]!="NOT_PERFORMED":
+                  raise SystemExit("PRIMARY_EVIDENCE_OVERCLAIM:"+objective)
+              if v["verified_candidate_count"]<1:
+                  raise SystemExit("NO_AUTHORITY_IDENTITY_SIGNAL:"+objective+":"+json.dumps(v,sort_keys=True)[:3000])
+              report["objectives"].append({"objective":objective,"discovery":d,"verification":v})
+          pathlib.Path("source-authority-identity-live.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          print("LIVE_3_DOMAIN_AUTHORITY_IDENTITY_PASS")
+          PY
+      - name: Independent registry/official-site oracle without producer verifier import
+        run: |
+          python - <<'PY'
+          import json, pathlib, urllib.parse, urllib.request
+          p=pathlib.Path("source-authority-identity-live.json")
+          report=json.loads(p.read_text())
+          checked=0
+          for case in report["objectives"]:
+              for admitted in case["verification"]["verified_candidates"]:
+                  cand=admitted["candidate"]
+                  for signal in admitted.get("authority_identity_signals") or []:
+                      if not signal.get("verified"):
+                          continue
+                      kind=signal.get("signal")
+                      if kind=="CROSSREF_REGISTRY":
+                          doi=str(signal["doi"]).lower()
+                          url="https://api.crossref.org/works/"+urllib.parse.quote(doi,safe="")
+                          req=urllib.request.Request(url,headers={"User-Agent":"ProjectBrain-IndependentAuthorityOracle/1"})
+                          with urllib.request.urlopen(req,timeout=20) as r:
+                              msg=json.loads(r.read(2500000))["message"]
+                          if str(msg.get("DOI") or "").lower()!=doi:
+                              raise SystemExit("ORACLE_CROSSREF_DOI_MISMATCH")
+                          title=" ".join((msg.get("title") or [""])[0].split()).casefold()
+                          if title!=" ".join(str(signal.get("registered_title") or "").split()).casefold():
+                              raise SystemExit("ORACLE_CROSSREF_TITLE_MISMATCH")
+                          checked+=1
+                      elif kind=="WIKIDATA_P856_OFFICIAL_WEBSITE":
+                          qid=signal["qid"]
+                          req=urllib.request.Request("https://www.wikidata.org/wiki/Special:EntityData/"+qid+".json",headers={"User-Agent":"ProjectBrain-IndependentAuthorityOracle/1"})
+                          with urllib.request.urlopen(req,timeout=20) as r:
+                              ent=json.loads(r.read(2500000))["entities"][qid]
+                          urls=[]
+                          for claim in (ent.get("claims") or {}).get("P856") or []:
+                              try: urls.append(claim["mainsnak"]["datavalue"]["value"])
+                              except Exception: pass
+                          candidate_host=(urllib.parse.urlsplit(cand["url"]).hostname or "").lower().strip(".")
+                          def same(a,b):
+                              a=a.lower().strip("."); b=b.lower().strip(".")
+                              return a==b or a.endswith("."+b) or b.endswith("."+a)
+                          if not any(same(candidate_host,(urllib.parse.urlsplit(u).hostname or "")) for u in urls):
+                              raise SystemExit("ORACLE_WIKIDATA_HOST_MISMATCH")
+                          checked+=1
+          if checked < 3:
+              raise SystemExit("ORACLE_TOO_FEW_INDEPENDENT_SIGNALS:"+str(checked))
+          print("INDEPENDENT_AUTHORITY_IDENTITY_ORACLE_PASS",checked)
+          PY
+      - name: Negative overclaim oracle
+        run: |
+          python - <<'PY'
+          import importlib.util, pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/source_candidate_authority_verify.py")
+          spec=importlib.util.spec_from_file_location("v",p); v=importlib.util.module_from_spec(spec); spec.loader.exec_module(v)
+          discovery={"objective":"Determine whether an unsupported claim is true","candidates":[{"url":"https://example.org/claim","host":"example.org","title":"Unsupported claim"}]}
+          original_cross=v._crossref_verify
+          original_wiki=v._wikidata_official_site_verify
+          try:
+              v._crossref_verify=lambda candidate,timeout: None
+              v._wikidata_official_site_verify=lambda candidate,objective,timeout: {"signal":"WIKIDATA_P856_OFFICIAL_WEBSITE","verified":False,"reason":"NO_MATCH","primary_evidence_status":"NOT_VERIFIED"}
+              out=v.verify_discovery(discovery)
+          finally:
+              v._crossref_verify=original_cross; v._wikidata_official_site_verify=original_wiki
+          assert out["status"]=="AUTHORITY_IDENTITY_UNRESOLVED",out
+          assert out["verified_candidate_count"]==0,out
+          assert out["primary_evidence_verification"]=="NOT_PERFORMED",out
+          print("NEGATIVE_FAIL_CLOSED_PASS")
+          PY
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-authority-identity-qualification
+          path: source-authority-identity-live.json
+          if-no-files-found: warn
