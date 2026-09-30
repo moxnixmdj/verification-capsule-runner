@@ -83,7 +83,7 @@ def run(
     out["discovery"]=discovered
     out["candidate_gate_results"]=[]
 
-    if not isinstance(discovered,dict) or discovered.get("status")!="CANDIDATES_DISCOVERED":
+    if not isinstance(discovered,dict) or discovered.get("status") not in {"CANDIDATES_DISCOVERED","SOURCE_CANDIDATES_DISCOVERED"}:
         out.update({
             "status":"SOURCE_DISCOVERY_BLOCKED",
             "next_required_capability":"MODEL_INDEPENDENT_OPEN_WEB_SOURCE_CANDIDATE_DISCOVERY_V1",
