@@ -1,0 +1,39 @@
+name: Validate Canonical Mission-Origin Entrypoint Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_MISSION_ORIGIN_ENTRYPOINT_CANARY_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  validate-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute fresh non-parent mission-origin canary exactly once
+        id: canary
+        continue-on-error: true
+        run: PYTHONPATH=. python run_mission_origin_entrypoint_canary_once.py
+      - name: Upload terminal canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-origin-entrypoint-canary-terminal
+          path: mission-origin-entrypoint-canary-terminal.json
+          if-no-files-found: error
+      - name: Preserve canary failure
+        if: steps.canary.outcome != 'success'
+        run: exit 1
