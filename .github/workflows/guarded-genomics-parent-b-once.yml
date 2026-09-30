@@ -1,0 +1,61 @@
+name: Guarded Genomics Parent Task B Once
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  execute-once:
+    if: github.head_ref == 'execute/guarded-genomics-parent-b-public-runner-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Fail-closed exact Brain snapshot prestart
+        run: |
+          set -euo pipefail
+          mkdir -p _terminal
+          test "$(find brain_snapshot/canonical/runtime -type f | wc -l | tr -d ' ')" = "96"
+          test "$(git hash-object brain_snapshot/canonical/tasks/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json)" = "5f1a8fea0d29c2a60dcc7a038ecd557829e602e7"
+          test "$(git hash-object brain_snapshot/canonical/astra_runtime/missions/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json)" = "03e718a9c779c26d26e7af140f2f65549c1a7f6e"
+          test "$(git hash-object brain_snapshot/canonical/runtime/astra_runtime.py)" = "426ffe58e405dc4f1ba2eb4e838e03a1df771964"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "1efaec4ba51ecb5c40072b3190853f4de89d8f77"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "1ec11496aa84f261fc2c7e8e689ba687581d8b3c"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "46e8e7466479ea298c34e5fa682d49c374510ce9"
+          test "$(git hash-object brain_snapshot/canonical/action_intents/2026-09-30_FREEZE_FRESH_GENOMICS_REFERENCE_LENGTH_OPENENDED_PARENT_TASK_A_V1.json)" = "58bfad63b66a3ec900146951acf8dfcb9368d7d0"
+          grep -Fq '"freshness_class": "FRESH_GENUINELY_OPEN_ENDED_PARENT_TASK_B"' brain_snapshot/canonical/tasks/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json
+          grep -Fq '"no_same_task_replay": true' brain_snapshot/canonical/astra_runtime/missions/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json
+          grep -Fq '"model_planner_disabled": true' brain_snapshot/canonical/astra_runtime/missions/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json
+          python -m py_compile brain_snapshot/canonical/runtime/astra_runtime.py brain_snapshot/canonical/runtime/bound_capabilities/broad_objective_decompose.py brain_snapshot/canonical/runtime/bound_capabilities/open_research_source_frontend.py brain_snapshot/canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+          echo GENOMICS_TASK_B_SNAPSHOT_PRESTART_QUALIFIED | tee _terminal/prestart_report.txt
+      - name: Generate frozen guarded plan
+        run: python generate_guarded_genomics_parent_b_plan.py
+      - name: Atomically admit and execute exactly once
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_genomics_parent_b_plan.json --receipt _terminal/guarded-genomics-admission.json
+      - name: Preserve terminal evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p _terminal/snapshot
+          cp brain_snapshot/canonical/tasks/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json _terminal/snapshot/task.json
+          cp brain_snapshot/canonical/astra_runtime/missions/PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005.json _terminal/snapshot/mission.json
+          cp brain_snapshot/canonical/action_intents/2026-09-30_FREEZE_FRESH_GENOMICS_REFERENCE_LENGTH_OPENENDED_PARENT_TASK_A_V1.json _terminal/snapshot/action_intent.json
+          cp guarded_genomics_parent_b_plan.json _terminal/snapshot/guarded_plan.json || true
+          if [ -d brain_snapshot/canonical/astra_runtime/evidence ]; then cp -R brain_snapshot/canonical/astra_runtime/evidence _terminal/snapshot/evidence; fi
+          if [ -d brain_snapshot/canonical/astra_runtime/state ]; then cp -R brain_snapshot/canonical/astra_runtime/state _terminal/snapshot/state; fi
+          if [ -f _terminal/producer.log ]; then grep -E -m40 'PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1|Blocker:|CAPABILITY_ACQUISITION_REQUIRED|OPEN_ENDED_RESEARCH_|COMPOUND_GOAL_COMPLETE' _terminal/producer.log > _terminal/first_signals.txt || true; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: guarded-genomics-parent-b-terminal
+          path: _terminal/
+          if-no-files-found: error
