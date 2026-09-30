@@ -1,0 +1,25 @@
+{
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_dependency_count": 0,
+    "parent_task_execution_forbidden": true,
+    "runtime_mutation_forbidden": true,
+    "supplier_acquisition_forbidden": true,
+    "supplier_discovery_forbidden": true
+  },
+  "goal": "Qualify canonical mission identity propagation only.",
+  "mission_id": "NONPARENT-MISSION-ORIGIN-QUALIFICATION-20260930-V1",
+  "purpose": "Qualify canonical Astra runtime mission-path identity propagation only. This is a non-parent boundary qualification and must not execute supplier discovery, supplier acquisition, or any parent task.",
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "steps": [
+    {
+      "adapter": "shell",
+      "command": "printf MISSION_ORIGIN_BOUNDARY_PROBE",
+      "id": "mission-origin-boundary-probe",
+      "verify": {
+        "text": "MISSION_ORIGIN_BOUNDARY_PROBE",
+        "type": "stdout_contains"
+      }
+    }
+  ]
+}
