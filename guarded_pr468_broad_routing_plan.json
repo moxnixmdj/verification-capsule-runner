@@ -1,0 +1,61 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the exact Brain PR468 generic multi-clause broad-objective research routing repair without executing any parent scientific task.",
+  "frozen": {
+    "gate_id": "BRAIN-PR468-BROAD-MULTICLAUSE-ROUTING-QUALIFICATION-20260930-V1",
+    "problem_sha256": "89f210b7252c287cfe38e72c8be0917b759a9bf9dd828f0ca22e173566de4bec",
+    "task_sha256": "c067e578913a8ae0d7a2ada1fd6981d2cf7e3ec8d832d071eb5e41e33a9d8436",
+    "runtime_sha256": "612cd383cb275702d382e6940b2cfcea30796ad2b0612cdbd6aea67316d42120",
+    "canonical_base": "73f8331cddf556af0daece3aa32998ac992981d0",
+    "authorization_sha256": "3ed98b70eb203554b8f89916e11c1d36db2c69802c4188b4b0de3418227821bc"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "15f5be3c890f14ccd96e232bb94ae92482d2fa18"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "25738e959dec0be46058e4bd7720fb8ed1b599bb"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "cf7c5ceab23724ec0d6b5c7ff5462c591da64804"
+    },
+    {
+      "path": "verify_pr468_broad_objective_routing.py",
+      "git_blob_sha1": "e682c8ee5439a21df85ce690b9460e99ef1ae697"
+    },
+    {
+      "path": "pr468_broad_routing_qualification_authorization.json",
+      "git_blob_sha1": "e46dddf135dd74bc55a429b82f6f78f63f65bf66",
+      "sha256": "3ed98b70eb203554b8f89916e11c1d36db2c69802c4188b4b0de3418227821bc"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python verify_pr468_broad_objective_routing.py"
+  ],
+  "authority": {
+    "brain_pr": 468,
+    "brain_head_sha": "ba4724a93b9479b38a316a8c26ed0a22b55e501f",
+    "qualification_only": true,
+    "parent_task_execution": false,
+    "spent_http2_task_replayed": false,
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0
+  }
+}
