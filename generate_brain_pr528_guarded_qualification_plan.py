@@ -13,7 +13,7 @@ plan={
  "goal_text":GOAL,
  "frozen":{
    "gate_id":"BRAIN-PR528-SCHOLARLY-ADMISSION-MATERIALIZATION-QUALIFICATION-20260930-V1",
-   "problem_sha256":hashlib.sha256(("goal_text_v1\\0"+norm).encode()).hexdigest(),
+   "problem_sha256":hashlib.sha256(("goal_text_v1\0"+norm).encode()).hexdigest(),
    "task_sha256":sha256_file(SOURCE),
    "runtime_sha256":sha256_file(FRONT),
    "canonical_base":"513e350225ff16485d729a8e9a0d74f196a7e103",
