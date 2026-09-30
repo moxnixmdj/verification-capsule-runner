@@ -3,20 +3,30 @@ name: Run Faithful Thermophysics Parent Once
 on:
   pull_request:
     branches: [main]
+    types: [synchronize]
     paths:
       - ARM_THERMOPHYSICS_PARENT_OPENENDED_20260930_002
 
 permissions:
   contents: read
 
+concurrency:
+  group: thermophysics-parent-openended-20260930-002
+  cancel-in-progress: false
+
 jobs:
   execute-once:
+    if: github.head_ref == 'verify/thermophysics-parent-install-20260930-v1' && github.run_attempt == 1
     runs-on: ubuntu-24.04
     timeout-minutes: 14
     env:
       ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
