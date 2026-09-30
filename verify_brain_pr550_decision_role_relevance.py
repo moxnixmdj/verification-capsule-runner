@@ -98,7 +98,7 @@ report={
  "schema":"BRAIN_PR550_THRESHOLD_SAFE_DECISION_ROLE_RELEVANCE_INDEPENDENT_QUALIFICATION_V1",
  "status":"PASS" if not fail else "FAIL",
  "brain_pr":550,
- "brain_candidate_head":"2508568cc2b3feab67e7ae9969aea2041e2352d9",
+ "brain_candidate_head":"3b8ab760e12c1cac8949240ebf8e15ec94937121",
  "failures":fail,
  "cases":cases,
  "parent_task_execution":False,
