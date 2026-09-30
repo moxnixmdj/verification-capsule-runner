@@ -1,0 +1,34 @@
+name: Run PR304 Clean Chemistry Task B Once
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Execute frozen PR304 chemistry Task B exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_pr304_parent_chemistry_taskb_once.py
+      - name: Upload terminal chemistry Task B evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr304-parent-chemistry-taskb-terminal
+          path: pr304-parent-chemistry-taskb-report.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
