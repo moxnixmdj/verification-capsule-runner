@@ -1,0 +1,10 @@
+{
+  "command_sha256": "a249be5b24647e1dd6cc831404cc31a6115fdfeb0ced1a307d4c25cc84496b58",
+  "duration_sec": 0.144,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "cargo-flight-dispatch-dev-20260930-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/app/dispatch.py\", line 270, in <module>\n    main()\n    ~~~~^^\n  File \"/app/dispatch.py\", line 259, in main\n    route = _optimize_route(\"NAN\", destinations, airports, weather, aircraft_data, manifest)\n  File \"/app/dispatch.py\", line 242, in _optimize_route\n    raise RuntimeError(\"no feasible single-tour route\")\nRuntimeError: no feasible single-tour route\nTraceback (most recent call last):\n  File \"/tmp/audit_dispatch.py\", line 16, in <module>\n    subprocess.run(['python3','/app/dispatch.py','--output',str(out)],check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['python3', '/app/dispatch.py', '--output', '/output/candidate.json']' returned non-zero exit status 1.\n",
+  "stdout": "===== V4 AUDIT REPLAY =====\n",
+  "step": 3
+}
