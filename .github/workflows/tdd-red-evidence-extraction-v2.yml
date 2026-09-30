@@ -15,4 +15,4 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run extraction V2 regression
-        run: python -m unittest -v canonical.tests.test_objective_evidence_unit_extract_v2
+        run: python -m unittest -v canonical.tests.test_objective_evidence_unit_extract_v2 canonical.tests.test_open_research_evidence_extraction_integration_v2
