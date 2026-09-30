@@ -1,0 +1,36 @@
+name: Thermophysics parent task one-shot
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ARM_PARENT_THERMOPHYSICS_WATER_VISCOSITY_20260930_002
+permissions:
+  contents: read
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Refresh zero-cost package metadata
+        run: sudo apt-get update
+      - name: Execute frozen parent task exactly once
+        id: producer
+        continue-on-error: true
+        run: python run_parent_thermophysics_water_viscosity_once.py
+      - name: Preserve terminal receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermophysics-parent-task-terminal
+          path: thermophysics-parent-task-terminal.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
