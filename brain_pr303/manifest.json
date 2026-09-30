@@ -1,0 +1,38 @@
+{
+  "source_repo": "moxnixmdj/brain",
+  "source_ref": "0f98db11cc71c315b08ca0c453017bd8e473f47b",
+  "files": {
+    "brain_pr303/canonical/runtime/astra_runtime.py": {
+      "git_blob_sha": "a73410e38d4c67d92188e934e0c0c3f0b2b329ee",
+      "source_path": "canonical/runtime/astra_runtime.py"
+    },
+    "brain_pr303/canonical/runtime/enforce_goal_hierarchy.py": {
+      "git_blob_sha": "c2e6db8e3758046a5885b7d8d1eabb6777125465",
+      "source_path": "canonical/runtime/enforce_goal_hierarchy.py"
+    },
+    "brain_pr303/canonical/tests/test_runtime_cognition_provenance.py": {
+      "git_blob_sha": "226b41573bd0ade9d363ad8b04bf5b45b3489963",
+      "source_path": "canonical/tests/test_runtime_cognition_provenance.py"
+    },
+    "brain_pr303/canonical/CANONICAL_POINTER.json": {
+      "git_blob_sha": "4c963dfad7ee2068d04f908927b2e73f4e0b0607",
+      "source_path": "canonical/CANONICAL_POINTER.json"
+    },
+    "brain_pr303/canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json": {
+      "git_blob_sha": "a81f648a1e93f8f0ac874e1cd5d6207c69f453c8",
+      "source_path": "canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json"
+    },
+    "brain_pr303/canonical/capabilities/FRONTIER_CAPABILITY_OBSOLESCENCE_QUEUE_V1.json": {
+      "git_blob_sha": "066625a36f089abba0877b95239634ab038fdc7b",
+      "source_path": "canonical/capabilities/FRONTIER_CAPABILITY_OBSOLESCENCE_QUEUE_V1.json"
+    },
+    "brain_pr303/canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json": {
+      "git_blob_sha": "441ce5a5bbfdac3d041368fda77e346373188d93",
+      "source_path": "canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json"
+    },
+    "brain_pr303/canonical/capabilities/frontier/OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1.json": {
+      "git_blob_sha": "99b5f2900accce916655e02ef146d53bb4dd2484",
+      "source_path": "canonical/capabilities/frontier/OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1.json"
+    }
+  }
+}
