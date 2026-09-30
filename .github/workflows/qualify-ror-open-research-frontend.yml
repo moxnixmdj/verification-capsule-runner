@@ -1,0 +1,31 @@
+name: Qualify ROR Open Research Frontend Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - canonical/runtime/astra_runtime.py
+      - canonical/tests/test_open_research_ror_identity_composition.py
+      - canonical/tests/test_ror_open_research_runtime_bridge_closure.py
+      - canonical/action_intents/2026-09-30_INTEGRATE_ROR_AUTHORITY_IDENTITY_OPEN_RESEARCH_FRONTEND_V1.json
+      - .github/workflows/qualify-ror-open-research-frontend.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Syntax-check exact runtime integration
+        run: python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - name: Run deterministic composition regression
+        run: python canonical/tests/test_open_research_ror_identity_composition.py
+      - name: Run independent bridge closure
+        run: python canonical/tests/test_ror_open_research_runtime_bridge_closure.py
