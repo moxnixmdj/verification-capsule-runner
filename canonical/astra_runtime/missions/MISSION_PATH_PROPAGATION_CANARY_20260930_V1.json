@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "MISSION-PATH-PROPAGATION-CANARY-20260930-V1",
+  "purpose": "Fresh non-parent canary proving the existing canonical astra_runtime mission entrypoint propagates origin mission identity into autonomous capability acquisition. No parent capability credit.",
+  "goal": "Using a zero-cost Ubuntu package if needed, render the text MISSION PATH CANARY as an Aztec barcode PNG and save it as canonical/astra_runtime/tmp/MISSION_PATH_CANARY.png.",
+  "steps": [
+    {
+      "id": "mission-path-canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "max_controller_actions": 16,
+      "max_cycles": 3,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_controller_required": false,
+    "parent_capability_credit": false,
+    "synthetic_canary_only": true
+  }
+}
