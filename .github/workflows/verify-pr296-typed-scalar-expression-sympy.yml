@@ -1,10 +1,30 @@
 name: Verify PR296 Typed Scalar SymPy
+
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - verify/typed-scalar-expression-sympy-20260930-v1
+
 permissions:
   contents: read
+
 jobs:
-  parked:
+  verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 12
     steps:
-      - run: echo parked
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run compiler and safety regressions
+        run: python canonical/tests/test_numeric_expression_sympy_binding.py
+      - name: Run fresh non-astronomy qualification and independent oracle
+        run: python verify_typed_scalar_expression_sympy.py
+      - name: Upload qualification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr296-typed-scalar-expression-qualification
+          path: typed-scalar-expression-qualification.json
+          if-no-files-found: error
