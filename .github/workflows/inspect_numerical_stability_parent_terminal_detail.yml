@@ -1,0 +1,35 @@
+name: Inspect Numerical Stability Parent Terminal Detail
+
+on:
+  push:
+    branches:
+      - observe/fresh-numerical-stability-terminal-detail-20260930-v2
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_RUN: "36675265218"
+      TARGET_PR: "109"
+    steps:
+      - name: Publish exact job and step conclusions
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          summary=$(gh api "repos/$repo/actions/runs/$TARGET_RUN/jobs?per_page=100" --jq '[.jobs[] | {job:.name, conclusion:.conclusion, steps:[.steps[] | {name:.name, conclusion:.conclusion}]}] | tostring')
+          producer=$(gh api "repos/$repo/actions/runs/$TARGET_RUN/jobs?per_page=100" --jq '[.jobs[].steps[] | select(.name=="Execute frozen parent exactly once") | .conclusion][0] // "MISSING"')
+          prestart=$(gh api "repos/$repo/actions/runs/$TARGET_RUN/jobs?per_page=100" --jq '[.jobs[].steps[] | select(.name=="Fail-closed prestart qualification") | .conclusion][0] // "MISSING"')
+          gh run view "$TARGET_RUN" --log-failed > failed.log 2>&1 || true
+          failed_tail=$(tail -n 120 failed.log | tr '\n\r' '  ' | cut -c1-7000)
+          receipt=$(printf 'RUN_ID=%s\nPRESTART_CONCLUSION=%s\nPRODUCER_STEP_CONCLUSION=%s\nJOB_STEPS=%s\nFAILED_LOG_TAIL=%s' "$TARGET_RUN" "$prestart" "$producer" "$summary" "$failed_tail")
+          old=$(gh api "repos/$repo/pulls/$TARGET_PR" --jq '.body // ""')
+          clean=$(printf '%s\n' "$old" | sed '/<!-- PARENT_TERMINAL_DETAIL_BEGIN -->/,/<!-- PARENT_TERMINAL_DETAIL_END -->/d')
+          new=$(printf '%s\n\n<!-- PARENT_TERMINAL_DETAIL_BEGIN -->\n%s\n<!-- PARENT_TERMINAL_DETAIL_END -->\n' "$clean" "$receipt")
+          gh api --method PATCH "repos/$repo/pulls/$TARGET_PR" -f body="$new" >/dev/null
