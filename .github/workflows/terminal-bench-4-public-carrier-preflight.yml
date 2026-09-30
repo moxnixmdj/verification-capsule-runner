@@ -1,38 +1,19 @@
-name: Terminal-Bench 4 Public Carrier Preflight
+name: TB4 Layout Solver Iteration
 
 on:
   push:
     branches:
       - carrier/tb4-public-preflight-20260930
-    paths:
-      - .github/workflows/terminal-bench-4-public-carrier-preflight.yml
 
 permissions:
   contents: read
 
 jobs:
-  preflight:
+  iterate:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Prove standard public Linux carrier
-        shell: bash
-        run: |
-          set -euo pipefail
-          uname -a
-          docker version
-          docker info
-          docker run --rm hello-world
-      - name: Prove Harbor CLI installability
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 --version
-          pipx install harbor
-          harbor --version
-          harbor --help >/dev/null
-          echo TERMINAL_BENCH_CARRIER_READY
       - name: Fetch selected task-visible environment only
         shell: bash
         run: |
@@ -46,11 +27,11 @@ jobs:
           test -f tasks/layout-config-recreation2/environment/data/layout.png
           test ! -e tasks/layout-config-recreation2/tests
           test ! -e tasks/layout-config-recreation2/solution
-      - name: Compute task-visible layout diagnostics
+      - name: Run current task-visible solver iteration
         shell: bash
         env:
           TASK_ENV: /tmp/tb4/tasks/layout-config-recreation2/environment
         run: |
           set -euo pipefail
           python3 -m pip install --disable-pip-version-check -q Pillow==11.2.1 numpy==2.1.3 opencv-python-headless==4.10.0.84
-          python3 tb4_layout_composite_gain.py
+          python3 tb4_iteration.py
