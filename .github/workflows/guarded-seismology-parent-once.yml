@@ -1,0 +1,67 @@
+name: Guarded Seismology Parent Once
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  execute-once:
+    if: github.head_ref == 'execute/guarded-seismology-parent-once-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Fail-closed exact Brain snapshot prestart
+        run: |
+          set -euo pipefail
+          mkdir -p _terminal
+          test "$(find brain_snapshot/canonical/runtime -type f | wc -l | tr -d ' ')" = "97"
+          test "$(git hash-object brain_snapshot/canonical/tasks/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json)" = "39ed2897a377914876afb97e2bb0d5cb9f3036a8"
+          test "$(git hash-object brain_snapshot/canonical/astra_runtime/missions/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json)" = "7063dd27d58104a0b3e29d54170ac6b816d9bb2f"
+          test "$(git hash-object brain_snapshot/canonical/action_intents/2026-09-30_EXECUTE_GUARDED_SEISMOLOGY_TASK_B_V2.json)" = "c85401a6905b79c5f9b4a3020f1d1be11ecc426c"
+          test "$(git hash-object brain_snapshot/canonical/runtime/astra_runtime.py)" = "426ffe58e405dc4f1ba2eb4e838e03a1df771964"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "3ded762075ed222228a14877af631f1e2e6d9e4c"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "045369d8cba5680c60b57e834d09d12a54d94380"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "a25a34d879413a9853f1d1ffd8ef5e4f6bdd2245"
+          test "$(git hash-object brain_snapshot/canonical/runtime/bound_capabilities/research_query_focus.py)" = "5403e1dc05716fcfc4f9a91b4534f55dc547eb7f"
+          grep -Fq '"fresh_parent_task": true' brain_snapshot/canonical/astra_runtime/missions/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json
+          grep -Fq '"no_same_task_replay": true' brain_snapshot/canonical/astra_runtime/missions/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json
+          grep -Fq '"model_planner_disabled": true' brain_snapshot/canonical/astra_runtime/missions/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json
+          python -m py_compile brain_snapshot/canonical/runtime/astra_runtime.py brain_snapshot/canonical/runtime/bound_capabilities/broad_objective_decompose.py brain_snapshot/canonical/runtime/bound_capabilities/open_research_source_frontend.py brain_snapshot/canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py brain_snapshot/canonical/runtime/bound_capabilities/objective_relevance_bm25.py brain_snapshot/canonical/runtime/bound_capabilities/research_query_focus.py
+          echo SEISMOLOGY_PARENT_SNAPSHOT_PRESTART_QUALIFIED | tee _terminal/prestart_report.txt
+      - name: Generate frozen guarded plan
+        run: python generate_guarded_seismology_parent_plan.py
+      - name: Atomically admit and execute exactly once
+        id: guarded
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_seismology_parent_plan.json --receipt _terminal/guarded-seismology-admission.json
+      - name: Preserve terminal evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p _terminal/snapshot
+          cp brain_snapshot/canonical/tasks/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json _terminal/snapshot/task.json
+          cp brain_snapshot/canonical/astra_runtime/missions/PARENT-SEISMOLOGY-KAMCHATKA-TSUNAMI-OPEN-RESEARCH-TASK-B-20260930-002.json _terminal/snapshot/mission.json
+          cp brain_snapshot/canonical/action_intents/2026-09-30_EXECUTE_GUARDED_SEISMOLOGY_TASK_B_V2.json _terminal/snapshot/action_intent.json
+          cp guarded_seismology_parent_plan.json _terminal/snapshot/guarded_plan.json || true
+          if [ -d brain_snapshot/canonical/astra_runtime/evidence ]; then cp -R brain_snapshot/canonical/astra_runtime/evidence _terminal/snapshot/evidence; fi
+          if [ -d brain_snapshot/canonical/astra_runtime/state ]; then cp -R brain_snapshot/canonical/astra_runtime/state _terminal/snapshot/state; fi
+          if [ -f _terminal/producer.log ]; then grep -E -m60 'PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1|Blocker:|CAPABILITY_ACQUISITION_REQUIRED|OPEN_ENDED_RESEARCH_|COMPOUND_GOAL_COMPLETE|SOURCE_|EVIDENCE_' _terminal/producer.log > _terminal/first_signals.txt || true; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: guarded-seismology-parent-terminal
+          path: _terminal/
+          if-no-files-found: error
+      - name: Preserve terminal failure
+        if: steps.guarded.outcome != 'success'
+        run: exit 1
