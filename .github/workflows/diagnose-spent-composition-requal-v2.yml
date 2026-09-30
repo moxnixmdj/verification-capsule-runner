@@ -1,0 +1,83 @@
+name: Diagnose Spent Composition Requalification V2
+
+on:
+  push:
+    branches: [verify/composition-requal-canonical-authority-v2-20260930]
+    paths:
+      - 'ARM_DIAGNOSE_SPENT_COMPOSITION_REQUAL_V2_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Static compile and pure decision diagnosis only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys,hashlib
+          root=pathlib.Path(".").resolve()
+          def load(name,path):
+              spec=importlib.util.spec_from_file_location(name,root/path)
+              mod=importlib.util.module_from_spec(spec); sys.modules[name]=mod; spec.loader.exec_module(mod); return mod
+          compiler=load("diag_compiler","canonical/runtime/goal_compiler.py")
+          grounder=load("diag_grounder","canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py")
+          composer=load("diag_composer","canonical/runtime/bound_capabilities/grounded_executable_composition.py")
+          planner=load("diag_planner","canonical/runtime/capability_planner.py")
+          proposal=load("diag_proposal","canonical/runtime/capability_proposal_generators.py")
+          producer=load("diag_producer","canonical/runtime/bound_capabilities/evidence_decision_synthesis.py")
+          verifier=load("diag_verifier","canonical/runtime/bound_capabilities/evidence_decision_verify.py")
+          registry=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          registry=compiler._platform_admissible_registry(registry)
+
+          input_path="canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json"
+          output_path="canonical/astra_runtime/tmp/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_OUTPUT.json"
+          goal=(
+            "Using typed decision evidence at "+input_path+
+            ", synthesize the decision to "+output_path+
+            ". Then independently verify the decision result at "+output_path+"."
+          )
+          grounding=grounder.ground(
+              goal,registry,compiler=compiler,proposal_binder=proposal,root=root,
+              enforce_bindability=True,
+          )
+          composition=composer.compose(
+              goal,grounding,registry,compiler,root,
+              verified_initial_facts=["structured.decision_evidence.available"],
+          )
+          planned=planner.plan_actions(composition["problem"])
+          actions=[x for x in planned["actions"] if x.get("type")!="finish"]
+
+          problem=json.loads((root/input_path).read_text())
+          synthesized=producer.synthesize(problem)
+          direct_ok,direct_reason=verifier.verify(problem,synthesized)
+
+          report={
+            "schema":"PROJECT_BRAIN_SPENT_REQUAL_STATIC_DIAGNOSTIC_V1",
+            "non_crediting":True,
+            "no_controller_execution":True,
+            "spent_run_id":36656793034,
+            "grounding_unresolved":grounding["unresolved_clause_indexes"],
+            "composition_ready":composition["composition_ready"],
+            "planned_actions":actions,
+            "direct_pure_verify":{"ok":direct_ok,"reason":direct_reason},
+            "direct_selected":synthesized.get("selected_alternative"),
+            "direct_status":synthesized.get("status"),
+            "input_hash_in_result":synthesized.get("input_sha256"),
+            "input_hash_direct":hashlib.sha256(json.dumps(problem,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest(),
+          }
+          pathlib.Path("SPENT_COMPOSITION_REQUAL_STATIC_DIAGNOSTIC.json").write_text(json.dumps(report,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(report,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: spent-composition-requal-static-diagnostic
+          path: SPENT_COMPOSITION_REQUAL_STATIC_DIAGNOSTIC.json
