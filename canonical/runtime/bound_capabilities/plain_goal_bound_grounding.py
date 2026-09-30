@@ -43,6 +43,20 @@ class GroundingError(RuntimeError):
     pass
 
 
+def _load_broad_objective_decomposer():
+    path=pathlib.Path(__file__).resolve().with_name("broad_objective_decompose.py")
+    if not path.is_file():
+        return None
+    spec=importlib.util.spec_from_file_location(
+        "project_brain_broad_objective_decompose",path
+    )
+    if spec is None or spec.loader is None:
+        return None
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _tokens(value):
     if isinstance(value,(list,tuple,set)):
         value=" ".join(str(x) for x in value)
@@ -263,6 +277,16 @@ def _admit_bindable_candidates(
     for ordinal,item in enumerate(ranked):
         cid=str(item.get("capability_id") or "")
         entry=registry.get(cid) or {}
+        # Grounding feeds grounded_executable_composition, whose contract
+        # requires a dict action_template. Reject impossible candidates here
+        # rather than allowing lexical overlap to masquerade as executable
+        # grounding and fail one stage later.
+        if not isinstance(entry.get("action_template"),dict):
+            rejected.append({
+                "capability_id":cid,
+                "error":"COMPOSITION_ACTION_TEMPLATE_MISSING",
+            })
+            continue
         instance_id="grounding.%d.%d.%s" % (
             index,ordinal,re.sub(r"[^A-Za-z0-9_.-]+","_",cid)
         )
@@ -451,6 +475,13 @@ def ground(
     grounded=[x for x in records if x["status"]!="UNRESOLVED"]
     unresolved=[x["index"] for x in records if x["status"]=="UNRESOLVED"]
     canonical_goal=" ".join(str(goal or "").strip().split())
+    broad=None
+    if len(records)==1 and not grounded and unresolved==[0]:
+        module=_load_broad_objective_decomposer()
+        if module is not None:
+            candidate=module.decompose(canonical_goal)
+            if isinstance(candidate,dict) and candidate.get("status")=="DECOMPOSED":
+                broad=candidate
     return {
         "schema":SCHEMA,
         "goal":canonical_goal,
@@ -459,6 +490,8 @@ def ground(
         "grounded_clause_count":len(grounded),
         "unresolved_clause_indexes":unresolved,
         "candidate_capability_ids":sorted(all_candidates),
+        "broad_objective_decomposition":broad,
+        "broad_objective_decomposition_available":bool(broad),
         "external_discovery_allowed_for_unresolved_only":True,
         "whole_goal_external_discovery_forbidden_if_any_bound_grounding":bool(grounded),
         "input_contract_bindability_enforced":bool(enforce_bindability),

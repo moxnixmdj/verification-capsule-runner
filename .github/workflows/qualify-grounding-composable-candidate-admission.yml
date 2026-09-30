@@ -1,0 +1,99 @@
+name: Qualify Grounding Composable Candidate Admission
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/grounding-composable-candidate-admission-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify exact current Brain closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "5570a2300656b840dbb252bf173a0b652fe29db3"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "e69aee6da9f78c6981e344b3b1a1237de940d3e5"
+          test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "6eb2b20e860da466ad8b793c20060ded1fbf389b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "425651bb88575b5ad940e76735a98618896e31ae"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "816c37742b23739e74a9455a97dd6aea9e767206"
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "1dc26e68d18010b66211d1d83f7b2024c8ad1fcf"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "a22761070ba4d45d3eae7b684d5c66cfb0601669"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "4b61fe911471854ec15c7900816f61e9e55f602e"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/tests/test_grounding_composable_candidate_admission.py)" = "1b382dd41d0452b5370110cbcc58933094d4cbbe"
+      - name: Run grounding precision regressions
+        run: python canonical/tests/test_grounding_composable_candidate_admission.py
+      - name: Live end-to-end broad research frontend oracle
+        shell: bash
+        run: |
+          python - <<'PY'
+          import importlib.util, json, pathlib, tempfile
+          p=pathlib.Path("canonical/runtime/astra_runtime.py")
+          s=importlib.util.spec_from_file_location("astra_grounding_live",p)
+          r=importlib.util.module_from_spec(s); s.loader.exec_module(r)
+          goals=[
+            "Assess whether HTTP cache freshness is distinct from validation according to technical documentation",
+            "Determine whether Python technical documentation distinguishes object identity from equality comparison",
+            "Compare whether two documented cryptographic properties, preimage resistance and collision resistance, are defined as distinct security properties",
+          ]
+          passed=[]
+          with tempfile.TemporaryDirectory() as td:
+              old=r.EVID_DIR
+              r.EVID_DIR=pathlib.Path(td)
+              try:
+                  for i,goal in enumerate(goals,1):
+                      mid=f"NONPARENT-GROUNDING-PRECISION-CANARY-{i}"
+                      mission={"mission_id":mid,"goal":goal}
+                      step={"id":"canary","adapter":"goal","goal_ref":"goal","max_controller_actions":32}
+                      try:
+                          r._run_goal_unstamped(step,mission)
+                      except r.Blocker as exc:
+                          msg=str(exc)
+                          print("CANARY_BLOCKER",i,msg[:1800])
+                          marker="OPEN_ENDED_RESEARCH_SOURCE_FRONTEND_READY__AUTHORITY_PRIMARY_SOURCE_RELEVANCE_VERIFICATION_REQUIRED:"
+                          if marker not in msg:
+                              continue
+                          assert "BOUND_CAPABILITY_GROUNDING_AVAILABLE_COMPOSITION_BLOCKED" not in msg
+                          assert "CAPABILITY_ACQUISITION_REQUIRED" not in msg
+                          assert "AutoAcquisitionFailure" not in msg
+                          gp=pathlib.Path(td)/f"{mid}__BOUND_CAPABILITY_GROUNDING.json"
+                          fp=pathlib.Path(td)/f"{mid}__OPEN_RESEARCH_SOURCE_FRONTEND.json"
+                          assert gp.is_file() and fp.is_file()
+                          grounding=json.loads(gp.read_text(encoding="utf-8"))
+                          frontend=json.loads(fp.read_text(encoding="utf-8"))
+                          assert grounding["grounded_clause_count"]==0, grounding
+                          assert grounding["candidate_capability_ids"]==[], grounding
+                          assert grounding["broad_objective_decomposition_available"] is True
+                          assert frontend["status"]=="SOURCE_FRONTEND_READY", frontend
+                          assert int(frontend["provenance_verified_candidate_count"])>=1, frontend
+                          assert frontend["next_required_capability"]=="MODEL_INDEPENDENT_SOURCE_AUTHORITY_PRIMARY_EVIDENCE_AND_RELEVANCE_VERIFICATION"
+                          assert frontend["authority_claims_made"] is False
+                          assert frontend["primary_source_claims_made"] is False
+                          assert frontend["relevance_claims_made"] is False
+                          assert int(frontend["model_dependency_count"])==0
+                          assert int(frontend["incremental_spend_usd"])==0
+                          passed.append({
+                            "goal":goal,
+                            "provenance_verified_candidate_count":frontend["provenance_verified_candidate_count"],
+                          })
+                      else:
+                          raise AssertionError("broad research canary unexpectedly completed")
+              finally:
+                  r.EVID_DIR=old
+          print("LIVE_GROUNDING_PRECISION_PASSES",json.dumps(passed,sort_keys=True))
+          assert len(passed)>=2, passed
+          print("INDEPENDENT_GROUNDING_COMPOSABLE_ADMISSION_PASS")
+          PY
