@@ -1,0 +1,13 @@
+{
+  "schema":"PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status":"AUTHORIZED",
+  "brain_pr":529,
+  "brain_head_sha":"4df38e5aa55cfd86a1fda6fbe11666ab6221da2c",
+  "brain_base_sha":"3e2435efb9398a062ee40a7bdbb3e3610724b330",
+  "scope":"FROZEN_SCHOLARLY_PROVENANCE_ADMISSION_SUBJECT_COVERAGE_SELECTED_MATERIALIZATION_METADATA_REFINEMENT_EXACT_BYTE_QUALIFICATION",
+  "parent_task_execution":false,
+  "parent_task_replay":false,
+  "spent_seismology_replay":false,
+  "model_dependency_count":0,
+  "incremental_spend_usd":0
+}
