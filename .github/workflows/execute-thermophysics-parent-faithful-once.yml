@@ -1,0 +1,46 @@
+name: Execute Faithful Thermophysics Parent Once
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - main
+    paths:
+      - ARM_PARENT_THERMOPHYSICS_FAITHFUL_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Verify parent runtime closure before spend
+        run: python verify_parent_runtime_closure_prestart_v2.py
+      - name: Execute frozen thermophysics parent exactly once
+        id: producer
+        continue-on-error: true
+        run: PYTHONPATH=. python run_parent_thermophysics_faithful_once.py
+      - name: Upload immutable terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: thermophysics-parent-faithful-terminal
+          path: |
+            thermophysics-parent-faithful-terminal.json
+            canonical/astra_runtime/evidence
+            canonical/astra_runtime/state
+            canonical/astra_runtime/tmp
+          if-no-files-found: warn
+      - name: Preserve producer failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
