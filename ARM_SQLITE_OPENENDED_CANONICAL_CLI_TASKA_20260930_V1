@@ -1,0 +1,10 @@
+ARM EXACTLY ONCE THROUGH CANONICAL ASTRA CLI
+task=PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001
+task_blob=5d09c9eebcb09612525836e7926bdf297f4bad32
+mission_blob=c7fa8a9303fdbff1065892d8f8b9b8e540378eea
+runtime_blob=6cb668bcc5a00665ea541fc5b6adf494f37ad1c9
+entrypoint=canonical/runtime/astra_runtime.py
+direct_run_goal_forbidden=true
+replay_allowed=false
+model_planner_disabled=true
+incremental_spend_usd=0
