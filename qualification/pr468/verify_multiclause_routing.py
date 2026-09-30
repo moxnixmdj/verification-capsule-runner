@@ -4,8 +4,8 @@ import hashlib, importlib.util, json, pathlib
 
 ROOT=pathlib.Path(__file__).resolve().parent
 REPORT=ROOT/"pr468-independent-report.json"
-EXPECTED_GROUNDING_BLOB="25738e959dec0be46058e4bd7720fb8ed1b599bb"
-EXPECTED_BROAD_BLOB="1efaec4ba51ecb5c40072b3190853f4de89d8f77"
+EXPECTED_GROUNDING_BLOB="46e8e7466479ea298c34e5fa682d49c374510ce9"
+EXPECTED_BROAD_BLOB="6eb2b20e860da466ad8b793c20060ded1fbf389b"
 
 def git_blob_sha(path):
     raw=path.read_bytes()
@@ -27,8 +27,8 @@ observed_broad=git_blob_sha(bp)
 assert observed_grounding==EXPECTED_GROUNDING_BLOB,(observed_grounding,EXPECTED_GROUNDING_BLOB)
 assert observed_broad==EXPECTED_BROAD_BLOB,(observed_broad,EXPECTED_BROAD_BLOB)
 
-g=load("pr468_grounding","plain_goal_bound_grounding.py")
-d=load("pr468_decomposer","broad_objective_decompose.py")
+g=load("pr470_grounding","plain_goal_bound_grounding.py")
+d=load("pr470_decomposer","broad_objective_decompose.py")
 checks=[]
 
 def ok(name,condition,detail=None):
@@ -92,7 +92,7 @@ ok("partial_grounding_does_not_escape_to_whole_goal_broad_route",
    {"grounded_clause_count":partial["grounded_clause_count"]})
 
 report={
- "schema":"PROJECT_BRAIN_PR468_INDEPENDENT_QUALIFICATION_V1",
+ "schema":"PROJECT_BRAIN_PR470_INDEPENDENT_QUALIFICATION_V1",
  "status":"PASS",
  "brain_pr":468,
  "brain_pr_head":"ba4724a93b9479b38a316a8c26ed0a22b55e501f",
