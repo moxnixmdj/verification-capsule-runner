@@ -1,0 +1,54 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Fresh guarded Qualification B of the exact merged claim-spec operand-binding capability using a materially distinct cross-domain corpus for canonical child-capability credit; no parent task execution or replay.",
+  "frozen": {
+    "gate_id": "CLAIM-SPEC-OPERAND-BINDING-FRESH-QUALIFICATION-B-20260930-V1",
+    "problem_sha256": "a00c8ab590b4f0dbf93d577f12cf67cbff4ea57a2fc923363cc1558cbb513825",
+    "task_sha256": "fd8db995f9cfc445adf21062ab5a02163635316c4d757623a062d72c74586b3a",
+    "runtime_sha256": "1dd6ce42e77748aa90e6d2e56ee94dce0bf2c3efe04a69576dd7097bf0bbb23b",
+    "canonical_base": "84b7779f66e1f37970cb8df1cbac0b8d09037a34",
+    "authorization_sha256": "d151683bda10e5a7fdf39379920ea6359f63dc1231a7a724ae900847d8eb248a"
+  },
+  "pinned_files": [
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py",
+      "git_blob_sha1": "48fd058430d8d361fc75beced567c7b6d1166531"
+    },
+    {
+      "path": "canonical/tests/test_objective_claim_operand_binding.py",
+      "git_blob_sha1": "467a9f4f9b835ca8f65fd19b9335770e7b0ef31b"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py",
+      "git_blob_sha1": "d66a7eb30774f66160b698d8082947776888293d"
+    },
+    {
+      "path": "guarded_claim_spec_fresh_qualification_b.py",
+      "sha256": "fd8db995f9cfc445adf21062ab5a02163635316c4d757623a062d72c74586b3a"
+    },
+    {
+      "path": "guarded_claim_spec_fresh_qualification_b_entry.py",
+      "sha256": "0dfd1611e86825639ece8449ec9b0995115c541ea019e4cea58c06504402ec50"
+    },
+    {
+      "path": "guarded_claim_spec_fresh_qualification_b_authorization.json",
+      "sha256": "d151683bda10e5a7fdf39379920ea6359f63dc1231a7a724ae900847d8eb248a"
+    }
+  ],
+  "command": [
+    "python",
+    "guarded_claim_spec_fresh_qualification_b_entry.py"
+  ]
+}
