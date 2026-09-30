@@ -1,0 +1,36 @@
+name: Guarded Brain PR548 Decision Role Relevance Qualification
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+jobs:
+  qualify:
+    if: github.head_ref == 'qualify/brain-pr548-decision-role-core-property-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Generate frozen guarded plan
+        run: python generate_brain_pr548_decision_role_plan.py
+      - name: Atomically admit and qualify PR548
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan brain_pr548_decision_role_plan.json --receipt brain-pr548-decision-role-guard-receipt.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brain-pr548-decision-role-relevance-qualification
+          path: |
+            brain-pr548-decision-role-guard-receipt.json
+            brain_pr548_decision_role_plan.json
+            pr548-independent-report.json
+            pr548_decision_role_authority.json
+          if-no-files-found: warn

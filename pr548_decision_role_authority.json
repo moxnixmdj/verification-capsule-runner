@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 548,
+  "brain_candidate_head": "9ffe718550a08021ea14c73a22894737be6592cb",
+  "brain_base": "81f2f813f03b5d80ac2e44080bd19d967bd06463",
+  "scope": "DECISION_ROLE_AWARE_RELEVANCE_ADMISSION_CORE_PROPERTY_PLUS_REQUESTED_OPERAND",
+  "qualification_only": true,
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "materials_task_c_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
