@@ -1,0 +1,37 @@
+name: Run PR304 Parent Chemistry Task B Once
+
+on:
+  push:
+    branches:
+      - arm/pr304-parent-chemistry-taskb-20260930-v1
+
+permissions:
+  contents: read
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Execute frozen PR304 parent Task B exactly once
+        id: parent_task
+        continue-on-error: true
+        run: python run_pr304_parent_chemistry_taskb_once.py
+      - name: Upload terminal parent Task B evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr304-parent-chemistry-taskb-terminal
+          path: pr304-parent-chemistry-taskb-report.json
+          if-no-files-found: error
+      - name: Preserve semantic failure
+        if: steps.parent_task.outcome != 'success'
+        run: exit 1
