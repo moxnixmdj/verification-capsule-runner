@@ -1,0 +1,58 @@
+name: Probe Parent Geophysics Sources
+
+on:
+  push:
+    branches:
+      - probe/geophysics-parent-sources-20260930
+    paths:
+      - 'ARM_PROBE_PARENT_GEOPHYSICS_SOURCES_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Probe exact frozen FDSN source URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,urllib.request,pathlib,hashlib
+          urls={
+            "USGS":"https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2026-09-28T00:00:00&endtime=2026-09-29T00:00:00&orderby=magnitude&limit=1",
+            "EMSC":"https://www.seismicportal.eu/fdsnws/event/1/query?format=json&starttime=2026-09-28T00:00:00&endtime=2026-09-29T00:00:00&orderby=magnitude&limit=1",
+          }
+          receipt={"schema":"PROJECT_BRAIN_GEOPHYSICS_SOURCE_PREFLIGHT_V1","sources":{}}
+          for name,url in urls.items():
+              req=urllib.request.Request(url,headers={"User-Agent":"Project-Brain-zero-spend-parent-task-preflight/1.0"})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                  raw=r.read()
+                  status=r.status
+                  ctype=r.headers.get("content-type","")
+              obj=json.loads(raw.decode("utf-8"))
+              features=obj.get("features")
+              assert status==200,(name,status)
+              assert isinstance(features,list) and features,(name,obj.keys())
+              mag=features[0].get("properties",{}).get("mag")
+              assert isinstance(mag,(int,float)),(name,features[0])
+              receipt["sources"][name]={
+                "http_status":status,
+                "content_type":ctype,
+                "body_sha256":hashlib.sha256(raw).hexdigest(),
+                "feature_count":len(features),
+                "magnitude_field_present":True,
+              }
+          pathlib.Path("GEOPHYSICS_SOURCE_PREFLIGHT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print("GEOPHYSICS_SOURCE_PREFLIGHT_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: geophysics-source-preflight
+          path: GEOPHYSICS_SOURCE_PREFLIGHT.json
