@@ -1,0 +1,10 @@
+{
+  "command_sha256": "fc530aab335509e8d19f63af4663924396cd7d78caca155b79c05d9a2b828e59",
+  "duration_sec": 0.061,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "risk-scorer-replay-20260930-v1",
+  "stderr": "",
+  "stdout": "3.12.14 (main, Sep 19 2026, 01:05:48) [GCC 12.2.0]\nnumpy False\nscipy False\nsklearn False\npandas False\n",
+  "step": 5
+}
