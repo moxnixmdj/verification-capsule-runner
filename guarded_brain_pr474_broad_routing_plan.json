@@ -1,0 +1,35 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify Brain PR474 exact broad-routing correction after the spent parent falsification: multi-clause all-unresolved research objectives and generic requirements to run a verification method must route to broad decomposition, concrete execution recipes must fail closed, and partially grounded goals must never be reinterpreted as whole-goal broad research.",
+  "frozen": {
+    "gate_id": "BRAIN-PR474-BROAD-ROUTING-CORRECTED-QUALIFICATION-20260930-V1",
+    "problem_sha256": "ce8e2f9f7b59a51fc9c312a7b756f852c8ffb5821301b2449ca8ed3dff78225b",
+    "task_sha256": "6f0ef3870bfa901e237637fdc10f601f74223010f3d76a241dd0468964f4cea9",
+    "runtime_sha256": "ba9fd1ae4d9eda0f26dd2cc239d50ac03ca5a81a55834c7483f4a6d1b8749d57",
+    "canonical_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+    "authorization_sha256": "740151ef83ceae4629d04ba1aae9597959fdd74df4d91dc9d26a49c4cb9ac264"
+  },
+  "pinned_files": [
+    {"path":"canonical/runtime/bound_capabilities/broad_objective_decompose.py","git_blob_sha1":"1efaec4ba51ecb5c40072b3190853f4de89d8f77"},
+    {"path":"canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py","git_blob_sha1":"46e8e7466479ea298c34e5fa682d49c374510ce9"},
+    {"path":"canonical/tests/test_broad_objective_semantic_decomposition.py","git_blob_sha1":"2df7c6ec85083458a69675f6ff86eca9c00ea278"},
+    {"path":"verify_brain_pr474_broad_routing.py","git_blob_sha1":"6beb56cee0245de45b48f8a96a3936f0bb98b412"},
+    {"path":"brain_pr474_routing_qualification_authorization.json","git_blob_sha1":"c820d5089671861a05653a28d3f3a9254b6d654d"},
+    {"path":"execution_guard/github_actions_guarded_run_live.py","git_blob_sha1":"30ea2fd2cc548444477c7b234a59129ff8386235"},
+    {"path":"execution_guard/actions_admission.py","git_blob_sha1":"6c46abef66c036f5382d5792b11a82a289b4dd94"},
+    {"path":"execution_guard/github_ref_store_live.py","git_blob_sha1":"a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"}
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python verify_brain_pr474_broad_routing.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_pr": 474,
+    "authoritative_parent_run": 36688193204,
+    "prior_red_run": 36689361168,
+    "parent_task_execution": false,
+    "parent_task_replay": false
+  }
+}
