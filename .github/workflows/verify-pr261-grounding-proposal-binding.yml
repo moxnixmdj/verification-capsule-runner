@@ -21,7 +21,7 @@ jobs:
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "fc262d7180189ecc8f61561a7ce6a1f4cdc66ea1"
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "ac38fb339cd5148f8d28817e2b41e9f0567d797b"
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "dd18074197d28abd267859dfe709baa28b4a8dfe"
-          test "$(git hash-object canonical/tests/test_grounding_proposal_binding_contract.py)" = "5d1617c00bfcd7bdaa705e5ee8307ed800db22a0"
+          test "$(git hash-object canonical/tests/test_grounding_proposal_binding_contract.py)" = "cf158ac3e8982083563db6c0a558a57c677e8a2b"
           test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
       - name: Compile exact candidate
         run: |
