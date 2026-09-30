@@ -1,0 +1,35 @@
+name: Qualify PR426 Generic Evidence Extraction
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py
+      - canonical/runtime/bound_capabilities/open_research_source_frontend.py
+      - canonical/runtime/bound_capabilities/objective_relevance_bm25.py
+      - canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py
+      - canonical/tests/test_objective_evidence_unit_extract_v2.py
+      - canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py
+      - canonical/tests/test_open_research_source_frontend_generic_extraction.py
+      - qualify_pr426_generic_evidence_extraction.py
+      - .github/workflows/qualify-pr426-generic-evidence-extraction.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Exact candidate regressions
+        run: |
+          python canonical/tests/test_objective_evidence_unit_extract_v2.py
+          python canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py
+          python canonical/tests/test_open_research_source_frontend_generic_extraction.py
+      - name: Independent live non-ROR qualification
+        run: python qualify_pr426_generic_evidence_extraction.py
