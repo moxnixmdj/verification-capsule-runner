@@ -1,0 +1,70 @@
+{
+  "command_sha256": "9d63d591b0e3e148a793294de92874f91512f1d3d1cbad931ce32a5c97f6bc43",
+  "completion_authorization": {
+    "acceptance_criteria": [
+      {
+        "criterion": "script_and_active_embed_removal",
+        "evidence": "dev observation 001: 20 adversarial cases passed",
+        "status": "PASS"
+      },
+      {
+        "criterion": "event_handler_and_active_url_neutralization",
+        "evidence": "dev observations 001/002: encoded javascript/vbscript/data HTML URL vectors and on* handlers removed",
+        "status": "PASS"
+      },
+      {
+        "criterion": "mutation_parser_boundary",
+        "evidence": "dev observation 002: 15 mutation/cross-parser vectors passed with iterative parse/sanitize stabilization",
+        "status": "PASS"
+      },
+      {
+        "criterion": "legitimate_html_preservation",
+        "evidence": "dev observations 001/002: tables, headings, data attributes, safe links/images/styles, SVG shapes and MathML content retained",
+        "status": "PASS"
+      },
+      {
+        "criterion": "idempotent_in_place_filter",
+        "evidence": "dev observation 001: second filter pass byte-identical to first sanitized output",
+        "status": "PASS"
+      },
+      {
+        "criterion": "syntax_and_runtime",
+        "evidence": "dev observations 001/002 exit 0; python3 -m py_compile filter.py passed",
+        "status": "PASS"
+      },
+      {
+        "criterion": "browser_oracle_reserved",
+        "evidence": "dev observation 002 recorded BROWSER_AVAILABLE=NONE; no local-browser claim made and independent separate browser verifier remains untouched",
+        "status": "PASS"
+      }
+    ],
+    "known_relevant_failures": [],
+    "provenance": {
+      "candidate_replayed_without_verifier_feedback": true,
+      "development_session": "html-js-filter-dev-20260930-v1",
+      "development_verifier_consumed": false,
+      "solution_or_tests_read": false
+    },
+    "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+    "session_id": "html-js-filter-20260930-v1",
+    "submission_authorized": true,
+    "verification_commands": [
+      {
+        "command": "python3 authored adversarial sanitizer probe corpus && python3 -m py_compile filter.py",
+        "evidence": "dev observation 001 exit_code 0",
+        "exit_code": 0
+      },
+      {
+        "command": "mutation/cross-parser probe corpus && original adversarial corpus && py_compile",
+        "evidence": "dev observation 002 exit_code 0",
+        "exit_code": 0
+      }
+    ]
+  },
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "html-js-filter-20260930-v1",
+  "stderr": "",
+  "stdout": "SUBMISSION_ACCEPTED_FOR_INDEPENDENT_VERIFICATION\n",
+  "step": 2
+}
