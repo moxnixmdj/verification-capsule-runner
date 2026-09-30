@@ -1,0 +1,68 @@
+name: Read Back PR337 Frozen Climate Terminal
+
+on:
+  push:
+    branches:
+      - execute/pr337-frozen-carrier-0ac7-once-20260930-v1
+    paths:
+      - .github/workflows/readback-pr337-frozen-terminal.yml
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 34c56c1ba9421a3778627c3ba6b6b65d0612405c
+      TARGET_WORKFLOW: run-pr337-frozen-carrier-once.yml
+      TARGET_ARTIFACT: pr337-parent-climate-open-taska-producer-terminal-frozen-carrier
+      SINK_ISSUE: "63"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate exact already-triggered run and wait for terminal state
+        id: locate
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=""
+          for i in $(seq 1 120); do
+            rows="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$TARGET_WORKFLOW" --branch "execute/pr337-frozen-carrier-0ac7-once-20260930-v1" --limit 20 --json databaseId,headSha,status,conclusion 2>/dev/null || true)"
+            run_id="$(python -c 'import json,os,sys; rows=json.loads(sys.stdin.read() or "[]"); t=os.environ["TARGET_SHA"]; print(next((str(x["databaseId"]) for x in rows if x.get("headSha")==t), ""))' <<<"$rows")"
+            if [ -n "$run_id" ]; then
+              status="$(gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json status -q .status)"
+              if [ "$status" = "completed" ]; then break; fi
+            fi
+            sleep 5
+          done
+          if [ -z "$run_id" ]; then
+            printf '%s\n' "READBACK_FAILED: exact target run not found; task was NOT rerun." > /tmp/readback.txt
+            gh issue edit "$SINK_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/readback.txt
+            exit 1
+          fi
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+      - name: Download immutable terminal artifact only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pr337-terminal
+          gh run download "${{ steps.locate.outputs.run_id }}" --repo "$GITHUB_REPOSITORY" --name "$TARGET_ARTIFACT" --dir /tmp/pr337-terminal
+          report="$(find /tmp/pr337-terminal -type f -name 'pr337-parent-climate-open-taska-producer-report.json' -print -quit)"
+          if [ -z "$report" ]; then
+            printf '%s\n' "READBACK_FAILED: terminal artifact file missing; task was NOT rerun." > /tmp/readback.txt
+            gh issue edit "$SINK_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/readback.txt
+            exit 1
+          fi
+          {
+            echo "Exact frozen-carrier run: ${{ steps.locate.outputs.run_id }}"
+            echo "Exact trigger commit: $TARGET_SHA"
+            echo
+            echo '~~~json'
+            cat "$report"
+            echo '~~~'
+          } > /tmp/readback.txt
+          gh issue edit "$SINK_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/readback.txt
