@@ -1,0 +1,10 @@
+{
+  "command_sha256": "619a63ee547d2be8444864888d0323bdd7c1b0700d6ed7460d65753e73fcc56a",
+  "duration_sec": 6.663,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "payments-pipeline-fix-20260930-v2-auth",
+  "stderr": "%3|1790804921.957|FAIL|rdkafka#consumer-1| [thrd:kafka:9092/bootstrap]: kafka:9092/bootstrap: Failed to resolve 'kafka:9092': Name or service not known (after 109ms in state CONNECT)\n%3|1790804922.964|FAIL|rdkafka#consumer-1| [thrd:kafka:9092/bootstrap]: kafka:9092/bootstrap: Failed to resolve 'kafka:9092': Name or service not known (after 6ms in state CONNECT, 1 identical error(s) suppressed)\nTraceback (most recent call last):\n  File \"<stdin>\", line 4, in <module>\ncimpl.KafkaException: KafkaError{code=_TRANSPORT,val=-195,str=\"Failed to get metadata: Local: Broker transport failure\"}\n",
+  "stdout": "===== ENV =====\nHOSTNAME=7a58f2156f31\nPYTHONUNBUFFERED=1\nPYTHON_SHA256=5c8462af5790baf43a321a1559dbe0db06d1be4300fb85fb53c40060668e548a\nPYTHON_VERSION=3.12.14\n===== SUPERVISOR =====\nunix:///tmp/supervisor.sock no such file\n===== WORKER LOGS =====\n===== CUSTOMER PROBES =====\n/ ERR ConnectError('[Errno -2] Name or service not known')\n/health ERR ConnectError('[Errno -2] Name or service not known')\n/openapi.json ERR ConnectError('[Errno -2] Name or service not known')\n/docs ERR ConnectError('[Errno -2] Name or service not known')\n===== KAFKA METADATA / OFFSETS / SAMPLES =====\n",
+  "step": 2
+}
