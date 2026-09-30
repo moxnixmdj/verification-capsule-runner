@@ -1,0 +1,5 @@
+ARM exactly one producer execution for Brain PR337 frozen open-ended climate Task A.
+Brain base: 797d5fbea5f230a31044006755beb98ae387134b
+Brain head: aa1f60088b645439ff1eb15284dee828cb6b0671
+Carrier prestart checksum bug fixed on main before this arm.
+No replay. Stop on first causal gap.
