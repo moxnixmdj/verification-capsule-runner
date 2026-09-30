@@ -6,12 +6,12 @@ from html.parser import HTMLParser
 ROOT=pathlib.Path(__file__).resolve().parent
 BOUND=ROOT/"canonical/runtime/bound_capabilities"
 EXPECTED={
-  "objective_evidence_unit_extract.py":"6598ba92307c55fe6e645b4ecba070d2259818e2",
+  "objective_evidence_unit_extract.py":"fc45fb583f6aeac91f7c88f918644c38fbc70e34",
   "open_research_source_frontend.py":"46fe82d74a35d9318a134fb95e1d5cecfc2dd485",
   "objective_relevance_bm25.py":"95d2b6bac6f6ffb5db97526407fcd22cbcc6c790",
   "source_candidate_provenance_verify.py":"1dc26e68d18010b66211d1d83f7b2024c8ad1fcf",
 }
-BLOCK={"h1","h2","h3","h4","h5","h6","p","li","dt","dd","blockquote","td","th","pre"}
+BLOCK={"h1","h2","h3","h4","h5","h6","p","li","dt","dd","blockquote","td","th","pre","main","article","section","div"}
 SUPPRESS={"script","style","noscript","svg","nav","footer","header","form"}
 
 def git_blob(path):
