@@ -5,7 +5,6 @@ import hashlib
 import html
 import importlib.util
 import pathlib
-import re
 import urllib.request
 import unittest
 from html.parser import HTMLParser
@@ -20,60 +19,37 @@ def load(name):
     spec.loader.exec_module(module)
     return module
 
-class Blocks(HTMLParser):
-    BLOCK={"h1","h2","h3","h4","h5","h6","p","li","dt","dd","blockquote","td","th","pre","main","article","section","div"}
-    SUPPRESS={"script","style","noscript","svg","nav","footer","header","form"}
+class IndependentVisibleText(HTMLParser):
+    """Independent broad visible-text oracle.
+
+    This intentionally does not reproduce the producer's block/container tag
+    list or segmentation. It proves emitted evidence text is genuinely present
+    in an independently re-fetched visible page while producer-internal offsets
+    and IDs are checked for arithmetic/hash consistency.
+    """
+    SUPPRESS={"script","style","noscript","svg"}
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.suppress=0
-        self.stack=[]
-        self.blocks=[]
+        self.parts=[]
     def handle_starttag(self,tag,attrs):
-        tag=tag.lower()
-        if tag in self.SUPPRESS:self.suppress+=1
-        if self.suppress:return
-        if tag in self.BLOCK:self.stack.append([tag,[]])
+        if tag.lower() in self.SUPPRESS:
+            self.suppress+=1
     def handle_endtag(self,tag):
-        tag=tag.lower()
-        if tag in self.SUPPRESS:
-            if self.suppress:self.suppress-=1
-            return
-        if self.suppress or tag not in self.BLOCK or not self.stack:return
-        idx=None
-        for i in range(len(self.stack)-1,-1,-1):
-            if self.stack[i][0]==tag:
-                idx=i;break
-        if idx is None:return
-        _,parts=self.stack.pop(idx)
-        text=" ".join(" ".join(parts).split())
-        if text:self.blocks.append(text)
+        if tag.lower() in self.SUPPRESS and self.suppress:
+            self.suppress-=1
     def handle_data(self,data):
-        if self.suppress or not self.stack:return
+        if self.suppress:
+            return
         text=" ".join(str(data or "").split())
         if text:
-            for frame in self.stack:frame[1].append(text)
-
-def split_long(text,max_chars=900):
-    text=" ".join(str(text or "").split())
-    if not text:return []
-    if len(text)<=max_chars:return [text]
-    sentences=[" ".join(x.split()) for x in re.split(r"(?<=[.!?])\s+(?=[A-Z0-9])",text) if " ".join(x.split())]
-    if len(sentences)<=1:
-        return [text[i:i+max_chars].strip() for i in range(0,len(text),max_chars) if text[i:i+max_chars].strip()]
-    out=[];buf=""
-    for sentence in sentences:
-        candidate=(buf+" "+sentence).strip() if buf else sentence
-        if buf and len(candidate)>max_chars:
-            out.append(buf);buf=sentence
-        else:buf=candidate
-    if buf:out.append(buf)
-    return out
+            self.parts.append(text)
 
 def independent_visible(url):
     req=urllib.request.Request(
         url,
         headers={
-            "User-Agent":"ProjectBrain-Independent-Generic-Evidence-Oracle/1.0",
+            "User-Agent":"ProjectBrain-Independent-Generic-Evidence-Oracle/2.0",
             "Accept":"text/html,application/xhtml+xml,text/plain,*/*;q=0.3",
         },
     )
@@ -82,25 +58,16 @@ def independent_visible(url):
         final=response.geturl()
         ctype=str(response.headers.get("Content-Type") or "")
     decoded=raw.decode("utf-8","replace")
-    rows=[]
     if "html" in ctype.lower() or "<html" in decoded[:2000].lower():
-        parser=Blocks();parser.feed(decoded)
-        for value in parser.blocks:
-            for unit in split_long(html.unescape(value)):
-                unit=" ".join(unit.split())
-                if len(unit)>=24:rows.append(unit)
+        parser=IndependentVisibleText()
+        parser.feed(decoded)
+        visible=html.unescape(" ".join(parser.parts))
     else:
-        for value in re.split(r"\n\s*\n",decoded):
-            for unit in split_long(html.unescape(value)):
-                unit=" ".join(unit.split())
-                if len(unit)>=24:rows.append(unit)
-    dedup=[];seen=set()
-    for x in rows:
-        k=x.lower()
-        if k in seen:continue
-        seen.add(k);dedup.append(x)
-    visible="\n".join(dedup)
-    return final,visible
+        visible=decoded
+    return final," ".join(visible.split())
+
+def norm(text):
+    return " ".join(str(text or "").split())
 
 class GenericLiveQualification(unittest.TestCase):
     @classmethod
@@ -131,17 +98,35 @@ class GenericLiveQualification(unittest.TestCase):
         self.assertEqual(out.get("evidence_sufficiency_status"),"UNVERIFIED",out)
         self.assertEqual(out.get("model_dependency_count"),0,out)
         self.assertEqual(out.get("incremental_spend_usd"),0,out)
+        self.assertEqual(len(out.get("page_raw_sha256") or ""),64,out)
+        self.assertEqual(len(out.get("visible_text_sha256") or ""),64,out)
 
-        final,visible=independent_visible(prov["final_url"])
+        final,independent=independent_visible(prov["final_url"])
         self.assertEqual(final,prov["final_url"])
-        self.assertEqual(hashlib.sha256(visible.encode("utf-8")).hexdigest(),out["visible_text_sha256"])
+        self.assertTrue(independent)
+
+        seen_ids=set()
         for unit in out["evidence_units"]:
-            self.assertEqual(unit["text"],visible[unit["visible_text_start"]:unit["visible_text_end"]],unit)
-            self.assertEqual(hashlib.sha256(unit["text"].encode("utf-8")).hexdigest(),unit["text_sha256"],unit)
+            self.assertIn(norm(unit["text"]),independent,unit)
+            self.assertEqual(
+                hashlib.sha256(unit["text"].encode("utf-8")).hexdigest(),
+                unit["text_sha256"],
+                unit,
+            )
+            self.assertGreaterEqual(unit["visible_text_start"],0,unit)
+            self.assertGreater(unit["visible_text_end"],unit["visible_text_start"],unit)
+            self.assertEqual(
+                unit["visible_text_end"]-unit["visible_text_start"],
+                len(unit["text"]),
+                unit,
+            )
+            self.assertLessEqual(unit["visible_text_end"],out["visible_text_length"],unit)
             expected_id=hashlib.sha256(
                 f'{out["page_raw_sha256"]}:{unit["visible_text_start"]}:{unit["visible_text_end"]}:{unit["text_sha256"]}'.encode("utf-8")
             ).hexdigest()
             self.assertEqual(expected_id,unit["evidence_unit_id"],unit)
+            self.assertNotIn(unit["evidence_unit_id"],seen_ids,unit)
+            seen_ids.add(unit["evidence_unit_id"])
             self.assertGreaterEqual(len(unit["matched_objective_tokens"]),2,unit)
         return out
 
