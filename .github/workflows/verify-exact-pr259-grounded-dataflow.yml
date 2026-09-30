@@ -33,7 +33,7 @@ jobs:
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "b2c97bec0d6843d251b36a51133a66cfbed57c96"
           test "$(git hash-object canonical/tests/test_grounded_executable_composition.py)" = "b77805b699740e9e9cea6058086fa80642b42d50"
           test "$(git hash-object canonical/tests/test_grounded_composition_runtime_scope.py)" = "8ecaba6c44374ec4250ca6a4b7ef196fa2b3067a"
-          test "$(git hash-object canonical/tests/test_grounded_composition_real_registry.py)" = "be895a78129464faeb6446a2573f4552d53ae183"
+          test "$(git hash-object canonical/tests/test_grounded_composition_real_registry.py)" = "75e4ab4ccb4ff8e278b8ff8d2f54318b64d974eb"
           echo EXACT_PR259_BLOBS_PASS
 
       - name: Compile exact candidate
@@ -73,7 +73,7 @@ jobs:
           out={
             "schema":"PROJECT_BRAIN_EXACT_PR259_GROUNDED_DATAFLOW_VERIFICATION_V1",
             "brain_pr":259,
-            "brain_head":"f584ceb670e57619b6a3689d4ff25c4abb00915a",
+            "brain_head":"ad1a3e453c33fb64923fa2eb0229b5b9fedda771",
             "brain_base":"a9816671c2792f22d4aed6d58a4785ac5101936e",
             "candidate_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in paths},
             "tests":[
