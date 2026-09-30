@@ -1,4 +1,4 @@
-name: Verify PR429 Generic Claim Relation
+name: Verify PR436 Generic V2 Claim Relation E2E
 on:
   pull_request:
     branches: [main]
@@ -14,19 +14,22 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
-      - name: Verify exact PR429 blobs
+      - name: Verify exact PR436 and upstream qualified blobs
         run: |
           set -euo pipefail
           test "$(git hash-object canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py)" = "d66a7eb30774f66160b698d8082947776888293d"
           test "$(git hash-object canonical/tests/test_generic_evidence_claim_relation.py)" = "590a1e50f11bc2903b56d41a00c5354ec2501c44"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py)" = "fc45fb583f6aeac91f7c88f918644c38fbc70e34"
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "1dc26e68d18010b66211d1d83f7b2024c8ad1fcf"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790"
       - name: Run deterministic fail-closed regressions
         run: python canonical/tests/test_generic_evidence_claim_relation.py
-      - name: Run fresh cross-domain independent qualification
+      - name: Run fresh actual-V2 end-to-end independent qualification
         run: python verify_pr429_generic_claim_relation.py
       - name: Upload exact qualification report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: pr429-generic-claim-relation-report
-          path: pr429-generic-claim-relation-report.json
+          name: pr436-generic-v2-claim-relation-e2e-report
+          path: pr436-generic-v2-claim-relation-e2e-report.json
           if-no-files-found: error
