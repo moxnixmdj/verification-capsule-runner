@@ -29,7 +29,7 @@ jobs:
           test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "82af4e1b2a68a63e415c756f121269d89689d7af"
       - name: Run deterministic compiler and safety regressions
         run: python canonical/tests/test_numeric_expression_sympy_binding.py
-      - name: Run fresh economics typed-expression task and independent oracle
+      - name: Run fresh demography typed-expression task and independent oracle
         run: python verify_pr298_typed_scalar_sympy.py
       - name: Upload exact report
         if: always()
