@@ -19,6 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "c19466687fd2d17e45dc6ba263b42301bed432d1"
           test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
           test "$(git hash-object canonical/tests/test_grounding_proposal_binding_contract.py)" = "362c42afd55d1429046dc0398c2fc133bb1e430e"
