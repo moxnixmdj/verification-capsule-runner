@@ -1,0 +1,50 @@
+name: Test Generic Grounding On Fresh Broad Child Cases
+on:
+  pull_request:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run grounding only on fresh non-parent objectives
+        run: |
+          python3 - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          def load(name,path):
+              spec=importlib.util.spec_from_file_location(name,path)
+              m=importlib.util.module_from_spec(spec);sys.modules[name]=m;spec.loader.exec_module(m);return m
+          compiler=load("diag_compiler",root/"canonical/runtime/goal_compiler.py")
+          binder=load("diag_binder",root/"canonical/runtime/capability_proposal_generators.py")
+          grounder=load("diag_grounder",root/"canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py")
+          reg=json.loads((root/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text())["capabilities"]
+          reg=compiler._platform_admissible_registry(reg)
+          cases=[
+            "Determine whether the average file size in dataset A is greater than in dataset B, using the available structured records and independently verify the comparison.",
+            "Identify the authoritative release source for a software package, determine whether its current stable version is newer than a recorded prior version, and preserve source provenance.",
+            "Determine which of two structured datasets has the larger median numeric value, quantify the difference, and independently verify the calculation.",
+            "Assess whether a documented measurement changed between two supplied periods, quantify the change using a defensible method, and preserve method provenance."
+          ]
+          for i,goal in enumerate(cases):
+              try:
+                  g=grounder.ground(goal,reg,compiler=compiler,proposal_binder=binder,root=root,enforce_bindability=True)
+                  print("CASE",i)
+                  print(json.dumps({
+                    "goal":goal,
+                    "grounded_clause_count":g["grounded_clause_count"],
+                    "unresolved_clause_indexes":g["unresolved_clause_indexes"],
+                    "clauses":[{
+                      "index":c["index"],"text":c["text"],"status":c["status"],
+                      "candidates":[x["capability_id"] for x in c["candidates"]],
+                      "rejected":[x["capability_id"]+":"+x["error"] for x in c["rejected_unbindable_candidates"][:5]]
+                    } for c in g["clauses"]]
+                  },indent=2))
+              except Exception as e:
+                  print("CASE",i,"ERROR",type(e).__name__,str(e))
+          PY
