@@ -1,0 +1,10 @@
+{
+  "command_sha256": "ba88f9eeb4d154f6817e8676a7d0349323cf3c6bf102b8513780b98d5d2fc995",
+  "duration_sec": 0.546,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "include: tests/**/*.test.{ts,tsx}\nexclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*\nwatch exclude:  **/node_modules/**, **/dist/**\n\nNo test files found, exiting with code 1\n",
+  "stdout": "\n> react-lead-form@1.0.0 test\n> vitest run\n\n\n RUN  v1.3.0 /app\n\n",
+  "step": 4
+}
