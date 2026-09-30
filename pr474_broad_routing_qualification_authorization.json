@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "qualification_id": "QUALIFY-BRAIN-PR474-BROAD-ROUTING-20260930-V1",
+  "source_brain_pr": 474,
+  "source_brain_head_sha": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+  "source_brain_base_sha": "691b08b7f51adca1ed980df384153b71ef38e046",
+  "scope": "INDEPENDENT_NON_PARENT_EXACT_BYTE_QUALIFICATION_ONLY",
+  "parent_task_execution": false,
+  "spent_http2_task_replayed": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
