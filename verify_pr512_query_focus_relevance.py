@@ -66,7 +66,7 @@ report={
  "status":"PASS",
  "brain_pr":512,
  "producer_blobs":{
-   "research_query_focus":"ed84275624182c6cc1676b93f4b1b79c08c91bad",
+   "research_query_focus":"5403e1dc05716fcfc4f9a91b4534f55dc547eb7f",
    "open_web_source_candidate_discovery":"045369d8cba5680c60b57e834d09d12a54d94380",
    "objective_relevance_bm25":"a25a34d879413a9853f1d1ffd8ef5e4f6bdd2245",
  },
