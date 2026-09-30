@@ -25,3 +25,4 @@ jobs:
         run: python canonical/tests/test_first_party_objective_relevance_verify.py
       - name: Independent live cross-domain qualification
         run: python canonical/tests/test_first_party_objective_relevance_live_qualification.py
+# repin trigger: runnable producer e35cdb2495accc43fd677df495bf120a561b47a3
