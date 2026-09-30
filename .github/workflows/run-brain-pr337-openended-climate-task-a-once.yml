@@ -15,6 +15,12 @@ jobs:
       ASTRA_DISABLE_MODEL_PLANNER: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # pull_request defaults to a synthetic merge ref; that raced carrier main and
+          # produced observed stale runtime blob 4df4bf... in two UNSPENT prestarts.
+          # Execute the exact PR head instead so the pinned closure is the checked-out closure.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
