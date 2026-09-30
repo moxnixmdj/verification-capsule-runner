@@ -1,4 +1,5 @@
 name: Guarded PR468 Broad Research Routing Qualification
+# synchronization trigger: exact qualification bytes unchanged
 on:
   pull_request:
     branches: [main]
