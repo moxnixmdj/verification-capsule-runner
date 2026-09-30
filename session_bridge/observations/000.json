@@ -1,0 +1,10 @@
+{
+  "command_sha256": "1c18b3219ea6971e62a6994a7d4697b28e9421b37ea083e5cb52da0ed04b61f1",
+  "duration_sec": 0.045,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "nextjs-performance-20260930-v1",
+  "stderr": "",
+  "stdout": "/app\n--- runtime files ---\n/app/app/exceptions/page.tsx\n/app/app/globals.css\n/app/app/inventory/page.tsx\n/app/app/layout.tsx\n/app/app/page.tsx\n/app/app/pick-batches/page.tsx\n/app/app/shipments/page.tsx\n/app/components/batch-score-panel.tsx\n/app/components/client-shell.tsx\n/app/components/exceptions-client.tsx\n/app/components/inventory-advanced-filter-panel.tsx\n/app/components/inventory-client.tsx\n/app/components/inventory-export-preview.tsx\n/app/components/pick-batches-client.tsx\n/app/components/route-plan-panel.tsx\n/app/components/shipments-client.tsx\n/app/lib/heavy-advanced-filter.ts\n/app/lib/heavy-analytics.ts\n/app/lib/heavy-exporter.ts\n/app/lib/heavy-route-planner.ts\n/app/lib/types.ts\n/app/lib/warehouse-api.ts\n/app/next-env.d.ts\n/app/next.config.ts\n/app/package-lock.json\n/app/package.json\n/app/tsconfig.json\n--- package.json ---\n{\n  \"name\": \"warehouse-dispatch-console\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"dev\": \"next dev\"\n  },\n  \"dependencies\": {\n    \"next\": \"15.4.10\",\n    \"react\": \"19.0.0\",\n    \"react-dom\": \"19.0.0\"\n  },\n  \"devDependencies\": {\n    \"@types/node\": \"22.15.29\",\n    \"@types/react\": \"19.0.12\",\n    \"@types/react-dom\": \"19.0.4\",\n    \"typescript\": \"5.8.3\"\n  }\n}\n",
+  "step": 0
+}
