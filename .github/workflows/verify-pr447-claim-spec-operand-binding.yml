@@ -23,7 +23,7 @@ jobs:
       - name: Verify exact Brain PR447 and inherited relation blobs
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/objective_claim_operand_binding.py)" = "34c6851f859a9f1575f0b64c8aac85611e817f29"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_claim_operand_binding.py)" = "48fd058430d8d361fc75beced567c7b6d1166531"
           test "$(git hash-object canonical/tests/test_objective_claim_operand_binding.py)" = "467a9f4f9b835ca8f65fd19b9335770e7b0ef31b"
           test "$(git hash-object canonical/runtime/bound_capabilities/generic_evidence_claim_relation.py)" = "d66a7eb30774f66160b698d8082947776888293d"
       - name: Run exact authored regressions
