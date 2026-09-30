@@ -17,9 +17,9 @@ jobs:
       - name: Verify exact PR426 and qualified dependency blobs
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py)" = "6598ba92307c55fe6e645b4ecba070d2259818e2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py)" = "fc45fb583f6aeac91f7c88f918644c38fbc70e34"
           test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "46fe82d74a35d9318a134fb95e1d5cecfc2dd485"
-          test "$(git hash-object canonical/tests/test_objective_evidence_unit_extract_v2.py)" = "81bd70c3b30ac8a83a2f781dd130858e2a5ba7de"
+          test "$(git hash-object canonical/tests/test_objective_evidence_unit_extract_v2.py)" = "8dc3a5d350173d57f67c8e1ac50ab243d42f2214"
           test "$(git hash-object canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py)" = "c6dd4e33646758484572472ce24f8d7cc9bf1886"
           test "$(git hash-object canonical/tests/test_open_research_source_frontend_generic_extraction.py)" = "69445a30d93f3459be53e5f38e31149d311b6df2"
           test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790"
