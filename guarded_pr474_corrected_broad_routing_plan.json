@@ -1,0 +1,59 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the exact Brain PR474 corrected broad-objective routing repair: fully unresolved multi-clause research objectives must reach the existing broad decomposer, generic research wording such as choose and run a zero-cost verification method must remain non-recipe, concrete execution commands must fail closed, and partial grounding must not activate whole-goal broad decomposition.",
+  "frozen": {
+    "gate_id": "BRAIN-PR474-CORRECTED-BROAD-ROUTING-GREEN-20260930-V1",
+    "problem_sha256": "d1c289926d91b460ad11e21e94db1dc9d45399790b233d092a66fd2d04e5de19",
+    "task_sha256": "45f10018c76bda0e836aee73ce4e7ef83009e45d23e493ce2ded6dd5c9ec1099",
+    "runtime_sha256": "ada28ce606259983f7f9b0fd3e7d585e25f6a74d3f879ca924e15c2d40bfaca0",
+    "canonical_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+    "authorization_sha256": "30227e15d3c7d2c90d9e2ac840e6f6ee4ca1a85736f6147878aa91f626475a45"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "1efaec4ba51ecb5c40072b3190853f4de89d8f77"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "46e8e7466479ea298c34e5fa682d49c374510ce9"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "2df7c6ec85083458a69675f6ff86eca9c00ea278"
+    },
+    {
+      "path": "verify_pr474_corrected_broad_routing.py",
+      "git_blob_sha1": "da529d8b1a030f67ef3695924cc90ee816902902"
+    },
+    {
+      "path": "pr474_corrected_broad_routing_authorization.json",
+      "git_blob_sha1": "b98a0181b336108644671a746a12e4bfacb42b87"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python verify_pr474_corrected_broad_routing.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_pr": 474,
+    "brain_repair_branch": "repair/current-main-correct-broad-routing-20260930-v1",
+    "parent_task_execution": false,
+    "parent_task_replay": false,
+    "diagnostic_red_run_id": 36689361168
+  }
+}
