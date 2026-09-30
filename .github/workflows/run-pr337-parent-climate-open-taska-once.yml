@@ -1,40 +1,42 @@
-name: Run PR337 Open Climate Task A Once
+name: Run ca16 World Bank Open-Ended Task A Once
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - ARM_PR337_PARENT_CLIMATE_OPEN_TASKA_20260930_V1
+    branches: [main]
+    types: [opened, synchronize]
 
 permissions:
   contents: read
 
 jobs:
   execute-once:
+    if: github.head_ref == 'execute/ca16-worldbank-openended-taska-once-20260930-v2'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 12
     env:
-      ASTRA_DISABLE_MODEL_PLANNER: "1"
-      PYTHONUNBUFFERED: "1"
+      ASTRA_DISABLE_MODEL_PLANNER: '1'
+      PYTHONUNBUFFERED: '1'
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout exact PR head, never merge ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - name: Refresh Ubuntu package metadata
         run: sudo apt-get update
-      - name: Execute frozen PR337 open-ended climate Task A exactly once
-        id: producer
+      - name: Execute canonical runtime mission exactly once
+        id: parent_task
         continue-on-error: true
-        run: python run_pr337_parent_climate_open_taska_once.py
-      - name: Upload terminal producer evidence
+        run: python run_ca16_worldbank_openended_taska_once.py
+      - name: Upload terminal producer and oracle evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pr337-parent-climate-open-taska-producer-terminal
-          path: pr337-parent-climate-open-taska-producer-report.json
+          name: ca16-worldbank-openended-taska-terminal
+          path: ca16-worldbank-openended-taska-terminal.json
           if-no-files-found: error
       - name: Preserve semantic failure
-        if: steps.producer.outcome != 'success'
+        if: steps.parent_task.outcome != 'success'
         run: exit 1
