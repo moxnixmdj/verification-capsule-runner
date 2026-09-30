@@ -133,8 +133,13 @@ def _host_labels(host):
     return labels
 
 def _same_site(host_a,host_b):
-    a=(host_a or "").lower().strip(".")
-    b=(host_b or "").lower().strip(".")
+    def norm(host):
+        value=(host or "").lower().strip(".")
+        if value.startswith("www."):
+            value=value[4:]
+        return value
+    a=norm(host_a)
+    b=norm(host_b)
     return bool(a and b and (a==b or a.endswith("."+b) or b.endswith("."+a)))
 
 def _wikidata_official_site_verify(candidate, objective, timeout):
