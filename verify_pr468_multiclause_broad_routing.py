@@ -22,4 +22,11 @@ for goal in fresh:
     assert broad["model_dependency_count"]==0, broad
 unsupported=mod.ground("Create output.json with one record. Then print it.",{})
 assert unsupported["broad_objective_decomposition_available"] is False, unsupported
+broad=mod._load_broad_objective_decomposer()
+assert broad is not None
+abstract=broad.decompose("Assess whether two independent measurements differ and choose and run a zero-cost verification method")
+assert abstract["status"]=="DECOMPOSED", abstract
+concrete=broad.decompose("Assess whether two independent measurements differ and run python verify_values.py")
+assert concrete["status"]=="UNSUPPORTED", concrete
+assert concrete["reason"]=="OBJECTIVE_ALREADY_CONTAINS_EXPLICIT_EXECUTION_RECIPE", concrete
 print("INDEPENDENT_MULTI_CLAUSE_BROAD_ROUTING_PASS")
