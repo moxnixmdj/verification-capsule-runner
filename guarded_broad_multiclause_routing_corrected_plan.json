@@ -1,0 +1,59 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify the exact Project Brain corrected broad multi-clause research routing bytes: fully unresolved multi-clause broad objectives must reach the generic broad-research decomposer, generic choose-and-run-method language must remain admissible, concrete commands and supplied URLs must fail closed, partial grounding must not activate whole-goal broad decomposition, and no parent task may execute.",
+  "frozen": {
+    "gate_id": "BRAIN-BROAD-MULTICLAUSE-ROUTING-CORRECTED-GREEN-20260930-V1",
+    "problem_sha256": "985289c74ac95b9a84a3f81191f4c89fbe17c0febaa1359ad4734230436d6368",
+    "task_sha256": "c9400b01f94c4e745b0afc32809f12c3dc35a560daaa76f5aaf0b78333ed112e",
+    "runtime_sha256": "5926478410ad7dd6fc7e87967d9c5db38478fd3f9752f37254333e1623c36ce6",
+    "canonical_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+    "authorization_sha256": "80a0d80d37b0658c314340ecba36a5df23a529b303a057806314f8a7fdc94892"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "1efaec4ba51ecb5c40072b3190853f4de89d8f77"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "46e8e7466479ea298c34e5fa682d49c374510ce9"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "2df7c6ec85083458a69675f6ff86eca9c00ea278"
+    },
+    {
+      "path": "verify_broad_multiclause_routing_corrected.py",
+      "git_blob_sha1": "30d7fb757839c781107f9cd4564679e671ca31e2"
+    },
+    {
+      "path": "broad_multiclause_routing_qualification_authorization.json",
+      "git_blob_sha1": "a5838d3fbb6e2ed23fd2e8d08d694143217fbc67"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python verify_broad_multiclause_routing_corrected.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_pr": 474,
+    "brain_head_sha": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+    "parent_task_execution": false,
+    "parent_task_replay": false,
+    "spent_parent_task": "PARENT-OPENENDED-HTTP2-FLOW-CONTROL-LIMITS-REAL-TASK-20260930-003"
+  }
+}
