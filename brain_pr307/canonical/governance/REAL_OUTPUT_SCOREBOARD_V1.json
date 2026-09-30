@@ -1,0 +1,475 @@
+{
+  "schema": "PROJECT_BRAIN_REAL_OUTPUT_SCOREBOARD_V1",
+  "status": "CANONICAL_PROGRESS_ACCOUNTING",
+  "epoch_id": "CAPABILITY_ACQUISITION_ENGINE_V3_EPOCH_20260929",
+  "epoch_reason": "USER_AUTHORIZED_RESET_FROM_PROBE_BENCHMARK_ACTIVITY_TO_REUSABLE_REAL_CAPABILITY_OUTPUT",
+  "terminal_objective": "SYSTEMATICALLY_OBSOLETE_THE_USEFUL_CAPABILITIES_OF_FRONTIER_MODELS_BY_FINDING_VERIFIED_EQUAL_OR_BETTER_CAPABILITY_ROUTES_WITH_MINIMUM_WALL_CLOCK_TIME_AND_INCREMENTAL_COST",
+  "progress_currency": "VERIFIED_REUSABLE_CAPABILITY_OUTPUT",
+  "counters_since_epoch_start": {
+    "reusable_capabilities_inherited": 5,
+    "verified_real_tasks_completed": 9,
+    "fresh_reuse_passes": 2,
+    "frontier_dependencies_removed": 1,
+    "residual_gaps_localized": 10
+  },
+  "efficiency_since_epoch_start": {
+    "capability_acquisition_wall_s_samples": [],
+    "median_capability_acquisition_wall_s": null,
+    "incremental_spend_usd": 0,
+    "synthetic_support_actions_since_last_real_output": 0
+  },
+  "hard_rules": {
+    "pr_count_is_progress": false,
+    "commit_count_is_progress": false,
+    "benchmark_count_is_progress": false,
+    "workflow_count_is_progress": false,
+    "gate_count_is_progress": false,
+    "worker_count_is_progress": false,
+    "infrastructure_is_progress_without_real_output": false,
+    "synthetic_probe_is_progress_without_parent_state_change": false,
+    "maximum_support_actions_before_frontier_recompute": 2,
+    "default_real_task_first": true,
+    "inherited_capability_requires_real_task_evidence": true,
+    "recursive_obs_required_before_consequential_implementation": true,
+    "obs_activity_is_progress": false,
+    "blocker_repair_requires_delete_bypass_reuse_substitute_compose_precheck": true,
+    "direct_real_effect_verification_preferred": true,
+    "material_state_change_invalidates_obs_receipt": true,
+    "recursive_obs_exact_base_commit_binding_required": true,
+    "frontier_capability_credit_requires_documented_frontier_reference": true,
+    "same_domain_parameter_variation_is_not_frontier_fresh_reuse": true,
+    "narrow_domain_tool_is_not_frontier_capability": true,
+    "recursive_obs_schema_v4_structural_live_frontier_and_preflight_validation_required": true,
+    "deterministic_duplicate_blocker_lease_owner_required": true,
+    "active_capability_target_change_requires_explicit_reconciliation": true,
+    "scoreboard_increase_requires_promotion_evidence": true,
+    "promotion_claim_scope_must_equal_evidence_scope": true,
+    "adversarial_falsification_before_promotion_required": true,
+    "circular_frontier_proof_forbidden": true,
+    "child_cognitive_capabilities_inherit_parent_model_independence": true,
+    "target_frontier_supplier_cannot_verify_its_own_dependency_removal": true
+  },
+  "progress_event_requirements": {
+    "reusable_capability_inherited": [
+      "real_useful_behavior_defined",
+      "route_bound_or_reliably_invocable",
+      "independent_verification_present",
+      "provenance_present",
+      "failure_modes_recorded",
+      "real_task_evidence_present"
+    ],
+    "verified_real_task_completed": [
+      "task_is_consequential_not_synthetic_only",
+      "result_verified",
+      "capability_route_identified"
+    ],
+    "fresh_reuse_pass": [
+      "distinct_fresh_task",
+      "same_inherited_capability_used_without_rediscovery",
+      "result_verified"
+    ],
+    "frontier_dependency_removed": [
+      "previous_frontier_dependency_explicit",
+      "replacement_route_equal_or_better_on_real_behavior",
+      "independent_verification_present"
+    ],
+    "residual_gap_localized": [
+      "gap_changes_next_frontier_decision",
+      "evidence_excludes_known_alternative_explanations"
+    ]
+  },
+  "historical_context_non_crediting": {
+    "exact_symbolic_computation_v1_obsolescence_win_preserved": true,
+    "historical_prs_tests_gates_and_workflows": "PRESERVED_AS_EVIDENCE_NOT_IMPORTED_AS_V3_PROGRESS",
+    "reason": "NEW_SCOREBOARD_COUNTS_OUTPUT_FROM_POLICY_ACTIVATION_FORWARD_TO_PREVENT_ACTIVITY_INFLATION"
+  },
+  "next_progress_event_target": "RUN_GENUINELY_OPEN_ENDED_MODEL_INDEPENDENT_PARENT_REAL_TASK_A__NO_PREWIRED_RESEARCH_PLAN__AUTONOMOUS_DECOMPOSITION_AND_SOURCE_TOOL_DISCOVERY_REQUIRED__STOP_ON_FIRST_CAUSAL_GAP",
+  "authority": [
+    "canonical/laws/RECURSIVE_OBSOLESCENCE_CONTROL_LAW_V1.md",
+    "canonical/laws/CAPABILITY_ACQUISITION_ENGINE_LAW_V2.md",
+    "canonical/laws/CAPABILITY_OBSOLESCENCE_ARBITRAGE_STRATEGY_V4.md"
+  ],
+  "compliance_state": {
+    "recursive_obs_law": "canonical/laws/RECURSIVE_OBSOLESCENCE_CONTROL_LAW_V3.md",
+    "receipt_schema": "canonical/governance/RECURSIVE_OBS_RECEIPT_SCHEMA_V4.json",
+    "implementation_actions_without_current_obs_receipt_allowed": 0,
+    "deletion_first_order": [
+      "DELETE",
+      "BYPASS",
+      "REUSE",
+      "SUBSTITUTE",
+      "COMPOSE",
+      "REPAIR",
+      "BUILD"
+    ],
+    "exact_base_commit_binding_required": true,
+    "placeholder_receipts_allowed": false,
+    "action_intent_template": "canonical/governance/ACTION_INTENT_WITH_RECURSIVE_OBS_TEMPLATE_V4.json",
+    "goal_hierarchy_action_gate": "canonical/gates/GOAL_HIERARCHY_ACTION_GATE_V6.json",
+    "critical_path_pre_action_gate": "canonical/gates/CRITICAL_PATH_PRE_ACTION_GATE_V7.json",
+    "capability_acquisition_engine_law": "canonical/laws/CAPABILITY_ACQUISITION_ENGINE_LAW_V4.md",
+    "live_challenger_frontier_required": true,
+    "selected_route_execution_preflight_required": true,
+    "mistake_immunity_law": "canonical/laws/FAIL_CLOSED_MISTAKE_IMMUNITY_LAW_V1.md",
+    "recurring_mistake_regression_catalog": "canonical/regressions/2026-09-30_RECURRING_FRONTIER_MISTAKE_CLASSES.json"
+  },
+  "progress_events": [
+    {
+      "event_id": "FRONTIER_CAPABILITY_EVIDENCE_A_SPACE_CARGO_20260929",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "CANDIDATE_EVIDENCE_A__FRONTIER_CAPABILITY_NOT_YET_ACQUIRED",
+      "real_task_evidence": "canonical/capabilities/obsolescence/SPACE_CARGO_ARCHITECTURE_ENVELOPE_WIN1_20260929_V1.json",
+      "supporting_domain_tool": "canonical/capabilities/inherited/FIRST_PRINCIPLES_LAUNCH_ARCHITECTURE_ENVELOPE_V1.json",
+      "same_domain_reuse_counts_as_frontier_fresh_reuse": false,
+      "parent_level_changes": [
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "RESIDUAL_GAP_LOCALIZED"
+      ],
+      "residual_gap": "CROSS_DOMAIN_REAL_TASK_B_REQUIRED_TO_PROVE_GENERAL_FRONTIER_CAPABILITY_TRANSFER_AND_REMOVE_FRONTIER_DEPENDENCE",
+      "incremental_spend_usd": 0
+    },
+    {
+      "event_id": "POLLINATIONS_NONFRONTIER_PLANNER_ROUTE_FALSIFIED_20260929",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "ROUTE_FALSIFIED__RESIDUAL_GAP_LOCALIZED__NO_CAPABILITY_CREDIT",
+      "evidence_path": "canonical/capabilities/obsolescence/NONFRONTIER_AGENTIC_TASK_B_POLLINATIONS_ROUTE_FALSIFICATION_20260929_V1.json",
+      "parent_level_changes": [
+        "RESIDUAL_GAP_LOCALIZED"
+      ],
+      "residual_gap": "RELIABLE_ZERO_INCREMENTAL_COST_NONFRONTIER_OPEN_ENDED_PLANNER_SUPPLIER_FOR_REAL_PROMPT_LOAD",
+      "incremental_spend_usd": 0
+    },
+    {
+      "event_id": "LOCAL_QWEN3_5_4B_REAL_TASK_B_ROUTE_FALSIFIED_20260929",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "ROUTE_FALSIFIED__REAL_TASK_NOT_COMPLETED__NO_CAPABILITY_CREDIT",
+      "evidence_path": "canonical/capabilities/obsolescence/LOCAL_QWEN3_5_4B_TASK_B_FALSIFICATION_20260929_V1.json",
+      "parent_level_changes": [
+        "RESIDUAL_GAP_LOCALIZED"
+      ],
+      "residual_gap": "QWEN3_5_4B_LOCAL_PLANNER_DID_NOT_TERMINATE_REAL_OPEN_ENDED_TASK_WITHIN_BOUNDED_CONTROLLER_POLICY",
+      "execution_count": 1,
+      "incremental_spend_usd": 0
+    },
+    {
+      "event_id": "LOCAL_QWEN3_5_9B_BIOPHYSICS_TASK_B_ROUTE_FALSIFIED_20260929",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "ROUTE_END_TO_END_FAIL__USEFUL_RESEARCH_ACTIONS_OBSERVED__NO_CAPABILITY_CREDIT",
+      "evidence_path": "canonical/capabilities/obsolescence/LOCAL_QWEN3_5_9B_BIOPHYSICS_TASK_B_FALSIFICATION_20260929_V1.json",
+      "parent_level_changes": [
+        "RESIDUAL_GAP_LOCALIZED"
+      ],
+      "residual_gap": "GENERIC_EVIDENCE_TO_FINALIZATION_COMPOSITION_OR_TERMINATION_SEAM",
+      "execution_count": 1,
+      "incremental_spend_usd": 0
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_EVIDENCE_TO_DECISION_SYNTHESIS_ACQUIRED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_EVIDENCE_TO_DECISION_SYNTHESIS_V1",
+      "status": "VERIFIED_ACQUIRED__INHERITED__FRESH_REUSE_PASS",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_EVIDENCE_TO_DECISION_SYNTHESIS_V1.json",
+      "real_task_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_EVIDENCE_DECISION_REMOTE_VERIFICATION_20260930_V1.json",
+      "integration_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_EVIDENCE_DECISION_ASTRA_INTEGRATION_20260930_V1.json",
+      "real_tasks_verified": 2,
+      "fresh_reuse_passed": true,
+      "frontier_dependency_removed": "MODEL_BACKED_EVIDENCE_TO_DECISION_SYNTHESIS",
+      "replacement_route": "decision.synthesis.typed.stdlib + decision.synthesis.verify.stdlib",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_INHERITED",
+        "VERIFIED_REAL_TASK_COMPLETED_X2",
+        "FRESH_REUSE_PASS",
+        "FRONTIER_DEPENDENCY_REMOVED"
+      ]
+    },
+    {
+      "event_id": "FRESH_PARENT_SERIALIZATION_DECISION_FIRST_CAUSAL_GAP_20260930",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "PARENT_FRESH_TASK_FAIL__FIRST_CAUSAL_GAP_LOCALIZED__NO_CAPABILITY_CREDIT",
+      "evidence_path": "canonical/capabilities/obsolescence/FRESH_PARENT_SERIALIZATION_DECISION_TERMINAL_RECONCILIATION_20260930_V1.json",
+      "public_run_id": 36644374149,
+      "artifact_id": 11067706810,
+      "artifact_digest": "sha256:57c6a188f8027c2788f4e2c6991fa8066799a55fb40771f17be6072a819e71d7",
+      "parent_level_changes": [
+        "RESIDUAL_GAP_LOCALIZED"
+      ],
+      "residual_gap": "MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "same_task_replay_allowed": false
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_PLAIN_GOAL_BOUND_GROUNDING_ACQUIRED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1",
+      "status": "VERIFIED_ACQUIRED__INHERITED__FRESH_REUSE_PASS",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1.json",
+      "real_task_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_PLAIN_GOAL_BOUND_GROUNDING_ACQUISITION_20260930_V1.json",
+      "real_tasks_verified": 1,
+      "fresh_reuse_passed": true,
+      "frontier_dependency_removed": null,
+      "replacement_route": "plain_goal_bound_grounding.py + plain_goal_bound_grounding_verify.py",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_INHERITED",
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "FRESH_REUSE_PASS"
+      ]
+    },
+    {
+      "event_id": "GROUNDING_INPUT_CONTRACT_REGRESSION_20260930",
+      "capability_id": "MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1",
+      "status": "PRIOR_PROMOTION_REOPENED__CURRENT_CAPABILITY_AND_FRESH_REUSE_CREDIT_REVOKED__PRIOR_REAL_TASK_RESULTS_PRESERVED",
+      "evidence_path": "canonical/capabilities/obsolescence/GROUNDING_INPUT_CONTRACT_FALSIFICATION_REQUESTS_REAL_TASK_20260930_V1.json",
+      "public_run_id": 36649042160,
+      "counter_effects": {
+        "reusable_capabilities_inherited": -1,
+        "verified_real_tasks_completed": 0,
+        "fresh_reuse_passes": -1,
+        "frontier_dependencies_removed": 0,
+        "residual_gaps_localized": 0
+      },
+      "progress_credit": false,
+      "reason": "Fresh real multi-step task falsified input-contract completeness of the claimed grounding capability scope."
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_PLAIN_GOAL_GROUNDING_REQUALIFIED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1",
+      "status": "REQUALIFIED_AFTER_REGRESSION_REPAIR__FRESH_REAL_AND_DISTINCT_REUSE_PASS",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_PLAIN_GOAL_TO_BOUND_CAPABILITY_GROUNDING_V1.json",
+      "repair_merge_commit": "08338df0cc989b092567f10ffd1dca6a7f37be65",
+      "exact_component_validation_run_id": 36651748631,
+      "real_task_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_PLAIN_GOAL_GROUNDING_REQUALIFICATION_UNIFIED_PLANNING_20260930_V1.json",
+      "fresh_real_run_id": 36652169397,
+      "artifact_id": 11070249875,
+      "artifact_digest": "sha256:5112a20e0b95ca3a81029aad35f618eca7c5bb83d4c86860d3137fbdca31ccb1",
+      "model_dependency_count": 0,
+      "frontier_dependency_removed": false,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_INHERITED",
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "FRESH_REUSE_PASS"
+      ],
+      "next_causal_gap": "PARENT_OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH__NEW_DIFFERENT_REAL_TASK_REQUIRED",
+      "incremental_spend_usd": 0,
+      "fresh_reuse_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_GROUNDING_COMPOSITION_FRESH_REUSE_YAML_20260930_V1.json",
+      "fresh_reuse_run_id": 36652623916,
+      "fresh_reuse_artifact_id": 11071595189,
+      "fresh_reuse_artifact_digest": "sha256:5b8270ffd346a2e5c7fdec093826db44f635f77e9bd106a7af50513549ab4b5a"
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_GROUNDED_EXECUTABLE_COMPOSITION_ACQUIRED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1",
+      "status": "VERIFIED_ACQUIRED__FRESH_REAL_AND_MATERIALLY_DISTINCT_REUSE_PASS",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1.json",
+      "real_task_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_GROUNDED_COMPOSITION_TASK_A_UNIFIED_PLANNING_20260930_V1.json",
+      "acquisition_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_ACQUISITION_20260930_V1.json",
+      "fresh_reuse_evidence": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_GROUNDING_COMPOSITION_FRESH_REUSE_YAML_20260930_V1.json",
+      "fresh_real_run_id": 36652169397,
+      "fresh_reuse_run_id": 36652623916,
+      "fresh_reuse_artifact_id": 11071595189,
+      "fresh_reuse_artifact_digest": "sha256:5b8270ffd346a2e5c7fdec093826db44f635f77e9bd106a7af50513549ab4b5a",
+      "model_dependency_count": 0,
+      "frontier_dependency_removed": false,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_INHERITED",
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "FRESH_REUSE_PASS"
+      ],
+      "next_causal_gap": "PARENT_OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH__NEW_DIFFERENT_REAL_TASK_REQUIRED",
+      "incremental_spend_usd": 0
+    },
+    {
+      "event_id": "GROUNDED_COMPOSITION_PATH_PROVENANCE_REGRESSION_20260930",
+      "capability_id": "MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1",
+      "status": "PRIOR_PROMOTION_REOPENED__CAPABILITY_AND_FRESH_REUSE_CREDIT_REVOKED__PRIOR_REAL_TASK_RESULTS_PRESERVED",
+      "evidence_path": "canonical/capabilities/obsolescence/GROUNDED_COMPOSITION_DOWNSTREAM_PATH_PROVENANCE_FALSIFICATION_20260930_V1.json",
+      "source_pr": 267,
+      "public_run_id": 36653756561,
+      "counter_effects": {
+        "reusable_capabilities_inherited": -1,
+        "verified_real_tasks_completed": 0,
+        "fresh_reuse_passes": -1,
+        "frontier_dependencies_removed": 0,
+        "residual_gaps_localized": 1
+      },
+      "progress_credit": "RESIDUAL_GAP_LOCALIZED",
+      "residual_gap": "DOWNSTREAM_CAPABILITY_INPUT_PROVENANCE_IS_IMPLICIT_IN_PATH_RECENCY_INSTEAD_OF_DECLARED_EFFECT_RESULT_BINDING",
+      "reason": "Fresh materially distinct in-scope decision-chain task falsified generic explicit data/effect dependency composition after promotion."
+    },
+    {
+      "event_id": "COMPOSITION_DIRECT_COMPILER_BINDING_FALSIFICATION_20260930",
+      "capability_id": "MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1",
+      "status": "FRESH_REQUALIFICATION_FAILED__NEW_GENERIC_BINDING_SEAM_LOCALIZED",
+      "evidence_path": "canonical/capabilities/obsolescence/GROUNDED_COMPOSITION_DIRECT_COMPILER_BINDING_FALSIFICATION_20260930_V1.json",
+      "source_pr": 277,
+      "public_run_id": 36656793034,
+      "counter_effects": {
+        "reusable_capabilities_inherited": 0,
+        "verified_real_tasks_completed": 0,
+        "fresh_reuse_passes": 0,
+        "frontier_dependencies_removed": 0,
+        "residual_gaps_localized": 1
+      },
+      "progress_credit": "RESIDUAL_GAP_LOCALIZED",
+      "residual_gap": "DIRECT_COMPOUND_COMPILER_BYPASSES_PROPOSAL_BINDINGS_EFFECT_RESULT_AND_REBINDS_CAUSAL_INPUTS_BY_PATH_RECENCY"
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_GROUNDED_EXECUTABLE_COMPOSITION_REQUALIFIED_RECOVERED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1",
+      "status": "REQUALIFIED_AFTER_DIRECT_COMPILER_REPAIR__FRESH_MATERIALLY_DISTINCT_REUSE_PASS_RECOVERED_WITHOUT_REPLAY",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_GROUNDED_CAPABILITY_TO_EXECUTABLE_COMPOSITION_V1.json",
+      "evidence_path": "canonical/capabilities/obsolescence/GROUNDED_COMPOSITION_EVIDENCE_SURFACE_REQUALIFICATION_RECOVERY_ADJUDICATION_20260930_V1.json",
+      "source_requalification_run_id": 36659637634,
+      "independent_recovery_run_id": 36660108447,
+      "recovery_artifact_id": 11074221334,
+      "recovery_artifact_digest": "sha256:17fc8daf075b813fb00419887c4fdc4b8a2123dae6430744a89163b68dd7df60",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_RESTORED",
+        "FRESH_REUSE_CREDIT_RESTORED",
+        "RETURN_TO_PARENT_FRONTIER"
+      ],
+      "verified_real_tasks_completed_delta": 0,
+      "reason": "The fresh task semantically completed on exact current bytes; preserved job-log evidence and an independent no-replay recomputation proved the red workflow came from an obsolete post-success harness assertion."
+    },
+    {
+      "event_id": "PARENT_GEOPHYSICS_NUMERIC_RELATION_GAP_20260930",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "FRESH_PARENT_REAL_TASK_FAILED__FIRST_CAUSAL_GAP_LOCALIZED",
+      "evidence_path": "canonical/capabilities/obsolescence/PARENT_GEOPHYSICS_NUMERIC_RELATION_GAP_20260930_V1.json",
+      "public_run_id": 36661188188,
+      "public_job_id": 109716113402,
+      "counter_effects": {
+        "reusable_capabilities_inherited": 0,
+        "verified_real_tasks_completed": 0,
+        "fresh_reuse_passes": 0,
+        "frontier_dependencies_removed": 0,
+        "residual_gaps_localized": 1
+      },
+      "progress_credit": "RESIDUAL_GAP_LOCALIZED",
+      "residual_gap": "PARENT_NUMERIC_RELATION_SUBGOAL_HAS_NO_VERIFIED_BOUND_CAPABILITY_MATCH__EXISTING_EXACT_SYMBOLIC_ROUTE_NOT_BOUND_TO_CONTROLLER",
+      "reason": "The exact frozen task reached both source-acquisition clauses but the earliest quantitative relation clause had no verified bound capability match.",
+      "promotion_admissibility_correction": "canonical/capabilities/obsolescence/PR286_GEOPHYSICS_RESIDUAL_GAP_ADMISSIBILITY_CORRECTION_20260930_V1.json",
+      "claim_scope_exact": true,
+      "parent_capability_promoted": false,
+      "same_task_replay_allowed": false
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_TWO_SCALAR_NUMERIC_RELATION_ACQUIRED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_TWO_SCALAR_NUMERIC_RELATION_EXECUTION_V1",
+      "status": "VERIFIED_ACQUIRED__FRESH_CROSS_DOMAIN_EXECUTION_PASS",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_TWO_SCALAR_NUMERIC_RELATION_EXECUTION_V1.json",
+      "evidence_path": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_TWO_SCALAR_NUMERIC_RELATION_ACQUISITION_20260930_V1.json",
+      "public_run_id": 36664102642,
+      "public_job_id": 109724968059,
+      "artifact_id": 11075158049,
+      "artifact_digest": "sha256:b47bbe491db198bcbd4c09b7a9e8cfeac95062989300eca8f8784c117a1222d1",
+      "real_task_domain": "DEMOGRAPHY_PUBLIC_STATISTICS",
+      "replacement_route": "native result refs + write_json_records + json.query.jq",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_INHERITED",
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "PRIOR_PARENT_NUMERIC_RELATION_BLOCKER_CLOSED",
+        "RETURN_TO_PARENT_FRONTIER"
+      ],
+      "fresh_reuse_passed": false,
+      "frontier_dependency_removed": false,
+      "parent_capability_promoted": false,
+      "next_causal_gap": "PARENT_OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH__NEW_DIFFERENT_REAL_TASK_REQUIRED"
+    },
+    {
+      "event_id": "PARENT_ASTRONOMY_EROS_KEPLER_GAP_20260930",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "FRESH_PARENT_REAL_TASK_FAILED__FIRST_CAUSAL_GAP_LOCALIZED__TASK_SPENT",
+      "evidence_path": "canonical/capabilities/obsolescence/PARENT_ASTRONOMY_EROS_KEPLER_REAL_TASK_20260930_001_TERMINAL_RECONCILIATION_V1.json",
+      "public_run_id": 36664896545,
+      "public_job_id": 109727357700,
+      "artifact_id": 11075578533,
+      "artifact_digest": "sha256:1602e529f3e33249e586a67475aff947be0d2b7ce97db0bd82c770a2f7bba734",
+      "counter_effects": {
+        "reusable_capabilities_inherited": 0,
+        "verified_real_tasks_completed": 0,
+        "fresh_reuse_passes": 0,
+        "frontier_dependencies_removed": 0,
+        "residual_gaps_localized": 1
+      },
+      "progress_credit": "RESIDUAL_GAP_LOCALIZED",
+      "residual_gap": "MODEL_INDEPENDENT_TYPED_SCALAR_NUMERIC_EXPRESSION_EXECUTION_WITH_MULTIPLICATION_AND_EXPONENTIATION",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "same_task_replay_allowed": false
+    },
+    {
+      "event_id": "MODEL_INDEPENDENT_TYPED_SCALAR_NUMERIC_EXPRESSION_ACQUIRED_20260930",
+      "capability_id": "MODEL_INDEPENDENT_TYPED_SCALAR_NUMERIC_EXPRESSION_EXECUTION_V1",
+      "status": "VERIFIED_ACQUIRED__FRESH_NON_ASTRONOMY_EXECUTION_PASS",
+      "capability_package": "canonical/capabilities/frontier/MODEL_INDEPENDENT_TYPED_SCALAR_NUMERIC_EXPRESSION_EXECUTION_V1.json",
+      "evidence_path": "canonical/capabilities/obsolescence/MODEL_INDEPENDENT_TYPED_SCALAR_NUMERIC_EXPRESSION_ACQUISITION_20260930_V1.json",
+      "public_run_id": 36666659921,
+      "public_job_id": 109732664034,
+      "artifact_id": 11076347530,
+      "artifact_digest": "sha256:1bf6628bff366eb6fa3d277042798c956eec1c5fca7d7bace1237d13ce832cc0",
+      "real_task_domain": "DEMOGRAPHY_PUBLIC_STATISTICS",
+      "replacement_route": "restricted typed AST + pinned SymPy 1.14.0",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "parent_level_changes": [
+        "REUSABLE_CAPABILITY_INHERITED",
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "PRIOR_ASTRONOMY_NUMERIC_EXPRESSION_BLOCKER_CLOSED",
+        "RETURN_TO_PARENT_FRONTIER"
+      ],
+      "fresh_reuse_passed": false,
+      "frontier_dependency_removed": false,
+      "parent_capability_promoted": false,
+      "next_causal_gap": "PARENT_OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH__NEW_DIFFERENT_REAL_TASK_REQUIRED"
+    },
+    {
+      "event_id": "PARENT_DEMOGRAPHY_MODEL_FREE_REAL_TASK_VERIFIED_AND_TASK_A_ADMISSIBILITY_CORRECTED_20260930",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "VERIFIED_MODEL_FREE_PARENT_REAL_TASK__CLEAN_TASK_A__PARENT_NOT_YET_ACQUIRED",
+      "evidence_path": "canonical/capabilities/obsolescence/PARENT_DEMOGRAPHY_CLEAN_MODEL_INDEPENDENCE_RECONCILIATION_20260930_V1.json",
+      "public_run_id": 36667844172,
+      "public_job_id": 109736256301,
+      "artifact_id": 11076359417,
+      "artifact_digest": "sha256:48cf6ffa11abef1cee2443d5ca69b4a4f6cf5608c31af883b5b987d533ed6326",
+      "model_dependency_count": 0,
+      "incremental_spend_usd": 0,
+      "parent_level_changes": [
+        "VERIFIED_REAL_TASK_COMPLETED",
+        "RESIDUAL_GAP_LOCALIZED"
+      ],
+      "residual_gap": "PARENT_MODEL_INDEPENDENT_CROSS_DOMAIN_REAL_TASK_B_REQUIRED__OLD_SPACE_CARGO_TASK_A_INADMISSIBLE_FOR_DEPENDENCY_REMOVAL",
+      "prior_space_cargo_task_a_frontier_dependency_credit_revoked": true,
+      "parent_capability_promoted": false
+    },
+    {
+      "event_id": "PARENT_OPEN_ENDED_SCOPE_ADMISSIBILITY_CORRECTION_20260930",
+      "capability_id": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+      "status": "STRUCTURED_DEMOGRAPHY_REAL_TASK_PRESERVED__OPEN_ENDED_PARENT_PROMOTION_CREDIT_REVOKED",
+      "evidence_path": "canonical/capabilities/obsolescence/PARENT_OPEN_ENDED_SCOPE_ADMISSIBILITY_CORRECTION_20260930_V1.json",
+      "counter_effects": {
+        "reusable_capabilities_inherited": 0,
+        "verified_real_tasks_completed": 0,
+        "fresh_reuse_passes": 0,
+        "frontier_dependencies_removed": 0,
+        "residual_gaps_localized": 0
+      },
+      "progress_credit": "EVIDENCE_SCOPE_CORRECTION_ONLY",
+      "corrected_blocker": "PARENT_OPEN_ENDED_SCOPE_UNPROVEN__NO_ADMISSIBLE_MODEL_INDEPENDENT_OPEN_ENDED_REAL_TASK_A",
+      "parent_capability_promoted": false
+    }
+  ],
+  "active_frontier_accounting": {
+    "parent_frontier_capability": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+    "active_subcapability_target": null,
+    "subcapability_status": "NO_ADMISSIBLE_OPEN_ENDED_MODEL_INDEPENDENT_PARENT_TASK_YET__STRUCTURED_DEMOGRAPHY_PRESERVED",
+    "frontier_dependency_removed": false,
+    "reconciliation_credit": 0
+  }
+}
