@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import hashlib
 import html
+import importlib.util
 import json
+import pathlib
 import re
 import urllib.parse
 import urllib.request
@@ -22,13 +24,25 @@ UA = "ProjectBrain-SourceDiscovery/1.0 (+zero-cost model-independent research)"
 def _canon(text):
     return " ".join(str(text or "").strip().split())
 
-def _query(objective):
-    q = _canon(objective)
-    if not q:
+def _query_focus(objective):
+    text=_canon(objective)
+    if not text:
         raise ValueError("OBJECTIVE_REQUIRED")
-    if len(q) > 1200:
+    if len(text)>4000:
         raise ValueError("OBJECTIVE_TOO_LONG")
-    return q
+    path=pathlib.Path(__file__).resolve().with_name("research_query_focus.py")
+    spec=importlib.util.spec_from_file_location("project_brain_research_query_focus_discovery",path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("RESEARCH_QUERY_FOCUS_LOAD_FAILED")
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    result=module.focus(text)
+    if result.get("status")!="FOCUSED" or not _canon(result.get("query")):
+        raise ValueError("RESEARCH_QUERY_FOCUS_UNRESOLVED")
+    return result
+
+def _query(objective):
+    return _canon(_query_focus(objective).get("query"))
 
 def _safe_url(raw):
     try:
@@ -210,8 +224,15 @@ def _crossref(query, limit, timeout):
         "candidate_count": len(out),
     }
 
-def discover(objective, limit=12, timeout=15):
-    query = _query(objective)
+def discover(objective, limit=12, timeout=15, query_override=None):
+    original_objective=_canon(objective)
+    focus=_query_focus(original_objective)
+    focused_query=_canon(focus.get("query"))
+    query=_canon(query_override) if query_override is not None else focused_query
+    if not query:
+        raise ValueError("DISCOVERY_QUERY_REQUIRED")
+    if len(query)>1200:
+        query=query[:1200].rsplit(" ",1)[0] or query[:1200]
     limit = max(1, min(int(limit), 40))
     timeout = max(2, min(int(timeout), 30))
     candidates = []
@@ -247,8 +268,10 @@ def discover(objective, limit=12, timeout=15):
     return {
         "schema": SCHEMA,
         "status": status,
-        "objective": query,
+        "objective": original_objective,
         "query": query,
+        "query_focus": focus,
+        "query_origin":"METADATA_REFINED_OVERRIDE" if query_override is not None else "FOCUSED_OBJECTIVE",
         "query_sha256": hashlib.sha256(query.encode("utf-8")).hexdigest(),
         "candidates": unique,
         "candidate_count": len(unique),

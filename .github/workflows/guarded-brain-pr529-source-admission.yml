@@ -1,0 +1,50 @@
+name: Guarded Brain PR529 Source Admission Qualification
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+jobs:
+  qualify:
+    if: github.head_ref == 'qualify/brain-pr529-source-admission-4df38e5-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Prestart exact frozen candidate closure
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "8f6f80403dc48268ecbf244ae633ea2928204148"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "830fd35c816140cb6ddb2d3dac9f0886e595d993"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "31d3703b38dcec3215b77d1038e2521b1a89ea95"
+          test "$(git hash-object canonical/runtime/bound_capabilities/research_query_focus.py)" = "5403e1dc05716fcfc4f9a91b4534f55dc547eb7f"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py)" = "227877b9f7c80c8e810a1042a0bad5c0ed94577d"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "81f73bca882d35603e5be43e8c40dd57e73ffce0"
+          test "$(git hash-object canonical/tests/test_scholarly_provenance_admission_materialization.py)" = "d99e2fdf0db70a62d0c7483cb223a6159f681f0e"
+          test "$(git hash-object canonical/action_intents/2026-09-30_REPAIR_SCHOLARLY_PROVENANCE_ADMISSION_MATERIALIZATION_V1.json)" = "26c5e477cdd1f5a2cdd6afbd70e4e843c4500d4b"
+          test "$(git hash-object pr529_source_admission_authority.json)" = "5dabdb7d670ab0826414af479ef2d920eb7d09ea"
+          test "$(git hash-object verify_brain_pr529_source_admission.py)" = "25ceb1331a3470a4b389c291a65baffb1a9a557b"
+          python -m py_compile canonical/runtime/bound_capabilities/*.py canonical/tests/test_scholarly_provenance_admission_materialization.py verify_brain_pr529_source_admission.py
+      - name: Generate frozen qualification plan
+        run: python generate_brain_pr529_source_admission_plan.py
+      - name: Atomically admit and qualify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan brain_pr529_source_admission_plan.json --receipt brain-pr529-source-admission-guard-receipt.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brain-pr529-source-admission-qualification
+          path: |
+            brain-pr529-source-admission-guard-receipt.json
+            brain_pr529_source_admission_plan.json
+            pr529-independent-source-admission-report.json
+            pr529_source_admission_authority.json
+          if-no-files-found: warn
