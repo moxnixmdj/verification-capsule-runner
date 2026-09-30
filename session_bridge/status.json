@@ -1,6 +1,7 @@
 {
-  "next_step": 2,
+  "final_step": 2,
+  "reward": "0",
   "session_id": "bun-sourcemap-leak-20260930-v2",
-  "status": "READY_FOR_COMMAND",
-  "task": "bun-sourcemap-leak"
+  "status": "COMPLETE",
+  "verifier_status": "VERIFIER_COMPLETED"
 }
