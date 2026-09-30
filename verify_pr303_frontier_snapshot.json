@@ -1,0 +1,42 @@
+{
+  "schema": "PR303_TARGETED_FRONTIER_SNAPSHOT_V1",
+  "source_ref": "governance/promotion-firewall-runtime-provenance-v1-20260930",
+  "source_blobs": {
+    "pointer": "4c963dfad7ee2068d04f908927b2e73f4e0b0607",
+    "hierarchy": "a81f648a1e93f8f0ac874e1cd5d6207c69f453c8",
+    "queue": "066625a36f089abba0877b95239634ab038fdc7b",
+    "scoreboard": "57170ec42ded0f4667caf478d29251152b362301",
+    "target": "99b5f2900accce916655e02ef146d53bb4dd2484"
+  },
+  "pointer": {
+    "target": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+    "blocker": "PARENT_MODEL_INDEPENDENT_CROSS_DOMAIN_REAL_TASK_B_REQUIRED__OLD_SPACE_CARGO_TASK_A_INADMISSIBLE_FOR_DEPENDENCY_REMOVAL",
+    "next": "RUN_ONE_NEW_CROSS_DOMAIN_MODEL_INDEPENDENT_PARENT_REAL_TASK_B__NO_DEMOGRAPHY_ASTRONOMY_GEOPHYSICS_BIOPHYSICS_REPLAY__STOP_ON_FIRST_NEW_CAUSAL_GAP"
+  },
+  "hierarchy": {
+    "target": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+    "blocker": "PARENT_MODEL_INDEPENDENT_CROSS_DOMAIN_REAL_TASK_B_REQUIRED__OLD_SPACE_CARGO_TASK_A_INADMISSIBLE_FOR_DEPENDENCY_REMOVAL",
+    "next": "RUN_ONE_NEW_CROSS_DOMAIN_MODEL_INDEPENDENT_PARENT_REAL_TASK_B__NO_DEMOGRAPHY_ASTRONOMY_GEOPHYSICS_BIOPHYSICS_REPLAY__STOP_ON_FIRST_NEW_CAUSAL_GAP"
+  },
+  "queue": {
+    "target": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+    "blocker": "PARENT_MODEL_INDEPENDENT_CROSS_DOMAIN_REAL_TASK_B_REQUIRED__OLD_SPACE_CARGO_TASK_A_INADMISSIBLE_FOR_DEPENDENCY_REMOVAL",
+    "next": "RUN_ONE_NEW_CROSS_DOMAIN_MODEL_INDEPENDENT_PARENT_REAL_TASK_B__NO_DEMOGRAPHY_ASTRONOMY_GEOPHYSICS_BIOPHYSICS_REPLAY__STOP_ON_FIRST_NEW_CAUSAL_GAP"
+  },
+  "scoreboard": {
+    "target": "OPEN_ENDED_AGENTIC_TECHNICAL_RESEARCH_AND_SCIENTIFIC_PROBLEM_SOLVING_V1",
+    "next": "RUN_ONE_NEW_CROSS_DOMAIN_MODEL_INDEPENDENT_PARENT_REAL_TASK_B__NO_DEMOGRAPHY_ASTRONOMY_GEOPHYSICS_BIOPHYSICS_REPLAY__STOP_ON_FIRST_NEW_CAUSAL_GAP"
+  },
+  "acquisition_contract": {
+    "real_task_A": "One difficult real technical/scientific task completed end-to-end and independently verified.",
+    "real_task_B": "One materially different real technical/scientific domain completed using the inherited general route without rediscovery.",
+    "cross_domain_transfer_required": true,
+    "frontier_model_dependency_removed_for_both_tasks": true,
+    "same_domain_parameter_variation_does_not_count_as_frontier_fresh_reuse": true,
+    "runtime_derived_cognition_provenance_required": true,
+    "required_cognition_provenance_authority": "ASTRA_RUNTIME_DERIVED_V1",
+    "required_producer_model_dependency_count": 0,
+    "advisory_model_controller_modes_ineligible": true,
+    "nonempty_planner_model_ineligible": true
+  }
+}
