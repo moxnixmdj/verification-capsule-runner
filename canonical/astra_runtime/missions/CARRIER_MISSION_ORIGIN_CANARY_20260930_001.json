@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_MISSION_V1",
+  "mission_id": "CARRIER-MISSION-ORIGIN-CANARY-20260930-001",
+  "purpose": "Validate that the canonical ASTRA CLI entrypoint propagates a real mission origin into autonomous capability acquisition without spending any parent held-out task.",
+  "goal": "Create a Code 128 barcode PNG from the literal text carrier-origin-canary using a verified zero-cost executable capability, and report the output path and SHA-256.",
+  "constraints": {
+    "parent_task": false,
+    "heldout_gate": false,
+    "same_parent_task_replay": false,
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0
+  },
+  "steps": [
+    {
+      "id": "mission_origin_canary",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "max_cycles": 1,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ]
+}
