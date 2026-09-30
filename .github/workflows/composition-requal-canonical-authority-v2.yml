@@ -1,0 +1,222 @@
+name: Composition Requalification - Canonical Authority Decision V2
+
+on:
+  push:
+    branches:
+      - verify/composition-requal-canonical-authority-v2-20260930
+    paths:
+      - 'ARM_COMPOSITION_REQUAL_CANONICAL_AUTHORITY_V2_20260930'
+
+permissions:
+  contents: read
+
+jobs:
+  requalify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact repaired route bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "e23789745c053868d026f66f8c1258c0444b6552"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "b0fb5ccaf73552230dba24f914821d437b1a043d"
+          test "$(git hash-object canonical/runtime/goal_compiler.py)" = "195d5dd5f4fabb8a897fb6407433e691a8fdaf26"
+          test "$(git hash-object canonical/runtime/capability_planner.py)" = "64ff65cb184f50d3336326f33cccfcc0a53301a8"
+          test "$(git hash-object canonical/runtime/capability_proposal_generators.py)" = "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "6385b469f1287c971217dcac58af2ffebd81f9fd"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition.py)" = "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"
+          test "$(git hash-object canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py)" = "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_synthesis.py)" = "d7c73c24d2038c40bfb38ea6f10749a15a2d5415"
+          test "$(git hash-object canonical/runtime/bound_capabilities/evidence_decision_verify.py)" = "63cf325320c7b91bf48ea2f2769c999c5a090929"
+          test "$(git hash-object canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json)" = "496363bf99d3f7c16d99288aed027534a71d796d"
+          echo EXACT_REQUAL_ROUTE_BYTES_PASS
+
+      - name: Execute fresh model-independent composition requalification exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib,sys
+          root=pathlib.Path(".").resolve()
+          spec=importlib.util.spec_from_file_location(
+              "composition_requal_runtime",
+              root/"canonical/runtime/astra_runtime.py",
+          )
+          runtime=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=runtime
+          spec.loader.exec_module(runtime)
+
+          input_path="canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json"
+          output_path="canonical/astra_runtime/tmp/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_OUTPUT.json"
+          goal=(
+            "Using typed decision evidence at "+input_path+
+            ", synthesize the decision to "+output_path+
+            ". Then independently verify the decision result at "+output_path+"."
+          )
+          mission={
+            "mission_id":"COMPOSITION-REQUAL-CANONICAL-AUTHORITY-V2-20260930",
+            "goal":goal,
+          }
+          step={
+            "adapter":"goal",
+            "goal_ref":"goal",
+            "verified_initial_facts":["structured.decision_evidence.available"],
+            "max_controller_actions":8,
+          }
+          result=runtime.run_goal(step,mission)
+          assert result.get("controller_mode")=="MODEL_INDEPENDENT_ACTION_PLAN",result
+          assert result.get("planner_model_last") is None,result
+          assert result.get("composition_mode")=="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH",result
+          assert result.get("model_dependency_count")==0,result
+
+          grounding=json.loads(pathlib.Path(result["grounding_evidence_path"]).read_text())
+          composition=json.loads(pathlib.Path(result["composition_evidence_path"]).read_text())
+          assert grounding["unresolved_clause_indexes"]==[],grounding
+          assert grounding["input_contract_bindability_enforced"] is True,grounding
+          ids=set(grounding.get("candidate_capability_ids") or [])
+          assert "decision.synthesis.typed.stdlib" in ids,ids
+          assert "decision.synthesis.verify.stdlib" in ids,ids
+          assert composition["composition_ready"] is True,composition
+          assert composition["model_dependency_count"]==0,composition
+          assert composition["required_external_initials"]==["structured.decision_evidence.available"],composition
+          assert composition["verified_initial_facts"]==["structured.decision_evidence.available"],composition
+          assert composition["problem"]["initial_facts"]==["structured.decision_evidence.available"],composition
+
+          consumer=[
+            x for x in composition["problem"]["capabilities"]
+            if x["source_capability_id"]=="decision.synthesis.verify.stdlib"
+          ][0]
+          source_ref=consumer["inputs"]["input_path"]
+          result_ref=consumer["inputs"]["result_path"]
+          assert source_ref=={
+            "$effect_result":{"effect":"decision.synthesis.typed","field":"input_path"}
+          },source_ref
+          assert result_ref=={
+            "$effect_result":{"effect":"decision.synthesis.typed","field":"output_path"}
+          },result_ref
+
+          trace=result.get("trace") or []
+          invoked=[
+            x.get("result") for x in trace
+            if isinstance(x,dict) and isinstance(x.get("result"),dict)
+          ]
+          producer=[x for x in invoked if x.get("adapter")=="evidence_decision_synthesis"]
+          verifier=[x for x in invoked if x.get("adapter")=="evidence_decision_verify"]
+          assert len(producer)==1,producer
+          assert len(verifier)==1,verifier
+          assert producer[0]["status"]=="DECIDED",producer
+          assert producer[0]["selected_alternative"]=="PRIVATE_GITHUB_MAIN",producer
+          assert producer[0]["input_path"]==input_path,producer
+          assert producer[0]["output_path"]==output_path,producer
+          assert verifier[0]["verified"] is True,verifier
+          assert verifier[0]["selected_alternative"]=="PRIVATE_GITHUB_MAIN",verifier
+
+          evidence={
+            "schema":"PROJECT_BRAIN_COMPOSITION_POST_REPAIR_REQUALIFICATION_V1",
+            "task":"CANONICAL_AUTHORITY_DECISION",
+            "goal":goal,
+            "result":result,
+            "grounding":grounding,
+            "composition":composition,
+            "producer_result":producer[0],
+            "verifier_result":verifier[0],
+            "causal_source_ref":source_ref,
+            "causal_result_ref":result_ref,
+            "model_dependency_count":0,
+            "incremental_spend_usd":0,
+          }
+          pathlib.Path("COMPOSITION_REQUAL_CANONICAL_AUTHORITY_RESULT.json").write_text(
+            json.dumps(evidence,indent=2,sort_keys=True)+"\n"
+          )
+          print("COMPOSITION_REQUAL_EXECUTION_PASS")
+          PY
+
+      - name: Independently recompute decision and final oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib
+          problem=json.loads(pathlib.Path(
+            "canonical/tasks/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_20260930.json"
+          ).read_text())
+          result=json.loads(pathlib.Path(
+            "canonical/astra_runtime/tmp/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_OUTPUT.json"
+          ).read_text())
+          wrapper=json.loads(pathlib.Path("COMPOSITION_REQUAL_CANONICAL_AUTHORITY_RESULT.json").read_text())
+
+          states={}
+          for alt in [x["id"] for x in problem["alternatives"]]:
+              req=[c for c in problem["constraints"] if c["alternative"]==alt and c.get("required",True)]
+              if any(c["state"]=="VIOLATED" for c in req):
+                  states[alt]="DISQUALIFIED"
+              elif any(c["state"]=="UNKNOWN" for c in req):
+                  states[alt]="UNRESOLVED"
+              else:
+                  states[alt]="ADMISSIBLE"
+
+          support={}
+          contradiction={}
+          groups={}
+          for e in problem["evidence"]:
+              alt=e["alternative"]
+              weight=float(e["confidence"])*float(e.get("strength",1))
+              key=(alt,e["independence_group"])
+              dest=support if e["relation"]=="SUPPORTS" else contradiction
+              dest[key]=max(dest.get(key,0.0),weight)
+              if e["relation"]=="SUPPORTS" and weight>0:
+                  groups.setdefault(alt,set()).add(e["independence_group"])
+
+          eligible=[]
+          policy=problem["policy"]
+          for alt,state in states.items():
+              s=sum(v for (a,_),v in support.items() if a==alt)
+              c=sum(v for (a,_),v in contradiction.items() if a==alt)
+              total=s+c
+              ratio=s/total if total else 0.0
+              conflict=2*min(s,c)/total if total else 0.0
+              if (
+                  state=="ADMISSIBLE"
+                  and total>0
+                  and len(groups.get(alt,set()))>=policy["minimum_independent_support_groups"]
+                  and ratio>=policy["minimum_support_ratio"]
+                  and conflict<=policy["maximum_conflict_ratio"]
+              ):
+                  eligible.append((s-c,ratio,alt))
+          eligible.sort(key=lambda x:(-x[0],-x[1],x[2]))
+          assert eligible and eligible[0][2]=="PRIVATE_GITHUB_MAIN",eligible
+          assert result["status"]=="DECIDED",result
+          assert result["selected_alternative"]=="PRIVATE_GITHUB_MAIN",result
+          assert result["model_dependency_count"]==0,result
+          assert wrapper["verifier_result"]["verified"] is True,wrapper
+          assert wrapper["causal_source_ref"]["$effect_result"]["field"]=="input_path",wrapper
+          assert wrapper["causal_result_ref"]["$effect_result"]["field"]=="output_path",wrapper
+
+          wrapper["independent_final_oracle"]={
+            "verified":True,
+            "selected_alternative":"PRIVATE_GITHUB_MAIN",
+            "recomputed_without_producer_or_verifier_import":True,
+            "input_sha256":hashlib.sha256(
+              json.dumps(problem,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+            ).hexdigest(),
+          }
+          pathlib.Path("COMPOSITION_REQUAL_CANONICAL_AUTHORITY_RESULT.json").write_text(
+            json.dumps(wrapper,indent=2,sort_keys=True)+"\n"
+          )
+          print("COMPOSITION_REQUAL_INDEPENDENT_ORACLE_PASS")
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: composition-requal-canonical-authority-v2
+          path: |
+            COMPOSITION_REQUAL_CANONICAL_AUTHORITY_RESULT.json
+            canonical/astra_runtime/tmp/COMPOSITION_REQUAL_CANONICAL_AUTHORITY_OUTPUT.json
+            canonical/astra_runtime/evidence/COMPOSITION-REQUAL-CANONICAL-AUTHORITY-V2-20260930__BOUND_CAPABILITY_GROUNDING.json
+            canonical/astra_runtime/evidence/COMPOSITION-REQUAL-CANONICAL-AUTHORITY-V2-20260930__GROUNDED_EXECUTABLE_COMPOSITION.json
