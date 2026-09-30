@@ -1,0 +1,39 @@
+name: Guarded Broad Objective Routing Qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/broad_objective_decompose.py
+      - canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+      - canonical/tests/test_broad_objective_semantic_decomposition.py
+      - verify_broad_objective_routing_after_parent_falsification.py
+      - broad_objective_routing_qualification_authorization.json
+      - guarded_broad_objective_routing_plan.json
+      - .github/workflows/guarded-broad-objective-routing-qualification.yml
+permissions:
+  contents: write
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Atomically admit non-parent qualification and execute exact tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_broad_objective_routing_plan.json --receipt guarded-broad-objective-routing-admission.json
+      - name: Upload routing qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-broad-objective-routing-qualification
+          path: |
+            guarded-broad-objective-routing-admission.json
+            guarded_broad_objective_routing_plan.json
+            broad_objective_routing_qualification_authorization.json
+          if-no-files-found: warn
