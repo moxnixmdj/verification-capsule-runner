@@ -1,0 +1,156 @@
+name: Recover Composition Evidence Surface Requalification
+on:
+  push:
+    branches:
+      - verify/recover-composition-evidence-surface-20260930
+    paths:
+      - '.github/workflows/recover-composition-evidence-surface.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Fetch immutable source run evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/jobs/109711314434/logs"             -o source-job.log
+          curl --fail --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/36659637634"             -o source-run.json
+          test -s source-job.log
+          test -s source-run.json
+      - name: Independently adjudicate preserved evidence without replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,re
+
+          source_run_id=36659637634
+          source_job_id=109711314434
+          source_head="f2f906e35a1d56ee37beb44544d5a81a982e9de3"
+          task_path=pathlib.Path("canonical/tasks/COMPOSITION_REQUAL_EVIDENCE_SURFACE_20260930.json")
+          log_path=pathlib.Path("source-job.log")
+          run_path=pathlib.Path("source-run.json")
+
+          run=json.loads(run_path.read_text(encoding="utf-8"))
+          assert run["id"]==source_run_id,run
+          assert run["head_sha"]==source_head,run
+          assert run["conclusion"]=="failure",run
+
+          raw=log_path.read_text(encoding="utf-8",errors="replace")
+          plain=re.sub(r"\x1b\[[0-9;]*m","",raw)
+          required=[
+            "EXACT_REQUAL_ROUTE_BYTES_PASS",
+            "'controller_mode': 'MODEL_INDEPENDENT_ACTION_PLAN'",
+            "'planner_model_last': None",
+            "'planning_mode': 'DETERMINISTIC_COMPOUND_ACTION_PLAN'",
+            "'final_summary': 'COMPOUND_GOAL_COMPLETE'",
+            "'adapter': 'evidence_decision_synthesis'",
+            "'status': 'DECIDED'",
+            "'selected_alternative': 'PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION'",
+            "'adapter': 'evidence_decision_verify'",
+            "'verified': True",
+            "'producer_independent': True",
+            "'model_dependency_count': 0",
+            "'input_path': {'$result': {'cycle': 0, 'field': 'input_path'}}",
+            "'result_path': {'$result': {'cycle': 0, 'field': 'output_path'}}",
+          ]
+          missing=[x for x in required if x not in plain]
+          assert not missing,missing
+          assert "result.get("composition_mode")=="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH"" in plain
+          assert "AssertionError:" in plain
+
+          task=json.loads(task_path.read_text(encoding="utf-8"))
+          assert task["decision_id"]=="COMPOSITION-REQUAL-EVIDENCE-SURFACE-20260930"
+
+          states={}
+          for alt in [x["id"] for x in task["alternatives"]]:
+              req=[c for c in task["constraints"] if c["alternative"]==alt and c.get("required",True)]
+              if any(c["state"]=="VIOLATED" for c in req):
+                  states[alt]="DISQUALIFIED"
+              elif any(c["state"]=="UNKNOWN" for c in req):
+                  states[alt]="UNRESOLVED"
+              else:
+                  states[alt]="ADMISSIBLE"
+
+          support={}
+          contradiction={}
+          groups={}
+          for e in task["evidence"]:
+              alt=e["alternative"]
+              weight=float(e["confidence"])*float(e.get("strength",1))
+              key=(alt,e["independence_group"])
+              dest=support if e["relation"]=="SUPPORTS" else contradiction
+              dest[key]=max(dest.get(key,0.0),weight)
+              if e["relation"]=="SUPPORTS" and weight>0:
+                  groups.setdefault(alt,set()).add(e["independence_group"])
+
+          eligible=[]
+          policy=task["policy"]
+          for alt,state in states.items():
+              s=sum(v for (a,_),v in support.items() if a==alt)
+              c=sum(v for (a,_),v in contradiction.items() if a==alt)
+              total=s+c
+              ratio=s/total if total else 0.0
+              conflict=2*min(s,c)/total if total else 0.0
+              if (
+                  state=="ADMISSIBLE"
+                  and total>0
+                  and len(groups.get(alt,set()))>=policy["minimum_independent_support_groups"]
+                  and ratio>=policy["minimum_support_ratio"]
+                  and conflict<=policy["maximum_conflict_ratio"]
+              ):
+                  eligible.append((s-c,ratio,alt))
+          eligible.sort(key=lambda x:(-x[0],-x[1],x[2]))
+          assert eligible and eligible[0][2]=="PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION",eligible
+
+          receipt={
+            "schema":"PROJECT_BRAIN_COMPOSITION_EVIDENCE_SURFACE_RECOVERY_ADJUDICATION_V1",
+            "status":"PASS",
+            "source_run_id":source_run_id,
+            "source_job_id":source_job_id,
+            "source_head_sha":source_head,
+            "source_task_git_blob":"70db3e3ba900df9479ed330b611a0f0bfa7c8647",
+            "source_workflow_conclusion":"failure",
+            "source_semantic_execution":"PASS",
+            "source_exact_route_bytes":"PASS",
+            "source_controller_mode":"MODEL_INDEPENDENT_ACTION_PLAN",
+            "source_planning_mode":"DETERMINISTIC_COMPOUND_ACTION_PLAN",
+            "source_planner_model_last":None,
+            "source_producer_status":"DECIDED",
+            "source_selected_alternative":"PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION",
+            "source_verifier_verified":True,
+            "source_verifier_producer_independent":True,
+            "source_model_dependency_count":0,
+            "source_causal_input_ref":{"$result":{"cycle":0,"field":"input_path"}},
+            "source_causal_result_ref":{"$result":{"cycle":0,"field":"output_path"}},
+            "source_causal_refs_distinct":True,
+            "first_failed_harness_assertion":"obsolete top-level composition_mode expectation after authoritative route changed to DETERMINISTIC_COMPOUND_ACTION_PLAN",
+            "harness_failure_is_capability_semantic_failure":False,
+            "execution_replayed":False,
+            "producer_or_verifier_modules_imported_by_recovery":False,
+            "independent_semantic_recompute":True,
+            "independent_selected_alternative":"PUBLIC_GITHUB_ACTIONS_EXECUTABLE_VALIDATION",
+            "task_sha256":hashlib.sha256(task_path.read_bytes()).hexdigest(),
+            "source_job_log_sha256":hashlib.sha256(log_path.read_bytes()).hexdigest(),
+            "incremental_spend_usd":0,
+            "promotion_predicate":"FRESH_MATERIALLY_DISTINCT_COMPOSITION_REQUALIFICATION_PASS",
+          }
+          pathlib.Path("COMPOSITION_EVIDENCE_SURFACE_RECOVERY_ADJUDICATION.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("COMPOSITION_EVIDENCE_SURFACE_RECOVERY_PASS")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: composition-evidence-surface-recovery-adjudication
+          path: COMPOSITION_EVIDENCE_SURFACE_RECOVERY_ADJUDICATION.json
