@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "MISSION-ORIGIN-ENTRYPOINT-CANARY-20260930-V1",
+  "purpose": "Fresh non-parent canary for canonical mission-origin propagation into model-independent autonomous capability acquisition.",
+  "goal": "Use an Ubuntu package to generate a QR-code PNG file containing the exact text project-brain-origin-canary-v1 and save it as mission-origin-canary.png.",
+  "steps": [
+    {
+      "id": "exercise-canonical-mission-origin-path",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "max_cycles": 1,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "incremental_spend_usd": 0,
+    "model_controller_required": false,
+    "parent_capability_credit_authorized": false,
+    "source_task_replay": false,
+    "validation_scope": "MISSION_ORIGIN_ENTRYPOINT_ONLY"
+  }
+}
