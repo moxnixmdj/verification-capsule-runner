@@ -43,6 +43,20 @@ class GroundingError(RuntimeError):
     pass
 
 
+def _load_broad_objective_decomposer():
+    path=pathlib.Path(__file__).resolve().with_name("broad_objective_decompose.py")
+    if not path.is_file():
+        return None
+    spec=importlib.util.spec_from_file_location(
+        "project_brain_broad_objective_decompose",path
+    )
+    if spec is None or spec.loader is None:
+        return None
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def _tokens(value):
     if isinstance(value,(list,tuple,set)):
         value=" ".join(str(x) for x in value)
@@ -451,6 +465,27 @@ def ground(
     grounded=[x for x in records if x["status"]!="UNRESOLVED"]
     unresolved=[x["index"] for x in records if x["status"]=="UNRESOLVED"]
     canonical_goal=" ".join(str(goal or "").strip().split())
+    broad=None
+    broad_role_goal=None
+    broad_role_grounding=None
+    if len(records)==1 and not grounded and unresolved==[0]:
+        module=_load_broad_objective_decomposer()
+        if module is not None:
+            candidate=module.decompose(canonical_goal)
+            if isinstance(candidate,dict) and candidate.get("status")=="DECOMPOSED":
+                broad=candidate
+                role_descriptions=[
+                    str(x.get("description") or "").strip()
+                    for x in (candidate.get("roles") or [])
+                    if isinstance(x,dict) and str(x.get("description") or "").strip()
+                ]
+                if role_descriptions:
+                    broad_role_goal=" Then ".join(role_descriptions)
+                    broad_role_grounding=ground(
+                        broad_role_goal,registry,max_candidates_per_clause,
+                        compiler=compiler,proposal_binder=proposal_binder,root=root,
+                        enforce_bindability=enforce_bindability,
+                    )
     return {
         "schema":SCHEMA,
         "goal":canonical_goal,
@@ -459,6 +494,11 @@ def ground(
         "grounded_clause_count":len(grounded),
         "unresolved_clause_indexes":unresolved,
         "candidate_capability_ids":sorted(all_candidates),
+        "broad_objective_decomposition":broad,
+        "broad_objective_decomposition_available":bool(broad),
+        "broad_objective_role_goal":broad_role_goal,
+        "broad_objective_role_grounding":broad_role_grounding,
+        "broad_objective_role_grounding_available":bool(broad_role_grounding),
         "external_discovery_allowed_for_unresolved_only":True,
         "whole_goal_external_discovery_forbidden_if_any_bound_grounding":bool(grounded),
         "input_contract_bindability_enforced":bool(enforce_bindability),
