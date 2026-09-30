@@ -1,0 +1,10 @@
+{
+  "command_sha256": "c4510fc3385fb5e2dc354b37fbeb0f35a516c019cf4225cb3ca495ca2a783609",
+  "duration_sec": 0.373,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "[esbuild Error]: Top-level await is currently not supported with the \"cjs\" output format\n    at /tmp/brain_probe.ts:10:15\n",
+  "stdout": "",
+  "step": 17
+}
