@@ -21,7 +21,7 @@ class Discovery:
 class Provenance:
     @staticmethod
     def verify(candidate,timeout=15):
-        if "verified.example" in candidate["url"]:
+        if candidate["url"].startswith("https://verified.example/"):
             return {
               "status":"RETRIEVAL_PROVENANCE_VERIFIED",
               "final_url":"https://verified.example/evidence",
