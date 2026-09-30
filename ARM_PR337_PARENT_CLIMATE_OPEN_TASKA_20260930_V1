@@ -1,4 +1,7 @@
 ARM exactly one producer execution for Brain PR337 frozen open-ended climate Task A.
 Brain base: 797d5fbea5f230a31044006755beb98ae387134b
-Brain head: 0af30865752f71da09af7b324ab1ab734855290f
+Brain head: aa1f60088b645439ff1eb15284dee828cb6b0671
+Prior run 36670464767 was PRESTART_ONLY: task_executed=false, execution_count=0.
+Harness Git-blob calculation repaired before this arm.
+This marker update is the sole authorized producer execution trigger after that prestart failure.
 No replay. Stop on first causal gap.
