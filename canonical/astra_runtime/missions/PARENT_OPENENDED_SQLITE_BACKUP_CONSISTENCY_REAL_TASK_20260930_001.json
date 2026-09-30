@@ -1,0 +1,26 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_RUNTIME_MISSION_V1",
+  "mission_id": "PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001",
+  "purpose": "Faithful fresh parent-capability execution through the canonical ASTRA runtime mission entrypoint. No direct goal-compiler harness and no task-specific research recipe.",
+  "goal": "Determine whether SQLite's online backup capability can produce a logically consistent destination database while the source database is being modified concurrently. Use authoritative primary technical evidence and a real executable experiment. Choose and justify the research method, discover and verify the necessary source and tool route, test the claim, identify material limitations, independently verify the consequential result, and produce a decision-quality answer with provenance.",
+  "steps": [
+    {
+      "id": "execute-fresh-open-ended-sqlite-parent-task",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ],
+  "constraints": {
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0,
+    "model_planner_disabled": true,
+    "fresh_parent_task": true,
+    "exactly_one_execution": true,
+    "stop_on_first_causal_gap": true
+  }
+}
