@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# qualification-trigger-v2: no runtime semantic effect
 from __future__ import annotations
 import importlib.util, json, pathlib, sys, unittest
 
