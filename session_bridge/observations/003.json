@@ -1,0 +1,10 @@
+{
+  "command_sha256": "1517073b3380819bbd516bda7babbe8ec685bbca34d5effddbbf036bd3689f7f",
+  "duration_sec": 0.066,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "interleaved-vigenere-dev-20260930-v1",
+  "stderr": "",
+  "stdout": "=== PYTHON / CORPUS AVAILABILITY ===\nwordfreq NO ModuleNotFoundError\nwordninja NO ModuleNotFoundError\nwordfreq NO ModuleNotFoundError\nnltk NO ModuleNotFoundError\nspacy NO ModuleNotFoundError\nwordfreq NO ModuleNotFoundError\nscipy NO ModuleNotFoundError\nnumpy NO ModuleNotFoundError\nPATH /usr/share/dict EXISTS True\n['/usr/share/dict/american-english', '/usr/share/dict/words']\nPATH /usr/share/hunspell EXISTS False\nPATH /usr/share/myspell EXISTS False\nPATH /usr/local/lib/python3.11/site-packages EXISTS False\n",
+  "step": 3
+}
