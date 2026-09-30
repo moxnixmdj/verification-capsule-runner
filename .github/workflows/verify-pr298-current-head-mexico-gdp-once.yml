@@ -1,0 +1,39 @@
+name: Verify PR298 Current Head Mexico GDP Once
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ARM_PR298_CURRENT_HEAD_MEXICO_GDP_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run exact current-head compiler and safety regressions
+        run: python canonical/tests/test_numeric_expression_sympy_binding.py
+      - name: Run fresh Mexico GDP typed-expression qualification
+        id: qualify
+        continue-on-error: true
+        run: python verify_pr298_current_head_mexico_gdp.py
+      - name: Upload terminal qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr298-current-head-mexico-gdp-report
+          path: pr298-current-head-mexico-report.json
+          if-no-files-found: error
+      - name: Preserve qualification failure
+        if: steps.qualify.outcome != 'success'
+        run: exit 1
