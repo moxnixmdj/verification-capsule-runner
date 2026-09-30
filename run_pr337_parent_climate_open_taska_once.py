@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import subprocess
 import sys
 
 ROOT=pathlib.Path(__file__).resolve().parent
@@ -29,8 +30,18 @@ EXPECTED_BLOBS={
 }
 
 def git_blob_sha(path):
-    raw=path.read_bytes()
-    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\x00"+raw).hexdigest()
+    rel=path.relative_to(ROOT).as_posix()
+    proc=subprocess.run(
+        ["git","rev-parse","HEAD:"+rel],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode!=0:
+        return None
+    value=proc.stdout.strip().lower()
+    return value if len(value)==40 else None
 
 def emit(report):
     REPORT.write_text(json.dumps(report,indent=2,sort_keys=True,default=str)+"\\n",encoding="utf-8")
