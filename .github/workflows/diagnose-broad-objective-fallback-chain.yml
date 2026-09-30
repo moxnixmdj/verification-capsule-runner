@@ -1,0 +1,48 @@
+name: Diagnose Broad Objective Fallback Chain
+on:
+  pull_request:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print exact fallback chain and grounding IR
+        run: |
+          python3 - <<'PY'
+          import ast, pathlib
+          targets = {
+            "canonical/runtime/goal_compiler.py": {
+              "decompose_goal",
+              "_compile_domain_free_authority_source_goal",
+              "_compile_runtime_fallback_goal",
+              "_compile_compound_goal",
+              "_compile_single_goal",
+            },
+          }
+          for rel,names in targets.items():
+              p=pathlib.Path(rel); s=p.read_text(); t=ast.parse(s)
+              funcs={n.name:n for n in t.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}
+              print("FILE",rel)
+              for name in names:
+                  n=funcs.get(name)
+                  if not n:
+                      print("MISSING",name); continue
+                  print("\n###",name,"lines",n.lineno,"-",n.end_lineno)
+                  print("\n".join(s.splitlines()[n.lineno-1:n.end_lineno]))
+                  calls=sorted({x.func.id if isinstance(x.func,ast.Name) else x.func.attr
+                                for x in ast.walk(n) if isinstance(x,ast.Call)
+                                and isinstance(x.func,(ast.Name,ast.Attribute))})
+                  print("CALLS",calls)
+          for rel in [
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition.py",
+            "canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py",
+          ]:
+              p=pathlib.Path(rel)
+              print("\n===== FULL",rel,"=====")
+              print(p.read_text())
+          PY
