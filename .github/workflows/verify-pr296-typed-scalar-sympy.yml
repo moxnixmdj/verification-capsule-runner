@@ -25,7 +25,7 @@ jobs:
           test "$(git hash-object canonical/runtime/astra_runtime.py)" = "85642a89a0d99c5e6cafa2e116ffdc24f04de32c"
           test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "23f7b79fca15593eb563bdcdba17c8b972f006db"
           test "$(git hash-object canonical/runtime/bound_capabilities/numeric_expression_sympy.py)" = "443e3386f11156e55635556b6e8f8ad7d7733592"
-          test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "9d0b043d6a02958ddd3887d8dbdcffcbfd6250b0"
+          test "$(git hash-object canonical/tests/test_numeric_expression_sympy_binding.py)" = "22892d432aeda73f7ae6deadd19de4eac6961d5c"
       - name: Run deterministic compiler and safety regressions
         run: python canonical/tests/test_numeric_expression_sympy_binding.py
       - name: Run fresh economics typed-expression task and independent oracle
