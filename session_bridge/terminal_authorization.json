@@ -1,6 +1,6 @@
 {
   "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
-  "session_id": "cargo-flight-dispatch-dev-20260930-v1",
+  "session_id": "cargo-flight-dispatch-submit-20261001-v2",
   "submission_authorized": true,
   "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
   "task": "cargo-flight-dispatch",
@@ -70,5 +70,6 @@
       "exit_code": 0,
       "evidence": "Observation 008: deterministic exact-command readback and FINAL_PRE_SUBMIT_PASS."
     }
-  ]
+  ],
+  "transport_replay_reason": "Prior controller instance correctly blocked submission because terminal authorization was committed after its immutable initial checkout. No verifier was invoked; this fresh PR starts with authorization present."
 }
