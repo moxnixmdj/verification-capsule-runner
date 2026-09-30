@@ -1,0 +1,10 @@
+{
+  "command_sha256": "e1c4b9f54098ad411bddd502b044be13273e5c50997ede4a5b694f0d31f65b2a",
+  "duration_sec": 2.497,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "react-lead-form-20260930-v1",
+  "stderr": "[plugin:vite:resolve] [plugin vite:resolve] Module \"node:fs\" has been externalized for browser compatibility, imported by \"/app/src/lib/submitLead.ts\". See https://vitejs.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.\n",
+  "stdout": "PHONE_ONLY_FB={\"status\":\"accepted\",\"payload\":{\"fullName\":\"Phone Only\",\"email\":\"\",\"phone\":\"+14045550115\",\"service\":\"roof_repair\",\"city\":\"Atlanta\",\"state\":\"GA\",\"consent\":true,\"source\":\"facebook_lead_ads\",\"campaign\":\"CMP\",\"utmMedium\":\"paid_social\",\"submittedAt\":\"2025-01-02T10:00:00Z\",\"facebookLeadId\":\"FB-PHONE-ONLY\",\"status\":\"ready_for_crm\"}}\nGOOGLE_NO_GCLID={\"status\":\"rejected\",\"reason\":\"invalid_lead\"}\n\n> react-lead-form@1.0.0 test\n> vitest run --run tests/submitLead.test.ts\n\n\n RUN  v1.3.0 /app\n\n \u2713 tests/submitLead.test.ts  (6 tests) 21ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  21:23:55\n   Duration  404ms (transform 115ms, setup 0ms, collect 105ms, tests 21ms, environment 0ms, prepare 81ms)\n\n\n> react-lead-form@1.0.0 build\n> vite build\n\nvite v5.0.0 building for production...\ntransforming...\n\u2713 37 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                                    0.39 kB \u2502 gzip:  0.29 kB\ndist/assets/__vite-browser-external-BIHI7g3E.js    0.03 kB \u2502 gzip:  0.05 kB\ndist/assets/index-C2VA_uuS.js                    156.31 kB \u2502 gzip: 50.84 kB\n\u2713 built in 831ms\n",
+  "step": 21
+}
