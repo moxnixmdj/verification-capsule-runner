@@ -1,0 +1,10 @@
+{
+  "command_sha256": "12067259c4a78ea498f4399f620baa3c6be1b806cc64f6df8eeacc3a4a810946",
+  "duration_sec": 0.046,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "risk-scorer-replay-20260930-v1",
+  "stderr": "/tmp/bridge-command.sh: line 184: rebuild_parity_report.sh: Permission denied\n",
+  "stdout": "",
+  "step": 22
+}
