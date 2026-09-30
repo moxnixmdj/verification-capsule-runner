@@ -1,0 +1,35 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_MISSION_V1",
+  "mission_id": "PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001",
+  "purpose": "Faithfully execute the canonical Brain frozen genuinely open-ended SQLite parent Task A through the validated ASTRA CLI mission-entry path. No predeclared research recipe and no direct compiler harness.",
+  "source_task_path": "canonical/tasks/PARENT_OPENENDED_SQLITE_BACKUP_CONSISTENCY_REAL_TASK_20260930_001.json",
+  "source_task_blob_sha": "5d09c9eebcb09612525836e7926bdf297f4bad32",
+  "goal": "Determine whether SQLite's online backup capability can produce a logically consistent destination database while the source database is being modified concurrently. Use authoritative primary technical evidence and a real executable experiment. Choose and justify the research method, discover and verify the necessary source and tool route, test the claim, identify material limitations, independently verify the consequential result, and produce a decision-quality answer with provenance.",
+  "constraints": {
+    "parent_task": true,
+    "fresh_parent_task": true,
+    "source_task_replay": false,
+    "no_predeclared_research_recipe": true,
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0,
+    "no_frontier_model_cognition": true,
+    "no_local_model": true,
+    "no_model_artifact": true,
+    "no_task_specific_runtime_patch": true,
+    "exactly_one_execution": true,
+    "stop_on_first_causal_gap": true
+  },
+  "steps": [
+    {
+      "id": "execute-frozen-openended-sqlite-parent-taska",
+      "adapter": "goal",
+      "goal_ref": "goal",
+      "allow_optional_model_planner": false,
+      "max_controller_actions": 64,
+      "max_cycles": 8,
+      "verify": {
+        "type": "returncode_zero"
+      }
+    }
+  ]
+}
