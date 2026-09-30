@@ -1,0 +1,16 @@
+Re-arm the same frozen Brain PR337 parent open-ended Task A only because the prior carrier attempt never executed the task.
+
+Prior carrier run: 36670464767
+Prior terminal status: CARRIER_CLOSURE_FAIL
+Prior task_executed: false
+Prior execution_count: 0
+First closure gap: canonical/runtime/astra_runtime.py expected blob 6cb668bcc5a00665ea541fc5b6adf494f37ad1c9, observed 4df4bfca6e57e9cc3b4171d7f9fce5291a4c6a52
+
+Requirements:
+- exact same frozen PR337 task bytes
+- model planner disabled
+- $0 incremental spend
+- carrier closure must pass before run_goal
+- exactly one producer execution if and only if closure passes
+- stop on first causal gap
+- no branch update / no rerun after this PR opens
