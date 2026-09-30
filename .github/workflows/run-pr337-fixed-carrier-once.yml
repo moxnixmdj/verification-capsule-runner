@@ -1,0 +1,68 @@
+name: Run PR337 Fixed Carrier Once
+
+on:
+  push:
+    branches:
+      - execute/pr337-frozen-carrier-0ac7-once-20260930-v1
+    paths:
+      - .github/workflows/run-pr337-fixed-carrier-once.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ASTRA_DISABLE_MODEL_PLANNER: "1"
+      PYTHONUNBUFFERED: "1"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Refresh Ubuntu package metadata
+        run: sudo apt-get update
+      - name: Correct carrier verifier in an ephemeral copy only
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src = Path("run_pr337_parent_climate_open_taska_once.py").read_text(encoding="utf-8")
+          old = r'b"\\0"'
+          new = r'b"\0"'
+          if src.count(old) != 1:
+              raise SystemExit("CARRIER_VERIFIER_PATTERN_COUNT_INVALID")
+          Path("/tmp/run_pr337_fixed.py").write_text(src.replace(old, new), encoding="utf-8")
+          PY
+      - name: Execute frozen PR337 open-ended climate Task A exactly once
+        id: producer
+        continue-on-error: true
+        run: python /tmp/run_pr337_fixed.py
+      - name: Upload immutable terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr337-parent-climate-open-taska-terminal-fixed-carrier
+          path: pr337-parent-climate-open-taska-producer-report.json
+          if-no-files-found: error
+      - name: Publish terminal report to readback sink
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "PR337_FIXED_CARRIER_TERMINAL"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "trigger_sha=${GITHUB_SHA}"
+            echo
+            echo '~~~json'
+            cat pr337-parent-climate-open-taska-producer-report.json
+            echo '~~~'
+          } > /tmp/pr337-body.txt
+          gh issue edit 63 --repo "$GITHUB_REPOSITORY" --body-file /tmp/pr337-body.txt
+      - name: Preserve semantic failure
+        if: steps.producer.outcome != 'success'
+        run: exit 1
