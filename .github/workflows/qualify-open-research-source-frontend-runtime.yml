@@ -1,0 +1,74 @@
+name: Qualify Open Research Source Frontend Runtime Routing
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ARM_OPEN_RESEARCH_SOURCE_FRONTEND_RUNTIME_20260930_V1
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Verify exact Brain blob identities
+        run: |
+          python - <<'PY'
+          import hashlib,pathlib
+          expected={
+            "canonical/runtime/bound_capabilities/broad_objective_decompose.py":"6eb2b20e860da466ad8b793c20060ded1fbf389b",
+            "canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py":"816c37742b23739e74a9455a97dd6aea9e767206",
+            "canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py":"1dc26e68d18010b66211d1d83f7b2024c8ad1fcf",
+            "canonical/runtime/bound_capabilities/open_research_source_frontend.py":"425651bb88575b5ad940e76735a98618896e31ae",
+            "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py":"da42f0615380027f963044f80e55ddfa1d73ced1",
+            "canonical/runtime/astra_runtime.py":"5570a2300656b840dbb252bf173a0b652fe29db3",
+          }
+          for rel,want in expected.items():
+              raw=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got==want,(rel,got,want)
+          print("EXACT_BRAIN_BLOBS_OK",len(expected))
+          PY
+      - name: Run source frontend cross-domain qualification
+        run: python -m unittest -v canonical.tests.test_open_research_source_frontend
+      - name: Prove broad research cannot fall through to package acquisition
+        run: python -m unittest -v canonical.tests.test_open_research_runtime_routing
+      - name: Independent fresh runtime-source oracle
+        run: |
+          python - <<'PY'
+          import importlib.util,pathlib
+          bc=pathlib.Path("canonical/runtime/bound_capabilities")
+          def load(n):
+              p=bc/(n+".py"); s=importlib.util.spec_from_file_location(n,p)
+              m=importlib.util.module_from_spec(s); s.loader.exec_module(m); return m
+          d=load("broad_objective_decompose")
+          f=load("open_research_source_frontend")
+          qs=[
+            "Determine whether PostgreSQL documents serializable transaction isolation behavior using provenance-bearing technical evidence",
+            "Assess whether fatigue crack growth in aluminum alloys depends on stress intensity using published experimental evidence",
+            "Evaluate whether WebAssembly has a published core specification using provenance-bearing source evidence",
+          ]
+          for q in qs:
+              de=d.decompose(q); assert de["status"]=="DECOMPOSED",de
+              x=f.run(q,de,limit=8,timeout=20)
+              assert x["status"]=="SOURCE_FRONTEND_READY",x
+              assert x["provenance_verified_candidate_count"]>=1,x
+              assert x["authority_verified_candidate_count"]==0,x
+              assert x["model_dependency_count"]==0,x
+              assert x["incremental_spend_usd"]==0,x
+          PY
+      - name: Emit durable PASS receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          gh api "repos/$REPO/issues"             -f title="QUALIFICATION_PASS_OPEN_RESEARCH_SOURCE_FRONTEND_RUNTIME_20260930_V1"             -f body="PASS. Head SHA: $SHA. Workflow run: $RUN_ID. Exact Brain blobs verified; cross-domain live source frontend passed; runtime regression proved decomposed broad research cannot fall through to package acquisition. Authority/primary-source/relevance remain the next explicit gap. model_dependency_count=0; incremental_spend_usd=0."
