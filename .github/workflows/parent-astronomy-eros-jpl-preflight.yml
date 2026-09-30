@@ -38,12 +38,13 @@ jobs:
           orbit=data.get("orbit") or {}
           elements=orbit.get("elements")
           assert isinstance(elements,list) and len(elements)>7
-          e6=elements[6]; e7=elements[7]
-          assert str(e6.get("name") or "").lower() in {"a","a."} or str(e6.get("label") or "").lower().startswith("semi"), e6
-          assert str(e7.get("name") or "").lower() in {"per","p"} or "period" in str(e7.get("label") or "").lower(), e7
-          assert str(e6.get("units") or "").lower()=="au", e6
-          assert str(e7.get("units") or "").lower()=="d", e7
-          assert e6.get("value") not in (None,"")
-          assert e7.get("value") not in (None,"")
-          print("JPL_EROS_FROZEN_SOURCE_PREFLIGHT_PASS")
+          named={str(e.get("name") or "").lower():(i,e) for i,e in enumerate(elements)}
+          assert "a" in named, [str(e.get("name") or "") for e in elements]
+          assert "per" in named, [str(e.get("name") or "") for e in elements]
+          ia,ea=named["a"]; ip,ep=named["per"]
+          assert str(ea.get("units") or "").lower()=="au", ea
+          assert str(ep.get("units") or "").lower()=="d", ep
+          assert ea.get("value") not in (None,"")
+          assert ep.get("value") not in (None,"")
+          print(json.dumps({"status":"JPL_EROS_FROZEN_SOURCE_PREFLIGHT_PASS","a_index":ia,"per_index":ip,"a_units":"au","per_units":"d"},sort_keys=True))
           PY
