@@ -1,0 +1,10 @@
+{
+  "command_sha256": "c06a230a2b21dd52218cb060df922524b85952ed4ca2e50ce402e49f18b501ce",
+  "duration_sec": 0.148,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "cargo-flight-dispatch-dev-20260930-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/tmp/audit_dispatch.py\", line 3, in <module>\n    import navigation as nav\nModuleNotFoundError: No module named 'navigation'\n",
+  "stdout": "",
+  "step": 2
+}
