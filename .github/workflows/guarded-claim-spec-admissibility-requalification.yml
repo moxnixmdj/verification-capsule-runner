@@ -1,0 +1,37 @@
+name: Guarded Claim Spec Admissibility Requalification
+
+on:
+  push:
+    branches:
+      - guarded/claim-spec-admissibility-requalification-20260930-v1
+
+permissions:
+  contents: write
+
+jobs:
+  guarded-qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Guarded admission and exact qualification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python execution_guard/github_actions_guarded_run_live.py \
+            --plan guarded_claim_spec_requalification_plan.json \
+            --receipt guarded-claim-spec-launch-receipt.json
+      - name: Upload guarded qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-claim-spec-admissibility-requalification
+          path: |
+            guarded-claim-spec-launch-receipt.json
+            guarded-claim-spec-requalification-summary.json
+            pr447-claim-spec-operand-binding-report.json
+          if-no-files-found: warn
