@@ -19,15 +19,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/qualified_source_frontend.py)" = "686101e731a6aa7ceced688ca51acab755356e37"
+          test "$(git hash-object canonical/runtime/bound_capabilities/qualified_source_frontend.py)" = "8dbe60b457a047d5ae6ded00b49c49cdcaefd039"
           test "$(git hash-object canonical/tests/test_qualified_source_frontend.py)" = "c479e7f9cb86f7d8fa6991f74df3959caca8740b"
           test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "6eb2b20e860da466ad8b793c20060ded1fbf389b"
           test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "816c37742b23739e74a9455a97dd6aea9e767206"
           test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "1dc26e68d18010b66211d1d83f7b2024c8ad1fcf"
           test "$(git hash-object canonical/runtime/bound_capabilities/source_authority_binding_wikidata.py)" = "a293ffae6e9f62b6087aab804718bc30a92b2105"
           test "$(git hash-object canonical/runtime/bound_capabilities/official_primary_relevance_verify.py)" = "7adeddec64cb99c14d6ab364a922be3752addbf0"
+          test "$(git hash-object canonical/runtime/bound_capabilities/web_source_candidate_discovery_ddgs.py)" = "29ac520725afeb1b76f765ca4524c2ac31c4acc3"
       - name: Run authored composition tests
         run: python -m unittest -v canonical.tests.test_qualified_source_frontend
+      - name: Install exact qualified DDGS supplier
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ddgs-wheel
+          python -m pip download --disable-pip-version-check --no-deps --only-binary=:all: 'ddgs==9.16.0' -d /tmp/ddgs-wheel
+          printf '%s  %s\n' '175d9198c958a263f51a06a54368ba0b41294942c0cd29f4aa71be03dbcd5f4a' /tmp/ddgs-wheel/ddgs-9.16.0-py3-none-any.whl | sha256sum -c -
+          python -m pip install --disable-pip-version-check /tmp/ddgs-wheel/ddgs-9.16.0-py3-none-any.whl
       - name: Run fresh live WCAG source-chain qualification
         shell: bash
         run: |
@@ -48,6 +57,10 @@ jobs:
 
           decomposer=load("broad_objective_decompose")
           frontend=load("qualified_source_frontend")
+          ddgs_discovery=load("web_source_candidate_discovery_ddgs")
+
+          def discover_with_qualified_ddgs(goal,limit=12,timeout=15):
+              return ddgs_discovery.discover(goal,max_results=limit)
 
           objective=(
               "Assess whether WCAG 2.2 defines normative requirements for accessible "
@@ -56,7 +69,7 @@ jobs:
           decomposition=decomposer.decompose(objective)
           assert decomposition["status"]=="DECOMPOSED",decomposition
 
-          out=frontend.run(objective,decomposition,limit=20,timeout=20)
+          out=frontend.run(objective,decomposition,limit=20,timeout=20,discovery_fn=discover_with_qualified_ddgs)
           pathlib.Path("qualified-source-chain-report.json").write_text(
               json.dumps(out,indent=2,sort_keys=True)+"\n",encoding="utf-8"
           )
