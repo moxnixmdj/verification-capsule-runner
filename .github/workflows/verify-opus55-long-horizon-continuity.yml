@@ -1,0 +1,222 @@
+name: Verify Opus55 Long-Horizon Continuity
+on:
+  push:
+    branches:
+      - verify/opus55-long-horizon-continuity-20260930-v1
+permissions:
+  contents: read
+jobs:
+  continuity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Lock exact current Brain supervisor blob
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/same_identity_supervisor.py)" = "47c461f502e840def0c38728e1bfd7c6401cb804"
+      - name: Prepare immutable mission and completed-work artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf continuity_fixture
+          mkdir -p continuity_fixture/canonical/astra_runtime/missions
+          mkdir -p continuity_fixture/canonical/same_identity_worker/{tasks,state,evidence}
+          mkdir -p continuity_fixture/canonical/work
+          cat > continuity_fixture/canonical/astra_runtime/missions/CONTINUITY.json <<'JSON'
+          {"mission_id":"OPUS55-LONG-HORIZON-CONTINUITY-001","objective":"resume exactly after process loss","steps":["reuse completed phase","finish exactly once"]}
+          JSON
+          cat > continuity_fixture/canonical/work/COMPLETED_PHASE.json <<'JSON'
+          {"phase":1,"status":"COMPLETE","result":"durable-prior-work","must_not_reexecute":true}
+          JSON
+      - name: Process A - checkpoint and terminate before runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util, hashlib, json, pathlib, sys
+          module_path=pathlib.Path("canonical/runtime/same_identity_supervisor.py").resolve()
+          spec=importlib.util.spec_from_file_location("continuity_supervisor_A",module_path)
+          sup=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=sup
+          spec.loader.exec_module(sup)
+
+          root=pathlib.Path("continuity_fixture").resolve()
+          mission=root/"canonical/astra_runtime/missions/CONTINUITY.json"
+          prior=root/"canonical/work/COMPLETED_PHASE.json"
+          sha=lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+          task={
+              "schema":sup.TASK_SCHEMA,
+              "task_id":"CONTINUITY-TASK-001",
+              "agent_id":"SUPERWORKER-UNIFIED-1",
+              "mission_path":"canonical/astra_runtime/missions/CONTINUITY.json",
+              "mission_sha256":sha(mission),
+              "priority":100,
+              "prerequisites":[{"path":"canonical/work/COMPLETED_PHASE.json","sha256":sha(prior)}],
+              "incremental_spend_usd":0,
+              "checkpoint_before_runtime_once":True,
+          }
+          task_path=root/"canonical/same_identity_worker/tasks/CONTINUITY-TASK-001.json"
+          task_path.write_text(json.dumps(task,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          tasks=root/"canonical/same_identity_worker/tasks"
+          state=root/"canonical/same_identity_worker/state"
+          evidence=root/"canonical/same_identity_worker/evidence"
+
+          def forbidden_executor(*_):
+              raise AssertionError("runtime executed before mandatory process boundary")
+
+          code,receipt=sup.run_once(
+              root,tasks,state,evidence,"SUPERWORKER-UNIFIED-1",task_path,
+              executor=forbidden_executor,
+          )
+          assert code==75,(code,receipt)
+          assert receipt["status"]=="CHECKPOINTED_RELAUNCH_REQUIRED",receipt
+          assert receipt["same_identity_bound"] is True,receipt
+          assert receipt["incremental_spend_usd"]==0,receipt
+          pathlib.Path("PROCESS_A_RECEIPT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+      - name: Process B - fresh interpreter resumes same mission exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util, json, pathlib, sys
+          module_path=pathlib.Path("canonical/runtime/same_identity_supervisor.py").resolve()
+          spec=importlib.util.spec_from_file_location("continuity_supervisor_B",module_path)
+          sup=importlib.util.module_from_spec(spec)
+          sys.modules[spec.name]=sup
+          spec.loader.exec_module(sup)
+
+          root=pathlib.Path("continuity_fixture").resolve()
+          task_path=root/"canonical/same_identity_worker/tasks/CONTINUITY-TASK-001.json"
+          tasks=root/"canonical/same_identity_worker/tasks"
+          state=root/"canonical/same_identity_worker/state"
+          evidence=root/"canonical/same_identity_worker/evidence"
+          invocation_log=root/"canonical/work/RUNTIME_INVOCATIONS.txt"
+
+          def fresh_executor(argv,cwd,env):
+              prior=json.loads((root/"canonical/work/COMPLETED_PHASE.json").read_text(encoding="utf-8"))
+              assert prior=={
+                  "phase":1,
+                  "status":"COMPLETE",
+                  "result":"durable-prior-work",
+                  "must_not_reexecute":True,
+              },prior
+              with invocation_log.open("a",encoding="utf-8") as f:
+                  f.write("runtime-once\n")
+              assert env["PROJECT_BRAIN_AGENT_ID"]=="SUPERWORKER-UNIFIED-1"
+              assert env["PROJECT_BRAIN_TASK_ID"]=="CONTINUITY-TASK-001"
+              return sup.RuntimeResult(0,"resumed-and-completed\n","")
+
+          code,receipt=sup.run_once(
+              root,tasks,state,evidence,"SUPERWORKER-UNIFIED-1",task_path,
+              executor=fresh_executor,
+          )
+          assert code==0,(code,receipt)
+          assert receipt["terminal_state"]=="COMPLETE",receipt
+          assert receipt["same_identity_bound"] is True,receipt
+          assert receipt["checkpoint_count"]==1,receipt
+          assert receipt["runtime_attempt_count"]==1,receipt
+          assert receipt["incremental_spend_usd"]==0,receipt
+          pathlib.Path("PROCESS_B_RECEIPT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          PY
+      - name: Process C - independent ledger and hash adjudication
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path("continuity_fixture").resolve()
+          task_path=root/"canonical/same_identity_worker/tasks/CONTINUITY-TASK-001.json"
+          state_path=root/"canonical/same_identity_worker/state/CONTINUITY-TASK-001.json"
+          mission_path=root/"canonical/astra_runtime/missions/CONTINUITY.json"
+          prior_path=root/"canonical/work/COMPLETED_PHASE.json"
+          invocation_log=root/"canonical/work/RUNTIME_INVOCATIONS.txt"
+
+          task=json.loads(task_path.read_text(encoding="utf-8"))
+          state=json.loads(state_path.read_text(encoding="utf-8"))
+          a=json.loads(pathlib.Path("PROCESS_A_RECEIPT.json").read_text(encoding="utf-8"))
+          b=json.loads(pathlib.Path("PROCESS_B_RECEIPT.json").read_text(encoding="utf-8"))
+
+          sha=lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+          canonical_task_sha=hashlib.sha256(
+              json.dumps(task,sort_keys=True,separators=(",",":")).encode("utf-8")
+          ).hexdigest()
+
+          assert task["mission_sha256"]==sha(mission_path)
+          assert state["task_sha256"]==canonical_task_sha
+          assert state["mission_sha256"]==task["mission_sha256"]
+          assert state["agent_id"]=="SUPERWORKER-UNIFIED-1"
+          assert state["task_id"]=="CONTINUITY-TASK-001"
+          assert state["status"]=="COMPLETE"
+          assert state["claim_count"]==2
+          assert state["checkpoint_count"]==1
+          assert state["runtime_attempt_count"]==1
+          assert state["promotion_claim"] is False
+          assert state["p_real_claim"]==0
+          assert invocation_log.read_text(encoding="utf-8").splitlines()==["runtime-once"]
+
+          events=[e["type"] for e in state["events"]]
+          assert events==[
+              "TASK_ACQUIRED",
+              "CHECKPOINT_CREATED",
+              "TASK_RESUMED",
+              "ASTRA_RUNTIME_STARTED",
+              "TASK_COMPLETE",
+          ],events
+          assert a["status"]=="CHECKPOINTED_RELAUNCH_REQUIRED"
+          assert b["terminal_state"]=="COMPLETE"
+          assert a["task_sha256"]==b["task_sha256"]==canonical_task_sha
+          assert a["mission_sha256"]==b["mission_sha256"]==sha(mission_path)
+          assert a["incremental_spend_usd"]==b["incremental_spend_usd"]==0
+
+          prior=json.loads(prior_path.read_text(encoding="utf-8"))
+          assert prior["status"]=="COMPLETE" and prior["result"]=="durable-prior-work"
+
+          result={
+              "schema":"PROJECT_BRAIN_OPUS55_LONG_HORIZON_CONTINUITY_FRESH_VERIFICATION_V1",
+              "verified":True,
+              "producer_independent_ledger_check":True,
+              "supervisor_git_blob":"47c461f502e840def0c38728e1bfd7c6401cb804",
+              "forced_process_boundary":True,
+              "fresh_second_interpreter":True,
+              "same_agent_identity_preserved":True,
+              "same_task_identity_preserved":True,
+              "same_mission_hash_preserved":True,
+              "completed_prior_artifact_reused_unchanged":True,
+              "runtime_invoked_after_resume_exactly_once":True,
+              "checkpoint_count":1,
+              "claim_count":2,
+              "runtime_attempt_count":1,
+              "terminal_state":"COMPLETE",
+              "incremental_spend_usd":0,
+              "excluded_claims":[
+                  "AUTONOMOUS_WAKE_WITHOUT_TRIGGER",
+                  "GENERAL_SEMANTIC_MEMORY_QUALITY",
+                  "ARBITRARY_COGNITIVE_COMPETENCE"
+              ]
+          }
+          pathlib.Path("OPUS55_LONG_HORIZON_CONTINUITY_FRESH_VERIFICATION.json").write_text(
+              json.dumps(result,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print("OPUS55_LONG_HORIZON_CONTINUITY_VERIFIED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: opus55-long-horizon-continuity-fresh-verification
+          path: |
+            OPUS55_LONG_HORIZON_CONTINUITY_FRESH_VERIFICATION.json
+            PROCESS_A_RECEIPT.json
+            PROCESS_B_RECEIPT.json
+            continuity_fixture/canonical/same_identity_worker/state/CONTINUITY-TASK-001.json
+            continuity_fixture/canonical/same_identity_worker/evidence/*.json
+            continuity_fixture/canonical/work/COMPLETED_PHASE.json
+            continuity_fixture/canonical/work/RUNTIME_INVOCATIONS.txt
