@@ -1,0 +1,12 @@
+{
+  "schema": "BRAIN_NON_PARENT_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "purpose": "QUALIFY_BRAIN_PR496_EXPLICIT_RECIPE_FAILCLOSED_REPAIR",
+  "brain_pr": 496,
+  "brain_candidate_head": "d472da3082c8a26d16b91aad0997cb369ee5180e",
+  "canonical_base": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
