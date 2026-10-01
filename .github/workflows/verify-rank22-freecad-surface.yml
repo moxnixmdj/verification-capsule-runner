@@ -1,0 +1,29 @@
+name: Verify rank22 exact FreeCAD surface
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/rank22_surface/Dockerfile'
+      - '.github/workflows/verify-rank22-freecad-surface.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify exact Dockerfile bytes by git blob
+        run: |
+          test "$(git hash-object verification/rank22_surface/Dockerfile)" = "1bb433cd0994aa4f88e4e9d52040fd880e59b919"
+      - name: Build exact task environment
+        run: docker build --pull=false -t rank22-freecad-surface -f verification/rank22_surface/Dockerfile verification/rank22_surface
+      - name: Smoke exact runtime
+        run: |
+          docker run --rm rank22-freecad-surface bash -lc 'python --version; freecadcmd --version; python - <<"PY"
+import FreeCAD, Part, Sketcher
+print("FREECAD_VERSION", FreeCAD.Version())
+print("PART_OK", hasattr(Part,"makeLine"))
+print("SKETCHER_OK", hasattr(Sketcher,"Constraint"))
+PY'
+      - name: Emit immutable image identity
+        run: docker image inspect rank22-freecad-surface --format 'IMAGE_ID={{.Id}}'
