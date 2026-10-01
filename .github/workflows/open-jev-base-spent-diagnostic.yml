@@ -1,0 +1,39 @@
+name: Open Jev Base Spent Task Diagnostic
+
+on:
+  push:
+    paths:
+      - ".github/workflows/open-jev-base-spent-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout frozen inputs
+        uses: actions/checkout@v4
+
+      - name: Install model runtime
+        run: |
+          set -euo pipefail
+          python3 -m pip install --upgrade pip
+          python3 -m pip install torch transformers huggingface_hub
+
+      - name: Run calibrated spent-task diagnostic
+        env:
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: |
+          set -euo pipefail
+          python3 open_jev_base_diagnostic/run.py             --v2 cognitive_basis_probe/cases.jsonl             --task cognitive_kernel_real_task/task.json             --output open_jev_base_spent_diagnostic.json             --confidence-gate 0.80
+          cat open_jev_base_spent_diagnostic.json
+
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-jev-base-spent-task-diagnostic
+          path: open_jev_base_spent_diagnostic.json
+          if-no-files-found: warn
