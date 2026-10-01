@@ -354,10 +354,37 @@ def main():
             if lease is not None:
                 seen.add(cid)
                 if lease_authorized:
-                    post("<!-- BRAIN_FAST_BURST_LEASE_BLOCKED_V1 -->", {
-                        "schema": "BRAIN_FAST_BURST_LEASE_BLOCKED_V1",
+                    upgrade_errors = acceptance.validate_lease_upgrade(
+                        lease_payload,
+                        lease,
+                        CONFIG["session_id"],
+                        CONFIG["task"],
+                        next_burst=next_burst,
+                        acceptance_hash=acceptance_hash,
+                    )
+                    if not instruction_surfaced:
+                        upgrade_errors.append("LEASE_UPGRADE_REQUIRES_INSTRUCTION_SURFACED")
+                    if upgrade_errors:
+                        post("<!-- BRAIN_FAST_BURST_LEASE_BLOCKED_V1 -->", {
+                            "schema": "BRAIN_FAST_BURST_LEASE_BLOCKED_V1",
+                            "session_id": CONFIG["session_id"],
+                            "reason": upgrade_errors[0],
+                            "all_errors": upgrade_errors,
+                        })
+                        continue
+                    lease_payload = lease
+                    legacy.write_json(EVIDENCE / "canonical_lease_authorization.json", lease_payload)
+                    post("<!-- BRAIN_FAST_BURST_LEASE_UPGRADED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_UPGRADED_V1",
                         "session_id": CONFIG["session_id"],
-                        "reason": "CANONICAL_LEASE_ALREADY_BOUND",
+                        "task": CONFIG["task"],
+                        "canonical_brain_commit": lease["canonical_brain_commit"],
+                        "canonical_lease_path": lease["canonical_lease_path"],
+                        "sample_rank": lease["sample_rank"],
+                        "source_scope": "STAGE_B_INSTRUCTION_EXPOSURE_ONLY",
+                        "target_scope": "STAGE_C_ONE_SHOT_EXECUTION",
+                        "builder_commands_executed": 0,
+                        "instruction_exposed": True,
                     })
                     continue
                 if next_burst != 0 or acceptance_hash is not None:
