@@ -20,7 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install --upgrade pip
-          python3 -m pip install torch transformers huggingface_hub
+          python3 -m pip install torch transformers huggingface_hub sentencepiece
 
       - name: Run calibrated spent-task diagnostic
         env:
