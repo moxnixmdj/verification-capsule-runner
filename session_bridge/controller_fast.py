@@ -173,6 +173,92 @@ def replay_bootstrap():
     }
 
 
+
+def collect_execution_surface_profile():
+    """Fingerprint the already-built task container before instruction exposure.
+
+    This records package-management policy and Python runtime facts from the
+    exact execution surface so Stage-B feasibility cannot silently rely on a
+    materially different GitHub Actions/setup-python environment.
+    """
+    probe = r"""
+import hashlib, importlib.util, json, os, pathlib, platform, sys, sysconfig
+stdlib = sysconfig.get_path("stdlib") or ""
+marker = pathlib.Path(stdlib) / "EXTERNALLY-MANAGED" if stdlib else pathlib.Path("/nonexistent")
+os_release = {}
+try:
+    for line in pathlib.Path("/etc/os-release").read_text(encoding="utf-8", errors="replace").splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            os_release[k] = v.strip().strip('"')
+except Exception:
+    pass
+payload = {
+    "python_present": True,
+    "python_executable": sys.executable,
+    "python_version": platform.python_version(),
+    "python_implementation": platform.python_implementation(),
+    "stdlib_path": stdlib,
+    "externally_managed_marker_present": marker.is_file(),
+    "externally_managed_marker_path": str(marker),
+    "pip_module_present": importlib.util.find_spec("pip") is not None,
+    "venv_module_present": importlib.util.find_spec("venv") is not None,
+    "os_id": os_release.get("ID"),
+    "os_version_id": os_release.get("VERSION_ID"),
+}
+print(json.dumps(payload, sort_keys=True))
+"""
+    cp = legacy.run(
+        ["docker", "exec", "brain-bridge-task", "python3", "-c", probe],
+        check=False,
+    )
+    if cp.returncode != 0:
+        return {
+            "schema": "BRAIN_EXECUTION_SURFACE_PROFILE_V1",
+            "status": "PYTHON_PROFILE_UNAVAILABLE",
+            "python_present": False,
+            "probe_exit_code": cp.returncode,
+            "probe_stderr_tail": (cp.stderr or "")[-2000:],
+        }
+    try:
+        payload = json.loads((cp.stdout or "").strip())
+    except Exception as exc:
+        return {
+            "schema": "BRAIN_EXECUTION_SURFACE_PROFILE_V1",
+            "status": "PROFILE_PARSE_FAILED",
+            "python_present": True,
+            "probe_exit_code": cp.returncode,
+            "probe_stdout_tail": (cp.stdout or "")[-2000:],
+            "parse_error": type(exc).__name__,
+        }
+    payload["schema"] = "BRAIN_EXECUTION_SURFACE_PROFILE_V1"
+    payload["status"] = "OK"
+    payload["system_pip_mutation_policy"] = (
+        "PEP668_EXTERNALLY_MANAGED"
+        if payload.get("externally_managed_marker_present")
+        else "NO_PEP668_EXTERNALLY_MANAGED_MARKER"
+    )
+    stable = {
+        k: payload.get(k)
+        for k in (
+            "python_present",
+            "python_version",
+            "python_implementation",
+            "stdlib_path",
+            "externally_managed_marker_present",
+            "pip_module_present",
+            "venv_module_present",
+            "os_id",
+            "os_version_id",
+            "system_pip_mutation_policy",
+        )
+    }
+    payload["profile_sha256"] = hashlib.sha256(
+        json.dumps(stable, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return payload
+
+
 def normalize_artifact_contract(entries):
     """Normalize trusted task artifact metadata for this single-container carrier.
 
@@ -322,6 +408,8 @@ def main():
         return 0
 
     legacy.build_runtime(task_dir)
+    execution_surface_profile = collect_execution_surface_profile()
+    legacy.write_json(EVIDENCE / "execution_surface_profile.json", execution_surface_profile)
     artifact_paths = [item["source"] for item in artifact_contract]
     artifact_parent_dirs = sorted({str(Path(p).parent) for p in artifact_paths if str(Path(p).parent)})
     for parent in artifact_parent_dirs:
@@ -341,6 +429,8 @@ def main():
         "artifact_contract": artifact_contract,
         "verifier_environment_mode": verifier_environment_mode,
         "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
+        "execution_surface_profile": execution_surface_profile,
+        "execution_surface_profile_authority": "EXACT_BUILT_TASK_CONTAINER__PRE_INSTRUCTION__NO_TASK_SOLUTION_TEST_OR_VERIFIER_CONTENT",
     })
 
     seen = set()
