@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_CAUSE_CANDIDATE_FRESH_RANDOM_DAG_DIFFERENTIAL_V1",
+  "status": "FRESH_STRUCTURAL_DIFFERENTIAL__ZERO_FAMILY_CREDIT",
+  "seed": 202610010821,
+  "generated_cases": 1000,
+  "candidate_source_blob_sha": "a35f17a3c4c4cab557f886e0825d74621cd081df",
+  "donor": {
+    "repo": "ShaneDolphin/pyrapide",
+    "revision": "d1dc66efbefe3442e247ac896416bf00c25d3ca1",
+    "license": "MIT"
+  },
+  "mismatch_count": 0,
+  "exact_set_equivalence_fraction": 1.0,
+  "nonempty_candidate_case_fraction": 0.62,
+  "total_brain_candidates": 1055,
+  "total_donor_candidates": 1055,
+  "mismatches": [],
+  "donor_runtime_required_by_candidate": false,
+  "external_runtime_dependencies_of_candidate": [],
+  "interpretation_rule": "PASS_VERIFIES_THE_BRAIN_OWNED_NARROW_EXPLICIT_CAUSAL_DAG_TRANSFORM_OVER_FRESH_RANDOM_STRUCTURES__IT_DOES_NOT_PROVE_CAUSAL_EDGE_DISCOVERY_OR_GENERAL_ROOT_CAUSE_INTELLIGENCE",
+  "capability_credit_delta": 0
+}
