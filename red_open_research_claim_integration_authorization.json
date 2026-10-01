@@ -1,0 +1,9 @@
+{
+  "brain_base": "f0f87c981d77b552caa21844e6bcc7b83116f339",
+  "incremental_spend_usd": 0,
+  "parent_task_execution": false,
+  "purpose": "RED_TDD_DIAGNOSTIC_ONLY__NO_PARENT_TASK_EXECUTION",
+  "schema": "BRAIN_NON_PARENT_DIAGNOSTIC_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "task": "Verify the current unintegrated open-research path fails the claim/relation integration behavioral test."
+}
