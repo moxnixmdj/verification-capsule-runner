@@ -1,8 +1,9 @@
 import random, unittest
 from acceptance_contract import (
   canonical_payload_hash, validate_acceptance_payload, validate_lease_authorization,
-  terminal_acceptance_errors, audit_required_graph
+  validate_lease_revalidation, terminal_acceptance_errors, audit_required_graph
 )
+from controller_fast import runtime_authority_errors
 
 def base_payload():
     return {
@@ -41,6 +42,59 @@ class TestAcceptanceContract(unittest.TestCase):
     self.assertIn("LEASE_NOT_CONFIRMED_MERGED_TO_MAIN",validate_lease_authorization(bad,"s1","t1"))
     bad=dict(good); bad["canonical_brain_commit"]="not-a-commit"
     self.assertIn("CANONICAL_BRAIN_COMMIT_INVALID",validate_lease_authorization(bad,"s1","t1"))
+
+
+  def test_per_action_lease_revalidation_is_single_scope_and_burst_bound(self):
+    lease={
+      "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"lease_merged_to_main":True,
+      "canonical_brain_commit":"a"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+    }
+    burst={
+      "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"scope":"BURST","burst_id":0,
+      "canonical_brain_commit":"b"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+    }
+    self.assertEqual(validate_lease_revalidation(
+      burst,"s1","t1",lease,expected_scope="BURST",expected_burst_id=0
+    ),[])
+    self.assertIn("LEASE_REVALIDATION_BURST_MISMATCH",validate_lease_revalidation(
+      burst,"s1","t1",lease,expected_scope="BURST",expected_burst_id=1
+    ))
+    self.assertIn("PER_ACTION_CANONICAL_LEASE_REVALIDATION_REQUIRED",runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=None,scope="BURST",burst_id=0,pr_open=True
+    ))
+    self.assertIn("RUNNER_PR_NOT_OPEN",runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=burst,scope="BURST",burst_id=0,pr_open=False
+    ))
+    self.assertEqual(runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=burst,scope="BURST",burst_id=0,pr_open=True
+    ),[])
+
+  def test_terminal_requires_fresh_terminal_revalidation(self):
+    lease={
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+    }
+    terminal={
+      "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"scope":"TERMINAL",
+      "canonical_brain_commit":"c"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+    }
+    self.assertEqual(runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=terminal,scope="TERMINAL",pr_open=True
+    ),[])
+    terminal["scope"]="BURST"; terminal["burst_id"]=0
+    self.assertIn("LEASE_REVALIDATION_SCOPE_MISMATCH",runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=terminal,scope="TERMINAL",pr_open=True
+    ))
 
   def test_valid_and_hash_stable(self):
     p=base_payload()
