@@ -1,0 +1,10 @@
+{
+  "command_sha256": "2f1a96ef9cdee9295049f5c3275617e9692c6ed62305939b50dbe324f85c7359",
+  "duration_sec": 2.127,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "stderr": "",
+  "stdout": "KEYS 163\nMAX_ABS_DIFF 16.504850387573242\nMEAN_ABS_DIFF 2.859964370727539\nEXACT_EQUAL False\nALLCLOSE_1E6 False\nOUTPUT_BYTES 186721216\nDEV_KEEP\nMP_CONSOLIDATION_AUTHORED_PASS\nTP_REPLICATION\nL 1 router [0.0, 0.0, 0.0, 0.0]\nL 1 bias [0.0, 0.0, 0.0, 0.0]\nL 3 router [0.0, 0.0, 0.0, 0.0]\nL 3 bias [0.0, 0.0, 0.0, 0.0]\nL 5 router [0.0, 0.0, 0.0, 0.0]\nL 5 bias [0.0, 0.0, 0.0, 0.0]\nL 7 router [0.0, 0.0, 0.0, 0.0]\nL 7 bias [0.0, 0.0, 0.0, 0.0]\nEP_REPLICATION_ALL_NONROUTED\n0 0 bad []\n1 0 bad []\n2 0 bad []\n3 0 bad []\n0 1 bad []\n1 1 bad []\n2 1 bad []\n3 1 bad []\nL 0 QKV_RESPLIT_MAX 0.0\nL 1 QKV_RESPLIT_MAX 0.0\nL 2 QKV_RESPLIT_MAX 0.0\nL 3 QKV_RESPLIT_MAX 0.0\nL 4 QKV_RESPLIT_MAX 0.0\nL 5 QKV_RESPLIT_MAX 0.0\nL 6 QKV_RESPLIT_MAX 0.0\nL 7 QKV_RESPLIT_MAX 0.0\nGLOBAL_QKV_RESPLIT_MAX 0.0\n",
+  "step": 24
+}
