@@ -1,0 +1,26 @@
+{
+  "schema": "RANK21_STAGE_B_READY_SURFACE_V1",
+  "runner_pr": 393,
+  "comment_id": 5941288937,
+  "task": "foodstuff-beta-activity",
+  "session_id": "foodstuff-beta-activity-20261001-stageb-v1",
+  "artifact_contract": [
+    {
+      "source": "/app/results.txt",
+      "destination": "/app/results.txt",
+      "exclude": [],
+      "service": null
+    }
+  ],
+  "verifier_environment_mode": "separate",
+  "execution_surface_profile": {
+    "os": "Debian GNU/Linux 13 (trixie)",
+    "python": "3.12.14",
+    "pip_available": true,
+    "venv_usable": true,
+    "externally_managed": false,
+    "status": "PASS"
+  },
+  "task_execution_occurred": false,
+  "terminal_verifier_executed": false
+}
