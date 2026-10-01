@@ -6,6 +6,11 @@ on:
       - ".github/workflows/cognitive-c9-nli-probe.yml"
       - "cognitive_c9_nli_probe/cases.json"
       - "cognitive_c9_nli_probe/probe.py"
+  pull_request:
+    paths:
+      - ".github/workflows/cognitive-c9-nli-probe.yml"
+      - "cognitive_c9_nli_probe/cases.json"
+      - "cognitive_c9_nli_probe/probe.py"
 
 permissions:
   contents: write
@@ -50,7 +55,7 @@ jobs:
             cognitive_c9_nli_probe/run.log
           if-no-files-found: warn
       - name: Persist observable terminal status
-        if: always()
+        if: always() && github.event_name == 'push'
         shell: bash
         env:
           MEASUREMENT_OUTCOME: ${{ steps.measurement.outcome }}
