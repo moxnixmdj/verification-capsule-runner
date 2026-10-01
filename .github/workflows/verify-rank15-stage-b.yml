@@ -31,7 +31,7 @@ jobs:
         run: docker build --pull=false -t brain-wdm-preflight -f /tmp/wdm-env/Dockerfile /tmp/wdm-env
       - name: Verify pymeep imports and bounded CPU FDTD
         run: |
-          docker run --rm brain-wdm-preflight python - <<'PY'
+          docker run --rm -i brain-wdm-preflight python - <<'PY'
           import time
           import numpy as np
           import scipy
@@ -46,5 +46,5 @@ jobs:
           sim.run(until=1)
           dt=time.time()-t0
           assert dt < 120, dt
-          print({"meep_version":getattr(mp,"__version__","unknown"),"numpy":np.__version__,"scipy":scipy.__version__,"bounded_fdtd_seconds":dt,"candidate_task_executed":False})
+          print({"receipt":"MEEP_PREFLIGHT_EXECUTED","meep_version":getattr(mp,"__version__","unknown"),"numpy":np.__version__,"scipy":scipy.__version__,"bounded_fdtd_seconds":dt,"candidate_task_executed":False}, flush=True)
           PY
