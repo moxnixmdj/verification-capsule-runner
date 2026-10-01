@@ -78,3 +78,4 @@ jobs:
           grep -q '"ok":true' /tmp/health.json
           grep -q 'id="root"' /tmp/front.html
           docker inspect "$cid" --format '{{.HostConfig.NanoCpus}} {{.HostConfig.Memory}}' | grep -q '^2000000000 8589934592
+
