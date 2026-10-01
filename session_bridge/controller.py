@@ -279,7 +279,10 @@ def stage_missing_artifacts(artifacts):
         candidates = []
         for root in roots:
             src = str(Path(root) / basename)
-            probe = run(["docker", "exec", "brain-bridge-task", "test", "-e", src], check=False)
+            # Preserve historical fallback staging semantics: fallback
+            # discovery is for uniquely named files only. Directory artifacts
+            # must be written at their contractual source path by the builder.
+            probe = run(["docker", "exec", "brain-bridge-task", "test", "-f", src], check=False)
             if probe.returncode == 0:
                 candidates.append(src)
         candidates = sorted(set(candidates))
