@@ -314,6 +314,12 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
         payload.get("continuous_obs"),
         expected_brain_commit=commit if isinstance(commit,str) else None,
     ))
+    scope=str(payload.get("scope") or "")
+    if scope in {"STAGE_B_INSTRUCTION_EXPOSURE_ONLY","STAGE_C_ONE_SHOT_EXECUTION"}:
+        info=(payload.get("continuous_obs") or {}).get("information_policy") if isinstance(payload.get("continuous_obs"),dict) else None
+        mode=info.get("mode") if isinstance(info,dict) else None
+        if mode not in {"EXACT_FETCH_ONLY","NO_EXTERNAL_INFORMATION"}:
+            errors.append("POST_EXPOSURE_EXTERNAL_DISCOVERY_NOT_DISABLED")
     if payload.get("task_execution_authorized") is True or payload.get("scope") == "STAGE_C_ONE_SHOT_EXECUTION":
         execution_budget = payload.get("execution_count_allowed")
         terminal_budget = payload.get("terminal_verifier_count_allowed")
@@ -441,6 +447,12 @@ def validate_lease_revalidation(
         payload.get("continuous_obs"),
         expected_brain_commit=commit if isinstance(commit,str) else None,
     ))
+    bound_scope=str(bound_lease.get("scope") or "")
+    if bound_scope=="STAGE_C_ONE_SHOT_EXECUTION":
+        info=(payload.get("continuous_obs") or {}).get("information_policy") if isinstance(payload.get("continuous_obs"),dict) else None
+        mode=info.get("mode") if isinstance(info,dict) else None
+        if mode not in {"EXACT_FETCH_ONLY","NO_EXTERNAL_INFORMATION"}:
+            errors.append("POST_EXPOSURE_EXTERNAL_DISCOVERY_NOT_DISABLED")
     if expected_scope == "BURST":
         if not isinstance(expected_burst_id, int) or expected_burst_id < 0:
             errors.append("LEASE_REVALIDATION_EXPECTED_BURST_INVALID")
