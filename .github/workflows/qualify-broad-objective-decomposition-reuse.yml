@@ -1,0 +1,51 @@
+name: Qualify Broad Objective Decomposition Reuse
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+permissions:
+  contents: read
+jobs:
+  qualify:
+    if: github.head_ref == 'verify/broad-objective-decomposition-reuse-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify exact proposed bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/broad_objective_decompose.py)" = "6eb2b20e860da466ad8b793c20060ded1fbf389b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py)" = "da42f0615380027f963044f80e55ddfa1d73ced1"
+          test "$(git hash-object canonical/tests/test_broad_objective_semantic_decomposition.py)" = "d785eaa1e8feb7ab93e3de65cbd3b1605350f3a8"
+      - name: Run authored cross-domain regressions
+        run: python canonical/tests/test_broad_objective_semantic_decomposition.py
+      - name: Independent fresh-objective oracle
+        run: |
+          python - <<'PY'
+          import importlib.util, pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/broad_objective_decompose.py")
+          s=importlib.util.spec_from_file_location("dec",p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+          fresh=[
+            "Determine whether a lithium-ion cell's measured capacity retention differs between two temperature conditions",
+            "Assess whether a public software project's issue closure rate changed between two adjacent six-month periods",
+            "Compare the reported tensile strength of two alloy conditions using authoritative evidence",
+          ]
+          expected=["SOURCE_DISCOVERY","EVIDENCE_ACQUISITION","EVIDENCE_EXTRACTION","RELATION_EVALUATION","DECISION_SYNTHESIS_AND_VERIFICATION"]
+          for g in fresh:
+              r=m.decompose(g)
+              assert r["status"]=="DECOMPOSED", r
+              assert [x["role"] for x in r["roles"]]==expected, r
+              assert r["invented_source_urls"]==[] and r["invented_facts"]==[]
+              assert r["task_specific_literals_added"]==[]
+              assert r["model_dependency_count"]==0
+          for bad in ["", "Create output.json with one record", "Determine whether x using https://example.com/data"]:
+              r=m.decompose(bad)
+              assert r["status"]=="UNSUPPORTED", r
+          print("INDEPENDENT_BROAD_OBJECTIVE_DECOMPOSITION_PASS")
+          PY

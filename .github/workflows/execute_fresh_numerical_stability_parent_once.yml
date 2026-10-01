@@ -1,0 +1,125 @@
+name: Execute Fresh Numerical Stability Parent Once
+
+on:
+  push:
+    branches:
+      - execute/fresh-numerical-stability-parent-a-20260930-v1
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  execute-once:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_PR: "109"
+      TASK_ID: PARENT-OPENENDED-FLOATING-POINT-SUMMATION-STABILITY-REAL-TASK-20260930-002
+      TASK_PATH: canonical/tasks/PARENT_OPENENDED_FLOATING_POINT_SUMMATION_STABILITY_REAL_TASK_20260930_002.json
+      MISSION_PATH: canonical/astra_runtime/missions/PARENT_OPENENDED_FLOATING_POINT_SUMMATION_STABILITY_REAL_TASK_20260930_002.json
+      EXPECTED_TASK_BLOB: f07448644ca7f88fdfa438144f2b971596cab06f
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fail-closed prestart qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _terminal
+          test -f canonical/runtime/bound_capabilities/broad_objective_decompose.py
+          test -f canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+          test -f canonical/runtime/astra_runtime.py
+          test -f canonical/tests/test_broad_objective_semantic_decomposition.py
+          test -f "$TASK_PATH"
+          test -f "$MISSION_PATH"
+          test "$(git hash-object "$TASK_PATH")" = "$EXPECTED_TASK_BLOB"
+          grep -Fq '"exactly_one_execution": true' "$TASK_PATH"
+          grep -Fq '"no_same_task_replay": true' "$MISSION_PATH"
+          grep -Fq 'broad_objective_decomposition_available' canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+          ! grep -Fq 'PARENT-OPENENDED-SQLITE-BACKUP-CONSISTENCY-REAL-TASK-20260930-001' canonical/runtime/astra_runtime.py
+          python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/bound_capabilities/broad_objective_decompose.py canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+          python canonical/tests/test_broad_objective_semantic_decomposition.py | tee _terminal/prestart_test.log
+          printf '%s\n' 'PARENT_PRESTART_QUALIFIED' | tee _terminal/prestart_report.txt
+          old=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" --jq '.body // ""' || true)
+          if [ -n "$old" ]; then
+            clean=$(printf '%s\n' "$old" | sed '/<!-- LIVE_PRESTART_BEGIN -->/,/<!-- LIVE_PRESTART_END -->/d')
+            new=$(printf '%s\n\n<!-- LIVE_PRESTART_BEGIN -->\nPARENT_PRESTART_QUALIFIED\nTASK_BLOB=%s\n<!-- LIVE_PRESTART_END -->\n' "$clean" "$EXPECTED_TASK_BLOB")
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" -f body="$new" >/dev/null || true
+          fi
+
+      - name: Execute frozen parent exactly once
+        id: producer
+        shell: bash
+        run: |
+          set +e
+          python canonical/runtime/astra_runtime.py "$MISSION_PATH" 2>&1 | tee _terminal/producer.log
+          code=${PIPESTATUS[0]}
+          printf 'exit_code=%s\n' "$code" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$code" > _terminal/producer_exit_code.txt
+          exit 0
+
+      - name: Publish producer receipt
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          code="${{ steps.producer.outputs.exit_code }}"
+          if [ -z "$code" ]; then code="NOT_STARTED"; fi
+          complete="false"
+          if [ -f _terminal/producer.log ] && grep -Fq 'COMPOUND_GOAL_COMPLETE' _terminal/producer.log; then complete="true"; fi
+          signal=""
+          if [ -f _terminal/producer.log ]; then
+            signal=$(grep -E -m3 'PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1|CAPABILITY_ACQUISITION_REQUIRED|GOAL_ARCHITECTURAL_GAP|NO_COMPATIBLE_|COMPOUND_GOAL_COMPLETE|Blocker:' _terminal/producer.log | tr '\n\r' '  ' | cut -c1-5000)
+          fi
+          receipt=$(printf 'PRODUCER_EXIT_CODE=%s\nSEMANTIC_COMPLETE=%s\nFIRST_SIGNAL=%s' "$code" "$complete" "$signal")
+          old=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" --jq '.body // ""' || true)
+          if [ -n "$old" ]; then
+            clean=$(printf '%s\n' "$old" | sed '/<!-- LIVE_PRODUCER_BEGIN -->/,/<!-- LIVE_PRODUCER_END -->/d')
+            new=$(printf '%s\n\n<!-- LIVE_PRODUCER_BEGIN -->\n%s\n<!-- LIVE_PRODUCER_END -->\n' "$clean" "$receipt")
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$TARGET_PR" -f body="$new" >/dev/null || true
+          fi
+          exit 0
+
+      - name: Preserve terminal evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _terminal/snapshot
+          cp "$TASK_PATH" _terminal/snapshot/task.json
+          cp "$MISSION_PATH" _terminal/snapshot/mission.json
+          if [ -d canonical/astra_runtime/evidence ]; then cp -R canonical/astra_runtime/evidence _terminal/snapshot/evidence; fi
+          if [ -d canonical/astra_runtime/state ]; then cp -R canonical/astra_runtime/state _terminal/snapshot/state; fi
+          find canonical/astra_runtime -maxdepth 3 -type f \( -name '*PARENT-OPENENDED-FLOATING-POINT-SUMMATION-STABILITY-REAL-TASK-20260930-002*' -o -name '*BLOCKER*' -o -name '*controller*' \) -print > _terminal/relevant_paths.txt || true
+          while IFS= read -r p; do
+            [ -f "$p" ] || continue
+            dest="_terminal/snapshot/extra/${p#canonical/astra_runtime/}"
+            mkdir -p "$(dirname "$dest")"
+            cp "$p" "$dest"
+          done < _terminal/relevant_paths.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fresh-numerical-stability-parent-terminal
+          path: _terminal/
+          if-no-files-found: error
+
+      - name: Enforce producer terminal status
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          code="${{ steps.producer.outputs.exit_code }}"
+          test -n "$code"
+          if [ "$code" != "0" ]; then
+            echo "PARENT_PRODUCER_FAILED_EXIT_$code"
+            exit "$code"
+          fi
+          grep -Fq 'COMPOUND_GOAL_COMPLETE' _terminal/producer.log
+          echo "PARENT_PRODUCER_SEMANTIC_COMPLETE"
