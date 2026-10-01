@@ -5,6 +5,10 @@ on:
     paths:
       - ".github/workflows/verify-c3-deterministic-router.yml"
       - "cognitive_c3_filtered_probe/**"
+  pull_request:
+    paths:
+      - ".github/workflows/verify-c3-deterministic-router.yml"
+      - "cognitive_c3_filtered_probe/**"
 
 permissions:
   contents: write
@@ -20,18 +24,22 @@ jobs:
         shell: bash
         run: |
           set +e
-          {
-            set -euo pipefail
-            test "$(git hash-object cognitive_c3_filtered_probe/cognitive_tool_router.py)" = "e947d086225aa165895dc5addd4847fb686b3454"
-            test "$(git hash-object cognitive_c3_filtered_probe/test_cognitive_tool_router.py)" = "114364aae54aa2ec2f55613fb73125d361f7dc3f"
-            python cognitive_c3_filtered_probe/test_cognitive_tool_router.py
-          } > cognitive_c3_filtered_probe/verify.log 2>&1
-          rc=$?
+          : > cognitive_c3_filtered_probe/verify.log
+          test "$(git hash-object cognitive_c3_filtered_probe/cognitive_tool_router.py)" = "e947d086225aa165895dc5addd4847fb686b3454"
+          hash_router_rc=$?
+          test "$(git hash-object cognitive_c3_filtered_probe/test_cognitive_tool_router.py)" = "114364aae54aa2ec2f55613fb73125d361f7dc3f"
+          hash_test_rc=$?
+          python cognitive_c3_filtered_probe/test_cognitive_tool_router.py >> cognitive_c3_filtered_probe/verify.log 2>&1
+          test_rc=$?
           cat cognitive_c3_filtered_probe/verify.log
+          rc=0
+          test "$hash_router_rc" -eq 0 || rc=1
+          test "$hash_test_rc" -eq 0 || rc=1
+          test "$test_rc" -eq 0 || rc=1
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
-          exit $rc
+          exit "$rc"
       - name: Persist terminal verification receipt
-        if: always()
+        if: always() && github.event_name == 'push'
         shell: bash
         env:
           VERIFY_OUTCOME: ${{ steps.verify.outcome }}
