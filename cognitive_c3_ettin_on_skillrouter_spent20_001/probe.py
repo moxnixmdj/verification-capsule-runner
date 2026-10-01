@@ -30,11 +30,11 @@ for ep in data["episodes"]:
     eligible=m.eligible_routes(routes,required_provider=ep.get("required_provider"),allowed_route_ids=allowed)
     t0=time.perf_counter()
     if len(eligible)==0:
-        d=m.RouteDecision(status="ESCALATE",route_id=None,reason="NO_DETERMINISTICALLY_ADMISSIBLE_ROUTE",eligible_route_ids=())
+        d=m.RouteDecision(status="ESCALATE",route_id=None,reason="NO_DETERMINISTICALLY_ADMISSIBLE_ROUTE",score=None,eligible_route_ids=())
         route_scores={}
         margin=None
     elif len(eligible)==1:
-        d=m.RouteDecision(status="SELECT",route_id=eligible[0].route_id,reason="SINGLE_DETERMINISTICALLY_ADMISSIBLE_ROUTE",eligible_route_ids=(eligible[0].route_id,))
+        d=m.RouteDecision(status="SELECT",route_id=eligible[0].route_id,reason="SINGLE_DETERMINISTICALLY_ADMISSIBLE_ROUTE",score=None,eligible_route_ids=(eligible[0].route_id,))
         route_scores={eligible[0].route_id:None}
         margin=None
     else:
@@ -43,7 +43,7 @@ for ep in data["episodes"]:
         order=sorted(range(len(vals)),key=lambda i:vals[i],reverse=True)
         top=order[0]
         margin=float(vals[order[0]]-vals[order[1]]) if len(order)>1 else None
-        d=m.RouteDecision(status="SELECT",route_id=eligible[top].route_id,reason="SEMANTIC_RERANK_AMONG_DETERMINISTICALLY_ADMISSIBLE_ROUTES",eligible_route_ids=tuple(r.route_id for r in eligible))
+        d=m.RouteDecision(status="SELECT",route_id=eligible[top].route_id,reason="SEMANTIC_RERANK_AMONG_DETERMINISTICALLY_ADMISSIBLE_ROUTES",score=float(vals[top]),eligible_route_ids=tuple(r.route_id for r in eligible))
     ms=(time.perf_counter()-t0)*1000
 
     expected_status=ep.get("expected_status","SELECT")
