@@ -17,10 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pinned PyRCA
+      - name: Install pinned PyRCA with Python-3.12-compatible carrier deps
         run: |
           set -euo pipefail
-          PIP_DEFAULT_TIMEOUT=60 python -m pip install "git+https://github.com/salesforce/PyRCA.git@411310d589fac5cb8e7bdce67d33eadb091a1083"
+          PIP_DEFAULT_TIMEOUT=60 python -m pip install "numpy>=2,<3" "pandas>=2,<4" "networkx>=3,<4" "scikit-learn>=1.5,<2" "scipy>=1.13,<2" "schema>=0.7,<1" "pyyaml>=6,<7"
+          PIP_DEFAULT_TIMEOUT=60 python -m pip install --no-deps "git+https://github.com/salesforce/PyRCA.git@411310d589fac5cb8e7bdce67d33eadb091a1083"
 
       - name: Run residual cause-ranking screen
         id: screen
