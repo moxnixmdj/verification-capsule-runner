@@ -31,12 +31,20 @@ def obs(commit, mode="EXACT_FETCH_ONLY"):
 
 
 def authority_preflight(task):
+    raw = [
+        ("STAGE_A_PASS", "stage-a"),
+        ("STAGE_B_PASS", "stage-b"),
+        ("SOURCE_BOUNDARY_PASS", "source-boundary"),
+        ("EXECUTION_SURFACE_PASS", "execution-surface"),
+        ("ACCEPTANCE_FROZEN", "acceptance"),
+        ("MINIMUM_REALITY_CUT_PASS", "minimum-reality-cut"),
+        ("RUNTIME_API_PREFLIGHT_PASS", "runtime-api"),
+        ("LEASE_ISSUED", "lease"),
+        ("CARRIER_OPEN", {"pr": 999, "head": "fixture"}),
+    ]
     events=[]
     prev=None
-    for seq,typ in enumerate((
-        "STAGE_A_PASS","STAGE_B_PASS","SOURCE_BOUNDARY_PASS",
-        "EXECUTION_SURFACE_PASS","LEASE_ISSUED","CARRIER_OPEN",
-    )):
+    for seq,(typ,evidence) in enumerate(raw):
         e={
             "schema":authority_reducer.SCHEMA,
             "event_id":f"auth-{seq}",
@@ -44,6 +52,7 @@ def authority_preflight(task):
             "seq":seq,
             "prev_event_sha256":prev,
             "type":typ,
+            "evidence":evidence,
         }
         e["event_sha256"]=authority_reducer.canonical_event_hash(e)
         prev=e["event_sha256"]
@@ -51,9 +60,11 @@ def authority_preflight(task):
     derived=authority_reducer.derive_authority(
         events,task=task,execution_budget=1,verifier_budget=1
     )
+    assert derived["valid"] is True
+    assert derived["can_execute"] is True
     return {
         "schema":"BRAIN_DERIVED_AUTHORITY_PREFLIGHT_V1",
-        "reducer_git_blob_sha":"d7dcb02e051003996c44b6dd52b78dad7908810e",
+        "reducer_git_blob_sha":"d49deb24be6a0ac268c700f788777c39fe33086d",
         "events":events,
         "state_sha256":derived["state_sha256"],
     }
