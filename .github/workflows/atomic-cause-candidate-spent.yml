@@ -41,6 +41,13 @@ jobs:
           set -euo pipefail
           python atomic_cause_candidate_spent/verify_brain_owned.py | tee atomic_cause_candidate_spent/brain_owned_run.log
 
+      - name: Verify fresh random DAG transfer
+        id: fresh_transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python atomic_cause_candidate_spent/verify_fresh_random_dags.py | tee atomic_cause_candidate_spent/fresh_random_dag_run.log
+
       - name: Persist visible result
         if: always()
         shell: bash
@@ -70,8 +77,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add atomic_cause_candidate_spent/status.json atomic_cause_candidate_spent/run.log
           test ! -f atomic_cause_candidate_spent/brain_owned_run.log || git add atomic_cause_candidate_spent/brain_owned_run.log
+          test ! -f atomic_cause_candidate_spent/fresh_random_dag_run.log || git add atomic_cause_candidate_spent/fresh_random_dag_run.log
           test ! -f atomic_cause_candidate_spent/result.json || git add atomic_cause_candidate_spent/result.json
           test ! -f atomic_cause_candidate_spent/brain_owned_result.json || git add atomic_cause_candidate_spent/brain_owned_result.json
+          test ! -f atomic_cause_candidate_spent/fresh_random_dag_result.json || git add atomic_cause_candidate_spent/fresh_random_dag_result.json
           git commit -m "Record atomic cause candidate generation spent screen" || exit 0
           git pull --rebase origin main
           git push
