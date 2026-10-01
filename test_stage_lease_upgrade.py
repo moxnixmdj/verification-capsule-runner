@@ -59,7 +59,7 @@ class LeaseUpgradeTests(unittest.TestCase):
 
     def test_replay_enabled_fails(self):
         x=dict(self.stage_c); x["replay_for_credit"]=True
-        self.assertIn("LEASE_UPGRADE_REPLAY_POLICY_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
+        self.assertIn("REPLAY_POLICY_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
 
 
 if __name__ == "__main__":
