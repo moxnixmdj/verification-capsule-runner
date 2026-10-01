@@ -65,6 +65,57 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
     rank = payload.get("sample_rank")
     if not isinstance(rank, int) or rank < 1:
         errors.append("SAMPLE_RANK_INVALID")
+
+    # Stage-C authority is not merely a boolean. Its total execution and
+    # terminal-verifier budgets are part of the authority and must travel with
+    # the bound lease so the runner can enforce them locally.
+    if payload.get("task_execution_authorized") is True or payload.get("scope") == "STAGE_C_ONE_SHOT_EXECUTION":
+        execution_budget = payload.get("execution_count_allowed")
+        terminal_budget = payload.get("terminal_verifier_count_allowed")
+        if not isinstance(execution_budget, int) or isinstance(execution_budget, bool) or execution_budget < 0:
+            errors.append("CANONICAL_EXECUTION_BUDGET_INVALID")
+        if not isinstance(terminal_budget, int) or isinstance(terminal_budget, bool) or terminal_budget < 0:
+            errors.append("CANONICAL_TERMINAL_BUDGET_INVALID")
+        if payload.get("replay_for_credit") is not False:
+            errors.append("STAGE_C_REPLAY_POLICY_INVALID")
+    return errors
+
+
+def validate_execution_budget(
+    bound_lease: Mapping[str, Any],
+    *,
+    accepted_bursts: int,
+    terminal_verifier_count: int,
+    action: str,
+) -> list[str]:
+    """Fail closed on total Stage-C execution/verifier authority.
+
+    accepted_bursts counts already accepted Stage-C command bursts. A lease
+    allowing one execution therefore permits burst 0 and rejects burst 1.
+    """
+    errors: list[str] = []
+    if not isinstance(bound_lease, Mapping):
+        return ["BOUND_LEASE_NOT_OBJECT"]
+    if bound_lease.get("task_execution_authorized") is not True:
+        errors.append("TASK_EXECUTION_NOT_AUTHORIZED")
+
+    execution_budget = bound_lease.get("execution_count_allowed")
+    terminal_budget = bound_lease.get("terminal_verifier_count_allowed")
+    if not isinstance(execution_budget, int) or isinstance(execution_budget, bool) or execution_budget < 0:
+        errors.append("CANONICAL_EXECUTION_BUDGET_MISSING_OR_INVALID")
+    if not isinstance(terminal_budget, int) or isinstance(terminal_budget, bool) or terminal_budget < 0:
+        errors.append("CANONICAL_TERMINAL_BUDGET_MISSING_OR_INVALID")
+    if errors:
+        return errors
+
+    if action == "BURST":
+        if accepted_bursts >= execution_budget:
+            errors.append("CANONICAL_EXECUTION_BUDGET_EXHAUSTED")
+    elif action == "TERMINAL":
+        if terminal_verifier_count >= terminal_budget:
+            errors.append("CANONICAL_TERMINAL_BUDGET_EXHAUSTED")
+    else:
+        errors.append("CANONICAL_BUDGET_ACTION_INVALID")
     return errors
 
 
