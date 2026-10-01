@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+  "probe": "C3_FILTERED_ETTIN_FRESH_TRANSFER",
+  "workflow_run_id": "36821377439",
+  "head_sha": "cdc3087c5facf633b5707137fb66a8931b10d522",
+  "probe_outcome": "success",
+  "probe_rc": "0",
+  "result_exists": true,
+  "terminal_state": "SUCCESS",
+  "capability_credit_delta": 0
+}
