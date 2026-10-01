@@ -1,0 +1,10 @@
+{
+  "command_sha256": "b1aacdf932aec4e3b6c0d0b9c24801370c36efa74b98d473f3d26d3500d3ed79",
+  "duration_sec": 4.228,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-20261001-v1",
+  "stderr": "",
+  "stdout": "SAVED 163 186721216\nbaseline 16.504859924316406 2.859964370727539\ndense_gateup_half 33.86111068725586 5.909003257751465\nshared_gateup_half 32.698097229003906 5.7218427658081055\nexpert_map_contiguous 16.13466453552246 2.842755079269409\nvocab_interleaved 136.567626953125 25.337730407714844\n",
+  "step": 15
+}
