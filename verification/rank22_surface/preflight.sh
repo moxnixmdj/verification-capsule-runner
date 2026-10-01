@@ -3,7 +3,7 @@ CTX=/tmp/rank22-freecad-surface
 rm -rf "$CTX"
 mkdir -p "$CTX"
 curl -LfsS "https://raw.githubusercontent.com/harbor-framework/terminal-bench/452bf305c6daa62fc59061d22133a7cbc7c1572e/tasks/freecad-spring-clip/environment/Dockerfile" -o "$CTX/Dockerfile"
-test "$(sha1sum "$CTX/Dockerfile" | awk '{print $1}')" = "1bb433cd0994aa4f88e4e9d52040fd880e59b919"
+test "$(git hash-object "$CTX/Dockerfile")" = "1bb433cd0994aa4f88e4e9d52040fd880e59b919"
 docker build -t rank22-freecad-preflight "$CTX"
 docker run --rm -v "$PWD:/evidence" rank22-freecad-preflight bash -lc '
 set -euo pipefail
