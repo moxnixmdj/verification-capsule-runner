@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_NON_PARENT_GUARDED_QUALIFICATION_AUTHORIZATION_V1",
+  "status": "AUTHORIZED",
+  "brain_pr": 496,
+  "brain_head_sha": "d472da3082c8a26d16b91aad0997cb369ee5180e",
+  "brain_base_sha": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+  "scope": "EXPLICIT_RECIPE_FAILCLOSED_V2_EXACT_BYTE_ADVERSARIAL_QUALIFICATION",
+  "producer_blobs": {
+    "broad_objective_decompose": "3ded762075ed222228a14877af631f1e2e6d9e4c",
+    "plain_goal_bound_grounding": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+    "authored_regressions": "4717bd5ebf4b4e6521abf331e93e9675c1b8a785"
+  },
+  "authoritative_red_run": 36689999285,
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "frozen_genomics_task_execution": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}
