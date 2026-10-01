@@ -64,7 +64,7 @@ def build_contract_for_source(spec,text,source_name):
 
 class StageB(unittest.TestCase):
     def test_candidate_hash_and_syntax(self):
-        self.assertEqual(hashlib.sha256(CANDIDATE).hexdigest(),CONTRACT["candidate_answer_sha256"])
+        git_blob=hashlib.sha1(b"blob "+str(len(CANDIDATE)).encode()+b"\\0"+CANDIDATE).hexdigest()\n        self.assertEqual(git_blob,CONTRACT["candidate_answer_git_blob"])
         compile(CANDIDATE.decode(),"<candidate>","exec")
 
     def test_lossless_sources_and_zero_open_holes(self):
@@ -138,4 +138,4 @@ class StageB(unittest.TestCase):
             self.assertGreater(c["connector_turn_deg"],0)
 
 if __name__=="__main__":
-    unittest.main(verbosity=2)
+    unittest.main(argv=[sys.argv[0]],verbosity=2)
