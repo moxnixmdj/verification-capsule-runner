@@ -1,0 +1,10 @@
+{
+  "command_sha256": "67ccdfd600310d0392699f550f60f8810af5e2ce24a5c2a42c1c630ee62c1269",
+  "duration_sec": 1.387,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/tmp/variant_probe.py\", line 3, in <module>\n    from reference_model.model import build_model\nModuleNotFoundError: No module named 'reference_model'\n",
+  "stdout": "",
+  "step": 8
+}
