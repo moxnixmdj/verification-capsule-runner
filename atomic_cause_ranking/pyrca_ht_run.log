@@ -1,0 +1,32 @@
+{
+  "schema": "PROJECT_BRAIN_PYRCA_HT_RESIDUAL_CAUSE_RANKING_SCREEN_V1",
+  "status": "SCREEN_ONLY__ZERO_CAPABILITY_CREDIT",
+  "seed": 202610010843,
+  "generated_trials": 120,
+  "usable_multi_survivor_trials": 120,
+  "normal_samples_per_trial": 500,
+  "abnormal_samples_per_trial": 80,
+  "intervention_shift": 6.0,
+  "candidate_contract": "EXPLICIT_DAG_ANCESTORS_OF_TARGET__MULTIPLE_SURVIVORS",
+  "hidden_true_cause_generation": "UNIFORM_RANDOM_ANCESTOR_INTERVENTION",
+  "pyrca": {
+    "repo": "salesforce/PyRCA",
+    "revision": "411310d589fac5cb8e7bdce67d33eadb091a1083",
+    "license": "BSD-3-Clause",
+    "algorithm": "HT"
+  },
+  "metrics": {
+    "pyrca_ht_top1_accuracy": 1.0,
+    "rootmost_baseline_top1_accuracy": 0.175,
+    "closest_to_target_baseline_top1_accuracy": 0.20833333333333334,
+    "delta_vs_best_graph_order_baseline": 0.7916666666666666
+  },
+  "screen_gate": {
+    "min_usable_trials": 80,
+    "min_ht_top1_accuracy": 0.7,
+    "min_delta_vs_best_graph_order_baseline": 0.25,
+    "pass": true
+  },
+  "interpretation_rule": "PASS_ONLY_SUPPORTS_PYRCA_HT_AS_A_RESIDUAL_CAUSE_RANKING_CHALLENGER_ON_EXPLICIT_NUMERIC_CAUSAL_DAGS_WITH_MULTIPLE_SURVIVORS__NO_EDGE_DISCOVERY_GENERAL_RCA_OR_FAMILY_CREDIT",
+  "capability_credit_delta": 0
+}
