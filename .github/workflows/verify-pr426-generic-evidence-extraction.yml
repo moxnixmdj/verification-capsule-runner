@@ -1,0 +1,40 @@
+name: Verify PR426 Generic Evidence Extraction
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact PR426 and qualified dependency blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_evidence_unit_extract.py)" = "fc45fb583f6aeac91f7c88f918644c38fbc70e34"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_research_source_frontend.py)" = "46fe82d74a35d9318a134fb95e1d5cecfc2dd485"
+          test "$(git hash-object canonical/tests/test_objective_evidence_unit_extract_v2.py)" = "8dc3a5d350173d57f67c8e1ac50ab243d42f2214"
+          test "$(git hash-object canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py)" = "c6dd4e33646758484572472ce24f8d7cc9bf1886"
+          test "$(git hash-object canonical/tests/test_open_research_source_frontend_generic_extraction.py)" = "69445a30d93f3459be53e5f38e31149d311b6df2"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "95d2b6bac6f6ffb5db97526407fcd22cbcc6c790"
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_candidate_provenance_verify.py)" = "1dc26e68d18010b66211d1d83f7b2024c8ad1fcf"
+      - name: Run exact authored fail-closed regressions
+        run: |
+          python canonical/tests/test_objective_evidence_unit_extract_v2.py
+          python canonical/tests/test_objective_evidence_unit_extract_v2_generic_bm25.py
+          python canonical/tests/test_open_research_source_frontend_generic_extraction.py
+      - name: Run fresh live non-ROR cross-domain qualification
+        run: python verify_pr426_generic_evidence_extraction.py
+      - name: Upload qualification report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr426-generic-evidence-extraction-report
+          path: pr426-generic-evidence-extraction-report.json
+          if-no-files-found: error
