@@ -58,14 +58,27 @@ class Rank19StageBStatic(unittest.TestCase):
           "tasks/satb-audio-transcription/task.toml",
           "tasks/satb-audio-transcription/environment/"
         )
-        for s in self.sources["sources"]:
+        for s in self.sources["task_sources"]:
             self.assertTrue(s["path"].startswith(allowed_prefixes), s["path"])
+        self.assertFalse(self.sources["task_audio_analyzed"])
+        self.assertFalse(self.sources["solution_read"])
+        self.assertFalse(self.sources["readme_read"])
+        self.assertFalse(self.sources["tests_read"])
+        self.assertFalse(self.sources["hidden_verifier_read"])
+        self.assertFalse(self.sources["task_specific_repository_search_after_exposure"])
+        self.assertFalse(self.sources["task_specific_external_search"])
 
     def test_stage_c_still_forbidden(self):
         self.assertFalse(self.contract["task_execution_authorized"])
-        self.assertFalse(self.contract["solution_read"])
-        self.assertFalse(self.contract["tests_read"])
-        self.assertFalse(self.contract["hidden_verifier_read"])
+        b=self.contract["source_boundary"]
+        self.assertTrue(b["instruction_read"])
+        self.assertFalse(b["task_audio_analyzed"])
+        self.assertFalse(b["solution_read"])
+        self.assertFalse(b["readme_read"])
+        self.assertFalse(b["tests_read"])
+        self.assertFalse(b["hidden_verifier_read"])
+        self.assertFalse(b["task_specific_repository_search_after_exposure"])
+        self.assertFalse(b["task_specific_external_search"])
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
