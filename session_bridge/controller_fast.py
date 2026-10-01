@@ -8,7 +8,7 @@ from pathlib import Path
 import time
 import urllib.request
 
-from session_bridge import controller as legacy
+import controller as legacy
 
 EVIDENCE = Path("/tmp/bridge-evidence")
 COMMAND_MARKER = "<!-- BRAIN_FAST_BURST_COMMAND_V2 -->"
