@@ -1,8 +1,6 @@
-Traceback (most recent call last):
-  File "/home/runner/work/verification-capsule-runner/verification-capsule-runner/atomic_cause_candidate_spent/probe.py", line 103, in <module>
-    raise SystemExit(main())
-                     ^^^^^^
-  File "/home/runner/work/verification-capsule-runner/verification-capsule-runner/atomic_cause_candidate_spent/probe.py", line 84, in main
-    "expected_cause_leakage": false,
-                              ^^^^^
-NameError: name 'false' is not defined. Did you mean: 'case'?
+{
+  "cases": 6,
+  "true_cause_candidate_recall": 1.0,
+  "unique_expected_candidate_fraction": 1.0,
+  "mean_candidate_fraction_vs_all_upstream": 0.3333333333333333
+}

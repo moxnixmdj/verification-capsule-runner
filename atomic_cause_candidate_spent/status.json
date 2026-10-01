@@ -1,11 +1,11 @@
 {
   "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
   "probe": "ATOMIC_CAUSE_CANDIDATE_GENERATION_SPENT",
-  "workflow_run_id": "36835403724",
-  "head_sha": "8e5e71433090df3bf76093c92aee6ec5cd5a9378",
-  "outcome": "failure",
-  "rc": "1",
-  "result_exists": false,
-  "terminal_state": "FAILURE",
+  "workflow_run_id": "36835495109",
+  "head_sha": "673b2d03b4504d24bb20b1fad848a0a8daf6b580",
+  "outcome": "success",
+  "rc": "0",
+  "result_exists": true,
+  "terminal_state": "SUCCESS",
   "capability_credit_delta": 0
 }
