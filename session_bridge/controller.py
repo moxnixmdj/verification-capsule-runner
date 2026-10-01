@@ -59,15 +59,18 @@ def init_observation_branch():
     git("push", "origin", f"HEAD:refs/heads/{CONFIG['observation_branch']}", cwd=OBS)
 
 
-def fetch_command(step: int):
+def fetch_control_text(rel: str):
     cp = git("fetch", "--quiet", "origin", CONFIG["control_branch"], check=False)
     if cp.returncode != 0:
         return None
-    rel = f"session_bridge/commands/{step:03d}.sh"
     cp = git("show", f"FETCH_HEAD:{rel}", check=False)
     if cp.returncode != 0:
         return None
     return cp.stdout
+
+
+def fetch_command(step: int):
+    return fetch_control_text(f"session_bridge/commands/{step:03d}.sh")
 
 
 def clone_task():
@@ -519,14 +522,14 @@ def main():
             return 0
 
         if command.strip() == "echo COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT":
-            auth_path = ROOT / "session_bridge" / "terminal_authorization.json"
             blocked_reason = None
             auth = None
-            if not auth_path.exists():
+            auth_text = fetch_control_text("session_bridge/terminal_authorization.json")
+            if auth_text is None:
                 blocked_reason = "TERMINAL_AUTHORIZATION_MISSING"
             else:
                 try:
-                    auth = json.loads(auth_path.read_text(encoding="utf-8"))
+                    auth = json.loads(auth_text)
                 except Exception:
                     blocked_reason = "TERMINAL_AUTHORIZATION_INVALID_JSON"
 
