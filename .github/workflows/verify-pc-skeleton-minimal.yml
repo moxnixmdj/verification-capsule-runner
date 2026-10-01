@@ -1,0 +1,20 @@
+name: Verify minimized PC skeleton
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/pc_skeleton_minimal.py'
+      - 'verification/test_pc_skeleton_minimal.py'
+      - '.github/workflows/verify-pc-skeleton-minimal.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet numpy scipy "git+https://github.com/py-why/causal-learn.git@0dacacf36390e3084704636bc3c36e82e35ee0cc"
+      - run: cd verification && python -m unittest -v test_pc_skeleton_minimal.py
