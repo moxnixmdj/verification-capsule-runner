@@ -129,7 +129,7 @@ def main():
       "terminal_success_delta":batch["terminal_success_rate"]-baseline["terminal_success_rate"],
       "semantic_terminal_success_delta":batch["semantic_terminal_success_rate"]-baseline["semantic_terminal_success_rate"],
       "predeclared_gate":{
-        "strict_terminal_improvement_required":true,
+        "strict_terminal_improvement_required":True,
         "minimum_skillrouter_terminal_success_rate":0.90,
         "deterministic_filter_success_rate_required":1.0
       },
