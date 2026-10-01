@@ -1,0 +1,54 @@
+name: Cognitive C9 Semantic Support NLI Probe
+
+on:
+  push:
+    paths:
+      - ".github/workflows/cognitive-c9-nli-probe.yml"
+      - "cognitive_c9_nli_probe/cases.json"
+      - "cognitive_c9_nli_probe/probe.py"
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record provenance
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          sha256sum cognitive_c9_nli_probe/cases.json cognitive_c9_nli_probe/probe.py
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install transformers torch sentencepiece
+          python -m pip freeze > cognitive_c9_nli_probe/pip-freeze.txt
+      - name: Run fresh C9 semantic support probe
+        run: |
+          set -euo pipefail
+          python cognitive_c9_nli_probe/probe.py
+          cat cognitive_c9_nli_probe/result.json
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cognitive-c9-nli-probe
+          path: |
+            cognitive_c9_nli_probe/cases.json
+            cognitive_c9_nli_probe/probe.py
+            cognitive_c9_nli_probe/result.json
+            cognitive_c9_nli_probe/pip-freeze.txt
+          if-no-files-found: warn
+      - name: Persist successful measurement
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cognitive_c9_nli_probe/result.json cognitive_c9_nli_probe/pip-freeze.txt
+          git commit -m "Record fresh C9 semantic support NLI measurement"
+          git push
