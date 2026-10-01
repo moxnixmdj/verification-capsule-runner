@@ -21,7 +21,7 @@ jobs:
       - name: Install bounded data dependencies
         run: python -m pip install --disable-pip-version-check --quiet numpy pandas pyarrow huggingface_hub fsspec
       - name: Run precommitted fresh transfer
-        run: python verification/test_brain_owned_re2ob_transfer.py
+        run: PYTHONPATH=. python verification/test_brain_owned_re2ob_transfer.py
       - name: Upload transfer result
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
