@@ -1,0 +1,41 @@
+name: Session mini-SWE fast burst
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  fast-burst:
+    if: startsWith(github.head_ref, 'burst/session-mini-swe-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout exact session head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Syntax-check fast burst controller
+        run: python -m py_compile session_bridge/controller_fast.py
+
+      - name: Run persistent fast burst controller
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python session_bridge/controller_fast.py --session-config session_bridge/session.json
+
+      - name: Upload terminal evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: session-mini-swe-fast-${{ github.event.pull_request.number }}
+          path: /tmp/bridge-evidence/
+          if-no-files-found: warn
