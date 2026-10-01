@@ -89,7 +89,7 @@ class GlobalCutTests(unittest.TestCase):
         # A1+BC1 and ABC2 tie at 2 bits; ABC2 wins on wall clock.
         self.assertEqual(out["selected_actions"],["ABC2"])
         self.assertEqual(out["total_new_reality_units"],2.0)
-        self.assertEqual(out["total_critical_path_wall_clock_units"],2.0)
+        self.assertEqual(out["parallel_critical_path_wall_clock_units"],2.0)
 
     def test_dominance_deletes_strictly_worse_action(self):
         actions=[
