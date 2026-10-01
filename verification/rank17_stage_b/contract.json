@@ -1,0 +1,1073 @@
+{
+  "schema": "PROJECT_BRAIN_RANK17_STAGE_B_TYPED_CONTRACT_V1",
+  "task": "data-anonymization",
+  "rank": 17,
+  "benchmark_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "session_id": "data-anonymization-20261001-v1",
+  "acceptance_contract_sha256": "cea23932b0c4dec00258fb6c16edafd55aa8b366a54ddca177fc5f8ebe81bb2b",
+  "source_allowlist": {
+    "allowed": [
+      "tasks/data-anonymization/instruction.md",
+      "tasks/data-anonymization/task.toml",
+      "tasks/data-anonymization/environment/**"
+    ],
+    "forbidden": [
+      "tasks/data-anonymization/README*",
+      "tasks/data-anonymization/solution/**",
+      "tasks/data-anonymization/tests/**",
+      "tasks/data-anonymization/cheat/**",
+      "task-specific pull requests/issues/commit history",
+      "task-specific external web/social search",
+      "hidden verifier or verifier-derived artifacts"
+    ],
+    "solution_tests_verifier_exposed": false
+  },
+  "source_authority": {
+    "instruction_sha256": "2b1c2f0be6beb3ac6aea1a3c59325fc3e5d5c20ffcdb1ea4347afb8f004709c1",
+    "task_toml_git_blob": "8a861d741855b6545899ad18107a4a9da506320a",
+    "dockerfile_git_blob": "bc7f5ad3910f53abf5c17255fa22dc12e33b4d2d",
+    "policy_git_blob": "d3733b5d27f3df8e8a495ed9227b4b67cbeec9b8",
+    "generator_git_blob": "b84cf19542c34ffb6847a0454e1beaafa17783fa"
+  },
+  "policy_model": {
+    "reference_tokens": {
+      "prefix": "ref_",
+      "length": 12,
+      "alphabet": "hex_lower",
+      "length_counts_prefix": false
+    },
+    "transforms": {
+      "business_reference": {
+        "anonymizer": "business_ref"
+      },
+      "fake_email": {
+        "anonymizer": "fake",
+        "type": "email",
+        "format": "simple_email"
+      },
+      "fake_phone": {
+        "anonymizer": "fake",
+        "type": "phone",
+        "format": "e164_us",
+        "country_code": "+1",
+        "national_number_digits": 10
+      },
+      "fake_date": {
+        "anonymizer": "fake",
+        "type": "date",
+        "supported_input_formats": [
+          "%Y-%m-%d",
+          "%m/%d/%Y",
+          "%d-%m-%Y"
+        ],
+        "preserve_input_format": true,
+        "on_unrecognized_input": "redact",
+        "min_offset_days": 1
+      },
+      "redact_text": {
+        "anonymizer": "redact",
+        "replacement": ""
+      },
+      "sha256": {
+        "anonymizer": "hash",
+        "algorithm": "sha256",
+        "encoding": "utf-8",
+        "salt": "none"
+      },
+      "mask_secret": {
+        "anonymizer": "mask",
+        "keep_prefix": 4,
+        "keep_suffix": 4,
+        "mask_char": "*",
+        "short_value_behavior": "full_mask"
+      },
+      "mask_address": {
+        "anonymizer": "mask",
+        "keep_prefix": 6,
+        "keep_suffix": 0,
+        "mask_char": "*",
+        "short_value_behavior": "full_mask"
+      },
+      "gaussian_money": {
+        "anonymizer": "noise",
+        "sigma": 10,
+        "distribution": "gaussian",
+        "preserve_scale": true,
+        "on_non_numeric": "preserve"
+      },
+      "gaussian_score": {
+        "anonymizer": "noise",
+        "sigma": 1,
+        "distribution": "gaussian",
+        "preserve_scale": true,
+        "on_non_numeric": "preserve"
+      }
+    },
+    "files": {
+      "subjects.csv": {
+        "subject_local_id": "business_reference",
+        "household_local_id": "business_reference",
+        "primary_email": "fake_email",
+        "backup_email": "fake_email",
+        "mobile_phone": "fake_phone",
+        "signup_date": "fake_date",
+        "government_id": "redact_text",
+        "tax_identifier": "sha256",
+        "access_key": "mask_secret",
+        "profile_note": "redact_text",
+        "risk_score": "gaussian_score",
+        "annual_value_estimate": "gaussian_money"
+      },
+      "subject_versions.csv": {
+        "subject_local_id": "business_reference",
+        "household_local_id": "business_reference",
+        "primary_email": "fake_email",
+        "backup_email": "fake_email",
+        "mobile_phone": "fake_phone",
+        "effective_from": "fake_date",
+        "effective_to": "fake_date",
+        "signup_date": "fake_date",
+        "government_id": "redact_text",
+        "tax_identifier": "sha256",
+        "access_key": "mask_secret",
+        "profile_note": "redact_text",
+        "risk_score": "gaussian_score",
+        "annual_value_estimate": "gaussian_money"
+      },
+      "accounts.csv": {
+        "account_local_id": "business_reference",
+        "primary_subject_ref": "business_reference",
+        "household_key": "business_reference",
+        "billing_email": "fake_email",
+        "billing_phone": "fake_phone",
+        "opened_date": "fake_date",
+        "account_secret": "sha256",
+        "credit_limit": "gaussian_money",
+        "account_note": "redact_text"
+      },
+      "account_memberships.csv": {
+        "account_scope": "business_reference",
+        "member_handle": "business_reference",
+        "role_subject_ref": "business_reference",
+        "household_hint": "business_reference",
+        "role_email": "fake_email",
+        "membership_start": "fake_date",
+        "membership_note": "redact_text"
+      },
+      "identity_aliases.csv": {
+        "external_actor": "business_reference",
+        "external_account": "business_reference",
+        "subject_ref": "business_reference",
+        "account_ref": "business_reference",
+        "alias_email": "fake_email",
+        "alias_phone": "fake_phone",
+        "created_date": "fake_date",
+        "confidence": "gaussian_score",
+        "alias_secret": "sha256"
+      },
+      "devices.csv": {
+        "device_ref": "business_reference",
+        "owner_actor": "business_reference",
+        "account_ref": "business_reference",
+        "device_serial": "sha256",
+        "last_seen_date": "fake_date",
+        "device_note": "redact_text"
+      },
+      "orders.csv": {
+        "order_local_id": "business_reference",
+        "account_ref": "business_reference",
+        "buyer_actor": "business_reference",
+        "merchant_ref": "business_reference",
+        "device_ref": "business_reference",
+        "shipping_email": "fake_email",
+        "contact_phone": "fake_phone",
+        "order_date": "fake_date",
+        "total_amount": "gaussian_money",
+        "card_token": "sha256",
+        "shipping_address": "mask_address",
+        "internal_note": "redact_text"
+      },
+      "events.csv": {
+        "actor_handle": "business_reference",
+        "account_handle": "business_reference",
+        "order_handle": "business_reference",
+        "device_handle": "business_reference",
+        "merchant_handle": "business_reference",
+        "event_uuid": "sha256",
+        "actor_email": "fake_email",
+        "event_date": "fake_date",
+        "session_token": "mask_secret",
+        "ip_address": "sha256",
+        "payload": "redact_text",
+        "revenue_delta": "gaussian_money"
+      },
+      "merger_history.csv": {
+        "external_actor": "business_reference",
+        "merged_subject_ref": "business_reference",
+        "effective_from": "fake_date",
+        "merge_note": "redact_text",
+        "merge_id": "sha256"
+      },
+      "subject_links.csv": {
+        "subject_a": "business_reference",
+        "subject_b": "business_reference",
+        "link_note": "redact_text",
+        "link_id": "sha256"
+      }
+    }
+  },
+  "generator_function_accounting": {
+    "get_env_int": "support",
+    "numeric_id": "support",
+    "tenant_for_index": "support",
+    "tenant_local_index": "support",
+    "format_date": "R15_FAKE_DATE",
+    "subject_ref": "R06_TYPED_SCOPE",
+    "account_ref": "R06_TYPED_SCOPE",
+    "household_ref": "R06_TYPED_SCOPE",
+    "merchant_ref": "R06_TYPED_SCOPE",
+    "device_ref": "R06_TYPED_SCOPE",
+    "order_ref": "R06_TYPED_SCOPE",
+    "strip_required_prefix": "support",
+    "actor_handle": "R08_ALIAS_RESOLUTION",
+    "account_handle": "R08_ALIAS_RESOLUTION",
+    "subjects_by_tenant": "support",
+    "accounts_by_tenant": "support",
+    "write_csv": "R02_OUTPUT_STRUCTURE",
+    "build_subjects": "R06_TYPED_SCOPE",
+    "build_subject_versions": "R07_TYPE2_HISTORY",
+    "build_accounts": "R06_TYPED_SCOPE",
+    "build_account_memberships": "R08_ALIAS_RESOLUTION",
+    "build_identity_aliases": "R08_ALIAS_RESOLUTION",
+    "build_devices": "R08_ALIAS_RESOLUTION",
+    "build_orders": "R08_ALIAS_RESOLUTION",
+    "build_events": "R08_ALIAS_RESOLUTION",
+    "build_subject_links": "R09_SUBJECT_LINK_TRANSITIVITY",
+    "build_merger_history": "R10_EFFECTIVE_MERGE_BOUNDARY",
+    "parse_generated_date": "R10_EFFECTIVE_MERGE_BOUNDARY",
+    "append_merge_probe_events": "R11_MERGE_TRANSITIVITY",
+    "main": "support"
+  },
+  "generator_semantic_markers": [
+    {
+      "needle": "3-way chains (a~b, b~c)",
+      "requirement": "R09_SUBJECT_LINK_TRANSITIVITY"
+    },
+    {
+      "needle": "union-find must compose links transitively",
+      "requirement": "R09_SUBJECT_LINK_TRANSITIVITY"
+    },
+    {
+      "needle": "Layer 2: chain S1 into a fresh survivor S2",
+      "requirement": "R11_MERGE_TRANSITIVITY"
+    },
+    {
+      "needle": "follow the chain forward",
+      "requirement": "R11_MERGE_TRANSITIVITY"
+    },
+    {
+      "needle": "pre/post merge probe events",
+      "requirement": "R10_EFFECTIVE_MERGE_BOUNDARY"
+    },
+    {
+      "needle": "post-chain",
+      "requirement": "R11_MERGE_TRANSITIVITY"
+    }
+  ],
+  "feasibility": {
+    "exact_cli_memory_limit_bytes": 67108864,
+    "task_container": {
+      "cpus": 2,
+      "memory_mb": 8192,
+      "storage_mb": 10240,
+      "gpus": 0
+    },
+    "task_runtime": [
+      "python3",
+      "PyYAML==6.0.2"
+    ],
+    "owned_or_stdlib_route": [
+      "csv",
+      "sqlite3",
+      "hashlib",
+      "hmac",
+      "argparse",
+      "datetime",
+      "decimal"
+    ],
+    "planned_memory_strategy": "STREAM_CSV_ROWS__DISK_BACKED_SQLITE_IDENTITY_STATE__BOUNDED_CACHES",
+    "external_service_required": false,
+    "gpu_required": false,
+    "obvious_resource_blocker": false
+  },
+  "requirements": [
+    {
+      "id": "R01_CLI",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R01_CLI_C1",
+          "keyword": "MUST",
+          "text": "The CLI accepts the instructed positional input directory and --policy, --output, --seed, and --max-memory options, including the exact 64MB invocation.",
+          "covered_by_scenarios": [
+            "R01_CLI_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R01_CLI_S1",
+          "given": [
+            "Invoke the exact command shape."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Argument parsing succeeds and binds the exact supplied paths/seed/memory value."
+          ]
+        }
+      ],
+      "source_basis": "official_instruction"
+    },
+    {
+      "id": "R02_OUTPUT_STRUCTURE",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R02_OUTPUT_STRUCTURE_C1",
+          "keyword": "MUST",
+          "text": "Every input CSV produces the same filename with identical headers, column order, row order, and row count.",
+          "covered_by_scenarios": [
+            "R02_OUTPUT_STRUCTURE_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R02_OUTPUT_STRUCTURE_S1",
+          "given": [
+            "Compare each input/output CSV structurally."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "All five structural invariants are identical."
+          ]
+        }
+      ],
+      "source_basis": "official_instruction"
+    },
+    {
+      "id": "R03_NONPOLICY_COLUMNS",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R03_NONPOLICY_COLUMNS_C1",
+          "keyword": "MUST",
+          "text": "Only policy-declared columns are transformed; all other columns preserve original cell values.",
+          "covered_by_scenarios": [
+            "R03_NONPOLICY_COLUMNS_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R03_NONPOLICY_COLUMNS_S1",
+          "given": [
+            "Compare non-policy cells by row and column."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Every non-policy cell is byte-equivalent after CSV decoding."
+          ]
+        }
+      ],
+      "source_basis": "instruction_plus_policy"
+    },
+    {
+      "id": "R04_REFERENCE_FORMAT",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R04_REFERENCE_FORMAT_C1",
+          "keyword": "MUST",
+          "text": "business_reference outputs use prefix ref_ plus exactly 12 lowercase hexadecimal characters.",
+          "covered_by_scenarios": [
+            "R04_REFERENCE_FORMAT_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R04_REFERENCE_FORMAT_S1",
+          "given": [
+            "Inspect every transformed business-reference cell."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Every token matches ^ref_[0-9a-f]{12}$."
+          ]
+        }
+      ],
+      "source_basis": "policy.reference_tokens"
+    },
+    {
+      "id": "R05_REFERENCE_DETERMINISM",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R05_REFERENCE_DETERMINISM_C1",
+          "keyword": "MUST",
+          "text": "One canonical business entity maps to one reference token across all representations for a fixed seed.",
+          "covered_by_scenarios": [
+            "R05_REFERENCE_DETERMINISM_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R05_REFERENCE_DETERMINISM_S1",
+          "given": [
+            "Resolve multiple representations of one entity independently."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "All representations emit one token."
+          ]
+        }
+      ],
+      "source_basis": "official_instruction"
+    },
+    {
+      "id": "R06_TYPED_SCOPE",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R06_TYPED_SCOPE_C1",
+          "keyword": "MUST",
+          "text": "Identity canonicalization preserves business-object type and tenant scope unless an explicit equivalence relation joins subjects.",
+          "covered_by_scenarios": [
+            "R06_TYPED_SCOPE_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R06_TYPED_SCOPE_S1",
+          "given": [
+            "Compare equal-looking local IDs from distinct types/tenants without linking edges."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Unrelated typed/scoped entities remain distinct."
+          ]
+        }
+      ],
+      "source_basis": "policy.business_objects_plus_generator"
+    },
+    {
+      "id": "R07_TYPE2_HISTORY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R07_TYPE2_HISTORY_C1",
+          "keyword": "MUST",
+          "text": "All type-2 subject history rows for one tenant-scoped subject share the subject's canonical token.",
+          "covered_by_scenarios": [
+            "R07_TYPE2_HISTORY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R07_TYPE2_HISTORY_S1",
+          "given": [
+            "Select a subject with multiple versions."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "All versions and the base subject resolve identically."
+          ]
+        }
+      ],
+      "source_basis": "instruction_plus_build_subject_versions"
+    },
+    {
+      "id": "R08_ALIAS_RESOLUTION",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R08_ALIAS_RESOLUTION_C1",
+          "keyword": "MUST",
+          "text": "External actor/account handles resolve through identity_aliases to their canonical subject/account and propagate across related files.",
+          "covered_by_scenarios": [
+            "R08_ALIAS_RESOLUTION_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R08_ALIAS_RESOLUTION_S1",
+          "given": [
+            "Trace one alias into memberships/devices/orders/events."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Alias and direct-reference representations resolve identically."
+          ]
+        }
+      ],
+      "source_basis": "build_identity_aliases_plus_handle_constructors"
+    },
+    {
+      "id": "R09_SUBJECT_LINK_TRANSITIVITY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R09_SUBJECT_LINK_TRANSITIVITY_C1",
+          "keyword": "MUST",
+          "text": "subject_links is an undirected transitive equivalence relation across tenants.",
+          "covered_by_scenarios": [
+            "R09_SUBJECT_LINK_TRANSITIVITY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R09_SUBJECT_LINK_TRANSITIVITY_S1",
+          "given": [
+            "Use an A~B and B~C generated chain."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "A, B, and C resolve to one canonical subject token."
+          ]
+        }
+      ],
+      "source_basis": "instruction_plus_build_subject_links"
+    },
+    {
+      "id": "R10_EFFECTIVE_MERGE_BOUNDARY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R10_EFFECTIVE_MERGE_BOUNDARY_C1",
+          "keyword": "MUST",
+          "text": "A merger_history edge affects date-bearing identity resolution only at or after effective_from.",
+          "covered_by_scenarios": [
+            "R10_EFFECTIVE_MERGE_BOUNDARY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R10_EFFECTIVE_MERGE_BOUNDARY_S1",
+          "given": [
+            "Compare generated pre-merge and post-merge probe events."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Pre event retains prior subject; post event resolves to merge survivor."
+          ]
+        }
+      ],
+      "source_basis": "instruction_plus_merger_history_probes"
+    },
+    {
+      "id": "R11_MERGE_TRANSITIVITY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R11_MERGE_TRANSITIVITY_C1",
+          "keyword": "MUST",
+          "text": "Effective merge chains compose transitively across later survivor merges.",
+          "covered_by_scenarios": [
+            "R11_MERGE_TRANSITIVITY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R11_MERGE_TRANSITIVITY_S1",
+          "given": [
+            "Follow a layer-1 survivor through a layer-2 chain merge."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Post-chain observations resolve to the final survivor."
+          ]
+        }
+      ],
+      "source_basis": "instruction_plus_build_merger_history"
+    },
+    {
+      "id": "R12_RELATION_COMPOSITION",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R12_RELATION_COMPOSITION_C1",
+          "keyword": "MUST",
+          "text": "Direct refs, aliases, subject-link equivalence, and applicable effective merges compose into one canonical subject identity graph.",
+          "covered_by_scenarios": [
+            "R12_RELATION_COMPOSITION_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R12_RELATION_COMPOSITION_S1",
+          "given": [
+            "Construct an entity path using more than one relation class."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Final canonical identity is independent of which equivalent representation begins the path."
+          ]
+        }
+      ],
+      "source_basis": "instruction_plus_generator_relations"
+    },
+    {
+      "id": "R13_FAKE_EMAIL",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R13_FAKE_EMAIL_C1",
+          "keyword": "MUST",
+          "text": "fake_email creates deterministic simple email values for a fixed seed and changes under a different seed.",
+          "covered_by_scenarios": [
+            "R13_FAKE_EMAIL_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R13_FAKE_EMAIL_S1",
+          "given": [
+            "Transform representative email values under equal and unequal seeds."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Same seed repeats; different seed changes; output remains simple email syntax."
+          ]
+        }
+      ],
+      "source_basis": "policy.fake_email_plus_seed_contract"
+    },
+    {
+      "id": "R14_FAKE_PHONE",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R14_FAKE_PHONE_C1",
+          "keyword": "MUST",
+          "text": "fake_phone emits +1 followed by exactly 10 digits, deterministic for fixed seed and seed-sensitive.",
+          "covered_by_scenarios": [
+            "R14_FAKE_PHONE_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R14_FAKE_PHONE_S1",
+          "given": [
+            "Transform representative phones under equal and unequal seeds."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Format is E.164 US and seed behavior is correct."
+          ]
+        }
+      ],
+      "source_basis": "policy.fake_phone_plus_seed_contract"
+    },
+    {
+      "id": "R15_FAKE_DATE",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R15_FAKE_DATE_C1",
+          "keyword": "MUST",
+          "text": "fake_date supports the three policy formats, preserves input format, shifts recognized dates by at least one day, and redacts unrecognized values.",
+          "covered_by_scenarios": [
+            "R15_FAKE_DATE_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R15_FAKE_DATE_S1",
+          "given": [
+            "Test all supported formats plus an unrecognized value."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Recognized values preserve format and change date; unrecognized becomes empty."
+          ]
+        }
+      ],
+      "source_basis": "policy.fake_date"
+    },
+    {
+      "id": "R16_REDACTION",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R16_REDACTION_C1",
+          "keyword": "MUST",
+          "text": "redact_text replaces every targeted value with the empty string.",
+          "covered_by_scenarios": [
+            "R16_REDACTION_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R16_REDACTION_S1",
+          "given": [
+            "Transform nonempty targeted text."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Output is exactly empty."
+          ]
+        }
+      ],
+      "source_basis": "policy.redact_text"
+    },
+    {
+      "id": "R17_SHA256",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R17_SHA256_C1",
+          "keyword": "MUST",
+          "text": "sha256 equals unsalted SHA-256 of the original UTF-8 cell and is seed-independent.",
+          "covered_by_scenarios": [
+            "R17_SHA256_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R17_SHA256_S1",
+          "given": [
+            "Recompute digest independently under two seeds."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Both outputs equal hashlib SHA-256 hex of original bytes."
+          ]
+        }
+      ],
+      "source_basis": "policy.sha256"
+    },
+    {
+      "id": "R18_MASKING",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R18_MASKING_C1",
+          "keyword": "MUST",
+          "text": "mask_secret and mask_address preserve exactly their declared prefixes/suffixes and use '*' for all masked characters, with full mask for short values.",
+          "covered_by_scenarios": [
+            "R18_MASKING_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R18_MASKING_S1",
+          "given": [
+            "Test long and short representative values."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Masks exactly match policy parameters."
+          ]
+        }
+      ],
+      "source_basis": "policy.mask_secret_mask_address"
+    },
+    {
+      "id": "R19_NOISE",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R19_NOISE_C1",
+          "keyword": "MUST",
+          "text": "gaussian_money and gaussian_score use Gaussian noise with the declared sigma, preserve decimal scale, preserve nonnumeric values, repeat for fixed seed, and vary with changed seed.",
+          "covered_by_scenarios": [
+            "R19_NOISE_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R19_NOISE_S1",
+          "given": [
+            "Check scale/nonnumeric cases and repeated/different seeds over multiple numeric cells."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Formatting and seed invariants hold; different seed changes a nonzero set."
+          ]
+        }
+      ],
+      "source_basis": "policy.noise_plus_seed_contract"
+    },
+    {
+      "id": "R20_SEED_REPEATABILITY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R20_SEED_REPEATABILITY_C1",
+          "keyword": "MUST",
+          "text": "Two full runs with identical inputs and seed produce byte-identical output CSVs.",
+          "covered_by_scenarios": [
+            "R20_SEED_REPEATABILITY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R20_SEED_REPEATABILITY_S1",
+          "given": [
+            "Hash every output file from two same-seed runs."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "All file hashes match."
+          ]
+        }
+      ],
+      "source_basis": "official_instruction"
+    },
+    {
+      "id": "R21_SEED_SENSITIVITY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R21_SEED_SENSITIVITY_C1",
+          "keyword": "MUST",
+          "text": "Changing seed changes seeded transforms while seed-independent transforms and structural/non-policy values remain invariant.",
+          "covered_by_scenarios": [
+            "R21_SEED_SENSITIVITY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R21_SEED_SENSITIVITY_S1",
+          "given": [
+            "Differentially compare two full runs with different seeds."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Seeded fields change somewhere; SHA256/mask/redact/structure/non-policy data remain invariant."
+          ]
+        }
+      ],
+      "source_basis": "official_instruction_plus_policy"
+    },
+    {
+      "id": "R22_MEMORY_LIMIT",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R22_MEMORY_LIMIT_C1",
+          "keyword": "MUST",
+          "text": "Peak memory stays at or below the parsed --max-memory 64MB during the full official workload.",
+          "covered_by_scenarios": [
+            "R22_MEMORY_LIMIT_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R22_MEMORY_LIMIT_S1",
+          "given": [
+            "Monitor peak RSS around the exact full command."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "Peak RSS is <= 67108864 bytes and run completes."
+          ]
+        }
+      ],
+      "source_basis": "official_instruction_plus_docker_scale"
+    },
+    {
+      "id": "R23_SOURCE_IMMUTABILITY",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R23_SOURCE_IMMUTABILITY_C1",
+          "keyword": "MUST",
+          "text": "The read-only input corpus and policy remain byte-identical after execution.",
+          "covered_by_scenarios": [
+            "R23_SOURCE_IMMUTABILITY_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R23_SOURCE_IMMUTABILITY_S1",
+          "given": [
+            "Hash /app/input and /app/policy.yaml before and after."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "All source hashes match."
+          ]
+        }
+      ],
+      "source_basis": "Dockerfile_readonly_contract"
+    },
+    {
+      "id": "R24_ARTIFACTS",
+      "critical": true,
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "clauses": [
+        {
+          "id": "R24_ARTIFACTS_C1",
+          "keyword": "MUST",
+          "text": "The deliverables are /app/anon.py plus the official /app/policy.yaml, with no weakened replacement policy.",
+          "covered_by_scenarios": [
+            "R24_ARTIFACTS_S1"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "R24_ARTIFACTS_S1",
+          "given": [
+            "Check artifact existence and policy hash."
+          ],
+          "when": [
+            "Evaluate the implementation using an oracle derived only from allowlisted official sources."
+          ],
+          "then": [
+            "anon.py exists and policy hash equals official source."
+          ]
+        }
+      ],
+      "source_basis": "task.toml_plus_instruction"
+    }
+  ]
+}
