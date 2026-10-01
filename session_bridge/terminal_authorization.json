@@ -1,0 +1,43 @@
+{
+  "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+  "session_id": "foodstuff-beta-activity-20261001-stagec-v1",
+  "submission_authorized": true,
+  "known_relevant_failures": [],
+  "acceptance_criteria": [
+    {
+      "id": "BUILDER_COMMAND_EXIT_ZERO",
+      "status": "PASS",
+      "evidence": "observation step 000 exit_code=0"
+    },
+    {
+      "id": "RESULTS_EXACT_FORMAT_SELF_CHECK",
+      "status": "PASS",
+      "evidence": "stdout contains RESULTS_FROZEN_PREVERIFIER_PASS and exact five required lines"
+    },
+    {
+      "id": "ONE_SHOT_BUDGET",
+      "status": "PASS",
+      "evidence": "Brain Stage-C lease allows one builder execution and one terminal verifier; builder count now consumed once"
+    },
+    {
+      "id": "SOURCE_BOUNDARY_CLEAN",
+      "status": "PASS",
+      "evidence": "canonical/capabilities/opus55/FOODSTUFF_BETA_ACTIVITY_RANK21_SOURCE_BOUNDARY_PREFLIGHT_V1.json"
+    },
+    {
+      "id": "EXACT_SURFACE_PASS",
+      "status": "PASS",
+      "evidence": "canonical/capabilities/opus55/FOODSTUFF_BETA_ACTIVITY_RANK21_EXACT_SURFACE_PREFLIGHT_V1.json"
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "builder step 000 exact-output self-check",
+      "exit_code": 0,
+      "evidence": "session_bridge/observations/000.json"
+    }
+  ],
+  "output_frozen": true,
+  "output_path": "/app/results.txt",
+  "replay_allowed": false
+}
