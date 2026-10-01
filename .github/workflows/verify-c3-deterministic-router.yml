@@ -67,3 +67,4 @@ jobs:
           git commit -m "Record C3 router verification status"
           git pull --rebase origin main
           git push
+# observable verification trigger
