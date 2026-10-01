@@ -1,0 +1,67 @@
+name: PyRCA HT Residual Cause Ranking Screen
+on:
+  push:
+    branches:
+      - "probe/pyrca-ht-residual-ranking-20261001-v1"
+    paths:
+      - ".github/workflows/pyrca-ht-residual-ranking.yml"
+      - "atomic_cause_ranking/pyrca_ht_screen.py"
+
+permissions:
+  contents: write
+
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned PyRCA
+        run: |
+          set -euo pipefail
+          PIP_DEFAULT_TIMEOUT=60 python -m pip install "git+https://github.com/salesforce/PyRCA.git@411310d589fac5cb8e7bdce67d33eadb091a1083"
+
+      - name: Run residual cause-ranking screen
+        id: screen
+        shell: bash
+        run: |
+          set +e
+          python atomic_cause_ranking/pyrca_ht_screen.py | tee atomic_cause_ranking/pyrca_ht_run.log
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+
+      - name: Persist visible result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.screen.outcome }}
+          RC: ${{ steps.screen.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("atomic_cause_ranking")
+          result=p/"pyrca_ht_result.json"
+          (p/"status.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"PYRCA_HT_RESIDUAL_CAUSE_RANKING_SCREEN_V1",
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "head_sha":os.environ["GITHUB_SHA"],
+            "outcome":os.environ.get("OUTCOME"),
+            "rc":os.environ.get("RC"),
+            "result_exists":result.exists(),
+            "terminal_state":"SUCCESS" if os.environ.get("OUTCOME")=="success" and result.exists() else "FAILURE",
+            "capability_credit_delta":0
+          },indent=2)+"\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atomic_cause_ranking/status.json
+          test ! -f atomic_cause_ranking/pyrca_ht_run.log || git add atomic_cause_ranking/pyrca_ht_run.log
+          test ! -f atomic_cause_ranking/pyrca_ht_result.json || git add atomic_cause_ranking/pyrca_ht_result.json
+          git commit -m "Record PyRCA HT residual cause-ranking screen" || exit 0
+          git pull --rebase origin "probe/pyrca-ht-residual-ranking-20261001-v1"
+          git push origin HEAD:"probe/pyrca-ht-residual-ranking-20261001-v1"
