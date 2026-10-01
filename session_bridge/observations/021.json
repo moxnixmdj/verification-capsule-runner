@@ -1,0 +1,10 @@
+{
+  "command_sha256": "aae6d5154ccd25f18341a072fcdd711aff6b86db6a3092a8be62dbf266d32816",
+  "duration_sec": 2.113,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/tmp/moe_independent_search.py\", line 3, in <module>\n    import consolidate as c\n  File \"/app/consolidate.py\", line 228, in <module>\n    raise RuntimeError('reference logits mismatch')\nRuntimeError: reference logits mismatch\n",
+  "stdout": "KEYS 163\nMAX_ABS_DIFF 16.504850387573242\nMEAN_ABS_DIFF 2.859964370727539\nEXACT_EQUAL False\nALLCLOSE_1E6 False\nOUTPUT_BYTES 186721216\n",
+  "step": 21
+}
