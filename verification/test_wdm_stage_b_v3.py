@@ -79,7 +79,7 @@ class StageBV3(unittest.TestCase):
             r"\geq 0.87",
             r"\leq 0.15",
             "single-simulation self-normalization",
-            r"\\left|s_\\text{out}^{+}/s_\\text{in}^{+}\\right|^2",
+            r"\left|s_\text{out}^{+}/s_\text{in}^{+}\right|^2",
             "/app/design.npy",
             "float64",
             r"\rho<0.05",
