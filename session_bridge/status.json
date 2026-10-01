@@ -1,6 +1,5 @@
 {
   "next_step": 38,
   "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
-  "status": "READY_FOR_COMMAND",
-  "task": "mp-checkpoint-consolidation"
+  "status": "SESSION_TIMEOUT"
 }
