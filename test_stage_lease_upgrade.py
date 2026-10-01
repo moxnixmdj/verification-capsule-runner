@@ -16,6 +16,8 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
         "scope": scope,
         "task_execution_authorized": execute,
         "replay_for_credit": False,
+        "execution_count_allowed": 1 if execute else 0,
+        "terminal_verifier_count_allowed": 1 if execute else 0,
     }
 
 

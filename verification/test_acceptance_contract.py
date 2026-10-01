@@ -1,7 +1,8 @@
 import random, unittest
 from acceptance_contract import (
   canonical_payload_hash, validate_acceptance_payload, validate_lease_authorization,
-  validate_lease_revalidation, terminal_acceptance_errors, audit_required_graph
+  validate_lease_revalidation, validate_total_lease_budget,
+  terminal_acceptance_errors, audit_required_graph
 )
 from controller_fast import runtime_authority_errors
 
@@ -49,7 +50,8 @@ class TestAcceptanceContract(unittest.TestCase):
       "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"lease_merged_to_main":True,
       "canonical_brain_commit":"a"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
+      "execution_count_allowed":1,"terminal_verifier_count_allowed":1
     }
     burst={
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
@@ -76,9 +78,77 @@ class TestAcceptanceContract(unittest.TestCase):
       revalidation=burst,scope="BURST",burst_id=0,pr_open=True
     ),[])
 
+  def test_stage_c_lease_requires_explicit_total_budgets(self):
+    lease={
+      "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"lease_merged_to_main":True,
+      "canonical_brain_commit":"a"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18,
+      "scope":"STAGE_C_ONE_SHOT_EXECUTION","task_execution_authorized":True,
+    }
+    errors=validate_lease_authorization(lease,"s1","t1")
+    self.assertIn("EXECUTION_COUNT_ALLOWED_INVALID",errors)
+    self.assertIn("TERMINAL_VERIFIER_COUNT_ALLOWED_INVALID",errors)
+    lease["execution_count_allowed"]=1
+    lease["terminal_verifier_count_allowed"]=1
+    self.assertEqual(validate_lease_authorization(lease,"s1","t1"),[])
+
+  def test_total_builder_budget_blocks_second_accepted_burst(self):
+    lease={"execution_count_allowed":1,"terminal_verifier_count_allowed":1,
+           "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18}
+    self.assertEqual(validate_total_lease_budget(
+      lease,scope="BURST",execution_count_used=0,terminal_verifier_count_used=0
+    ),[])
+    self.assertIn("TOTAL_EXECUTION_BUDGET_EXHAUSTED",validate_total_lease_budget(
+      lease,scope="BURST",execution_count_used=1,terminal_verifier_count_used=0
+    ))
+    burst={
+      "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"scope":"BURST","burst_id":1,
+      "canonical_brain_commit":"b"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18
+    }
+    self.assertIn("TOTAL_EXECUTION_BUDGET_EXHAUSTED",runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=burst,scope="BURST",burst_id=1,pr_open=True,
+      execution_count_used=1,terminal_verifier_count_used=0
+    ))
+
+  def test_total_terminal_budget_blocks_second_verifier(self):
+    lease={"execution_count_allowed":1,"terminal_verifier_count_allowed":1,
+           "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18}
+    terminal={
+      "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"scope":"TERMINAL",
+      "canonical_brain_commit":"c"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18
+    }
+    self.assertEqual(runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=terminal,scope="TERMINAL",pr_open=True,
+      execution_count_used=1,terminal_verifier_count_used=0
+    ),[])
+    self.assertIn("TOTAL_TERMINAL_VERIFIER_BUDGET_EXHAUSTED",runtime_authority_errors(
+      session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
+      revalidation=terminal,scope="TERMINAL",pr_open=True,
+      execution_count_used=1,terminal_verifier_count_used=1
+    ))
+
+  def test_zero_or_missing_budget_fails_closed(self):
+    self.assertIn("TOTAL_EXECUTION_BUDGET_EXHAUSTED",validate_total_lease_budget(
+      {"execution_count_allowed":0},scope="BURST",execution_count_used=0
+    ))
+    self.assertIn("EXECUTION_COUNT_ALLOWED_INVALID",validate_total_lease_budget(
+      {},scope="BURST",execution_count_used=0
+    ))
+    self.assertIn("TERMINAL_VERIFIER_COUNT_ALLOWED_INVALID",validate_total_lease_budget(
+      {},scope="TERMINAL",terminal_verifier_count_used=0
+    ))
+
   def test_terminal_requires_fresh_terminal_revalidation(self):
     lease={
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
+      "execution_count_allowed":1,"terminal_verifier_count_allowed":1
     }
     terminal={
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",

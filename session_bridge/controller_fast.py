@@ -116,6 +116,8 @@ def runtime_authority_errors(
     scope: str,
     burst_id: int | None = None,
     pr_open: bool = True,
+    execution_count_used: int = 0,
+    terminal_verifier_count_used: int = 0,
 ):
     if not lease_authorized or not isinstance(bound_lease, dict):
         return ["CANONICAL_LEASE_NOT_BOUND"]
@@ -123,13 +125,21 @@ def runtime_authority_errors(
         return ["RUNNER_PR_NOT_OPEN"]
     if revalidation is None:
         return ["PER_ACTION_CANONICAL_LEASE_REVALIDATION_REQUIRED"]
-    return acceptance.validate_lease_revalidation(
+    errors = acceptance.validate_lease_revalidation(
         revalidation,
         session_id,
         task,
         bound_lease,
         expected_scope=scope,
         expected_burst_id=burst_id,
+    )
+    if errors:
+        return errors
+    return acceptance.validate_total_lease_budget(
+        bound_lease,
+        scope=scope,
+        execution_count_used=execution_count_used,
+        terminal_verifier_count_used=terminal_verifier_count_used,
     )
 
 
@@ -342,6 +352,8 @@ def main():
     acceptance_hash = None
     burst_revalidations = {}
     terminal_revalidation = None
+    stage_c_execution_count_used = 0
+    terminal_verifier_count_used = 0
     deadline = time.time() + int(CONFIG.get("session_timeout_sec", 10800))
     while time.time() < deadline:
         for comment in comments():
@@ -547,6 +559,8 @@ def main():
                     revalidation=terminal_revalidation,
                     scope="TERMINAL",
                     pr_open=current_pr_open(),
+                    execution_count_used=stage_c_execution_count_used,
+                    terminal_verifier_count_used=terminal_verifier_count_used,
                 )
                 if authority_errors:
                     post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
@@ -566,6 +580,17 @@ def main():
                         "reason": blocker,
                     })
                     continue
+                # Consume terminal authority before invoking the hidden verifier.
+                # A verifier crash/failure must never grant an accidental retry.
+                terminal_verifier_count_used += 1
+                legacy.write_json(EVIDENCE / "canonical_budget_state.json", {
+                    "session_id": CONFIG["session_id"],
+                    "execution_count_used": stage_c_execution_count_used,
+                    "execution_count_allowed": lease_payload.get("execution_count_allowed"),
+                    "terminal_verifier_count_used": terminal_verifier_count_used,
+                    "terminal_verifier_count_allowed": lease_payload.get("terminal_verifier_count_allowed"),
+                    "terminal_budget_consumed_before_verifier": True,
+                })
                 final = legacy.verify(task_dir)
                 post(FINAL_MARKER, final)
                 return 0
@@ -588,6 +613,8 @@ def main():
                     scope="BURST",
                     burst_id=next_burst,
                     pr_open=current_pr_open(),
+                    execution_count_used=stage_c_execution_count_used,
+                    terminal_verifier_count_used=terminal_verifier_count_used,
                 )
                 if authority_errors:
                     post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
@@ -634,10 +661,20 @@ def main():
                 })
                 continue
 
-            # Single-use authority: consume the current-burst revalidation before
-            # execution so it can never authorize a later/replayed burst.
+            # Single-use authority and total budget are consumed before any task
+            # command runs. Even a command/runtime failure spends this Stage-C
+            # execution unit; otherwise failure would silently create a replay.
             burst_revalidations.pop(next_burst, None)
             terminal_revalidation = None
+            stage_c_execution_count_used += 1
+            legacy.write_json(EVIDENCE / "canonical_budget_state.json", {
+                "session_id": CONFIG["session_id"],
+                "execution_count_used": stage_c_execution_count_used,
+                "execution_count_allowed": lease_payload.get("execution_count_allowed"),
+                "terminal_verifier_count_used": terminal_verifier_count_used,
+                "terminal_verifier_count_allowed": lease_payload.get("terminal_verifier_count_allowed"),
+                "burst_budget_consumed_before_execution": next_burst,
+            })
             results = []
             for idx, item in enumerate(cmds):
                 if not isinstance(item, dict) or not isinstance(item.get("script"), str):

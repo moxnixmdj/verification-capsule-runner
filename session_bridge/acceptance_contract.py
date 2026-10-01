@@ -63,8 +63,50 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
     if not isinstance(path, str) or not path.startswith("canonical/governance/") or not path.endswith(".json"):
         errors.append("CANONICAL_LEASE_PATH_INVALID")
     rank = payload.get("sample_rank")
-    if not isinstance(rank, int) or rank < 1:
+    if not isinstance(rank, int) or isinstance(rank, bool) or rank < 1:
         errors.append("SAMPLE_RANK_INVALID")
+    if payload.get("task_execution_authorized") is True or payload.get("scope") == "STAGE_C_ONE_SHOT_EXECUTION":
+        execution_budget = payload.get("execution_count_allowed")
+        terminal_budget = payload.get("terminal_verifier_count_allowed")
+        if not isinstance(execution_budget, int) or isinstance(execution_budget, bool) or execution_budget < 0:
+            errors.append("EXECUTION_COUNT_ALLOWED_INVALID")
+        if not isinstance(terminal_budget, int) or isinstance(terminal_budget, bool) or terminal_budget < 0:
+            errors.append("TERMINAL_VERIFIER_COUNT_ALLOWED_INVALID")
+    return errors
+
+
+def validate_total_lease_budget(
+    bound_lease: Mapping[str, Any],
+    *,
+    scope: str,
+    execution_count_used: int = 0,
+    terminal_verifier_count_used: int = 0,
+) -> list[str]:
+    """Fail closed against the canonical lease's total one-shot budgets.
+
+    Every accepted Stage-C builder burst consumes one execution unit. The
+    terminal verifier consumes one terminal unit before it is invoked, so a
+    verifier crash cannot accidentally grant a retry.
+    """
+    errors: list[str] = []
+    if scope == "BURST":
+        allowed = bound_lease.get("execution_count_allowed")
+        if not isinstance(allowed, int) or isinstance(allowed, bool) or allowed < 0:
+            return ["EXECUTION_COUNT_ALLOWED_INVALID"]
+        if not isinstance(execution_count_used, int) or isinstance(execution_count_used, bool) or execution_count_used < 0:
+            return ["EXECUTION_COUNT_USED_INVALID"]
+        if execution_count_used >= allowed:
+            errors.append("TOTAL_EXECUTION_BUDGET_EXHAUSTED")
+    elif scope == "TERMINAL":
+        allowed = bound_lease.get("terminal_verifier_count_allowed")
+        if not isinstance(allowed, int) or isinstance(allowed, bool) or allowed < 0:
+            return ["TERMINAL_VERIFIER_COUNT_ALLOWED_INVALID"]
+        if not isinstance(terminal_verifier_count_used, int) or isinstance(terminal_verifier_count_used, bool) or terminal_verifier_count_used < 0:
+            return ["TERMINAL_VERIFIER_COUNT_USED_INVALID"]
+        if terminal_verifier_count_used >= allowed:
+            errors.append("TOTAL_TERMINAL_VERIFIER_BUDGET_EXHAUSTED")
+    else:
+        errors.append("TOTAL_BUDGET_SCOPE_INVALID")
     return errors
 
 
