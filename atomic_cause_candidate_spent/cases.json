@@ -1,0 +1,250 @@
+{
+  "schema": "PROJECT_BRAIN_CAUSE_CANDIDATE_GENERATION_SPENT_C3_V1",
+  "status": "FROZEN_FROM_SPENT_C3_FAILURE_TRACES__ZERO_CAPABILITY_CREDIT",
+  "source": {
+    "agentdebugx_case_commit": "72a93f8673dd96f74c0785b523eb972d9510394c",
+    "rule": "The generator receives causal edges and event roles only. expected_cause_event is evaluation-only and never passed to candidate generation."
+  },
+  "cases": [
+    {
+      "id": "baseline_sort_priorities",
+      "events": [
+        {
+          "id": "task",
+          "name": "task.observation",
+          "role": "observation",
+          "intervenable": false
+        },
+        {
+          "id": "route",
+          "name": "router.selection",
+          "role": "decision",
+          "intervenable": true,
+          "caused_by": [
+            "task"
+          ]
+        },
+        {
+          "id": "exec",
+          "name": "tool.result",
+          "role": "execution",
+          "intervenable": false,
+          "caused_by": [
+            "route"
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "verifier.failure",
+          "role": "failure",
+          "intervenable": false,
+          "caused_by": [
+            "exec"
+          ]
+        }
+      ],
+      "target": "fail",
+      "expected_cause_event": "route"
+    },
+    {
+      "id": "baseline_path_filename",
+      "events": [
+        {
+          "id": "task",
+          "name": "task.observation",
+          "role": "observation",
+          "intervenable": false
+        },
+        {
+          "id": "route",
+          "name": "router.selection",
+          "role": "decision",
+          "intervenable": true,
+          "caused_by": [
+            "task"
+          ]
+        },
+        {
+          "id": "exec",
+          "name": "tool.result",
+          "role": "execution",
+          "intervenable": false,
+          "caused_by": [
+            "route"
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "verifier.failure",
+          "role": "failure",
+          "intervenable": false,
+          "caused_by": [
+            "exec"
+          ]
+        }
+      ],
+      "target": "fail",
+      "expected_cause_event": "route"
+    },
+    {
+      "id": "baseline_json_lookup",
+      "events": [
+        {
+          "id": "task",
+          "name": "task.observation",
+          "role": "observation",
+          "intervenable": false
+        },
+        {
+          "id": "route",
+          "name": "router.selection",
+          "role": "decision",
+          "intervenable": true,
+          "caused_by": [
+            "task"
+          ]
+        },
+        {
+          "id": "exec",
+          "name": "tool.error",
+          "role": "execution",
+          "intervenable": false,
+          "caused_by": [
+            "route"
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "verifier.failure",
+          "role": "failure",
+          "intervenable": false,
+          "caused_by": [
+            "exec"
+          ]
+        }
+      ],
+      "target": "fail",
+      "expected_cause_event": "route"
+    },
+    {
+      "id": "ettin_average_latency",
+      "events": [
+        {
+          "id": "task",
+          "name": "task.observation",
+          "role": "observation",
+          "intervenable": false
+        },
+        {
+          "id": "route",
+          "name": "router.selection",
+          "role": "decision",
+          "intervenable": true,
+          "caused_by": [
+            "task"
+          ]
+        },
+        {
+          "id": "exec",
+          "name": "tool.result",
+          "role": "execution",
+          "intervenable": false,
+          "caused_by": [
+            "route"
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "verifier.failure",
+          "role": "failure",
+          "intervenable": false,
+          "caused_by": [
+            "exec"
+          ]
+        }
+      ],
+      "target": "fail",
+      "expected_cause_event": "route"
+    },
+    {
+      "id": "ettin_largest_sample",
+      "events": [
+        {
+          "id": "task",
+          "name": "task.observation",
+          "role": "observation",
+          "intervenable": false
+        },
+        {
+          "id": "route",
+          "name": "router.selection",
+          "role": "decision",
+          "intervenable": true,
+          "caused_by": [
+            "task"
+          ]
+        },
+        {
+          "id": "exec",
+          "name": "tool.result",
+          "role": "execution",
+          "intervenable": false,
+          "caused_by": [
+            "route"
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "verifier.failure",
+          "role": "failure",
+          "intervenable": false,
+          "caused_by": [
+            "exec"
+          ]
+        }
+      ],
+      "target": "fail",
+      "expected_cause_event": "route"
+    },
+    {
+      "id": "ettin_path_filename",
+      "events": [
+        {
+          "id": "task",
+          "name": "task.observation",
+          "role": "observation",
+          "intervenable": false
+        },
+        {
+          "id": "route",
+          "name": "router.selection",
+          "role": "decision",
+          "intervenable": true,
+          "caused_by": [
+            "task"
+          ]
+        },
+        {
+          "id": "exec",
+          "name": "tool.result",
+          "role": "execution",
+          "intervenable": false,
+          "caused_by": [
+            "route"
+          ]
+        },
+        {
+          "id": "fail",
+          "name": "verifier.failure",
+          "role": "failure",
+          "intervenable": false,
+          "caused_by": [
+            "exec"
+          ]
+        }
+      ],
+      "target": "fail",
+      "expected_cause_event": "route"
+    }
+  ]
+}
