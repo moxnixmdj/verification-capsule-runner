@@ -23,7 +23,7 @@ jobs:
           {
             set -euo pipefail
             test "$(git hash-object cognitive_c3_filtered_probe/cognitive_tool_router.py)" = "e947d086225aa165895dc5addd4847fb686b3454"
-            test "$(git hash-object cognitive_c3_filtered_probe/test_cognitive_tool_router.py)" = "3627d7cf4aea718e6b56edab7f9b84ab04dbb208"
+            test "$(git hash-object cognitive_c3_filtered_probe/test_cognitive_tool_router.py)" = "114364aae54aa2ec2f55613fb73125d361f7dc3f"
             python cognitive_c3_filtered_probe/test_cognitive_tool_router.py
           } > cognitive_c3_filtered_probe/verify.log 2>&1
           rc=$?
