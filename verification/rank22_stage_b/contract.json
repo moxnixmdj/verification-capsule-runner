@@ -245,10 +245,11 @@
       "inner_tangent_line_length_mm": 8.860003747088186
     }
   },
-  "candidate_answer_sha256": "b0a8a45ae30cce657f6fde06a7c2fa97334d4f0b35f9183df2d1129d94752d70",
+  "candidate_answer_sha256": null,
   "candidate_execution": false,
   "stage_c_authorized": false,
   "capability_credit_delta": 0,
   "family_credit_delta": 0,
-  "incremental_spend_usd": 0
+  "incremental_spend_usd": 0,
+  "candidate_answer_git_blob": "de51533a501713886e1fd762d9e5e5e901d3be50"
 }
