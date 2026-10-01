@@ -1,0 +1,17 @@
+{
+  "session_id": "gsea-proteomics-20261001-parallel-v2",
+  "task": "gsea-proteomics",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "build_timeout_sec": 1800,
+  "command_timeout_sec": 1800,
+  "verifier_build_timeout_sec": 1800,
+  "verifier_timeout_sec": 1800,
+  "session_timeout_sec": 10800,
+  "max_bursts": 16,
+  "max_commands_per_burst": 8,
+  "max_parallel_commands": 8,
+  "poll_interval_sec": 2,
+  "per_command_output_char_limit": 16000,
+  "comment_char_limit": 60000,
+  "authorized_controller_login": "moxnixmdj"
+}
