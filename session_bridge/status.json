@@ -1,7 +1,5 @@
 {
-  "last_submission_blocker": "TERMINAL_AUTHORIZATION_MISSING",
-  "next_step": 2,
+  "max_steps": 2,
   "session_id": "foodstuff-beta-activity-20261001-stagec-v1",
-  "status": "READY_FOR_COMMAND",
-  "task": "foodstuff-beta-activity"
+  "status": "STEP_LIMIT"
 }
