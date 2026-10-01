@@ -24,8 +24,7 @@ jobs:
       - name: Install pinned causal-history candidate
         run: |
           set -euo pipefail
-          python -m pip install --upgrade pip
-          python -m pip install "git+https://github.com/ShaneDolphin/pyrapide.git@d1dc66efbefe3442e247ac896416bf00c25d3ca1"
+          PIP_DEFAULT_TIMEOUT=60 python -m pip install "git+https://github.com/ShaneDolphin/pyrapide.git@d1dc66efbefe3442e247ac896416bf00c25d3ca1"
 
       - name: Run spent cause-candidate generation screen
         id: screen
