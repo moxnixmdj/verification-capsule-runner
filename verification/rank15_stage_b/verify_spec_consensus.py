@@ -60,7 +60,7 @@ assert route_a==route_b==REQS
 
 # Fail-closed sentence accounting. Any sentence that looks normative/constraint-bearing
 # must be captured by at least one requirement's literal or regex evidence.
-sentences=[s.strip() for s in re.findall(r"[^.!?\n]+(?:[.!?]+|$)",text) if s.strip()]
+sentences=[s.strip() for s in re.split(r"(?<=[.!?])\\s+(?=\\S)", text.strip()) if s.strip()]
 normative_markers=("must","do not","rejects","required","minimum","verifier","use ","writes ","write ","bounds",">= ","<= "," ≥ "," ≤ ","exactly","same fixed pattern","no smoothing","no filter")
 unaccounted=[]
 for i,s in enumerate(sentences,1):
