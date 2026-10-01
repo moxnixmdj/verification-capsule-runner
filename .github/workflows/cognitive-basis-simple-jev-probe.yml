@@ -1,0 +1,79 @@
+name: Cognitive Basis Simple Jev Qwen Probe
+
+on:
+  push:
+    paths:
+      - ".github/workflows/cognitive-basis-simple-jev-probe.yml"
+      - "cognitive_basis_probe/**"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout execution capsule
+        uses: actions/checkout@v4
+
+      - name: Record capsule provenance
+        run: |
+          set -euo pipefail
+          cat cognitive_basis_probe/MANIFEST.json
+          git rev-parse HEAD
+
+      - name: Fetch pinned Simple Jev
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o simple-jev.tar.gz             https://github.com/featherless-ai/simple-jev/archive/146d3a65cc6e52926bf136e2e29cd2d9d7108e39.tar.gz
+          mkdir simple-jev
+          tar -xzf simple-jev.tar.gz -C simple-jev --strip-components=1
+          test "$(git ls-remote https://github.com/featherless-ai/simple-jev.git 146d3a65cc6e52926bf136e2e29cd2d9d7108e39 | awk '{print $1}')" = "146d3a65cc6e52926bf136e2e29cd2d9d7108e39" || true
+
+      - name: Install pinned Simple Jev server
+        run: |
+          set -euo pipefail
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e './simple-jev/hf-server'
+
+      - name: Start pinned Qwen Simple Jev server
+        env:
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: |
+          set -euo pipefail
+          python3 simple-jev/hf-server/hf_server.py             --model Qwen/Qwen3.5-0.8B             --revision 2fc06364715b967f1860aea9cf38778875588b17             --device cpu             --dtype float32             --max-model-len 2048             --port 8000             > simple_jev.log 2>&1 &
+          echo $! > simple_jev.pid
+          for i in $(seq 1 300); do
+            if curl -fsS http://127.0.0.1:8000/health > simple_jev_health.json; then
+              cat simple_jev_health.json
+              exit 0
+            fi
+            if ! kill -0 "$(cat simple_jev.pid)" 2>/dev/null; then
+              echo "Simple Jev process exited before health became ready"
+              cat simple_jev.log || true
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "Timed out waiting for Simple Jev health"
+          cat simple_jev.log || true
+          exit 1
+
+      - name: Run identical Brain pointwise probe
+        run: |
+          set -euo pipefail
+          python3 cognitive_basis_probe/pointwise_jev_probe.py             --cases cognitive_basis_probe/cases.jsonl             --endpoint http://127.0.0.1:8000/v1/systemone             --model Qwen/Qwen3.5-0.8B             --output cognitive_basis_simple_jev_qwen_result.json             --confidence-gate 0.80
+          cat cognitive_basis_simple_jev_qwen_result.json
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cognitive-basis-simple-jev-qwen-probe
+          path: |
+            cognitive_basis_simple_jev_qwen_result.json
+            simple_jev.log
+            simple_jev_health.json
+            cognitive_basis_probe/MANIFEST.json
+          if-no-files-found: warn
