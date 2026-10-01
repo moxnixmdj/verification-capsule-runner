@@ -1,4 +1,8 @@
-import session_bridge.controller_fast as c
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "session_bridge"))
+import controller_fast as c
 
 
 def test_plain_string_artifact_supported():
