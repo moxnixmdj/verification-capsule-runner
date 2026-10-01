@@ -87,6 +87,20 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
             "contamination_ledger_sha256": "c" * 64,
             "evidence": ["canonical contamination ledger independently checked"],
         } if execute else None),
+        "runtime_api_preflight": ({
+            "schema": "BRAIN_RUNTIME_API_CONTRACT_PREFLIGHT_V1",
+            "status": "PASS",
+            "exact_execution_surface": True,
+            "planned_api_surface_complete": True,
+            "unverified_api_symbols": [],
+            "contracts": [{
+                "id": "python-runtime",
+                "symbol": "python.version_info",
+                "expected_behavior": "runtime API is present with verified behavior",
+                "status": "PASS",
+                "evidence": ["exact-surface synthetic smoke"],
+            }],
+        } if execute else None),
         "execution_surface_preflight": ({
             "schema": "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1",
             "status": "PASS",
@@ -238,6 +252,23 @@ class LeaseUpgradeTests(unittest.TestCase):
         p["state_sha256"]="0"*64
         x["derived_authority_preflight"]=p
         self.assertIn("DERIVED_AUTHORITY_STATE_DIGEST_MISMATCH", self.check(candidate=x, acceptance_hash="frozen"))
+
+
+    def test_missing_runtime_api_preflight_fails(self):
+        x=dict(self.stage_c); x.pop("runtime_api_preflight", None)
+        self.assertIn("RUNTIME_API_PREFLIGHT_MISSING", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_unverified_runtime_api_symbol_fails(self):
+        x=dict(self.stage_c)
+        x["runtime_api_preflight"]=dict(x["runtime_api_preflight"])
+        x["runtime_api_preflight"]["unverified_api_symbols"]=["FreeCAD.Base.Vector.X"]
+        self.assertIn("UNVERIFIED_RUNTIME_API_SYMBOLS_REMAIN", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_nonexact_runtime_api_surface_fails(self):
+        x=dict(self.stage_c)
+        x["runtime_api_preflight"]=dict(x["runtime_api_preflight"])
+        x["runtime_api_preflight"]["exact_execution_surface"]=False
+        self.assertIn("RUNTIME_API_PREFLIGHT_NOT_EXACT_SURFACE", self.check(candidate=x, acceptance_hash="frozen"))
 
 
 if __name__ == "__main__":
