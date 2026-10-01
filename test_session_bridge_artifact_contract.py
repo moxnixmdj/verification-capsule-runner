@@ -45,3 +45,18 @@ def test_unsafe_exclude_filter_fails_closed():
     ])
     assert normalized == []
     assert unsupported[0]["reason"] == "ARTIFACT_EXCLUDE_PATTERN_MUST_BE_RELATIVE"
+
+
+def test_builder_artifact_postcondition_regression_is_enforced_in_controller_source():
+    source = (Path(__file__).resolve().parent / "session_bridge" / "controller_fast.py").read_text()
+    assert "REQUIRED_ARTIFACTS_MISSING_AFTER_BUILDER:" in source
+    assert '"artifact_poststate": artifact_poststate' in source
+    assert '"missing_artifacts": missing_artifacts' in source
+    assert '"id": "artifact_contract_postcondition"' in source
+
+
+def test_rank22_false_success_class_cannot_be_process_exit_only():
+    source = (Path(__file__).resolve().parent / "session_bridge" / "controller_fast.py").read_text()
+    burst_write = source.index('legacy.write_json(EVIDENCE / f"burst_{next_burst:03d}.json"')
+    postcondition = source.index('REQUIRED_ARTIFACTS_MISSING_AFTER_BUILDER:')
+    assert postcondition < burst_write
