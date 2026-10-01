@@ -48,7 +48,7 @@ B={
 "R13_MONITOR_CONFIGURATION":[r"five frequencies of the active band",r"input monitor is centered",r"output monitors are centered"],
 "R14_RUN_AND_COEFFICIENT_EXTRACTION":[r"stop_when_dft_decayed\(tol=1e-4\)",r"get_eigenmode_coefficients",r"alpha\[0, :, 0\]"],
 "R15_RESOURCE_AND_POLICY":[r"28800 seconds",r"do not cheat"],
-"R16_MATERIAL_MODEL":[r"2\\.85",r"1\\.44",r"215.*nm"]
+"R16_MATERIAL_MODEL":[r"2\.85",r"1\.44",r"215.*nm"]
 }
 route_b={rid for rid,patterns in B.items() if all(re.search(p,lo,re.S) for p in patterns)}
 
