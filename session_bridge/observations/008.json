@@ -1,0 +1,10 @@
+{
+  "command_sha256": "cfc79f9bf8d3087f6ad7ed8cc0f5dd0702ccb00655a7565989271f2248d61637",
+  "duration_sec": 0.249,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-verify-20261001-v2",
+  "stderr": "",
+  "stdout": "A recovery canonicalization / duplicate / order\nB first gap / omitted durability\nC detached recovery outputs\nD live deep-copy / snapshot shape\nE out-of-order durable suffix hidden from visibility\nF concurrent stress\nG recovery performance\nperf_sec 0.055\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\n",
+  "step": 8
+}
