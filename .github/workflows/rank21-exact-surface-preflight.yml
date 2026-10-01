@@ -1,0 +1,19 @@
+name: Rank21 exact task surface preflight
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/rank21_surface/**'
+      - '.github/workflows/rank21-exact-surface-preflight.yml'
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: bash verification/rank21_surface/preflight.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rank21-exact-surface-profile
+          path: rank21_surface_profile.json
