@@ -104,8 +104,8 @@ def validate_lease_upgrade(
         errors.append("LEASE_UPGRADE_REPLAY_POLICY_INVALID")
     if next_burst != 0:
         errors.append("LEASE_UPGRADE_AFTER_BUILDER_STARTED")
-    if acceptance_hash is not None:
-        errors.append("LEASE_UPGRADE_AFTER_ACCEPTANCE_FROZEN")
+    if acceptance_hash is None:
+        errors.append("LEASE_UPGRADE_REQUIRES_ACCEPTANCE_FROZEN")
     return errors
 
 
