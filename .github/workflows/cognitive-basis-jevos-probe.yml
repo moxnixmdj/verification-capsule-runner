@@ -30,7 +30,7 @@ jobs:
             https://github.com/feder-cr/jev/releases/download/jevos-v2/jev-linux-x64.tar.gz
           curl -fL --retry 3 -o jevos-v2-openvino-int8.zip \
             https://github.com/feder-cr/jev/releases/download/jevos-v2/jevos-v2-openvino-int8.zip
-          echo "e1b1f2c629ef53c8abafe9bff158cb92e08a6478ec3382c66c6de9d2efac7004  jev-linux-x64.tar.gz" | sha256sum -c -
+          echo "719540869b8fc019c237894bf481346b0f534b50ba9be01d9496dd8f07ee21c4  jev-linux-x64.tar.gz" | sha256sum -c -
           echo "adb0057720a00b5c49aaeee68e4552a7a2cd52dc5fd33919e9787b0a97ed1570  jevos-v2-openvino-int8.zip" | sha256sum -c -
 
       - name: Start local jevos-v2
