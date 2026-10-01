@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+  "probe": "C3_SKILLROUTER_FRESH_TERMINAL_DELTA_001",
+  "workflow_run_id": "36823508697",
+  "head_sha": "1b3b176cd28cecab59733a5d0e92a9e3cca1724c",
+  "outcome": "failure",
+  "rc": "1",
+  "result_exists": false,
+  "terminal_state": "FAILURE",
+  "capability_credit_delta": 0
+}
