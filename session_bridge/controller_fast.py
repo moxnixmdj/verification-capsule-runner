@@ -662,16 +662,46 @@ def main():
                 results.append(obs)
                 if obs["exit_code"] != 0 and item.get("stop_on_error", True):
                     break
+            # A subprocess exit code is not a sufficient builder-success oracle.
+            # Some task runtimes (FreeCADCmd is a real observed example) may emit
+            # a script-processing exception yet return process exit 0. Probe the
+            # trusted artifact contract directly after every builder burst.
+            artifact_poststate = {}
+            missing_artifacts = []
+            for artifact in artifact_paths:
+                probe = legacy.run(
+                    ["docker", "exec", "brain-bridge-task", "test", "-e", artifact],
+                    check=False,
+                )
+                exists_after = probe.returncode == 0
+                artifact_poststate[artifact] = {"exists_after_builder": exists_after}
+                if not exists_after:
+                    missing_artifacts.append(artifact)
+            if missing_artifacts:
+                results.append({
+                    "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+                    "session_id": CONFIG["session_id"],
+                    "id": "artifact_contract_postcondition",
+                    "exit_code": 66,
+                    "stdout": "",
+                    "stderr": "REQUIRED_ARTIFACTS_MISSING_AFTER_BUILDER:" + ",".join(missing_artifacts),
+                    "duration_sec": 0.0,
+                    "command_sha256": "DIRECT_ARTIFACT_POSTCONDITION",
+                })
             legacy.write_json(EVIDENCE / f"burst_{next_burst:03d}.json", {
                 "session_id": CONFIG["session_id"],
                 "burst_id": next_burst,
                 "results": results,
+                "artifact_poststate": artifact_poststate,
+                "missing_artifacts": missing_artifacts,
             })
             post(OBS_MARKER, {
                 "schema": "BRAIN_FAST_BURST_OBSERVATION_V2",
                 "session_id": CONFIG["session_id"],
                 "burst_id": next_burst,
                 "results": results,
+                "artifact_poststate": artifact_poststate,
+                "missing_artifacts": missing_artifacts,
             })
             next_burst += 1
             if next_burst >= int(CONFIG.get("max_bursts", 20)):
