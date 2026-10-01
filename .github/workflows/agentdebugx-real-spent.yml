@@ -1,0 +1,75 @@
+name: AgentDebugX Real Spent Brain Trajectories
+
+on:
+  push:
+    paths:
+      - ".github/workflows/agentdebugx-real-spent.yml"
+      - "agentdebugx_real_spent/**"
+
+permissions:
+  contents: write
+
+jobs:
+  test-real-spent:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute pinned zero-LLM diagnostic on real spent Brain traces
+        id: probe
+        shell: bash
+        run: |
+          set +e
+          {
+            python -m pip install --upgrade pip
+            python -m pip install "agentdebugx==0.5.2"
+            python agentdebugx_real_spent/probe.py
+          } > agentdebugx_real_spent/run.log 2>&1
+          rc=$?
+          cat agentdebugx_real_spent/run.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentdebugx-real-spent
+          path: |
+            agentdebugx_real_spent/cases.json
+            agentdebugx_real_spent/probe.py
+            agentdebugx_real_spent/result.json
+            agentdebugx_real_spent/run.log
+          if-no-files-found: warn
+      - name: Persist terminal result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.probe.outcome }}
+          RC: ${{ steps.probe.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("agentdebugx_real_spent")
+          ex=(p/"result.json").exists()
+          status={
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"AGENTDEBUGX_REAL_SPENT_BRAIN_TRAJECTORIES",
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "head_sha":os.environ["GITHUB_SHA"],
+            "outcome":os.environ.get("OUTCOME"),
+            "rc":os.environ.get("RC"),
+            "result_exists":ex,
+            "terminal_state":"SUCCESS" if os.environ.get("OUTCOME")=="success" and ex else "FAILURE",
+            "capability_credit_delta":0
+          }
+          (p/"status.json").write_text(json.dumps(status,indent=2)+"\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add agentdebugx_real_spent/status.json agentdebugx_real_spent/run.log
+          test ! -f agentdebugx_real_spent/result.json || git add agentdebugx_real_spent/result.json
+          git commit -m "Record AgentDebugX real spent Brain result"
+          git pull --rebase origin main
+          git push
