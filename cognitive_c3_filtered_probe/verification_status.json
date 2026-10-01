@@ -1,0 +1,9 @@
+{
+  "schema": "PROJECT_BRAIN_C3_TOOL_ROUTER_VERIFICATION_STATUS_V1",
+  "workflow_run_id": "36821032176",
+  "head_sha": "cd8d280054f0c5d3cf17cfeaa80ca86ff58adfc7",
+  "verify_outcome": "failure",
+  "verify_rc": "",
+  "terminal_state": "FAILURE",
+  "capability_credit_delta": 0
+}
