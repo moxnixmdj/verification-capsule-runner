@@ -1,0 +1,55 @@
+name: C3 Ettin Terminal Task Delta
+
+on:
+  push:
+    branches:
+      - "c3-terminal-delta-20261001-v1"
+    paths:
+      - ".github/workflows/c3-ettin-terminal-delta.yml"
+      - "cognitive_c3_terminal_delta/**"
+      - "cognitive_c3_filtered_probe/cognitive_tool_router.py"
+  pull_request:
+    paths:
+      - ".github/workflows/c3-ettin-terminal-delta.yml"
+      - "cognitive_c3_terminal_delta/**"
+      - "cognitive_c3_filtered_probe/cognitive_tool_router.py"
+
+permissions:
+  contents: read
+
+jobs:
+  delta:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record frozen provenance
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          sha256sum             cognitive_c3_terminal_delta/episodes.json             cognitive_c3_terminal_delta/evaluate.py             cognitive_c3_filtered_probe/cognitive_tool_router.py
+
+      - name: Install CPU runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install "sentence-transformers==6.1.0" huggingface_hub
+
+      - name: Run baseline vs filtered Ettin terminal delta
+        run: |
+          set -euo pipefail
+          python cognitive_c3_terminal_delta/evaluate.py
+          cat cognitive_c3_terminal_delta/result.json
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c3-ettin-terminal-task-delta
+          path: |
+            cognitive_c3_terminal_delta/episodes.json
+            cognitive_c3_terminal_delta/evaluate.py
+            cognitive_c3_terminal_delta/result.json
+          if-no-files-found: warn
