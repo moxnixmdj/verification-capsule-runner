@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
 SCHEMA = "BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1"
@@ -44,6 +45,125 @@ LEASE_REVALIDATION_SCHEMA = "BRAIN_FAST_BURST_LEASE_REVALIDATION_V1"
 
 EXECUTION_SURFACE_PREFLIGHT_SCHEMA = "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1"
 SOURCE_BOUNDARY_PREFLIGHT_SCHEMA = "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1"
+CONTINUOUS_OBS_SCHEMA = "PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1"
+CONTINUOUS_OBS_REQUIRED_STATE_PATHS = {
+    "canonical/CANONICAL_POINTER.json",
+    "canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json",
+    "canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json",
+}
+CONTINUOUS_OBS_REQUIRED_LAYERS = {
+    "goal","capability","blocker","solution","verification","inherited_system","obs_process",
+}
+CONTINUOUS_OBS_CLASSES = {
+    "CANONICAL_STATE","EXECUTION_AUTHORITY","VERIFICATION_RECEIPT","EXECUTION_SURFACE",
+    "TOOL_OR_SERVICE","DATA_SOURCE","PACKAGE_OR_MODEL","NETWORK_OR_CAPACITY",
+    "COST_OR_RATE_LIMIT","BENCHMARK_OR_TARGET_VERSION","EXTERNAL_WORLD_STATE",
+}
+
+def _parse_obs_utc(value: Any) -> datetime:
+    if not isinstance(value,str) or not value.strip():
+        raise ValueError("missing")
+    raw=value.strip()
+    if raw.endswith("Z"):
+        raw=raw[:-1]+"+00:00"
+    dt=datetime.fromisoformat(raw)
+    if dt.tzinfo is None:
+        raise ValueError("naive")
+    return dt.astimezone(timezone.utc)
+
+def validate_continuous_obs_context(
+    payload: Any,
+    *,
+    expected_brain_commit: str | None = None,
+    now: datetime | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    now=(now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    if not isinstance(payload,dict):
+        return ["CONTINUOUS_OBS_CONTEXT_MISSING"]
+    if payload.get("schema") != CONTINUOUS_OBS_SCHEMA:
+        errors.append("CONTINUOUS_OBS_SCHEMA_INVALID")
+    if payload.get("status") != "CURRENT":
+        errors.append("CONTINUOUS_OBS_STATUS_NOT_CURRENT")
+    commit=payload.get("canonical_brain_commit")
+    if not isinstance(commit,str) or re.fullmatch(r"[0-9a-f]{40}",commit) is None:
+        errors.append("CONTINUOUS_OBS_CANONICAL_COMMIT_INVALID")
+    elif expected_brain_commit is not None and commit != expected_brain_commit:
+        errors.append("CONTINUOUS_OBS_CANONICAL_COMMIT_MISMATCH")
+    if payload.get("dependency_inventory_complete") is not True:
+        errors.append("CONTINUOUS_OBS_DEPENDENCY_INVENTORY_INCOMPLETE")
+    if payload.get("material_world_state_dependencies_complete") is not True:
+        errors.append("CONTINUOUS_OBS_WORLD_STATE_INVENTORY_INCOMPLETE")
+    unknown=payload.get("unknown_material_dependencies")
+    if not isinstance(unknown,list) or unknown:
+        errors.append("CONTINUOUS_OBS_UNKNOWN_MATERIAL_DEPENDENCIES")
+    if payload.get("stale_authority_absent") is not True:
+        errors.append("CONTINUOUS_OBS_STALE_AUTHORITY_PRESENT")
+    if payload.get("valid_proof_action_priority") is not True:
+        errors.append("CONTINUOUS_OBS_PROOF_ACTION_PRIORITY_MISSING")
+    layers=payload.get("obs_layers_current")
+    if not isinstance(layers,dict):
+        errors.append("CONTINUOUS_OBS_LAYERS_MISSING")
+    else:
+        for layer in sorted(CONTINUOUS_OBS_REQUIRED_LAYERS):
+            if layers.get(layer) is not True:
+                errors.append("CONTINUOUS_OBS_LAYER_STALE:"+layer)
+    state=payload.get("canonical_state_dependencies")
+    if not isinstance(state,list):
+        errors.append("CONTINUOUS_OBS_CANONICAL_STATE_BINDINGS_MISSING")
+        state=[]
+    paths=set()
+    for i,item in enumerate(state):
+        if not isinstance(item,dict):
+            errors.append(f"CONTINUOUS_OBS_STATE_BINDING_INVALID:{i}")
+            continue
+        p=str(item.get("path") or "")
+        h=str(item.get("sha256") or "")
+        paths.add(p)
+        if re.fullmatch(r"[0-9a-f]{64}",h) is None:
+            errors.append(f"CONTINUOUS_OBS_STATE_DIGEST_INVALID:{p or i}")
+    for p in sorted(CONTINUOUS_OBS_REQUIRED_STATE_PATHS-paths):
+        errors.append("CONTINUOUS_OBS_REQUIRED_STATE_UNBOUND:"+p)
+    deps=payload.get("dependencies")
+    if not isinstance(deps,list):
+        errors.append("CONTINUOUS_OBS_DEPENDENCIES_MISSING")
+        deps=[]
+    for i,dep in enumerate(deps):
+        if not isinstance(dep,dict):
+            errors.append(f"CONTINUOUS_OBS_DEPENDENCY_INVALID:{i}")
+            continue
+        did=str(dep.get("dependency_id") or i)
+        material=dep.get("material")
+        cls=str(dep.get("class") or "")
+        if cls not in CONTINUOUS_OBS_CLASSES:
+            errors.append("CONTINUOUS_OBS_DEPENDENCY_CLASS_INVALID:"+did)
+        if material is not True and material is not False:
+            errors.append("CONTINUOUS_OBS_DEPENDENCY_MATERIAL_INVALID:"+did)
+            material=True
+        if material and dep.get("status") != "READY":
+            errors.append("CONTINUOUS_OBS_MATERIAL_DEPENDENCY_NOT_READY:"+did)
+        evidence=dep.get("evidence")
+        if material and (not isinstance(evidence,list) or not evidence):
+            errors.append("CONTINUOUS_OBS_MATERIAL_EVIDENCE_MISSING:"+did)
+        volatility=dep.get("volatility")
+        if volatility not in ("STATIC","VOLATILE"):
+            errors.append("CONTINUOUS_OBS_DEPENDENCY_VOLATILITY_INVALID:"+did)
+        if volatility=="VOLATILE":
+            try:
+                observed=_parse_obs_utc(dep.get("observed_at_utc"))
+            except Exception:
+                errors.append("CONTINUOUS_OBS_VOLATILE_TIME_INVALID:"+did)
+                observed=None
+            max_age=dep.get("max_age_seconds")
+            if not isinstance(max_age,(int,float)) or isinstance(max_age,bool) or not (0 < float(max_age) <= 86400):
+                errors.append("CONTINUOUS_OBS_VOLATILE_MAX_AGE_INVALID:"+did)
+            elif observed is not None:
+                age=(now-observed).total_seconds()
+                if age < -300:
+                    errors.append("CONTINUOUS_OBS_VOLATILE_TIME_IN_FUTURE:"+did)
+                elif age > float(max_age):
+                    errors.append("CONTINUOUS_OBS_VOLATILE_DEPENDENCY_STALE:"+did)
+    return sorted(set(errors))
 
 def validate_source_boundary_preflight(payload: Any) -> list[str]:
     """Fail closed if task-specific knowledge escaped the frozen source boundary.
@@ -128,6 +248,10 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
     rank = payload.get("sample_rank")
     if not isinstance(rank, int) or isinstance(rank, bool) or rank < 1:
         errors.append("SAMPLE_RANK_INVALID")
+    errors.extend(validate_continuous_obs_context(
+        payload.get("continuous_obs"),
+        expected_brain_commit=commit if isinstance(commit,str) else None,
+    ))
     if payload.get("task_execution_authorized") is True or payload.get("scope") == "STAGE_C_ONE_SHOT_EXECUTION":
         execution_budget = payload.get("execution_count_allowed")
         terminal_budget = payload.get("terminal_verifier_count_allowed")
@@ -245,6 +369,10 @@ def validate_lease_revalidation(
     commit = payload.get("canonical_brain_commit")
     if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
         errors.append("LEASE_REVALIDATION_CANONICAL_COMMIT_INVALID")
+    errors.extend(validate_continuous_obs_context(
+        payload.get("continuous_obs"),
+        expected_brain_commit=commit if isinstance(commit,str) else None,
+    ))
     if expected_scope == "BURST":
         if not isinstance(expected_burst_id, int) or expected_burst_id < 0:
             errors.append("LEASE_REVALIDATION_EXPECTED_BURST_INVALID")
