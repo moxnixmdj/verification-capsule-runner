@@ -1,0 +1,91 @@
+name: Qualify Wikidata P856 Source Authority Binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ARM_SOURCE_AUTHORITY_BINDING_P856_20260930_V1
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Verify exact Brain candidate bytes
+        shell: bash
+        run: |
+          test "$(git hash-object canonical/runtime/bound_capabilities/source_authority_binding_wikidata.py)" = "a293ffae6e9f62b6087aab804718bc30a92b2105"
+          test "$(git hash-object canonical/tests/test_source_authority_binding_wikidata.py)" = "b86e2d2a979bc9c4c33e43c61466e181257c8917"
+      - name: Run authored qualification tests
+        run: python -m unittest -v canonical.tests.test_source_authority_binding_wikidata
+      - name: Independent fresh P856 oracle
+        run: |
+          python - <<'PY'
+          import importlib.util,json,pathlib,urllib.parse,urllib.request
+          UA="ProjectBrain-Independent-P856-Oracle/1.0"
+          def fetch(url):
+              req=urllib.request.Request(url,headers={"User-Agent":UA,"Accept":"application/json"})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                  return json.loads(r.read(2500000).decode("utf-8","replace"))
+          def same(a,b):
+              a=a.lower().strip("."); b=b.lower().strip(".")
+              return a==b or a.endswith("."+b) or b.endswith("."+a)
+          def oracle(label,wanted_host):
+              q="https://www.wikidata.org/w/api.php?"+urllib.parse.urlencode({
+                  "action":"wbsearchentities","search":label,"language":"en","format":"json","limit":8
+              })
+              data=fetch(q)
+              for item in data.get("search") or []:
+                  qid=item.get("id","")
+                  if not qid.startswith("Q"): continue
+                  ent=fetch("https://www.wikidata.org/wiki/Special:EntityData/"+qid+".json")
+                  obj=(ent.get("entities") or {}).get(qid) or {}
+                  for claim in ((obj.get("claims") or {}).get("P856") or []):
+                      try: url=claim["mainsnak"]["datavalue"]["value"]
+                      except Exception: continue
+                      host=(urllib.parse.urlsplit(url).hostname or "").lower()
+                      if same(host,wanted_host):
+                          return {"qid":qid,"url":url,"host":host}
+              raise AssertionError("NO_P856_MATCH:"+label+":"+wanted_host)
+
+          independent=[
+              ("World Health Organization","who.int","https://www.who.int/","World Health Organization"),
+              ("European Space Agency","esa.int","https://www.esa.int/","European Space Agency"),
+          ]
+          oracle_rows=[]
+          for label,host,url,title in independent:
+              oracle_rows.append(oracle(label,host))
+
+          p=pathlib.Path("canonical/runtime/bound_capabilities/source_authority_binding_wikidata.py")
+          s=importlib.util.spec_from_file_location("producer",p)
+          m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+          for label,host,url,title in independent:
+              out=m.bind_candidate({"url":url,"host":host,"title":title},timeout=20)
+              assert out["status"]=="AUTHORITY_IDENTITY_VERIFIED",out
+              assert out["authority_status"]=="VERIFIED",out
+              assert out["registry_property"]=="P856",out
+              assert out["primary_source_status"]=="UNVERIFIED",out
+              assert out["relevance_status"]=="UNVERIFIED",out
+              assert out["model_dependency_count"]==0,out
+              assert out["incremental_spend_usd"]==0,out
+          neg=m.bind_candidate({"url":"https://doi.org/10.17487/RFC9110","title":"RFC 9110 HTTP Semantics"})
+          assert neg["authority_status"]=="UNVERIFIED",neg
+          print(json.dumps({"independent_oracle":oracle_rows,"status":"PASS"},sort_keys=True))
+          PY
+      - name: Emit durable PASS receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          gh api "repos/$REPO/issues" \
+            -f title="QUALIFICATION_PASS_SOURCE_AUTHORITY_BINDING_P856_20260930_V1" \
+            -f body="PASS. Head SHA: $SHA. Workflow run: $RUN_ID. Exact Brain candidate blobs a293ffae6e9f62b6087aab804718bc30a92b2105 / b86e2d2a979bc9c4c33e43c61466e181257c8917. Authored tests plus independent WHO/ESA Wikidata P856 oracle passed. Claim scope is host-to-declared-official-website identity only; primary-source, relevance, and evidence sufficiency remain UNVERIFIED. model_dependency_count=0; incremental_spend_usd=0."
