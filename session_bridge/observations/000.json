@@ -1,0 +1,10 @@
+{
+  "command_sha256": "29cad5927958b0eb8b2cfad4c1170a4f1f131d3326edcb3054961a5b7821a1c9",
+  "duration_sec": 0.055,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-verify-20261001-v2",
+  "stderr": "",
+  "stdout": "/app\ntotal 68\ndrwxr-xr-x 1 root root 4096 Oct  1 02:52 .\ndrwxr-xr-x 1 root root 4096 Oct  1 02:52 ..\n-rw-r--r-- 1 root root  599 Oct  1 02:52 _stage_a.py\n-rw-r--r-- 1 root root  504 Oct  1 02:52 _stage_b.py\n-rw-r--r-- 1 root root  435 Oct  1 02:52 _stage_c.py\n-rw-r--r-- 1 root root  499 Oct  1 02:52 _stage_d.py\n-rw-r--r-- 1 root root 1182 Oct  1 02:52 _stage_e.py\n-rw-r--r-- 1 root root  507 Oct  1 02:52 app.py\n-rw-r--r-- 1 root root 1654 Oct  1 02:52 checkpoint.py\n-rw-r--r-- 1 root root 1908 Oct  1 02:52 config.py\n-rw-r--r-- 1 root root 3197 Oct  1 02:52 log_writer.py\n-rw-r--r-- 1 root root 1960 Oct  1 02:52 metrics.py\n-rw-r--r-- 1 root root  756 Oct  1 02:52 recovery.py\n-rw-r--r-- 1 root root 3026 Oct  1 02:52 segment_manager.py\n-rw-r--r-- 1 root root 1968 Oct  1 02:52 serializer.py\n-rw-r--r-- 1 root root 2309 Oct  1 02:52 wal.py\n-rw-r--r-- 1 root root 1783 Oct  1 02:52 wal_index.py\n/app/_stage_a.py\n/app/_stage_b.py\n/app/_stage_c.py\n/app/_stage_d.py\n/app/_stage_e.py\n/app/app.py\n/app/checkpoint.py\n/app/config.py\n/app/log_writer.py\n/app/metrics.py\n/app/recovery.py\n/app/segment_manager.py\n/app/serializer.py\n/app/wal.py\n/app/wal_index.py\n",
+  "step": 0
+}
