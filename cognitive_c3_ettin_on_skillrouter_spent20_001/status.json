@@ -1,11 +1,11 @@
 {
   "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
   "probe": "C3_ETTIN_ON_SKILLROUTER_SPENT20_001",
-  "workflow_run_id": "36824615729",
-  "head_sha": "8f37905d9f7f09215f12a830460bbb0f167280e9",
-  "outcome": "failure",
-  "rc": "1",
-  "result_exists": false,
-  "terminal_state": "FAILURE",
+  "workflow_run_id": "36824849179",
+  "head_sha": "4a347b3441fd48d0bfdce2ffc85e5a03560fad38",
+  "outcome": "success",
+  "rc": "0",
+  "result_exists": true,
+  "terminal_state": "SUCCESS",
   "capability_credit_delta": 0
 }

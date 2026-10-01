@@ -1,0 +1,391 @@
+{
+  "schema": "PROJECT_BRAIN_C3_ETTIN_ON_SKILLROUTER_SPENT20_001_RESULT_V1",
+  "status": "SPENT_CROSS_VALIDATION_MEASUREMENT__ZERO_CAPABILITY_CREDIT",
+  "ettin_model": "cross-encoder/ettin-reranker-150m-v1",
+  "episodes": 20,
+  "semantic_episodes": 17,
+  "ettin_terminal_success_rate": 0.85,
+  "ettin_semantic_success_rate": 0.8235294117647058,
+  "ettin_mean_routing_latency_ms": 132.58253564999833,
+  "ettin_failures": [
+    "average_latency",
+    "largest_sample",
+    "path_filename"
+  ],
+  "skillrouter_terminal_success_rate": 0.95,
+  "skillrouter_semantic_success_rate": 0.9411764705882353,
+  "skillrouter_mean_routing_latency_ms": 1970.0300380999975,
+  "rows": [
+    {
+      "id": "sum_invoice_lines",
+      "pick": "sum_numbers",
+      "correct": true,
+      "latency_ms": 181.29474500000242,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "sum_numbers",
+        "mean_numbers",
+        "sort_numbers",
+        "count_words"
+      ],
+      "scores": {
+        "sum_numbers": 8.517513275146484,
+        "mean_numbers": 2.9337565898895264,
+        "sort_numbers": 1.9822068214416504,
+        "count_words": -0.17612974345684052
+      },
+      "top1_top2_margin": 5.583756685256958
+    },
+    {
+      "id": "average_latency",
+      "pick": "median_numbers",
+      "correct": false,
+      "latency_ms": 161.732065999999,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "sum_numbers",
+        "mean_numbers",
+        "max_number",
+        "median_numbers"
+      ],
+      "scores": {
+        "sum_numbers": 4.503897190093994,
+        "mean_numbers": 5.005618572235107,
+        "max_number": 2.09975528717041,
+        "median_numbers": 5.142269611358643
+      },
+      "top1_top2_margin": 0.13665103912353516
+    },
+    {
+      "id": "median_outlier_resistant",
+      "pick": "median_numbers",
+      "correct": true,
+      "latency_ms": 172.08894499999872,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "mean_numbers",
+        "median_numbers",
+        "sort_numbers",
+        "max_number"
+      ],
+      "scores": {
+        "mean_numbers": 5.082065105438232,
+        "median_numbers": 8.300897598266602,
+        "sort_numbers": 3.738407850265503,
+        "max_number": 3.908478021621704
+      },
+      "top1_top2_margin": 3.218832492828369
+    },
+    {
+      "id": "largest_sample",
+      "pick": "sort_numbers",
+      "correct": false,
+      "latency_ms": 140.55680199999188,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "max_number",
+        "median_numbers",
+        "sum_numbers",
+        "sort_numbers"
+      ],
+      "scores": {
+        "max_number": 1.6359903812408447,
+        "median_numbers": -1.1199188232421875,
+        "sum_numbers": -2.0868210792541504,
+        "sort_numbers": 2.0788588523864746
+      },
+      "top1_top2_margin": 0.4428684711456299
+    },
+    {
+      "id": "sort_priorities",
+      "pick": "sort_numbers",
+      "correct": true,
+      "latency_ms": 157.38667800000883,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "sort_numbers",
+        "max_number",
+        "unique_items",
+        "sum_numbers"
+      ],
+      "scores": {
+        "sort_numbers": 7.101833820343018,
+        "max_number": 4.843322277069092,
+        "unique_items": 1.6245492696762085,
+        "sum_numbers": 4.467928409576416
+      },
+      "top1_top2_margin": 2.258511543273926
+    },
+    {
+      "id": "dedupe_tags",
+      "pick": "unique_items",
+      "correct": true,
+      "latency_ms": 161.07580399999222,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "unique_items",
+        "sort_text",
+        "count_words",
+        "reverse_text"
+      ],
+      "scores": {
+        "unique_items": 11.031135559082031,
+        "sort_text": 5.221805095672607,
+        "count_words": 3.2857608795166016,
+        "reverse_text": 5.2614521980285645
+      },
+      "top1_top2_margin": 5.769683361053467
+    },
+    {
+      "id": "word_count",
+      "pick": "count_words",
+      "correct": true,
+      "latency_ms": 150.60231799999713,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "count_words",
+        "count_lines",
+        "uppercase_text",
+        "sha256_text"
+      ],
+      "scores": {
+        "count_words": 1.9031424522399902,
+        "count_lines": 0.7637295722961426,
+        "uppercase_text": -0.29142946004867554,
+        "sha256_text": 0.16534656286239624
+      },
+      "top1_top2_margin": 1.1394128799438477
+    },
+    {
+      "id": "line_count",
+      "pick": "count_lines",
+      "correct": true,
+      "latency_ms": 157.3985969999967,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "count_lines",
+        "count_words",
+        "reverse_text",
+        "uppercase_text"
+      ],
+      "scores": {
+        "count_lines": 4.300614833831787,
+        "count_words": 0.8537251949310303,
+        "reverse_text": 0.6617158055305481,
+        "uppercase_text": -0.9566794037818909
+      },
+      "top1_top2_margin": 3.446889638900757
+    },
+    {
+      "id": "uppercase_identifier",
+      "pick": "uppercase_text",
+      "correct": true,
+      "latency_ms": 154.47238699999843,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "uppercase_text",
+        "reverse_text",
+        "sha256_text",
+        "basename_path"
+      ],
+      "scores": {
+        "uppercase_text": 8.582722663879395,
+        "reverse_text": 4.376133918762207,
+        "sha256_text": 0.533423662185669,
+        "basename_path": 1.981489896774292
+      },
+      "top1_top2_margin": 4.2065887451171875
+    },
+    {
+      "id": "reverse_token",
+      "pick": "reverse_text",
+      "correct": true,
+      "latency_ms": 143.30573499999844,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "reverse_text",
+        "uppercase_text",
+        "sort_text",
+        "sha256_text"
+      ],
+      "scores": {
+        "reverse_text": 11.171256065368652,
+        "uppercase_text": 2.7791836261749268,
+        "sort_text": 5.283046245574951,
+        "sha256_text": 2.186136245727539
+      },
+      "top1_top2_margin": 5.888209819793701
+    },
+    {
+      "id": "path_filename",
+      "pick": "extension_path",
+      "correct": false,
+      "latency_ms": 154.92158899999708,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "basename_path",
+        "extension_path",
+        "count_words",
+        "sha256_text"
+      ],
+      "scores": {
+        "basename_path": 8.002852439880371,
+        "extension_path": 8.95590877532959,
+        "count_words": 0.17251746356487274,
+        "sha256_text": -0.7185946702957153
+      },
+      "top1_top2_margin": 0.9530563354492188
+    },
+    {
+      "id": "path_extension",
+      "pick": "extension_path",
+      "correct": true,
+      "latency_ms": 159.10712199999466,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "extension_path",
+        "basename_path",
+        "json_key",
+        "count_lines"
+      ],
+      "scores": {
+        "extension_path": 6.181074619293213,
+        "basename_path": 2.434581756591797,
+        "json_key": -1.3232617378234863,
+        "count_lines": -0.7423535585403442
+      },
+      "top1_top2_margin": 3.746492862701416
+    },
+    {
+      "id": "json_lookup",
+      "pick": "json_key",
+      "correct": true,
+      "latency_ms": 165.10532400000955,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "json_key",
+        "count_words",
+        "unique_items",
+        "basename_path"
+      ],
+      "scores": {
+        "json_key": 3.926551342010498,
+        "count_words": -0.9716610312461853,
+        "unique_items": -0.609833300113678,
+        "basename_path": 0.5179551243782043
+      },
+      "top1_top2_margin": 3.4085962176322937
+    },
+    {
+      "id": "km_to_miles",
+      "pick": "km_to_miles",
+      "correct": true,
+      "latency_ms": 143.23334299999146,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "km_to_miles",
+        "c_to_f",
+        "mean_numbers",
+        "sum_numbers"
+      ],
+      "scores": {
+        "km_to_miles": 10.60466480255127,
+        "c_to_f": -0.7215757966041565,
+        "mean_numbers": 1.6074490547180176,
+        "sum_numbers": 2.7193050384521484
+      },
+      "top1_top2_margin": 7.885359764099121
+    },
+    {
+      "id": "temperature_convert",
+      "pick": "c_to_f",
+      "correct": true,
+      "latency_ms": 170.25054699999487,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "c_to_f",
+        "km_to_miles",
+        "mean_numbers",
+        "max_number"
+      ],
+      "scores": {
+        "c_to_f": 9.974213600158691,
+        "km_to_miles": -1.881912112236023,
+        "mean_numbers": 0.9070576429367065,
+        "max_number": -0.18477559089660645
+      },
+      "top1_top2_margin": 9.067155957221985
+    },
+    {
+      "id": "hash_payload",
+      "pick": "sha256_text",
+      "correct": true,
+      "latency_ms": 184.65030299999796,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "sha256_text",
+        "uppercase_text",
+        "reverse_text",
+        "count_words"
+      ],
+      "scores": {
+        "sha256_text": 10.216524124145508,
+        "uppercase_text": 3.8783371448516846,
+        "reverse_text": 6.550546169281006,
+        "count_words": 4.17721700668335
+      },
+      "top1_top2_margin": 3.665977954864502
+    },
+    {
+      "id": "provider_filter_authorized",
+      "pick": "dropbox_search",
+      "correct": true,
+      "latency_ms": 0.003757000001769484,
+      "semantic_choice_required": false,
+      "eligible_route_ids": [
+        "dropbox_search"
+      ],
+      "scores": {
+        "dropbox_search": null
+      },
+      "top1_top2_margin": null
+    },
+    {
+      "id": "provider_filter_unavailable",
+      "pick": "ESCALATE",
+      "correct": true,
+      "latency_ms": 0.002365000000281725,
+      "semantic_choice_required": false,
+      "eligible_route_ids": [],
+      "scores": {},
+      "top1_top2_margin": null
+    },
+    {
+      "id": "provider_filter_unauthorized",
+      "pick": "ESCALATE",
+      "correct": true,
+      "latency_ms": 0.0022039999976186664,
+      "semantic_choice_required": false,
+      "eligible_route_ids": [],
+      "scores": {},
+      "top1_top2_margin": null
+    },
+    {
+      "id": "allowed_route_scope",
+      "pick": "web_search",
+      "correct": true,
+      "latency_ms": 94.46008199999767,
+      "semantic_choice_required": true,
+      "eligible_route_ids": [
+        "web_search",
+        "local_file_search"
+      ],
+      "scores": {
+        "web_search": 9.918829917907715,
+        "local_file_search": 5.505366325378418
+      },
+      "top1_top2_margin": 4.413463592529297
+    }
+  ],
+  "capability_credit_delta": 0
+}
