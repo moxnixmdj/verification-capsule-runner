@@ -1,0 +1,10 @@
+{
+  "command_sha256": "8614919771e9cc1408480e51c044fa336877678c609bc574fe7b3157efaf8088",
+  "duration_sec": 2.627,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "stderr": "",
+  "stdout": "current [0, 1, 2, 3, 4, 5, 6, 7] (2.3255598545074463, 2.859964370727539, 16.504850387573242)\ncontiguous_pp [0, 1, 4, 5, 2, 3, 6, 7] (4.613248348236084, 4.243503570556641, 25.985776901245117)\nreverse_virtual_chunks [4, 5, 6, 7, 0, 1, 2, 3] (7.998124599456787, 6.220554351806641, 40.04550552368164)\nreverse_within_stage_chunks [4, 5, 2, 3, 0, 1, 6, 7] (8.089037895202637, 6.032327175140381, 34.415550231933594)\nTRAINING_PROFILE_CHECK\nenv None virtual_pp_size 2\n",
+  "step": 16
+}
