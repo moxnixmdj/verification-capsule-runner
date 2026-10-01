@@ -1,0 +1,23 @@
+name: Rank21 frozen-output verifier-only recovery
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/rank21_verify_only/**'
+      - '.github/workflows/rank21-verifier-only.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: bash verification/rank21_verify_only/verify_once.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rank21-frozen-output-final-verification
+          path: |
+            rank21_final_verification.json
+            rank21_verifier_ctrf.json
+          if-no-files-found: warn
