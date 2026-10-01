@@ -4,7 +4,7 @@ from session_bridge.acceptance_contract import validate_lease_upgrade
 
 
 def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymization-20261001-v1", execute=False):
-    return {
+    payload = {
         "schema": "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1",
         "session_id": session,
         "task": task,
@@ -17,6 +17,10 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
         "task_execution_authorized": execute,
         "replay_for_credit": False,
     }
+    if execute:
+        payload["execution_count_allowed"] = 1
+        payload["terminal_verifier_count_allowed"] = 1
+    return payload
 
 
 class LeaseUpgradeTests(unittest.TestCase):
