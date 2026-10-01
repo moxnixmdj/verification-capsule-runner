@@ -123,7 +123,7 @@ def main() -> int:
     revision = info.sha
     print(json.dumps({"resolved_model": MODEL_ID, "revision": revision}), flush=True)
 
-    tok = AutoTokenizer.from_pretrained(MODEL_ID, revision=revision)
+    tok = AutoTokenizer.from_pretrained("jhu-clsp/mmBERT-small")
     model = AutoModelForSequenceClassification.from_pretrained(
         MODEL_ID, revision=revision, attn_implementation="sdpa"
     ).to("cpu").eval()
