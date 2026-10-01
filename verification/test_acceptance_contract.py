@@ -8,7 +8,7 @@ from acceptance_contract import (
 )
 from controller_fast import runtime_authority_errors
 
-def obs(commit):
+def obs(commit, mode="EXACT_FETCH_ONLY"):
     return {
       "schema":"PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1",
       "status":"CURRENT",
@@ -16,7 +16,7 @@ def obs(commit):
       "dependency_inventory_complete":True,
       "material_world_state_dependencies_complete":True,
       "information_boundary_complete":True,
-      "information_policy":{"mode":"OPEN_DISCOVERY","allowed_exact_sources":[],"allowed_external_tool_kinds":[]},
+      "information_policy":{"mode":mode,"allowed_exact_sources":[],"allowed_external_tool_kinds":[]},
       "unknown_material_dependencies":[],
       "stale_authority_absent":True,
       "valid_proof_action_priority":True,
@@ -68,6 +68,18 @@ class TestAcceptanceContract(unittest.TestCase):
       "max_age_seconds":60,"evidence":["direct world-state observation"]
     }
     self.assertTrue(any(e.startswith("CONTINUOUS_OBS_VOLATILE_DEPENDENCY_STALE") for e in validate_continuous_obs_context(x,expected_brain_commit="a"*40)))
+
+  def test_stage_c_open_discovery_is_rejected(self):
+    lease={
+      "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"lease_merged_to_main":True,
+      "canonical_brain_commit":"a"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":22,
+      "scope":"STAGE_C_ONE_SHOT_EXECUTION","task_execution_authorized":True,
+      "execution_count_allowed":1,"terminal_verifier_count_allowed":1,
+      "continuous_obs":obs("a"*40,"OPEN_DISCOVERY")
+    }
+    self.assertIn("POST_EXPOSURE_EXTERNAL_DISCOVERY_NOT_DISABLED",validate_lease_authorization(lease,"s1","t1"))
 
   def test_lease_authorization_fail_closed(self):
     good={
