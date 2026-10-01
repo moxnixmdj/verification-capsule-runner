@@ -1,0 +1,172 @@
+{
+  "harbor_exit_code": 0,
+  "incremental_spend_usd": 0,
+  "results": [
+    {
+      "path": "jobs/2026-10-01__02-44-27/live-database-cutover__Co2zKe2/result.json",
+      "result": {
+        "agent_execution": {
+          "finished_at": "2026-10-01T04:46:05.889201Z",
+          "started_at": "2026-10-01T02:45:59.097939Z"
+        },
+        "agent_info": {
+          "model_info": null,
+          "name": "brain-harbor-branch-bridge",
+          "version": "1.0.0"
+        },
+        "agent_result": {
+          "cost_usd": null,
+          "metadata": null,
+          "model_usage": null,
+          "n_cache_tokens": null,
+          "n_input_tokens": null,
+          "n_output_tokens": null,
+          "rollout_details": null
+        },
+        "agent_setup": {
+          "finished_at": "2026-10-01T02:45:59.097847Z",
+          "started_at": "2026-10-01T02:45:59.097791Z"
+        },
+        "config": {
+          "agent": {
+            "concurrency_group": null,
+            "extra_allowed_hosts": [],
+            "import_path": null,
+            "kwargs": {},
+            "load_trajectory": null,
+            "max_timeout_sec": null,
+            "mcp_servers": [],
+            "model_name": null,
+            "n_concurrent": null,
+            "name": "session_bridge.harbor_branch_bridge:HarborBranchBridgeAgent",
+            "override_setup_timeout_sec": null,
+            "override_timeout_sec": null,
+            "resume_trajectory": false,
+            "skills": []
+          },
+          "agent_setup_timeout_multiplier": null,
+          "agent_timeout_multiplier": null,
+          "artifacts": [],
+          "environment": {
+            "cpu_enforcement_policy": "auto",
+            "delete": true,
+            "extra_allowed_hosts": [],
+            "extra_docker_compose": [],
+            "force_build": false,
+            "import_path": null,
+            "kwargs": {},
+            "memory_enforcement_policy": "auto",
+            "mounts": null,
+            "override_cpus": 4,
+            "override_gpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_tpu": null,
+            "type": "docker"
+          },
+          "environment_build_timeout_multiplier": null,
+          "extra_instruction_paths": [],
+          "extra_instructions": [],
+          "install_only": false,
+          "job_id": "d5fc1fd8-fa03-47f1-8e22-86dc9f079a5a",
+          "source_trial": null,
+          "task": {
+            "download_dir": null,
+            "git_commit_id": null,
+            "git_url": null,
+            "name": null,
+            "overwrite": false,
+            "path": "/tmp/terminal-bench-harbor/tasks/live-database-cutover",
+            "ref": null,
+            "source": null
+          },
+          "timeout_multiplier": 1.0,
+          "trial_name": "live-database-cutover__Co2zKe2",
+          "trials_dir": "jobs/2026-10-01__02-44-27",
+          "user_agent": null,
+          "verifier": {
+            "disable": false,
+            "max_timeout_sec": null,
+            "override_timeout_sec": null
+          },
+          "verifier_timeout_multiplier": null
+        },
+        "environment_setup": {
+          "finished_at": "2026-10-01T02:45:59.097737Z",
+          "started_at": "2026-10-01T02:44:32.114858Z"
+        },
+        "exception_info": null,
+        "finished_at": "2026-10-01T04:48:41.738190Z",
+        "id": "e99b257c-6f14-4b0a-9874-01c6dbc9bce7",
+        "source": null,
+        "started_at": "2026-10-01T02:44:31.985311Z",
+        "step_results": null,
+        "task_checksum": "382d08d7b5b229fbcc8cd3f142c651349b16eff3671b61a181e3019c54153397",
+        "task_id": {
+          "path": "/tmp/terminal-bench-harbor/tasks/live-database-cutover"
+        },
+        "task_name": "terminal-bench/live-database-cutover",
+        "trial_name": "live-database-cutover__Co2zKe2",
+        "trial_uri": "file:///home/runner/work/verification-capsule-runner/verification-capsule-runner/jobs/2026-10-01__02-44-27/live-database-cutover__Co2zKe2",
+        "verifier": {
+          "finished_at": "2026-10-01T04:48:41.738177Z",
+          "started_at": "2026-10-01T04:46:35.758673Z"
+        },
+        "verifier_environment_mode": "separate",
+        "verifier_result": {
+          "rewards": {
+            "reward": 0.0
+          }
+        }
+      }
+    },
+    {
+      "path": "jobs/2026-10-01__02-44-27/result.json",
+      "result": {
+        "finished_at": "2026-10-01T04:48:41.741016",
+        "id": "d5fc1fd8-fa03-47f1-8e22-86dc9f079a5a",
+        "n_total_trials": 1,
+        "started_at": "2026-10-01T02:44:31.638222",
+        "stats": {
+          "cost_usd": null,
+          "evals": {
+            "brain-harbor-branch-bridge__adhoc": {
+              "exception_stats": {},
+              "metrics": [
+                {
+                  "mean": 0.0
+                }
+              ],
+              "n_errors": 0,
+              "n_trials": 1,
+              "pass_at_k": {},
+              "reward_stats": {
+                "reward": {
+                  "0.0": [
+                    "live-database-cutover__Co2zKe2"
+                  ]
+                }
+              }
+            }
+          },
+          "n_cache_tokens": null,
+          "n_cancelled_trials": 0,
+          "n_completed_trials": 1,
+          "n_errored_trials": 0,
+          "n_input_tokens": null,
+          "n_output_tokens": null,
+          "n_pending_trials": 0,
+          "n_retries": 0,
+          "n_running_trials": 0
+        },
+        "updated_at": "2026-10-01T04:48:41.741016"
+      }
+    }
+  ],
+  "schema": "BRAIN_HARBOR_FINAL_RUN_V1",
+  "session_id": "harbor-live-database-cutover-dev-20261001-v3",
+  "stderr_tail": "",
+  "stdout_tail": "Tip: There are many benchmarks available in Harbor's registry.\nRun `harbor datasets list` to see all available datasets.\n\n  1/1 Mean: 0.000 \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 2:04:10 0:00:00\nadhoc \u2022 brain-harbor-branch-bridge\n\u250f\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2513\n\u2503 Trials \u2503 Exceptions \u2503  Mean \u2503\n\u2521\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2529\n\u2502      1 \u2502          0 \u2502 0.000 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n\u250f\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2513\n\u2503 Reward \u2503 Count \u2503\n\u2521\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2529\n\u2502 0.0    \u2502     1 \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\nJob Info\nTotal runtime: 2h 4m 10s\nResults written to jobs/2026-10-01__02-44-27/result.json\nInspect results by running `harbor view jobs`\nShare results by running `harbor upload jobs/2026-10-01__02-44-27`\n\n",
+  "task": "live-database-cutover",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e"
+}
