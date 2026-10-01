@@ -1,0 +1,90 @@
+name: Verify rank15 Stage-B V2
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  rank15-stage-b-v2:
+    if: startsWith(github.head_ref, 'verify/rank15-stage-b-v2-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout independent runner branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Checkout pinned Terminal-Bench source
+        run: |
+          git clone --filter=blob:none https://github.com/harbor-framework/terminal-bench.git /tmp/terminal-bench
+          git -C /tmp/terminal-bench checkout --detach 452bf305c6daa62fc59061d22133a7cbc7c1572e
+
+      - name: Independently verify Stage-B semantic contract
+        run: |
+          python rank15_stage_b/verify_stage_b_v2.py /tmp/terminal-bench | tee /tmp/stage_b_semantic.txt
+
+      - name: Build exact official wdm-design environment
+        run: |
+          docker build -t brain-rank15-wdm-stageb /tmp/terminal-bench/tasks/wdm-design/environment
+
+      - name: Prove pymeep import and bounded CPU FDTD runtime
+        run: |
+          mkdir -p /tmp/rank15-receipt
+          docker run --rm brain-rank15-wdm-stageb python - <<'PY' | tee /tmp/rank15-receipt/meep_smoke.txt
+          import json, time
+          import meep as mp
+          t0=time.time()
+          sim=mp.Simulation(
+              cell_size=mp.Vector3(2,2,0),
+              resolution=10,
+              sources=[mp.Source(mp.GaussianSource(frequency=1.0,fwidth=0.2),component=mp.Ez,center=mp.Vector3())],
+          )
+          sim.run(until=1)
+          out={
+              "pymeep_import": True,
+              "meep_version": getattr(mp,"__version__",None),
+              "bounded_fdtd_completed": True,
+              "elapsed_sec": round(time.time()-t0,3),
+              "candidate_executed": False,
+              "solution_read": False,
+              "tests_read": False,
+              "hidden_verifier_read": False,
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Emit independent Stage-B receipt
+        if: success()
+        run: |
+          cp /tmp/stage_b_semantic.txt /tmp/rank15-receipt/semantic.txt
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('/tmp/rank15-receipt/receipt.json')
+          p.write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_RANK15_STAGE_B_INDEPENDENT_RECEIPT_V1",
+            "task":"wdm-design",
+            "rank":15,
+            "benchmark_ref":"452bf305c6daa62fc59061d22133a7cbc7c1572e",
+            "contract":"WDM_DESIGN_RANK15_STAGE_B_CONTRACT_V2",
+            "semantic_contract_verified":True,
+            "official_environment_built":True,
+            "pymeep_import_verified":True,
+            "bounded_cpu_fdtd_verified":True,
+            "task_candidate_executed":False,
+            "solution_read":False,
+            "tests_read":False,
+            "hidden_verifier_read":False,
+            "stage_b_pass":True
+          },indent=2)+"\n")
+          PY
+
+      - name: Upload Stage-B evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rank15-stage-b-v2-evidence
+          path: /tmp/rank15-receipt/
+          if-no-files-found: warn
