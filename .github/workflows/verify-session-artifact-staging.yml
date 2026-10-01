@@ -1,0 +1,27 @@
+name: Verify Session Artifact Staging
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'session_bridge/controller.py'
+      - 'test_session_bridge_artifact_staging.py'
+      - '.github/workflows/verify-session-artifact-staging.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run focused artifact-staging regression
+        run: python -m pytest -q test_session_bridge_artifact_staging.py

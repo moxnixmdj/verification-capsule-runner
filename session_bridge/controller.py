@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import shlex
 from pathlib import Path
 import shutil
 import subprocess
@@ -126,6 +127,44 @@ def load_artifacts(task_dir: Path):
     return list(payload.get("artifacts") or []), str((payload.get("verifier") or {}).get("environment_mode") or "")
 
 
+def stage_missing_artifacts(artifacts):
+    """Stage a uniquely matching output file into each required artifact path.
+
+    This is execution glue only. It never guesses among multiple candidates and
+    never overwrites an artifact already written at the required path.
+    """
+    roots = list(CONFIG.get("artifact_fallback_roots") or ["/app", "/workspace"])
+    staged = []
+    unresolved = []
+    for dst in artifacts:
+        exists = run(["docker", "exec", "brain-bridge-task", "test", "-e", dst], check=False)
+        if exists.returncode == 0:
+            continue
+        basename = Path(dst).name
+        candidates = []
+        for root in roots:
+            src = str(Path(root) / basename)
+            probe = run(["docker", "exec", "brain-bridge-task", "test", "-f", src], check=False)
+            if probe.returncode == 0:
+                candidates.append(src)
+        candidates = sorted(set(candidates))
+        if len(candidates) != 1:
+            unresolved.append({"required": dst, "candidates": candidates})
+            continue
+        src = candidates[0]
+        parent = str(Path(dst).parent)
+        script = (
+            f"mkdir -p {shlex.quote(parent)} && "
+            f"cp -- {shlex.quote(src)} {shlex.quote(dst)}"
+        )
+        cp = run(["docker", "exec", "brain-bridge-task", "/bin/sh", "-lc", script], check=False)
+        if cp.returncode != 0:
+            unresolved.append({"required": dst, "candidates": candidates, "copy_error": (cp.stderr or "")[-2000:]})
+            continue
+        staged.append({"source": src, "required": dst})
+    return {"staged": staged, "unresolved": unresolved}
+
+
 def stream_artifact(src_path: str, target_container: str):
     relative = src_path.lstrip("/")
     exists = run(["docker", "exec", "brain-bridge-task", "test", "-e", src_path], check=False)
@@ -178,6 +217,7 @@ def archive_candidate(artifacts):
 
 def verify(task_dir: Path):
     artifacts, mode = load_artifacts(task_dir)
+    artifact_staging = stage_missing_artifacts(artifacts)
     archive = archive_candidate(artifacts)
     result = {
         "schema": "BRAIN_SESSION_MINI_SWE_FINAL_VERIFICATION_V1",
@@ -187,6 +227,7 @@ def verify(task_dir: Path):
         "environment_mode": mode,
         "artifact_paths": artifacts,
         "candidate_archive": archive,
+        "artifact_staging": artifact_staging,
         "incremental_spend_usd": 0,
     }
     if mode != "separate":
