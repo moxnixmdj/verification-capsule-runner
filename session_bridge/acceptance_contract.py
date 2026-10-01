@@ -68,6 +68,47 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
     return errors
 
 
+def validate_lease_upgrade(
+    current: Any,
+    candidate: Any,
+    session_id: str,
+    task: str,
+    *,
+    next_burst: int,
+    acceptance_hash: str | None,
+) -> list[str]:
+    """Allow only the monotonic Stage-B exposure -> Stage-C execution transition.
+
+    This is intentionally narrow. A bound lease cannot change task/session/rank,
+    cannot be upgraded after any builder burst, and cannot change after the
+    acceptance contract is frozen.
+    """
+    errors = validate_lease_authorization(candidate, session_id, task)
+    if not isinstance(current, dict):
+        return ["BOUND_LEASE_NOT_OBJECT"] + errors
+    if errors:
+        return errors
+    if current.get("session_id") != session_id or current.get("task") != task:
+        errors.append("BOUND_LEASE_IDENTITY_MISMATCH")
+    if current.get("sample_rank") != candidate.get("sample_rank"):
+        errors.append("LEASE_UPGRADE_RANK_MISMATCH")
+    if current.get("scope") != "STAGE_B_INSTRUCTION_EXPOSURE_ONLY":
+        errors.append("LEASE_UPGRADE_SOURCE_SCOPE_INVALID")
+    if candidate.get("scope") != "STAGE_C_ONE_SHOT_EXECUTION":
+        errors.append("LEASE_UPGRADE_TARGET_SCOPE_INVALID")
+    if current.get("task_execution_authorized") is not False:
+        errors.append("LEASE_UPGRADE_SOURCE_EXECUTION_AUTHORITY_INVALID")
+    if candidate.get("task_execution_authorized") is not True:
+        errors.append("LEASE_UPGRADE_TARGET_EXECUTION_AUTHORITY_INVALID")
+    if candidate.get("replay_for_credit") is not False:
+        errors.append("LEASE_UPGRADE_REPLAY_POLICY_INVALID")
+    if next_burst != 0:
+        errors.append("LEASE_UPGRADE_AFTER_BUILDER_STARTED")
+    if acceptance_hash is not None:
+        errors.append("LEASE_UPGRADE_AFTER_ACCEPTANCE_FROZEN")
+    return errors
+
+
 def validate_lease_revalidation(
     payload: Any,
     session_id: str,
