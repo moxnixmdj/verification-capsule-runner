@@ -1,0 +1,126 @@
+{
+  "schema": "PROJECT_BRAIN_ATOMIC_CAUSAL_REPLAY_SPENT_C3_V1",
+  "status": "FROZEN_FROM_SPENT_C3_FAILURES__ZERO_CAPABILITY_CREDIT",
+  "source": {
+    "terminal_delta_branch": "c3-terminal-delta-20261001-v1",
+    "terminal_delta_frozen_episode_commit": "985483c8eb6695adf5c5b9cc292417fb4a65b9b5",
+    "agentdebugx_case_commit": "72a93f8673dd96f74c0785b523eb972d9510394c",
+    "rule": "Candidate interventions are derived only from each episode's admissible route list. expected_route/expected_output are verifier-only and are never supplied to the intervention generator."
+  },
+  "cases": [
+    {
+      "id": "baseline_sort_priorities",
+      "query": "Put these priority scores in ascending order.",
+      "payload": {
+        "numbers": [
+          8,
+          3,
+          5,
+          1
+        ]
+      },
+      "selected_route": "max_number",
+      "expected_route": "sort_numbers",
+      "expected_output": "1,3,5,8",
+      "routes": [
+        "sort_numbers",
+        "max_number",
+        "unique_items",
+        "sum_numbers"
+      ]
+    },
+    {
+      "id": "baseline_path_filename",
+      "query": "Extract just the filename from this path.",
+      "payload": {
+        "path": "/tmp/reports/final.csv"
+      },
+      "selected_route": "extension_path",
+      "expected_route": "basename_path",
+      "expected_output": "final.csv",
+      "routes": [
+        "basename_path",
+        "extension_path",
+        "count_words",
+        "sha256_text"
+      ]
+    },
+    {
+      "id": "baseline_json_lookup",
+      "query": "Read the value stored under the status field.",
+      "payload": {
+        "object": {
+          "status": "ready",
+          "count": 3
+        },
+        "key": "status"
+      },
+      "selected_route": "basename_path",
+      "expected_route": "json_key",
+      "expected_output": "ready",
+      "routes": [
+        "json_key",
+        "count_words",
+        "unique_items",
+        "basename_path"
+      ]
+    },
+    {
+      "id": "ettin_average_latency",
+      "query": "What is the average of these latency samples?",
+      "payload": {
+        "numbers": [
+          100,
+          120,
+          80,
+          140
+        ]
+      },
+      "selected_route": "median_numbers",
+      "expected_route": "mean_numbers",
+      "expected_output": "110.0",
+      "routes": [
+        "sum_numbers",
+        "mean_numbers",
+        "max_number",
+        "median_numbers"
+      ]
+    },
+    {
+      "id": "ettin_largest_sample",
+      "query": "Which reading is highest?",
+      "payload": {
+        "numbers": [
+          4.2,
+          9.1,
+          7.7
+        ]
+      },
+      "selected_route": "sort_numbers",
+      "expected_route": "max_number",
+      "expected_output": "9.1",
+      "routes": [
+        "max_number",
+        "median_numbers",
+        "sum_numbers",
+        "sort_numbers"
+      ]
+    },
+    {
+      "id": "ettin_path_filename",
+      "query": "Extract just the filename from this path.",
+      "payload": {
+        "path": "/tmp/reports/final.csv"
+      },
+      "selected_route": "extension_path",
+      "expected_route": "basename_path",
+      "expected_output": "final.csv",
+      "routes": [
+        "basename_path",
+        "extension_path",
+        "count_words",
+        "sha256_text"
+      ]
+    }
+  ]
+}
