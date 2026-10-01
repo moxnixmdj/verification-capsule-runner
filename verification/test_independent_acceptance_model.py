@@ -34,5 +34,40 @@ class TestIndependentAcceptanceModel(unittest.TestCase):
         o=assess({"requirements":[{"id":"N","critical":False,"transform_kinds":["aggregate"],"builder_dependencies":[]}],"checks":[]})
         self.assertTrue(o["pass"])
 
+    def test_precommitted_bun_spent_heldout_blocks_correlated_self_tests(self):
+        # Heldout selected before reading failure details. This model uses only
+        # PR240's PRE-verifier plan: candidate-authored baseline/runtime/map
+        # self-tests derived from the same release-policy interpretation.
+        m={
+          "requirements":[{
+            "id":"BUN_PUBLIC_RELEASE_POLICY_ENVELOPE",
+            "critical":True,
+            "must_detect_failure_modes":["policy_or_semantic_variant"],
+            "builder_dependencies":["raw:instruction","raw:visibility-policy","semantic:release-policy-interpretation"],
+          }],
+          "checks":[
+            {
+              "id":"candidate-self-test-functional-output",
+              "covers":["BUN_PUBLIC_RELEASE_POLICY_ENVELOPE"],
+              "provenance":"builder_derived",
+              "dependencies":["raw:instruction","semantic:release-policy-interpretation"],
+              "detects":["baseline_functional_output"],
+            },
+            {
+              "id":"candidate-self-test-map-and-manifest",
+              "covers":["BUN_PUBLIC_RELEASE_POLICY_ENVELOPE"],
+              "provenance":"builder_derived",
+              "dependencies":["raw:visibility-policy","semantic:release-policy-interpretation"],
+              "detects":["baseline_provenance_scan","manifest_consistency"],
+            },
+          ],
+        }
+        out=assess(m)
+        self.assertFalse(out["pass"])
+        self.assertEqual(out["failed_requirements"],["BUN_PUBLIC_RELEASE_POLICY_ENVELOPE"])
+        r=out["requirements"][0]
+        self.assertEqual(r["uncovered"],("policy_or_semantic_variant",))
+        self.assertEqual(r["independent_checks"],())
+
 if __name__=="__main__":
     unittest.main()
