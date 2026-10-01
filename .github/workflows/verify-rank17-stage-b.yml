@@ -20,6 +20,8 @@ jobs:
           PYTHONPATH=verification/rank17_stage_b \
           python verification/rank17_stage_b/canonical/runtime/data_anonymization_stage_b_gate.py \
             verification/rank17_stage_b
+      - name: Run independent allowlisted-source parser and consensus verifier
+        run: python3 verification/rank17_stage_b/verify.py
       - name: Negative forbidden-source mutation must fail closed
         run: |
           python - <<'PY'
