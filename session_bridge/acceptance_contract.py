@@ -18,6 +18,11 @@ try:
 except ImportError:  # script-mode controller import
     import execution_authority_reducer as authority_reducer
 
+try:
+    from . import source_contract_compiler as source_compiler
+except ImportError:  # script-mode controller import
+    import source_contract_compiler as source_compiler
+
 SCHEMA = "BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1"
 REQUIRED_BEHAVIOR_FIELDS = (
     "behavior_id",
@@ -52,6 +57,8 @@ EXECUTION_SURFACE_PREFLIGHT_SCHEMA = "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1"
 SOURCE_BOUNDARY_PREFLIGHT_SCHEMA = "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1"
 DERIVED_AUTHORITY_PREFLIGHT_SCHEMA = "BRAIN_DERIVED_AUTHORITY_PREFLIGHT_V1"
 AUTHORITY_REDUCER_GIT_BLOB_SHA = "d7dcb02e051003996c44b6dd52b78dad7908810e"
+INSTRUCTION_SOURCE_COVERAGE_SCHEMA = "BRAIN_INSTRUCTION_SOURCE_COVERAGE_V1"
+SOURCE_CONTRACT_COMPILER_GIT_BLOB_SHA = "8f68e0e8aba6585626b414e3cb49c20d0470ea0c"
 CONTINUOUS_OBS_SCHEMA = "PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1"
 CONTINUOUS_OBS_REQUIRED_STATE_PATHS = {
     "canonical/CANONICAL_POINTER.json",
@@ -184,6 +191,39 @@ def validate_continuous_obs_context(
                 elif age > float(max_age):
                     errors.append("CONTINUOUS_OBS_VOLATILE_DEPENDENCY_STALE:"+did)
     return sorted(set(errors))
+
+def validate_instruction_source_coverage(payload: Any, instruction_text: str) -> list[str]:
+    errors: list[str] = []
+    coverage = payload.get("instruction_source_coverage") if isinstance(payload, dict) else None
+    if not isinstance(coverage, dict):
+        return ["INSTRUCTION_SOURCE_COVERAGE_MISSING"]
+    if coverage.get("schema") != INSTRUCTION_SOURCE_COVERAGE_SCHEMA:
+        errors.append("INSTRUCTION_SOURCE_COVERAGE_SCHEMA_INVALID")
+    if coverage.get("compiler_git_blob_sha") != SOURCE_CONTRACT_COMPILER_GIT_BLOB_SHA:
+        errors.append("INSTRUCTION_SOURCE_COMPILER_BLOB_MISMATCH")
+    expected_sha = hashlib.sha256(instruction_text.encode("utf-8")).hexdigest()
+    if coverage.get("instruction_sha256") != expected_sha:
+        errors.append("INSTRUCTION_SOURCE_SHA_MISMATCH")
+    atoms = source_compiler.atomize_source(instruction_text, "instruction.md")
+    if coverage.get("atom_count") != len(atoms):
+        errors.append("INSTRUCTION_SOURCE_ATOM_COUNT_MISMATCH")
+    dispositions = coverage.get("dispositions")
+    requirements = payload.get("requirements") if isinstance(payload, dict) else None
+    if not isinstance(dispositions, list):
+        errors.append("INSTRUCTION_SOURCE_DISPOSITIONS_MISSING")
+        dispositions = []
+    if not isinstance(requirements, list):
+        errors.append("INSTRUCTION_SOURCE_REQUIREMENTS_MISSING")
+        requirements = []
+    for err in source_compiler.validate_contract_coverage(
+        source_text=instruction_text,
+        atoms=atoms,
+        dispositions=dispositions,
+        requirements=requirements,
+    ):
+        errors.append("INSTRUCTION_SOURCE_COVERAGE:" + err)
+    return sorted(set(errors))
+
 
 def validate_derived_authority_preflight(
     payload: Any,
