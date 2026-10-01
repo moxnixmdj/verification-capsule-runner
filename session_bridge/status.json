@@ -1,6 +1,7 @@
 {
-  "next_step": 1,
+  "final_step": 1,
+  "reward": "1",
   "session_id": "mp-checkpoint-consolidation-final-20261001-v1",
-  "status": "READY_FOR_COMMAND",
-  "task": "mp-checkpoint-consolidation"
+  "status": "COMPLETE",
+  "verifier_status": "VERIFIER_COMPLETED"
 }
