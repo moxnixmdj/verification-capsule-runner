@@ -11,12 +11,15 @@ import urllib.error
 import urllib.request
 
 import controller as legacy
+import acceptance_contract as acceptance
 
 EVIDENCE = Path("/tmp/bridge-evidence")
 COMMAND_MARKER = "<!-- BRAIN_FAST_BURST_COMMAND_V2 -->"
 OBS_MARKER = "<!-- BRAIN_FAST_BURST_OBSERVATION_V2 -->"
 READY_MARKER = "<!-- BRAIN_FAST_BURST_READY_V2 -->"
 INSTRUCTION_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_V1 -->"
+ACCEPTANCE_MARKER = "<!-- BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1 -->"
+ACCEPTANCE_FROZEN_MARKER = "<!-- BRAIN_FAST_BURST_ACCEPTANCE_FROZEN_V1 -->"
 TERMINAL_MARKER = "<!-- BRAIN_FAST_BURST_TERMINAL_V2 -->"
 FINAL_MARKER = "<!-- BRAIN_FAST_BURST_FINAL_V2 -->"
 
@@ -211,11 +214,17 @@ def surface_instruction(task_dir: Path):
     post(INSTRUCTION_MARKER, payload)
     return True
 
-def terminal_blocker(payload):
+def terminal_blocker(payload, acceptance_payload=None, acceptance_hash=None):
     if payload.get("schema") != "BRAIN_FAST_BURST_TERMINAL_AUTHORIZATION_V2":
         return "SCHEMA_INVALID"
     if payload.get("session_id") != CONFIG["session_id"]:
         return "SESSION_MISMATCH"
+    if CONFIG.get("require_acceptance_contract", True):
+        if acceptance_payload is None or not acceptance_hash:
+            return "ACCEPTANCE_CONTRACT_NOT_FROZEN"
+        errors = acceptance.terminal_acceptance_errors(payload, acceptance_payload, acceptance_hash)
+        if errors:
+            return errors[0]
     if payload.get("submission_authorized") is not True:
         return "SUBMISSION_NOT_AUTHORIZED"
     if payload.get("known_relevant_failures") not in ([], None):
@@ -240,6 +249,7 @@ def main():
     args = ap.parse_args()
     CONFIG = json.loads(Path(args.session_config).read_text(encoding="utf-8"))
     CONFIG.setdefault("authorized_controller_login", os.environ["GITHUB_REPOSITORY"].split("/", 1)[0])
+    CONFIG.setdefault("require_acceptance_contract", True)
 
     legacy.CONFIG = CONFIG
     EVIDENCE.mkdir(parents=True, exist_ok=True)
@@ -290,6 +300,8 @@ def main():
 
     seen = set()
     next_burst = 0
+    acceptance_payload = None
+    acceptance_hash = None
     deadline = time.time() + int(CONFIG.get("session_timeout_sec", 10800))
     while time.time() < deadline:
         for comment in comments():
@@ -298,10 +310,61 @@ def main():
                 continue
             body = comment.get("body") or ""
 
+            contract = parse_payload(body, ACCEPTANCE_MARKER)
+            if contract is not None:
+                seen.add(cid)
+                if acceptance_hash is not None:
+                    post("<!-- BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "ACCEPTANCE_CONTRACT_ALREADY_FROZEN",
+                        "acceptance_contract_sha256": acceptance_hash,
+                    })
+                    continue
+                if next_burst != 0:
+                    post("<!-- BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "BUILDER_ALREADY_STARTED",
+                    })
+                    continue
+                errors = acceptance.validate_acceptance_payload(contract, CONFIG["session_id"])
+                if errors:
+                    post("<!-- BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": errors[0],
+                        "all_errors": errors,
+                    })
+                    continue
+                acceptance_payload = contract
+                acceptance_hash = acceptance.canonical_payload_hash(contract)
+                artifact_baseline = {}
+                for artifact in artifact_paths:
+                    probe = legacy.run(
+                        ["docker", "exec", "brain-bridge-task", "test", "-e", artifact],
+                        check=False,
+                    )
+                    artifact_baseline[artifact] = {"exists_before_builder": probe.returncode == 0}
+                legacy.write_json(EVIDENCE / "acceptance_contract.json", {
+                    "acceptance_contract_sha256": acceptance_hash,
+                    "contract": acceptance_payload,
+                    "artifact_baseline": artifact_baseline,
+                    "next_burst_at_freeze": next_burst,
+                })
+                post(ACCEPTANCE_FROZEN_MARKER, {
+                    "schema": "BRAIN_FAST_BURST_ACCEPTANCE_FROZEN_V1",
+                    "session_id": CONFIG["session_id"],
+                    "acceptance_contract_sha256": acceptance_hash,
+                    "artifact_baseline": artifact_baseline,
+                    "builder_commands_executed": 0,
+                })
+                continue
+
             terminal = parse_payload(body, TERMINAL_MARKER)
             if terminal is not None:
                 seen.add(cid)
-                blocker = terminal_blocker(terminal)
+                blocker = terminal_blocker(terminal, acceptance_payload, acceptance_hash)
                 if blocker:
                     post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
                         "schema": "BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2",
@@ -321,6 +384,22 @@ def main():
                 continue
             if payload.get("session_id") != CONFIG["session_id"]:
                 continue
+            if CONFIG.get("require_acceptance_contract", True):
+                if acceptance_hash is None:
+                    post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
+                        "schema": "BRAIN_FAST_BURST_REJECTED_V2",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "ACCEPTANCE_CONTRACT_REQUIRED_BEFORE_BUILDER_COMMAND",
+                    })
+                    continue
+                if payload.get("acceptance_contract_sha256") != acceptance_hash:
+                    post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
+                        "schema": "BRAIN_FAST_BURST_REJECTED_V2",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "ACCEPTANCE_CONTRACT_HASH_MISMATCH",
+                        "expected_acceptance_contract_sha256": acceptance_hash,
+                    })
+                    continue
             if int(payload.get("burst_id", -1)) != next_burst:
                 post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
                     "schema": "BRAIN_FAST_BURST_REJECTED_V2",
