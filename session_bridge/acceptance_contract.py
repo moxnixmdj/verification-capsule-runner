@@ -65,6 +65,24 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
     rank = payload.get("sample_rank")
     if not isinstance(rank, int) or rank < 1:
         errors.append("SAMPLE_RANK_INVALID")
+
+    execution_budget = payload.get("execution_count_allowed")
+    if not isinstance(execution_budget, int) or isinstance(execution_budget, bool) or execution_budget < 0:
+        errors.append("EXECUTION_COUNT_ALLOWED_INVALID")
+    terminal_budget = payload.get("terminal_verifier_count_allowed")
+    if not isinstance(terminal_budget, int) or isinstance(terminal_budget, bool) or terminal_budget < 0:
+        errors.append("TERMINAL_VERIFIER_COUNT_ALLOWED_INVALID")
+
+    task_execution_authorized = payload.get("task_execution_authorized")
+    if not isinstance(task_execution_authorized, bool):
+        errors.append("TASK_EXECUTION_AUTHORITY_INVALID")
+    elif isinstance(execution_budget, int) and not isinstance(execution_budget, bool):
+        if task_execution_authorized and execution_budget < 1:
+            errors.append("EXECUTION_AUTHORITY_WITHOUT_BUDGET")
+        if not task_execution_authorized and execution_budget != 0:
+            errors.append("EXECUTION_BUDGET_WITHOUT_AUTHORITY")
+    if payload.get("replay_for_credit") is not False:
+        errors.append("REPLAY_POLICY_INVALID")
     return errors
 
 
@@ -143,7 +161,18 @@ def validate_lease_revalidation(
             errors.append("LEASE_REVALIDATION_EXPECTED_BURST_INVALID")
         if payload.get("burst_id") != expected_burst_id:
             errors.append("LEASE_REVALIDATION_BURST_MISMATCH")
-    elif expected_scope != "TERMINAL":
+        execution_budget = bound_lease.get("execution_count_allowed")
+        if not isinstance(execution_budget, int) or isinstance(execution_budget, bool) or execution_budget < 0:
+            errors.append("CANONICAL_EXECUTION_BUDGET_INVALID")
+        elif isinstance(expected_burst_id, int) and expected_burst_id >= execution_budget:
+            errors.append("CANONICAL_EXECUTION_BUDGET_EXHAUSTED")
+    elif expected_scope == "TERMINAL":
+        terminal_budget = bound_lease.get("terminal_verifier_count_allowed")
+        if not isinstance(terminal_budget, int) or isinstance(terminal_budget, bool) or terminal_budget < 0:
+            errors.append("CANONICAL_TERMINAL_BUDGET_INVALID")
+        elif terminal_budget < 1:
+            errors.append("CANONICAL_TERMINAL_BUDGET_EXHAUSTED")
+    else:
         errors.append("LEASE_REVALIDATION_EXPECTED_SCOPE_INVALID")
     return errors
 
