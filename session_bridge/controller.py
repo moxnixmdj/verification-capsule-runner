@@ -211,8 +211,16 @@ def verify(task_dir: Path):
             missing.append(path)
 
     limit = int(CONFIG.get("verifier_timeout_sec", 1200))
+    # Verifier images are not required to contain /app. Choose a valid cwd
+    # before starting the hidden verifier so an OCI chdir failure cannot burn
+    # a clean submission without executing the verifier at all.
+    wd_probe = run([
+        "docker", "exec", "brain-bridge-verifier",
+        "/bin/sh", "-lc", "if [ -d /app ]; then printf /app; else printf /; fi"
+    ], check=False)
+    verifier_workdir = (wd_probe.stdout or "").strip() or "/"
     cp = run([
-        "docker", "exec", "-w", "/app", "brain-bridge-verifier",
+        "docker", "exec", "-w", verifier_workdir, "brain-bridge-verifier",
         "/bin/sh", "-lc",
         f"if command -v timeout >/dev/null 2>&1; then timeout -k 5 {limit}s /bin/bash /tests/test.sh; else /bin/bash /tests/test.sh; fi"
     ], check=False, timeout=limit + 20)
