@@ -4,10 +4,11 @@ on:
   push:
     paths:
       - ".github/workflows/cognitive-c3-ettin-probe.yml"
-      - "cognitive_c3_ettin_probe/**"
+      - "cognitive_c3_ettin_probe/cases.json"
+      - "cognitive_c3_ettin_probe/probe.py"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   probe:
@@ -42,3 +43,12 @@ jobs:
             cognitive_c3_ettin_probe/result.json
             cognitive_c3_ettin_probe/pip-freeze.txt
           if-no-files-found: warn
+      - name: Persist successful measurement to repository
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cognitive_c3_ettin_probe/result.json cognitive_c3_ettin_probe/pip-freeze.txt
+          git commit -m "Record fresh C3 Ettin reranker measurement"
+          git push
