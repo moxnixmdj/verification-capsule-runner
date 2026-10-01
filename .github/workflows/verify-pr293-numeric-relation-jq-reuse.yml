@@ -1,4 +1,4 @@
-name: Verify PR293 Numeric Relation JQ Reuse
+name: Preflight Corrected Frozen Parent Astronomy
 
 on:
   push:
@@ -25,12 +25,12 @@ jobs:
         run: sudo apt-get update
       - name: Run deterministic compiler regressions
         run: python canonical/tests/test_numeric_relation_jq_reuse.py
-      - name: Run fresh cross-domain numeric relation task and independent oracle
-        run: python verify_numeric_relation_jq_reuse.py
+      - name: Preflight corrected frozen NASA JPL task paths
+        run: python verify_parent_astronomy_jpl_preflight_v2.py
       - name: Upload verification report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pr293-numeric-relation-jq-reuse-report
-          path: numeric-relation-fresh-report.json
+          name: parent-astronomy-jpl-preflight-v2
+          path: parent-astronomy-jpl-preflight-v2.json
           if-no-files-found: error
