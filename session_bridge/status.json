@@ -1,6 +1,5 @@
 {
-  "next_step": 0,
-  "runtime_boundary": "COMMANDS_EXECUTE_ONLY_INSIDE_BUILT_TASK_CONTAINER",
+  "next_step": 1,
   "session_id": "foodstuff-beta-activity-20261001-stagec-v1",
   "status": "READY_FOR_COMMAND",
   "task": "foodstuff-beta-activity"
