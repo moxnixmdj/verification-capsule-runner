@@ -81,7 +81,7 @@ def main():
         "unique_expected_candidate_fraction": unique,
         "mean_candidate_fraction_vs_all_upstream": mean_selectivity,
         "generator_inputs": "CAUSAL_EDGES_PLUS_EVENT_ROLE_AND_INTERVENABLE_METADATA_ONLY",
-        "expected_cause_leakage": false,
+        "expected_cause_leakage": False,
         "rows": rows,
         "interpretation_rule": (
             "PASS_ESTABLISHES_ONLY_DETERMINISTIC_CANDIDATE_GENERATION_FOR_TRACES_WITH_"
