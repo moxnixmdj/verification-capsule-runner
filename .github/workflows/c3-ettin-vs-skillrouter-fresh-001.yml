@@ -1,0 +1,71 @@
+name: C3 ETTIN vs SkillRouter Same Cases 001
+on:
+  push:
+    paths:
+      - ".github/workflows/c3-ettin-vs-skillrouter-fresh-001.yml"
+      - "cognitive_c3_ettin_vs_skillrouter_fresh_001/**"
+permissions:
+  contents: write
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify frozen evidence bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object cognitive_c3_skillrouter_fresh_001/cases.json)" = "bba26e1e07e35ef00eb09ea627c5502ff2ea15df"
+          test "$(git hash-object cognitive_c3_skillrouter_fresh_001/cognitive_tool_router.py)" = "e947d086225aa165895dc5addd4847fb686b3454"
+          test -f cognitive_c3_skillrouter_fresh_001/result.json
+      - name: Run ETTIN same-case comparison
+        id: compare
+        shell: bash
+        run: |
+          set +e
+          {
+            python -m pip install --upgrade pip
+            python -m pip install sentence-transformers
+            python cognitive_c3_ettin_vs_skillrouter_fresh_001/probe.py
+            cat cognitive_c3_ettin_vs_skillrouter_fresh_001/result.json
+          } > cognitive_c3_ettin_vs_skillrouter_fresh_001/run.log 2>&1
+          rc=$?
+          cat cognitive_c3_ettin_vs_skillrouter_fresh_001/run.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+      - name: Persist comparison
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.compare.outcome }}
+          RC: ${{ steps.compare.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("cognitive_c3_ettin_vs_skillrouter_fresh_001")
+          ex=(p/"result.json").exists()
+          (p/"status.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"C3_ETTIN_VS_SKILLROUTER_SAME_CASES_001",
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "head_sha":os.environ["GITHUB_SHA"],
+            "outcome":os.environ.get("OUTCOME"),
+            "rc":os.environ.get("RC"),
+            "result_exists":ex,
+            "terminal_state":"SUCCESS" if os.environ.get("OUTCOME")=="success" and ex else "FAILURE",
+            "capability_credit_delta":0
+          },indent=2)+"\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cognitive_c3_ettin_vs_skillrouter_fresh_001/status.json cognitive_c3_ettin_vs_skillrouter_fresh_001/run.log
+          test ! -f cognitive_c3_ettin_vs_skillrouter_fresh_001/result.json || git add cognitive_c3_ettin_vs_skillrouter_fresh_001/result.json
+          git commit -m "Record ETTIN vs SkillRouter same-case comparison"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push; then exit 0; fi
+            git rebase --abort >/dev/null 2>&1 || true
+            sleep $((i*2))
+          done
+          exit 1
