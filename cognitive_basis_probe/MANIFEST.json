@@ -1,0 +1,10 @@
+{
+  "schema": "PROJECT_BRAIN_COGNITIVE_BASIS_EXECUTION_CAPSULE_MANIFEST_V1",
+  "canonical_repo": "moxnixmdj/brain",
+  "canonical_probe_path": "canonical/runtime/pointwise_jev_probe.py",
+  "canonical_probe_introduction_commit": "a07cb967b452cdc98ad9dfe14d882d591bcc72b2",
+  "canonical_cases_path": "canonical/capabilities/opus55/evals/COGNITIVE_BASIS_POINTWISE_TRANSFER_001.jsonl",
+  "canonical_cases_introduction_commit": "bcde1b3cc8de74b45ee48df219249b0ee1b09791",
+  "execution_copy_only": true,
+  "capability_credit_delta": 0
+}
