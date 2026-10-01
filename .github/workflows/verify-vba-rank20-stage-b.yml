@@ -11,6 +11,7 @@ on:
       - 'verification/vba_rank20_surface/**'
       - '.github/workflows/verify-vba-rank20-stage-b.yml'
 permissions:
+# synchronized after PR creation to force an actual independent run
   contents: read
 jobs:
   static-contract:
