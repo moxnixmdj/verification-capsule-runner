@@ -1,0 +1,44 @@
+name: Cognitive C3 Ettin Reranker Probe
+
+on:
+  push:
+    paths:
+      - ".github/workflows/cognitive-c3-ettin-probe.yml"
+      - "cognitive_c3_ettin_probe/**"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record provenance
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          sha256sum cognitive_c3_ettin_probe/cases.json cognitive_c3_ettin_probe/probe.py
+      - name: Install runner dependency
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install sentence-transformers
+          python -m pip freeze > cognitive_c3_ettin_probe/pip-freeze.txt
+      - name: Run fresh C3 reranker probe
+        run: |
+          set -euo pipefail
+          python cognitive_c3_ettin_probe/probe.py
+          cat cognitive_c3_ettin_probe/result.json
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cognitive-c3-ettin-probe
+          path: |
+            cognitive_c3_ettin_probe/cases.json
+            cognitive_c3_ettin_probe/probe.py
+            cognitive_c3_ettin_probe/result.json
+            cognitive_c3_ettin_probe/pip-freeze.txt
+          if-no-files-found: warn
