@@ -1,0 +1,23 @@
+name: Verify semantic operator counterfactuals
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/semantic_operator_counterfactuals.py'
+      - 'verification/test_semantic_operator_counterfactuals_independent.py'
+      - 'verification/SEMANTIC_OPERATOR_COUNTERFACTUAL_SOURCE_V1.json'
+      - '.github/workflows/verify-semantic-operator-counterfactuals.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain source blob
+        run: test "$(git hash-object verification/semantic_operator_counterfactuals.py)" = "494d72ed2d5d10e0a3b3f421d0f5de81fb1e5730"
+      - name: Run independent semantic adversarial suite
+        run: cd verification && python -m unittest -v test_semantic_operator_counterfactuals_independent
