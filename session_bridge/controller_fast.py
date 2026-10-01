@@ -12,6 +12,7 @@ import urllib.request
 
 import controller as legacy
 import acceptance_contract as acceptance
+import execution_surface as surface_probe
 
 EVIDENCE = Path("/tmp/bridge-evidence")
 COMMAND_MARKER = "<!-- BRAIN_FAST_BURST_COMMAND_V2 -->"
@@ -322,6 +323,24 @@ def main():
         return 0
 
     legacy.build_runtime(task_dir)
+
+    # Probe the exact built task container before instruction exposure. This is
+    # execution-interface evidence only and prevents Stage-B feasibility on a
+    # different Python/package-management surface from authorizing Stage-C.
+    surface_profile = surface_probe.probe_running_container("brain-bridge-task")
+    legacy.write_json(EVIDENCE / "execution_surface_profile.json", surface_profile)
+    if surface_profile.get("status") != "PASS":
+        post("<!-- BRAIN_FAST_BURST_SURFACE_INCOMPATIBLE_V2 -->", {
+            "schema": "BRAIN_FAST_BURST_SURFACE_INCOMPATIBLE_V2",
+            "session_id": CONFIG["session_id"],
+            "task": CONFIG["task"],
+            "reason": "EXECUTION_SURFACE_PROFILE_UNKNOWN_FAIL_CLOSED",
+            "execution_surface_profile": surface_profile,
+            "instruction_read": False,
+            "capability_credit_delta": 0,
+        })
+        return 0
+
     artifact_paths = [item["source"] for item in artifact_contract]
     artifact_parent_dirs = sorted({str(Path(p).parent) for p in artifact_paths if str(Path(p).parent)})
     for parent in artifact_parent_dirs:
@@ -340,6 +359,8 @@ def main():
         "artifact_paths": artifact_paths,
         "artifact_contract": artifact_contract,
         "verifier_environment_mode": verifier_environment_mode,
+        "execution_surface_profile": surface_profile,
+        "python_package_policy": surface_profile.get("python_package_policy"),
         "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
     })
 
