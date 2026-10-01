@@ -1,0 +1,34 @@
+name: Verify rank15 Stage A admission
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-rank15-stage-a.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Fetch pinned Brain Stage-A candidate
+        run: |
+          git clone https://github.com/moxnixmdj/brain.git brain
+          cd brain
+          git checkout a3b67e3b5fa56c8cacb464e8680a4717b021fd8c
+      - name: Run real Stage-A reducer
+        run: python brain/canonical/runtime/prequalification_stage_a_reducer.py brain
+      - name: Run reducer regression tests
+        run: |
+          cd brain
+          python - <<'PY'
+          import canonical.runtime.test_prequalification_stage_a_reducer as t
+          t.test_all_stage_a_passes()
+          t.test_task_specific_search_fails()
+          t.test_instruction_exposure_fails_stage_a()
+          t.test_missing_mutation_evidence_fails()
+          print("4 regression tests passed")
+          PY
