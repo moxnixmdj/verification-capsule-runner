@@ -1,0 +1,211 @@
+{
+  "schema": "PROJECT_BRAIN_C9_SEMANTIC_SUPPORT_NLI_PROBE_RESULT_V1",
+  "status": "MEASUREMENT_ONLY__ZERO_CAPABILITY_CREDIT",
+  "model": "MoritzLaurer/deberta-v3-base-zeroshot-v1",
+  "id2label": {
+    "0": "entailment",
+    "1": "not_entailment"
+  },
+  "entailment_index": 0,
+  "cases": 20,
+  "accuracy": 0.8,
+  "mean_latency_ms": 601.3710218499966,
+  "wrong_cases": [
+    {
+      "id": "promotion_all_met",
+      "gold": true,
+      "predicted": false,
+      "correct": false,
+      "entailment_probability": 0.2294921875,
+      "latency_ms": 586.8968810000297
+    },
+    {
+      "id": "one_task_not_breadth",
+      "gold": false,
+      "predicted": true,
+      "correct": false,
+      "entailment_probability": 0.88134765625,
+      "latency_ms": 578.7188189999597
+    },
+    {
+      "id": "fresh_falsification",
+      "gold": true,
+      "predicted": false,
+      "correct": false,
+      "entailment_probability": 0.00455474853515625,
+      "latency_ms": 633.8513819999889
+    },
+    {
+      "id": "surface_blocked",
+      "gold": true,
+      "predicted": false,
+      "correct": false,
+      "entailment_probability": 0.1854248046875,
+      "latency_ms": 590.8782689999725
+    }
+  ],
+  "rows": [
+    {
+      "id": "promotion_all_met",
+      "gold": true,
+      "predicted": false,
+      "correct": false,
+      "entailment_probability": 0.2294921875,
+      "latency_ms": 586.8968810000297
+    },
+    {
+      "id": "promotion_donor_missing",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.0792236328125,
+      "latency_ms": 567.9457600000433
+    },
+    {
+      "id": "one_task_not_breadth",
+      "gold": false,
+      "predicted": true,
+      "correct": false,
+      "entailment_probability": 0.88134765625,
+      "latency_ms": 578.7188189999597
+    },
+    {
+      "id": "scoped_artifact",
+      "gold": true,
+      "predicted": true,
+      "correct": true,
+      "entailment_probability": 0.9765625,
+      "latency_ms": 597.249282000007
+    },
+    {
+      "id": "docx_not_supported",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.01158905029296875,
+      "latency_ms": 580.887141000062
+    },
+    {
+      "id": "continuity_scope",
+      "gold": true,
+      "predicted": true,
+      "correct": true,
+      "entailment_probability": 0.98046875,
+      "latency_ms": 652.5876659999312
+    },
+    {
+      "id": "continuity_overclaim",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.0009002685546875,
+      "latency_ms": 620.9747249999964
+    },
+    {
+      "id": "research_not_finished",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.361572265625,
+      "latency_ms": 597.6605609999979
+    },
+    {
+      "id": "research_components_worked",
+      "gold": true,
+      "predicted": true,
+      "correct": true,
+      "entailment_probability": 0.794921875,
+      "latency_ms": 636.6343689999212
+    },
+    {
+      "id": "fresh_falsification",
+      "gold": true,
+      "predicted": false,
+      "correct": false,
+      "entailment_probability": 0.00455474853515625,
+      "latency_ms": 633.8513819999889
+    },
+    {
+      "id": "frozen_gate_not_general",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.00803375244140625,
+      "latency_ms": 650.4712860000836
+    },
+    {
+      "id": "surface_blocked",
+      "gold": true,
+      "predicted": false,
+      "correct": false,
+      "entailment_probability": 0.1854248046875,
+      "latency_ms": 590.8782689999725
+    },
+    {
+      "id": "surface_not_executed",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.00662994384765625,
+      "latency_ms": 609.0791210000361
+    },
+    {
+      "id": "exact_relation_scope",
+      "gold": true,
+      "predicted": true,
+      "correct": true,
+      "entailment_probability": 0.955078125,
+      "latency_ms": 640.6364690000146
+    },
+    {
+      "id": "unit_conversion_overclaim",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.0026111602783203125,
+      "latency_ms": 629.2158049999443
+    },
+    {
+      "id": "corrupt_record",
+      "gold": true,
+      "predicted": true,
+      "correct": true,
+      "entailment_probability": 1.0,
+      "latency_ms": 573.2034760000033
+    },
+    {
+      "id": "uncertain_dispatch",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 5.626678466796875e-05,
+      "latency_ms": 592.2656490000691
+    },
+    {
+      "id": "source_admission",
+      "gold": true,
+      "predicted": true,
+      "correct": true,
+      "entailment_probability": 0.96044921875,
+      "latency_ms": 553.4516729999268
+    },
+    {
+      "id": "source_conflict",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.041107177734375,
+      "latency_ms": 530.8572159999585
+    },
+    {
+      "id": "replay_forbidden",
+      "gold": false,
+      "predicted": false,
+      "correct": true,
+      "entailment_probability": 0.00011682510375976562,
+      "latency_ms": 603.9548869999862
+    }
+  ],
+  "scope_warning": "THIS_MEASURES_SEMANTIC_SUPPORT_RELATION_ONLY__NOT_COMPLETE_EVIDENCE_SUFFICIENCY_OR_PROMOTION_AUTHORITY",
+  "capability_credit_delta": 0
+}
