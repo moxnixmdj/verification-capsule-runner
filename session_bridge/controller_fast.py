@@ -216,6 +216,33 @@ def surface_instruction(task_dir: Path):
     post(INSTRUCTION_MARKER, payload)
     return True
 
+
+DEFAULT_FATAL_STDERR_PATTERNS = (
+    "Traceback (most recent call last):",
+    "Exception while processing file:",
+    "Fatal Python error:",
+)
+
+def semantic_success_errors(item, observation):
+    errors = []
+    if observation.get("exit_code") != 0:
+        errors.append("PROCESS_EXIT_NONZERO")
+    sentinel = item.get("success_sentinel")
+    if not isinstance(sentinel, str) or not sentinel:
+        errors.append("SUCCESS_SENTINEL_MISSING_FROM_COMMAND_CONTRACT")
+    elif sentinel not in (observation.get("stdout") or ""):
+        errors.append("SUCCESS_SENTINEL_NOT_OBSERVED")
+    stderr = observation.get("stderr") or ""
+    patterns = list(DEFAULT_FATAL_STDERR_PATTERNS)
+    extra = item.get("forbidden_stderr_patterns")
+    if isinstance(extra, list):
+        patterns.extend(x for x in extra if isinstance(x, str) and x)
+    for pattern in patterns:
+        if pattern in stderr:
+            errors.append("FATAL_STDERR_PATTERN:" + pattern)
+    return errors
+
+
 def terminal_blocker(payload, acceptance_payload=None, acceptance_hash=None, lease_authorized=False):
     if payload.get("schema") != "BRAIN_FAST_BURST_TERMINAL_AUTHORIZATION_V2":
         return "SCHEMA_INVALID"
@@ -331,6 +358,7 @@ def main():
     terminal_revalidation = None
     stage_c_execution_count_used = 0
     terminal_verifier_count_used = 0
+    builder_semantic_failures = []
     deadline = time.time() + int(CONFIG.get("session_timeout_sec", 10800))
     while time.time() < deadline:
         for comment in comments():
@@ -549,6 +577,14 @@ def main():
                     if authority_errors[0] == "RUNNER_PR_NOT_OPEN":
                         return 0
                     continue
+                if builder_semantic_failures:
+                    post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
+                        "schema": "BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "BUILDER_SEMANTIC_FAILURE_REMAINS",
+                        "all_errors": sorted(set(builder_semantic_failures)),
+                    })
+                    continue
                 blocker = terminal_blocker(terminal, acceptance_payload, acceptance_hash, lease_authorized)
                 if blocker:
                     post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
@@ -638,6 +674,22 @@ def main():
                 })
                 continue
 
+            # Fail closed before spending fresh evidence unless every builder command
+            # declares a semantic success sentinel. Process exit code is not sufficient:
+            # some frameworks (notably FreeCADCmd) return zero after script exceptions.
+            missing_sentinel = [
+                idx for idx, item in enumerate(cmds)
+                if not isinstance(item, dict) or not isinstance(item.get("success_sentinel"), str) or not item.get("success_sentinel")
+            ]
+            if missing_sentinel:
+                post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
+                    "schema": "BRAIN_FAST_BURST_REJECTED_V2",
+                    "session_id": CONFIG["session_id"],
+                    "reason": "BUILDER_SUCCESS_SENTINEL_REQUIRED_BEFORE_SPEND",
+                    "command_indices": missing_sentinel,
+                })
+                continue
+
             # Single-use authority and total budget are consumed before any task
             # command runs. Even a command/runtime failure spends this Stage-C
             # execution unit; otherwise failure would silently create a replay.
@@ -659,8 +711,13 @@ def main():
                     break
                 obs = legacy.execute_command(next_burst * 100 + idx, item["script"])
                 obs["id"] = item.get("id", str(idx))
+                semantic_errors = semantic_success_errors(item, obs)
+                obs["semantic_success"] = not semantic_errors
+                obs["semantic_errors"] = semantic_errors
                 results.append(obs)
-                if obs["exit_code"] != 0 and item.get("stop_on_error", True):
+                if semantic_errors:
+                    builder_semantic_failures.extend(semantic_errors)
+                if semantic_errors and item.get("stop_on_error", True):
                     break
             legacy.write_json(EVIDENCE / f"burst_{next_burst:03d}.json", {
                 "session_id": CONFIG["session_id"],
