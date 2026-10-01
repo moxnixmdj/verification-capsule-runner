@@ -8,7 +8,7 @@ from pyrca.analyzers.ht import HT, HTConfig
 
 from brain_owned_ht_ranker import ResidualCauseRanker
 
-SEED = 202610010852
+SEED = 202610010901
 TRIALS = 400
 NORMAL_N = 500
 ABNORMAL_N = 80
@@ -142,7 +142,7 @@ result={
     "rows":rows,
     "capability_credit_delta":0
 }
-p=Path("atomic_cause_ranking/pyrca_ht_minimization_result.json")
+p=Path("pyrca_ht_minimization_result.json")
 p.write_text(json.dumps(result,indent=2)+"\n",encoding="utf-8")
 print(json.dumps({k:v for k,v in result.items() if k!="rows"},indent=2))
 if not result["gate"]["pass"]:
