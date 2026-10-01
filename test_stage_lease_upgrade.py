@@ -35,29 +35,29 @@ class LeaseUpgradeTests(unittest.TestCase):
         )
 
     def test_exact_monotonic_upgrade_passes(self):
-        self.assertEqual(self.check(), [])
+        self.assertEqual(self.check(acceptance_hash="frozen"), [])
 
     def test_rank_swap_fails(self):
         x=lease("STAGE_C_ONE_SHOT_EXECUTION", rank=18, execute=True)
-        self.assertIn("LEASE_UPGRADE_RANK_MISMATCH", self.check(candidate=x))
+        self.assertIn("LEASE_UPGRADE_RANK_MISMATCH", self.check(candidate=x, acceptance_hash="frozen"))
 
     def test_wrong_target_scope_fails(self):
         x=lease("STAGE_B_INSTRUCTION_EXPOSURE_ONLY", execute=False)
-        self.assertIn("LEASE_UPGRADE_TARGET_SCOPE_INVALID", self.check(candidate=x))
+        self.assertIn("LEASE_UPGRADE_TARGET_SCOPE_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
 
     def test_post_burst_upgrade_fails(self):
-        self.assertIn("LEASE_UPGRADE_AFTER_BUILDER_STARTED", self.check(next_burst=1))
+        self.assertIn("LEASE_UPGRADE_AFTER_BUILDER_STARTED", self.check(next_burst=1, acceptance_hash="frozen"))
 
-    def test_post_acceptance_freeze_upgrade_fails(self):
-        self.assertIn("LEASE_UPGRADE_AFTER_ACCEPTANCE_FROZEN", self.check(acceptance_hash="frozen"))
+    def test_upgrade_before_acceptance_freeze_fails(self):
+        self.assertIn("LEASE_UPGRADE_REQUIRES_ACCEPTANCE_FROZEN", self.check())
 
     def test_task_swap_fails_authorization(self):
         x=lease("STAGE_C_ONE_SHOT_EXECUTION", task="other-task", execute=True)
-        self.assertIn("LEASE_TASK_MISMATCH", self.check(candidate=x))
+        self.assertIn("LEASE_TASK_MISMATCH", self.check(candidate=x, acceptance_hash="frozen"))
 
     def test_replay_enabled_fails(self):
         x=dict(self.stage_c); x["replay_for_credit"]=True
-        self.assertIn("LEASE_UPGRADE_REPLAY_POLICY_INVALID", self.check(candidate=x))
+        self.assertIn("LEASE_UPGRADE_REPLAY_POLICY_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
 
 
 if __name__ == "__main__":
