@@ -1,6 +1,6 @@
 import random, unittest
 from acceptance_contract import (
-  canonical_payload_hash, validate_acceptance_payload,
+  canonical_payload_hash, validate_acceptance_payload, validate_lease_authorization,
   terminal_acceptance_errors, audit_required_graph
 )
 
@@ -29,6 +29,19 @@ def base_payload():
     }
 
 class TestAcceptanceContract(unittest.TestCase):
+  def test_lease_authorization_fail_closed(self):
+    good={
+      "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"lease_merged_to_main":True,
+      "canonical_brain_commit":"a"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":15
+    }
+    self.assertEqual(validate_lease_authorization(good,"s1","t1"),[])
+    bad=dict(good); bad["lease_merged_to_main"]=False
+    self.assertIn("LEASE_NOT_CONFIRMED_MERGED_TO_MAIN",validate_lease_authorization(bad,"s1","t1"))
+    bad=dict(good); bad["canonical_brain_commit"]="not-a-commit"
+    self.assertIn("CANONICAL_BRAIN_COMMIT_INVALID",validate_lease_authorization(bad,"s1","t1"))
+
   def test_valid_and_hash_stable(self):
     p=base_payload()
     self.assertEqual(validate_acceptance_payload(p,"s1"),[])
