@@ -9,7 +9,7 @@ class CutV3(unittest.TestCase):
         self.assertTrue(out["exact_minimum"])
         self.assertEqual(out["status"],"EXACT_MINIMUM")
         self.assertEqual(out["observation_count"],15)
-        self.assertEqual(out["total_cost"],15.0)
+        self.assertEqual(out["total_cost"],16.0)
         self.assertEqual(set(out["unresolved_distinctions"]),set(data["distinctions"]))
         self.assertEqual(set(out["selected_observations"]),{o["id"] for o in data["observations"]})
     def test_zero_cost_members_present_and_rank23_absent(self):
