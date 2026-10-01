@@ -18,7 +18,7 @@ jobs:
         run: docker build -f verification/rank22_pre_stagec/Dockerfile -t rank22-prestagec verification/rank22_pre_stagec
       - name: Probe exact FreeCAD surface without task execution
         run: |
-          docker run --name rank22-prestagec-probe rank22-prestagec python /probe_surface.py
+          docker run --name rank22-prestagec-probe -v "$PWD/verification/rank22_pre_stagec/probe_surface.py:/probe_surface.py:ro" rank22-prestagec python /probe_surface.py
           docker cp rank22-prestagec-probe:/app/surface_receipt.json verification/rank22_pre_stagec/surface_receipt.json
           docker rm rank22-prestagec-probe
           cat verification/rank22_pre_stagec/surface_receipt.json
