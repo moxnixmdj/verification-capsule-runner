@@ -5,7 +5,11 @@ on:
       - main
     paths:
       - ".github/workflows/atomic-cause-candidate-spent.yml"
-      - "atomic_cause_candidate_spent/**"
+      - "atomic_cause_candidate_spent/cases.json"
+      - "atomic_cause_candidate_spent/probe.py"
+      - "atomic_cause_candidate_spent/brain_owned_candidate.py"
+      - "atomic_cause_candidate_spent/verify_brain_owned.py"
+      - "atomic_cause_candidate_spent/verify_fresh_random_dags.py"
 
 permissions:
   contents: write
