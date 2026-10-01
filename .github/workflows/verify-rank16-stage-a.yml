@@ -1,0 +1,38 @@
+name: Verify rank16 Stage A admission
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/rank16_stage_a/**'
+      - '.github/workflows/verify-rank16-stage-a.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run exact Brain Stage-A reducer on pinned rank16 evidence
+        run: |
+          python verification/rank16_stage_a/canonical/runtime/prequalification_stage_a_reducer_v2.py verification/rank16_stage_a \
+            --task session-window-debug --rank 16 \
+            --ledger canonical/capabilities/opus55/SESSION_WINDOW_DEBUG_RANK16_CONTAMINATION_LEDGER_V1.json
+      - name: Negative contamination mutation must fail closed
+        run: |
+          python - <<'PY'
+          import json, pathlib, subprocess, tempfile, shutil
+          src=pathlib.Path("verification/rank16_stage_a")
+          with tempfile.TemporaryDirectory() as d:
+              dst=pathlib.Path(d)/"bundle"; shutil.copytree(src,dst)
+              p=dst/"canonical/capabilities/opus55/SESSION_WINDOW_DEBUG_RANK16_CONTAMINATION_LEDGER_V1.json"
+              o=json.loads(p.read_text()); o["instruction_read"]=True; o["state"]="INSTRUCTION_EXPOSED"
+              p.write_text(json.dumps(o))
+              cp=subprocess.run(["python",str(dst/"canonical/runtime/prequalification_stage_a_reducer_v2.py"),str(dst),
+                 "--task","session-window-debug","--rank","16",
+                 "--ledger","canonical/capabilities/opus55/SESSION_WINDOW_DEBUG_RANK16_CONTAMINATION_LEDGER_V1.json"])
+              if cp.returncode == 0: raise SystemExit("mutated contaminated ledger incorrectly passed")
+          print("negative contamination mutation rejected")
+          PY
