@@ -1,0 +1,10 @@
+{
+  "command_sha256": "754d71bd11925409c83bad514776cee8e9204ae06d82ead0c3e2f043425c6793",
+  "duration_sec": 2.196,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/tmp/moe_independent_search.py\", line 8, in <module>\n    E=c.M.num_experts//c.P.ep_size; I=c.M.intermediate_size//c.P.tp_size; H=c.M.hidden_size\n      ^^^\nAttributeError: module 'consolidate_probe' has no attribute 'M'. Did you mean: 'm'?\n",
+  "stdout": "KEYS 163\nMAX_ABS_DIFF 16.504850387573242\nMEAN_ABS_DIFF 2.859964370727539\nEXACT_EQUAL False\nALLCLOSE_1E6 False\nOUTPUT_BYTES 186721216\nDEV_IMPORT_KEEP_MISMATCH\nMP_CONSOLIDATION_AUTHORED_PASS\n",
+  "step": 22
+}
