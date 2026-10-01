@@ -43,6 +43,43 @@ LEASE_SCHEMA = "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1"
 LEASE_REVALIDATION_SCHEMA = "BRAIN_FAST_BURST_LEASE_REVALIDATION_V1"
 
 EXECUTION_SURFACE_PREFLIGHT_SCHEMA = "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1"
+SOURCE_BOUNDARY_PREFLIGHT_SCHEMA = "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1"
+
+def validate_source_boundary_preflight(payload: Any) -> list[str]:
+    """Fail closed if task-specific knowledge escaped the frozen source boundary.
+
+    This receipt is required before Stage-C authorization. It is deliberately
+    redundant with contamination ledgers so stale bookkeeping cannot authorize
+    execution after external task-specific search, hidden-verifier access, or
+    solution/test leakage.
+    """
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["SOURCE_BOUNDARY_PREFLIGHT_MISSING"]
+    if payload.get("schema") != SOURCE_BOUNDARY_PREFLIGHT_SCHEMA:
+        errors.append("SOURCE_BOUNDARY_PREFLIGHT_SCHEMA_INVALID")
+    if payload.get("status") != "PASS":
+        errors.append("SOURCE_BOUNDARY_PREFLIGHT_NOT_PASS")
+    if payload.get("task_specific_external_search") is not False:
+        errors.append("TASK_SPECIFIC_EXTERNAL_SEARCH_DETECTED")
+    if payload.get("task_specific_hints_read") is not False:
+        errors.append("TASK_SPECIFIC_HINTS_READ")
+    if payload.get("solution_read") is not False:
+        errors.append("SOLUTION_READ")
+    if payload.get("tests_read") is not False:
+        errors.append("TESTS_READ")
+    if payload.get("hidden_verifier_read") is not False:
+        errors.append("HIDDEN_VERIFIER_READ")
+    if payload.get("task_command_executed") is not False:
+        errors.append("TASK_COMMAND_ALREADY_EXECUTED_BEFORE_STAGE_C")
+    ledger_hash = payload.get("contamination_ledger_sha256")
+    if not isinstance(ledger_hash, str) or re.fullmatch(r"[0-9a-f]{64}", ledger_hash) is None:
+        errors.append("CONTAMINATION_LEDGER_DIGEST_INVALID")
+    evidence = payload.get("evidence")
+    if not isinstance(evidence, list) or not evidence or any(not _nonempty_text(x) for x in evidence):
+        errors.append("SOURCE_BOUNDARY_EVIDENCE_MISSING")
+    return errors
+
 
 def validate_execution_surface_preflight(payload: Any) -> list[str]:
     errors: list[str] = []
@@ -175,6 +212,7 @@ def validate_lease_upgrade(
     if acceptance_hash is None:
         errors.append("LEASE_UPGRADE_REQUIRES_ACCEPTANCE_FROZEN")
     errors.extend(validate_execution_surface_preflight(candidate.get("execution_surface_preflight")))
+    errors.extend(validate_source_boundary_preflight(candidate.get("source_boundary_preflight")))
     return errors
 
 
