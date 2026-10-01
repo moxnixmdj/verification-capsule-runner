@@ -7,7 +7,7 @@ import controller_fast as c
 
 def test_plain_string_artifact_supported():
     normalized, unsupported = c.normalize_artifact_contract(["/app/output.json"])
-    assert normalized == [{"source":"/app/output.json","destination":"/app/output.json","service":None}]
+    assert normalized == [{"source":"/app/output.json","destination":"/app/output.json","service":None,"exclude":[]}]
     assert unsupported == []
 
 
@@ -15,7 +15,7 @@ def test_structured_local_artifact_supported():
     normalized, unsupported = c.normalize_artifact_contract([
         {"source":"/app/out.json","destination":"/results/out.json"}
     ])
-    assert normalized == [{"source":"/app/out.json","destination":"/results/out.json","service":None}]
+    assert normalized == [{"source":"/app/out.json","destination":"/results/out.json","service":None,"exclude":[]}]
     assert unsupported == []
 
 
@@ -28,9 +28,20 @@ def test_per_service_artifact_fails_closed():
     assert unsupported[0]["service"] == "api"
 
 
-def test_exclude_filter_fails_closed():
+def test_exclude_filter_is_supported_when_safe_and_relative():
     normalized, unsupported = c.normalize_artifact_contract([
-        {"source":"/app/out","exclude":["*.tmp"]}
+        {"source":"/app/out","exclude":["*.tmp","node_modules"]}
+    ])
+    assert unsupported == []
+    assert normalized == [{
+        "source":"/app/out","destination":"/app/out","service":None,
+        "exclude":["*.tmp","node_modules"]
+    }]
+
+
+def test_unsafe_exclude_filter_fails_closed():
+    normalized, unsupported = c.normalize_artifact_contract([
+        {"source":"/app/out","exclude":["../secret"]}
     ])
     assert normalized == []
-    assert unsupported[0]["reason"] == "ARTIFACT_EXCLUDE_FILTER_UNSUPPORTED"
+    assert unsupported[0]["reason"] == "ARTIFACT_EXCLUDE_PATTERN_MUST_BE_RELATIVE"
