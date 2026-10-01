@@ -1,0 +1,10 @@
+{
+  "command_sha256": "188e54b7fb26a03e171116f961149deb74ef8c528ce01e00be2c91f9934e5c6a",
+  "duration_sec": 0.09,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-submit-20261001-v1",
+  "stderr": "",
+  "stdout": "SUBMISSION_STORAGE_ENGINE_READY\n",
+  "step": 3
+}
