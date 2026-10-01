@@ -1,10 +1,10 @@
 {
   "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
   "probe": "PYRCA_HT_RESIDUAL_CAUSE_RANKING_SCREEN_V1",
-  "workflow_run_id": "36838336169",
-  "head_sha": "1bad5b8f31234de15d5e787477db8e4514b46dff",
-  "outcome": "skipped",
-  "rc": "",
+  "workflow_run_id": "36838436785",
+  "head_sha": "d2a45b2683984ddcc8edc7cf2923f6470f729426",
+  "outcome": "failure",
+  "rc": "1",
   "result_exists": false,
   "terminal_state": "FAILURE",
   "capability_credit_delta": 0
