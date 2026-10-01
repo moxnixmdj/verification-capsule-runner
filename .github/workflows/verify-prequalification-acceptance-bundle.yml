@@ -1,0 +1,21 @@
+name: Verify prequalification acceptance bundle
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/requirement_graph_kernel.py'
+      - 'canonical/runtime/independent_acceptance_model.py'
+      - 'canonical/runtime/prequalification_acceptance_bundle.py'
+      - 'verification/test_prequalification_acceptance_bundle.py'
+      - '.github/workflows/verify-prequalification-acceptance-bundle.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: python -m unittest -v verification/test_prequalification_acceptance_bundle.py
