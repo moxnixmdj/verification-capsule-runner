@@ -1,9 +1,9 @@
 {
-  "schema": "PROJECT_BRAIN_VBA_USERFORM_PORT_RANK20_STAGE_B_CONTRACT_V2",
+  "schema": "PROJECT_BRAIN_VBA_USERFORM_PORT_RANK20_STAGE_B_CONTRACT_V3",
   "date": "2026-10-01",
   "task": "vba-userform-port",
   "rank": 20,
-  "status": "FROZEN_POST_INSTRUCTION_PRE_EXECUTION__V1_FALSIFIED__V2_STRONGER_ACCEPTANCE_COVERAGE__INDEPENDENT_VERIFICATION_REQUIRED__ZERO_CREDIT",
+  "status": "FROZEN_POST_INSTRUCTION_PRE_EXECUTION__UNION_OF_TRACEABLE_MAIN_V1_AND_STRONG_ACCEPTANCE_V2__INDEPENDENT_VERIFICATION_REQUIRED__ZERO_CREDIT",
   "benchmark_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
   "source_accounting": "canonical/capabilities/opus55/VBA_USERFORM_PORT_RANK20_STAGE_B_SOURCE_ACCOUNTING_V1.json",
   "source_allowlist": "canonical/governance/TB4_STAGE_B_SOURCE_ALLOWLIST_V1.json",
@@ -13,7 +13,7 @@
     "environment_state": "Python 3.12 slim task image with Node/npm/sqlite3; 2 CPU, 8 GiB RAM, 20 GiB storage; verifier separate; app startup deadline 30 seconds.",
     "allowed_information": "Official instruction.md, task.toml and environment/** only plus general reusable libraries/knowledge; no solution/tests/verifier/task-specific hints.",
     "required_output_or_action": "Produce React + FastAPI + SQLite app at /workspace/generated_app preserving documented API/DOM and observable VBA behavior.",
-    "success_condition": "All 33 normalized requirements and independent acceptance obligations pass on frozen candidate, task-specific exact-container feasibility passes, then one Stage-C terminal verifier may run.",
+    "success_condition": "All 38 union requirements, source traceability, independent acceptance obligations, and exact-surface feasibility pass before any Stage-C task command.",
     "failure_condition": "Any packaging, API, persistence, relationship, form, validation, state-transition, calculation, rounding, role, atomicity, startup, DOM or source-boundary requirement fails.",
     "terminal_consequence": "Fresh rank20 coding evidence only after independent Stage-B pass and one authorized Stage-C execution+terminal verdict.",
     "verification_route": "Requirement graph + mutation score + independent acceptance + behavioral mutants + exact task-container package/build/startup smoke, then one-shot Stage-C.",
@@ -53,14 +53,21 @@
     "R_FULL_SAVE_RESPONSE",
     "R_HTTP_ERRORS",
     "R_PERSISTENCE",
-    "R_SOURCE_BOUNDARY"
+    "R_SOURCE_BOUNDARY",
+    "R_ARTIFACT_SCOPE",
+    "R_REQUIRED_STACK",
+    "R_CUSTOMER_LOAD",
+    "R_ARTIFACT_EXCLUDES",
+    "R_RUNTIME_FEASIBILITY"
   ],
   "normalized_requirements": [
     {
       "id": "R_APP_LAYOUT",
       "critical": true,
       "statement": "/workspace/generated_app contains migration_summary.json, run.sh, backend/, frontend/, pinned dependency manifests, and SQLite at backend/data/app.sqlite.",
-      "dependencies": [],
+      "dependencies": [
+        "R_ARTIFACT_SCOPE"
+      ],
       "children": [],
       "open_questions": [],
       "clauses": [
@@ -97,6 +104,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_TASK",
+        "S_README"
       ]
     },
     {
@@ -144,6 +155,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_INSTRUCTION",
+        "S_README",
+        "S_DOCKER"
       ]
     },
     {
@@ -191,6 +207,9 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README"
       ]
     },
     {
@@ -237,6 +256,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_MANIFEST"
       ]
     },
     {
@@ -284,6 +307,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_MANIFEST",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -330,6 +358,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_MANIFEST",
+        "S_DATA_ACCESS",
+        "S_WORKORDER_CODE"
       ]
     },
     {
@@ -376,6 +409,15 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_CUSTOMERS_CSV",
+        "S_ASSETS_CSV",
+        "S_TECHNICIANS_CSV",
+        "S_PARTS_CSV",
+        "S_WORK_ORDERS_CSV",
+        "S_WORK_ORDER_LINES_CSV"
       ]
     },
     {
@@ -423,6 +465,13 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_CUSTOMER_FORM",
+        "S_WORKORDER_FORM",
+        "S_CUSTOMER_CODE",
+        "S_WORKORDER_CODE"
       ]
     },
     {
@@ -470,6 +519,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_CUSTOMER_CODE",
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -515,6 +569,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_CUSTOMER_CODE",
+        "S_DATA_ACCESS",
+        "S_MANIFEST"
       ]
     },
     {
@@ -561,6 +620,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_CUSTOMER_CODE",
+        "S_VALIDATION",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -607,6 +671,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_CUSTOMER_CODE",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -655,6 +723,13 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_FORMATTING",
+        "S_DATA_ACCESS",
+        "S_MANIFEST"
       ]
     },
     {
@@ -702,6 +777,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -748,6 +827,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -792,6 +875,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -839,6 +926,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_FORMATTING"
       ]
     },
     {
@@ -884,6 +976,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES"
       ]
     },
     {
@@ -930,6 +1026,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_VALIDATION"
       ]
     },
     {
@@ -975,6 +1076,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_VALIDATION"
       ]
     },
     {
@@ -1020,6 +1126,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_VALIDATION"
       ]
     },
     {
@@ -1068,6 +1179,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_VALIDATION"
       ]
     },
     {
@@ -1114,6 +1230,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS",
+        "S_RULES"
       ]
     },
     {
@@ -1160,6 +1281,12 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS",
+        "S_RULES",
+        "S_FORMATTING"
       ]
     },
     {
@@ -1206,6 +1333,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_VALIDATION"
       ]
     },
     {
@@ -1254,6 +1385,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_FORMATTING"
       ]
     },
     {
@@ -1300,6 +1436,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_DATA_ACCESS"
       ]
     },
     {
@@ -1348,6 +1489,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_WORKORDER_CODE",
+        "S_RULES",
+        "S_FORMATTING"
       ]
     },
     {
@@ -1396,6 +1542,12 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_WORKORDER_CODE",
+        "S_DATA_ACCESS",
+        "S_VALIDATION"
       ]
     },
     {
@@ -1441,6 +1593,9 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README"
       ]
     },
     {
@@ -1488,6 +1643,10 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_VALIDATION"
       ]
     },
     {
@@ -1535,6 +1694,11 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_README",
+        "S_DATA_ACCESS",
+        "S_MANIFEST"
       ]
     },
     {
@@ -1578,6 +1742,263 @@
       "builder_dependencies": [
         "raw:rank20_allowlisted_sources",
         "builder:generated_app"
+      ],
+      "source_refs": [
+        "S_INSTRUCTION",
+        "S_TASK"
+      ]
+    },
+    {
+      "id": "R_ARTIFACT_SCOPE",
+      "critical": true,
+      "statement": "/workspace/generated_app is the sole submitted application source tree and contains all source/manifests needed to reinstall and relaunch without runtime caches.",
+      "dependencies": [],
+      "children": [],
+      "open_questions": [],
+      "source_refs": [
+        "S_TASK",
+        "S_INSTRUCTION"
+      ],
+      "clauses": [
+        {
+          "id": "C_R_ARTIFACT_SCOPE",
+          "keyword": "MUST",
+          "text": "/workspace/generated_app is the sole submitted application source tree and contains all source/manifests needed to reinstall and relaunch without runtime caches.",
+          "covered_by_scenarios": [
+            "S_R_ARTIFACT_SCOPE"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S_R_ARTIFACT_SCOPE",
+          "given": [
+            "frozen rank20 candidate and canonical allowlisted Stage-B sources"
+          ],
+          "when": [
+            "evaluate R_ARTIFACT_SCOPE independently of builder implementation"
+          ],
+          "then": [
+            "/workspace/generated_app is the sole submitted application source tree and contains all source/manifests needed to reinstall and relaunch without runtime caches."
+          ]
+        }
+      ],
+      "must_detect_failure_modes": [
+        "missing_generated_app",
+        "cache_dependent_submission",
+        "second_app_tree"
+      ],
+      "transform_kinds": [
+        "artifact"
+      ],
+      "builder_dependencies": [
+        "raw:rank20_allowlisted_sources",
+        "builder:generated_app"
+      ]
+    },
+    {
+      "id": "R_REQUIRED_STACK",
+      "critical": true,
+      "statement": "The replacement uses React frontend, FastAPI backend, and SQLite persistence and remains a behavior-preserving port rather than a redesign.",
+      "dependencies": [
+        "R_ARTIFACT_SCOPE"
+      ],
+      "children": [],
+      "open_questions": [],
+      "source_refs": [
+        "S_INSTRUCTION",
+        "S_README"
+      ],
+      "clauses": [
+        {
+          "id": "C_R_REQUIRED_STACK",
+          "keyword": "MUST",
+          "text": "The replacement uses React frontend, FastAPI backend, and SQLite persistence and remains a behavior-preserving port rather than a redesign.",
+          "covered_by_scenarios": [
+            "S_R_REQUIRED_STACK"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S_R_REQUIRED_STACK",
+          "given": [
+            "frozen rank20 candidate and canonical allowlisted Stage-B sources"
+          ],
+          "when": [
+            "evaluate R_REQUIRED_STACK independently of builder implementation"
+          ],
+          "then": [
+            "The replacement uses React frontend, FastAPI backend, and SQLite persistence and remains a behavior-preserving port rather than a redesign."
+          ]
+        }
+      ],
+      "must_detect_failure_modes": [
+        "wrong_frontend_stack",
+        "wrong_backend_stack",
+        "nonpersistent_store",
+        "behavior_redesign"
+      ],
+      "transform_kinds": [
+        "artifact"
+      ],
+      "builder_dependencies": [
+        "raw:rank20_allowlisted_sources",
+        "builder:generated_app"
+      ]
+    },
+    {
+      "id": "R_CUSTOMER_LOAD",
+      "critical": true,
+      "statement": "frmCustomers loads selected customer name, account tier, billing terms, service region, active flag, default tax-exempt flag, and notes exactly from persisted customer state.",
+      "dependencies": [
+        "R_FORM_DOM",
+        "R_ENTITY_CRUD"
+      ],
+      "children": [],
+      "open_questions": [],
+      "source_refs": [
+        "S_CUSTOMER_FORM",
+        "S_CUSTOMER_CODE"
+      ],
+      "clauses": [
+        {
+          "id": "C_R_CUSTOMER_LOAD",
+          "keyword": "MUST",
+          "text": "frmCustomers loads selected customer name, account tier, billing terms, service region, active flag, default tax-exempt flag, and notes exactly from persisted customer state.",
+          "covered_by_scenarios": [
+            "S_R_CUSTOMER_LOAD"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S_R_CUSTOMER_LOAD",
+          "given": [
+            "frozen rank20 candidate and canonical allowlisted Stage-B sources"
+          ],
+          "when": [
+            "evaluate R_CUSTOMER_LOAD independently of builder implementation"
+          ],
+          "then": [
+            "frmCustomers loads selected customer name, account tier, billing terms, service region, active flag, default tax-exempt flag, and notes exactly from persisted customer state."
+          ]
+        }
+      ],
+      "must_detect_failure_modes": [
+        "field_not_loaded",
+        "boolean_mapping_wrong",
+        "wrong_customer_loaded"
+      ],
+      "transform_kinds": [
+        "state_transition"
+      ],
+      "builder_dependencies": [
+        "raw:rank20_allowlisted_sources",
+        "builder:generated_app"
+      ]
+    },
+    {
+      "id": "R_ARTIFACT_EXCLUDES",
+      "critical": true,
+      "statement": "Submission transport excludes node_modules, .venv, .vite, .git, __pycache__, *.pyc, .pytest_cache, .npm, and .cache while preserving all source/manifests required to reinstall and relaunch.",
+      "dependencies": [
+        "R_ARTIFACT_SCOPE"
+      ],
+      "children": [],
+      "open_questions": [],
+      "source_refs": [
+        "S_TASK"
+      ],
+      "clauses": [
+        {
+          "id": "C_R_ARTIFACT_EXCLUDES",
+          "keyword": "MUST",
+          "text": "Submission transport excludes node_modules, .venv, .vite, .git, __pycache__, *.pyc, .pytest_cache, .npm, and .cache while preserving all source/manifests required to reinstall and relaunch.",
+          "covered_by_scenarios": [
+            "S_R_ARTIFACT_EXCLUDES"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S_R_ARTIFACT_EXCLUDES",
+          "given": [
+            "frozen rank20 candidate and canonical allowlisted Stage-B sources"
+          ],
+          "when": [
+            "evaluate R_ARTIFACT_EXCLUDES independently of builder implementation"
+          ],
+          "then": [
+            "Submission transport excludes node_modules, .venv, .vite, .git, __pycache__, *.pyc, .pytest_cache, .npm, and .cache while preserving all source/manifests required to reinstall and relaunch."
+          ]
+        }
+      ],
+      "must_detect_failure_modes": [
+        "required_source_excluded",
+        "cache_required_for_success",
+        "exclude_not_honored"
+      ],
+      "transform_kinds": [
+        "artifact"
+      ],
+      "builder_dependencies": [
+        "raw:rank20_allowlisted_sources",
+        "builder:generated_app"
+      ]
+    },
+    {
+      "id": "R_RUNTIME_FEASIBILITY",
+      "critical": true,
+      "statement": "Pinned backend/frontend manifests install and the packaged React/FastAPI/SQLite app can run on the exact Python 3.12-slim plus apt nodejs/npm/sqlite3 CPU-only surface within resource and startup limits.",
+      "dependencies": [
+        "R_RUN_STARTUP",
+        "R_REQUIRED_STACK"
+      ],
+      "children": [],
+      "open_questions": [],
+      "source_refs": [
+        "S_DOCKER",
+        "S_TASK"
+      ],
+      "clauses": [
+        {
+          "id": "C_R_RUNTIME_FEASIBILITY",
+          "keyword": "MUST",
+          "text": "Pinned backend/frontend manifests install and the packaged React/FastAPI/SQLite app can run on the exact Python 3.12-slim plus apt nodejs/npm/sqlite3 CPU-only surface within resource and startup limits.",
+          "covered_by_scenarios": [
+            "S_R_RUNTIME_FEASIBILITY"
+          ]
+        }
+      ],
+      "scenarios": [
+        {
+          "id": "S_R_RUNTIME_FEASIBILITY",
+          "given": [
+            "frozen rank20 candidate and canonical allowlisted Stage-B sources"
+          ],
+          "when": [
+            "evaluate R_RUNTIME_FEASIBILITY independently of builder implementation"
+          ],
+          "then": [
+            "Pinned backend/frontend manifests install and the packaged React/FastAPI/SQLite app can run on the exact Python 3.12-slim plus apt nodejs/npm/sqlite3 CPU-only surface within resource and startup limits."
+          ]
+        }
+      ],
+      "must_detect_failure_modes": [
+        "dependency_install_failure",
+        "pep668_mismatch",
+        "frontend_build_failure",
+        "resource_limit_exceeded",
+        "readiness_timeout"
+      ],
+      "transform_kinds": [
+        "artifact",
+        "state_transition"
+      ],
+      "builder_dependencies": [
+        "raw:rank20_allowlisted_sources",
+        "builder:generated_app"
       ]
     }
   ],
@@ -1592,6 +2013,18 @@
     "M_R_APP_LAYOUT__ROUNDTRIP_OR_PARSE",
     "M_R_APP_LAYOUT__SCHEMA",
     "M_R_APP_LAYOUT__WRONG_DATABASE_PATH",
+    "M_R_ARTIFACT_EXCLUDES__CACHE_REQUIRED_FOR_SUCCESS",
+    "M_R_ARTIFACT_EXCLUDES__EXCLUDE_NOT_HONORED",
+    "M_R_ARTIFACT_EXCLUDES__EXISTENCE",
+    "M_R_ARTIFACT_EXCLUDES__REQUIRED_SOURCE_EXCLUDED",
+    "M_R_ARTIFACT_EXCLUDES__ROUNDTRIP_OR_PARSE",
+    "M_R_ARTIFACT_EXCLUDES__SCHEMA",
+    "M_R_ARTIFACT_SCOPE__CACHE_DEPENDENT_SUBMISSION",
+    "M_R_ARTIFACT_SCOPE__EXISTENCE",
+    "M_R_ARTIFACT_SCOPE__MISSING_GENERATED_APP",
+    "M_R_ARTIFACT_SCOPE__ROUNDTRIP_OR_PARSE",
+    "M_R_ARTIFACT_SCOPE__SCHEMA",
+    "M_R_ARTIFACT_SCOPE__SECOND_APP_TREE",
     "M_R_COMPLETED_GATE__COMPLETED_DATE_MISSING",
     "M_R_COMPLETED_GATE__FAILURE_RECOVERY",
     "M_R_COMPLETED_GATE__IDEMPOTENCE",
@@ -1608,6 +2041,12 @@
     "M_R_CUSTOMER_DELETE__FAILURE_RECOVERY",
     "M_R_CUSTOMER_DELETE__IDEMPOTENCE",
     "M_R_CUSTOMER_DELETE__ORDERING_PRECEDENCE",
+    "M_R_CUSTOMER_LOAD__BOOLEAN_MAPPING_WRONG",
+    "M_R_CUSTOMER_LOAD__FAILURE_RECOVERY",
+    "M_R_CUSTOMER_LOAD__FIELD_NOT_LOADED",
+    "M_R_CUSTOMER_LOAD__IDEMPOTENCE",
+    "M_R_CUSTOMER_LOAD__ORDERING_PRECEDENCE",
+    "M_R_CUSTOMER_LOAD__WRONG_CUSTOMER_LOADED",
     "M_R_CUSTOMER_NEW__CUSTOMER_DEFAULT_WRONG",
     "M_R_CUSTOMER_NEW__FAILURE_RECOVERY",
     "M_R_CUSTOMER_NEW__IDEMPOTENCE",
@@ -1712,12 +2151,30 @@
     "M_R_RELATION_DELETE__MISSING_NOT_404",
     "M_R_RELATION_DELETE__ORDERING_PRECEDENCE",
     "M_R_RELATION_DELETE__RESTRICTED_DELETE_ALLOWED",
+    "M_R_REQUIRED_STACK__BEHAVIOR_REDESIGN",
+    "M_R_REQUIRED_STACK__EXISTENCE",
+    "M_R_REQUIRED_STACK__NONPERSISTENT_STORE",
+    "M_R_REQUIRED_STACK__ROUNDTRIP_OR_PARSE",
+    "M_R_REQUIRED_STACK__SCHEMA",
+    "M_R_REQUIRED_STACK__WRONG_BACKEND_STACK",
+    "M_R_REQUIRED_STACK__WRONG_FRONTEND_STACK",
     "M_R_RESET_DUMP__DUMP_INCOMPLETE",
     "M_R_RESET_DUMP__FAILURE_RECOVERY",
     "M_R_RESET_DUMP__IDEMPOTENCE",
     "M_R_RESET_DUMP__ORDERING_PRECEDENCE",
     "M_R_RESET_DUMP__RESET_INCOMPLETE",
     "M_R_RESET_DUMP__SEED_DRIFT",
+    "M_R_RUNTIME_FEASIBILITY__DEPENDENCY_INSTALL_FAILURE",
+    "M_R_RUNTIME_FEASIBILITY__EXISTENCE",
+    "M_R_RUNTIME_FEASIBILITY__FAILURE_RECOVERY",
+    "M_R_RUNTIME_FEASIBILITY__FRONTEND_BUILD_FAILURE",
+    "M_R_RUNTIME_FEASIBILITY__IDEMPOTENCE",
+    "M_R_RUNTIME_FEASIBILITY__ORDERING_PRECEDENCE",
+    "M_R_RUNTIME_FEASIBILITY__PEP668_MISMATCH",
+    "M_R_RUNTIME_FEASIBILITY__READINESS_TIMEOUT",
+    "M_R_RUNTIME_FEASIBILITY__RESOURCE_LIMIT_EXCEEDED",
+    "M_R_RUNTIME_FEASIBILITY__ROUNDTRIP_OR_PARSE",
+    "M_R_RUNTIME_FEASIBILITY__SCHEMA",
     "M_R_RUN_STARTUP__BUILD_IN_STARTUP",
     "M_R_RUN_STARTUP__EXISTENCE",
     "M_R_RUN_STARTUP__FAILURE_RECOVERY",
@@ -1792,7 +2249,7 @@
     "M_R_WO_NEW__WORKORDER_DEFAULT_WRONG"
   ],
   "independent_acceptance": {
-    "status": "SPEC_AND_VBA_DERIVED_NOT_BUILDER_DERIVED__ALL_DECLARED_TRANSFORM_OBLIGATIONS_EXPLICITLY_COVERED",
+    "status": "UNION_CONTRACT__SPEC_AND_VBA_DERIVED__ALL_DECLARED_TRANSFORM_OBLIGATIONS_COVERED",
     "oracles": [
       {
         "id": "A_R_APP_LAYOUT",
@@ -2463,6 +2920,112 @@
           "schema",
           "task_command_before_stage_b"
         ]
+      },
+      {
+        "id": "A_R_ARTIFACT_SCOPE",
+        "covers": [
+          "R_ARTIFACT_SCOPE"
+        ],
+        "provenance": "independent_spec_oracle",
+        "dependencies": [
+          "raw:rank20_allowlisted_sources",
+          "oracle:rank20_stage_b_v3_R_ARTIFACT_SCOPE"
+        ],
+        "derived_from_builder_output": false,
+        "detects": [
+          "cache_dependent_submission",
+          "existence",
+          "missing_generated_app",
+          "roundtrip_or_parse",
+          "schema",
+          "second_app_tree"
+        ]
+      },
+      {
+        "id": "A_R_REQUIRED_STACK",
+        "covers": [
+          "R_REQUIRED_STACK"
+        ],
+        "provenance": "independent_spec_oracle",
+        "dependencies": [
+          "raw:rank20_allowlisted_sources",
+          "oracle:rank20_stage_b_v3_R_REQUIRED_STACK"
+        ],
+        "derived_from_builder_output": false,
+        "detects": [
+          "behavior_redesign",
+          "existence",
+          "nonpersistent_store",
+          "roundtrip_or_parse",
+          "schema",
+          "wrong_backend_stack",
+          "wrong_frontend_stack"
+        ]
+      },
+      {
+        "id": "A_R_CUSTOMER_LOAD",
+        "covers": [
+          "R_CUSTOMER_LOAD"
+        ],
+        "provenance": "independent_spec_oracle",
+        "dependencies": [
+          "raw:rank20_allowlisted_sources",
+          "oracle:rank20_stage_b_v3_R_CUSTOMER_LOAD"
+        ],
+        "derived_from_builder_output": false,
+        "detects": [
+          "boolean_mapping_wrong",
+          "failure_recovery",
+          "field_not_loaded",
+          "idempotence",
+          "ordering_precedence",
+          "wrong_customer_loaded"
+        ]
+      },
+      {
+        "id": "A_R_ARTIFACT_EXCLUDES",
+        "covers": [
+          "R_ARTIFACT_EXCLUDES"
+        ],
+        "provenance": "independent_spec_oracle",
+        "dependencies": [
+          "raw:rank20_allowlisted_sources",
+          "oracle:rank20_stage_b_v3_R_ARTIFACT_EXCLUDES"
+        ],
+        "derived_from_builder_output": false,
+        "detects": [
+          "cache_required_for_success",
+          "exclude_not_honored",
+          "existence",
+          "required_source_excluded",
+          "roundtrip_or_parse",
+          "schema"
+        ]
+      },
+      {
+        "id": "A_R_RUNTIME_FEASIBILITY",
+        "covers": [
+          "R_RUNTIME_FEASIBILITY"
+        ],
+        "provenance": "independent_spec_oracle",
+        "dependencies": [
+          "raw:rank20_allowlisted_sources",
+          "oracle:rank20_stage_b_v3_R_RUNTIME_FEASIBILITY"
+        ],
+        "derived_from_builder_output": false,
+        "detects": [
+          "dependency_install_failure",
+          "existence",
+          "failure_recovery",
+          "frontend_build_failure",
+          "idempotence",
+          "ordering_precedence",
+          "pep668_mismatch",
+          "readiness_timeout",
+          "resource_limit_exceeded",
+          "roundtrip_or_parse",
+          "schema"
+        ]
       }
     ]
   },
@@ -2564,5 +3127,21 @@
     "added_oracle_mode_bindings": 117,
     "total_declared_mutants": 208,
     "task_execution_authorized": false
+  },
+  "supersedes": [
+    "canonical/capabilities/opus55/VBA_USERFORM_PORT_RANK20_STAGE_B_CONTRACT_V1.json",
+    "canonical/capabilities/opus55/VBA_USERFORM_PORT_RANK20_STAGE_B_CONTRACT_V2.json"
+  ],
+  "union_rationale": {
+    "main_v1_blob": "16affaf98c8565913d45a751e1b16f00c79d9e63",
+    "strong_v2_blob": "d668bf68b1130649ee06245f3975d9bca909ad3b",
+    "rule": "PRESERVE_ALL_DISTINCT_BEHAVIORS__PRESERVE_SOURCE_TRACEABILITY__PRESERVE_STRONGER_INDEPENDENT_ACCEPTANCE",
+    "discarded_behavior_count": 0
+  },
+  "v3_metrics": {
+    "requirements": 38,
+    "source_traced_requirements": 38,
+    "independent_oracles": 38,
+    "declared_mutants": 244
   }
 }
