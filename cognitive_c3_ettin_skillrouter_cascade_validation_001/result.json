@@ -1,0 +1,269 @@
+{
+  "schema": "PROJECT_BRAIN_C3_ETTIN_SKILLROUTER_CASCADE_VALIDATION_001_RESULT_V1",
+  "status": "VALIDATE_SPENT20_DERIVED_THRESHOLD_ON_NEWER_FROZEN_SET__ZERO_CAPABILITY_CREDIT",
+  "threshold_source": "cognitive_c3_ettin_on_skillrouter_spent20_001/result.json",
+  "fixed_margin_threshold": 0.9530563354492188,
+  "frozen_cases_commit": "28ab0f0a62e7ad23294945403639d9b6e42736df",
+  "episodes": 15,
+  "semantic_episodes": 12,
+  "ettin_success_rate": 0.9333333333333333,
+  "skillrouter_success_rate": 1.0,
+  "cascade_success_rate": 0.9333333333333333,
+  "semantic_cascade_success_rate": 0.9166666666666666,
+  "fallbacks": 0,
+  "fallback_fraction_semantic": 0.0,
+  "fallback_ids": [],
+  "uncaught_ettin_failures": [
+    "fresh_order_queue"
+  ],
+  "unnecessary_fallbacks": [],
+  "ettin_mean_routing_latency_ms": 157.44004079999647,
+  "skillrouter_mean_routing_latency_ms": 2535.918673133339,
+  "estimated_cascade_mean_routing_latency_ms": 157.44004079999647,
+  "estimated_speedup_vs_always_skillrouter": 16.10720284527134,
+  "rows": [
+    {
+      "id": "fresh_total_expenses",
+      "ettin_pick": "sum_numbers",
+      "ettin_correct": true,
+      "ettin_latency_ms": 199.32316399999195,
+      "semantic": true,
+      "scores": {
+        "mean_numbers": 3.6994099617004395,
+        "sum_numbers": 5.884798526763916,
+        "max_number": 2.404404878616333,
+        "sort_numbers": 2.1479461193084717
+      },
+      "top1_top2_margin": 2.1853885650634766,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_average_scores",
+      "ettin_pick": "mean_numbers",
+      "ettin_correct": true,
+      "ettin_latency_ms": 193.08965099999398,
+      "semantic": true,
+      "scores": {
+        "median_numbers": 6.126771450042725,
+        "sum_numbers": 6.1686577796936035,
+        "mean_numbers": 8.183013916015625,
+        "max_number": 3.461575508117676
+      },
+      "top1_top2_margin": 2.0143561363220215,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_middle_value",
+      "ettin_pick": "median_numbers",
+      "ettin_correct": true,
+      "ettin_latency_ms": 192.1443190000076,
+      "semantic": true,
+      "scores": {
+        "mean_numbers": 6.238640308380127,
+        "median_numbers": 7.947368144989014,
+        "max_number": 3.9961490631103516,
+        "sort_numbers": 4.80867338180542
+      },
+      "top1_top2_margin": 1.7087278366088867,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_highest_temperature",
+      "ettin_pick": "max_number",
+      "ettin_correct": true,
+      "ettin_latency_ms": 183.73606699999812,
+      "semantic": true,
+      "scores": {
+        "sort_numbers": 4.095244884490967,
+        "mean_numbers": 0.4247151017189026,
+        "max_number": 10.419129371643066,
+        "sum_numbers": 6.289221286773682
+      },
+      "top1_top2_margin": 4.129908084869385,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_order_queue",
+      "ettin_pick": "max_number",
+      "ettin_correct": false,
+      "ettin_latency_ms": 190.45391799998868,
+      "semantic": true,
+      "scores": {
+        "max_number": 6.075789451599121,
+        "sort_numbers": 4.827763080596924,
+        "unique_items": 4.437218189239502,
+        "sum_numbers": 4.524254322052002
+      },
+      "top1_top2_margin": 1.2480263710021973,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": false
+    },
+    {
+      "id": "fresh_unique_labels",
+      "ettin_pick": "unique_items",
+      "ettin_correct": true,
+      "ettin_latency_ms": 200.92483499999503,
+      "semantic": true,
+      "scores": {
+        "sort_text": 4.198522567749023,
+        "unique_items": 9.565381050109863,
+        "count_words": 0.27591371536254883,
+        "reverse_text": 2.2829039096832275
+      },
+      "top1_top2_margin": 5.36685848236084,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_filename_only",
+      "ettin_pick": "basename_path",
+      "ettin_correct": true,
+      "ettin_latency_ms": 214.79183699999282,
+      "semantic": true,
+      "scores": {
+        "extension_path": 9.631672859191895,
+        "basename_path": 12.523037910461426,
+        "count_words": 0.9953230023384094,
+        "sha256_text": 0.6942841410636902
+      },
+      "top1_top2_margin": 2.8913650512695312,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_extension_only",
+      "ettin_pick": "extension_path",
+      "ettin_correct": true,
+      "ettin_latency_ms": 207.8551859999891,
+      "semantic": true,
+      "scores": {
+        "basename_path": 4.519871234893799,
+        "extension_path": 7.269662857055664,
+        "json_key": -0.9362793564796448,
+        "count_lines": -0.44251444935798645
+      },
+      "top1_top2_margin": 2.7497916221618652,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_json_state",
+      "ettin_pick": "json_key",
+      "ettin_correct": true,
+      "ettin_latency_ms": 207.92892400000085,
+      "semantic": true,
+      "scores": {
+        "basename_path": 3.9943270683288574,
+        "unique_items": 1.7475028038024902,
+        "json_key": 8.704480171203613,
+        "count_words": -1.244384765625
+      },
+      "top1_top2_margin": 4.710153102874756,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_mileage",
+      "ettin_pick": "km_to_miles",
+      "ettin_correct": true,
+      "ettin_latency_ms": 164.9664489999907,
+      "semantic": true,
+      "scores": {
+        "c_to_f": -0.8399262428283691,
+        "mean_numbers": 1.3177103996276855,
+        "km_to_miles": 10.444496154785156,
+        "sum_numbers": 1.7731937170028687
+      },
+      "top1_top2_margin": 8.671302437782288,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_fahrenheit",
+      "ettin_pick": "c_to_f",
+      "ettin_correct": true,
+      "ettin_latency_ms": 207.9728980000084,
+      "semantic": true,
+      "scores": {
+        "km_to_miles": -2.1199440956115723,
+        "c_to_f": 9.652020454406738,
+        "max_number": -0.48554879426956177,
+        "mean_numbers": -0.2229951173067093
+      },
+      "top1_top2_margin": 9.875015571713448,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_digest",
+      "ettin_pick": "sha256_text",
+      "ettin_correct": true,
+      "ettin_latency_ms": 198.40946799999415,
+      "semantic": true,
+      "scores": {
+        "reverse_text": 6.363467216491699,
+        "sha256_text": 12.10496711730957,
+        "uppercase_text": 3.8542063236236572,
+        "count_words": 4.57389497756958
+      },
+      "top1_top2_margin": 5.741499900817871,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_provider_exact",
+      "ettin_pick": "dropbox_search",
+      "ettin_correct": true,
+      "ettin_latency_ms": 0.002453999996987477,
+      "semantic": false,
+      "scores": {
+        "dropbox_search": null
+      },
+      "top1_top2_margin": null,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_provider_missing",
+      "ettin_pick": "ESCALATE",
+      "ettin_correct": true,
+      "ettin_latency_ms": 0.0008109999924954536,
+      "semantic": false,
+      "scores": {},
+      "top1_top2_margin": null,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    },
+    {
+      "id": "fresh_provider_denied",
+      "ettin_pick": "ESCALATE",
+      "ettin_correct": true,
+      "ettin_latency_ms": 0.0006310000060238963,
+      "semantic": false,
+      "scores": {},
+      "top1_top2_margin": null,
+      "fallback_to_skillrouter": false,
+      "skillrouter_correct": true,
+      "composed_correct": true
+    }
+  ],
+  "capability_credit_delta": 0
+}
