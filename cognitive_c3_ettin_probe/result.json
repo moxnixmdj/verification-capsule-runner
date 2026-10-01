@@ -1,0 +1,432 @@
+{
+  "schema": "PROJECT_BRAIN_C3_TOOL_ROUTE_RERANKER_PROBE_RESULT_V1",
+  "status": "MEASUREMENT_ONLY__ZERO_CAPABILITY_CREDIT",
+  "model": "cross-encoder/ettin-reranker-150m-v1",
+  "cases": 20,
+  "model_hit_at_1": 0.95,
+  "lexical_hit_at_1": 0.8,
+  "mean_model_latency_ms": 108.84567794999357,
+  "rows": [
+    {
+      "id": "weather_forecast",
+      "gold": "weather",
+      "model_pick": "weather",
+      "model_correct": true,
+      "model_scores": {
+        "weather": 10.48530101776123,
+        "web": 2.6499483585357666,
+        "calendar": -0.42334601283073425,
+        "calculator": -3.149305582046509
+      },
+      "model_latency_ms": 105.17301999999518,
+      "lexical_pick": "weather",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "weather": 0.25,
+        "web": 0.16666666666666666,
+        "calendar": 0.06666666666666667,
+        "calculator": 0.06666666666666667
+      }
+    },
+    {
+      "id": "currency_conversion",
+      "gold": "currency",
+      "model_pick": "currency",
+      "model_correct": true,
+      "model_scores": {
+        "currency": 9.726966857910156,
+        "calculator": 2.8887526988983154,
+        "web": -0.34915414452552795,
+        "weather": -2.4836080074310303
+      },
+      "model_latency_ms": 98.81965099998524,
+      "lexical_pick": "currency",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "currency": 0.23529411764705882,
+        "calculator": 0.05555555555555555,
+        "web": 0.05555555555555555,
+        "weather": 0.0
+      }
+    },
+    {
+      "id": "future_reminder",
+      "gold": "automation",
+      "model_pick": "automation",
+      "model_correct": true,
+      "model_scores": {
+        "automation": 6.148919105529785,
+        "calendar": -0.2684963047504425,
+        "chat": 0.695810079574585,
+        "web": 0.2936015725135803
+      },
+      "model_latency_ms": 109.39817900001003,
+      "lexical_pick": "chat",
+      "lexical_correct": false,
+      "lexical_scores": {
+        "automation": 0.0,
+        "calendar": 0.0,
+        "chat": 0.05555555555555555,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "image_generation",
+      "gold": "image_gen",
+      "model_pick": "image_gen",
+      "model_correct": true,
+      "model_scores": {
+        "image_gen": 3.958238363265991,
+        "slides": -0.4700171947479248,
+        "web_images": 3.821340560913086,
+        "files": -2.224106788635254
+      },
+      "model_latency_ms": 99.79022599998189,
+      "lexical_pick": "slides",
+      "lexical_correct": false,
+      "lexical_scores": {
+        "image_gen": 0.0,
+        "slides": 0.0625,
+        "web_images": 0.05263157894736842,
+        "files": 0.0
+      }
+    },
+    {
+      "id": "restaurant_availability",
+      "gold": "availability",
+      "model_pick": "availability",
+      "model_correct": true,
+      "model_scores": {
+        "availability": 8.306353569030762,
+        "business_search": 7.97805643081665,
+        "web": 4.435582160949707,
+        "map": 2.690333604812622
+      },
+      "model_latency_ms": 122.43283600000154,
+      "lexical_pick": "availability",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "availability": 0.13043478260869565,
+        "business_search": 0.1,
+        "web": 0.05263157894736842,
+        "map": 0.0
+      }
+    },
+    {
+      "id": "private_github_file",
+      "gold": "github_fetch",
+      "model_pick": "github_fetch",
+      "model_correct": true,
+      "model_scores": {
+        "github_fetch": 8.423139572143555,
+        "web": 1.9766850471496582,
+        "files": 5.644047737121582,
+        "dropbox": 4.307456970214844
+      },
+      "model_latency_ms": 112.24574199999893,
+      "lexical_pick": "github_fetch",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "github_fetch": 0.09523809523809523,
+        "web": 0.0,
+        "files": 0.0,
+        "dropbox": 0.0
+      }
+    },
+    {
+      "id": "library_semantic_search",
+      "gold": "files",
+      "model_pick": "files",
+      "model_correct": true,
+      "model_scores": {
+        "files": 9.480052947998047,
+        "github_search": 5.3245768547058105,
+        "web": 4.614185810089111,
+        "gmail": 4.049396991729736
+      },
+      "model_latency_ms": 125.24739899998849,
+      "lexical_pick": "files",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "files": 0.17391304347826086,
+        "github_search": 0.05,
+        "web": 0.058823529411764705,
+        "gmail": 0.05555555555555555
+      }
+    },
+    {
+      "id": "dropbox_find",
+      "gold": "dropbox",
+      "model_pick": "google_drive",
+      "model_correct": false,
+      "model_scores": {
+        "dropbox": 6.745230674743652,
+        "files": 1.118531584739685,
+        "google_drive": 8.806279182434082,
+        "web": 4.387731075286865
+      },
+      "model_latency_ms": 115.75471599999787,
+      "lexical_pick": "dropbox",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "dropbox": 0.10526315789473684,
+        "files": 0.0625,
+        "google_drive": 0.06666666666666667,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "gmail_send",
+      "gold": "gmail",
+      "model_pick": "gmail",
+      "model_correct": true,
+      "model_scores": {
+        "gmail": 7.688083171844482,
+        "chat_draft": 4.516988277435303,
+        "slack": 1.3762176036834717,
+        "notion": -1.958550214767456
+      },
+      "model_latency_ms": 106.85425100001567,
+      "lexical_pick": "gmail",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "gmail": 0.2222222222222222,
+        "chat_draft": 0.10526315789473684,
+        "slack": 0.058823529411764705,
+        "notion": 0.0
+      }
+    },
+    {
+      "id": "slack_search",
+      "gold": "slack",
+      "model_pick": "slack",
+      "model_correct": true,
+      "model_scores": {
+        "slack": 7.800062656402588,
+        "gmail": 3.133483409881592,
+        "notion": 3.777146577835083,
+        "web": 3.037307024002075
+      },
+      "model_latency_ms": 112.93976399997518,
+      "lexical_pick": "slack",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "slack": 0.15,
+        "gmail": 0.05263157894736842,
+        "notion": 0.05263157894736842,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "notion_spec",
+      "gold": "notion",
+      "model_pick": "notion",
+      "model_correct": true,
+      "model_scores": {
+        "notion": 11.242264747619629,
+        "github": 0.28074023127555847,
+        "slides": 1.9050542116165161,
+        "gmail": 2.0065457820892334
+      },
+      "model_latency_ms": 112.5758769999834,
+      "lexical_pick": "notion",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "notion": 0.14285714285714285,
+        "github": 0.05,
+        "slides": 0.0,
+        "gmail": 0.058823529411764705
+      }
+    },
+    {
+      "id": "drive_sheet",
+      "gold": "google_sheets",
+      "model_pick": "google_sheets",
+      "model_correct": true,
+      "model_scores": {
+        "google_sheets": 9.755416870117188,
+        "spreadsheet_file": 4.202761650085449,
+        "files": 3.087796688079834,
+        "web": 1.257020354270935
+      },
+      "model_latency_ms": 119.83651399998507,
+      "lexical_pick": "google_sheets",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "google_sheets": 0.2777777777777778,
+        "spreadsheet_file": 0.09523809523809523,
+        "files": 0.0625,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "figma_edit",
+      "gold": "figma",
+      "model_pick": "figma",
+      "model_correct": true,
+      "model_scores": {
+        "figma": 8.168203353881836,
+        "image_gen": 4.070527076721191,
+        "slides": 0.5744019746780396,
+        "web_images": 2.1017208099365234
+      },
+      "model_latency_ms": 114.12686899998903,
+      "lexical_pick": "figma",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "figma": 0.17647058823529413,
+        "image_gen": 0.0,
+        "slides": 0.0,
+        "web_images": 0.0625
+      }
+    },
+    {
+      "id": "vercel_deploy",
+      "gold": "vercel",
+      "model_pick": "vercel",
+      "model_correct": true,
+      "model_scores": {
+        "vercel": 8.545791625976562,
+        "github": 1.3854022026062012,
+        "replit": 3.8052244186401367,
+        "web": -0.35621100664138794
+      },
+      "model_latency_ms": 134.90938399999663,
+      "lexical_pick": "vercel",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "vercel": 0.15,
+        "github": 0.05263157894736842,
+        "replit": 0.05263157894736842,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "current_time",
+      "gold": "time",
+      "model_pick": "time",
+      "model_correct": true,
+      "model_scores": {
+        "time": 4.536843776702881,
+        "weather": 0.16546103358268738,
+        "calendar": -1.6778535842895508,
+        "calculator": -1.8341376781463623
+      },
+      "model_latency_ms": 93.3257039999944,
+      "lexical_pick": "time",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "time": 0.058823529411764705,
+        "weather": 0.0,
+        "calendar": 0.0,
+        "calculator": 0.0
+      }
+    },
+    {
+      "id": "unit_conversion",
+      "gold": "unit",
+      "model_pick": "unit",
+      "model_correct": true,
+      "model_scores": {
+        "unit": 5.7436933517456055,
+        "calculator": 2.361309289932251,
+        "currency": 0.5137954354286194,
+        "web": -1.0245872735977173
+      },
+      "model_latency_ms": 75.82069899999055,
+      "lexical_pick": "currency",
+      "lexical_correct": false,
+      "lexical_scores": {
+        "unit": 0.1,
+        "calculator": 0.0,
+        "currency": 0.1111111111111111,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "news_search",
+      "gold": "web",
+      "model_pick": "web",
+      "model_correct": true,
+      "model_scores": {
+        "web": 8.496297836303711,
+        "files": 0.7189356684684753,
+        "github": 2.241424798965454,
+        "gmail": 0.7153038382530212
+      },
+      "model_latency_ms": 98.56984099999977,
+      "lexical_pick": "files",
+      "lexical_correct": false,
+      "lexical_scores": {
+        "web": 0.05,
+        "files": 0.05555555555555555,
+        "github": 0.0,
+        "gmail": 0.0
+      }
+    },
+    {
+      "id": "github_commit",
+      "gold": "github",
+      "model_pick": "github",
+      "model_correct": true,
+      "model_scores": {
+        "github": 4.470211982727051,
+        "files": 2.8985047340393066,
+        "dropbox": -0.7774547338485718,
+        "web": -0.6585412621498108
+      },
+      "model_latency_ms": 117.24809099999334,
+      "lexical_pick": "github",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "github": 0.08695652173913043,
+        "files": 0.05,
+        "dropbox": 0.05555555555555555,
+        "web": 0.0
+      }
+    },
+    {
+      "id": "document_artifact",
+      "gold": "document",
+      "model_pick": "document",
+      "model_correct": true,
+      "model_scores": {
+        "document": 9.28597640991211,
+        "slides": 3.824409246444702,
+        "spreadsheet": 3.4395415782928467,
+        "pdf": 4.581787586212158
+      },
+      "model_latency_ms": 95.90205800000717,
+      "lexical_pick": "document",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "document": 0.11764705882352941,
+        "slides": 0.08333333333333333,
+        "spreadsheet": 0.1,
+        "pdf": 0.08333333333333333
+      }
+    },
+    {
+      "id": "pdf_edit",
+      "gold": "pdf",
+      "model_pick": "pdf",
+      "model_correct": true,
+      "model_scores": {
+        "pdf": 8.509760856628418,
+        "document": 5.910667419433594,
+        "image_gen": 4.215411186218262,
+        "files": 1.239415168762207
+      },
+      "model_latency_ms": 105.94273799998177,
+      "lexical_pick": "pdf",
+      "lexical_correct": true,
+      "lexical_scores": {
+        "pdf": 0.2,
+        "document": 0.1111111111111111,
+        "image_gen": 0.0,
+        "files": 0.05555555555555555
+      }
+    }
+  ],
+  "capability_credit_delta": 0
+}
