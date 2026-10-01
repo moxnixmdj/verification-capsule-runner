@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+  "probe": "C3_ETTIN_VS_SKILLROUTER_SAME_CASES_001",
+  "workflow_run_id": "36824331770",
+  "head_sha": "97a44be5c844e827c63f72c69c91c973c120334c",
+  "outcome": "success",
+  "rc": "0",
+  "result_exists": true,
+  "terminal_state": "SUCCESS",
+  "capability_credit_delta": 0
+}
