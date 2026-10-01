@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+  "probe": "PYRCA_HT_DONOR_MINIMIZATION_V1",
+  "workflow_run_id": "36840123904",
+  "head_sha": "330b67fcbdc18ac15b9dfd7b5265be945fa6351d",
+  "outcome": "success",
+  "rc": "0",
+  "result_exists": true,
+  "terminal_state": "SUCCESS",
+  "capability_credit_delta": 0
+}
