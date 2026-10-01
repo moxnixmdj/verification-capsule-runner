@@ -80,8 +80,8 @@ def validate_lease_upgrade(
     """Allow only the monotonic Stage-B exposure -> Stage-C execution transition.
 
     This is intentionally narrow. A bound lease cannot change task/session/rank,
-    cannot be upgraded after any builder burst, and cannot change after the
-    acceptance contract is frozen.
+    cannot be upgraded after any builder burst, and may promote to Stage C only
+    after the acceptance contract is already frozen.
     """
     errors = validate_lease_authorization(candidate, session_id, task)
     if not isinstance(current, dict):
