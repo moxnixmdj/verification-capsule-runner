@@ -35,7 +35,9 @@ class TestAcceptanceContract(unittest.TestCase):
       "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"lease_merged_to_main":True,
       "canonical_brain_commit":"a"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":15
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":15,
+      "task_execution_authorized":True,"execution_count_allowed":1,
+      "terminal_verifier_count_allowed":1,"replay_for_credit":False
     }
     self.assertEqual(validate_lease_authorization(good,"s1","t1"),[])
     bad=dict(good); bad["lease_merged_to_main"]=False
@@ -49,7 +51,9 @@ class TestAcceptanceContract(unittest.TestCase):
       "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"lease_merged_to_main":True,
       "canonical_brain_commit":"a"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
+      "task_execution_authorized":True,"execution_count_allowed":1,
+      "terminal_verifier_count_allowed":1,"replay_for_credit":False
     }
     burst={
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
@@ -78,7 +82,9 @@ class TestAcceptanceContract(unittest.TestCase):
 
   def test_terminal_requires_fresh_terminal_revalidation(self):
     lease={
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
+      "task_execution_authorized":True,"execution_count_allowed":1,
+      "terminal_verifier_count_allowed":1,"replay_for_credit":False
     }
     terminal={
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
@@ -95,6 +101,41 @@ class TestAcceptanceContract(unittest.TestCase):
       session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
       revalidation=terminal,scope="TERMINAL",pr_open=True
     ))
+
+  def test_total_one_shot_budgets_fail_closed(self):
+    lease={
+      "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"lease_merged_to_main":True,
+      "canonical_brain_commit":"a"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18,
+      "task_execution_authorized":True,"execution_count_allowed":1,
+      "terminal_verifier_count_allowed":1,"replay_for_credit":False
+    }
+    burst0={
+      "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"scope":"BURST","burst_id":0,
+      "canonical_brain_commit":"b"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18
+    }
+    self.assertEqual(validate_lease_revalidation(
+      burst0,"s1","t1",lease,expected_scope="BURST",expected_burst_id=0
+    ),[])
+    burst1=dict(burst0); burst1["burst_id"]=1
+    self.assertIn("CANONICAL_EXECUTION_BUDGET_EXHAUSTED",validate_lease_revalidation(
+      burst1,"s1","t1",lease,expected_scope="BURST",expected_burst_id=1
+    ))
+    no_terminal=dict(lease); no_terminal["terminal_verifier_count_allowed"]=0
+    terminal={
+      "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
+      "authorization":True,"scope":"TERMINAL",
+      "canonical_brain_commit":"c"*40,
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18
+    }
+    self.assertIn("CANONICAL_TERMINAL_BUDGET_EXHAUSTED",validate_lease_revalidation(
+      terminal,"s1","t1",no_terminal,expected_scope="TERMINAL"
+    ))
+    missing=dict(lease); missing.pop("execution_count_allowed")
+    self.assertIn("EXECUTION_COUNT_ALLOWED_INVALID",validate_lease_authorization(missing,"s1","t1"))
 
   def test_valid_and_hash_stable(self):
     p=base_payload()
