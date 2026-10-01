@@ -48,6 +48,52 @@ FORBIDDEN_INDEPENDENCE = {"BUILDER_RECOMPUTE", "BUILDER_DERIVED_EXPECTATION"}
 LEASE_SCHEMA = "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1"
 LEASE_REVALIDATION_SCHEMA = "BRAIN_FAST_BURST_LEASE_REVALIDATION_V1"
 
+
+RUNTIME_API_PREFLIGHT_SCHEMA = "BRAIN_RUNTIME_API_CONTRACT_PREFLIGHT_V1"
+
+def validate_runtime_api_preflight(payload: Any) -> list[str]:
+    """Require the builder's external API assumptions to be smoke-tested on the exact execution surface."""
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["RUNTIME_API_PREFLIGHT_MISSING"]
+    if payload.get("schema") != RUNTIME_API_PREFLIGHT_SCHEMA:
+        errors.append("RUNTIME_API_PREFLIGHT_SCHEMA_INVALID")
+    if payload.get("status") != "PASS":
+        errors.append("RUNTIME_API_PREFLIGHT_NOT_PASS")
+    if payload.get("exact_execution_surface") is not True:
+        errors.append("RUNTIME_API_PREFLIGHT_NOT_EXACT_SURFACE")
+    if payload.get("planned_api_surface_complete") is not True:
+        errors.append("RUNTIME_API_SURFACE_INCOMPLETE")
+    unknown = payload.get("unverified_api_symbols")
+    if unknown not in ([], None):
+        errors.append("UNVERIFIED_RUNTIME_API_SYMBOLS_REMAIN")
+    contracts = payload.get("contracts")
+    if not isinstance(contracts, list) or not contracts:
+        errors.append("RUNTIME_API_CONTRACTS_MISSING")
+    else:
+        seen: set[str] = set()
+        for i, item in enumerate(contracts):
+            if not isinstance(item, dict):
+                errors.append(f"RUNTIME_API_CONTRACT_INVALID:{i}")
+                continue
+            cid = item.get("id")
+            if not _nonempty_text(cid):
+                errors.append(f"RUNTIME_API_CONTRACT_ID_MISSING:{i}")
+                continue
+            if cid in seen:
+                errors.append(f"RUNTIME_API_CONTRACT_ID_DUPLICATE:{cid}")
+            seen.add(cid)
+            if not _nonempty_text(item.get("symbol")):
+                errors.append(f"RUNTIME_API_SYMBOL_MISSING:{cid}")
+            if not _nonempty_text(item.get("expected_behavior")):
+                errors.append(f"RUNTIME_API_EXPECTATION_MISSING:{cid}")
+            if item.get("status") != "PASS":
+                errors.append(f"RUNTIME_API_CONTRACT_NOT_PASS:{cid}")
+            evidence = item.get("evidence")
+            if not isinstance(evidence, list) or not evidence or any(not _nonempty_text(x) for x in evidence):
+                errors.append(f"RUNTIME_API_EVIDENCE_MISSING:{cid}")
+    return errors
+
 EXECUTION_SURFACE_PREFLIGHT_SCHEMA = "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1"
 SOURCE_BOUNDARY_PREFLIGHT_SCHEMA = "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1"
 DERIVED_AUTHORITY_PREFLIGHT_SCHEMA = "BRAIN_DERIVED_AUTHORITY_PREFLIGHT_V1"
@@ -404,6 +450,7 @@ def validate_lease_upgrade(
     if acceptance_hash is None:
         errors.append("LEASE_UPGRADE_REQUIRES_ACCEPTANCE_FROZEN")
     errors.extend(validate_execution_surface_preflight(candidate.get("execution_surface_preflight")))
+    errors.extend(validate_runtime_api_preflight(candidate.get("runtime_api_preflight")))
     errors.extend(validate_source_boundary_preflight(candidate.get("source_boundary_preflight")))
     errors.extend(validate_derived_authority_preflight(
         candidate.get("derived_authority_preflight"),
