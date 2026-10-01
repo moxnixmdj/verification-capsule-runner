@@ -7,7 +7,7 @@ sys.path.insert(0,str(ROOT/"verification"))
 from requirement_graph_kernel import compile_requirement_contract, requirement_mutation_score
 from independent_acceptance_model import assess
 
-contract=json.loads((Path(__file__).with_name("wdm_design_stage_b_contract_v2.json")).read_text())
+contract=json.loads((Path(__file__).with_name("wdm_design_stage_b_contract_v3.json")).read_text())
 reqs=contract["normalized_requirements"]
 checks=contract["independent_acceptance_plan"]["checks"]
 expected=[r["id"] for r in reqs]
@@ -19,7 +19,7 @@ acceptance=assess({"requirements":reqs,"checks":checks})
 assert graph["pass"], graph
 assert mut["pass"], mut
 assert acceptance["pass"], acceptance
-assert len(reqs)==15
+assert len(reqs)==16
 assert contract["source"]["instruction_blob_sha"]=="ab7255e9b4cf9597e965e2fe385447e502c4e8f9"
 assert contract["behavioral_contract"]["polarization"]["meep_eig_parity"]=="mp.ODD_Z"
 assert contract["behavioral_contract"]["performance"][0]["wavelengths_um"]==[1.50,1.51,1.52,1.53,1.54]
