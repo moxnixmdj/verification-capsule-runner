@@ -28,7 +28,7 @@ class LeaseUpgradeTests(unittest.TestCase):
         return validate_lease_upgrade(
             current or self.stage_b,
             candidate or self.stage_c,
-            "data-anonymization",
+            "data-anonymization-20261001-v1",
             "data-anonymization",
             next_burst=next_burst,
             acceptance_hash=acceptance_hash,
