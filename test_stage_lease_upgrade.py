@@ -18,6 +18,16 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
         "replay_for_credit": False,
         "execution_count_allowed": 1 if execute else 0,
         "terminal_verifier_count_allowed": 1 if execute else 0,
+        "execution_surface_preflight": ({
+            "schema": "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1",
+            "status": "PASS",
+            "exact_or_materially_equivalent": True,
+            "package_management_policy_verified": True,
+            "required_install_steps_verified": True,
+            "required_runtime_imports_verified": True,
+            "environment_sha256": "b" * 64,
+            "evidence": ["exact task-image smoke passed"],
+        } if execute else None),
     }
 
 
@@ -60,6 +70,28 @@ class LeaseUpgradeTests(unittest.TestCase):
     def test_replay_enabled_fails(self):
         x=dict(self.stage_c); x["replay_for_credit"]=True
         self.assertIn("LEASE_UPGRADE_REPLAY_POLICY_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_missing_execution_surface_preflight_fails(self):
+        x=dict(self.stage_c); x.pop("execution_surface_preflight", None)
+        self.assertIn("EXECUTION_SURFACE_PREFLIGHT_MISSING", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_host_only_approximation_fails(self):
+        x=dict(self.stage_c)
+        x["execution_surface_preflight"]=dict(x["execution_surface_preflight"])
+        x["execution_surface_preflight"]["exact_or_materially_equivalent"]=False
+        self.assertIn("EXECUTION_SURFACE_NOT_MATERIALLY_EQUIVALENT", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_package_policy_unverified_fails(self):
+        x=dict(self.stage_c)
+        x["execution_surface_preflight"]=dict(x["execution_surface_preflight"])
+        x["execution_surface_preflight"]["package_management_policy_verified"]=False
+        self.assertIn("PACKAGE_MANAGEMENT_POLICY_UNVERIFIED", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_install_smoke_missing_fails(self):
+        x=dict(self.stage_c)
+        x["execution_surface_preflight"]=dict(x["execution_surface_preflight"])
+        x["execution_surface_preflight"]["required_install_steps_verified"]=False
+        self.assertIn("REQUIRED_INSTALL_STEPS_UNVERIFIED", self.check(candidate=x, acceptance_hash="frozen"))
 
 
 if __name__ == "__main__":
