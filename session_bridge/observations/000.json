@@ -1,0 +1,10 @@
+{
+  "command_sha256": "29cad5927958b0eb8b2cfad4c1170a4f1f131d3326edcb3054961a5b7821a1c9",
+  "duration_sec": 0.059,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-20261001-v1",
+  "stderr": "",
+  "stdout": "/app\ntotal 28\ndrwxr-xr-x 1 root root 4096 Oct  1 02:59 .\ndrwxr-xr-x 1 root root 4096 Oct  1 03:00 ..\ndrwxr-xr-x 2 root root 4096 Oct  1 02:59 checkpoints\ndrwxr-xr-x 2 root root 4096 Oct  1 02:59 framework\ndrwxr-xr-x 2 root root 4096 Oct  1 02:59 output\ndrwxr-xr-x 2 root root 4096 Oct  1 02:59 reference_model\ndrwxr-xr-x 2 root root 4096 Oct  1 02:59 reference_output\n/app/checkpoints/shard_tp0_pp0_ep0.pt\n/app/checkpoints/shard_tp0_pp0_ep1.pt\n/app/checkpoints/shard_tp0_pp1_ep0.pt\n/app/checkpoints/shard_tp0_pp1_ep1.pt\n/app/checkpoints/shard_tp1_pp0_ep0.pt\n/app/checkpoints/shard_tp1_pp0_ep1.pt\n/app/checkpoints/shard_tp1_pp1_ep0.pt\n/app/checkpoints/shard_tp1_pp1_ep1.pt\n/app/checkpoints/shard_tp2_pp0_ep0.pt\n/app/checkpoints/shard_tp2_pp0_ep1.pt\n/app/checkpoints/shard_tp2_pp1_ep0.pt\n/app/checkpoints/shard_tp2_pp1_ep1.pt\n/app/checkpoints/shard_tp3_pp0_ep0.pt\n/app/checkpoints/shard_tp3_pp0_ep1.pt\n/app/checkpoints/shard_tp3_pp1_ep0.pt\n/app/checkpoints/shard_tp3_pp1_ep1.pt\n/app/framework/__init__.py\n/app/framework/config.py\n/app/framework/distributed.py\n/app/framework/kernels.py\n/app/framework/parallel.py\n/app/framework/precision.py\n/app/reference_model/config.json\n/app/reference_model/model.py\n/app/reference_output/expected_keys.json\n/app/reference_output/input_ids.pt\n/app/reference_output/logits.pt\n",
+  "step": 0
+}
