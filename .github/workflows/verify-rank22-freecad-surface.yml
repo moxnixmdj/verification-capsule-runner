@@ -1,4 +1,5 @@
 name: Verify rank22 exact FreeCAD surface
+# trigger: explicit PR-visible surface verification
 on:
   push:
     branches: [main]
