@@ -3,6 +3,11 @@ from pathlib import Path
 from minimum_reality_cut import solve
 ROOT=Path(__file__).parent
 class CutV3(unittest.TestCase):
+    def test_exact_brain_mirror_hash(self):
+        import hashlib
+        raw=(ROOT/"cut.json").read_bytes()
+        self.assertEqual(hashlib.sha1(raw).hexdigest(),"c0ceaba4919201119faa94d92abc6b8efacc86d0")
+
     def test_exact_compressed_cut(self):
         data=json.loads((ROOT/"cut.json").read_text())
         out=solve(data)
