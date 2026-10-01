@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from typing import Any, Iterable, Mapping
 
 SCHEMA = "BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1"
@@ -36,6 +37,34 @@ ALLOWED_CHECK_KINDS = {
     "LINEAGE_COVERAGE",
 }
 FORBIDDEN_INDEPENDENCE = {"BUILDER_RECOMPUTE", "BUILDER_DERIVED_EXPECTATION"}
+
+
+LEASE_SCHEMA = "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1"
+
+def validate_lease_authorization(payload: Any, session_id: str, task: str) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["LEASE_PAYLOAD_NOT_OBJECT"]
+    if payload.get("schema") != LEASE_SCHEMA:
+        errors.append("LEASE_SCHEMA_INVALID")
+    if payload.get("session_id") != session_id:
+        errors.append("LEASE_SESSION_MISMATCH")
+    if payload.get("task") != task:
+        errors.append("LEASE_TASK_MISMATCH")
+    if payload.get("authorization") is not True:
+        errors.append("LEASE_AUTHORIZATION_FALSE")
+    if payload.get("lease_merged_to_main") is not True:
+        errors.append("LEASE_NOT_CONFIRMED_MERGED_TO_MAIN")
+    commit = payload.get("canonical_brain_commit")
+    if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        errors.append("CANONICAL_BRAIN_COMMIT_INVALID")
+    path = payload.get("canonical_lease_path")
+    if not isinstance(path, str) or not path.startswith("canonical/governance/") or not path.endswith(".json"):
+        errors.append("CANONICAL_LEASE_PATH_INVALID")
+    rank = payload.get("sample_rank")
+    if not isinstance(rank, int) or rank < 1:
+        errors.append("SAMPLE_RANK_INVALID")
+    return errors
 
 def _nonempty_text(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
