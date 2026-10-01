@@ -1,0 +1,19 @@
+{
+  "schema":"PROJECT_BRAIN_INDEPENDENT_REQUIREMENT_ACCEPTANCE_COMPILER_VERIFICATION_SOURCE_V1",
+  "date":"2026-10-02",
+  "source_repository":"moxnixmdj/brain",
+  "source_compiler_path":"canonical/runtime/requirement_acceptance_compiler.py",
+  "source_compiler_blob_sha1":"c306ac6191e2d6f6d84445d7a698eeec8676a0ef",
+  "source_dependency_path":"canonical/runtime/independent_acceptance_model.py",
+  "source_dependency_blob_sha1":"710298c5d7154b5a3c2a4a1700420c40cb2fa55a",
+  "verification_scope":[
+    "EXACT_COMPILER_AND_DEPENDENCY_BLOB_BINDING",
+    "ALL_DECLARED_TRANSFORM_KINDS_COMPILE_NONEMPTY_ACCEPTANCE_CONSEQUENCES",
+    "UNKNOWN_TRANSFORM_FAIL_CLOSED",
+    "DUPLICATE_REQUIREMENT_FAIL_CLOSED",
+    "UNBACKED_FAILURE_MODE_FAIL_CLOSED",
+    "INVALID_DEPENDENCY_PROVENANCE_FAIL_CLOSED",
+    "NO_TERMINAL_AUTHORITY_CLAIM"
+  ],
+  "promotion_scope_if_pass":"NARROW_M0B_NORMALIZED_REQUIREMENT_TO_ACCEPTANCE_CONSEQUENCE_COMPONENT_ONLY"
+}
