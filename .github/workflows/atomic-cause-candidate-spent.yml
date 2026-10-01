@@ -1,0 +1,68 @@
+name: Atomic Cause Candidate Generation Spent Screen
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/atomic-cause-candidate-spent.yml"
+      - "atomic_cause_candidate_spent/**"
+
+permissions:
+  contents: write
+
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned causal-history candidate
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install "git+https://github.com/ShaneDolphin/pyrapide.git@d1dc66efbefe3442e247ac896416bf00c25d3ca1"
+
+      - name: Run spent cause-candidate generation screen
+        id: screen
+        shell: bash
+        run: |
+          set +e
+          python atomic_cause_candidate_spent/probe.py > atomic_cause_candidate_spent/run.log 2>&1
+          rc=$?
+          cat atomic_cause_candidate_spent/run.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+
+      - name: Persist visible result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.screen.outcome }}
+          RC: ${{ steps.screen.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("atomic_cause_candidate_spent")
+          ex=(p/"result.json").exists()
+          (p/"status.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"ATOMIC_CAUSE_CANDIDATE_GENERATION_SPENT",
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "head_sha":os.environ["GITHUB_SHA"],
+            "outcome":os.environ.get("OUTCOME"),
+            "rc":os.environ.get("RC"),
+            "result_exists":ex,
+            "terminal_state":"SUCCESS" if os.environ.get("OUTCOME")=="success" and ex else "FAILURE",
+            "capability_credit_delta":0
+          },indent=2)+"\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atomic_cause_candidate_spent/status.json atomic_cause_candidate_spent/run.log
+          test ! -f atomic_cause_candidate_spent/result.json || git add atomic_cause_candidate_spent/result.json
+          git commit -m "Record atomic cause candidate generation spent screen" || exit 0
+          git pull --rebase origin main
+          git push
