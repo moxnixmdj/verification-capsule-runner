@@ -1,0 +1,3638 @@
+{
+  "schema": "PROJECT_BRAIN_PYRCA_HT_DONOR_MINIMIZATION_DIFFERENTIAL_V1",
+  "status": "DONOR_MINIMIZATION_DIFFERENTIAL__ZERO_CAPABILITY_CREDIT",
+  "seed": 202610010901,
+  "fresh_trials": 400,
+  "donor": {
+    "repo": "salesforce/PyRCA",
+    "revision": "411310d589fac5cb8e7bdce67d33eadb091a1083",
+    "algorithm": "HT",
+    "license": "BSD-3-Clause"
+  },
+  "brain_owned_candidate": {
+    "path": "atomic_cause_ranking/brain_owned_ht_ranker.py",
+    "external_runtime_dependencies": [
+      "numpy"
+    ],
+    "pyrca_runtime_required": false,
+    "sklearn_runtime_required": false,
+    "scipy_runtime_required": false,
+    "pandas_runtime_required": false,
+    "networkx_runtime_required": false
+  },
+  "metrics": {
+    "top1_equivalence_fraction": 1.0,
+    "full_candidate_order_equivalence_fraction": 1.0,
+    "max_candidate_score_abs_error": 4.973799150320701e-14
+  },
+  "gate": {
+    "min_top1_equivalence_fraction": 1.0,
+    "min_full_order_equivalence_fraction": 0.995,
+    "max_candidate_score_abs_error": 1e-08,
+    "pass": true
+  },
+  "interpretation_rule": "PASS_SUPPORTS_ONLY_DONOR_INDEPENDENT_EQUIVALENCE_OF_THE_PYRCA_HT_RESIDUAL_SCORING_AND_RANKING_SLICE_ON_FRESH_EXPLICIT_NUMERIC_DAGS__REAL_TRACE_TRANSFER_AND_GENERAL_RCA_REMAIN_UNPROVEN",
+  "rows": [
+    {
+      "trial": 0,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 1,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.549516567451064e-15
+    },
+    {
+      "trial": 2,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.993605777301127e-15
+    },
+    {
+      "trial": 3,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 4,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 5,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 6,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 7,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.549516567451064e-15
+    },
+    {
+      "trial": 8,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 9,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.973799150320701e-14
+    },
+    {
+      "trial": 10,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 11,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 12,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 13,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 14,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 15,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 16,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 17,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 18,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 19,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 20,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 21,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.4654943925052066e-14
+    },
+    {
+      "trial": 22,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 23,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 24,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 25,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 26,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 27,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 28,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 29,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 30,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 31,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 32,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1102230246251565e-14
+    },
+    {
+      "trial": 33,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.325873406851315e-15
+    },
+    {
+      "trial": 34,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 35,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 36,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 37,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 38,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 39,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 40,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 41,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 42,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 43,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 44,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 45,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 46,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 47,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 48,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.3306690738754696e-15
+    },
+    {
+      "trial": 49,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7319479184152442e-14
+    },
+    {
+      "trial": 50,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 51,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 52,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.1760371282653068e-14
+    },
+    {
+      "trial": 53,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 54,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 55,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 56,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.4210854715202004e-14
+    },
+    {
+      "trial": 57,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 58,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 59,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 60,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 61,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 62,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 63,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 64,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 65,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1546319456101628e-14
+    },
+    {
+      "trial": 66,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 67,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 68,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 69,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 70,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.4654943925052066e-14
+    },
+    {
+      "trial": 71,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 72,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 73,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 74,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 75,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 76,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 77,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.199040866595169e-14
+    },
+    {
+      "trial": 78,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 79,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 80,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.021405182655144e-14
+    },
+    {
+      "trial": 81,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 82,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 83,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 0.0
+    },
+    {
+      "trial": 84,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 85,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 86,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 87,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 0.0
+    },
+    {
+      "trial": 88,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 89,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 90,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 91,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 92,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.993605777301127e-15
+    },
+    {
+      "trial": 93,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 94,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 95,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 96,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 97,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.769962616701378e-15
+    },
+    {
+      "trial": 98,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 99,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.509903313490213e-14
+    },
+    {
+      "trial": 100,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 101,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.4424906541753444e-14
+    },
+    {
+      "trial": 102,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 103,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 104,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 105,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.2434497875801753e-14
+    },
+    {
+      "trial": 106,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 107,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 108,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 109,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 110,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 111,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 112,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-15
+    },
+    {
+      "trial": 113,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 114,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 115,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.8207657603852567e-14
+    },
+    {
+      "trial": 116,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 117,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 118,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 119,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 120,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 121,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 122,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 123,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 124,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 125,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 126,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 127,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 128,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 129,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 130,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 131,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 132,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 133,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 134,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1102230246251565e-14
+    },
+    {
+      "trial": 135,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 136,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 137,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 138,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 139,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 140,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 141,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 142,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 143,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 144,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 145,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 146,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.325873406851315e-15
+    },
+    {
+      "trial": 147,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1102230246251565e-14
+    },
+    {
+      "trial": 148,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 149,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.6431300764452317e-14
+    },
+    {
+      "trial": 150,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 151,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.993605777301127e-15
+    },
+    {
+      "trial": 152,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 153,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 154,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 155,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 156,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 157,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 158,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 159,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 160,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 161,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 162,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 163,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 164,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 165,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 166,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 167,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 168,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 169,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 170,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 171,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 172,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 173,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 174,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 175,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 176,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 177,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 178,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 179,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 180,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 181,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 182,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1546319456101628e-14
+    },
+    {
+      "trial": 183,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.2434497875801753e-14
+    },
+    {
+      "trial": 184,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 185,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 186,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 187,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 188,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 189,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 190,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 191,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 192,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 193,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 194,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 195,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 196,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 197,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 198,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 199,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 200,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 201,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 202,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 203,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-15
+    },
+    {
+      "trial": 204,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 205,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 206,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 207,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 208,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 209,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 210,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 211,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 212,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 213,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 214,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 215,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 216,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 217,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 218,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 219,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 220,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 221,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 222,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 223,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 224,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 225,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 226,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 227,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 228,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 229,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 230,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 231,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 232,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 233,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 234,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 235,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.554312234475219e-14
+    },
+    {
+      "trial": 236,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 237,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.5987211554602254e-14
+    },
+    {
+      "trial": 238,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 239,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 240,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 241,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 242,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 243,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 244,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 245,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 246,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 247,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 248,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 249,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 250,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 251,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 252,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 253,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 254,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 255,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 256,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 257,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 258,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 259,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7319479184152442e-14
+    },
+    {
+      "trial": 260,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 261,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 262,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 263,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 264,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 265,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 266,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 267,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.549516567451064e-15
+    },
+    {
+      "trial": 268,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.6415315207705135e-14
+    },
+    {
+      "trial": 269,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 270,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.325873406851315e-15
+    },
+    {
+      "trial": 271,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.549516567451064e-15
+    },
+    {
+      "trial": 272,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 273,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1102230246251565e-14
+    },
+    {
+      "trial": 274,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 275,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.769962616701378e-15
+    },
+    {
+      "trial": 276,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 277,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 278,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.531308496145357e-14
+    },
+    {
+      "trial": 279,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 280,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 281,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 282,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 283,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 0.0
+    },
+    {
+      "trial": 284,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 285,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 286,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 287,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 288,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 289,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 290,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 291,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 292,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 293,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 294,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.769962616701378e-15
+    },
+    {
+      "trial": 295,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 296,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 297,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 298,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 299,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.993605777301127e-15
+    },
+    {
+      "trial": 300,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 301,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 302,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 303,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 304,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 305,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.1546319456101628e-14
+    },
+    {
+      "trial": 306,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 307,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 308,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 309,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 310,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 311,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 312,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 313,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 314,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 315,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.325873406851315e-15
+    },
+    {
+      "trial": 316,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.021405182655144e-14
+    },
+    {
+      "trial": 317,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 318,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 0.0
+    },
+    {
+      "trial": 319,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 320,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 0.0
+    },
+    {
+      "trial": 321,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 322,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 323,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3322676295501878e-15
+    },
+    {
+      "trial": 324,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.105427357601002e-15
+    },
+    {
+      "trial": 325,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 326,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 327,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 328,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 329,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 330,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 331,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.325873406851315e-15
+    },
+    {
+      "trial": 332,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 333,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.4210854715202004e-14
+    },
+    {
+      "trial": 334,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.0658141036401503e-14
+    },
+    {
+      "trial": 335,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 336,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 337,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.884981308350689e-15
+    },
+    {
+      "trial": 338,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 339,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.217248937900877e-15
+    },
+    {
+      "trial": 340,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.993605777301127e-15
+    },
+    {
+      "trial": 341,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 342,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 343,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 344,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 345,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 346,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 7.549516567451064e-15
+    },
+    {
+      "trial": 347,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 348,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 349,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 350,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-15
+    },
+    {
+      "trial": 351,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 352,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 353,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 354,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 355,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 356,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.773159728050814e-15
+    },
+    {
+      "trial": 357,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 358,
+      "true_cause": "N7",
+      "donor_top1": "N7",
+      "owned_top1": "N7",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 359,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 360,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 361,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 362,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 9.325873406851315e-15
+    },
+    {
+      "trial": 363,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 364,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 365,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 366,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 367,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 368,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 5.329070518200751e-15
+    },
+    {
+      "trial": 369,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 370,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 371,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 372,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 373,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    },
+    {
+      "trial": 374,
+      "true_cause": "N5",
+      "donor_top1": "N5",
+      "owned_top1": "N5",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 375,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 376,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 377,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 378,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 379,
+      "true_cause": "N6",
+      "donor_top1": "N6",
+      "owned_top1": "N6",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 380,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 381,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 382,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.3766765505351941e-14
+    },
+    {
+      "trial": 383,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 384,
+      "true_cause": "N3",
+      "donor_top1": "N3",
+      "owned_top1": "N3",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 6.661338147750939e-15
+    },
+    {
+      "trial": 385,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 386,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 387,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 388,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 389,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.552713678800501e-15
+    },
+    {
+      "trial": 390,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 391,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.9968028886505635e-15
+    },
+    {
+      "trial": 392,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 8.881784197001252e-16
+    },
+    {
+      "trial": 393,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 3.1086244689504383e-15
+    },
+    {
+      "trial": 394,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 395,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-15
+    },
+    {
+      "trial": 396,
+      "true_cause": "N2",
+      "donor_top1": "N2",
+      "owned_top1": "N2",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.220446049250313e-15
+    },
+    {
+      "trial": 397,
+      "true_cause": "N0",
+      "donor_top1": "N0",
+      "owned_top1": "N0",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 1.7763568394002505e-15
+    },
+    {
+      "trial": 398,
+      "true_cause": "N1",
+      "donor_top1": "N1",
+      "owned_top1": "N1",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 2.6645352591003757e-15
+    },
+    {
+      "trial": 399,
+      "true_cause": "N4",
+      "donor_top1": "N4",
+      "owned_top1": "N4",
+      "top1_match": true,
+      "full_order_match": true,
+      "max_candidate_score_abs_error": 4.440892098500626e-16
+    }
+  ],
+  "capability_credit_delta": 0
+}
