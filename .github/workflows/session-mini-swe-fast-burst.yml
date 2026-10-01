@@ -29,6 +29,9 @@ jobs:
       - name: Syntax-check fast burst controller
         run: python -m py_compile session_bridge/controller_fast.py
 
+      - name: Test instruction authorization gate
+        run: python -m unittest -v tests/test_fast_burst_instruction_authorization.py
+
       - name: Run persistent fast burst controller
         env:
           GITHUB_TOKEN: ${{ github.token }}
