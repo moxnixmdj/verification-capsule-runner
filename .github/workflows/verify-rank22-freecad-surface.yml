@@ -25,11 +25,6 @@ jobs:
         run: docker build --pull=false -t rank22-freecad-surface -f verification/rank22_surface/Dockerfile verification/rank22_surface
       - name: Smoke exact runtime
         run: |
-          docker run --rm rank22-freecad-surface bash -lc 'python --version; freecadcmd --version; python - <<"PY"
-import FreeCAD, Part, Sketcher
-print("FREECAD_VERSION", FreeCAD.Version())
-print("PART_OK", hasattr(Part,"makeLine"))
-print("SKETCHER_OK", hasattr(Sketcher,"Constraint"))
-PY'
+          docker run --rm rank22-freecad-surface bash -lc 'python --version; freecadcmd --version; python -c "import FreeCAD,Part,Sketcher; print(\"FREECAD_VERSION\", FreeCAD.Version()); print(\"PART_OK\", hasattr(Part,\"makeLine\")); print(\"SKETCHER_OK\", hasattr(Sketcher,\"Constraint\"))"'
       - name: Emit immutable image identity
         run: docker image inspect rank22-freecad-surface --format 'IMAGE_ID={{.Id}}'
