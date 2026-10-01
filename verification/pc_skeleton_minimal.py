@@ -41,7 +41,12 @@ def pc_stable_skeleton(data: np.ndarray, alpha: float=0.05, max_k: int|None=None
     if not 0.0<alpha<1.0:
         raise ValueError("alpha must be in (0,1)")
     n,p=data.shape
+    std=np.std(data,axis=0)
+    if not np.isfinite(std).all() or np.any(std <= 0.0):
+        raise ValueError("every variable must have positive finite variance")
     corr=np.corrcoef(data.T)
+    if not np.isfinite(corr).all():
+        raise ValueError("finite correlation matrix required")
     adj=np.ones((p,p),dtype=bool)
     np.fill_diagonal(adj,False)
     depth=0
