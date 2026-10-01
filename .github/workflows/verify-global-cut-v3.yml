@@ -1,0 +1,15 @@
+name: Verify global cut V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/global-cut-v3/**'
+      - '.github/workflows/verify-global-cut-v3.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: cd verification/global-cut-v3 && python3 -m unittest -v test_cut.py
