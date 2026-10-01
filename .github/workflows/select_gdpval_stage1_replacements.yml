@@ -1,0 +1,24 @@
+name: Select GDPval Stage1 Replacements
+on:
+  pull_request:
+    paths:
+      - 'professional_work/select_gdpval_stage1_replacements.py'
+      - '.github/workflows/select_gdpval_stage1_replacements.yml'
+permissions:
+  contents: read
+jobs:
+  select:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --disable-pip-version-check "datasets>=3,<5"
+      - name: Metadata-only deterministic replacement selection
+        working-directory: professional_work
+        run: python select_gdpval_stage1_replacements.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdpval-stage1-replacements
+          path: professional_work/gdpval_stage1_replacements.json
+          if-no-files-found: error
