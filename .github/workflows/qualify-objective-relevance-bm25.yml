@@ -1,0 +1,38 @@
+name: Qualify Objective Relevance BM25
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/objective_relevance_bm25.py
+      - canonical/tests/test_objective_relevance_bm25.py
+      - canonical/tests/test_objective_relevance_bm25_qualification.py
+      - .github/workflows/qualify-objective-relevance-bm25.yml
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.13'}
+      - name: Install independent verifier
+        run: python -m pip install --disable-pip-version-check rank-bm25==0.2.2
+      - name: Run producer regressions
+        run: python -m unittest -v canonical.tests.test_objective_relevance_bm25
+      - name: Run independent cross-domain qualification
+        run: python canonical/tests/test_objective_relevance_bm25_qualification.py
+      - name: Emit durable PASS receipt
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          gh api "repos/$REPO/issues" -f title="QUALIFICATION_PASS_OBJECTIVE_RELEVANCE_BM25_20260930_V1" -f body="PASS. Head SHA: $SHA. Workflow run: $RUN_ID. Exact producer blob 95d2b6bac6f6ffb5db97526407fcd22cbcc6c790. Fresh aerospace/database/climate top-choice agreement with independent rank-bm25 0.2.2; no-overlap fails closed; primary-source and semantic-entailment claims remain UNVERIFIED; model_dependency_count=0; incremental_spend_usd=0."
