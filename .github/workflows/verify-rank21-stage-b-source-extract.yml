@@ -28,5 +28,14 @@ jobs:
           test "$(git hash-object '/tmp/rank21/measurement data.xls')" = '77ebde66abfe83423f89586de9e2b5a499228154'
           test "$(git hash-object '/tmp/rank21/sample.xls')" = '4c62b8be6b1a96c390012f775f596476ebe017bd'
           test "$(git hash-object '/tmp/rank21/Sr-90_tables.pdf')" = '2d1705dc43d36628ce98884b7531a023a839ecad'
+      - name: Expose any embedded spreadsheet formulas without executing the task
+        run: |
+          set -euo pipefail
+          if ! command -v libreoffice >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends libreoffice-calc >/dev/null
+          fi
+          libreoffice --headless --convert-to xlsx --outdir /tmp/rank21 '/tmp/rank21/measurement data.xls' >/tmp/lo1.txt 2>&1
+          libreoffice --headless --convert-to xlsx --outdir /tmp/rank21 '/tmp/rank21/sample.xls' >/tmp/lo2.txt 2>&1
       - name: Extract source facts only
         run: python verification/rank21_stage_b/extract_allowlisted_sources.py /tmp/rank21
