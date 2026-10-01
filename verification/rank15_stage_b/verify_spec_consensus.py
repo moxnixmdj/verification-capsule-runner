@@ -15,7 +15,7 @@ A={
 "R01_FIXED_SINGLE_PATTERN":["same fixed pattern","all four conditions simultaneously"],
 "R02_EZ_ODD_Z_POLARIZATION":["fundamental out-of-plane-electric-field","mp.odd_z","mp.even_z"],
 "R03_SHORT_BAND_THRESHOLDS":["short band","[1.50, 1.54]","short-band output transmission","long-band output leakage"],
-"R04_SAME_RUN_SELF_NORMALIZATION":["single-simulation self-normalization","same run","do not normalize against a separate straight-waveguide reference"],
+"R04_SAME_RUN_SELF_NORMALIZATION":["single-simulation self-normalization","same run","separate straight-waveguide reference simulation"],
 "R05_LONG_BAND_THRESHOLDS":["long band","[1.56, 1.60]","long-band output transmission","short-band output leakage"],
 "R06_DESIGN_NPY_CONTRACT":["/app/design.npy","float64","axis 0 = spatial","fully binary"],
 "R07_META_SCHEMA_AND_BOUNDS":["/app/meta.json","design_region_size_um","fdtd_resolution","verifier rejects submissions"],
