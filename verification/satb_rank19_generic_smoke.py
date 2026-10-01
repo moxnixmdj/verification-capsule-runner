@@ -52,30 +52,49 @@ pitches=sorted({int(e[2]) for e in note_events})
 assert len(pitches)>=3, pitches
 print("BASIC_PITCH_CPU_SMOKE_PASS",len(note_events),pitches[:16],providers)
 
-from music21 import stream, note, meter, clef, key, bar
-score=stream.Score(id="synthetic")
-names=["Soprano","Alto","Tenor","Bass"]
-pitches4=["E4","C4","G3","C3"]
-for idx,(name,pn) in enumerate(zip(names,pitches4),1):
-    p=stream.Part(id=f"P{idx}")
-    p.partName=name
-    m=stream.Measure(number=1)
-    m.insert(0,meter.TimeSignature("4/4"))
-    m.insert(0,key.KeySignature(0))
-    m.insert(0,clef.BassClef() if name=="Bass" else clef.TrebleClef())
-    q=note.Note(pn,quarterLength=4)
-    m.append(q)
-    m.rightBarline=bar.Barline("final")
-    p.append(m); score.append(p)
-xml=tmp/"synthetic.musicxml"
-score.write("musicxml",fp=xml)
+from xml.etree import ElementTree as ET
 from music21 import converter
-s2=converter.parse(xml)
-parts=list(s2.parts)
-assert [p.id for p in parts]==["P1","P2","P3","P4"]
-assert [p.partName for p in parts]==names
-assert len(parts)==4
-print("MUSIC21_MUSICXML_ROUNDTRIP_PASS",xml.stat().st_size)
+
+# Deterministic MusicXML 3.1 serializer smoke with exact IDs.
+score=ET.Element("score-partwise",version="3.1")
+part_list=ET.SubElement(score,"part-list")
+names=["Soprano","Alto","Tenor","Bass"]
+for idx,name in enumerate(names,1):
+    sp=ET.SubElement(part_list,"score-part",id=f"P{idx}")
+    ET.SubElement(sp,"part-name").text=name
+for idx,(name,pn) in enumerate(zip(names,["E4","C4","G3","C3"]),1):
+    part=ET.SubElement(score,"part",id=f"P{idx}")
+    meas=ET.SubElement(part,"measure",number="1")
+    attrs=ET.SubElement(meas,"attributes")
+    ET.SubElement(attrs,"divisions").text="2"
+    key_el=ET.SubElement(attrs,"key"); ET.SubElement(key_el,"fifths").text="0"
+    time_el=ET.SubElement(attrs,"time")
+    ET.SubElement(time_el,"beats").text="4"; ET.SubElement(time_el,"beat-type").text="4"
+    clef_el=ET.SubElement(attrs,"clef")
+    ET.SubElement(clef_el,"sign").text="F" if name=="Bass" else "G"
+    ET.SubElement(clef_el,"line").text="4" if name=="Bass" else "2"
+    ne=ET.SubElement(meas,"note")
+    pe=ET.SubElement(ne,"pitch")
+    step=pn[0]; octave=pn[-1]
+    ET.SubElement(pe,"step").text=step
+    ET.SubElement(pe,"octave").text=octave
+    ET.SubElement(ne,"duration").text="8"
+    ET.SubElement(ne,"type").text="whole"
+    bl=ET.SubElement(meas,"barline",location="right")
+    ET.SubElement(bl,"bar-style").text="light-heavy"
+xml=tmp/"synthetic.musicxml"
+ET.ElementTree(score).write(xml,encoding="utf-8",xml_declaration=True)
+
+raw=ET.parse(xml).getroot()
+assert raw.tag=="score-partwise" and raw.attrib.get("version")=="3.1"
+assert [x.attrib["id"] for x in raw.findall("./part-list/score-part")]==["P1","P2","P3","P4"]
+assert [x.attrib["id"] for x in raw.findall("./part")]==["P1","P2","P3","P4"]
+assert [x.findtext("part-name") for x in raw.findall("./part-list/score-part")]==names
+assert all(x.findtext("./measure/barline/bar-style")=="light-heavy" for x in raw.findall("./part"))
+parsed=converter.parse(xml)
+assert len(parsed.parts)==4
+assert [p.partName for p in parsed.parts]==names
+print("DETERMINISTIC_MUSICXML_MUSIC21_PARSE_PASS",xml.stat().st_size)
 
 # Generic deterministic constraint/mutant canaries.
 def noncross_ok(states):
