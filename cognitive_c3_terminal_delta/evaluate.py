@@ -8,6 +8,7 @@ import math
 import os
 import re
 import statistics
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ MODEL_ID = "cross-encoder/ettin-reranker-150m-v1"
 spec = importlib.util.spec_from_file_location("c3_router", ROUTER_PATH)
 router = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
+sys.modules[spec.name] = router
 spec.loader.exec_module(router)
 
 
