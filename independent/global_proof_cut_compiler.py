@@ -9,8 +9,8 @@ compiler makes exactness truthful by requiring:
 
 Objective order:
   1) minimize longest dependency depth,
-  2) minimize genuinely new reality bits,
-  3) minimize wall-clock units,
+  2) minimize frozen-model new reality units,
+  3) minimize parallel critical-path wall-clock units,
   4) minimize selected action count,
   5) deterministic lexical tie-break.
 
@@ -218,7 +218,7 @@ def _solve_at_depth(
     return {
         "max_dependency_depth": max_depth,
         "total_new_reality_units": bits,
-        "total_critical_path_wall_clock_units": wall,
+        "parallel_critical_path_wall_clock_units": wall,
         "action_count": count,
         "selected_actions": list(ids),
     }
@@ -314,7 +314,7 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
             "selected_actions": [],
             "max_dependency_depth": 0,
             "total_new_reality_units": 0.0,
-            "total_critical_path_wall_clock_units": 0.0,
+            "parallel_critical_path_wall_clock_units": 0.0,
             "action_count": 0,
             "dominance_deletions": [],
             "obligation_graph_sha256": obligation_hash,
