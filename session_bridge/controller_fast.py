@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -15,6 +16,7 @@ EVIDENCE = Path("/tmp/bridge-evidence")
 COMMAND_MARKER = "<!-- BRAIN_FAST_BURST_COMMAND_V2 -->"
 OBS_MARKER = "<!-- BRAIN_FAST_BURST_OBSERVATION_V2 -->"
 READY_MARKER = "<!-- BRAIN_FAST_BURST_READY_V2 -->"
+INSTRUCTION_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_V1 -->"
 TERMINAL_MARKER = "<!-- BRAIN_FAST_BURST_TERMINAL_V2 -->"
 FINAL_MARKER = "<!-- BRAIN_FAST_BURST_FINAL_V2 -->"
 
@@ -171,6 +173,44 @@ def normalize_artifact_contract(entries):
     return normalized, unsupported
 
 
+def surface_instruction(task_dir: Path):
+    """Surface only the official agent instruction after READY; fail closed."""
+    path = task_dir / "instruction.md"
+    if not path.is_file():
+        post("<!-- BRAIN_FAST_BURST_INSTRUCTION_BLOCKED_V1 -->", {
+            "schema": "BRAIN_FAST_BURST_INSTRUCTION_BLOCKED_V1",
+            "session_id": CONFIG["session_id"],
+            "task": CONFIG["task"],
+            "reason": "INSTRUCTION_MD_MISSING",
+        })
+        return False
+    raw = path.read_bytes()
+    text_value = raw.decode("utf-8")
+    digest = hashlib.sha256(raw).hexdigest()
+    payload = {
+        "schema": "BRAIN_FAST_BURST_INSTRUCTION_V1",
+        "session_id": CONFIG["session_id"],
+        "task": CONFIG["task"],
+        "instruction_sha256": digest,
+        "instruction_length": len(text_value),
+        "instruction": text_value,
+        "authority": "OFFICIAL_TASK_INSTRUCTION_MD_AFTER_READY",
+        "solution_tests_verifier_exposed": False,
+    }
+    marker_body = INSTRUCTION_MARKER + "\n" + json.dumps(payload, sort_keys=True)
+    if len(marker_body) > int(CONFIG.get("comment_char_limit", 60000)):
+        post("<!-- BRAIN_FAST_BURST_INSTRUCTION_BLOCKED_V1 -->", {
+            "schema": "BRAIN_FAST_BURST_INSTRUCTION_BLOCKED_V1",
+            "session_id": CONFIG["session_id"],
+            "task": CONFIG["task"],
+            "reason": "INSTRUCTION_TOO_LARGE_FOR_EXACT_COMMENT_HANDOFF",
+            "instruction_sha256": digest,
+            "instruction_length": len(text_value),
+        })
+        return False
+    post(INSTRUCTION_MARKER, payload)
+    return True
+
 def terminal_blocker(payload):
     if payload.get("schema") != "BRAIN_FAST_BURST_TERMINAL_AUTHORIZATION_V2":
         return "SCHEMA_INVALID"
@@ -244,6 +284,9 @@ def main():
         "verifier_environment_mode": verifier_environment_mode,
         "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
     })
+
+    if not surface_instruction(task_dir):
+        return 0
 
     seen = set()
     next_burst = 0
