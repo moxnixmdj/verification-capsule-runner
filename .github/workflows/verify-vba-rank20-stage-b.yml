@@ -1,0 +1,32 @@
+name: Verify rank20 VBA Stage-B
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/vba_rank20_stage_b_contract.json'
+      - 'verification/vba_rank20_stage_b_source_accounting.json'
+      - 'verification/stage_b_source_universe_closure.json'
+      - 'verification/test_vba_rank20_stage_b.py'
+      - 'verification/vba_rank20_task.Dockerfile'
+      - 'verification/vba_rank20_surface/**'
+      - '.github/workflows/verify-vba-rank20-stage-b.yml'
+permissions:
+  contents: read
+jobs:
+  static-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: PYTHONPATH=. python -m unittest -v verification.test_vba_rank20_stage_b
+  exact-task-surface:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build materially exact package-policy surface
+        run: docker build -f verification/vba_rank20_task.Dockerfile verification/vba_rank20_surface -t rank20-stageb-surface
+      - name: Verify venv pip, FastAPI, React/Vite, SQLite and sub-30s startup pattern
+        run: docker run --rm rank20-stageb-surface bash /shared/legacy_app/smoke.sh
