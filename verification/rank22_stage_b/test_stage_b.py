@@ -1,11 +1,11 @@
-import hashlib, importlib.util, json, math, unittest
+import hashlib, importlib.util, json, math, sys, unittest
 from pathlib import Path
 
 ROOT=Path(__file__).parent
 
 def loadmod(name,path):
     s=importlib.util.spec_from_file_location(name,path)
-    m=importlib.util.module_from_spec(s); s.loader.exec_module(m); return m
+    m=importlib.util.module_from_spec(s); sys.modules[name]=m; s.loader.exec_module(m); return m
 
 scc=loadmod("scc",ROOT/"source_contract_compiler.py")
 iam=loadmod("iam",ROOT/"independent_acceptance_model.py")
