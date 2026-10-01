@@ -1,0 +1,60 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently qualify current exact Brain PR512 head 5e8384431607b3a287b1b1282b87e64a792555f5 research-query focus and focused lexical relevance bytes across fresh cross-domain cases without executing or replaying any parent scientific task.",
+  "frozen": {
+    "gate_id": "BRAIN-PR512-QUERY-FOCUS-RELEVANCE-GUARDED-QUALIFICATION-20260930-V2",
+    "problem_sha256": "8c3ac91c90a47fd362d618e23401c2870db12baf18926ad2a6f8b8eccbf80478",
+    "task_sha256": "9a33e2803361a6fca29042a469ed9b1967ff36a6f728743667372ccc53ae2833",
+    "runtime_sha256": "81eab3891d751226ca8edd1eedc73fb165bd4e0454eb028c193d668849b83b0c",
+    "canonical_base": "0d795dad885e706e6eb1cfd4d20cd2b2edd5cf12",
+    "authorization_sha256": "89dc89e8244aadd574c2a4b31528d9675a46fd9e391733f90c3957581ed0cbb1"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/research_query_focus.py",
+      "git_blob_sha1": "5403e1dc05716fcfc4f9a91b4534f55dc547eb7f"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py",
+      "git_blob_sha1": "045369d8cba5680c60b57e834d09d12a54d94380"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/objective_relevance_bm25.py",
+      "git_blob_sha1": "a25a34d879413a9853f1d1ffd8ef5e4f6bdd2245"
+    },
+    {
+      "path": "canonical/tests/test_open_research_query_focus_relevance.py",
+      "git_blob_sha1": "e4738e192faba93d2804e02080af27a3ab93570b"
+    },
+    {
+      "path": "verify_pr512_query_focus_relevance.py",
+      "git_blob_sha1": "db4ddd2735e0b8d1ca9c67d1de9e9d3464531f57"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_open_research_query_focus_relevance.py && python verify_pr512_query_focus_relevance.py"
+  ],
+  "authority": {
+    "brain_pr": 512,
+    "brain_pr_head": "5e8384431607b3a287b1b1282b87e64a792555f5",
+    "brain_base": "0d795dad885e706e6eb1cfd4d20cd2b2edd5cf12",
+    "source_parent_task": "PARENT-OPENENDED-GENOMICS-REFERENCE-LENGTH-REAL-TASK-20260930-005",
+    "source_parent_run": 36690682680,
+    "parent_task_execution": false,
+    "parent_replay": false
+  }
+}
