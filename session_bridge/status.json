@@ -1,5 +1,6 @@
 {
-  "next_step": 36,
+  "last_submission_blocker": "TERMINAL_AUTHORIZATION_MISSING",
+  "next_step": 37,
   "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
   "status": "READY_FOR_COMMAND",
   "task": "mp-checkpoint-consolidation"
