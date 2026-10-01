@@ -1,0 +1,35 @@
+{
+  "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "submission_authorized": true,
+  "known_relevant_failures": [],
+  "acceptance_criteria": [
+    {
+      "criterion": "Exact output artifact exists at /app/output/model.safetensors with the required 163-key set and no extra lm_head tensor.",
+      "status": "PASS",
+      "evidence": "Observation 035: KEYS 163; consolidate.py enforces exact expected_keys set before save and model load allows only tied lm_head.weight missing."
+    },
+    {
+      "criterion": "Consolidated checkpoint reproduces the supplied reference output on the supplied input.",
+      "status": "PASS",
+      "evidence": "Observation 035: MAX_ABS_DIFF 0.0; MEAN_ABS_DIFF 0.0; EXACT_EQUAL True; ALLCLOSE_1E6 True."
+    },
+    {
+      "criterion": "Artifact serialization completed successfully.",
+      "status": "PASS",
+      "evidence": "Observation 035: OUTPUT_BYTES 186721216 and process exit_code 0."
+    },
+    {
+      "criterion": "Authored runtime validation completed without a known relevant failure.",
+      "status": "PASS",
+      "evidence": "Observation 035: MP_CONSOLIDATION_AUTHORED_PASS; exit_code 0."
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "python3 /app/consolidate.py",
+      "exit_code": 0,
+      "evidence": "Observation 035 exact equality and authored pass."
+    }
+  ]
+}
