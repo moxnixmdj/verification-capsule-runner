@@ -17,6 +17,8 @@ COMMAND_MARKER = "<!-- BRAIN_FAST_BURST_COMMAND_V2 -->"
 OBS_MARKER = "<!-- BRAIN_FAST_BURST_OBSERVATION_V2 -->"
 READY_MARKER = "<!-- BRAIN_FAST_BURST_READY_V2 -->"
 INSTRUCTION_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_V1 -->"
+INSTRUCTION_AUTH_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_AUTHORIZATION_V1 -->"
+INSTRUCTION_AUTH_ACCEPTED_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_AUTHORIZED_V1 -->"
 TERMINAL_MARKER = "<!-- BRAIN_FAST_BURST_TERMINAL_V2 -->"
 FINAL_MARKER = "<!-- BRAIN_FAST_BURST_FINAL_V2 -->"
 
@@ -173,6 +175,68 @@ def normalize_artifact_contract(entries):
     return normalized, unsupported
 
 
+def instruction_authorization_blocker(payload):
+    if payload.get("schema") != "BRAIN_FAST_BURST_INSTRUCTION_AUTHORIZATION_V1":
+        return "SCHEMA_INVALID"
+    if payload.get("session_id") != CONFIG["session_id"]:
+        return "SESSION_MISMATCH"
+    lease = str(CONFIG.get("lease_brain_commit") or "")
+    if len(lease) != 40:
+        return "SESSION_LEASE_BRAIN_COMMIT_MISSING"
+    if payload.get("lease_brain_commit") != lease:
+        return "LEASE_COMMIT_MISMATCH"
+    frontier = str(payload.get("canonical_frontier_commit") or "")
+    if len(frontier) != 40:
+        return "CANONICAL_FRONTIER_COMMIT_MISSING"
+    if payload.get("canonical_frontier_status") != "ALLOWS_INSTRUCTION_EXPOSURE":
+        return "CANONICAL_FRONTIER_DOES_NOT_ALLOW_EXPOSURE"
+    if payload.get("freshness_revalidated") is not True:
+        return "FRESHNESS_NOT_REVALIDATED"
+    if payload.get("instruction_exposure_authorized") is not True:
+        return "INSTRUCTION_EXPOSURE_NOT_AUTHORIZED"
+    return None
+
+
+def await_instruction_authorization():
+    deadline = time.time() + int(CONFIG.get("instruction_authorization_timeout_sec", 900))
+    seen = set()
+    while time.time() < deadline:
+        for comment in comments():
+            cid = comment.get("id")
+            if cid in seen or not authorized(comment):
+                continue
+            seen.add(cid)
+            payload = parse_payload(comment.get("body") or "", INSTRUCTION_AUTH_MARKER)
+            if payload is None:
+                continue
+            blocker = instruction_authorization_blocker(payload)
+            if blocker:
+                post("<!-- BRAIN_FAST_BURST_INSTRUCTION_AUTH_BLOCKED_V1 -->", {
+                    "schema": "BRAIN_FAST_BURST_INSTRUCTION_AUTH_BLOCKED_V1",
+                    "session_id": CONFIG["session_id"],
+                    "reason": blocker,
+                })
+                continue
+            evidence = {
+                "schema": "BRAIN_FAST_BURST_INSTRUCTION_AUTHORIZED_V1",
+                "session_id": CONFIG["session_id"],
+                "lease_brain_commit": payload["lease_brain_commit"],
+                "canonical_frontier_commit": payload["canonical_frontier_commit"],
+                "freshness_revalidated": True,
+                "instruction_exposure_authorized": True,
+            }
+            legacy.write_json(EVIDENCE / "instruction_authorization.json", evidence)
+            post(INSTRUCTION_AUTH_ACCEPTED_MARKER, evidence)
+            return evidence
+        time.sleep(float(CONFIG.get("poll_interval_sec", 10)))
+    post("<!-- BRAIN_FAST_BURST_INSTRUCTION_AUTH_BLOCKED_V1 -->", {
+        "schema": "BRAIN_FAST_BURST_INSTRUCTION_AUTH_BLOCKED_V1",
+        "session_id": CONFIG["session_id"],
+        "reason": "INSTRUCTION_AUTHORIZATION_TIMEOUT",
+    })
+    return None
+
+
 def surface_instruction(task_dir: Path):
     """Surface only the official agent instruction after READY; fail closed."""
     path = task_dir / "instruction.md"
@@ -285,6 +349,9 @@ def main():
         "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
     })
 
+    instruction_auth = await_instruction_authorization()
+    if instruction_auth is None:
+        return 0
     if not surface_instruction(task_dir):
         return 0
 
