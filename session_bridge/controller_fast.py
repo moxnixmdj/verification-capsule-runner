@@ -20,6 +20,7 @@ READY_MARKER = "<!-- BRAIN_FAST_BURST_READY_V2 -->"
 INSTRUCTION_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_V1 -->"
 LEASE_MARKER = "<!-- BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1 -->"
 LEASE_BOUND_MARKER = "<!-- BRAIN_FAST_BURST_LEASE_BOUND_V1 -->"
+LEASE_REVALIDATION_MARKER = "<!-- BRAIN_FAST_BURST_LEASE_REVALIDATION_V1 -->"
 ACCEPTANCE_MARKER = "<!-- BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1 -->"
 ACCEPTANCE_FROZEN_MARKER = "<!-- BRAIN_FAST_BURST_ACCEPTANCE_FROZEN_V1 -->"
 TERMINAL_MARKER = "<!-- BRAIN_FAST_BURST_TERMINAL_V2 -->"
@@ -98,6 +99,38 @@ def parse_payload(body: str, marker: str):
 
 def authorized(comment):
     return (comment.get("user") or {}).get("login") == CONFIG["authorized_controller_login"]
+
+def current_pr_open() -> bool:
+    repo = os.environ["GITHUB_REPOSITORY"]
+    pr = os.environ["PR_NUMBER"]
+    payload = gh_api("GET", f"/repos/{repo}/pulls/{pr}") or {}
+    return payload.get("state") == "open"
+
+def runtime_authority_errors(
+    *,
+    session_id: str,
+    task: str,
+    lease_authorized: bool,
+    bound_lease,
+    revalidation,
+    scope: str,
+    burst_id: int | None = None,
+    pr_open: bool = True,
+):
+    if not lease_authorized or not isinstance(bound_lease, dict):
+        return ["CANONICAL_LEASE_NOT_BOUND"]
+    if not pr_open:
+        return ["RUNNER_PR_NOT_OPEN"]
+    if revalidation is None:
+        return ["PER_ACTION_CANONICAL_LEASE_REVALIDATION_REQUIRED"]
+    return acceptance.validate_lease_revalidation(
+        revalidation,
+        session_id,
+        task,
+        bound_lease,
+        expected_scope=scope,
+        expected_burst_id=burst_id,
+    )
 
 
 def replay_bootstrap():
@@ -307,6 +340,8 @@ def main():
     instruction_surfaced = False
     acceptance_payload = None
     acceptance_hash = None
+    burst_revalidations = {}
+    terminal_revalidation = None
     deadline = time.time() + int(CONFIG.get("session_timeout_sec", 10800))
     while time.time() < deadline:
         for comment in comments():
@@ -358,6 +393,55 @@ def main():
                 if not surface_instruction(task_dir):
                     return 0
                 instruction_surfaced = True
+                continue
+
+            revalidation = parse_payload(body, LEASE_REVALIDATION_MARKER)
+            if revalidation is not None:
+                seen.add(cid)
+                if not lease_authorized or not isinstance(lease_payload, dict):
+                    post("<!-- BRAIN_FAST_BURST_LEASE_REVALIDATION_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_REVALIDATION_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "CANONICAL_LEASE_NOT_BOUND",
+                    })
+                    continue
+                scope = revalidation.get("scope")
+                expected_burst = next_burst if scope == "BURST" else None
+                errors = acceptance.validate_lease_revalidation(
+                    revalidation,
+                    CONFIG["session_id"],
+                    CONFIG["task"],
+                    lease_payload,
+                    expected_scope=scope,
+                    expected_burst_id=expected_burst,
+                )
+                if errors:
+                    post("<!-- BRAIN_FAST_BURST_LEASE_REVALIDATION_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_REVALIDATION_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": errors[0],
+                        "all_errors": errors,
+                    })
+                    continue
+                if not current_pr_open():
+                    post("<!-- BRAIN_FAST_BURST_LEASE_REVALIDATION_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_REVALIDATION_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "RUNNER_PR_NOT_OPEN",
+                    })
+                    return 0
+                if scope == "BURST":
+                    burst_revalidations[next_burst] = revalidation
+                elif scope == "TERMINAL":
+                    terminal_revalidation = revalidation
+                post("<!-- BRAIN_FAST_BURST_LEASE_REVALIDATED_V1 -->", {
+                    "schema": "BRAIN_FAST_BURST_LEASE_REVALIDATED_V1",
+                    "session_id": CONFIG["session_id"],
+                    "scope": scope,
+                    "burst_id": revalidation.get("burst_id"),
+                    "canonical_brain_commit": revalidation.get("canonical_brain_commit"),
+                    "canonical_lease_path": revalidation.get("canonical_lease_path"),
+                })
                 continue
 
             contract = parse_payload(body, ACCEPTANCE_MARKER)
@@ -428,6 +512,25 @@ def main():
             terminal = parse_payload(body, TERMINAL_MARKER)
             if terminal is not None:
                 seen.add(cid)
+                authority_errors = runtime_authority_errors(
+                    session_id=CONFIG["session_id"],
+                    task=CONFIG["task"],
+                    lease_authorized=lease_authorized,
+                    bound_lease=lease_payload,
+                    revalidation=terminal_revalidation,
+                    scope="TERMINAL",
+                    pr_open=current_pr_open(),
+                )
+                if authority_errors:
+                    post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
+                        "schema": "BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2",
+                        "session_id": CONFIG["session_id"],
+                        "reason": authority_errors[0],
+                        "all_errors": authority_errors,
+                    })
+                    if authority_errors[0] == "RUNNER_PR_NOT_OPEN":
+                        return 0
+                    continue
                 blocker = terminal_blocker(terminal, acceptance_payload, acceptance_hash, lease_authorized)
                 if blocker:
                     post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
@@ -448,13 +551,27 @@ def main():
                 continue
             if payload.get("session_id") != CONFIG["session_id"]:
                 continue
-            if CONFIG.get("require_canonical_lease_authorization", True) and not lease_authorized:
-                post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
-                    "schema": "BRAIN_FAST_BURST_REJECTED_V2",
-                    "session_id": CONFIG["session_id"],
-                    "reason": "CANONICAL_LEASE_REQUIRED_BEFORE_BUILDER_COMMAND",
-                })
-                continue
+            if CONFIG.get("require_canonical_lease_authorization", True):
+                authority_errors = runtime_authority_errors(
+                    session_id=CONFIG["session_id"],
+                    task=CONFIG["task"],
+                    lease_authorized=lease_authorized,
+                    bound_lease=lease_payload,
+                    revalidation=burst_revalidations.get(next_burst),
+                    scope="BURST",
+                    burst_id=next_burst,
+                    pr_open=current_pr_open(),
+                )
+                if authority_errors:
+                    post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
+                        "schema": "BRAIN_FAST_BURST_REJECTED_V2",
+                        "session_id": CONFIG["session_id"],
+                        "reason": authority_errors[0],
+                        "all_errors": authority_errors,
+                    })
+                    if authority_errors[0] == "RUNNER_PR_NOT_OPEN":
+                        return 0
+                    continue
             if CONFIG.get("require_acceptance_contract", True):
                 if acceptance_hash is None:
                     post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
@@ -490,6 +607,10 @@ def main():
                 })
                 continue
 
+            # Single-use authority: consume the current-burst revalidation before
+            # execution so it can never authorize a later/replayed burst.
+            burst_revalidations.pop(next_burst, None)
+            terminal_revalidation = None
             results = []
             for idx, item in enumerate(cmds):
                 if not isinstance(item, dict) or not isinstance(item.get("script"), str):
