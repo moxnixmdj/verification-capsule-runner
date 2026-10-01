@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import time
+import urllib.error
 import urllib.request
 
 import controller as legacy
@@ -56,7 +57,26 @@ def post(marker: str, payload):
 def comments():
     repo = os.environ["GITHUB_REPOSITORY"]
     pr = os.environ["PR_NUMBER"]
-    return gh_api("GET", f"/repos/{repo}/issues/{pr}/comments?per_page=100") or []
+    try:
+        return gh_api("GET", f"/repos/{repo}/issues/{pr}/comments?per_page=100") or []
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (403, 429):
+            raise
+        retry_after = exc.headers.get("Retry-After")
+        reset_at = exc.headers.get("X-RateLimit-Reset")
+        delay = 15.0
+        if retry_after:
+            try:
+                delay = max(delay, float(retry_after))
+            except ValueError:
+                pass
+        if reset_at:
+            try:
+                delay = max(delay, float(reset_at) - time.time() + 2.0)
+            except ValueError:
+                pass
+        time.sleep(min(max(delay, 1.0), 300.0))
+        return []
 
 
 def parse_payload(body: str, marker: str):
