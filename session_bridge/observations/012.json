@@ -1,0 +1,10 @@
+{
+  "command_sha256": "bf36d9d99157fe100b33a7ed0aa2b2b996608566c9c264f815733cf01f0e2667",
+  "duration_sec": 1.631,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-20261001-v1",
+  "stderr": "",
+  "stdout": "MISSING ['lm_head.weight']\nUNEXPECTED []\nMAX_ABS 16.504859924316406\nMEAN_ABS 2.859964370727539\nALLCLOSE False\n",
+  "step": 12
+}
