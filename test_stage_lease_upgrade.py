@@ -4,7 +4,7 @@ from session_bridge.acceptance_contract import validate_lease_upgrade
 from session_bridge import execution_authority_reducer as authority_reducer
 
 
-def obs(commit):
+def obs(commit, mode="EXACT_FETCH_ONLY"):
     return {
         "schema":"PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1",
         "status":"CURRENT",
@@ -12,7 +12,7 @@ def obs(commit):
         "dependency_inventory_complete":True,
         "material_world_state_dependencies_complete":True,
       "information_boundary_complete":True,
-      "information_policy":{"mode":"OPEN_DISCOVERY","allowed_exact_sources":[],"allowed_external_tool_kinds":[]},
+      "information_policy":{"mode":mode,"allowed_exact_sources":[],"allowed_external_tool_kinds":[]},
         "unknown_material_dependencies":[],
         "stale_authority_absent":True,
         "valid_proof_action_priority":True,
