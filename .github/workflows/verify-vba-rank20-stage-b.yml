@@ -1,0 +1,23 @@
+name: Verify VBA rank20 Stage B
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/vba_rank20_stage_b_contract.json'
+      - 'verification/vba_rank20_stage_b_source_accounting.json'
+      - 'verification/test_vba_rank20_stage_b.py'
+      - 'verification/vba_rank20_stage_b_smoke.py'
+      - '.github/workflows/verify-vba-rank20-stage-b.yml'
+permissions:
+  contents: read
+jobs:
+  static-and-mutation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: python3 -m unittest -v verification/test_vba_rank20_stage_b.py
+  equivalent-surface-feasibility:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: python3 verification/vba_rank20_stage_b_smoke.py
