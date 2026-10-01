@@ -271,6 +271,23 @@ def verify(task_dir: Path):
         if rp.returncode == 0:
             reward = (rp.stdout or "").strip()
             break
+    # Preserve the verifier's structured test report in the durable evidence
+    # artifact. A reward/exit code without the failed-test identities is not
+    # sufficient to distinguish a capability failure from verifier bootstrap
+    # or evidence-transport failure.
+    ctrf_payload = None
+    ctrf_probe = run(
+        ["docker", "exec", "brain-bridge-verifier", "cat", "/logs/verifier/ctrf.json"],
+        check=False,
+    )
+    if ctrf_probe.returncode == 0 and (ctrf_probe.stdout or "").strip():
+        ctrf_text = ctrf_probe.stdout or ""
+        (EVIDENCE / "verifier_ctrf.json").write_text(ctrf_text, encoding="utf-8")
+        try:
+            ctrf_payload = json.loads(ctrf_text)
+        except json.JSONDecodeError:
+            ctrf_payload = {"parse_error": True, "raw_tail": ctrf_text[-4000:]}
+
     cap = int(CONFIG.get("verifier_output_char_limit", 120000))
     result.update(
         status="VERIFIER_COMPLETED",
@@ -279,6 +296,8 @@ def verify(task_dir: Path):
         missing_artifacts=missing,
         verifier_stdout=(cp.stdout or "")[-cap:],
         verifier_stderr=(cp.stderr or "")[-cap:],
+        verifier_ctrf=ctrf_payload,
+        verifier_ctrf_evidence_path=str(EVIDENCE / "verifier_ctrf.json") if ctrf_payload is not None else None,
     )
     write_json(EVIDENCE / "final_verification.json", result)
     return result
