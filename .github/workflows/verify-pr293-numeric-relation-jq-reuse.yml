@@ -1,4 +1,4 @@
-name: Verify PR293 Numeric Relation JQ Reuse
+name: Execute Frozen Parent Astronomy Once
 
 on:
   push:
@@ -25,12 +25,16 @@ jobs:
         run: sudo apt-get update
       - name: Run deterministic compiler regressions
         run: python canonical/tests/test_numeric_relation_jq_reuse.py
-      - name: Run fresh cross-domain numeric relation task and independent oracle
-        run: python verify_numeric_relation_jq_reuse.py
-      - name: Upload verification report
+      - name: Execute frozen parent astronomy task exactly once
+        run: python execute_parent_astronomy_once.py
+      - name: Upload terminal and oracle evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pr293-numeric-relation-jq-reuse-report
-          path: numeric-relation-fresh-report.json
-          if-no-files-found: error
+          name: parent-astronomy-eros-kepler-real-task-v1
+          path: |
+            PARENT_ASTRONOMY_TERMINAL.json
+            PARENT_ASTRONOMY_ORACLE.json
+            canonical/astra_runtime/tmp/PARENT_ASTRONOMY_EROS_KEPLER_RESULT.json
+            canonical/astra_runtime/evidence/
+          if-no-files-found: warn
