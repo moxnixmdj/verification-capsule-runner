@@ -1,0 +1,21 @@
+{
+  "schema": "PROJECT_BRAIN_QUALIFICATION_AUTHORITY_V1",
+  "purpose": "Independent guarded non-parent adversarial qualification of exact Brain PR496 broad explicit-recipe fail-closed repair",
+  "brain_pr": 496,
+  "brain_pr_head": "d472da3082c8a26d16b91aad0997cb369ee5180e",
+  "brain_pr_base": "b8a0102421e68f4137a4c5fe72d27ed96fb448b2",
+  "candidate_blobs": {
+    "canonical/runtime/bound_capabilities/broad_objective_decompose.py": "3ded762075ed222228a14877af631f1e2e6d9e4c",
+    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+    "canonical/tests/test_broad_objective_semantic_decomposition.py": "4717bd5ebf4b4e6521abf331e93e9675c1b8a785"
+  },
+  "authoritative_falsification": {
+    "workflow_run_id": 36689999285,
+    "job_id": 109804684560,
+    "exact_failure": "EXPLICIT_RECIPE_3_WAS_ADMITTED"
+  },
+  "parent_task_execution": false,
+  "parent_task_replay": false,
+  "model_dependency_count": 0,
+  "incremental_spend_usd": 0
+}

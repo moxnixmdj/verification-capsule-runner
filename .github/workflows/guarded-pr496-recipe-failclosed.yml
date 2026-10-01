@@ -1,0 +1,43 @@
+name: Guarded Brain PR496 Recipe Failclosed Qualification
+on:
+  push:
+    branches:
+      - qualify/brain-pr496-recipe-failclosed-v2-20260930-v1
+    paths:
+      - canonical/runtime/bound_capabilities/broad_objective_decompose.py
+      - canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+      - canonical/tests/test_broad_objective_semantic_decomposition.py
+      - qualification/pr496/**
+      - .github/workflows/guarded-pr496-recipe-failclosed.yml
+permissions:
+  contents: write
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact pushed head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+      - name: Set up Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Generate exact guarded PR496 qualification plan
+        run: python qualification/pr496/generate_guarded_plan.py
+      - name: Atomically admit once and adversarially qualify exact bytes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_pr496_recipe_failclosed_plan.json --receipt guarded-pr496-admission.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-pr496-recipe-failclosed-evidence
+          path: |
+            guarded-pr496-admission.json
+            guarded_pr496_recipe_failclosed_plan.json
+            qualification/pr496/authority.json
+            qualification/pr496/independent-report.json
+          if-no-files-found: warn
