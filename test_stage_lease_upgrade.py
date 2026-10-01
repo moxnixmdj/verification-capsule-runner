@@ -3,6 +3,30 @@ import unittest
 from session_bridge.acceptance_contract import validate_lease_upgrade
 
 
+def obs(commit):
+    return {
+        "schema":"PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1",
+        "status":"CURRENT",
+        "canonical_brain_commit":commit,
+        "dependency_inventory_complete":True,
+        "material_world_state_dependencies_complete":True,
+        "unknown_material_dependencies":[],
+        "stale_authority_absent":True,
+        "valid_proof_action_priority":True,
+        "obs_layers_current":{k:True for k in ("goal","capability","blocker","solution","verification","inherited_system","obs_process")},
+        "canonical_state_dependencies":[
+            {"path":"canonical/CANONICAL_POINTER.json","sha256":"d"*64},
+            {"path":"canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json","sha256":"e"*64},
+            {"path":"canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json","sha256":"f"*64},
+        ],
+        "dependencies":[{
+            "dependency_id":"runner","class":"EXECUTION_SURFACE","material":True,
+            "volatility":"STATIC","scope":"GLOBAL","status":"READY",
+            "evidence":["runner receipt"]
+        }],
+    }
+
+
 def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymization-20261001-v1", execute=False):
     return {
         "schema": "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1",
@@ -16,6 +40,7 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
         "scope": scope,
         "task_execution_authorized": execute,
         "replay_for_credit": False,
+        "continuous_obs": obs("a" * 40),
         "execution_count_allowed": 1 if execute else 0,
         "terminal_verifier_count_allowed": 1 if execute else 0,
         "source_boundary_preflight": ({
