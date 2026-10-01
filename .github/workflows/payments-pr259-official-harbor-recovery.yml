@@ -1,0 +1,77 @@
+name: Payments PR259 official Harbor recovery
+
+on:
+  push:
+    branches:
+      - execute/payments-harbor-recovery-20261001-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recover-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout recovery carrier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Assert frozen recovery source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f harbor_recovery/payments_replay_agent.py
+          ! grep -RInE 'tasks/payments-pipeline-fix/(tests|solution)' harbor_recovery || {
+            echo "Forbidden hidden-material reference in recovery carrier" >&2
+            exit 1
+          }
+
+      - name: Install pinned Harbor
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv /tmp/harbor-venv
+          /tmp/harbor-venv/bin/python -m pip install --upgrade pip
+          /tmp/harbor-venv/bin/python -m pip install             "git+https://github.com/harbor-framework/harbor.git@99218a4611e3bd76e49ce3b5f977e8c8134ad3ac"
+
+      - name: Materialize exact frozen Terminal-Bench task
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/terminal-bench
+          git clone --filter=blob:none --no-checkout             https://github.com/harbor-framework/terminal-bench.git /tmp/terminal-bench
+          cd /tmp/terminal-bench
+          git sparse-checkout init --no-cone
+          printf '%s\n' 'tasks/payments-pipeline-fix/*' > .git/info/sparse-checkout
+          git checkout --detach 452bf305c6daa62fc59061d22133a7cbc7c1572e
+          test "$(git rev-parse HEAD)" = "452bf305c6daa62fc59061d22133a7cbc7c1572e"
+
+      - name: Replay candidate and invoke official independent verifier
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          rm -rf harbor_recovery/trials
+          /tmp/harbor-venv/bin/harbor trials start             -p /tmp/terminal-bench/tasks/payments-pipeline-fix             --agent harbor_recovery.payments_replay_agent:PaymentsReplayAgent             --trial-name payments-pipeline-fix-pr259-official-harbor-recovery             --trials-dir "${GITHUB_WORKSPACE}/harbor_recovery/trials"
+
+      - name: Print durable trial evidence
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          echo "===== REPLAY RECEIPT ====="
+          find harbor_recovery/trials -type f -name replay_receipt.json -print -exec cat {} \;
+          echo "===== HARBOR RESULTS ====="
+          find harbor_recovery/trials -type f \( -name result.json -o -name reward.txt -o -name reward.json \)             -print -exec cat {} \;
+          echo "===== TRIAL FILE INDEX ====="
+          find harbor_recovery/trials -maxdepth 5 -type f -print | sort
+
+      - name: Upload Harbor trial evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: payments-pr259-official-harbor-recovery
+          path: harbor_recovery/trials/
+          if-no-files-found: warn
