@@ -3,7 +3,7 @@ name: Cognitive Basis Jevos Probe
 on:
   push:
     paths:
-      - ".github/workflows/cognitive-basis-jevos-probe.yml"
+      - ".github/workflows/cognitive-basis-jevos-probe.yml"\n      - "cognitive_basis_probe/**"
 
 permissions:
   contents: read
