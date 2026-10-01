@@ -1,0 +1,9 @@
+{
+  "schema": "PROJECT_BRAIN_C3_TOOL_ROUTER_EXECUTION_CAPSULE_V1",
+  "canonical_repo": "moxnixmdj/brain",
+  "canonical_router_path": "canonical/runtime/cognitive_tool_router.py",
+  "canonical_router_blob": "e947d086225aa165895dc5addd4847fb686b3454",
+  "canonical_test_path": "canonical/runtime/test_cognitive_tool_router.py",
+  "canonical_test_blob": "3627d7cf4aea718e6b56edab7f9b84ab04dbb208",
+  "capability_credit_delta": 0
+}
