@@ -1,0 +1,16 @@
+{
+  "session_id": "session-window-debug-20261001-v1",
+  "task": "session-window-debug",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "build_timeout_sec": 1800,
+  "command_timeout_sec": 600,
+  "verifier_build_timeout_sec": 1800,
+  "verifier_timeout_sec": 1800,
+  "session_timeout_sec": 10800,
+  "max_bursts": 20,
+  "max_commands_per_burst": 8,
+  "poll_interval_sec": 10,
+  "per_command_output_char_limit": 12000,
+  "comment_char_limit": 60000,
+  "authorized_controller_login": "moxnixmdj"
+}
