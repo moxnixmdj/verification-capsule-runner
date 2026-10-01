@@ -1,0 +1,470 @@
+{
+  "schema": "PROJECT_BRAIN_C3_TOOL_ROUTE_FRESH_PROBE_V1",
+  "status": "FROZEN_MEASUREMENT_ONLY__ZERO_CAPABILITY_CREDIT",
+  "created_utc": "2026-10-01",
+  "primitive": "C3_TOOL_ROUTE_SUITABILITY",
+  "contamination_rule": "DO_NOT_CHANGE_CASES_OR_GOLD_AFTER_FIRST_MODEL_SCORE",
+  "cases": [
+    {
+      "id": "weather_forecast",
+      "query": "Get the current weather and tomorrow's forecast for Cairo.",
+      "gold": "weather",
+      "candidates": [
+        {
+          "id": "weather",
+          "text": "Return current weather conditions and forecasts for a specified location."
+        },
+        {
+          "id": "web",
+          "text": "Search the public web for recent pages, news, and general information."
+        },
+        {
+          "id": "calendar",
+          "text": "Read and manage scheduled calendar events."
+        },
+        {
+          "id": "calculator",
+          "text": "Evaluate arithmetic expressions and numerical calculations."
+        }
+      ]
+    },
+    {
+      "id": "currency_conversion",
+      "query": "Convert 250 US dollars to Egyptian pounds using the current exchange rate.",
+      "gold": "currency",
+      "candidates": [
+        {
+          "id": "currency",
+          "text": "Convert money between currencies using current foreign-exchange rates."
+        },
+        {
+          "id": "calculator",
+          "text": "Evaluate arithmetic expressions using provided numeric inputs."
+        },
+        {
+          "id": "web",
+          "text": "Search public webpages and current information sources."
+        },
+        {
+          "id": "weather",
+          "text": "Return weather conditions and forecasts by location."
+        }
+      ]
+    },
+    {
+      "id": "future_reminder",
+      "query": "Remind me tomorrow at 3 PM to submit the form.",
+      "gold": "automation",
+      "candidates": [
+        {
+          "id": "automation",
+          "text": "Create future one-time or recurring reminders and condition-triggered tasks."
+        },
+        {
+          "id": "calendar",
+          "text": "Inspect and manage calendar events and meeting schedules."
+        },
+        {
+          "id": "chat",
+          "text": "Draft a message or response in the current conversation."
+        },
+        {
+          "id": "web",
+          "text": "Search public websites for information."
+        }
+      ]
+    },
+    {
+      "id": "image_generation",
+      "query": "Create an image of a solar-powered cargo launcher at sunset.",
+      "gold": "image_gen",
+      "candidates": [
+        {
+          "id": "image_gen",
+          "text": "Generate or edit images from natural-language visual instructions."
+        },
+        {
+          "id": "slides",
+          "text": "Create slide presentations and presentation files."
+        },
+        {
+          "id": "web_images",
+          "text": "Search the web for existing images matching a query."
+        },
+        {
+          "id": "files",
+          "text": "Search and read files from the user's file library."
+        }
+      ]
+    },
+    {
+      "id": "restaurant_availability",
+      "query": "Find a sushi restaurant near me with a table for four tonight at 8.",
+      "gold": "availability",
+      "candidates": [
+        {
+          "id": "availability",
+          "text": "Search real-time restaurant reservation availability for a location, party size, date, and time."
+        },
+        {
+          "id": "business_search",
+          "text": "Find nearby businesses and restaurants with location and rating information."
+        },
+        {
+          "id": "web",
+          "text": "Search the public web for current information."
+        },
+        {
+          "id": "map",
+          "text": "Display known places and businesses on an interactive map."
+        }
+      ]
+    },
+    {
+      "id": "private_github_file",
+      "query": "Read canonical/runtime/astra_runtime.py from my private brain repository.",
+      "gold": "github_fetch",
+      "candidates": [
+        {
+          "id": "github_fetch",
+          "text": "Fetch the contents of a specific file path from an accessible GitHub repository."
+        },
+        {
+          "id": "web",
+          "text": "Search publicly indexed webpages on the internet."
+        },
+        {
+          "id": "files",
+          "text": "Search files stored in the user's ChatGPT file library."
+        },
+        {
+          "id": "dropbox",
+          "text": "Search and inspect files stored in connected Dropbox."
+        }
+      ]
+    },
+    {
+      "id": "library_semantic_search",
+      "query": "Search my ChatGPT file library for the document where I defined the execution truth rule.",
+      "gold": "files",
+      "candidates": [
+        {
+          "id": "files",
+          "text": "Semantically search and read files in the user's ChatGPT conversation and Library storage."
+        },
+        {
+          "id": "github_search",
+          "text": "Search code and files in GitHub repositories."
+        },
+        {
+          "id": "web",
+          "text": "Search public internet pages."
+        },
+        {
+          "id": "gmail",
+          "text": "Search email messages and threads."
+        }
+      ]
+    },
+    {
+      "id": "dropbox_find",
+      "query": "Find the latest budget.xlsx inside my connected Dropbox.",
+      "gold": "dropbox",
+      "candidates": [
+        {
+          "id": "dropbox",
+          "text": "Find Dropbox files and folders by filename, folder, recency, or relevant content."
+        },
+        {
+          "id": "files",
+          "text": "Search the ChatGPT file library and conversation attachments."
+        },
+        {
+          "id": "google_drive",
+          "text": "Search files stored in connected Google Drive."
+        },
+        {
+          "id": "web",
+          "text": "Search public websites and web documents."
+        }
+      ]
+    },
+    {
+      "id": "gmail_send",
+      "query": "Send the approved project update email through my Gmail account.",
+      "gold": "gmail",
+      "candidates": [
+        {
+          "id": "gmail",
+          "text": "Search, draft, reply to, and send messages using the connected Gmail account."
+        },
+        {
+          "id": "chat_draft",
+          "text": "Write reusable email text without sending it through an external service."
+        },
+        {
+          "id": "slack",
+          "text": "Read and send messages in connected Slack workspaces."
+        },
+        {
+          "id": "notion",
+          "text": "Create and edit structured workspace pages and databases."
+        }
+      ]
+    },
+    {
+      "id": "slack_search",
+      "query": "Find yesterday's discussion about the release blocker in our Slack workspace.",
+      "gold": "slack",
+      "candidates": [
+        {
+          "id": "slack",
+          "text": "Search and read channels, messages, threads, and workspace content in connected Slack."
+        },
+        {
+          "id": "gmail",
+          "text": "Search email messages and threads in connected Gmail."
+        },
+        {
+          "id": "notion",
+          "text": "Search pages and databases in connected Notion workspaces."
+        },
+        {
+          "id": "web",
+          "text": "Search public web pages."
+        }
+      ]
+    },
+    {
+      "id": "notion_spec",
+      "query": "Turn the existing Notion feature spec into an implementation plan and task list.",
+      "gold": "notion",
+      "candidates": [
+        {
+          "id": "notion",
+          "text": "Read Notion specs and create structured implementation plans, tasks, and progress tracking."
+        },
+        {
+          "id": "github",
+          "text": "Inspect repositories, issues, and pull requests in GitHub."
+        },
+        {
+          "id": "slides",
+          "text": "Create a slide presentation from supplied content."
+        },
+        {
+          "id": "gmail",
+          "text": "Draft and send email messages."
+        }
+      ]
+    },
+    {
+      "id": "drive_sheet",
+      "query": "Open the connected Google Sheet and update the formulas in cells D2:D50.",
+      "gold": "google_sheets",
+      "candidates": [
+        {
+          "id": "google_sheets",
+          "text": "Inspect and edit ranges, formulas, charts, and data in connected Google Sheets."
+        },
+        {
+          "id": "spreadsheet_file",
+          "text": "Create or edit standalone spreadsheet files in the local artifact workspace."
+        },
+        {
+          "id": "files",
+          "text": "Search and read Library files."
+        },
+        {
+          "id": "web",
+          "text": "Search public webpages."
+        }
+      ]
+    },
+    {
+      "id": "figma_edit",
+      "query": "Update the button component variants in the connected Figma design system.",
+      "gold": "figma",
+      "candidates": [
+        {
+          "id": "figma",
+          "text": "Inspect and modify Figma designs, components, variables, and design-system assets."
+        },
+        {
+          "id": "image_gen",
+          "text": "Generate or stylistically edit raster images."
+        },
+        {
+          "id": "slides",
+          "text": "Create presentation slides."
+        },
+        {
+          "id": "web_images",
+          "text": "Search for reference images on the web."
+        }
+      ]
+    },
+    {
+      "id": "vercel_deploy",
+      "query": "Deploy the current Next.js project to Vercel and inspect the deployment logs.",
+      "gold": "vercel",
+      "candidates": [
+        {
+          "id": "vercel",
+          "text": "Manage Vercel projects, deployments, logs, environment variables, domains, and CI/CD."
+        },
+        {
+          "id": "github",
+          "text": "Manage source repositories, issues, pull requests, and commits."
+        },
+        {
+          "id": "replit",
+          "text": "Build and run applications inside a Replit workspace."
+        },
+        {
+          "id": "web",
+          "text": "Search public internet content."
+        }
+      ]
+    },
+    {
+      "id": "current_time",
+      "query": "What time is it right now in Tokyo?",
+      "gold": "time",
+      "candidates": [
+        {
+          "id": "time",
+          "text": "Return current local time for a requested location or timezone."
+        },
+        {
+          "id": "weather",
+          "text": "Return weather conditions and forecasts."
+        },
+        {
+          "id": "calendar",
+          "text": "Read scheduled events."
+        },
+        {
+          "id": "calculator",
+          "text": "Perform mathematical calculations."
+        }
+      ]
+    },
+    {
+      "id": "unit_conversion",
+      "query": "Convert 7 cups to milliliters.",
+      "gold": "unit",
+      "candidates": [
+        {
+          "id": "unit",
+          "text": "Convert measurements between compatible physical units."
+        },
+        {
+          "id": "calculator",
+          "text": "Evaluate arithmetic expressions."
+        },
+        {
+          "id": "currency",
+          "text": "Convert monetary values between currencies."
+        },
+        {
+          "id": "web",
+          "text": "Search public web pages."
+        }
+      ]
+    },
+    {
+      "id": "news_search",
+      "query": "Find the latest public reporting today about a newly announced AI model.",
+      "gold": "web",
+      "candidates": [
+        {
+          "id": "web",
+          "text": "Search current public web pages and recent news sources."
+        },
+        {
+          "id": "files",
+          "text": "Search the user's private Library files."
+        },
+        {
+          "id": "github",
+          "text": "Search repositories, code, issues, and commits on GitHub."
+        },
+        {
+          "id": "gmail",
+          "text": "Search private email."
+        }
+      ]
+    },
+    {
+      "id": "github_commit",
+      "query": "Create a commit in my brain repository that adds a new canonical JSON file.",
+      "gold": "github",
+      "candidates": [
+        {
+          "id": "github",
+          "text": "Create and update repository files, commits, branches, issues, and pull requests on GitHub."
+        },
+        {
+          "id": "files",
+          "text": "Upload and manage files in ChatGPT Library storage."
+        },
+        {
+          "id": "dropbox",
+          "text": "Organize files and folders in Dropbox."
+        },
+        {
+          "id": "web",
+          "text": "Search public webpages."
+        }
+      ]
+    },
+    {
+      "id": "document_artifact",
+      "query": "Create a polished DOCX report from these notes.",
+      "gold": "document",
+      "candidates": [
+        {
+          "id": "document",
+          "text": "Create and edit word-processing document artifacts such as DOCX reports."
+        },
+        {
+          "id": "slides",
+          "text": "Create PowerPoint or slide presentations."
+        },
+        {
+          "id": "spreadsheet",
+          "text": "Create spreadsheet workbooks."
+        },
+        {
+          "id": "pdf",
+          "text": "Create and edit PDF documents."
+        }
+      ]
+    },
+    {
+      "id": "pdf_edit",
+      "query": "Edit this PDF to add a corrected appendix and preserve the rest of the document.",
+      "gold": "pdf",
+      "candidates": [
+        {
+          "id": "pdf",
+          "text": "Create, inspect, and edit PDF documents while preserving document structure."
+        },
+        {
+          "id": "document",
+          "text": "Create and edit word-processing documents."
+        },
+        {
+          "id": "image_gen",
+          "text": "Generate or alter images."
+        },
+        {
+          "id": "files",
+          "text": "Search and read stored files."
+        }
+      ]
+    }
+  ],
+  "capability_credit_delta": 0
+}
