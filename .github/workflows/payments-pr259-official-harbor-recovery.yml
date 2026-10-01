@@ -33,14 +33,14 @@ jobs:
           set -euo pipefail
           python3 -m venv /tmp/harbor-venv
           /tmp/harbor-venv/bin/python -m pip install --upgrade pip
-          /tmp/harbor-venv/bin/python -m pip install             "git+https://github.com/harbor-framework/harbor.git@99218a4611e3bd76e49ce3b5f977e8c8134ad3ac"
+          /tmp/harbor-venv/bin/python -m pip install "git+https://github.com/harbor-framework/harbor.git@99218a4611e3bd76e49ce3b5f977e8c8134ad3ac"
 
       - name: Materialize exact frozen Terminal-Bench task
         shell: bash
         run: |
           set -euo pipefail
           rm -rf /tmp/terminal-bench
-          git clone --filter=blob:none --no-checkout             https://github.com/harbor-framework/terminal-bench.git /tmp/terminal-bench
+          git clone --filter=blob:none --no-checkout https://github.com/harbor-framework/terminal-bench.git /tmp/terminal-bench
           cd /tmp/terminal-bench
           git sparse-checkout init --no-cone
           printf '%s\n' 'tasks/payments-pipeline-fix/*' > .git/info/sparse-checkout
@@ -54,7 +54,26 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf harbor_recovery/trials
-          /tmp/harbor-venv/bin/harbor trials start             -p /tmp/terminal-bench/tasks/payments-pipeline-fix             --agent harbor_recovery.payments_replay_agent:PaymentsReplayAgent             --trial-name payments-pipeline-fix-pr259-official-harbor-recovery             --trials-dir "${GITHUB_WORKSPACE}/harbor_recovery/trials"
+          /tmp/harbor-venv/bin/harbor trials start -p /tmp/terminal-bench/tasks/payments-pipeline-fix --agent harbor_recovery.payments_replay_agent:PaymentsReplayAgent --trial-name payments-pipeline-fix-pr259-official-harbor-recovery --trials-dir "${GITHUB_WORKSPACE}/harbor_recovery/trials" --override-cpus 4
+
+      - name: Require verifier execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          results = list(Path("harbor_recovery/trials").rglob("result.json"))
+          if len(results) != 1:
+              raise SystemExit(f"expected exactly one result.json, found {len(results)}")
+          result = json.loads(results[0].read_text())
+          verifier = result.get("verifier_result")
+          if verifier is None:
+              raise SystemExit("Harbor verifier did not execute: " + repr(result.get("exception_info")))
+          print("VERIFIER_EXECUTED")
+          print(json.dumps(verifier, indent=2, sort_keys=True))
+          PY
 
       - name: Print durable trial evidence
         if: always()
@@ -64,7 +83,7 @@ jobs:
           echo "===== REPLAY RECEIPT ====="
           find harbor_recovery/trials -type f -name replay_receipt.json -print -exec cat {} \;
           echo "===== HARBOR RESULTS ====="
-          find harbor_recovery/trials -type f \( -name result.json -o -name reward.txt -o -name reward.json \)             -print -exec cat {} \;
+          find harbor_recovery/trials -type f \( -name result.json -o -name reward.txt -o -name reward.json \) -print -exec cat {} \;
           echo "===== TRIAL FILE INDEX ====="
           find harbor_recovery/trials -maxdepth 5 -type f -print | sort
 
