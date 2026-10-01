@@ -1,0 +1,10 @@
+{
+  "command_sha256": "a54ea2d35f383b85f45a40f7e30c07147bb83364de02c6c10a9eb5be226798a3",
+  "duration_sec": 1.908,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "wal-recovery-ordering-20261001-v1",
+  "stderr": "",
+  "stdout": "H static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nH static restrictions\nALL_ACCEPTANCE_PROBES_PASS\nSAME_SEGMENT_OUT_OF_ORDER_PASS\n",
+  "step": 9
+}
