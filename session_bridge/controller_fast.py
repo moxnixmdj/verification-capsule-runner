@@ -175,52 +175,8 @@ def replay_bootstrap():
 
 
 def normalize_artifact_contract(entries):
-    """Normalize trusted task artifact metadata for this single-container carrier.
-
-    String artifacts are supported directly. Structured artifacts are supported
-    only when they do not require another service/container and do not request
-    exclude filtering. Unsupported entries are surfaced before runtime build so
-    the task can be skipped unspent instead of crashing or producing false
-    capability evidence.
-    """
-    normalized = []
-    unsupported = []
-    for entry in entries:
-        if isinstance(entry, str):
-            normalized.append({"source": entry, "destination": entry, "service": None})
-            continue
-        if not isinstance(entry, dict):
-            unsupported.append({"entry": entry, "reason": "INVALID_ARTIFACT_ENTRY_TYPE"})
-            continue
-        source = entry.get("source")
-        destination = entry.get("destination") or source
-        service = entry.get("service")
-        exclude = entry.get("exclude")
-        if not isinstance(source, str) or not source:
-            unsupported.append({"entry": entry, "reason": "ARTIFACT_SOURCE_MISSING_OR_INVALID"})
-            continue
-        if not isinstance(destination, str) or not destination:
-            unsupported.append({"entry": entry, "reason": "ARTIFACT_DESTINATION_INVALID"})
-            continue
-        if service:
-            unsupported.append({
-                "source": source,
-                "destination": destination,
-                "service": service,
-                "reason": "PER_SERVICE_ARTIFACT_REQUIRES_MULTI_SERVICE_COLLECTOR",
-            })
-            continue
-        if exclude:
-            unsupported.append({
-                "source": source,
-                "destination": destination,
-                "exclude": exclude,
-                "reason": "ARTIFACT_EXCLUDE_FILTER_UNSUPPORTED",
-            })
-            continue
-        normalized.append({"source": source, "destination": destination, "service": None})
-    return normalized, unsupported
-
+    """Use the shared fail-closed artifact transport contract."""
+    return legacy.normalize_artifact_contract(entries)
 
 def surface_instruction(task_dir: Path):
     """Surface only the official agent instruction after READY; fail closed."""
@@ -612,7 +568,7 @@ def main():
                     "terminal_verifier_count_allowed": lease_payload.get("terminal_verifier_count_allowed"),
                     "terminal_budget_consumed_before_verifier": True,
                 })
-                final = legacy.verify(task_dir)
+                final = legacy.verify(task_dir, artifact_contract=artifact_contract)
                 post(FINAL_MARKER, final)
                 return 0
 

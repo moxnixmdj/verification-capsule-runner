@@ -127,16 +127,151 @@ def load_artifacts(task_dir: Path):
     return list(payload.get("artifacts") or []), str((payload.get("verifier") or {}).get("environment_mode") or "")
 
 
-def stage_missing_artifacts(artifacts):
-    """Stage a uniquely matching output file into each required artifact path.
 
-    This is execution glue only. It never guesses among multiple candidates and
-    never overwrites an artifact already written at the required path.
+def _safe_artifact_path(value, field):
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{field}_MISSING_OR_INVALID")
+    if "\x00" in value or "\n" in value or "\r" in value:
+        raise ValueError(f"{field}_CONTROL_CHARACTER")
+    p = Path(value)
+    if not p.is_absolute() or ".." in p.parts:
+        raise ValueError(f"{field}_MUST_BE_ABSOLUTE_NORMALIZED_PATH")
+    return str(p)
+
+
+def _safe_exclude_pattern(value):
+    if not isinstance(value, str) or not value:
+        raise ValueError("ARTIFACT_EXCLUDE_PATTERN_INVALID")
+    if "\x00" in value or "\n" in value or "\r" in value:
+        raise ValueError("ARTIFACT_EXCLUDE_PATTERN_CONTROL_CHARACTER")
+    p = Path(value)
+    if p.is_absolute() or ".." in p.parts:
+        raise ValueError("ARTIFACT_EXCLUDE_PATTERN_MUST_BE_RELATIVE")
+    return value
+
+
+def normalize_artifact_contract(entries):
+    """Normalize trusted artifact metadata into a safe transport contract.
+
+    Supports path strings and structured single-container artifacts with
+    source/destination plus relative tar-exclude patterns. Per-service artifacts
+    remain unsupported by this carrier and fail closed before task execution.
+    """
+    normalized = []
+    unsupported = []
+    for entry in entries:
+        if isinstance(entry, str):
+            try:
+                path = _safe_artifact_path(entry, "ARTIFACT_SOURCE")
+            except ValueError as exc:
+                unsupported.append({"entry": entry, "reason": str(exc)})
+                continue
+            normalized.append({"source": path, "destination": path, "service": None, "exclude": []})
+            continue
+        if not isinstance(entry, dict):
+            unsupported.append({"entry": entry, "reason": "INVALID_ARTIFACT_ENTRY_TYPE"})
+            continue
+        try:
+            source = _safe_artifact_path(entry.get("source"), "ARTIFACT_SOURCE")
+            destination = _safe_artifact_path(entry.get("destination") or entry.get("source"), "ARTIFACT_DESTINATION")
+        except ValueError as exc:
+            unsupported.append({"entry": entry, "reason": str(exc)})
+            continue
+        service = entry.get("service")
+        if service:
+            unsupported.append({
+                "source": source,
+                "destination": destination,
+                "service": service,
+                "reason": "PER_SERVICE_ARTIFACT_REQUIRES_MULTI_SERVICE_COLLECTOR",
+            })
+            continue
+        raw_exclude = entry.get("exclude") or []
+        if not isinstance(raw_exclude, list):
+            unsupported.append({
+                "source": source,
+                "destination": destination,
+                "exclude": raw_exclude,
+                "reason": "ARTIFACT_EXCLUDE_MUST_BE_LIST",
+            })
+            continue
+        try:
+            exclude = [_safe_exclude_pattern(x) for x in raw_exclude]
+        except ValueError as exc:
+            unsupported.append({
+                "source": source,
+                "destination": destination,
+                "exclude": raw_exclude,
+                "reason": str(exc),
+            })
+            continue
+        normalized.append({
+            "source": source,
+            "destination": destination,
+            "service": None,
+            "exclude": exclude,
+        })
+    return normalized, unsupported
+
+
+def _artifact_entry(value):
+    if isinstance(value, str):
+        contract, unsupported = normalize_artifact_contract([value])
+        if unsupported:
+            raise ValueError(unsupported[0]["reason"])
+        return contract[0]
+    if isinstance(value, dict) and "source" in value:
+        # Already-normalized contracts are revalidated so callers cannot bypass
+        # the path/exclude safety boundary.
+        contract, unsupported = normalize_artifact_contract([value])
+        if unsupported:
+            raise ValueError(unsupported[0]["reason"])
+        return contract[0]
+    raise ValueError("INVALID_ARTIFACT_ENTRY_TYPE")
+
+
+def _rooted_exclude_patterns(source: str, excludes):
+    """Translate artifact-root-relative excludes into GNU-tar member patterns."""
+    src = source.lstrip("/").rstrip("/")
+    patterns = []
+    for pattern in excludes:
+        # Exact root-relative path plus descendant match. GNU tar exclusion
+        # wildcards match slashes, so the second pattern covers nested names.
+        patterns.append(f"{src}/{pattern}")
+        patterns.append(f"{src}/*/{pattern}")
+    return list(dict.fromkeys(patterns))
+
+
+def _tar_transform(source: str, destination: str):
+    src = source.lstrip("/").rstrip("/")
+    dst = destination.lstrip("/").rstrip("/")
+    if src == dst:
+        return None
+    # GNU tar's transform uses a sed expression. Escape the delimiter,
+    # backslash, regex metacharacters in the source, and replacement '&'.
+    regex = src
+    for ch in ("\\", "|", ".", "[", "]", "^", "$", "*"):
+        regex = regex.replace(ch, "\\" + ch)
+    replacement = dst.replace("\\", "\\\\").replace("|", "\\|").replace("&", "\\&")
+    return f"s|^{regex}|{replacement}|"
+
+
+def stage_missing_artifacts(artifacts):
+    """Stage a uniquely matching output into each required builder source path.
+
+    This remains conservative: it never guesses among multiple candidates and
+    copies directories recursively only when exactly one fallback exists.
     """
     roots = list(CONFIG.get("artifact_fallback_roots") or ["/app", "/workspace"])
     staged = []
     unresolved = []
-    for dst in artifacts:
+    for raw in artifacts:
+        try:
+            entry = _artifact_entry(raw)
+        except ValueError as exc:
+            unresolved.append({"required": raw, "reason": str(exc)})
+            continue
+        dst = entry["source"]
         exists = run(["docker", "exec", "brain-bridge-task", "test", "-e", dst], check=False)
         if exists.returncode == 0:
             continue
@@ -144,6 +279,9 @@ def stage_missing_artifacts(artifacts):
         candidates = []
         for root in roots:
             src = str(Path(root) / basename)
+            # Preserve historical fallback staging semantics: fallback
+            # discovery is for uniquely named files only. Directory artifacts
+            # must be written at their contractual source path by the builder.
             probe = run(["docker", "exec", "brain-bridge-task", "test", "-f", src], check=False)
             if probe.returncode == 0:
                 candidates.append(src)
@@ -155,7 +293,7 @@ def stage_missing_artifacts(artifacts):
         parent = str(Path(dst).parent)
         script = (
             f"mkdir -p {shlex.quote(parent)} && "
-            f"cp -- {shlex.quote(src)} {shlex.quote(dst)}"
+            f"cp -a -- {shlex.quote(src)} {shlex.quote(dst)}"
         )
         cp = run(["docker", "exec", "brain-bridge-task", "/bin/sh", "-lc", script], check=False)
         if cp.returncode != 0:
@@ -164,14 +302,25 @@ def stage_missing_artifacts(artifacts):
         staged.append({"source": src, "required": dst})
     return {"staged": staged, "unresolved": unresolved}
 
-
-def stream_artifact(src_path: str, target_container: str):
+def stream_artifact(artifact, target_container: str):
+    entry = _artifact_entry(artifact)
+    src_path = entry["source"]
+    dst_path = entry["destination"]
     relative = src_path.lstrip("/")
     exists = run(["docker", "exec", "brain-bridge-task", "test", "-e", src_path], check=False)
     if exists.returncode != 0:
         return False
+
+    tar_cmd = ["docker", "exec", "brain-bridge-task", "tar", "-C", "/"]
+    for pattern in _rooted_exclude_patterns(src_path, entry.get("exclude") or []):
+        tar_cmd.append("--exclude=" + pattern)
+    transform = _tar_transform(src_path, dst_path)
+    if transform:
+        tar_cmd.append("--transform=" + transform)
+    tar_cmd += ["-cf", "-", relative]
+
     producer = subprocess.Popen(
-        ["docker", "exec", "brain-bridge-task", "tar", "-C", "/", "-cf", "-", relative],
+        tar_cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -187,25 +336,30 @@ def stream_artifact(src_path: str, target_container: str):
     _, perr = producer.communicate(timeout=600)
     if producer.returncode != 0 or consumer.returncode != 0:
         raise RuntimeError(
-            f"ARTIFACT_TRANSFER_FAILED:{src_path}:producer={producer.returncode}:consumer={consumer.returncode}:"
+            f"ARTIFACT_TRANSFER_FAILED:{src_path}->{dst_path}:producer={producer.returncode}:consumer={consumer.returncode}:"
             + (perr or b"").decode(errors="replace")[-2000:]
             + (cerr or b"").decode(errors="replace")[-2000:]
         )
     return True
 
-
 def archive_candidate(artifacts):
     EVIDENCE.mkdir(parents=True, exist_ok=True)
-    existing = []
-    for path in artifacts:
-        if run(["docker", "exec", "brain-bridge-task", "test", "-e", path], check=False).returncode == 0:
-            existing.append(path.lstrip("/"))
-    if not existing:
+    entries = []
+    for raw in artifacts:
+        entry = _artifact_entry(raw)
+        if run(["docker", "exec", "brain-bridge-task", "test", "-e", entry["source"]], check=False).returncode == 0:
+            entries.append(entry)
+    if not entries:
         return None
     out = EVIDENCE / "candidate_artifacts.tar.gz"
+    tar_cmd = ["docker", "exec", "brain-bridge-task", "tar", "-C", "/"]
+    for entry in entries:
+        for pattern in _rooted_exclude_patterns(entry["source"], entry.get("exclude") or []):
+            tar_cmd.append("--exclude=" + pattern)
+    tar_cmd += ["-czf", "-"] + [entry["source"].lstrip("/") for entry in entries]
     with out.open("wb") as fh:
         cp = subprocess.run(
-            ["docker", "exec", "brain-bridge-task", "tar", "-C", "/", "-czf", "-", *existing],
+            tar_cmd,
             stdout=fh,
             stderr=subprocess.PIPE,
             check=False,
@@ -214,18 +368,32 @@ def archive_candidate(artifacts):
         raise RuntimeError("CANDIDATE_ARCHIVE_FAILED:" + (cp.stderr or b"").decode(errors="replace")[-4000:])
     return str(out)
 
-
-def verify(task_dir: Path):
-    artifacts, mode = load_artifacts(task_dir)
-    artifact_staging = stage_missing_artifacts(artifacts)
-    archive = archive_candidate(artifacts)
+def verify(task_dir: Path, artifact_contract=None):
+    raw_artifacts, mode = load_artifacts(task_dir)
+    if artifact_contract is None:
+        artifact_contract, unsupported = normalize_artifact_contract(raw_artifacts)
+        if unsupported:
+            return {
+                "schema": "BRAIN_SESSION_MINI_SWE_FINAL_VERIFICATION_V1",
+                "session_id": CONFIG["session_id"],
+                "task": CONFIG["task"],
+                "terminal_bench_ref": CONFIG["terminal_bench_ref"],
+                "environment_mode": mode,
+                "status": "UNSUPPORTED_ARTIFACT_CONTRACT",
+                "unsupported_artifacts": unsupported,
+                "reward": None,
+                "incremental_spend_usd": 0,
+            }
+    artifact_staging = stage_missing_artifacts(artifact_contract)
+    archive = archive_candidate(artifact_contract)
     result = {
         "schema": "BRAIN_SESSION_MINI_SWE_FINAL_VERIFICATION_V1",
         "session_id": CONFIG["session_id"],
         "task": CONFIG["task"],
         "terminal_bench_ref": CONFIG["terminal_bench_ref"],
         "environment_mode": mode,
-        "artifact_paths": artifacts,
+        "artifact_paths": [x["destination"] for x in artifact_contract],
+        "artifact_contract": artifact_contract,
         "candidate_archive": archive,
         "artifact_staging": artifact_staging,
         "incremental_spend_usd": 0,
@@ -247,9 +415,9 @@ def verify(task_dir: Path):
     run(["docker", "exec", "brain-bridge-verifier", "mkdir", "-p", "/logs/verifier", "/logs/agent"])
 
     missing = []
-    for path in artifacts:
-        if not stream_artifact(path, "brain-bridge-verifier"):
-            missing.append(path)
+    for entry in artifact_contract:
+        if not stream_artifact(entry, "brain-bridge-verifier"):
+            missing.append(entry["destination"])
 
     limit = int(CONFIG.get("verifier_timeout_sec", 1200))
     # Verifier images are not required to contain /app. Choose a valid cwd

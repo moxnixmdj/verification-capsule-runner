@@ -1,0 +1,20 @@
+name: Verify artifact exclude transport
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'session_bridge/controller.py'
+      - 'session_bridge/controller_fast.py'
+      - 'verification/test_artifact_exclude_transport.py'
+      - '.github/workflows/verify-artifact-exclude-transport.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Syntax check controllers
+        run: python3 -m py_compile session_bridge/controller.py session_bridge/controller_fast.py
+      - name: Run exclude-aware artifact transport tests
+        run: python3 -m unittest -v verification/test_artifact_exclude_transport.py
