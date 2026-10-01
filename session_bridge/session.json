@@ -7,10 +7,17 @@
   "verifier_build_timeout_sec": 1800,
   "verifier_timeout_sec": 1800,
   "session_timeout_sec": 10800,
-  "max_bursts": 20,
+  "max_bursts": 4,
   "max_commands_per_burst": 8,
   "poll_interval_sec": 10,
   "per_command_output_char_limit": 12000,
   "comment_char_limit": 60000,
-  "authorized_controller_login": "moxnixmdj"
+  "authorized_controller_login": "moxnixmdj",
+  "bootstrap_replay": {
+    "ref": "state/cad-model-rank10-final-v1",
+    "start": 0,
+    "end": 0,
+    "require_contiguous": true,
+    "stop_on_error": true
+  }
 }
