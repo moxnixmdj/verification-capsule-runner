@@ -1,0 +1,12 @@
+{
+  "session_id": "harbor-live-database-cutover-dev-20261001-v1",
+  "task": "live-database-cutover",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "observation_branch": "bridge-observations/harbor-live-database-cutover-dev-20261001-v1",
+  "command_timeout_sec": 300,
+  "session_timeout_sec": 7200,
+  "harbor_timeout_sec": 10000,
+  "max_steps": 40,
+  "poll_interval_sec": 3,
+  "observation_char_limit": 120000
+}
