@@ -163,7 +163,7 @@ class TestAcceptanceContract(unittest.TestCase):
       "authorization":True,"scope":"TERMINAL",
       "canonical_brain_commit":"c"*40,
       "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18,
-      "continuous_obs":obs("b"*40)
+      "continuous_obs":obs("c"*40)
     }
     self.assertEqual(runtime_authority_errors(
       session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
