@@ -1,0 +1,20 @@
+name: Verify rank22 Stage-A exposure completeness
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/prequalification_stage_a_generic_rank22.py'
+      - 'verification/freecad_spring_clip_rank22_ledger.json'
+      - 'verification/test_stage_a_rank22.py'
+      - '.github/workflows/verify-stage-a-rank22.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: python -m unittest -v verification.test_stage_a_rank22
