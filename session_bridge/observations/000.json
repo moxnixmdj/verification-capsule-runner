@@ -1,0 +1,10 @@
+{
+  "command_sha256": "b28787d693cfdc248c0b362c064428e20a6d9fd31f73b8c8ae2a26d5600a41c6",
+  "duration_sec": 2.056,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-final-20261001-v1",
+  "stderr": "",
+  "stdout": "KEYS 163\nMAX_ABS_DIFF 0.0\nMEAN_ABS_DIFF 0.0\nEXACT_EQUAL True\nALLCLOSE_1E6 True\nOUTPUT_BYTES 186721216\nMP_CONSOLIDATION_AUTHORED_PASS\n",
+  "step": 0
+}
