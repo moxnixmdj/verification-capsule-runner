@@ -1,4 +1,4 @@
-import json, tempfile
+import json, tempfile, unittest
 from pathlib import Path
 from prequalification_stage_a_reducer import evaluate
 
@@ -18,50 +18,44 @@ def ledger(task,rank):
     return {"task":task,"rank":rank,"benchmark_ref":"452bf305c6daa62fc59061d22133a7cbc7c1572e","state":"UNEXPOSED__STAGE_A_PRE_EXPOSURE","instruction_read":False,"hidden_verifier_read":False,"task_specific_hints_read":False,"task_specific_web_or_repo_search":False,"task_command_executed":False,"clean_for_stage_b_exposure":True,"disqualifying_exposure_events":[]}
 
 def materialize(tmp, extra=None):
-    files=dict(BASE)
-    files[R15]=ledger("wdm-design",15)
-    files[R16]=ledger("session-window-debug",16)
+    files=dict(BASE); files[R15]=ledger("wdm-design",15); files[R16]=ledger("session-window-debug",16)
     if extra: files.update(extra)
     for p,o in files.items():
         q=Path(tmp)/p; q.parent.mkdir(parents=True,exist_ok=True); q.write_text(json.dumps(o))
 
-def test_rank15_backward_compatible_pass():
-    with tempfile.TemporaryDirectory() as td:
-        materialize(td)
-        out=evaluate(Path(td),R15)
-        assert out["pass"] is True and out["task"]=="wdm-design" and out["rank"]==15
-        assert out["task_execution_authorized"] is False
+class GenericStageATests(unittest.TestCase):
+    def test_rank15_backward_compatible_pass(self):
+        with tempfile.TemporaryDirectory() as td:
+            materialize(td); out=evaluate(Path(td),R15)
+            self.assertTrue(out["pass"]); self.assertEqual(out["task"],"wdm-design"); self.assertEqual(out["rank"],15)
+            self.assertFalse(out["task_execution_authorized"])
 
-def test_rank16_generic_pass():
-    with tempfile.TemporaryDirectory() as td:
-        materialize(td)
-        out=evaluate(Path(td),R16)
-        assert out["pass"] is True and out["task"]=="session-window-debug" and out["rank"]==16
-        assert out["task_execution_authorized"] is False
+    def test_rank16_generic_pass(self):
+        with tempfile.TemporaryDirectory() as td:
+            materialize(td); out=evaluate(Path(td),R16)
+            self.assertTrue(out["pass"]); self.assertEqual(out["task"],"session-window-debug"); self.assertEqual(out["rank"],16)
+            self.assertFalse(out["task_execution_authorized"])
 
-def test_task_specific_search_fails_for_any_task():
-    with tempfile.TemporaryDirectory() as td:
-        bad=ledger("session-window-debug",16); bad["task_specific_web_or_repo_search"]=True
-        materialize(td,{R16:bad})
-        assert evaluate(Path(td),R16)["pass"] is False
+    def test_task_specific_search_fails_for_any_task(self):
+        with tempfile.TemporaryDirectory() as td:
+            bad=ledger("session-window-debug",16); bad["task_specific_web_or_repo_search"]=True
+            materialize(td,{R16:bad}); self.assertFalse(evaluate(Path(td),R16)["pass"])
 
-def test_instruction_exposure_fails_stage_a():
-    with tempfile.TemporaryDirectory() as td:
-        bad=ledger("session-window-debug",16); bad["instruction_read"]=True
-        materialize(td,{R16:bad})
-        assert evaluate(Path(td),R16)["pass"] is False
+    def test_instruction_exposure_fails_stage_a(self):
+        with tempfile.TemporaryDirectory() as td:
+            bad=ledger("session-window-debug",16); bad["instruction_read"]=True
+            materialize(td,{R16:bad}); self.assertFalse(evaluate(Path(td),R16)["pass"])
 
-def test_missing_identity_fails():
-    with tempfile.TemporaryDirectory() as td:
-        bad=ledger("",16)
-        materialize(td,{R16:bad})
-        out=evaluate(Path(td),R16)
-        assert out["pass"] is False
-        assert "QUALIFICATION_IDENTITY" in out["failed_predicates"]
+    def test_missing_identity_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            bad=ledger("",16); materialize(td,{R16:bad}); out=evaluate(Path(td),R16)
+            self.assertFalse(out["pass"]); self.assertIn("QUALIFICATION_IDENTITY",out["failed_predicates"])
 
-def test_missing_mutation_evidence_fails():
-    with tempfile.TemporaryDirectory() as td:
-        bad=dict(BASE["canonical/capabilities/opus55/REQUIREMENT_GRAPH_KERNEL_001.json"])
-        bad["independently_verified_behaviors"]=[]
-        materialize(td,{"canonical/capabilities/opus55/REQUIREMENT_GRAPH_KERNEL_001.json":bad})
-        assert evaluate(Path(td),R16)["pass"] is False
+    def test_missing_mutation_evidence_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            bad=dict(BASE["canonical/capabilities/opus55/REQUIREMENT_GRAPH_KERNEL_001.json"]); bad["independently_verified_behaviors"]=[]
+            materialize(td,{"canonical/capabilities/opus55/REQUIREMENT_GRAPH_KERNEL_001.json":bad})
+            self.assertFalse(evaluate(Path(td),R16)["pass"])
+
+if __name__=="__main__":
+    unittest.main(verbosity=2)
