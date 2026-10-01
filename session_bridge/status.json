@@ -1,6 +1,6 @@
 {
+  "runner": "HARBOR_DOCKER_COMPOSE",
   "session_id": "harbor-live-database-cutover-dev-20261001-v1",
-  "status": "STARTING_HARBOR",
-  "task": "live-database-cutover",
-  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e"
+  "status": "STARTING_MULTI_SERVICE_RUNTIME",
+  "task": "live-database-cutover"
 }
