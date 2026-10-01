@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/open-jev-base-spent-diagnostic.yml"
+      - "open_jev_base_diagnostic/**"
 
 permissions:
   contents: read
