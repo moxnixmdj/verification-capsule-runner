@@ -1,0 +1,15 @@
+{
+  "session_id": "live-database-cutover-dev-20261001-v1",
+  "task": "live-database-cutover",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "observation_branch": "bridge-observations/live-database-cutover-dev-20261001-v1",
+  "build_timeout_sec": 900,
+  "command_timeout_sec": 300,
+  "verifier_build_timeout_sec": 1800,
+  "verifier_timeout_sec": 1800,
+  "session_timeout_sec": 7200,
+  "max_steps": 40,
+  "poll_interval_sec": 3,
+  "observation_char_limit": 120000,
+  "verifier_output_char_limit": 120000
+}
