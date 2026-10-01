@@ -69,5 +69,47 @@ class TestIndependentAcceptanceModel(unittest.TestCase):
         self.assertEqual(r["uncovered"],("policy_or_semantic_variant",))
         self.assertEqual(r["independent_checks"],())
 
+
+from specification_consensus_gate import assess_consensus
+
+class TestSpecificationConsensusGateIndependent(unittest.TestCase):
+    SOURCE="The service must retain records for 30 days. Logging is informational. If deletion is requested, the service must delete the record within 24 hours."
+
+    @classmethod
+    def good(cls):
+        a=[
+          {"source_sentence_id":"S1","source_quote":"The service must retain records for 30 days.","class":"requirement","requirement_id":"R1","actor":"service","action":"retain","object":"records","constraints":["30 days"]},
+          {"source_sentence_id":"S2","source_quote":"Logging is informational.","class":"non_requirement"},
+          {"source_sentence_id":"S3","source_quote":"If deletion is requested, the service must delete the record within 24 hours.","class":"requirement","requirement_id":"R2","actor":"service","action":"delete","object":"record","condition":"deletion is requested","constraints":["within 24 hours"]},
+        ]
+        b=[dict(x) for x in a]
+        return [{"extractor_id":"A","sentences":a},{"extractor_id":"B","sentences":b}]
+
+    def test_matching_independent_extractors_pass(self):
+        o=assess_consensus(self.SOURCE,self.good())
+        self.assertTrue(o["pass"])
+        self.assertEqual(len(o["accepted_requirements"]),2)
+
+    def test_missing_source_sentence_fails(self):
+        x=self.good(); x[1]["sentences"]=x[1]["sentences"][:-1]
+        self.assertFalse(assess_consensus(self.SOURCE,x)["pass"])
+
+    def test_class_disagreement_fails(self):
+        x=self.good(); x[1]["sentences"][0]["class"]="non_requirement"
+        o=assess_consensus(self.SOURCE,x)
+        self.assertFalse(o["pass"])
+        self.assertIn("CLASS_DISAGREEMENT:S1",o["failures"])
+
+    def test_semantic_signature_disagreement_fails(self):
+        x=self.good(); x[1]["sentences"][2]["constraints"]=["within 48 hours"]
+        o=assess_consensus(self.SOURCE,x)
+        self.assertFalse(o["pass"])
+        self.assertIn("SEMANTIC_SIGNATURE_DISAGREEMENT:S3",o["failures"])
+
+    def test_bad_source_quote_and_single_extractor_fail(self):
+        x=self.good(); x[1]["sentences"][0]["source_quote"]="wrong quote"
+        self.assertFalse(assess_consensus(self.SOURCE,x)["pass"])
+        self.assertFalse(assess_consensus(self.SOURCE,self.good()[:1])["pass"])
+
 if __name__=="__main__":
     unittest.main()
