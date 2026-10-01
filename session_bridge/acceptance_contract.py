@@ -13,6 +13,11 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
+try:
+    from . import execution_authority_reducer as authority_reducer
+except ImportError:  # script-mode controller import
+    import execution_authority_reducer as authority_reducer
+
 SCHEMA = "BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1"
 REQUIRED_BEHAVIOR_FIELDS = (
     "behavior_id",
@@ -45,6 +50,8 @@ LEASE_REVALIDATION_SCHEMA = "BRAIN_FAST_BURST_LEASE_REVALIDATION_V1"
 
 EXECUTION_SURFACE_PREFLIGHT_SCHEMA = "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1"
 SOURCE_BOUNDARY_PREFLIGHT_SCHEMA = "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1"
+DERIVED_AUTHORITY_PREFLIGHT_SCHEMA = "BRAIN_DERIVED_AUTHORITY_PREFLIGHT_V1"
+AUTHORITY_REDUCER_GIT_BLOB_SHA = "d7dcb02e051003996c44b6dd52b78dad7908810e"
 CONTINUOUS_OBS_SCHEMA = "PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1"
 CONTINUOUS_OBS_REQUIRED_STATE_PATHS = {
     "canonical/CANONICAL_POINTER.json",
@@ -177,6 +184,48 @@ def validate_continuous_obs_context(
                 elif age > float(max_age):
                     errors.append("CONTINUOUS_OBS_VOLATILE_DEPENDENCY_STALE:"+did)
     return sorted(set(errors))
+
+def validate_derived_authority_preflight(
+    payload: Any,
+    *,
+    task: str,
+    execution_budget: int,
+    verifier_budget: int,
+) -> list[str]:
+    """Recompute Stage-C authority from immutable hash-chained events.
+
+    The candidate's writable authorization booleans are not evidence. The
+    reducer must derive CAN_EXECUTE from the supplied event history, and the
+    caller-provided state digest must match the independently recomputed state.
+    """
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["DERIVED_AUTHORITY_PREFLIGHT_MISSING"]
+    if payload.get("schema") != DERIVED_AUTHORITY_PREFLIGHT_SCHEMA:
+        errors.append("DERIVED_AUTHORITY_PREFLIGHT_SCHEMA_INVALID")
+    if payload.get("reducer_git_blob_sha") != AUTHORITY_REDUCER_GIT_BLOB_SHA:
+        errors.append("DERIVED_AUTHORITY_REDUCER_BLOB_MISMATCH")
+    events = payload.get("events")
+    if not isinstance(events, list) or not events:
+        return sorted(set(errors + ["DERIVED_AUTHORITY_EVENTS_MISSING"]))
+    result = authority_reducer.derive_authority(
+        events,
+        task=task,
+        execution_budget=execution_budget,
+        verifier_budget=verifier_budget,
+    )
+    if result.get("valid") is not True:
+        for err in result.get("errors") or ["UNKNOWN"]:
+            errors.append("DERIVED_AUTHORITY_EVENT_CHAIN_INVALID:" + str(err))
+    if result.get("can_execute") is not True:
+        errors.append("DERIVED_AUTHORITY_CAN_EXECUTE_FALSE")
+    expected = payload.get("state_sha256")
+    if not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+        errors.append("DERIVED_AUTHORITY_STATE_DIGEST_INVALID")
+    elif expected != result.get("state_sha256"):
+        errors.append("DERIVED_AUTHORITY_STATE_DIGEST_MISMATCH")
+    return sorted(set(errors))
+
 
 def validate_source_boundary_preflight(payload: Any) -> list[str]:
     """Fail closed if task-specific knowledge escaped the frozen source boundary.
@@ -350,6 +399,12 @@ def validate_lease_upgrade(
         errors.append("LEASE_UPGRADE_REQUIRES_ACCEPTANCE_FROZEN")
     errors.extend(validate_execution_surface_preflight(candidate.get("execution_surface_preflight")))
     errors.extend(validate_source_boundary_preflight(candidate.get("source_boundary_preflight")))
+    errors.extend(validate_derived_authority_preflight(
+        candidate.get("derived_authority_preflight"),
+        task=task,
+        execution_budget=candidate.get("execution_count_allowed"),
+        verifier_budget=candidate.get("terminal_verifier_count_allowed"),
+    ))
     return errors
 
 
