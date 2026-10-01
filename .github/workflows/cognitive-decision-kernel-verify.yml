@@ -1,0 +1,64 @@
+name: Cognitive Decision Kernel Gate Verify
+
+on:
+  push:
+    paths:
+      - ".github/workflows/cognitive-decision-kernel-verify.yml"
+      - "cognitive_kernel_verify/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout verification capsule
+        uses: actions/checkout@v4
+
+      - name: Download pinned jevos-v2 runtime and model
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o jev-linux-x64.tar.gz             https://github.com/feder-cr/jev/releases/download/jevos-v2/jev-linux-x64.tar.gz
+          curl -fL --retry 3 -o jevos-v2-openvino-int8.zip             https://github.com/feder-cr/jev/releases/download/jevos-v2/jevos-v2-openvino-int8.zip
+          echo "e1b1f2c629ef53c8abafe9bff158cb92e08a6478ec3382c66c6de9d2efac7004  jev-linux-x64.tar.gz" | sha256sum -c -
+          echo "adb0057720a00b5c49aaeee68e4552a7a2cd52dc5fd33919e9787b0a97ed1570  jevos-v2-openvino-int8.zip" | sha256sum -c -
+
+      - name: Start pinned jevos-v2
+        run: |
+          set -euo pipefail
+          mkdir jev-dist
+          tar -xzf jev-linux-x64.tar.gz -C jev-dist --strip-components=1
+          unzip -q jevos-v2-openvino-int8.zip -d jev-dist
+          cd jev-dist
+          chmod +x ./jev
+          ./jev serve --host 127.0.0.1 --port 8017 > ../kernel_jev.log 2>&1 &
+          echo $! > ../kernel_jev.pid
+          cd ..
+          for i in $(seq 1 120); do
+            if curl -fsS http://127.0.0.1:8017/health > kernel_health.json; then
+              cat kernel_health.json
+              exit 0
+            fi
+            sleep 1
+          done
+          cat kernel_jev.log || true
+          exit 1
+
+      - name: Verify fail-closed kernel on frozen V2
+        run: |
+          set -euo pipefail
+          python3 cognitive_kernel_verify/verify_gate.py             --cases cognitive_basis_probe/cases.jsonl             --kernel cognitive_kernel_verify/cognitive_decision_kernel.py             --endpoint http://127.0.0.1:8017/v1/systemone             --model jev-latest             --threshold 0.80             --min-coverage 0.30             --output cognitive_decision_kernel_gate_result.json
+          cat cognitive_decision_kernel_gate_result.json
+
+      - name: Upload gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cognitive-decision-kernel-gate-verify
+          path: |
+            cognitive_decision_kernel_gate_result.json
+            kernel_jev.log
+            kernel_health.json
+          if-no-files-found: warn
