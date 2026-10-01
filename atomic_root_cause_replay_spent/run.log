@@ -1,0 +1,7 @@
+{
+  "cases": 6,
+  "route_step_causal_localization_accuracy": 1.0,
+  "unique_rescue_fraction": 1.0,
+  "repair_matches_evaluation_route_fraction": 1.0,
+  "all_downstream_symptom_only_repairs_failed": true
+}
