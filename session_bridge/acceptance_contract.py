@@ -59,6 +59,7 @@ CONTINUOUS_OBS_CLASSES = {
     "TOOL_OR_SERVICE","DATA_SOURCE","PACKAGE_OR_MODEL","NETWORK_OR_CAPACITY",
     "COST_OR_RATE_LIMIT","BENCHMARK_OR_TARGET_VERSION","EXTERNAL_WORLD_STATE",
 }
+CONTINUOUS_OBS_INFORMATION_MODES = {"OPEN_DISCOVERY","EXACT_FETCH_ONLY","NO_EXTERNAL_INFORMATION"}
 
 def _parse_obs_utc(value: Any) -> datetime:
     if not isinstance(value,str) or not value.strip():
@@ -94,6 +95,18 @@ def validate_continuous_obs_context(
         errors.append("CONTINUOUS_OBS_DEPENDENCY_INVENTORY_INCOMPLETE")
     if payload.get("material_world_state_dependencies_complete") is not True:
         errors.append("CONTINUOUS_OBS_WORLD_STATE_INVENTORY_INCOMPLETE")
+    if payload.get("information_boundary_complete") is not True:
+        errors.append("CONTINUOUS_OBS_INFORMATION_BOUNDARY_INCOMPLETE")
+    info=payload.get("information_policy")
+    if not isinstance(info,dict):
+        errors.append("CONTINUOUS_OBS_INFORMATION_POLICY_MISSING")
+    else:
+        if info.get("mode") not in CONTINUOUS_OBS_INFORMATION_MODES:
+            errors.append("CONTINUOUS_OBS_INFORMATION_MODE_INVALID")
+        if not isinstance(info.get("allowed_exact_sources"),list):
+            errors.append("CONTINUOUS_OBS_ALLOWED_EXACT_SOURCES_INVALID")
+        if not isinstance(info.get("allowed_external_tool_kinds"),list):
+            errors.append("CONTINUOUS_OBS_ALLOWED_EXTERNAL_TOOL_KINDS_INVALID")
     unknown=payload.get("unknown_material_dependencies")
     if not isinstance(unknown,list) or unknown:
         errors.append("CONTINUOUS_OBS_UNKNOWN_MATERIAL_DEPENDENCIES")
