@@ -115,9 +115,9 @@ def _normalize_actions(
             continue
         if not set(covers) <= known_obligations:
             errors.append(f"ACTION_COVERS_UNKNOWN_OBLIGATION:{aid}")
-        bits = row.get("new_reality_bits")
+        bits = row.get("new_reality_units")
         depth = row.get("dependency_depth")
-        wall = row.get("wall_clock_units")
+        wall = row.get("critical_path_wall_clock_units")
         if not _finite_nonnegative(bits):
             errors.append(f"ACTION_REALITY_COST_INVALID:{aid}")
         if not isinstance(depth, int) or isinstance(depth, bool) or depth < 0:
@@ -132,9 +132,9 @@ def _normalize_actions(
             {
                 "id": aid,
                 "covers": sorted(set(covers)),
-                "new_reality_bits": float(bits) if _finite_nonnegative(bits) else 0.0,
+                "new_reality_units": float(bits) if _finite_nonnegative(bits) else 0.0,
                 "dependency_depth": depth if isinstance(depth, int) and not isinstance(depth, bool) else 0,
-                "wall_clock_units": float(wall) if _finite_nonnegative(wall) else 0.0,
+                "critical_path_wall_clock_units": float(wall) if _finite_nonnegative(wall) else 0.0,
                 "admissible": row.get("admissible") is True,
                 "bundle_complete": row.get("bundle_complete") is True,
             }
@@ -157,20 +157,20 @@ def _dominance_delete(
             no_worse = (
                 acover >= bcover
                 and a["dependency_depth"] <= b["dependency_depth"]
-                and a["new_reality_bits"] <= b["new_reality_bits"]
-                and a["wall_clock_units"] <= b["wall_clock_units"]
+                and a["new_reality_units"] <= b["new_reality_units"]
+                and a["critical_path_wall_clock_units"] <= b["critical_path_wall_clock_units"]
             )
             strict = (
                 acover > bcover
                 or a["dependency_depth"] < b["dependency_depth"]
-                or a["new_reality_bits"] < b["new_reality_bits"]
-                or a["wall_clock_units"] < b["wall_clock_units"]
+                or a["new_reality_units"] < b["new_reality_units"]
+                or a["critical_path_wall_clock_units"] < b["critical_path_wall_clock_units"]
             )
             exact_tie_better_id = (
                 acover == bcover
                 and a["dependency_depth"] == b["dependency_depth"]
-                and a["new_reality_bits"] == b["new_reality_bits"]
-                and a["wall_clock_units"] == b["wall_clock_units"]
+                and a["new_reality_units"] == b["new_reality_units"]
+                and a["critical_path_wall_clock_units"] == b["critical_path_wall_clock_units"]
                 and a["id"] < b["id"]
             )
             if no_worse and (strict or exact_tie_better_id):
@@ -204,8 +204,8 @@ def _solve_at_depth(
             nmask = covered | mask
             ids = tuple(sorted(state[3] + (action["id"],)))
             cand = (
-                state[0] + action["new_reality_bits"],
-                state[1] + action["wall_clock_units"],
+                state[0] + action["new_reality_units"],
+                max(state[1], action["critical_path_wall_clock_units"]),
                 state[2] + 1,
                 ids,
             )
@@ -217,8 +217,8 @@ def _solve_at_depth(
     bits, wall, count, ids = best[target]
     return {
         "max_dependency_depth": max_depth,
-        "total_new_reality_bits": bits,
-        "total_wall_clock_units": wall,
+        "total_new_reality_units": bits,
+        "total_critical_path_wall_clock_units": wall,
         "action_count": count,
         "selected_actions": list(ids),
     }
@@ -267,6 +267,23 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
     ):
         errors.append("EVIDENCE_SATURATION_RECEIPT_HASH_INVALID")
 
+    cost_model = payload.get("cost_model")
+    if not isinstance(cost_model, Mapping):
+        errors.append("COST_MODEL_MISSING")
+        cost_model = {}
+    else:
+        if cost_model.get("status") != "FROZEN":
+            errors.append("COST_MODEL_NOT_FROZEN")
+        if cost_model.get("information_unit") != "PREDECLARED_NEW_TERMINAL_DISTINCTION_UNIT":
+            errors.append("COST_MODEL_INFORMATION_UNIT_INVALID")
+        if cost_model.get("parallel_wall_clock_aggregation") != "MAX_CRITICAL_PATH":
+            errors.append("COST_MODEL_PARALLEL_WALL_CLOCK_INVALID")
+        if cost_model.get("bundle_internal_dependencies_included") is not True:
+            errors.append("COST_MODEL_BUNDLE_DEPENDENCIES_NOT_INCLUDED")
+    cost_model_hash = canonical_hash(cost_model) if isinstance(cost_model, Mapping) else ""
+    if freeze.get("cost_model_sha256") != cost_model_hash:
+        errors.append("COST_MODEL_HASH_MISMATCH")
+
     open_ids = sorted(
         x["id"]
         for x in obligations
@@ -280,10 +297,11 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
             "schema": "PROJECT_BRAIN_GLOBAL_PROOF_CUT_VERDICT_V1",
             "status": "FAIL_CLOSED",
             "exact": False,
-            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE",
+            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE_AND_COST_MODEL",
             "errors": sorted(set(errors)),
             "obligation_graph_sha256": obligation_hash,
             "candidate_universe_sha256": action_hash,
+            "cost_model_sha256": cost_model_hash,
         }
 
     if not open_ids:
@@ -291,16 +309,17 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
             "schema": "PROJECT_BRAIN_GLOBAL_PROOF_CUT_VERDICT_V1",
             "status": "EXACT_CUT",
             "exact": True,
-            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE",
+            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE_AND_COST_MODEL",
             "open_obligations": [],
             "selected_actions": [],
             "max_dependency_depth": 0,
-            "total_new_reality_bits": 0.0,
-            "total_wall_clock_units": 0.0,
+            "total_new_reality_units": 0.0,
+            "total_critical_path_wall_clock_units": 0.0,
             "action_count": 0,
             "dominance_deletions": [],
             "obligation_graph_sha256": obligation_hash,
             "candidate_universe_sha256": action_hash,
+            "cost_model_sha256": cost_model_hash,
         }
 
     open_set = set(open_ids)
@@ -313,10 +332,11 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
             "schema": "PROJECT_BRAIN_GLOBAL_PROOF_CUT_VERDICT_V1",
             "status": "GRAPH_INCOMPLETE",
             "exact": False,
-            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE",
+            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE_AND_COST_MODEL",
             "missing_obligations": missing,
             "obligation_graph_sha256": obligation_hash,
             "candidate_universe_sha256": action_hash,
+            "cost_model_sha256": cost_model_hash,
         }
 
     reduced, deletions = _dominance_delete(actions, open_set)
@@ -331,20 +351,21 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
             "schema": "PROJECT_BRAIN_GLOBAL_PROOF_CUT_VERDICT_V1",
             "status": "UNRESOLVABLE_WITH_FROZEN_UNIVERSE",
             "exact": False,
-            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE",
+            "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE_AND_COST_MODEL",
             "obligation_graph_sha256": obligation_hash,
             "candidate_universe_sha256": action_hash,
+            "cost_model_sha256": cost_model_hash,
         }
 
     return {
         "schema": "PROJECT_BRAIN_GLOBAL_PROOF_CUT_VERDICT_V1",
         "status": "EXACT_CUT",
         "exact": True,
-        "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE",
+        "exactness_scope": "FROZEN_DECLARED_CANDIDATE_UNIVERSE_AND_COST_MODEL",
         "objective_order": [
             "MINIMIZE_LONGEST_DEPENDENCY_DEPTH",
-            "MINIMIZE_NEW_REALITY_BITS",
-            "MINIMIZE_WALL_CLOCK_UNITS",
+            "MINIMIZE_NEW_REALITY_UNITS",
+            "MINIMIZE_PARALLEL_CRITICAL_PATH_WALL_CLOCK_UNITS",
             "MINIMIZE_ACTION_COUNT",
             "LEXICOGRAPHIC_ACTION_IDS",
         ],
@@ -353,5 +374,6 @@ def compile_cut(payload: Mapping[str, Any]) -> dict[str, Any]:
         "dominance_deletions": deletions,
         "obligation_graph_sha256": obligation_hash,
         "candidate_universe_sha256": action_hash,
+        "cost_model_sha256": cost_model_hash,
         "recompute_rule": "ANY_NEW_CANDIDATE_OR_OBLIGATION_INVALIDATES_FREEZE_AND_REQUIRES_RECOMPUTATION",
     }
