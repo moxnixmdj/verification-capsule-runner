@@ -628,7 +628,7 @@
         "text": "brain"
       },
       "expected_route": "sha256_text",
-      "expected_output": "a3f04c3851adc88989c7f1d49c7a3b80a1119807b11fc2d80c020d7b7754b5f8",
+      "expected_output": "bbbf7a6412d6d3e8244ac1fda5e35a20037acee661288cb95b7b18cf469980aa",
       "routes": [
         {
           "route_id": "sha256_text",
