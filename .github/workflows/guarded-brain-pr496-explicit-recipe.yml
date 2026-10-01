@@ -1,0 +1,39 @@
+name: Guarded Brain PR496 Explicit Recipe Qualification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/broad_objective_decompose.py
+      - canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py
+      - canonical/tests/test_broad_objective_semantic_decomposition.py
+      - verify_brain_pr496_explicit_recipe_failclosed.py
+      - brain_pr496_explicit_recipe_qualification_authorization.json
+      - guarded_brain_pr496_explicit_recipe_plan.json
+      - .github/workflows/guarded-brain-pr496-explicit-recipe.yml
+permissions:
+  contents: write
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Atomically admit exact-byte non-parent PR496 qualification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python execution_guard/github_actions_guarded_run_live.py --plan guarded_brain_pr496_explicit_recipe_plan.json --receipt guarded-brain-pr496-explicit-recipe-admission.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: guarded-brain-pr496-explicit-recipe
+          path: |
+            guarded-brain-pr496-explicit-recipe-admission.json
+            guarded_brain_pr496_explicit_recipe_plan.json
+            brain_pr496_explicit_recipe_qualification_authorization.json
+          if-no-files-found: warn
