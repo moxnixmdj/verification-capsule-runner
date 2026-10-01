@@ -1,0 +1,26 @@
+name: Verify orthographic visual-hull candidate
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/orthographic_visual_hull.py'
+      - 'verification/test_orthographic_visual_hull_independent.py'
+      - 'verification/ORTHOGRAPHIC_VISUAL_HULL_SOURCE_V1.json'
+      - '.github/workflows/verify-orthographic-visual-hull-001.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain candidate blob
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object verification/orthographic_visual_hull.py)" = "d102226cfde581cf3d7de97ec2e55862edf1c31b"
+      - name: Run independent adversarial and randomized verification
+        run: cd verification && python -m unittest -v test_orthographic_visual_hull_independent

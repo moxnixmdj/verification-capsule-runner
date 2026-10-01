@@ -1,0 +1,21 @@
+{
+  "schema": "PROJECT_BRAIN_INDEPENDENT_ORTHOGRAPHIC_VISUAL_HULL_VERIFICATION_SOURCE_V1",
+  "date": "2026-10-02",
+  "source_repository": "moxnixmdj/brain",
+  "source_pull_request": 687,
+  "source_branch": "breakthrough/orthographic-visual-hull-20261002",
+  "source_head_commit": "9c7476e0e2803abc2f71d1fe7ac980f05535d474",
+  "source_path": "canonical/runtime/orthographic_visual_hull.py",
+  "source_git_blob_sha1": "d102226cfde581cf3d7de97ec2e55862edf1c31b",
+  "runner_mirror_path": "verification/orthographic_visual_hull.py",
+  "verification_scope": [
+    "EXACT_SOURCE_BLOB_BINDING",
+    "INDEPENDENT_KNOWN_CASES",
+    "INDEPENDENT_MUTATION_CANARIES",
+    "3000_RANDOM_DIFFERENTIAL_RECONSTRUCTION_CASES",
+    "1000_RANDOM_REPAIR_CONSERVATION_CASES",
+    "500_RANDOM_EXACT_ACCEPTANCE_CASES",
+    "FAIL_CLOSED_REPAIR_COMPILATION"
+  ],
+  "promotion_scope_if_pass": "NARROW_COMPONENT_ONLY__NO_FAMILY_CREDIT"
+}
