@@ -6,7 +6,8 @@ class CutV3(unittest.TestCase):
     def test_exact_brain_mirror_hash(self):
         import hashlib
         raw=(ROOT/"cut.json").read_bytes()
-        self.assertEqual(hashlib.sha1(raw).hexdigest(),"c0ceaba4919201119faa94d92abc6b8efacc86d0")
+        git_blob=b"blob "+str(len(raw)).encode("ascii")+b"\\0"+raw
+        self.assertEqual(hashlib.sha1(git_blob).hexdigest(),"c0ceaba4919201119faa94d92abc6b8efacc86d0")
 
     def test_exact_compressed_cut(self):
         data=json.loads((ROOT/"cut.json").read_text())
