@@ -42,6 +42,32 @@ FORBIDDEN_INDEPENDENCE = {"BUILDER_RECOMPUTE", "BUILDER_DERIVED_EXPECTATION"}
 LEASE_SCHEMA = "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1"
 LEASE_REVALIDATION_SCHEMA = "BRAIN_FAST_BURST_LEASE_REVALIDATION_V1"
 
+EXECUTION_SURFACE_PREFLIGHT_SCHEMA = "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1"
+
+def validate_execution_surface_preflight(payload: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["EXECUTION_SURFACE_PREFLIGHT_MISSING"]
+    if payload.get("schema") != EXECUTION_SURFACE_PREFLIGHT_SCHEMA:
+        errors.append("EXECUTION_SURFACE_PREFLIGHT_SCHEMA_INVALID")
+    if payload.get("status") != "PASS":
+        errors.append("EXECUTION_SURFACE_PREFLIGHT_NOT_PASS")
+    if payload.get("exact_or_materially_equivalent") is not True:
+        errors.append("EXECUTION_SURFACE_NOT_MATERIALLY_EQUIVALENT")
+    if payload.get("package_management_policy_verified") is not True:
+        errors.append("PACKAGE_MANAGEMENT_POLICY_UNVERIFIED")
+    if payload.get("required_install_steps_verified") is not True:
+        errors.append("REQUIRED_INSTALL_STEPS_UNVERIFIED")
+    if payload.get("required_runtime_imports_verified") is not True:
+        errors.append("REQUIRED_RUNTIME_IMPORTS_UNVERIFIED")
+    digest = payload.get("environment_sha256")
+    if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+        errors.append("EXECUTION_SURFACE_ENVIRONMENT_DIGEST_INVALID")
+    evidence = payload.get("evidence")
+    if not isinstance(evidence, list) or not evidence or any(not _nonempty_text(x) for x in evidence):
+        errors.append("EXECUTION_SURFACE_EVIDENCE_MISSING")
+    return errors
+
 def validate_lease_authorization(payload: Any, session_id: str, task: str) -> list[str]:
     errors: list[str] = []
     if not isinstance(payload, dict):
@@ -148,6 +174,7 @@ def validate_lease_upgrade(
         errors.append("LEASE_UPGRADE_AFTER_BUILDER_STARTED")
     if acceptance_hash is None:
         errors.append("LEASE_UPGRADE_REQUIRES_ACCEPTANCE_FROZEN")
+    errors.extend(validate_execution_surface_preflight(candidate.get("execution_surface_preflight")))
     return errors
 
 
