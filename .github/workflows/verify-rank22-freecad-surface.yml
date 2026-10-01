@@ -1,5 +1,10 @@
 name: Verify rank22 exact FreeCAD surface
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'verification/rank22_surface/Dockerfile'
+      - '.github/workflows/verify-rank22-freecad-surface.yml'
   pull_request:
     branches: [main]
     paths:
