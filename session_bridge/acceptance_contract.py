@@ -40,6 +40,7 @@ FORBIDDEN_INDEPENDENCE = {"BUILDER_RECOMPUTE", "BUILDER_DERIVED_EXPECTATION"}
 
 
 LEASE_SCHEMA = "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1"
+LEASE_REVALIDATION_SCHEMA = "BRAIN_FAST_BURST_LEASE_REVALIDATION_V1"
 
 def validate_lease_authorization(payload: Any, session_id: str, task: str) -> list[str]:
     errors: list[str] = []
@@ -64,6 +65,45 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
     rank = payload.get("sample_rank")
     if not isinstance(rank, int) or rank < 1:
         errors.append("SAMPLE_RANK_INVALID")
+    return errors
+
+
+def validate_lease_revalidation(
+    payload: Any,
+    session_id: str,
+    task: str,
+    bound_lease: Mapping[str, Any],
+    *,
+    expected_scope: str,
+    expected_burst_id: int | None = None,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["LEASE_REVALIDATION_PAYLOAD_NOT_OBJECT"]
+    if payload.get("schema") != LEASE_REVALIDATION_SCHEMA:
+        errors.append("LEASE_REVALIDATION_SCHEMA_INVALID")
+    if payload.get("session_id") != session_id:
+        errors.append("LEASE_REVALIDATION_SESSION_MISMATCH")
+    if payload.get("task") != task:
+        errors.append("LEASE_REVALIDATION_TASK_MISMATCH")
+    if payload.get("authorization") is not True:
+        errors.append("LEASE_REVALIDATION_AUTHORIZATION_FALSE")
+    if payload.get("scope") != expected_scope:
+        errors.append("LEASE_REVALIDATION_SCOPE_MISMATCH")
+    if payload.get("canonical_lease_path") != bound_lease.get("canonical_lease_path"):
+        errors.append("LEASE_REVALIDATION_PATH_MISMATCH")
+    if payload.get("sample_rank") != bound_lease.get("sample_rank"):
+        errors.append("LEASE_REVALIDATION_RANK_MISMATCH")
+    commit = payload.get("canonical_brain_commit")
+    if not isinstance(commit, str) or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        errors.append("LEASE_REVALIDATION_CANONICAL_COMMIT_INVALID")
+    if expected_scope == "BURST":
+        if not isinstance(expected_burst_id, int) or expected_burst_id < 0:
+            errors.append("LEASE_REVALIDATION_EXPECTED_BURST_INVALID")
+        if payload.get("burst_id") != expected_burst_id:
+            errors.append("LEASE_REVALIDATION_BURST_MISMATCH")
+    elif expected_scope != "TERMINAL":
+        errors.append("LEASE_REVALIDATION_EXPECTED_SCOPE_INVALID")
     return errors
 
 def _nonempty_text(value: Any) -> bool:
