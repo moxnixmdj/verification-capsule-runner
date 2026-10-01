@@ -1,0 +1,31 @@
+name: Diagnose Broad Objective Compiler Seam
+on:
+  pull_request:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print compiler dispatch and broad-goal helpers only
+        run: |
+          python3 - <<'PY'
+          import ast, pathlib
+          p=pathlib.Path("canonical/runtime/goal_compiler.py")
+          s=p.read_text()
+          t=ast.parse(s)
+          wanted=[]
+          terms=("compile_goal","plain_goal","ground","proposal","planner","compound","subgoal","capability_match")
+          for n in t.body:
+              if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and any(x in n.name.lower() for x in terms):
+                  wanted.append(n)
+          print("FILE",p)
+          print("MATCHED_FUNCTIONS",[n.name for n in wanted])
+          for n in wanted:
+              if n.name=="compile_goal" or any(x in n.name.lower() for x in ("plain_goal","ground","proposal","planner")):
+                  print("\n###",n.name,"lines",n.lineno,"-",getattr(n,"end_lineno",None))
+                  print("\n".join(s.splitlines()[n.lineno-1:n.end_lineno]))
+          PY
