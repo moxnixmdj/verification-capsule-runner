@@ -1,5 +1,5 @@
 {
-  "next_step": 9,
+  "next_step": 10,
   "session_id": "wal-recovery-ordering-verify-20261001-v2",
   "status": "READY_FOR_COMMAND",
   "task": "wal-recovery-ordering"
