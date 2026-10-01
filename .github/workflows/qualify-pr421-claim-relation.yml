@@ -1,0 +1,27 @@
+name: Qualify PR421 Claim Relation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bound_capabilities/extracted_evidence_claim_relation.py
+      - canonical/tests/test_extracted_evidence_claim_relation.py
+      - qualify_pr421_claim_relation.py
+      - .github/workflows/qualify-pr421-claim-relation.yml
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Producer regressions
+        run: python canonical/tests/test_extracted_evidence_claim_relation.py
+      - name: Independent cross-domain qualification
+        run: python qualify_pr421_claim_relation.py
