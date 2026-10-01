@@ -1,4 +1,4 @@
-from canonical.runtime.specification_consensus_gate import assess_consensus, source_sentences
+from specification_consensus_gate import assess_consensus, source_sentences
 
 SOURCE="The service must retain records for 30 days. Logging is informational. If deletion is requested, the service must delete the record within 24 hours."
 
