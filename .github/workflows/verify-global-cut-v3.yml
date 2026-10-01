@@ -1,5 +1,9 @@
 name: Verify global minimum reality cut v3
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-global-cut-v3.yml'
   pull_request:
     branches: [main]
     paths:
