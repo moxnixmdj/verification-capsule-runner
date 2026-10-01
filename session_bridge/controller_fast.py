@@ -157,6 +157,15 @@ def main():
     EVIDENCE.mkdir(parents=True, exist_ok=True)
     task_dir = legacy.clone_task()
     legacy.build_runtime(task_dir)
+
+    # Artifact paths are execution-interface metadata, not solution evidence.
+    # Surface only this safe contract before operator commands so the agent
+    # never has to guess where terminal artifacts must be written.
+    artifact_paths, verifier_environment_mode = legacy.load_artifacts(task_dir)
+    artifact_parent_dirs = sorted({str(Path(p).parent) for p in artifact_paths if str(Path(p).parent)})
+    for parent in artifact_parent_dirs:
+        legacy.run(["docker", "exec", "brain-bridge-task", "mkdir", "-p", parent])
+
     bootstrap = replay_bootstrap()
 
     post(READY_MARKER, {
@@ -167,6 +176,9 @@ def main():
         "microstep_git_commits": 0,
         "bootstrap": bootstrap,
         "max_commands_per_burst": int(CONFIG.get("max_commands_per_burst", 8)),
+        "artifact_paths": artifact_paths,
+        "verifier_environment_mode": verifier_environment_mode,
+        "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
     })
 
     seen = set()
