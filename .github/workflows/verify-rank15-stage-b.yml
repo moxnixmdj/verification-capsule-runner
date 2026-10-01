@@ -1,0 +1,50 @@
+name: Verify rank15 Stage B contract and Meep preflight
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/rank15_stage_b/**'
+      - '.github/workflows/verify-rank15-stage-b.yml'
+permissions:
+  contents: read
+jobs:
+  structural:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify requirement graph, mutation kill, and independent acceptance coverage
+        run: python verification/rank15_stage_b/verify_stage_b.py
+  meep-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Fetch exact official environment Dockerfile only
+        run: |
+          mkdir -p /tmp/wdm-env
+          curl --fail --location --silent --show-error             https://raw.githubusercontent.com/harbor-framework/terminal-bench/452bf305c6daa62fc59061d22133a7cbc7c1572e/tasks/wdm-design/environment/Dockerfile             -o /tmp/wdm-env/Dockerfile
+          test "$(git hash-object /tmp/wdm-env/Dockerfile)" = "c7f58a4bbde762976ec5ece0a4f345fec184f5f6"
+      - name: Build exact declared task environment
+        run: docker build --pull=false -t brain-wdm-preflight -f /tmp/wdm-env/Dockerfile /tmp/wdm-env
+      - name: Verify pymeep imports and bounded CPU FDTD
+        run: |
+          docker run --rm -i brain-wdm-preflight python - <<'PY'
+          import time
+          import numpy as np
+          import scipy
+          import meep as mp
+          t0=time.time()
+          sim=mp.Simulation(
+              cell_size=mp.Vector3(2.0,2.0,0),
+              boundary_layers=[mp.PML(0.2)],
+              resolution=15,
+              sources=[mp.Source(mp.ContinuousSource(frequency=1/1.55),component=mp.Ez,center=mp.Vector3())],
+          )
+          sim.run(until=1)
+          dt=time.time()-t0
+          assert dt < 120, dt
+          print({"receipt":"MEEP_PREFLIGHT_EXECUTED","meep_version":getattr(mp,"__version__","unknown"),"numpy":np.__version__,"scipy":scipy.__version__,"bounded_fdtd_seconds":dt,"candidate_task_executed":False}, flush=True)
+          PY
