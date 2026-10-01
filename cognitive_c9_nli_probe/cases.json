@@ -1,0 +1,131 @@
+{
+  "schema": "PROJECT_BRAIN_C9_SEMANTIC_SUPPORT_FRESH_PROBE_V1",
+  "status": "FROZEN_MEASUREMENT_ONLY__ZERO_CAPABILITY_CREDIT",
+  "created_utc": "2026-10-01",
+  "primitive_component": "C9_SEMANTIC_SUPPORT_RELATION_ONLY",
+  "warning": "ENTAILMENT_IS_NOT_COMPLETE_EVIDENCE_SUFFICIENCY",
+  "contamination_rule": "DO_NOT_CHANGE_CASES_OR_GOLD_AFTER_FIRST_MODEL_SCORE",
+  "cases": [
+    {
+      "id": "promotion_all_met",
+      "evidence": "Independent verification passed. Held-out verification passed. The donor dependency was deleted. The evidence was not contaminated.",
+      "claim": "All four stated promotion prerequisites are satisfied.",
+      "gold": true
+    },
+    {
+      "id": "promotion_donor_missing",
+      "evidence": "Independent verification passed and held-out verification passed. The donor dependency is still present. The evidence was not contaminated.",
+      "claim": "All four stated promotion prerequisites are satisfied.",
+      "gold": false
+    },
+    {
+      "id": "one_task_not_breadth",
+      "evidence": "One fresh coding task passed all 97 tests in ten deterministic runs. No other fresh tasks have been evaluated.",
+      "claim": "Breadth across multiple distinct fresh coding tasks has been established.",
+      "gold": false
+    },
+    {
+      "id": "scoped_artifact",
+      "evidence": "The mechanism successfully created and round-tripped XLSX and PPTX files. DOCX and PDF were explicitly excluded from the verification.",
+      "claim": "XLSX and PPTX behavior was verified.",
+      "gold": true
+    },
+    {
+      "id": "docx_not_supported",
+      "evidence": "The mechanism successfully created and round-tripped XLSX and PPTX files. DOCX and PDF were explicitly excluded from the verification.",
+      "claim": "DOCX creation was verified.",
+      "gold": false
+    },
+    {
+      "id": "continuity_scope",
+      "evidence": "Across a forced process boundary, exact task identity, mission hash, committed artifacts, and exactly-once continuation were preserved. Semantic-memory quality was not tested.",
+      "claim": "Exactly-once task continuation across the tested process boundary was verified.",
+      "gold": true
+    },
+    {
+      "id": "continuity_overclaim",
+      "evidence": "Across a forced process boundary, exact task identity, mission hash, committed artifacts, and exactly-once continuation were preserved. Semantic-memory quality was not tested.",
+      "claim": "General semantic-memory quality was verified.",
+      "gold": false
+    },
+    {
+      "id": "research_not_finished",
+      "evidence": "The local planner selected three authoritative sources and produced four planner responses. It reached the maximum cycle count without emitting a terminal result.",
+      "claim": "The end-to-end research task completed successfully.",
+      "gold": false
+    },
+    {
+      "id": "research_components_worked",
+      "evidence": "The local planner selected three authoritative sources and produced four planner responses. Model loading, server health, and source selection all passed before the controller reached its cycle limit.",
+      "claim": "Model loading and source selection worked during the run.",
+      "gold": true
+    },
+    {
+      "id": "fresh_falsification",
+      "evidence": "On a frozen fresh task, the decision kernel admitted four candidates and three of those admissions were wrong.",
+      "claim": "The fresh task falsified the claim that the kernel can safely auto-admit generic decisions at the tested gate.",
+      "gold": true
+    },
+    {
+      "id": "frozen_gate_not_general",
+      "evidence": "On the original 28-case development set, high-confidence decisions had zero observed errors. A later fresh task produced three wrong high-confidence admissions.",
+      "claim": "Zero errors on the development set established generalization to fresh tasks.",
+      "gold": false
+    },
+    {
+      "id": "surface_blocked",
+      "evidence": "The execution surface failed a required architecture predicate before the held-out payload was generated. The held-out runner was never invoked.",
+      "claim": "The held-out task remained unspent.",
+      "gold": true
+    },
+    {
+      "id": "surface_not_executed",
+      "evidence": "The execution surface failed a required architecture predicate before the held-out payload was generated. The held-out runner was never invoked.",
+      "claim": "The held-out task executed and failed its capability verifier.",
+      "gold": false
+    },
+    {
+      "id": "exact_relation_scope",
+      "evidence": "The acquired binder verified GT, LT, GTE, LTE, EQ, NE, ABS_DIFF_LTE, and exact quoted support. Unit conversion was explicitly listed as unverified.",
+      "claim": "Explicit bounded comparison operators were verified.",
+      "gold": true
+    },
+    {
+      "id": "unit_conversion_overclaim",
+      "evidence": "The acquired binder verified GT, LT, GTE, LTE, EQ, NE, ABS_DIFF_LTE, and exact quoted support. Unit conversion was explicitly listed as unverified.",
+      "claim": "Unit conversion was verified.",
+      "gold": false
+    },
+    {
+      "id": "corrupt_record",
+      "evidence": "An immutable execution record failed its integrity hash check when read back. The guard contract requires rejecting corrupt evidence.",
+      "claim": "The record has an integrity failure.",
+      "gold": true
+    },
+    {
+      "id": "uncertain_dispatch",
+      "evidence": "A launch may already have been dispatched, but acknowledgement persistence is uncertain. The exactly-once contract forbids a second launch until ownership is resolved.",
+      "claim": "A second launch is authorized immediately.",
+      "gold": false
+    },
+    {
+      "id": "source_admission",
+      "evidence": "The source is authoritative and direct. It is current and no conflicting authoritative source is present.",
+      "claim": "The stated source-admission conditions are satisfied.",
+      "gold": true
+    },
+    {
+      "id": "source_conflict",
+      "evidence": "The source is authoritative and direct, but another authoritative source reports a conflicting value.",
+      "claim": "The stated source-admission conditions are satisfied.",
+      "gold": false
+    },
+    {
+      "id": "replay_forbidden",
+      "evidence": "The failed benchmark task is already spent. The record explicitly forbids replay for promotion and requires a distinct untouched task after any general repair.",
+      "claim": "Replaying the same task can provide valid promotion evidence.",
+      "gold": false
+    }
+  ],
+  "capability_credit_delta": 0
+}
