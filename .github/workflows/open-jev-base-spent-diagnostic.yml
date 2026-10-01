@@ -21,7 +21,8 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m pip install --upgrade pip
-          python3 -m pip install torch transformers huggingface_hub sentencepiece tiktoken
+          python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python3 -m pip install "transformers==5.17.0" huggingface_hub
 
       - name: Run calibrated spent-task diagnostic
         env:
