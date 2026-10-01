@@ -7,6 +7,11 @@ import global_proof_cut_compiler as g
 
 
 def freeze_for(obligations, actions, **overrides):
+    normalized_obligations, obligation_errors=g._normalize_obligations(obligations)
+    assert obligation_errors == []
+    known={x["id"] for x in normalized_obligations}
+    normalized_actions, action_errors=g._normalize_actions(actions, known)
+    assert action_errors == []
     base={
         "schema":g.FREEZE_SCHEMA,
         "status":"FROZEN",
@@ -15,8 +20,8 @@ def freeze_for(obligations, actions, **overrides):
         "candidate_universe_complete_relative_to_freeze":True,
         "invalidated_by_new_candidate":False,
         "evidence_saturation_receipt_sha256":"a"*64,
-        "obligation_graph_sha256":g.canonical_hash(sorted(obligations,key=lambda x:x["id"])),
-        "candidate_universe_sha256":g.canonical_hash(sorted(actions,key=lambda x:x["id"])),
+        "obligation_graph_sha256":g.canonical_hash(normalized_obligations),
+        "candidate_universe_sha256":g.canonical_hash(normalized_actions),
     }
     base.update(overrides)
     return base
