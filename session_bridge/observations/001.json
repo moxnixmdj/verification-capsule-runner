@@ -1,0 +1,39 @@
+{
+  "command_sha256": "9d63d591b0e3e148a793294de92874f91512f1d3d1cbad931ce32a5c97f6bc43",
+  "completion_authorization": {
+    "acceptance_criteria": [
+      {
+        "criterion": "The exact candidate program was already exercised on the identical frozen task runtime before clean replay.",
+        "evidence": "Development observation 035: KEYS 163; MAX_ABS_DIFF 0.0; MEAN_ABS_DIFF 0.0; EXACT_EQUAL True; ALLCLOSE_1E6 True; MP_CONSOLIDATION_AUTHORED_PASS; exit_code 0.",
+        "status": "PASS"
+      },
+      {
+        "criterion": "The output artifact has the exact required key set and excludes the separately saved tied lm_head.",
+        "evidence": "The captured program enforces equality with expected_keys.json, reloads the safetensors file, and permits only the tied lm_head.weight model alias to be missing.",
+        "status": "PASS"
+      },
+      {
+        "criterion": "No hidden verifier, hidden tests, solution, or task-specific external hint was used to derive the candidate.",
+        "evidence": "Only runtime-visible framework/reference artifacts and supplied reference oracle were used; prior submission attempts were blocked before verifier invocation.",
+        "status": "PASS"
+      }
+    ],
+    "known_relevant_failures": [],
+    "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+    "session_id": "mp-checkpoint-consolidation-final-20261001-v1",
+    "submission_authorized": true,
+    "verification_commands": [
+      {
+        "command": "python3 /app/consolidate.py",
+        "evidence": "Development observation 035 on the identical frozen task runtime; final replay command 000 will rerun this before submission.",
+        "exit_code": 0
+      }
+    ]
+  },
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-final-20261001-v1",
+  "stderr": "",
+  "stdout": "SUBMISSION_ACCEPTED_FOR_INDEPENDENT_VERIFICATION\n",
+  "step": 1
+}
