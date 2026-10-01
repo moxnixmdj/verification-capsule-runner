@@ -1,0 +1,51 @@
+name: C3 SkillRouter Spent Terminal Screen
+
+on:
+  push:
+    branches:
+      - "c3-skillrouter-spent-screen-20261001-v1"
+    paths:
+      - ".github/workflows/c3-skillrouter-spent-screen.yml"
+      - "cognitive_c3_skillrouter_spent_screen/**"
+      - "cognitive_c3_terminal_delta/episodes.json"
+      - "cognitive_c3_filtered_probe/cognitive_tool_router.py"
+
+permissions:
+  contents: read
+
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record spent-screen provenance
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          sha256sum             cognitive_c3_terminal_delta/episodes.json             cognitive_c3_skillrouter_spent_screen/evaluate.py             cognitive_c3_filtered_probe/cognitive_tool_router.py
+
+      - name: Install CPU runtime
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install "transformers>=4.51.0" huggingface_hub sentencepiece safetensors
+
+      - name: Run SkillRouter spent terminal screen
+        run: |
+          set -euo pipefail
+          python cognitive_c3_skillrouter_spent_screen/evaluate.py
+          cat cognitive_c3_skillrouter_spent_screen/result.json
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c3-skillrouter-spent-terminal-screen
+          path: |
+            cognitive_c3_terminal_delta/episodes.json
+            cognitive_c3_skillrouter_spent_screen/evaluate.py
+            cognitive_c3_skillrouter_spent_screen/result.json
+          if-no-files-found: warn
