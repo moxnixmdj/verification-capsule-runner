@@ -1,6 +1,6 @@
 {
   "schema": "PROJECT_BRAIN_C3_SKILLROUTER_FRESH_TERMINAL_DELTA_001_CASES_V1",
-  "status": "FROZEN_BEFORE_MODEL_EXECUTION__ONE_SHOT_FRESH_EVIDENCE",
+  "status": "FROZEN_BEFORE_MODEL_EXECUTION__ONE_SHOT_FRESH_EVIDENCE__ORACLES_FINAL",
   "created_utc": "2026-10-01",
   "design_rule": "NEW_QUERIES_AND_PAYLOADS__SAME_STABLE_EXECUTABLE_TOOL_CONTRACT__NO_POST_RESULT_CASE_EDITING",
   "episodes": [
@@ -476,7 +476,7 @@
         "text": "cognitive-basis-fresh-001"
       },
       "expected_route": "sha256_text",
-      "expected_output": "__COMPUTE__",
+      "expected_output": "87abd98987be32ac6c872cdd21c6f5299060e64d1cbd592e7e767a66cba7a0f1",
       "routes": [
         {
           "route_id": "reverse_text",
@@ -628,5 +628,6 @@
         }
       ]
     }
-  ]
+  ],
+  "freeze_rule": "NO_CASE_OR_EXPECTED_OUTPUT_EDITS_AFTER_THIS_COMMIT"
 }
