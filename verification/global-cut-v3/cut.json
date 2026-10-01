@@ -162,7 +162,7 @@
   ],
   "expected_exact_minimum": {
     "observation_count": 15,
-    "total_cost": 15,
+    "total_cost": 16,
     "zero_new_information_members": [
       "Q_SEMANTIC_ACCEPTANCE_SPENT_PORTFOLIO",
       "Q_STRUCTURED_GEOMETRY_SPENT_PORTFOLIO"
