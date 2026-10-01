@@ -1,0 +1,728 @@
+{
+  "schema": "PROJECT_BRAIN_RANK23_STAGE_A_EXACT_SNAPSHOT_V1",
+  "brain_source_commit": "3ff7074c11f54cc378b5e36925646fb87ad5c7cf",
+  "brain_files": {
+    "canonical/capabilities/opus55/LAYOUT_CONFIG_RECREATION2_RANK23_CONTAMINATION_LEDGER_V1.json": {
+      "blob_sha": "3af1afd37e58af5641ac26a149e5f0f84e40c817",
+      "content": {
+        "schema": "PROJECT_BRAIN_QUALIFICATION_CONTAMINATION_LEDGER_V2",
+        "date": "2026-10-02",
+        "task": "layout-config-recreation2",
+        "rank": 23,
+        "task_identity_sha256": "78fe5d2840c1f1fb25a59693fc0bfe2676d10f07e1c66c0bcd03c90a8fc71aad",
+        "benchmark_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+        "sample_manifest_blob_sha": "4f0113c2fd670d7d4cb9b267593225f8b66f4ab6",
+        "search_base_commit": "771a3a767d0a1d1f75e4eec4e931f0c7223a26f7",
+        "state": "STAGE_A_PASS__STAGE_B_INSTRUCTION_EXPOSURE_AUTHORIZED__INSTRUCTION_UNREAD",
+        "instruction_read": false,
+        "hidden_verifier_read": false,
+        "task_specific_hints_read": false,
+        "task_specific_web_or_repo_search": false,
+        "task_command_executed": false,
+        "allowed_pre_exposure_information": [
+          "TASK_NAME_FROM_FROZEN_PRECOMMITTED_SAMPLE",
+          "RANK",
+          "PRECOMMITTED_TASK_IDENTITY_HASH",
+          "BENCHMARK_AND_SAMPLE_METADATA"
+        ],
+        "prior_exposure_search": {
+          "search_complete": true,
+          "brain_code_hits": 0,
+          "runner_code_hits": 0,
+          "brain_branch_hits": 0,
+          "runner_branch_hits": 0,
+          "brain_commit_hits": 0,
+          "runner_commit_hits": 0,
+          "brain_pr_hits": 1,
+          "runner_pr_hits": 0,
+          "disqualifying_hits": {
+            "brain_code_hits": 0,
+            "runner_code_hits": 0,
+            "brain_branch_hits": 0,
+            "runner_branch_hits": 0,
+            "brain_commit_hits": 0,
+            "runner_commit_hits": 0,
+            "brain_pr_hits": 0,
+            "runner_pr_hits": 0
+          },
+          "non_disqualifying_hits": [
+            {
+              "counter_field": "brain_pr_hits",
+              "evidence": "moxnixmdj/brain PR #684",
+              "classification": "TASK_NAME_ONLY_FROM_FROZEN_FRONTIER_ADVANCE__NO_INSTRUCTION_SOLUTION_TEST_VERIFIER_HINT_OR_RUNTIME_ARTIFACT_CONTENT"
+            }
+          ],
+          "searched_surfaces": [
+            "brain_code",
+            "runner_code",
+            "brain_branches",
+            "runner_branches",
+            "brain_commits",
+            "runner_commits",
+            "brain_prs",
+            "runner_prs"
+          ]
+        },
+        "disqualifying_exposure_events": [],
+        "clean_for_stage_b_exposure": true,
+        "rule": "ANY_TASK_SPECIFIC_INSTRUCTION_SOLUTION_VERIFIER_HINT_RUNTIME_ARTIFACT_OR_REPAIR_CONTENT_ACCESS_MUST_BE_APPENDED_IMMEDIATELY_AND_CHANGES_STATE_FROM_UNEXPOSED",
+        "task_execution_authorized": false,
+        "stage_b_active": false,
+        "source_boundary_status": "PREEXPOSURE_STAGE_A_PASS__STAGE_B_EXACT_FETCH_ONLY__NO_DISCOVERY_SEARCH",
+        "capability_credit_delta": 0,
+        "incremental_spend_usd": 0,
+        "stage_a_candidate": false,
+        "stage_a_active": false,
+        "prequalification_immunity": "canonical/governance/RANK22_BUILDER_FAILURE_IMMUNITY_VERIFICATION_20261002_V1.json",
+        "stage_a_pass": true,
+        "stage_a_admission": "canonical/capabilities/opus55/LAYOUT_CONFIG_RECREATION2_RANK23_STAGE_A_ADMISSION_V1.json",
+        "stage_b_exposure_authorized": true
+      }
+    },
+    "canonical/capabilities/opus55/TB4_V5_TARGET_VERSION_LOCK_V1.json": {
+      "blob_sha": "419c0a9ad171e2451b9e6e4910a6aea9f4a1dcd5",
+      "content": {
+        "schema": "PROJECT_BRAIN_TB4_V5_TARGET_VERSION_LOCK_V1",
+        "date": "2026-10-01",
+        "status": "FROZEN_BEFORE_RANK15_INSTRUCTION_EXPOSURE",
+        "capability_family": "ADVANCED_AGENTIC_CODING",
+        "target_model": "Claude Opus 5.5",
+        "target_envelope": "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json",
+        "benchmark": "Terminal-Bench 4.0",
+        "benchmark_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+        "stage1_target_success_fraction": 0.664,
+        "sample_manifest": "canonical/capabilities/opus55/TB4_V5_STAGE1_PRECOMMITTED_SAMPLE_V1.json",
+        "statistical_plan": "canonical/capabilities/opus55/TB4_V5_STAGE1_STATISTICAL_PROMOTION_PLAN_V1.json",
+        "drift_rule": "ANY_CHANGE_TO_TARGET_MODEL_IDENTITY_BENCHMARK_REF_HARNESS_OR_ACCEPTANCE_BAR_INVALIDATES_STAGE_A_AUTHORIZATION_AND_REQUIRES_RELOCK_BEFORE_FRESH_EVIDENCE",
+        "frozen_fields": [
+          "target_model",
+          "benchmark",
+          "benchmark_ref",
+          "stage1_target_success_fraction",
+          "sample_manifest",
+          "statistical_plan"
+        ],
+        "incremental_spend_usd": 0
+      }
+    },
+    "canonical/capabilities/opus55/GENERIC_EXECUTION_SURFACE_CERTIFICATE_20261001_V1.json": {
+      "blob_sha": "9f53973ee3ce12e9280ef95fab8b9eb07c4d4b3b",
+      "content": {
+        "schema": "PROJECT_BRAIN_GENERIC_EXECUTION_SURFACE_CERTIFICATE_V1",
+        "date": "2026-10-01",
+        "status": "STAGE_A_GENERIC_SURFACE_PASS__TASK_SPECIFIC_SURFACE_UNCLAIMED",
+        "runner_repository": "moxnixmdj/verification-capsule-runner",
+        "verified": [
+          {
+            "predicate": "EXECUTION_GUARD_COMPILES_AND_REJECTS_DIRECT_BYPASS",
+            "workflow_run_id": 36909004325,
+            "job_id": 110526679009,
+            "conclusion": "success"
+          },
+          {
+            "predicate": "ARTIFACT_STAGING_AND_VERIFIER_HANDOFF_PATH_REGRESSION",
+            "workflow_run_id": 36828009487,
+            "job_id": 110257951033,
+            "conclusion": "success"
+          },
+          {
+            "predicate": "PYTHON_3_12_CHECKOUT_AND_INDEPENDENT_BRAIN_BLOB_EXECUTION",
+            "workflow_run_id": 36909004095,
+            "job_id": 110526679108,
+            "conclusion": "success"
+          }
+        ],
+        "stage_a_claims": [
+          "PUBLIC_GITHUB_ACTIONS_RUNNER_REACHABLE",
+          "REPOSITORY_CHECKOUT_FUNCTIONAL",
+          "PYTHON_VERIFICATION_SURFACE_FUNCTIONAL",
+          "GLOBAL_EXECUTION_GUARD_REGRESSION_PASS",
+          "KNOWN_ARTIFACT_HANDOFF_PATH_REGRESSION_PASS"
+        ],
+        "explicitly_not_claimed": [
+          "RANK15_TASK_SPECIFIC_DEPENDENCIES",
+          "RANK15_REQUIRED_HARDWARE",
+          "RANK15_TOOL_AUTHORITY",
+          "RANK15_RUNTIME_RESOURCE_SUFFICIENCY"
+        ],
+        "next": "TASK_SPECIFIC_SURFACE_MUST_BE_CERTIFIED_ONLY_IN_STAGE_B_AFTER_OFFICIAL_INSTRUCTION_EXPOSURE_AND_BEFORE_TASK_EXECUTION",
+        "incremental_spend_usd": 0
+      }
+    },
+    "canonical/capabilities/opus55/INDEPENDENT_ACCEPTANCE_MODEL_EVIDENCE_V1.json": {
+      "blob_sha": "800ea1db458ff585431c2efb5dd7b503647b3d28",
+      "content": {
+        "schema": "PROJECT_BRAIN_INDEPENDENT_ACCEPTANCE_MODEL_EVIDENCE_V1",
+        "date": "2026-10-01",
+        "candidate_commit": "267f2e37f0d6951cfd6e56328ddc3178d162abff",
+        "candidate_blob": "c420b8be1f79a0b06afa98f461f443f53d7fc77a",
+        "runner": {
+          "repo": "moxnixmdj/verification-capsule-runner",
+          "pr": 310,
+          "merged_commit": "2203015424895dafac67161c9b4e080f2877ec73",
+          "workflow_run_id": 36904645786,
+          "job_id": 110512014067,
+          "source_blob": "c420b8be1f79a0b06afa98f461f443f53d7fc77a",
+          "source_exact_match": true,
+          "tests_run": 6,
+          "tests_passed": 6
+        },
+        "heldout_selection": {
+          "valid_case": "bun-sourcemap-leak",
+          "correction_receipt": "canonical/capabilities/opus55/INDEPENDENT_ACCEPTANCE_MODEL_HELDOUT_SELECTION_CORRECTION_V1.json",
+          "candidate_code_modified_after_selection": false,
+          "pre_verifier_source": "verification-capsule-runner PR #240 self-test plan",
+          "hidden_failure_values_used_to_construct_validation_input": false,
+          "result": "BLOCKED_TERMINAL_SUBMISSION_AS_REQUIRED__ALL_SEMANTIC_SELF_TESTS_BUILDER_DERIVED__POLICY_OR_SEMANTIC_VARIANT_UNCOVERED"
+        },
+        "invalidated_or_diagnostic_cases": {
+          "cargo_flight_dispatch": "DIAGNOSTIC_ONLY__INITIAL_SELECTION_RULE_ERROR_CORRECTED_BEFORE_BUN_DETAILS_READ",
+          "cad_model": "DESIGN_REGRESSION_ONLY",
+          "ontology_kg_querying": "DESIGN_REGRESSION_ONLY",
+          "fin_saccr_rwa": "DESIGN_REGRESSION_ONLY"
+        },
+        "owned_narrow_behavior": [
+          "DETECT_BUILDER_CORRELATED_ACCEPTANCE_CHECKS_FROM_EXPLICIT_DEPENDENCY_AND_PROVENANCE_LABELS",
+          "DETECT_UNCOVERED_FAILURE_MODE_OBLIGATIONS_IN_AN_EXPLICIT_TYPED_ACCEPTANCE_PLAN",
+          "EMIT_FAIL_CLOSED_COUNTEREXAMPLE_CLASSES_FOR_UNCOVERED_OBLIGATIONS"
+        ],
+        "not_owned": [
+          "ARBITRARY_NATURAL_LANGUAGE_SPECIFICATION_TO_TYPED_ACCEPTANCE_PLAN",
+          "DOMAIN_GOLD_VALUE_SYNTHESIS",
+          "PROOF_THAT_A_PASSING_ACCEPTANCE_PLAN_IS_SUFFICIENT_FOR_TASK_CORRECTNESS",
+          "WHOLE_SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001"
+        ],
+        "integration_rule": "MAY_BE_USED_AS_A_NECESSARY_FAIL_CLOSED_TERMINAL_GATE_ONLY__MUST_NOT_BE_TREATED_AS_SUFFICIENT_TERMINAL_AUTHORITY",
+        "capability_credit_delta": 0,
+        "family_credit_delta": 0,
+        "incremental_spend_usd": 0
+      }
+    },
+    "canonical/capabilities/opus55/REQUIREMENT_GRAPH_KERNEL_001.json": {
+      "blob_sha": "254604bfaec6f415d748e31f0de627aa2be59be9",
+      "content": {
+        "schema": "PROJECT_BRAIN_REQUIREMENT_GRAPH_KERNEL_VERIFICATION_V1",
+        "date": "2026-10-01",
+        "status": "INDEPENDENT_VERIFICATION_PASS__BRAIN_OWNED_NARROW_COMPONENT__ZERO_FAMILY_CREDIT",
+        "artifact": "canonical/runtime/requirement_graph_kernel.py",
+        "brain_blob_sha": "8c0d60c7bc1360b38a3c7688a46515e5a207deff",
+        "donor": {
+          "repository": "ZhangHanDong/agent-spec",
+          "revision": "2483398da89bd392186849bb865aae969667ac0a",
+          "license": "MIT",
+          "role": "WHITE_BOX_MECHANISM_DONOR"
+        },
+        "runner": {
+          "repository": "moxnixmdj/verification-capsule-runner",
+          "pr": 316,
+          "head_sha": "845ef1d62613bef44967be13b1e0d8b3c87fd00e",
+          "workflow_run_id": 36908467255,
+          "job_id": 110524871551,
+          "runner_blob_sha": "8c0d60c7bc1360b38a3c7688a46515e5a207deff",
+          "exact_source_match": true,
+          "conclusion": "success",
+          "merge_state": "OPEN__MERGE_ATTEMPT_BLOCKED_BY_CONNECTOR_SAFETY_LAYER__NOT_REQUIRED_FOR_EVIDENCE_AUTHORITY"
+        },
+        "independently_verified_behaviors": [
+          "VALID_NORMALIZED_REQUIREMENT_GRAPH_AND_SCENARIO_DERIVED_OBLIGATIONS_PASS",
+          "OMITTED_REQUIRED_NODE_FAILS_CLOSED",
+          "UNRESOLVED_AMBIGUITY_FAILS_CLOSED",
+          "UNCOVERED_NORMATIVE_MUST_CLAUSE_FAILS_CLOSED",
+          "DANGLING_DEPENDENCY_FAILS_CLOSED",
+          "DEPENDENCY_CYCLE_FAILS_CLOSED",
+          "SEEDED_REQUIREMENT_MUTATION_SUITE_HAS_ZERO_SURVIVORS_ON_VERIFICATION_CORPUS"
+        ],
+        "owned_scope": [
+          "NORMALIZED_REQUIREMENT_NODE_PRESENCE_AND_UNIQUENESS",
+          "DEPENDENCY_AND_CHILD_GRAPH_VALIDATION",
+          "OPEN_QUESTION_FAIL_CLOSED",
+          "SCENARIO_BACKED_CRITICAL_LEAF_VALIDATION",
+          "NORMATIVE_CLAUSE_TO_SCENARIO_COVERAGE",
+          "SCENARIO_DERIVED_IMPLEMENTATION_INDEPENDENT_TEST_OBLIGATIONS",
+          "STRUCTURAL_REQUIREMENT_MUTATION_GENERATION_AND_KILL_SCORING"
+        ],
+        "not_owned": [
+          "ARBITRARY_NATURAL_LANGUAGE_TO_COMPLETE_REQUIREMENT_GRAPH",
+          "SEMANTIC_CORRECTNESS_OF_NORMALIZED_REQUIREMENT_CONTENT",
+          "DOMAIN_GOLD_VALUE_SYNTHESIS",
+          "WHOLE_STRUCTURED_METHOD_COMPLETE_CALCULATION_GRAPH_001",
+          "WHOLE_SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001"
+        ],
+        "donor_runtime_required": false,
+        "capability_credit_delta": 0,
+        "family_credit_delta": 0,
+        "incremental_spend_usd": 0
+      }
+    },
+    "canonical/capabilities/opus55/TB4_V5_STAGE1_STATISTICAL_PROMOTION_PLAN_V1.json": {
+      "blob_sha": "ae18ff148f5ee5a3816c567a724fe5a0a27baf9d",
+      "content": {
+        "schema": "PROJECT_BRAIN_TB4_V5_STAGE1_STATISTICAL_PROMOTION_PLAN_V1",
+        "date": "2026-10-01",
+        "status": "FROZEN_BEFORE_RANK15_INSTRUCTION_EXPOSURE",
+        "benchmark": "Terminal-Bench 4.0",
+        "benchmark_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+        "sample_manifest": "canonical/capabilities/opus55/TB4_V5_STAGE1_PRECOMMITTED_SAMPLE_V1.json",
+        "frozen_order_max_tasks": 56,
+        "target_success_fraction": 0.664,
+        "outcome": "ONE_SHOT_INDEPENDENT_REWARD_1_OR_0_PER_ELIGIBLE_TASK",
+        "skips": "INELIGIBLE_OR_SURFACE_INCOMPATIBLE_UNSPENT_TASKS_DO_NOT_ENTER_DENOMINATOR_AND_DO_NOT_REORDER",
+        "replay": false,
+        "cherry_picking": false,
+        "sequential_promotion": {
+          "method": "ONE_SIDED_EXACT_CLOPPER_PEARSON_LOWER_BOUND_WITH_BONFERRONI_ALPHA_SPENDING",
+          "familywise_alpha": 0.05,
+          "max_looks": 56,
+          "per_look_alpha": 0.0008928571428571429,
+          "promotion_rule": "PROMOTE_STAGE1_ONLY_IF_CURRENT_ONE_SIDED_EXACT_LOWER_BOUND_GE_0_664",
+          "no_promotion_from_point_estimate_alone": true
+        },
+        "falsification": "MATERIAL_CAUSAL_FAILURE_MAY_STOP_ROUTE_FOR_REPAIR_BUT_CANNOT CREATE_PROMOTION_CREDIT",
+        "capability_credit_delta": 0
+      }
+    },
+    "canonical/governance/DONOR_DELETION_AND_DEPENDENCY_ACCOUNTING_PROTOCOL_V1.json": {
+      "blob_sha": "2ec3dfffd6191449fddbd2868c82606de7a9105d",
+      "content": {
+        "schema": "PROJECT_BRAIN_DONOR_DELETION_AND_DEPENDENCY_ACCOUNTING_PROTOCOL_V1",
+        "date": "2026-10-01",
+        "status": "ACTIVE_GENERIC_PROTOCOL__REQUIRED_BEFORE_DONOR_DERIVED_PROMOTION",
+        "purpose": "Prove promoted Brain behavior persists after target-capability donor removal and expose every unavoidable runtime dependency.",
+        "applies_to": "ANY_DONOR_DERIVED_OR_WHITE_BOX_HARVESTED_CAPABILITY_COMPONENT",
+        "preconditions": [
+          "PIN_EXACT_DONOR_REPOSITORY_REVISION_AND_LICENSE",
+          "PIN_EXACT_INTERNALIZED_BRAIN_BYTES_AND_PROVENANCE",
+          "ENUMERATE_RUNTIME_DEPENDENCIES_AND_CLASSIFY_EACH_AS_RAW_INPUT_TOOL_GENERAL_SUBSTRATE_OR_TARGET_CAPABILITY_DONOR",
+          "FREEZE_QUALIFICATION_EVIDENCE_BEFORE_DONOR_DELETION_RUN"
+        ],
+        "deletion_procedure": [
+          "DISABLE_NETWORK_OR_API_ACCESS_TO_TARGET_CAPABILITY_DONOR",
+          "REMOVE_UNVENDORED_DONOR_CODE_WEIGHTS_PROMPTS_AND_RUNTIME_SERVICES_FROM_EXECUTION_PATH",
+          "RECONSTRUCT_BRAIN_ROUTE_ONLY_FROM_DURABLE_BRAIN_OWNED_MANIFEST_AND_ALLOWED_GENERAL_SUBSTRATES",
+          "RUN_IDENTICAL_FROZEN_BEHAVIORAL_QUALIFICATION",
+          "COMPARE_OUTPUTS_AND_ACCEPTANCE_PREDICATES_TO_PREDELETION_ROUTE",
+          "FAIL_IF_ANY_UNDECLARED_DONOR_DEPENDENCY_IS_OBSERVED"
+        ],
+        "required_receipt_fields": [
+          "brain_candidate_hash",
+          "donor_identity_and_hash",
+          "dependency_manifest",
+          "network_denial_or_donor_unavailability_evidence",
+          "predeletion_result",
+          "postdeletion_result",
+          "behavior_preserved",
+          "undeclared_dependency_count"
+        ],
+        "pass_rule": "BEHAVIOR_PRESERVED_AND_UNDECLARED_DEPENDENCY_COUNT_ZERO",
+        "fail_closed": true,
+        "current_known_examples": {
+          "requirement_graph_kernel": {
+            "evidence": "canonical/capabilities/opus55/REQUIREMENT_GRAPH_KERNEL_001.json",
+            "donor_runtime_required": false
+          },
+          "pc_stable_skeleton": {
+            "evidence": "canonical/capabilities/opus55/PC_STABLE_SKELETON_001.json",
+            "donor_runtime_required": false
+          }
+        },
+        "incremental_spend_usd": 0
+      }
+    },
+    "canonical/governance/PREQUALIFICATION_FAILURE_IMMUNITY_V1.json": {
+      "blob_sha": "da8c558e6b928eb4db9815d42dbc533097af0857",
+      "content": {
+        "schema": "PROJECT_BRAIN_PREQUALIFICATION_FAILURE_IMMUNITY_V1",
+        "date": "2026-10-02",
+        "status": "MANDATORY_FAIL_CLOSED_BEFORE_UNTOUCHED_QUALIFICATION_SPEND",
+        "objective": "Prevent known false success and wasted clean evidence, and prevent generating fresh reality information that admissible existing evidence, deduction, or a smaller discriminating observation could replace.",
+        "applies_to": "ANY_ACTION_THAT_CAN_EXPOSE_OR_SPEND_UNTOUCHED_QUALIFICATION_EVIDENCE_OR_PROMOTE_OPUS_LEVEL_OWNERSHIP",
+        "failure_classes": [
+          {
+            "id": "TARGET_NOT_CLOSED",
+            "defense": "Frozen 19-family target envelope plus complete behavioral leaves and explicit acceptance scope",
+            "required_evidence": "TERMINAL_CLOSURE_MANIFEST_CURRENT"
+          },
+          {
+            "id": "MISSING_OR_IMPLICIT_REQUIREMENT",
+            "defense": "Independent requirement extraction plus requirement-to-consumer traceability; unresolved ambiguity fails closed",
+            "required_evidence": "COMPLETE_REQUIREMENT_GRAPH"
+          },
+          {
+            "id": "WRONG_SEMANTIC_EXTRACTION",
+            "defense": "At least two structurally independent extraction/interpretation routes or one deterministic parser plus adversarial challenger; disagreements surfaced",
+            "required_evidence": "SPECIFICATION_DISAGREEMENT_RECEIPT"
+          },
+          {
+            "id": "BUILDER_VERIFIER_CORRELATION",
+            "defense": "Independent acceptance model rejects shared non-raw dependencies and builder-derived checks",
+            "required_evidence": "INDEPENDENT_ACCEPTANCE_MODEL_PASS"
+          },
+          {
+            "id": "INCOMPLETE_ORACLE",
+            "defense": "Requirement mutation and verifier mutation suites must kill seeded critical faults",
+            "required_evidence": "VERIFIER_MUTATION_SCORECARD"
+          },
+          {
+            "id": "BENCHMARK_CONTAMINATION",
+            "defense": "Pre-exposure identity plus complete zero-hit search across Brain+runner code, branches, commits, and PR metadata; immutable exposure ledger; automatic ineligibility after any task-specific instruction/solution/verifier/hint leakage.",
+            "required_evidence": "QUALIFICATION_CONTAMINATION_LEDGER_WITH_COMPLETE_8_SURFACE_SEARCH"
+          },
+          {
+            "id": "BENCHMARK_OVERFIT",
+            "defense": "Development/validation/final qualification partitions disjoint; no post-reveal candidate change",
+            "required_evidence": "FROZEN_PARTITION_AND_CANDIDATE_HASH"
+          },
+          {
+            "id": "STATISTICAL_FALSE_PROMOTION",
+            "defense": "Predeclared estimator, confidence method, sample size/stop rule and familywise error control before results",
+            "required_evidence": "STATISTICAL_PROMOTION_PLAN"
+          },
+          {
+            "id": "VERIFIER_IMPLEMENTATION_BUG",
+            "defense": "Verifier tested against known-pass, known-fail, metamorphic, mutation and differential cases",
+            "required_evidence": "VERIFIER_VALIDATION_BUNDLE"
+          },
+          {
+            "id": "LEARNED_RESIDUAL_DISTRIBUTION_SHIFT",
+            "defense": "Leave-domain-out/adversarial transfer plus explicit abstention outside verified envelope",
+            "required_evidence": "RESIDUAL_VALIDITY_ENVELOPE"
+          },
+          {
+            "id": "HIDDEN_DONOR_DEPENDENCE",
+            "defense": "Physical donor deletion/network denial plus dependency/SBOM accounting and clean-room rerun",
+            "required_evidence": "DONOR_DELETION_CLEANROOM_RECEIPT"
+          },
+          {
+            "id": "LICENSE_OR_PROVENANCE_FAILURE",
+            "defense": "Pinned revision, source hash, license and derivative-use compatibility recorded before internalization",
+            "required_evidence": "PROVENANCE_AND_LICENSE_RECEIPT"
+          },
+          {
+            "id": "ZERO_COST_OR_COMPUTE_INFEASIBILITY",
+            "defense": "Current feasibility certificate proves a $0 route, resource envelope and hard stop before qualification",
+            "required_evidence": "FEASIBILITY_CERTIFICATE"
+          },
+          {
+            "id": "RUNTIME_TRANSPORT_RATE_LIMIT_FAILURE",
+            "defense": "Live executor heartbeat, artifact roundtrip, path contract, permissions, rate-limit budget and verifier reachability preflight",
+            "required_evidence": "EXECUTION_SURFACE_CERTIFICATE"
+          },
+          {
+            "id": "STALE_STATE_OR_CONCURRENT_DUPLICATION",
+            "defense": "Exact base binding, blocker lease, liveness receipt, duplicate-open-intent rejection, exact active-carrier identity binding in execution_authority_reducer, intrinsic rejection of a second CARRIER_OPEN, and live canonical authority revalidation after the last material state transition immediately before any irreversible task command.",
+            "required_evidence": "CURRENT_EXECUTION_AUTHORITY_RECEIPT_WITH_EXACT_CARRIER_BINDING_PLUS_POST_TRANSITION_REVALIDATION"
+          },
+          {
+            "id": "PERFORMANCE_OR_RESOURCE_REGRESSION",
+            "defense": "Latency/memory/storage/throughput bounds included in behavioral contract and tested where material",
+            "required_evidence": "RESOURCE_ACCEPTANCE_RECEIPT"
+          },
+          {
+            "id": "TOOL_OR_PERMISSION_FAILURE",
+            "defense": "Exact tool authority/availability/permission probes bound to execution context",
+            "required_evidence": "TOOL_AUTHORITY_PREFLIGHT"
+          },
+          {
+            "id": "MECHANISM_COMPOSITION_CONFLICT",
+            "defense": "Pairwise/t-way interaction suite plus adversarial mixed-capability scenarios before terminal closure",
+            "required_evidence": "COMPOSITION_QUALIFICATION_BUNDLE"
+          },
+          {
+            "id": "MOVING_TARGET_OR_BENCHMARK_VERSION",
+            "defense": "Pinned benchmark/model reference, harness version and acceptance bar; drift forces re-adjudication",
+            "required_evidence": "TARGET_VERSION_LOCK"
+          },
+          {
+            "id": "PROXY_METRIC_GAMING",
+            "defense": "Direct terminal-effect evidence required; proxy-only improvements receive zero promotion credit",
+            "required_evidence": "TERMINAL_EFFECT_RECEIPT"
+          },
+          {
+            "id": "NO_REALIZABLE_ROUTE_UNDER_HARD_CONSTRAINTS",
+            "defense": "Before fresh qualification, require at least one current plausible route satisfying ownership, $0, knowledge boundary, license and execution constraints; otherwise decompose or return exact impossibility boundary",
+            "required_evidence": "FEASIBILITY_CERTIFICATE"
+          },
+          {
+            "id": "ONE_SHOT_EXECUTION_BUDGET_ESCAPE",
+            "defense": "Runner binds explicit canonical execution_count_allowed and terminal_verifier_count_allowed, consumes each unit before invocation, and fails closed after exhaustion.",
+            "required_evidence": "RUNNER_TOTAL_STAGE_C_BUDGET_GUARD_VERIFICATION"
+          },
+          {
+            "id": "EXECUTION_SURFACE_ENVIRONMENT_PARITY_FAILURE",
+            "defense": "Before untouched Stage-C spend, prove package/install/runtime behavior on the exact task image or a materially equivalent container. Equivalence must cover OS/base image, runtime provenance, package-management policy including PEP 668 or analogous restrictions, shell, permissions, artifact paths, required native libraries, and network assumptions. A host-only or setup-python probe is insufficient when the task container differs.",
+            "required_evidence": "TASK_SPECIFIC_EXECUTION_SURFACE_PARITY_CERTIFICATE"
+          },
+          {
+            "id": "EXECUTION_SURFACE_PACKAGE_POLICY_MISMATCH",
+            "defense": "Stage-B dependency feasibility must bind to the exact built task-container READY execution_surface_profile or a separately proven-equivalent container. PEP-668/external-management state, Python identity, venv usability and safe install policy may not be inferred from GitHub setup-python or host Python. If task-specific non-system packages are required, Stage-B must verify the selected venv/portable install route on the equivalent package-management surface before Stage-C authorization.",
+            "required_evidence": "READY_EXECUTION_SURFACE_PROFILE_PLUS_TASK_SPECIFIC_DEPENDENCY_FEASIBILITY_RECEIPT"
+          },
+          {
+            "id": "POST_EXPOSURE_TASK_SPECIFIC_EXTERNAL_SEARCH",
+            "defense": "Before Stage-C promotion, require a machine-bound source-boundary receipt hashed to the canonical contamination ledger. Any task-specific external search/hints, solution/tests, hidden verifier access, or pre-Stage-C task execution makes promotion fail closed.",
+            "required_evidence": "SOURCE_BOUNDARY_PROMOTION_GATE_VERIFICATION_PLUS_TASK_SPECIFIC_SOURCE_BOUNDARY_PREFLIGHT"
+          },
+          {
+            "id": "POST_EXPOSURE_DISCOVERY_SEARCH_COLLISION",
+            "defense": "After Stage-B task identity/instruction exposure, perform zero discovery search of any kind, including apparently generic web/repository queries. Only exact predeclared allowlisted task fetches and pre-exposure-frozen generic-reference URLs may be retrieved. Any unbounded-result query contaminates the task because ranking can surface task-specific or verifier-derived content.",
+            "required_evidence": "POST_EXPOSURE_ZERO_DISCOVERY_SEARCH_RECEIPT_PLUS_SOURCE_BOUNDARY_PREFLIGHT"
+          },
+          {
+            "id": "LOSSY_SOURCE_TO_REQUIREMENT_COMPILATION",
+            "defense": "Atomize every authoritative textual source losslessly; every atom requires an explicit disposition. Normative/high-risk atoms cannot be silently informational. Operative atoms must map bidirectionally to requirements. Ambiguity creates a blocking specification hole rather than a guessed interpretation.",
+            "required_evidence": "LOSSLESS_SOURCE_CONTRACT_COMPILATION_RECEIPT__ZERO_UNACCOUNTED_ATOMS__ZERO_OPEN_SPECIFICATION_HOLES"
+          },
+          {
+            "id": "REDUNDANT_REALITY_QUERY",
+            "defense": "Before any new fresh evidence spend, saturate admissible existing Brain and external evidence, apply deterministic/deductive closure, compile terminal-relevant counterfactual distinctions, delete dominated observations, and require membership in the exact minimum reality cut. Existing evidence or proof that closes the same obligation deletes the experiment.",
+            "required_evidence": "EVIDENCE_SATURATION_AND_MINIMUM_REALITY_CUT_RECEIPT"
+          },
+          {
+            "id": "CARRIER_IDENTITY_AUTHORITY_COLLISION",
+            "defense": "Authorization state must cryptographically bind the exact active carrier evidence/identity. A second carrier may not open while one is active, and a static carrier-agnostic authority hash may never authorize execution.",
+            "required_evidence": "EXECUTION_AUTHORITY_CARRIER_BINDING_VERIFICATION_PLUS_EXACT_ACTIVE_CARRIER_RECEIPT"
+          },
+          {
+            "id": "RUNTIME_API_CONTRACT_MISMATCH",
+            "defense": "Before Stage-C, every external runtime API assumption used by the planned builder route must have an exact-surface PASS receipt; unknown assumptions fail closed.",
+            "required_evidence": "RUNTIME_API_CONTRACT_PREFLIGHT_PLUS_RANK22_BUILDER_FAILURE_IMMUNITY_VERIFICATION"
+          },
+          {
+            "id": "PROCESS_EXIT_ZERO_WITH_SEMANTIC_SCRIPT_FAILURE",
+            "defense": "Fresh builder execution requires a declared success sentinel before spend. Success requires exit zero, sentinel observed, and no fatal stderr; semantic failure blocks terminal verification.",
+            "required_evidence": "BUILDER_SEMANTIC_SUCCESS_REGRESSION_PLUS_EXACT_RUNTIME_BEHAVIOR_CANARY"
+          }
+        ],
+        "fresh_qualification_admission_rule": "FOR_ALL_SUBSEQUENT_FRESH_EVIDENCE_SPEND__EVIDENCE_SATURATION_AND_DEDUCTIVE_CLOSURE_AND_MINIMUM_REALITY_CUT_ADMISSION_PRECEDE_SPEND__THEN_STAGE_A_MUST_PASS_BEFORE_INSTRUCTION_EXPOSURE__STAGE_B_MUST_PASS_BEFORE_ANY_TASK_EXECUTION__STAGE_C_IS_ONE_SHOT__UNKNOWN_FAILS_CLOSED__RANK22_EXCEPTION_EXPIRED_AFTER_SPENT_BUILDER_FAILURE",
+        "terminal_promotion_rule": "NO_MODEL_OR_HUMAN_JUDGMENT_CAN_OVERRIDE_A_FAILED_OR_UNKNOWN_MACHINE_CHECKABLE_PREDICATE",
+        "staged_admission": {
+          "stage_a_pre_exposure": {
+            "purpose": "PROVE_GENERIC_ROUTE_AND_SURFACE_READY_WITHOUT_READING_TASK_INSTRUCTION",
+            "required": [
+              "TARGET_VERSION_LOCK",
+              "QUALIFICATION_CONTAMINATION_LEDGER_CREATED_WITH_PRE_EXPOSURE_IDENTITY",
+              "COMPLETE_8_SURFACE_PRIOR_EXPOSURE_SEARCH_INCLUDING_BRAIN_PRS",
+              "GENERAL_EXECUTION_SURFACE_CERTIFICATE",
+              "INDEPENDENT_ACCEPTANCE_MECHANISM_VERIFIED",
+              "REQUIREMENT_GRAPH_AND_MUTATION_MECHANISM_VERIFIED",
+              "STATISTICAL_PROMOTION_PLAN_FROZEN_IF_BENCHMARK_SCORE_WILL_BE_USED",
+              "GENERIC_DONOR_DELETION_AND_DEPENDENCY_ACCOUNTING_PROTOCOL_AVAILABLE",
+              "TOTAL_STAGE_C_EXECUTION_AND_TERMINAL_BUDGET_GUARD_VERIFIED",
+              "NO_TASK_SPECIFIC_SEARCH_OR_HINT_ACCESS"
+            ],
+            "failure_disposition": "TASK_REMAINS_UNEXPOSED"
+          },
+          "stage_b_post_exposure_pre_execution": {
+            "purpose": "AFTER_OFFICIAL_INSTRUCTION_IS_READ_BUT_BEFORE_TASK_COMMAND_OR_CANDIDATE_EXECUTION__COMPILE_AND_FALSIFY_TASK_SPECIFIC_PLAN",
+            "required": [
+              "TB4_STAGE_B_SOURCE_ALLOWLIST_ENFORCED",
+              "EXHAUSTIVE_SOURCE_SENTENCE_ACCOUNTING",
+              "CROSS_EXTRACTOR_SEMANTIC_CONSENSUS_OR_EXPLICIT_UNKNOWN",
+              "COMPLETE_NORMALIZED_REQUIREMENT_GRAPH",
+              "TASK_SPECIFIC_TEST_OBLIGATIONS",
+              "INDEPENDENT_ACCEPTANCE_PLAN",
+              "REQUIREMENT_MUTATION_COVERAGE",
+              "VERIFIER_MUTATION_OR_SEEDED_FAILURE_MODE_COVERAGE",
+              "TASK_SPECIFIC_FEASIBILITY_CERTIFICATE",
+              "TASK_SPECIFIC_EXECUTION_SURFACE_PARITY_CERTIFICATE",
+              "TASK_SPECIFIC_TOOL_AUTHORITY_AND_RESOURCE_PREFLIGHT",
+              "TASK_SPECIFIC_SOURCE_BOUNDARY_PREFLIGHT",
+              "POST_EXPOSURE_ZERO_DISCOVERY_SEARCH_RECEIPT",
+              "LOSSLESS_SOURCE_CONTRACT_COMPILATION_RECEIPT",
+              "ZERO_UNACCOUNTED_AUTHORITATIVE_SOURCE_ATOMS",
+              "ZERO_OPEN_SPECIFICATION_HOLES",
+              "BIDIRECTIONAL_SOURCE_REQUIREMENT_TRACEABILITY",
+              "TASK_SPECIFIC_RUNTIME_API_CONTRACT_PREFLIGHT",
+              "BUILDER_SEMANTIC_SUCCESS_CONTRACT"
+            ],
+            "failure_disposition": "INSTRUCTION_EXPOSED__NO_TASK_EXECUTION__UNSPENT_CAPABILITY_VERDICT__ZERO_CREDIT__DO_NOT_REPLAY_FOR_CLEAN_EVIDENCE"
+          },
+          "stage_c_execution": {
+            "purpose": "EXECUTE_EXACTLY_ONCE_ONLY_AFTER_STAGE_A_AND_STAGE_B_PASS",
+            "required": [
+              "IMMUTABLE_CANDIDATE_AND_PLAN_HASH",
+              "LIVE_EXECUTOR_RECEIPT",
+              "ARTIFACT_PATH_ROUNDTRIP",
+              "ONE_SHOT_INDEPENDENT_TERMINAL_VERIFIER",
+              "NO_POST_RESULT_RETUNING_FOR_SAME_TASK"
+            ],
+            "failure_disposition": "CLASSIFY_TRANSPORT_VS_CAPABILITY_VS_POLICY_FAILURE_FROM_INDEPENDENT_RECEIPTS__NO_REPLAY_FOR_CREDIT"
+          }
+        },
+        "tb4_stage_b_source_allowlist": "canonical/governance/TB4_STAGE_B_SOURCE_ALLOWLIST_V1.json",
+        "observed_failure_repairs": [
+          {
+            "id": "RANK19_PEP668_PARITY_REPAIR_20261001",
+            "source": "canonical/capabilities/opus55/SATB_AUDIO_TRANSCRIPTION_RANK19_STAGE_C_EXECUTION_RECONCILIATION_V1.json",
+            "observed": "Stage-B feasibility passed on GitHub Actions setup-python CPython 3.12, while the actual Ubuntu 24.04 task image used Debian-managed Python and rejected system pip under PEP 668. The one allowed builder burst was spent before task audio analysis.",
+            "repair": "Require exact-or-materially-equivalent task-container execution-surface parity before Stage-C authorization.",
+            "fresh_evidence_cost_avoided": "Generic environment/package failures must be discovered before untouched qualification execution."
+          },
+          {
+            "id": "RANK21_GENERIC_QUERY_COLLISION_REPAIR_20261001",
+            "source": "canonical/capabilities/opus55/FOODSTUFF_BETA_ACTIVITY_RANK21_POST_EXPOSURE_CONTAMINATION_V1.json",
+            "observed": "A general-method discovery query issued after Stage-B exposure returned task-specific verifier-derived content even though the query text was not task-specific.",
+            "repair": "Forbid all post-exposure discovery search; permit only exact allowlisted/pre-frozen fetches.",
+            "fresh_evidence_cost_avoided": "Prevents search-engine ranking from contaminating untouched tasks after identity exposure."
+          }
+        ],
+        "verified_generic_controls": {
+          "execution_surface_package_policy_probe": {
+            "status": "INDEPENDENT_PASS__MERGED",
+            "verification": "canonical/governance/EXECUTION_SURFACE_PACKAGE_POLICY_PROBE_VERIFICATION_20261001_V1.json",
+            "runner_merge_commit": "aea49829cceca3cc87828001bf2a76a2d5e32332",
+            "rule": "READY_PROFILE_IS_AUTHORITATIVE_FOR_ACTUAL_TASK_CONTAINER_PACKAGE_POLICY__TASK_SPECIFIC_INSTALL_FEASIBILITY_MUST_BIND_TO_IT"
+          },
+          "source_boundary_promotion_gate": {
+            "status": "INDEPENDENT_PASS__MERGED",
+            "verification": "canonical/governance/SOURCE_BOUNDARY_PROMOTION_GATE_VERIFICATION_20261001_V1.json",
+            "runner_merge_commit": "a902df6b5e8393cf8aff563f5394dc40a0b314d0",
+            "rule": "STAGE_C_LEASE_UPGRADE_REQUIRES_BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1_PASS"
+          },
+          "source_contract_completeness_compiler": {
+            "status": "INDEPENDENT_PASS__EXACT_BLOB_VERIFIED",
+            "verification": "canonical/governance/CORE_HARDENING_VERIFICATION_20261001_V1.json",
+            "kernel": "canonical/runtime/source_contract_compiler.py",
+            "git_blob_sha": "8f68e0e8aba6585626b414e3cb49c20d0470ea0c",
+            "rule": "STAGE_B_CANNOT_PASS_WITH_UNACCOUNTED_SOURCE_ATOMS__OPEN_SPECIFICATION_HOLES__OR_NON_BIDIRECTIONAL_TRACEABILITY"
+          },
+          "derived_stage_c_state_gate": {
+            "status": "VERIFIED_AND_MERGED",
+            "verification": "canonical/governance/DERIVED_STAGE_C_STATE_GATE_20261001_V1.json",
+            "runner_merge_commit": "f7c62fca832e31d26e15c755c1486b2bea3bb98e"
+          },
+          "runtime_api_and_semantic_builder_success": {
+            "status": "INDEPENDENT_PASS__MERGED",
+            "verification": "canonical/governance/RANK22_BUILDER_FAILURE_IMMUNITY_VERIFICATION_20261002_V1.json",
+            "runner_pr": 429,
+            "runner_merge_commit": "36dcfbd279790ce95c01bf96163266290cfb9929",
+            "rule": "STAGE_C_REQUIRES_EXACT_RUNTIME_API_PREFLIGHT__BUILDER_COMMANDS_REQUIRE_SEMANTIC_SUCCESS_SENTINELS__FATAL_STDERR_OVERRIDES_EXIT_ZERO"
+          }
+        },
+        "core_hardening_verification": "canonical/governance/CORE_HARDENING_VERIFICATION_20261001_V1.json",
+        "information_minimization": {
+          "law": "canonical/laws/EVIDENCE_SATURATION_AND_MINIMUM_REALITY_QUERY_LAW_V1.md",
+          "compiler": "canonical/governance/COUNTERFACTUAL_TERMINAL_COMPILER_V1.json",
+          "exact_minimum_cut_runtime": "canonical/runtime/minimum_reality_cut.py",
+          "applies_to": "NEW_FRESH_EVIDENCE_SPEND_AFTER_ACTIVATION",
+          "closure_order": [
+            "EXISTING_EVIDENCE",
+            "DEDUCTION",
+            "COUNTERFACTUAL_REDUCTION",
+            "DOMINANCE_DELETION",
+            "MINIMUM_REALITY_CUT",
+            "IRREDUCIBLE_REALITY_QUERY"
+          ],
+          "grandfathered_current_action": {
+            "task": "freecad-spring-clip",
+            "rank": 22,
+            "condition": "DERIVED_CAN_EXECUTE_TRUE_AND_CURRENT_AUTHORITY_UNCHANGED",
+            "rule": "NO_EXCEPTION_REMAINS__FUTURE_FRESH_EVIDENCE_SPEND_REQUIRES_MINIMUM_REALITY_CUT",
+            "status": "INVALIDATED_BY_SPENT_BUILDER_FAILURE",
+            "failure_evidence": "canonical/capabilities/opus55/FREECAD_SPRING_CLIP_RANK22_STAGE_C_EXECUTION_RECONCILIATION_V1.json"
+          }
+        },
+        "carrier_authority_regression": {
+          "regression": "canonical/regressions/2026-10-02_DUPLICATE_CARRIER_AUTHORITY_HASH_COLLISION.json",
+          "reducer": "canonical/runtime/execution_authority_reducer.py",
+          "verification": "canonical/verification/EXECUTION_AUTHORITY_CARRIER_BINDING_VERIFICATION_20261002_V1.json",
+          "fail_closed": true
+        },
+        "current_verdict": "RANK22_RUNTIME_API_AND_SEMANTIC_BUILDER_FAILURE_CLASS_VERIFIED_CLOSED__RANK23_STAGE_A_MAY_PROCEED_IF_STILL_UNEXPOSED"
+      }
+    },
+    "canonical/governance/PER_ACTION_CANONICAL_LEASE_REVALIDATION_VERIFICATION_20261001_V1.json": {
+      "blob_sha": "94da4e3465f01fa9bffa021e83d8165d7f0038f5",
+      "content": {
+        "schema": "PROJECT_BRAIN_PER_ACTION_CANONICAL_LEASE_REVALIDATION_VERIFICATION_V1",
+        "date": "2026-10-01",
+        "status": "VERIFIED_AND_MERGED__RANK15_REVOCATION_ESCAPE_CLASS_BLOCKED",
+        "root_failure": "SESSION_START_LEASE_WAS_CACHED_AND_REMAINED_SUFFICIENT_AFTER_CANONICAL_REVOCATION",
+        "runner": {
+          "repository": "moxnixmdj/verification-capsule-runner",
+          "pr": 331,
+          "merge_commit": "06486cd04c6a0940f9445bf41a943c7359398fc3",
+          "verification_workflow_run_id": 36914358764,
+          "verification_job_id": 110544554570,
+          "verification_tests_run": 9,
+          "verification_tests_passed": 9,
+          "verification_tests_failed": 0,
+          "execution_guard_regression_run_id": 36914358752,
+          "execution_guard_regression_conclusion": "success"
+        },
+        "enforced_invariants": [
+          "SESSION_START_LEASE_DOES_NOT_AUTHORIZE_BUILDER_BURSTS_BY_ITSELF",
+          "EACH_BUILDER_BURST_REQUIRES_FRESH_SINGLE_USE_LEASE_REVALIDATION",
+          "REVALIDATION_BINDS_SESSION_TASK_LEASE_PATH_SAMPLE_RANK_CANONICAL_COMMIT_AND_EXACT_BURST",
+          "TERMINAL_SUBMISSION_REQUIRES_FRESH_TERMINAL_SCOPE_REVALIDATION",
+          "CLOSED_RUNNER_PR_FAILS_CLOSED",
+          "BURST_REVALIDATION_IS_CONSUMED_BEFORE_EXECUTION"
+        ],
+        "rank15_causal_rescue": "A post-revocation burst like PR325 burst 2 would now fail with PER_ACTION_CANONICAL_LEASE_REVALIDATION_REQUIRED unless newly reauthorized after the canonical revocation.",
+        "capability_credit_delta": 0,
+        "family_credit_delta": 0,
+        "incremental_spend_usd": 0
+      }
+    },
+    "canonical/governance/RUNNER_TOTAL_STAGE_C_BUDGET_GUARD_VERIFICATION_20261001_V1.json": {
+      "blob_sha": "7595c8fcd861ce3c767ca796a81c9452e0ba5565",
+      "content": {
+        "schema": "PROJECT_BRAIN_RUNNER_TOTAL_STAGE_C_BUDGET_GUARD_VERIFICATION_V1",
+        "date": "2026-10-01",
+        "status": "INDEPENDENT_PASS__MERGED__RANK19_PREEXPOSURE_ELIGIBLE",
+        "root_bug": "PER_ACTION_REVALIDATION_ENFORCED_SCOPE_AND_BURST_ID_BUT_NOT_TOTAL_CANONICAL_EXECUTION_COUNT_ALLOWED_OR_TERMINAL_VERIFIER_COUNT_ALLOWED",
+        "causal_evidence": "canonical/capabilities/opus55/FREECAD_IMPELLER_RANK18_STAGE_C_EXECUTION_RECONCILIATION_V1.json",
+        "repair": {
+          "runner_repo": "moxnixmdj/verification-capsule-runner",
+          "pr": 358,
+          "merge_commit": "bd586c994a601871bc868272e07bdd2a5dd01e54",
+          "files": [
+            "session_bridge/acceptance_contract.py",
+            "session_bridge/controller_fast.py",
+            "verification/test_acceptance_contract.py",
+            "test_stage_lease_upgrade.py"
+          ],
+          "behavior": [
+            "STAGE_C_LEASE_REQUIRES_EXPLICIT_NONNEGATIVE_EXECUTION_AND_TERMINAL_BUDGETS",
+            "EVERY_ACCEPTED_BUILDER_BURST_CONSUMES_ONE_EXECUTION_UNIT_BEFORE_ANY_TASK_COMMAND_RUNS",
+            "BUILDER_BURST_REJECTED_WHEN_EXECUTION_COUNT_USED_GTE_EXECUTION_COUNT_ALLOWED",
+            "TERMINAL_VERIFIER_UNIT_CONSUMED_BEFORE_HIDDEN_VERIFIER_INVOCATION",
+            "TERMINAL_SUBMISSION_REJECTED_WHEN_TERMINAL_COUNT_USED_GTE_TERMINAL_VERIFIER_COUNT_ALLOWED",
+            "MISSING_OR_ZERO_BUDGET_FAILS_CLOSED"
+          ]
+        },
+        "independent_verification": [
+          {
+            "workflow": "Verify independent acceptance gate",
+            "run_id": 36921835282,
+            "job_id": 110569513683,
+            "conclusion": "success",
+            "includes": [
+              "TOTAL_EXECUTION_BUDGET_SECOND_BURST_NEGATIVE_CANARY",
+              "TOTAL_TERMINAL_BUDGET_SECOND_VERIFIER_NEGATIVE_CANARY",
+              "MISSING_ZERO_BUDGET_FAIL_CLOSED"
+            ]
+          },
+          {
+            "workflow": "Stage lease promotion regression",
+            "run_id": 36921835030,
+            "job_id": 110569512818,
+            "conclusion": "success"
+          },
+          {
+            "workflow": "Execution Guard Regression",
+            "run_id": 36921835135,
+            "job_id": 110569513626,
+            "conclusion": "success"
+          }
+        ],
+        "rank18_replay_allowed": false,
+        "rank19_instruction_read": false,
+        "rank19_task_execution_authorized": false,
+        "next": "RANK19_STAGE_A_PREEXPOSURE_ONLY__DO_NOT_READ_INSTRUCTION",
+        "capability_credit_delta": 0,
+        "incremental_spend_usd": 0
+      }
+    }
+  }
+}
