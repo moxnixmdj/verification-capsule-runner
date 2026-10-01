@@ -1,6 +1,7 @@
 import unittest
 
 from session_bridge.acceptance_contract import validate_lease_upgrade
+from session_bridge import execution_authority_reducer as authority_reducer
 
 
 def obs(commit):
@@ -27,6 +28,34 @@ def obs(commit):
     }
 
 
+def authority_preflight(task):
+    events=[]
+    prev=None
+    for seq,typ in enumerate((
+        "STAGE_A_PASS","STAGE_B_PASS","SOURCE_BOUNDARY_PASS",
+        "EXECUTION_SURFACE_PASS","LEASE_ISSUED","CARRIER_OPEN",
+    )):
+        e={
+            "schema":authority_reducer.SCHEMA,
+            "event_id":f"auth-{seq}",
+            "task":task,
+            "seq":seq,
+            "prev_event_sha256":prev,
+            "type":typ,
+        }
+        e["event_sha256"]=authority_reducer.canonical_event_hash(e)
+        prev=e["event_sha256"]
+        events.append(e)
+    derived=authority_reducer.derive_authority(
+        events,task=task,execution_budget=1,verifier_budget=1
+    )
+    return {
+        "schema":"BRAIN_DERIVED_AUTHORITY_PREFLIGHT_V1",
+        "reducer_git_blob_sha":"d7dcb02e051003996c44b6dd52b78dad7908810e",
+        "events":events,
+        "state_sha256":derived["state_sha256"],
+    }
+
 def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymization-20261001-v1", execute=False):
     return {
         "schema": "BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1",
@@ -42,6 +71,7 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
         "replay_for_credit": False,
         "continuous_obs": obs("a" * 40),
         "execution_count_allowed": 1 if execute else 0,
+        "derived_authority_preflight": (authority_preflight(task) if execute else None),
         "terminal_verifier_count_allowed": 1 if execute else 0,
         "source_boundary_preflight": ({
             "schema": "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1",
@@ -164,6 +194,48 @@ class LeaseUpgradeTests(unittest.TestCase):
         x["source_boundary_preflight"]=dict(x["source_boundary_preflight"])
         x["source_boundary_preflight"]["contamination_ledger_sha256"]="bad"
         self.assertIn("CONTAMINATION_LEDGER_DIGEST_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
+
+
+    def test_missing_derived_authority_fails(self):
+        x=dict(self.stage_c); x.pop("derived_authority_preflight", None)
+        self.assertIn("DERIVED_AUTHORITY_PREFLIGHT_MISSING", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_broken_authority_hash_chain_fails(self):
+        x=dict(self.stage_c)
+        p=dict(x["derived_authority_preflight"])
+        p["events"]=[dict(e) for e in p["events"]]
+        p["events"][3]["prev_event_sha256"]="0"*64
+        x["derived_authority_preflight"]=p
+        errors=self.check(candidate=x, acceptance_hash="frozen")
+        self.assertTrue(any(e.startswith("DERIVED_AUTHORITY_EVENT_CHAIN_INVALID:") for e in errors))
+
+    def test_later_revocation_beats_stale_authorized_true(self):
+        x=dict(self.stage_c)
+        p=dict(x["derived_authority_preflight"])
+        events=[dict(e) for e in p["events"]]
+        prev=events[-1]["event_sha256"]
+        e={
+            "schema":authority_reducer.SCHEMA,
+            "event_id":"auth-revoke",
+            "task":"data-anonymization",
+            "seq":len(events),
+            "prev_event_sha256":prev,
+            "type":"LEASE_REVOKED",
+        }
+        e["event_sha256"]=authority_reducer.canonical_event_hash(e)
+        events.append(e)
+        p["events"]=events
+        derived=authority_reducer.derive_authority(events,task="data-anonymization",execution_budget=1,verifier_budget=1)
+        p["state_sha256"]=derived["state_sha256"]
+        x["derived_authority_preflight"]=p
+        self.assertIn("DERIVED_AUTHORITY_CAN_EXECUTE_FALSE", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_wrong_derived_state_digest_fails(self):
+        x=dict(self.stage_c)
+        p=dict(x["derived_authority_preflight"])
+        p["state_sha256"]="0"*64
+        x["derived_authority_preflight"]=p
+        self.assertIn("DERIVED_AUTHORITY_STATE_DIGEST_MISMATCH", self.check(candidate=x, acceptance_hash="frozen"))
 
 
 if __name__ == "__main__":
