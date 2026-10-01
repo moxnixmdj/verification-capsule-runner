@@ -105,7 +105,8 @@ def main():
         })
         started=time.time()
         cmd=[harbor,"run","-p",str(task_dir),"--agent",
-             "session_bridge.harbor_branch_bridge:HarborBranchBridgeAgent","--env","docker"]
+             "session_bridge.harbor_branch_bridge:HarborBranchBridgeAgent","--env","docker",
+             "--override-cpus","4"]
         cp=subprocess.run(cmd,cwd=ROOT,env=env,text=True,capture_output=True,
                           timeout=int(CFG.get("harbor_timeout_sec",10000)))
         EVIDENCE.mkdir(parents=True,exist_ok=True)
