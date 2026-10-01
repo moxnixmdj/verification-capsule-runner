@@ -1,0 +1,68 @@
+name: Atomic Root Cause Replay Spent Screen
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/atomic-root-cause-replay-spent.yml"
+      - "atomic_root_cause_replay_spent/**"
+
+permissions:
+  contents: write
+
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned causal replay candidate
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install "git+https://github.com/krishddd/Trajectory_Causal_Attribution.git@v1.0.0"
+
+      - name: Run spent executable causal falsification screen
+        id: screen
+        shell: bash
+        run: |
+          set +e
+          python atomic_root_cause_replay_spent/probe.py > atomic_root_cause_replay_spent/run.log 2>&1
+          rc=$?
+          cat atomic_root_cause_replay_spent/run.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+
+      - name: Persist visible result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.screen.outcome }}
+          RC: ${{ steps.screen.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("atomic_root_cause_replay_spent")
+          ex=(p/"result.json").exists()
+          (p/"status.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"ATOMIC_ROOT_CAUSE_REPLAY_SPENT",
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "head_sha":os.environ["GITHUB_SHA"],
+            "outcome":os.environ.get("OUTCOME"),
+            "rc":os.environ.get("RC"),
+            "result_exists":ex,
+            "terminal_state":"SUCCESS" if os.environ.get("OUTCOME")=="success" and ex else "FAILURE",
+            "capability_credit_delta":0
+          },indent=2)+"\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atomic_root_cause_replay_spent/status.json atomic_root_cause_replay_spent/run.log
+          test ! -f atomic_root_cause_replay_spent/result.json || git add atomic_root_cause_replay_spent/result.json
+          git commit -m "Record atomic root cause replay spent screen" || exit 0
+          git pull --rebase origin main
+          git push
