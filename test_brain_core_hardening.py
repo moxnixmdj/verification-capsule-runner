@@ -67,6 +67,103 @@ class SourceContractCompilerTests(unittest.TestCase):
         self.assertIn("TRACEABILITY_NOT_BIDIRECTIONAL:"+self.atoms[0].atom_id+":R1",errors)
 
 
+    def semantic_payload(self):
+        text="Must write file and return status.\n"
+        atoms=sc.atomize_source(text,"compound.md")
+        atom=atoms[0]
+        split=atom.text.index(" and ")
+        spans=[
+            (0, split, "BEHAVIOR", "WRITE_FILE"),
+            (split, len(atom.text), "BEHAVIOR", "RETURN_STATUS"),
+        ]
+        def units():
+            out=[]
+            for start,end,kind,fp in spans:
+                frag=atom.text[start:end]
+                out.append({
+                    "atom_id":atom.atom_id,
+                    "start":start,
+                    "end":end,
+                    "text_sha256":__import__("hashlib").sha256(frag.encode()).hexdigest(),
+                    "kind":kind,
+                    "semantic_fingerprint":fp,
+                    "rationale":"independently extracted obligation",
+                })
+            return out
+        sids=[sc.semantic_unit_id(atom.atom_id,s,e) for s,e,_,_ in spans]
+        requirements=[
+            {"id":"R_WRITE","source_semantic_unit_ids":[sids[0]]},
+            {"id":"R_RETURN","source_semantic_unit_ids":[sids[1]]},
+        ]
+        return text,atoms,{"extractor-a":units(),"extractor-b":units()},requirements
+
+    def test_dual_semantic_span_consensus_passes(self):
+        text,atoms,units,reqs=self.semantic_payload()
+        self.assertEqual(
+            sc.validate_semantic_consensus(
+                source_text=text,atoms=atoms,extractor_units=units,requirements=reqs
+            ),[]
+        )
+
+    def test_compound_obligation_cannot_collapse_to_one_unit(self):
+        text,atoms,units,reqs=self.semantic_payload()
+        atom=atoms[0]
+        frag=atom.text
+        one={
+            "atom_id":atom.atom_id,"start":0,"end":len(frag),
+            "text_sha256":__import__("hashlib").sha256(frag.encode()).hexdigest(),
+            "kind":"BEHAVIOR","semantic_fingerprint":"COMPOUND",
+            "rationale":"collapsed compound claim",
+        }
+        units={"extractor-a":[one],"extractor-b":[dict(one)]}
+        errors=sc.validate_semantic_consensus(
+            source_text=text,atoms=atoms,extractor_units=units,requirements=reqs
+        )
+        self.assertTrue(any(x.startswith("SEMANTIC_OBLIGATION_UNDERSEGMENTED:") for x in errors))
+
+    def test_semantic_boundary_disagreement_blocks(self):
+        text,atoms,units,reqs=self.semantic_payload()
+        atom=atoms[0]
+        b=[dict(x) for x in units["extractor-b"]]
+        b[0]["end"] += 1
+        frag=atom.text[b[0]["start"]:b[0]["end"]]
+        b[0]["text_sha256"]=__import__("hashlib").sha256(frag.encode()).hexdigest()
+        b[1]["start"] += 1
+        frag=atom.text[b[1]["start"]:b[1]["end"]]
+        b[1]["text_sha256"]=__import__("hashlib").sha256(frag.encode()).hexdigest()
+        units["extractor-b"]=b
+        errors=sc.validate_semantic_consensus(
+            source_text=text,atoms=atoms,extractor_units=units,requirements=reqs
+        )
+        self.assertTrue(any(x.startswith("SEMANTIC_EXTRACTOR_DISAGREEMENT:") for x in errors))
+
+    def test_semantic_fingerprint_disagreement_blocks(self):
+        text,atoms,units,reqs=self.semantic_payload()
+        units["extractor-b"][0]["semantic_fingerprint"]="WRITE_SOMETHING_ELSE"
+        errors=sc.validate_semantic_consensus(
+            source_text=text,atoms=atoms,extractor_units=units,requirements=reqs
+        )
+        self.assertTrue(any(x.startswith("SEMANTIC_EXTRACTOR_DISAGREEMENT:") for x in errors))
+
+    def test_operative_semantic_unit_requires_requirement(self):
+        text,atoms,units,reqs=self.semantic_payload()
+        reqs=reqs[:1]
+        errors=sc.validate_semantic_consensus(
+            source_text=text,atoms=atoms,extractor_units=units,requirements=reqs
+        )
+        self.assertTrue(any(x.startswith("OPERATIVE_SEMANTIC_UNIT_WITHOUT_REQUIREMENT:") for x in errors))
+
+    def test_ambiguous_consensus_remains_blocking_hole(self):
+        text,atoms,units,reqs=self.semantic_payload()
+        for extractor in units.values():
+            extractor[1]["kind"]="AMBIGUOUS"
+            extractor[1]["semantic_fingerprint"]="AMBIGUOUS_RETURN"
+        errors=sc.validate_semantic_consensus(
+            source_text=text,atoms=atoms,extractor_units=units,requirements=reqs
+        )
+        self.assertTrue(any(x.startswith("OPEN_SPECIFICATION_HOLE:") for x in errors))
+
+
 class AuthorityReducerTests(unittest.TestCase):
     def chain(self, types):
         events=[]
