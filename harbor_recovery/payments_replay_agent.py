@@ -152,7 +152,11 @@ if old not in s:
 p.write_text(s.replace(old, new, 1))
 """
             patch_result = await environment.exec(
-                command=f"python3 - <<'PY'\\n{diagnostic_patch}PY\\npython3 -m py_compile /app/src/worker/worker.py\\ngrep -n -A3 -B2 'session.timeout.ms' /app/src/worker/worker.py",
+                command=f"""python3 - <<'PY'
+{diagnostic_patch}PY
+python3 -m py_compile /app/src/worker/worker.py
+grep -n -A3 -B2 'session.timeout.ms' /app/src/worker/worker.py
+""",
                 cwd="/app",
             )
             receipt["diagnostic_patch"] = {
