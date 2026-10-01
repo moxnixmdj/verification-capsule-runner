@@ -1,0 +1,98 @@
+{
+  "schema": "PROJECT_BRAIN_CAUSE_CANDIDATE_DONOR_DELETION_VERIFICATION_V1",
+  "status": "DONOR_DELETION_EQUIVALENCE_SCREEN__ZERO_CAPABILITY_CREDIT",
+  "source_candidate": "atomic_cause_candidate_spent/brain_owned_candidate.py",
+  "donor": {
+    "repo": "ShaneDolphin/pyrapide",
+    "revision": "d1dc66efbefe3442e247ac896416bf00c25d3ca1",
+    "license": "MIT",
+    "mechanism": "BACKWARD_CAUSAL_SLICE_PLUS_INTERVENABLE_DECISION_FILTER"
+  },
+  "cases": 6,
+  "exact_donor_equivalence_fraction": 1.0,
+  "true_cause_recall": 1.0,
+  "unique_expected_candidate_fraction": 1.0,
+  "donor_imported_by_candidate": false,
+  "external_runtime_dependencies": [],
+  "structural_fail_closed_checks": {
+    "unknown_parent_fail_closed": true,
+    "cycle_fail_closed": true,
+    "unknown_target_fail_closed": true
+  },
+  "rows": [
+    {
+      "id": "baseline_sort_priorities",
+      "brain_owned_candidates": [
+        "route"
+      ],
+      "donor_candidates": [
+        "route"
+      ],
+      "exact_donor_equivalence": true,
+      "contains_expected_cause": true,
+      "unique_expected_candidate": true
+    },
+    {
+      "id": "baseline_path_filename",
+      "brain_owned_candidates": [
+        "route"
+      ],
+      "donor_candidates": [
+        "route"
+      ],
+      "exact_donor_equivalence": true,
+      "contains_expected_cause": true,
+      "unique_expected_candidate": true
+    },
+    {
+      "id": "baseline_json_lookup",
+      "brain_owned_candidates": [
+        "route"
+      ],
+      "donor_candidates": [
+        "route"
+      ],
+      "exact_donor_equivalence": true,
+      "contains_expected_cause": true,
+      "unique_expected_candidate": true
+    },
+    {
+      "id": "ettin_average_latency",
+      "brain_owned_candidates": [
+        "route"
+      ],
+      "donor_candidates": [
+        "route"
+      ],
+      "exact_donor_equivalence": true,
+      "contains_expected_cause": true,
+      "unique_expected_candidate": true
+    },
+    {
+      "id": "ettin_largest_sample",
+      "brain_owned_candidates": [
+        "route"
+      ],
+      "donor_candidates": [
+        "route"
+      ],
+      "exact_donor_equivalence": true,
+      "contains_expected_cause": true,
+      "unique_expected_candidate": true
+    },
+    {
+      "id": "ettin_path_filename",
+      "brain_owned_candidates": [
+        "route"
+      ],
+      "donor_candidates": [
+        "route"
+      ],
+      "exact_donor_equivalence": true,
+      "contains_expected_cause": true,
+      "unique_expected_candidate": true
+    }
+  ],
+  "interpretation_rule": "PASS_PROVES_ONLY_DONOR_INDEPENDENT_EQUIVALENCE_FOR_THE_SCREENED_EXPLICIT_CAUSAL_GRAPH_CONTRACT__NOT_GENERAL_CAUSAL_DISCOVERY",
+  "capability_credit_delta": 0
+}

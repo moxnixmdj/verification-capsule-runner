@@ -1,0 +1,11 @@
+{
+  "cases": 6,
+  "exact_donor_equivalence_fraction": 1.0,
+  "true_cause_recall": 1.0,
+  "unique_expected_candidate_fraction": 1.0,
+  "structural_fail_closed_checks": {
+    "unknown_parent_fail_closed": true,
+    "cycle_fail_closed": true,
+    "unknown_target_fail_closed": true
+  }
+}
