@@ -1,0 +1,10 @@
+{
+  "command_sha256": "f764c3ad24f88f66b8f2de883245d74f19e94ba1a96f8766e70c1d43d57d1b22",
+  "duration_sec": 1.343,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-20261001-v1",
+  "stderr": "",
+  "stdout": "/app/framework/config.py:160:    def local_expert_to_global(self, ep_rank: int, local_expert_idx: int,\n/app/framework/config.py:178:        Inverse of local_expert_to_global.\n/app/framework/config.py:195:    # flat_bucket_align, and concatenated in sorted-key order. Per-parameter\n/app/framework/config.py:197:    flat_buffer_key: str = \"optimizer.flat_param_buffer\"\n/app/framework/config.py:198:    flat_bucket_align: int = 128\n/app/framework/config.py:233:class KeyMapper:\n/app/framework/config.py:282:    def layer_moe_grouped_gate_up_key(cls, local_idx: int) -> str:\n/app/framework/config.py:283:        return f\"{cls.PREFIX}.layers.{local_idx}.moe.grouped_gate_up_proj.weight\"\nshard_tp0_pp0_ep0.pt manifest 4339456 actual 4339456 OK True items 47\nshard_tp0_pp0_ep1.pt manifest 4339456 actual 4339456 OK True items 47\nshard_tp0_pp1_ep0.pt manifest 4209408 actual 4209408 OK True items 47\nshard_tp0_pp1_ep1.pt manifest 4209408 actual 4209408 OK True items 47\nshard_tp1_pp0_ep0.pt manifest 4329728 actual 4329728 OK True items 27\nshard_tp1_pp0_ep1.pt manifest 4329728 actual 4329728 OK True items 27\nshard_tp1_pp1_ep0.pt manifest 4198656 actual 4198656 OK True items 26\nshard_tp1_pp1_ep1.pt manifest 4198656 actual 4198656 OK True items 26\nshard_tp2_pp0_ep0.pt manifest 4329728 actual 4329728 OK True items 27\nshard_tp2_pp0_ep1.pt manifest 4329728 actual 4329728 OK True items 27\nshard_tp2_pp1_ep0.pt manifest 4198656 actual 4198656 OK True items 26\nshard_tp2_pp1_ep1.pt manifest 4198656 actual 4198656 OK True items 26\nshard_tp3_pp0_ep0.pt manifest 4329728 actual 4329728 OK True items 27\nshard_tp3_pp0_ep1.pt manifest 4329728 actual 4329728 OK True items 27\nshard_tp3_pp1_ep0.pt manifest 4198656 actual 4198656 OK True items 26\nshard_tp3_pp1_ep1.pt manifest 4198656 actual 4198656 OK True items 26\n",
+  "step": 4
+}
