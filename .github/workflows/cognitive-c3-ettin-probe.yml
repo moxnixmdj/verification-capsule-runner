@@ -87,3 +87,4 @@ jobs:
           git commit -m "Record visible C3 Ettin probe terminal status"
           git pull --rebase origin main
           git push
+# observable PR trigger: C3
