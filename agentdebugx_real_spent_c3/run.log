@@ -1,0 +1,165 @@
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: pip in /usr/lib/python3/dist-packages (24.0)
+Collecting pip
+  Downloading pip-26.2.1-py3-none-any.whl.metadata (4.6 kB)
+Downloading pip-26.2.1-py3-none-any.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 43.8 MB/s eta 0:00:00
+Installing collected packages: pip
+Successfully installed pip-26.2.1
+Defaulting to user installation because normal site-packages is not writeable
+Collecting agentdebugx==0.5.2
+  Downloading agentdebugx-0.5.2-py3-none-any.whl.metadata (30 kB)
+Collecting httpx<1.0,>=0.24 (from agentdebugx==0.5.2)
+  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting pydantic<3.0,>=1.10 (from agentdebugx==0.5.2)
+  Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+Collecting anyio (from httpx<1.0,>=0.24->agentdebugx==0.5.2)
+  Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+Requirement already satisfied: certifi in /usr/lib/python3/dist-packages (from httpx<1.0,>=0.24->agentdebugx==0.5.2) (2023.11.17)
+Collecting httpcore==1.* (from httpx<1.0,>=0.24->agentdebugx==0.5.2)
+  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Requirement already satisfied: idna in /usr/lib/python3/dist-packages (from httpx<1.0,>=0.24->agentdebugx==0.5.2) (3.6)
+Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0,>=0.24->agentdebugx==0.5.2)
+  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting annotated-types>=0.6.0 (from pydantic<3.0,>=1.10->agentdebugx==0.5.2)
+  Downloading annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.46.5 (from pydantic<3.0,>=1.10->agentdebugx==0.5.2)
+  Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting typing-extensions>=4.14.1 (from pydantic<3.0,>=1.10->agentdebugx==0.5.2)
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic<3.0,>=1.10->agentdebugx==0.5.2)
+  Downloading typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Downloading agentdebugx-0.5.2-py3-none-any.whl (735 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 735.4/735.4 kB 26.9 MB/s  0:00:00
+Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 37.9 MB/s  0:00:00
+Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
+Installing collected packages: typing-extensions, h11, annotated-types, typing-inspection, pydantic-core, httpcore, anyio, pydantic, httpx, agentdebugx
+
+Successfully installed agentdebugx-0.5.2 annotated-types-0.8.0 anyio-4.15.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 pydantic-2.13.5 pydantic-core-2.46.5 typing-extensions-4.16.0 typing-inspection-0.4.4
+{
+  "cases": 6,
+  "root_localization_accuracy": 0.0,
+  "wrong_root_cases": [
+    "baseline_sort_priorities",
+    "baseline_path_filename",
+    "baseline_json_lookup",
+    "ettin_average_latency",
+    "ettin_largest_sample",
+    "ettin_path_filename"
+  ]
+}
+{
+  "schema": "PROJECT_BRAIN_AGENTDEBUGX_REAL_SPENT_C3_TRACE_SCREEN_RESULT_V1",
+  "status": "SPENT_REAL_TRACE_SCREEN__ZERO_CAPABILITY_CREDIT",
+  "package": "agentdebugx",
+  "version": "0.5.2",
+  "mode": "DiagnosePipeline.local_default",
+  "cases": 6,
+  "root_localization_accuracy": 0.0,
+  "wrong_root_cases": [
+    "baseline_sort_priorities",
+    "baseline_path_filename",
+    "baseline_json_lookup",
+    "ettin_average_latency",
+    "ettin_largest_sample",
+    "ettin_path_filename"
+  ],
+  "rows": [
+    {
+      "id": "baseline_sort_priorities",
+      "expected_root_step": 2,
+      "observed_root_step": 4,
+      "root_localization_correct": false,
+      "root_cause_agent": "verifier",
+      "finding_modes": [
+        "system.environment_error"
+      ],
+      "finding_steps": [
+        4
+      ],
+      "summary": "Likely root cause: Environment error in verifier at step 4."
+    },
+    {
+      "id": "baseline_path_filename",
+      "expected_root_step": 2,
+      "observed_root_step": 4,
+      "root_localization_correct": false,
+      "root_cause_agent": "verifier",
+      "finding_modes": [
+        "system.environment_error"
+      ],
+      "finding_steps": [
+        4
+      ],
+      "summary": "Likely root cause: Environment error in verifier at step 4."
+    },
+    {
+      "id": "baseline_json_lookup",
+      "expected_root_step": 2,
+      "observed_root_step": 3,
+      "root_localization_correct": false,
+      "root_cause_agent": "executor",
+      "finding_modes": [
+        "system.tool_execution_error",
+        "system.environment_error"
+      ],
+      "finding_steps": [
+        3,
+        4
+      ],
+      "summary": "Likely root cause: Tool execution error in executor at step 3."
+    },
+    {
+      "id": "ettin_average_latency",
+      "expected_root_step": 2,
+      "observed_root_step": 4,
+      "root_localization_correct": false,
+      "root_cause_agent": "verifier",
+      "finding_modes": [
+        "system.environment_error"
+      ],
+      "finding_steps": [
+        4
+      ],
+      "summary": "Likely root cause: Environment error in verifier at step 4."
+    },
+    {
+      "id": "ettin_largest_sample",
+      "expected_root_step": 2,
+      "observed_root_step": 4,
+      "root_localization_correct": false,
+      "root_cause_agent": "verifier",
+      "finding_modes": [
+        "system.environment_error"
+      ],
+      "finding_steps": [
+        4
+      ],
+      "summary": "Likely root cause: Environment error in verifier at step 4."
+    },
+    {
+      "id": "ettin_path_filename",
+      "expected_root_step": 2,
+      "observed_root_step": 4,
+      "root_localization_correct": false,
+      "root_cause_agent": "verifier",
+      "finding_modes": [
+        "system.environment_error"
+      ],
+      "finding_steps": [
+        4
+      ],
+      "summary": "Likely root cause: Environment error in verifier at step 4."
+    }
+  ],
+  "interpretation_rule": "SUCCESS_REQUIRES_LOCALIZING_THE_CAUSAL_ROUTING_DECISION_AT_STEP_2__BLAMING_ONLY_DOWNSTREAM_TOOL_OR_VERIFIER_FAILURE_DOES_NOT_COUNT",
+  "capability_credit_delta": 0
+}
