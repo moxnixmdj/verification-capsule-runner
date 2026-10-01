@@ -1,0 +1,20 @@
+name: WDM Stage-B live feasibility
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/wdm_official_env.Dockerfile'
+      - 'verification/wdm_generic_meep_preflight.py'
+      - '.github/workflows/wdm-stage-b-feasibility.yml'
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact pinned official environment
+        run: docker build -f verification/wdm_official_env.Dockerfile -t wdm-stage-b-preflight .
+      - name: Verify CPU Meep import and bounded generic ODD_Z FDTD
+        run: timeout 180 docker run --rm -v "$PWD/verification:/verify:ro" wdm-stage-b-preflight python /verify/wdm_generic_meep_preflight.py
