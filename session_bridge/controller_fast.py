@@ -18,6 +18,8 @@ COMMAND_MARKER = "<!-- BRAIN_FAST_BURST_COMMAND_V2 -->"
 OBS_MARKER = "<!-- BRAIN_FAST_BURST_OBSERVATION_V2 -->"
 READY_MARKER = "<!-- BRAIN_FAST_BURST_READY_V2 -->"
 INSTRUCTION_MARKER = "<!-- BRAIN_FAST_BURST_INSTRUCTION_V1 -->"
+LEASE_MARKER = "<!-- BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1 -->"
+LEASE_BOUND_MARKER = "<!-- BRAIN_FAST_BURST_LEASE_BOUND_V1 -->"
 ACCEPTANCE_MARKER = "<!-- BRAIN_FAST_BURST_ACCEPTANCE_MODEL_V1 -->"
 ACCEPTANCE_FROZEN_MARKER = "<!-- BRAIN_FAST_BURST_ACCEPTANCE_FROZEN_V1 -->"
 TERMINAL_MARKER = "<!-- BRAIN_FAST_BURST_TERMINAL_V2 -->"
@@ -214,11 +216,13 @@ def surface_instruction(task_dir: Path):
     post(INSTRUCTION_MARKER, payload)
     return True
 
-def terminal_blocker(payload, acceptance_payload=None, acceptance_hash=None):
+def terminal_blocker(payload, acceptance_payload=None, acceptance_hash=None, lease_authorized=False):
     if payload.get("schema") != "BRAIN_FAST_BURST_TERMINAL_AUTHORIZATION_V2":
         return "SCHEMA_INVALID"
     if payload.get("session_id") != CONFIG["session_id"]:
         return "SESSION_MISMATCH"
+    if CONFIG.get("require_canonical_lease_authorization", True) and not lease_authorized:
+        return "CANONICAL_LEASE_NOT_BOUND"
     if CONFIG.get("require_acceptance_contract", True):
         if acceptance_payload is None or not acceptance_hash:
             return "ACCEPTANCE_CONTRACT_NOT_FROZEN"
@@ -250,6 +254,7 @@ def main():
     CONFIG = json.loads(Path(args.session_config).read_text(encoding="utf-8"))
     CONFIG.setdefault("authorized_controller_login", os.environ["GITHUB_REPOSITORY"].split("/", 1)[0])
     CONFIG.setdefault("require_acceptance_contract", True)
+    CONFIG.setdefault("require_canonical_lease_authorization", True)
 
     legacy.CONFIG = CONFIG
     EVIDENCE.mkdir(parents=True, exist_ok=True)
@@ -295,11 +300,11 @@ def main():
         "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
     })
 
-    if not surface_instruction(task_dir):
-        return 0
-
     seen = set()
     next_burst = 0
+    lease_payload = None
+    lease_authorized = False
+    instruction_surfaced = False
     acceptance_payload = None
     acceptance_hash = None
     deadline = time.time() + int(CONFIG.get("session_timeout_sec", 10800))
@@ -310,9 +315,68 @@ def main():
                 continue
             body = comment.get("body") or ""
 
+            lease = parse_payload(body, LEASE_MARKER)
+            if lease is not None:
+                seen.add(cid)
+                if lease_authorized:
+                    post("<!-- BRAIN_FAST_BURST_LEASE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "CANONICAL_LEASE_ALREADY_BOUND",
+                    })
+                    continue
+                if next_burst != 0 or acceptance_hash is not None:
+                    post("<!-- BRAIN_FAST_BURST_LEASE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "SESSION_ALREADY_ADVANCED_BEYOND_LEASE_GATE",
+                    })
+                    continue
+                errors = acceptance.validate_lease_authorization(
+                    lease, CONFIG["session_id"], CONFIG["task"]
+                )
+                if errors:
+                    post("<!-- BRAIN_FAST_BURST_LEASE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_LEASE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": errors[0],
+                        "all_errors": errors,
+                    })
+                    continue
+                lease_payload = lease
+                lease_authorized = True
+                legacy.write_json(EVIDENCE / "canonical_lease_authorization.json", lease_payload)
+                post(LEASE_BOUND_MARKER, {
+                    "schema": "BRAIN_FAST_BURST_LEASE_BOUND_V1",
+                    "session_id": CONFIG["session_id"],
+                    "task": CONFIG["task"],
+                    "canonical_brain_commit": lease["canonical_brain_commit"],
+                    "canonical_lease_path": lease["canonical_lease_path"],
+                    "sample_rank": lease["sample_rank"],
+                    "instruction_exposed": False,
+                })
+                if not surface_instruction(task_dir):
+                    return 0
+                instruction_surfaced = True
+                continue
+
             contract = parse_payload(body, ACCEPTANCE_MARKER)
             if contract is not None:
                 seen.add(cid)
+                if CONFIG.get("require_canonical_lease_authorization", True) and not lease_authorized:
+                    post("<!-- BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "CANONICAL_LEASE_NOT_BOUND",
+                    })
+                    continue
+                if not instruction_surfaced:
+                    post("<!-- BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1 -->", {
+                        "schema": "BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1",
+                        "session_id": CONFIG["session_id"],
+                        "reason": "OFFICIAL_INSTRUCTION_NOT_SURFACED",
+                    })
+                    continue
                 if acceptance_hash is not None:
                     post("<!-- BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1 -->", {
                         "schema": "BRAIN_FAST_BURST_ACCEPTANCE_BLOCKED_V1",
@@ -364,7 +428,7 @@ def main():
             terminal = parse_payload(body, TERMINAL_MARKER)
             if terminal is not None:
                 seen.add(cid)
-                blocker = terminal_blocker(terminal, acceptance_payload, acceptance_hash)
+                blocker = terminal_blocker(terminal, acceptance_payload, acceptance_hash, lease_authorized)
                 if blocker:
                     post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
                         "schema": "BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2",
@@ -383,6 +447,13 @@ def main():
             if payload.get("schema") != "BRAIN_FAST_BURST_COMMAND_V2":
                 continue
             if payload.get("session_id") != CONFIG["session_id"]:
+                continue
+            if CONFIG.get("require_canonical_lease_authorization", True) and not lease_authorized:
+                post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
+                    "schema": "BRAIN_FAST_BURST_REJECTED_V2",
+                    "session_id": CONFIG["session_id"],
+                    "reason": "CANONICAL_LEASE_REQUIRED_BEFORE_BUILDER_COMMAND",
+                })
                 continue
             if CONFIG.get("require_acceptance_contract", True):
                 if acceptance_hash is None:
