@@ -13,7 +13,7 @@ from typing import Any
 
 import torch
 from huggingface_hub import HfApi
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
 
 
 MODEL_ID = "sshalimov04/open-jev-base"
@@ -123,9 +123,11 @@ def main() -> int:
     revision = info.sha
     print(json.dumps({"resolved_model": MODEL_ID, "revision": revision}), flush=True)
 
-    tok = AutoTokenizer.from_pretrained("jhu-clsp/mmBERT-small")
+    base_model_id = "jhu-clsp/mmBERT-small"
+    tok = AutoTokenizer.from_pretrained(base_model_id)
+    config = AutoConfig.from_pretrained(base_model_id, num_labels=1)
     model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_ID, revision=revision, attn_implementation="sdpa"
+        MODEL_ID, revision=revision, config=config, attn_implementation="sdpa"
     ).to("cpu").eval()
 
     v2 = [json.loads(x) for x in args.v2.read_text(encoding="utf-8").splitlines() if x.strip()]
