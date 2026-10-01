@@ -342,6 +342,7 @@ def main():
     acceptance_hash = None
     burst_revalidations = {}
     terminal_revalidation = None
+    terminal_verifier_count = 0
     deadline = time.time() + int(CONFIG.get("session_timeout_sec", 10800))
     while time.time() < deadline:
         for comment in comments():
@@ -558,6 +559,20 @@ def main():
                     if authority_errors[0] == "RUNNER_PR_NOT_OPEN":
                         return 0
                     continue
+                budget_errors = acceptance.validate_execution_budget(
+                    lease_payload,
+                    accepted_bursts=next_burst,
+                    terminal_verifier_count=terminal_verifier_count,
+                    action="TERMINAL",
+                )
+                if budget_errors:
+                    post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
+                        "schema": "BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2",
+                        "session_id": CONFIG["session_id"],
+                        "reason": budget_errors[0],
+                        "all_errors": budget_errors,
+                    })
+                    continue
                 blocker = terminal_blocker(terminal, acceptance_payload, acceptance_hash, lease_authorized)
                 if blocker:
                     post("<!-- BRAIN_FAST_BURST_TERMINAL_BLOCKED_V2 -->", {
@@ -566,6 +581,7 @@ def main():
                         "reason": blocker,
                     })
                     continue
+                terminal_verifier_count += 1
                 final = legacy.verify(task_dir)
                 post(FINAL_MARKER, final)
                 return 0
@@ -599,6 +615,20 @@ def main():
                     if authority_errors[0] == "RUNNER_PR_NOT_OPEN":
                         return 0
                     continue
+            budget_errors = acceptance.validate_execution_budget(
+                lease_payload,
+                accepted_bursts=next_burst,
+                terminal_verifier_count=terminal_verifier_count,
+                action="BURST",
+            )
+            if budget_errors:
+                post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
+                    "schema": "BRAIN_FAST_BURST_REJECTED_V2",
+                    "session_id": CONFIG["session_id"],
+                    "reason": budget_errors[0],
+                    "all_errors": budget_errors,
+                })
+                continue
             if CONFIG.get("require_acceptance_contract", True):
                 if acceptance_hash is None:
                     post("<!-- BRAIN_FAST_BURST_REJECTED_V2 -->", {
