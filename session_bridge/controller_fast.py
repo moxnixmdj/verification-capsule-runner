@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -103,6 +105,33 @@ def replay_bootstrap():
     }
 
 
+def execute_isolated(slot: int, command: str, timeout_sec=None):
+    raw = command.encode("utf-8")
+    sha = hashlib.sha256(raw).hexdigest()
+    local = Path(f"/tmp/brain-burst-command-{slot}.sh")
+    remote = f"/tmp/brain-burst-command-{slot}.sh"
+    local.write_bytes(raw)
+    legacy.run(["docker", "cp", str(local), f"brain-bridge-task:{remote}"])
+    limit = int(timeout_sec or CONFIG.get("command_timeout_sec", 300))
+    started = time.time()
+    cp = legacy.run([
+        "docker", "exec", "-w", "/app", "brain-bridge-task", "/bin/sh", "-lc",
+        f"if command -v timeout >/dev/null 2>&1; then timeout -k 5 {limit}s /bin/bash {remote}; "
+        f"else /bin/bash {remote}; fi"
+    ], check=False, timeout=limit + 15)
+    cap = int(CONFIG.get("per_command_output_char_limit", CONFIG.get("observation_char_limit", 120000)))
+    return {
+        "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+        "session_id": CONFIG["session_id"],
+        "step": slot,
+        "command_sha256": sha,
+        "exit_code": cp.returncode,
+        "duration_sec": round(time.time() - started, 3),
+        "stdout": (cp.stdout or "")[-cap:],
+        "stderr": (cp.stderr or "")[-cap:],
+    }
+
+
 def terminal_blocker(payload):
     if payload.get("schema") != "BRAIN_FAST_BURST_TERMINAL_AUTHORIZATION_V2":
         return "SCHEMA_INVALID"
@@ -147,6 +176,8 @@ def main():
         "microstep_git_commits": 0,
         "bootstrap": bootstrap,
         "max_commands_per_burst": int(CONFIG.get("max_commands_per_burst", 8)),
+        "parallel_bursts_supported": True,
+        "max_parallel_commands": int(CONFIG.get("max_parallel_commands", 4)),
     })
 
     seen = set()
@@ -202,24 +233,49 @@ def main():
                 continue
 
             results = []
-            for idx, item in enumerate(cmds):
-                if not isinstance(item, dict) or not isinstance(item.get("script"), str):
-                    results.append({"index": idx, "exit_code": 2, "stderr": "INVALID_COMMAND_ITEM"})
-                    break
-                obs = legacy.execute_command(next_burst * 100 + idx, item["script"])
-                obs["id"] = item.get("id", str(idx))
-                results.append(obs)
-                if obs["exit_code"] != 0 and item.get("stop_on_error", True):
-                    break
+            parallel = bool(payload.get("parallel", False))
+            valid = all(isinstance(item, dict) and isinstance(item.get("script"), str) for item in cmds)
+            if not valid:
+                results.append({"index": 0, "exit_code": 2, "stderr": "INVALID_COMMAND_ITEM"})
+            elif parallel:
+                workers = min(len(cmds), int(CONFIG.get("max_parallel_commands", 4)))
+                with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+                    future_map = {}
+                    for idx, item in enumerate(cmds):
+                        slot = next_burst * 100 + idx
+                        fut = pool.submit(execute_isolated, slot, item["script"], item.get("timeout_sec"))
+                        future_map[fut] = (idx, item)
+                    tmp = []
+                    for fut in concurrent.futures.as_completed(future_map):
+                        idx, item = future_map[fut]
+                        try:
+                            obs = fut.result()
+                        except Exception as exc:
+                            obs = {"index": idx, "exit_code": 125, "stderr": "PARALLEL_EXECUTION_EXCEPTION:" + repr(exc)}
+                        obs["index"] = idx
+                        obs["id"] = item.get("id", str(idx))
+                        tmp.append(obs)
+                    results = sorted(tmp, key=lambda x: x.get("index", 0))
+            else:
+                for idx, item in enumerate(cmds):
+                    slot = next_burst * 100 + idx
+                    obs = execute_isolated(slot, item["script"], item.get("timeout_sec"))
+                    obs["index"] = idx
+                    obs["id"] = item.get("id", str(idx))
+                    results.append(obs)
+                    if obs["exit_code"] != 0 and item.get("stop_on_error", True):
+                        break
             legacy.write_json(EVIDENCE / f"burst_{next_burst:03d}.json", {
                 "session_id": CONFIG["session_id"],
                 "burst_id": next_burst,
+                "parallel": parallel,
                 "results": results,
             })
             post(OBS_MARKER, {
                 "schema": "BRAIN_FAST_BURST_OBSERVATION_V2",
                 "session_id": CONFIG["session_id"],
                 "burst_id": next_burst,
+                "parallel": parallel,
                 "results": results,
             })
             next_burst += 1
