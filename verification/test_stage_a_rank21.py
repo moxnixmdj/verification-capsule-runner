@@ -58,7 +58,7 @@ class Rank21StageA(unittest.TestCase):
         x=json.loads(json.dumps(self.ledger)); x["instruction_read"]=True
         self.assertFalse(self.run_case(x)["pass"])
     def test_unclassified_pr_hit_fails(self):
-        x=json.loads(json.dumps(self.ledger)); x["prior_exposure_search"]["brain_pr_hits"]=1
+        x=json.loads(json.dumps(self.ledger)); x["prior_exposure_search"]["brain_pr_hits"]=2
         out=self.run_case(x); self.assertFalse(out["pass"])
         self.assertIn("PRIOR_EXPOSURE_HIT_CLASSIFICATION_INCOMPLETE",out["failed_predicates"])
     def test_disqualifying_hit_fails(self):
