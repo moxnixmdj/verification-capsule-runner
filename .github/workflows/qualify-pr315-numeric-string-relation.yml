@@ -1,0 +1,34 @@
+name: Qualify Brain PR315 Numeric String Relation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - QUALIFY_PR315_NUMERIC_STRING_RELATION_20260930_V1
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify jq is present
+        run: jq --version
+      - name: Run compiler regression
+        run: python canonical/tests/test_numeric_relation_jq_reuse.py
+      - name: Qualify exact candidate filter on fresh numeric-string cases
+        run: python verify_pr315_numeric_string_relation.py
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr315-numeric-string-relation-qualification
+          path: pr315-numeric-string-relation-qualification.json
+          if-no-files-found: error
