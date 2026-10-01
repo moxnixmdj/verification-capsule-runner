@@ -1,0 +1,56 @@
+name: Qualify Open Web Source Discovery With Durable Receipt
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ARM_OPEN_WEB_SOURCE_CANDIDATE_DISCOVERY_RECEIPT_20260930_V1
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  qualify-and-receipt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run full qualification
+        run: python -m unittest -v canonical.tests.test_open_web_source_candidate_discovery
+      - name: Independent live oracle
+        run: |
+          python - <<'PY'
+          import importlib.util, json, pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py")
+          s=importlib.util.spec_from_file_location("m",p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+          qs=[
+            "PostgreSQL transaction isolation official documentation",
+            "aluminum fatigue crack growth experimental measurements",
+            "WebAssembly core specification official",
+          ]
+          results=[]
+          for q in qs:
+            x=m.discover(q,limit=8,timeout=20)
+            assert x["status"]=="CANDIDATES_DISCOVERED", x
+            assert x["candidate_count"]>=1, x
+            assert x["query"]==q
+            assert x["model_dependency_count"]==0
+            assert x["incremental_spend_usd"]==0
+            assert x["authority_verification"]=="NOT_PERFORMED"
+            assert all(c.get("authority_status")=="UNVERIFIED" for c in x["candidates"])
+            results.append({"query":q,"candidate_count":x["candidate_count"],"hosts":[c["host"] for c in x["candidates"][:5]]})
+          pathlib.Path("qualification-receipt.json").write_text(json.dumps({"status":"PASS","cases":results},indent=2)+"\n")
+          print(json.dumps(results,indent=2))
+          PY
+      - name: Create durable PASS receipt issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          gh api "repos/$REPO/issues"             -f title="QUALIFICATION_PASS_OPEN_WEB_SOURCE_CANDIDATE_DISCOVERY_20260930_V1"             -f body="PASS. Head SHA: $SHA. Workflow run: $RUN_ID. Full authored tests plus independent three-domain live oracle passed. model_dependency_count=0; incremental_spend_usd=0; authority claims remain forbidden."
