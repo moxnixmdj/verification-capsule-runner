@@ -1,10 +1,35 @@
 import random, unittest
+from datetime import datetime, timezone, timedelta
 from acceptance_contract import (
   canonical_payload_hash, validate_acceptance_payload, validate_lease_authorization,
+  validate_continuous_obs_context,
   validate_lease_revalidation, validate_total_lease_budget,
   terminal_acceptance_errors, audit_required_graph
 )
 from controller_fast import runtime_authority_errors
+
+def obs(commit):
+    return {
+      "schema":"PROJECT_BRAIN_CONTINUOUS_OBS_CONTEXT_V1",
+      "status":"CURRENT",
+      "canonical_brain_commit":commit,
+      "dependency_inventory_complete":True,
+      "material_world_state_dependencies_complete":True,
+      "unknown_material_dependencies":[],
+      "stale_authority_absent":True,
+      "valid_proof_action_priority":True,
+      "obs_layers_current":{k:True for k in ("goal","capability","blocker","solution","verification","inherited_system","obs_process")},
+      "canonical_state_dependencies":[
+        {"path":"canonical/CANONICAL_POINTER.json","sha256":"d"*64},
+        {"path":"canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json","sha256":"e"*64},
+        {"path":"canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json","sha256":"f"*64},
+      ],
+      "dependencies":[{
+        "dependency_id":"runner","class":"EXECUTION_SURFACE","material":True,
+        "volatility":"STATIC","scope":"GLOBAL","status":"READY",
+        "evidence":["runner receipt"]
+      }]
+    }
 
 def base_payload():
     return {
@@ -31,12 +56,24 @@ def base_payload():
     }
 
 class TestAcceptanceContract(unittest.TestCase):
+  def test_continuous_obs_missing_and_stale_fail_closed(self):
+    self.assertIn("CONTINUOUS_OBS_CONTEXT_MISSING",validate_continuous_obs_context(None))
+    x=obs("a"*40)
+    x["dependencies"][0]={
+      "dependency_id":"world","class":"EXTERNAL_WORLD_STATE","material":True,
+      "volatility":"VOLATILE","scope":"GLOBAL","status":"READY",
+      "observed_at_utc":(datetime.now(timezone.utc)-timedelta(hours=2)).isoformat(),
+      "max_age_seconds":60,"evidence":["direct world-state observation"]
+    }
+    self.assertTrue(any(e.startswith("CONTINUOUS_OBS_VOLATILE_DEPENDENCY_STALE") for e in validate_continuous_obs_context(x,expected_brain_commit="a"*40)))
+
   def test_lease_authorization_fail_closed(self):
     good={
       "schema":"BRAIN_FAST_BURST_LEASE_AUTHORIZATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"lease_merged_to_main":True,
       "canonical_brain_commit":"a"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":15
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":15,
+      "continuous_obs":obs("a"*40)
     }
     self.assertEqual(validate_lease_authorization(good,"s1","t1"),[])
     bad=dict(good); bad["lease_merged_to_main"]=False
@@ -51,13 +88,15 @@ class TestAcceptanceContract(unittest.TestCase):
       "authorization":True,"lease_merged_to_main":True,
       "canonical_brain_commit":"a"*40,
       "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
-      "execution_count_allowed":1,"terminal_verifier_count_allowed":1
+      "execution_count_allowed":1,"terminal_verifier_count_allowed":1,
+      "continuous_obs":obs("a"*40)
     }
     burst={
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"scope":"BURST","burst_id":0,
       "canonical_brain_commit":"b"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
+      "continuous_obs":obs("b"*40)
     }
     self.assertEqual(validate_lease_revalidation(
       burst,"s1","t1",lease,expected_scope="BURST",expected_burst_id=0
@@ -85,6 +124,7 @@ class TestAcceptanceContract(unittest.TestCase):
       "canonical_brain_commit":"a"*40,
       "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18,
       "scope":"STAGE_C_ONE_SHOT_EXECUTION","task_execution_authorized":True,
+      "continuous_obs":obs("a"*40),
     }
     errors=validate_lease_authorization(lease,"s1","t1")
     self.assertIn("EXECUTION_COUNT_ALLOWED_INVALID",errors)
@@ -106,7 +146,8 @@ class TestAcceptanceContract(unittest.TestCase):
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"scope":"BURST","burst_id":1,
       "canonical_brain_commit":"b"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18,
+      "continuous_obs":obs("b"*40)
     }
     self.assertIn("TOTAL_EXECUTION_BUDGET_EXHAUSTED",runtime_authority_errors(
       session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
@@ -121,7 +162,8 @@ class TestAcceptanceContract(unittest.TestCase):
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"scope":"TERMINAL",
       "canonical_brain_commit":"c"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":18,
+      "continuous_obs":obs("b"*40)
     }
     self.assertEqual(runtime_authority_errors(
       session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
@@ -154,7 +196,8 @@ class TestAcceptanceContract(unittest.TestCase):
       "schema":"BRAIN_FAST_BURST_LEASE_REVALIDATION_V1","session_id":"s1","task":"t1",
       "authorization":True,"scope":"TERMINAL",
       "canonical_brain_commit":"c"*40,
-      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16
+      "canonical_lease_path":"canonical/governance/LEASE_T1.json","sample_rank":16,
+      "continuous_obs":obs("c"*40)
     }
     self.assertEqual(runtime_authority_errors(
       session_id="s1",task="t1",lease_authorized=True,bound_lease=lease,
