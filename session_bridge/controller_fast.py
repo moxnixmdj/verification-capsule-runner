@@ -123,6 +123,54 @@ def replay_bootstrap():
     }
 
 
+def normalize_artifact_contract(entries):
+    """Normalize trusted task artifact metadata for this single-container carrier.
+
+    String artifacts are supported directly. Structured artifacts are supported
+    only when they do not require another service/container and do not request
+    exclude filtering. Unsupported entries are surfaced before runtime build so
+    the task can be skipped unspent instead of crashing or producing false
+    capability evidence.
+    """
+    normalized = []
+    unsupported = []
+    for entry in entries:
+        if isinstance(entry, str):
+            normalized.append({"source": entry, "destination": entry, "service": None})
+            continue
+        if not isinstance(entry, dict):
+            unsupported.append({"entry": entry, "reason": "INVALID_ARTIFACT_ENTRY_TYPE"})
+            continue
+        source = entry.get("source")
+        destination = entry.get("destination") or source
+        service = entry.get("service")
+        exclude = entry.get("exclude")
+        if not isinstance(source, str) or not source:
+            unsupported.append({"entry": entry, "reason": "ARTIFACT_SOURCE_MISSING_OR_INVALID"})
+            continue
+        if not isinstance(destination, str) or not destination:
+            unsupported.append({"entry": entry, "reason": "ARTIFACT_DESTINATION_INVALID"})
+            continue
+        if service:
+            unsupported.append({
+                "source": source,
+                "destination": destination,
+                "service": service,
+                "reason": "PER_SERVICE_ARTIFACT_REQUIRES_MULTI_SERVICE_COLLECTOR",
+            })
+            continue
+        if exclude:
+            unsupported.append({
+                "source": source,
+                "destination": destination,
+                "exclude": exclude,
+                "reason": "ARTIFACT_EXCLUDE_FILTER_UNSUPPORTED",
+            })
+            continue
+        normalized.append({"source": source, "destination": destination, "service": None})
+    return normalized, unsupported
+
+
 def terminal_blocker(payload):
     if payload.get("schema") != "BRAIN_FAST_BURST_TERMINAL_AUTHORIZATION_V2":
         return "SCHEMA_INVALID"
@@ -156,12 +204,27 @@ def main():
     legacy.CONFIG = CONFIG
     EVIDENCE.mkdir(parents=True, exist_ok=True)
     task_dir = legacy.clone_task()
-    legacy.build_runtime(task_dir)
 
-    # Artifact paths are execution-interface metadata, not solution evidence.
-    # Surface only this safe contract before operator commands so the agent
-    # never has to guess where terminal artifacts must be written.
-    artifact_paths, verifier_environment_mode = legacy.load_artifacts(task_dir)
+    # Artifact metadata is trusted execution-interface metadata. Inspect it
+    # before building the task runtime so unsupported multi-service contracts
+    # can be skipped unspent without exposing task instructions or burning CI.
+    raw_artifacts, verifier_environment_mode = legacy.load_artifacts(task_dir)
+    artifact_contract, unsupported_artifacts = normalize_artifact_contract(raw_artifacts)
+    if unsupported_artifacts:
+        post("<!-- BRAIN_FAST_BURST_SURFACE_INCOMPATIBLE_V2 -->", {
+            "schema": "BRAIN_FAST_BURST_SURFACE_INCOMPATIBLE_V2",
+            "session_id": CONFIG["session_id"],
+            "task": CONFIG["task"],
+            "reason": "ARTIFACT_CONTRACT_UNSUPPORTED_BY_SINGLE_CONTAINER_CARRIER",
+            "unsupported_artifacts": unsupported_artifacts,
+            "verifier_environment_mode": verifier_environment_mode,
+            "instruction_read": False,
+            "capability_credit_delta": 0,
+        })
+        return 0
+
+    legacy.build_runtime(task_dir)
+    artifact_paths = [item["source"] for item in artifact_contract]
     artifact_parent_dirs = sorted({str(Path(p).parent) for p in artifact_paths if str(Path(p).parent)})
     for parent in artifact_parent_dirs:
         legacy.run(["docker", "exec", "brain-bridge-task", "mkdir", "-p", parent])
@@ -177,6 +240,7 @@ def main():
         "bootstrap": bootstrap,
         "max_commands_per_burst": int(CONFIG.get("max_commands_per_burst", 8)),
         "artifact_paths": artifact_paths,
+        "artifact_contract": artifact_contract,
         "verifier_environment_mode": verifier_environment_mode,
         "artifact_contract_authority": "TRUSTED_TASK_METADATA_ONLY__NO_SOLUTION_TEST_OR_VERIFIER_CONTENT_EXPOSED",
     })
