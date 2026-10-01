@@ -77,7 +77,7 @@ def validate_lease_authorization(payload: Any, session_id: str, task: str) -> li
         if not isinstance(terminal_budget, int) or isinstance(terminal_budget, bool) or terminal_budget < 0:
             errors.append("CANONICAL_TERMINAL_BUDGET_INVALID")
         if payload.get("replay_for_credit") is not False:
-            errors.append("STAGE_C_REPLAY_POLICY_INVALID")
+            errors.append("LEASE_UPGRADE_REPLAY_POLICY_INVALID")
     return errors
 
 
