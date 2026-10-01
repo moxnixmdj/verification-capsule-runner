@@ -1,0 +1,14 @@
+{
+  "session_id": "vba-userform-port-20261001-stageb-v1",
+  "task": "vba-userform-port",
+  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e",
+  "build_timeout_sec": 1800,
+  "command_timeout_sec": 900,
+  "verifier_build_timeout_sec": 1800,
+  "verifier_timeout_sec": 900,
+  "session_timeout_sec": 14400,
+  "max_bursts": 1,
+  "max_commands_per_burst": 1,
+  "poll_interval_sec": 10,
+  "authorized_controller_login": "moxnixmdj"
+}
