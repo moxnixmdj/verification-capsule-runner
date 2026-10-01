@@ -1,0 +1,69 @@
+{
+  "schema": "BRAIN_GUARDED_LAUNCH_PLAN_V1",
+  "goal_text": "Independently guard-qualify exact Brain PR 474 broad multi-clause research routing bytes on canonical base 691b08b7, proving cross-domain all-unresolved admission, generic research-method language admission, concrete recipe rejection, partial-ground fail-closed behavior, and research-frontend precedence before package acquisition, without executing any parent scientific task.",
+  "frozen": {
+    "gate_id": "BRAIN-QUALIFY-PR474-CURRENTBASE-BROAD-ROUTING-20260930-V1",
+    "problem_sha256": "70e42a21256724d368a63c9f54914f958405f11712c75fd5b1a79004999ace85",
+    "task_sha256": "6206da2a8ec6534f43b005065f78727dff27b0ff8d49ca3f9238aaf7e6fc4d69",
+    "runtime_sha256": "3db9e931016b66b35ee1529ef36bd9fde1ee7962296763e4321ad5f87c0b567f",
+    "canonical_base": "691b08b7f51adca1ed980df384153b71ef38e046",
+    "authorization_sha256": "e5e57ea297c04a82f451eb974f9a75e7a621c6f82b53c7a9408b49239b3d143c"
+  },
+  "pinned_files": [
+    {
+      "path": "canonical/runtime/bound_capabilities/broad_objective_decompose.py",
+      "git_blob_sha1": "1efaec4ba51ecb5c40072b3190853f4de89d8f77",
+      "sha256": "c110537cf6efdd46167a28f2c45e4f9315870a55c3ae19da38e3af8692031f3a"
+    },
+    {
+      "path": "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+      "git_blob_sha1": "46e8e7466479ea298c34e5fa682d49c374510ce9",
+      "sha256": "3db9e931016b66b35ee1529ef36bd9fde1ee7962296763e4321ad5f87c0b567f"
+    },
+    {
+      "path": "canonical/tests/test_broad_objective_semantic_decomposition.py",
+      "git_blob_sha1": "2df7c6ec85083458a69675f6ff86eca9c00ea278",
+      "sha256": "6206da2a8ec6534f43b005065f78727dff27b0ff8d49ca3f9238aaf7e6fc4d69"
+    },
+    {
+      "path": "qualification/pr474/authorization.json",
+      "sha256": "e5e57ea297c04a82f451eb974f9a75e7a621c6f82b53c7a9408b49239b3d143c"
+    },
+    {
+      "path": "qualification/pr474/independent_oracle.py",
+      "sha256": "086ffcdeab9e4200b9086db66bac38f90084ade0dd979fe58606e3d9a1ed7707"
+    },
+    {
+      "path": "qualification/pr474/astra_runtime_currentbase.py",
+      "git_blob_sha1": "426ffe58e405dc4f1ba2eb4e838e03a1df771964",
+      "sha256": "7a5ef09caf905741ff25446991f07645a5876ac3e7644987a184a70d32afb613"
+    },
+    {
+      "path": "execution_guard/github_actions_guarded_run_live.py",
+      "git_blob_sha1": "30ea2fd2cc548444477c7b234a59129ff8386235"
+    },
+    {
+      "path": "execution_guard/actions_admission.py",
+      "git_blob_sha1": "6c46abef66c036f5382d5792b11a82a289b4dd94"
+    },
+    {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha1": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    }
+  ],
+  "command": [
+    "bash",
+    "-lc",
+    "python canonical/tests/test_broad_objective_semantic_decomposition.py && python qualification/pr474/independent_oracle.py"
+  ],
+  "authority": {
+    "kind": "NON_PARENT_GUARDED_INDEPENDENT_QUALIFICATION",
+    "brain_pr": 474,
+    "brain_head_sha": "2b2ad1272c28229b3a26fc48f3515138313fd774",
+    "parent_task_execution": false,
+    "parent_task_replay": false,
+    "spent_parent_run_id": 36688193204,
+    "model_dependency_count": 0,
+    "incremental_spend_usd": 0
+  }
+}

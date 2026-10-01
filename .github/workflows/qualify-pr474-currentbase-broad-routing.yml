@@ -1,0 +1,31 @@
+name: Guarded Qualify Brain PR474 Current-Base Broad Routing
+on:
+  pull_request:
+    branches: [main]
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  qualify:
+    if: github.head_ref == 'qualify/pr474-currentbase-broad-routing-20260930-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Guarded exact-byte non-parent qualification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ASTRA_DISABLE_MODEL_PLANNER: "1"
+        run: python execution_guard/github_actions_guarded_run_live.py --plan qualification/pr474/guarded_plan.json --receipt qualification/pr474/admission.json
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pr474-currentbase-broad-routing-qualification
+          path: qualification/pr474/
+          if-no-files-found: error
