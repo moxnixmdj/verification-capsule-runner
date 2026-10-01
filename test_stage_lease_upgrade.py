@@ -18,6 +18,18 @@ def lease(scope, *, rank=17, task="data-anonymization", session="data-anonymizat
         "replay_for_credit": False,
         "execution_count_allowed": 1 if execute else 0,
         "terminal_verifier_count_allowed": 1 if execute else 0,
+        "source_boundary_preflight": ({
+            "schema": "BRAIN_SOURCE_BOUNDARY_PREFLIGHT_V1",
+            "status": "PASS",
+            "task_specific_external_search": False,
+            "task_specific_hints_read": False,
+            "solution_read": False,
+            "tests_read": False,
+            "hidden_verifier_read": False,
+            "task_command_executed": False,
+            "contamination_ledger_sha256": "c" * 64,
+            "evidence": ["canonical contamination ledger independently checked"],
+        } if execute else None),
         "execution_surface_preflight": ({
             "schema": "BRAIN_EXECUTION_SURFACE_PREFLIGHT_V1",
             "status": "PASS",
@@ -92,6 +104,41 @@ class LeaseUpgradeTests(unittest.TestCase):
         x["execution_surface_preflight"]=dict(x["execution_surface_preflight"])
         x["execution_surface_preflight"]["required_install_steps_verified"]=False
         self.assertIn("REQUIRED_INSTALL_STEPS_UNVERIFIED", self.check(candidate=x, acceptance_hash="frozen"))
+
+
+    def test_missing_source_boundary_preflight_fails(self):
+        x=dict(self.stage_c); x.pop("source_boundary_preflight", None)
+        self.assertIn("SOURCE_BOUNDARY_PREFLIGHT_MISSING", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_external_task_search_fails(self):
+        x=dict(self.stage_c)
+        x["source_boundary_preflight"]=dict(x["source_boundary_preflight"])
+        x["source_boundary_preflight"]["task_specific_external_search"]=True
+        self.assertIn("TASK_SPECIFIC_EXTERNAL_SEARCH_DETECTED", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_hidden_verifier_read_fails(self):
+        x=dict(self.stage_c)
+        x["source_boundary_preflight"]=dict(x["source_boundary_preflight"])
+        x["source_boundary_preflight"]["hidden_verifier_read"]=True
+        self.assertIn("HIDDEN_VERIFIER_READ", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_solution_read_fails(self):
+        x=dict(self.stage_c)
+        x["source_boundary_preflight"]=dict(x["source_boundary_preflight"])
+        x["source_boundary_preflight"]["solution_read"]=True
+        self.assertIn("SOLUTION_READ", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_tests_read_fails(self):
+        x=dict(self.stage_c)
+        x["source_boundary_preflight"]=dict(x["source_boundary_preflight"])
+        x["source_boundary_preflight"]["tests_read"]=True
+        self.assertIn("TESTS_READ", self.check(candidate=x, acceptance_hash="frozen"))
+
+    def test_missing_ledger_digest_fails(self):
+        x=dict(self.stage_c)
+        x["source_boundary_preflight"]=dict(x["source_boundary_preflight"])
+        x["source_boundary_preflight"]["contamination_ledger_sha256"]="bad"
+        self.assertIn("CONTAMINATION_LEDGER_DIGEST_INVALID", self.check(candidate=x, acceptance_hash="frozen"))
 
 
 if __name__ == "__main__":
