@@ -1,0 +1,10 @@
+{
+  "command_sha256": "dab7ffb67b7fc7b1b8a1537a84df682eebd39c86435b9ee57dec6ca1f1dcf9ed",
+  "duration_sec": 1.481,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-dev-20261001-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"/app/consolidate.py\", line 86, in <module>\n    raise RuntimeError(f'EP replica mismatch tp={tp} pp={pp} key={k}')\nRuntimeError: EP replica mismatch tp=0 pp=0 key=transformer.layers.1.moe.router.weight\n",
+  "stdout": "",
+  "step": 2
+}
