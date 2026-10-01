@@ -1,3 +1,4 @@
+import unittest
 from canonical.runtime.prequalification_acceptance_bundle import assess_prequalification_bundle
 
 def req(rid, scenario):
@@ -60,80 +61,90 @@ def base_bundle():
         ],
     }
 
-def test_complete_composed_bundle_passes_and_kills_seeded_mutants():
-    out=assess_prequalification_bundle(base_bundle())
-    assert out["pass"] is True
-    assert out["verifier_mutation"]["killed"] == 2
-    assert out["fresh_execution_authorized_by_this_bundle"] is False
+class PrequalificationAcceptanceBundleTests(unittest.TestCase):
+    def test_complete_composed_bundle_passes_and_kills_seeded_mutants(self):
+        out=assess_prequalification_bundle(base_bundle())
+        assert out["pass"] is True
+        assert out["verifier_mutation"]["killed"] == 2
+        assert out["fresh_execution_authorized_by_this_bundle"] is False
+    
 
-def test_spent_saccr_missing_requirement_lineage_fails():
-    b=base_bundle()
-    b["requirements"].append(req("SUPERVISORY_DURATION","SD"))
-    b["expected_required_ids"].append("SUPERVISORY_DURATION")
-    b["calculation_nodes"].append({"id":"sd","requirement_id":"SUPERVISORY_DURATION"})
-    out=assess_prequalification_bundle(b)
-    assert out["pass"] is False
-    assert "SUPERVISORY_DURATION:NO_OUTPUT_PATH" in out["structured_method"]["output_reachability"]["uncovered"]
+    def test_spent_saccr_missing_requirement_lineage_fails(self):
+        b=base_bundle()
+        b["requirements"].append(req("SUPERVISORY_DURATION","SD"))
+        b["expected_required_ids"].append("SUPERVISORY_DURATION")
+        b["calculation_nodes"].append({"id":"sd","requirement_id":"SUPERVISORY_DURATION"})
+        out=assess_prequalification_bundle(b)
+        assert out["pass"] is False
+        assert "SUPERVISORY_DURATION:NO_OUTPUT_PATH" in out["structured_method"]["output_reachability"]["uncovered"]
+    
 
-def test_spent_cad_local_only_acceptance_fails_global_obligations():
-    b=base_bundle()
-    b["acceptance_model"]={
-        "requirements":[{
-            "id":"CAD_GLOBAL_SOLID","critical":True,
-            "transform_kinds":["geometry_reconstruction"],
-            "builder_dependencies":["raw:drawing","builder:cad"]
-        }],
-        "checks":[{
-            "id":"watertight-only","covers":["CAD_GLOBAL_SOLID"],
-            "provenance":"independent_oracle",
-            "dependencies":["raw:drawing","oracle:watertight"],
-            "detects":["watertightness"]
-        }],
-    }
-    out=assess_prequalification_bundle(b)
-    assert out["pass"] is False
-    uncovered=set(out["independent_acceptance"]["requirements"][0]["uncovered"])
-    assert {"global_mass_property","topology","envelope","curvature"} <= uncovered
+    def test_spent_cad_local_only_acceptance_fails_global_obligations(self):
+        b=base_bundle()
+        b["acceptance_model"]={
+            "requirements":[{
+                "id":"CAD_GLOBAL_SOLID","critical":True,
+                "transform_kinds":["geometry_reconstruction"],
+                "builder_dependencies":["raw:drawing","builder:cad"]
+            }],
+            "checks":[{
+                "id":"watertight-only","covers":["CAD_GLOBAL_SOLID"],
+                "provenance":"independent_oracle",
+                "dependencies":["raw:drawing","oracle:watertight"],
+                "detects":["watertightness"]
+            }],
+        }
+        out=assess_prequalification_bundle(b)
+        assert out["pass"] is False
+        uncovered=set(out["independent_acceptance"]["requirements"][0]["uncovered"])
+        assert {"global_mass_property","topology","envelope","curvature"} <= uncovered
+    
 
-def test_spent_kg_shared_semantic_acceptance_fails():
-    b=base_bundle()
-    b["acceptance_model"]={
-        "requirements":[{
-            "id":"KG","critical":True,
-            "must_detect_failure_modes":["identifier_variant"],
-            "builder_dependencies":["raw:records","semantic:identity"]
-        }],
-        "checks":[{
-            "id":"shared","covers":["KG"],
-            "provenance":"same_semantic_interpretation",
-            "dependencies":["raw:records","semantic:identity"],
-            "detects":["identifier_variant"]
-        }],
-    }
-    out=assess_prequalification_bundle(b)
-    assert out["pass"] is False
-    assert out["independent_acceptance"]["requirements"][0]["independent_checks"] == ()
+    def test_spent_kg_shared_semantic_acceptance_fails(self):
+        b=base_bundle()
+        b["acceptance_model"]={
+            "requirements":[{
+                "id":"KG","critical":True,
+                "must_detect_failure_modes":["identifier_variant"],
+                "builder_dependencies":["raw:records","semantic:identity"]
+            }],
+            "checks":[{
+                "id":"shared","covers":["KG"],
+                "provenance":"same_semantic_interpretation",
+                "dependencies":["raw:records","semantic:identity"],
+                "detects":["identifier_variant"]
+            }],
+        }
+        out=assess_prequalification_bundle(b)
+        assert out["pass"] is False
+        assert out["independent_acceptance"]["requirements"][0]["independent_checks"] == ()
+    
 
-def test_spent_bun_builder_only_policy_check_fails():
-    b=base_bundle()
-    b["acceptance_model"]={
-        "requirements":[{
-            "id":"BUN","critical":True,
-            "must_detect_failure_modes":["policy_or_semantic_variant"],
-            "builder_dependencies":["raw:instruction","semantic:policy"]
-        }],
-        "checks":[{
-            "id":"self","covers":["BUN"],
-            "provenance":"builder_derived",
-            "dependencies":["raw:instruction","semantic:policy"],
-            "detects":["policy_or_semantic_variant"]
-        }],
-    }
-    out=assess_prequalification_bundle(b)
-    assert out["pass"] is False
+    def test_spent_bun_builder_only_policy_check_fails(self):
+        b=base_bundle()
+        b["acceptance_model"]={
+            "requirements":[{
+                "id":"BUN","critical":True,
+                "must_detect_failure_modes":["policy_or_semantic_variant"],
+                "builder_dependencies":["raw:instruction","semantic:policy"]
+            }],
+            "checks":[{
+                "id":"self","covers":["BUN"],
+                "provenance":"builder_derived",
+                "dependencies":["raw:instruction","semantic:policy"],
+                "detects":["policy_or_semantic_variant"]
+            }],
+        }
+        out=assess_prequalification_bundle(b)
+        assert out["pass"] is False
+    
 
-def test_missing_verifier_mutants_fails_closed():
-    b=base_bundle(); b["verifier_mutants"]=[]
-    out=assess_prequalification_bundle(b)
-    assert out["pass"] is False
-    assert out["verifier_mutation"]["failure"]=="NO_VERIFIER_MUTANTS"
+    def test_missing_verifier_mutants_fails_closed(self):
+        b=base_bundle(); b["verifier_mutants"]=[]
+        out=assess_prequalification_bundle(b)
+        assert out["pass"] is False
+        assert out["verifier_mutation"]["failure"]=="NO_VERIFIER_MUTANTS"
+    
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
