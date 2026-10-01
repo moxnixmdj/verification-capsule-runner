@@ -1,0 +1,10 @@
+{
+  "command_sha256": "3f56c8162f9fc34bfccaecb98bdceff742c659d4b53ec782eeba6a96c157c6db",
+  "duration_sec": 3.428,
+  "exit_code": 0,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "mp-checkpoint-consolidation-20261001-v1",
+  "stderr": "",
+  "stdout": "SAVED 163 186721216\npair_inv 25.46187400817871 4.240872383117676\npair_perm 22.61800765991211 4.213437557220459\n",
+  "step": 18
+}
