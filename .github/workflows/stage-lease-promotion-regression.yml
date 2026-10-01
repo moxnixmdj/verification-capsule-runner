@@ -19,3 +19,29 @@ jobs:
           python-version: '3.12'
       - run: python -m py_compile session_bridge/acceptance_contract.py session_bridge/controller_fast.py
       - run: python -m unittest -v test_stage_lease_upgrade.py
+
+  execution-surface-parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Prove Debian Python policy and venv escape on exact base
+        run: |
+          cat > /tmp/Dockerfile.surface <<'EOF'
+          FROM ubuntu:24.04
+          ENV DEBIAN_FRONTEND=noninteractive
+          RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip python3-venv ca-certificates && rm -rf /var/lib/apt/lists/*
+          WORKDIR /app
+          EOF
+          docker build -f /tmp/Dockerfile.surface -t brain-surface-parity /tmp
+          docker run --rm brain-surface-parity /bin/bash -lc '
+            set -eu
+            if python3 -m pip install --disable-pip-version-check --no-input packaging >/tmp/system-pip.out 2>/tmp/system-pip.err; then
+              echo "SYSTEM_PIP_UNEXPECTEDLY_SUCCEEDED"
+              cat /tmp/system-pip.out /tmp/system-pip.err
+              exit 1
+            fi
+            grep -qi "externally-managed-environment\|externally managed" /tmp/system-pip.err
+            python3 -m venv /tmp/brain-venv
+            /tmp/brain-venv/bin/python -m pip install --disable-pip-version-check --no-input packaging
+            /tmp/brain-venv/bin/python -c "import packaging; print(packaging.__version__)"
+          '
