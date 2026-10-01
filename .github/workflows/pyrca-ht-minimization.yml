@@ -1,0 +1,70 @@
+name: PyRCA HT Donor Minimization Differential
+on:
+  push:
+    branches:
+      - "probe/minimize-pyrca-ht-ranker-20261001-v1"
+    paths:
+      - ".github/workflows/pyrca-ht-minimization.yml"
+      - "atomic_cause_ranking/brain_owned_ht_ranker.py"
+      - "atomic_cause_ranking/verify_pyrca_ht_minimization.py"
+
+permissions:
+  contents: write
+
+jobs:
+  differential:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned donor with Python-3.12-compatible carrier deps
+        run: |
+          set -euo pipefail
+          PIP_DEFAULT_TIMEOUT=60 python -m pip install "numpy>=2,<3" "pandas>=2,<4" "networkx>=3,<4" "scikit-learn>=1.5,<2" "scipy>=1.13,<2" "schema>=0.7,<1" "pyyaml>=6,<7" "matplotlib>=3.8,<4" "pyparsing>=3,<4" "dill>=0.3,<1" "tqdm>=4,<5" "wheel>=0.43,<1" "packaging>=24,<27" "JPype1>=1.5,<2"
+          PIP_DEFAULT_TIMEOUT=60 python -m pip install --no-deps "git+https://github.com/salesforce/PyRCA.git@411310d589fac5cb8e7bdce67d33eadb091a1083"
+
+      - name: Run fresh donor-minimization differential
+        id: diff
+        shell: bash
+        run: |
+          set +e
+          cd atomic_cause_ranking
+          python verify_pyrca_ht_minimization.py | tee pyrca_ht_minimization_run.log
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit "$rc"
+
+      - name: Persist visible result
+        if: always()
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.diff.outcome }}
+          RC: ${{ steps.diff.outputs.rc }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("atomic_cause_ranking")
+          result=p/"pyrca_ht_minimization_result.json"
+          (p/"minimization_status.json").write_text(json.dumps({
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"PYRCA_HT_DONOR_MINIMIZATION_V1",
+            "workflow_run_id":os.environ["GITHUB_RUN_ID"],
+            "head_sha":os.environ["GITHUB_SHA"],
+            "outcome":os.environ.get("OUTCOME"),
+            "rc":os.environ.get("RC"),
+            "result_exists":result.exists(),
+            "terminal_state":"SUCCESS" if os.environ.get("OUTCOME")=="success" and result.exists() else "FAILURE",
+            "capability_credit_delta":0
+          },indent=2)+"\n")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add atomic_cause_ranking/minimization_status.json
+          test ! -f atomic_cause_ranking/pyrca_ht_minimization_run.log || git add atomic_cause_ranking/pyrca_ht_minimization_run.log
+          test ! -f atomic_cause_ranking/pyrca_ht_minimization_result.json || git add atomic_cause_ranking/pyrca_ht_minimization_result.json
+          git commit -m "Record HT donor minimization differential" || exit 0
+          git pull --rebase origin "probe/minimize-pyrca-ht-ranker-20261001-v1"
+          git push origin HEAD:"probe/minimize-pyrca-ht-ranker-20261001-v1"
