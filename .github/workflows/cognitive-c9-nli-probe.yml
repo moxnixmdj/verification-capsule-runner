@@ -21,17 +21,22 @@ jobs:
           set -euo pipefail
           git rev-parse HEAD
           sha256sum cognitive_c9_nli_probe/cases.json cognitive_c9_nli_probe/probe.py
-      - name: Install dependencies
+      - name: Install dependencies and run probe
+        id: measurement
+        shell: bash
         run: |
-          set -euo pipefail
-          python -m pip install --upgrade pip
-          python -m pip install transformers torch sentencepiece
-          python -m pip freeze > cognitive_c9_nli_probe/pip-freeze.txt
-      - name: Run fresh C9 semantic support probe
-        run: |
-          set -euo pipefail
-          python cognitive_c9_nli_probe/probe.py
-          cat cognitive_c9_nli_probe/result.json
+          set +e
+          {
+            python -m pip install --upgrade pip
+            python -m pip install transformers torch sentencepiece
+            python -m pip freeze > cognitive_c9_nli_probe/pip-freeze.txt
+            python cognitive_c9_nli_probe/probe.py
+            cat cognitive_c9_nli_probe/result.json
+          } > cognitive_c9_nli_probe/run.log 2>&1
+          rc=$?
+          cat cognitive_c9_nli_probe/run.log
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit $rc
       - name: Upload evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -42,13 +47,38 @@ jobs:
             cognitive_c9_nli_probe/probe.py
             cognitive_c9_nli_probe/result.json
             cognitive_c9_nli_probe/pip-freeze.txt
+            cognitive_c9_nli_probe/run.log
           if-no-files-found: warn
-      - name: Persist successful measurement
-        if: success()
+      - name: Persist observable terminal status
+        if: always()
+        shell: bash
+        env:
+          MEASUREMENT_OUTCOME: ${{ steps.measurement.outcome }}
+          MEASUREMENT_RC: ${{ steps.measurement.outputs.rc }}
         run: |
           set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path("cognitive_c9_nli_probe")
+          result_exists=(p/"result.json").exists()
+          status={
+            "schema":"PROJECT_BRAIN_VISIBLE_EXECUTION_STATUS_V1",
+            "probe":"C9_NLI_SEMANTIC_SUPPORT",
+            "workflow_run_id":os.environ.get("GITHUB_RUN_ID"),
+            "head_sha":os.environ.get("GITHUB_SHA"),
+            "measurement_outcome":os.environ.get("MEASUREMENT_OUTCOME"),
+            "measurement_rc":os.environ.get("MEASUREMENT_RC"),
+            "result_exists":result_exists,
+            "terminal_state":"SUCCESS" if os.environ.get("MEASUREMENT_OUTCOME")=="success" and result_exists else "FAILURE"
+          }
+          (p/"status.json").write_text(json.dumps(status,indent=2)+"\n")
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add cognitive_c9_nli_probe/result.json cognitive_c9_nli_probe/pip-freeze.txt
-          git commit -m "Record fresh C9 semantic support NLI measurement"
+          git add cognitive_c9_nli_probe/status.json cognitive_c9_nli_probe/run.log
+          test ! -f cognitive_c9_nli_probe/result.json || git add cognitive_c9_nli_probe/result.json
+          test ! -f cognitive_c9_nli_probe/pip-freeze.txt || git add cognitive_c9_nli_probe/pip-freeze.txt
+          git commit -m "Record visible C9 NLI probe terminal status"
+          git pull --rebase origin main
           git push
