@@ -3,7 +3,7 @@
   "exact_brain_blobs": {
     "canonical/governance/DELEGATION_SCOPE_EQUIVALENCE_RELATION_V2.json": "6423232c60ac0c9757f4340f3e5f4deabd336c00",
     "canonical/governance/DELEGATION_PROTOCOL_SCOPE_COMPLETENESS_CERTIFICATE_V1.json": "397b734447638e25eb37758d5f4ce9a1b7748213",
-    "canonical/runtime/delegation_protocol_scope_completeness_verifier_v1.py": "fe4e8f594a956b50a569327f18a8574a1d79d055",
+    "canonical/runtime/delegation_protocol_scope_completeness_verifier_v1.py": "828e0c46cd00d7b4dd14a2a0c71a3ee0a1e1cbd7",
     "canonical/tests/test_delegation_protocol_scope_completeness_v1.py": "2cc6df3bad4f5da1807c6f45f95e978f3881f391",
     "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "ee187f611a0e82b2de495ee377682f39bc31dd31",
     "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "eb4bca0fe6a015d49d2854998fbe046c979c7ea9",
