@@ -1,0 +1,50 @@
+name: Verify SA-CCR-corrected terminal parent launcher V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/terminal_parent_portfolio_launcher_v1.py
+      - canonical/tests/test_terminal_parent_portfolio_launcher_v1.py
+      - canonical/runtime/terminal_parent_portfolio_runner_v1.py
+      - canonical/runtime/terminal_wave_launch_authority_reducer_v1.py
+      - .github/workflows/verify-saccr-corrected-terminal-launcher-v3.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact current Brain launcher dependency cone
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/terminal_parent_portfolio_launcher_v1.py)" = "d7f20a66f1f534b06ea11782cb350a582c07d985"
+          test "$(git hash-object canonical/tests/test_terminal_parent_portfolio_launcher_v1.py)" = "01996bc0cca7246c0dcfea5b1602c4740fa3e45d"
+          test "$(git hash-object canonical/runtime/terminal_parent_portfolio_runner_v1.py)" = "05c9adf60b76a8b2e0ccd139a90c4c7fd9d34449"
+          test "$(git hash-object canonical/runtime/terminal_wave_launch_authority_reducer_v1.py)" = "0b5b5e8229cc3e5ee950169469811e7576c43514"
+          test "$(git hash-object canonical/runtime/saccr_route_specific_terminal_executor_v1.py)" = "9810e3f9a2dd94dc372b6b9a865510795d0262fd"
+          test "$(git hash-object canonical/runtime/direct_route_terminal_executors_v1.py)" = "28ef55db77ac81e78bd5c67e4d2b39fef131b505"
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_terminal_executor_v1.py)" = "72586ea16289fbfc51460bc8abbb0cd9fee652a1"
+          test "$(git hash-object canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py)" = "dd8fba0f27691002babbc7ad1fc6b65d7bb57282"
+      - name: Run corrected launcher regressions
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_parent_portfolio_launcher_v1
+      - name: Assert SA-CCR dispatch is route-specific
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("canonical/runtime/terminal_parent_portfolio_launcher_v1.py").read_text()
+          assert "from canonical.runtime import saccr_route_specific_terminal_executor_v1 as saccr" in s
+          assert "SA_CCR_ID = saccr.BEHAVIOR_ID" in s
+          assert "saccr_runner: Callable[..., dict[str, Any]] = saccr.execute_terminal" in s
+          assert "candidate_package_commitment=commitment" in s
+          assert "post_freeze_beacon=beacon" in s
+          assert 'raw.get("case_count") == saccr.SAMPLE_COUNT' in s
+          print("SA_CCR_ROUTE_SPECIFIC_DISPATCH=PASS")
+          PY
