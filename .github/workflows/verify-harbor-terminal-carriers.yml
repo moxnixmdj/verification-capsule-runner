@@ -27,15 +27,14 @@ jobs:
           docker version
           docker info --format '{{json .ServerVersion}}'
           docker run --rm hello-world >/tmp/docker-hello.txt
-      - name: Verify dataset discovery without task-case reads
+      - name: Verify public dataset identities without task-case reads
         run: |
           harbor datasets list >/tmp/datasets.txt
+          grep -q 'hub.harborframework.com/datasets' /tmp/datasets.txt
+          curl -fsSI https://hub.harborframework.com/datasets/terminal-bench/terminal-bench/4 >/tmp/tb4-head.txt
+          curl -fsSI https://hub.harborframework.com/datasets/terminal-bench-science/terminal-bench-science >/tmp/tbs-head.txt
           python - <<'PY'
-          from pathlib import Path
-          s=Path("/tmp/datasets.txt").read_text(errors="replace")
-          lower=s.lower()
-          assert "terminal-bench" in lower, s[-4000:]
-          print({"dataset_list_contains_terminal_bench":True,"task_case_content_read":False})
+          print({"terminal_bench_4_public_endpoint":True,"terminal_bench_science_public_endpoint":True,"task_case_content_read":False})
           PY
       - name: Verify run CLI exposes local execution controls
         run: |
