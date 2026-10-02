@@ -1,0 +1,38 @@
+name: Verify tool discovery T2 T3 objective binding v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/tool_discovery_t2_t3_objective_binding_v1/**'
+      - '.github/workflows/verify-tool-discovery-t2-t3-objective-binding-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain capsule identities
+        working-directory: capsules/tool_discovery_t2_t3_objective_binding_v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "149b9b70d16294f6a21c6774f3613c9d9a7ee28a"
+          test "$(git hash-object canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py)" = "3269341bba873ba241d89ec8f1be5ffbf87d71c2"
+          test "$(git hash-object canonical/tests/test_tool_discovery_t2_t3_objective_binding_validator.py)" = "4f5cf6472e8f33c1a032fbe84b4fafce80dab278"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_candidate.py)" = "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_proof_v2.py)" = "5e8a953864e13ec76768c3e8920644107c65a644"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_proof.py)" = "2450a9644119c9fdf9c43307a1d115098d6ba592"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "f0a2d64d7c418dbf27f8c0bb5eb2eda8399423fd"
+          test "$(git hash-object canonical/governance/OUTER_TERMINAL_MULTIPLEX_PORTFOLIOS_V1.json)" = "7c49e3a44dc9a827e84a12b572ea6b8e9b2fa1f5"
+          test "$(git hash-object canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "afa00109031d638fef32cc3fe10be18786605c39"
+      - name: Run fail-closed regression test
+        working-directory: capsules/tool_discovery_t2_t3_objective_binding_v1
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_tool_discovery_t2_t3_objective_binding_validator
+      - name: Validate frozen direct-objective binding
+        working-directory: capsules/tool_discovery_t2_t3_objective_binding_v1
+        run: PYTHONPATH=. python canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py .
