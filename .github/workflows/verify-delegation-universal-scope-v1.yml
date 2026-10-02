@@ -1,0 +1,19 @@
+name: Verify delegation universal scope v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/delegation_universal_scope_v1/**"
+      - ".github/workflows/verify-delegation-universal-scope-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs and universal scope theorem
+        run: python capsules/delegation_universal_scope_v1/verify.py
