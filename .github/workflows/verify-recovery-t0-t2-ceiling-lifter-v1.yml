@@ -1,0 +1,25 @@
+name: Verify recovery T0 T2 ceiling lifter v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/recovery_t0_t2_ceiling_lifter_v1/**"
+      - ".github/workflows/verify-recovery-t0-t2-ceiling-lifter-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independent recovery T0 T2 ceiling verification
+        run: |
+          cd capsules/recovery_t0_t2_ceiling_lifter_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_recovery_t0_t2_ceiling_lifter_independent_v1 -v
