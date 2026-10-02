@@ -21,6 +21,6 @@ jobs:
         with: {python-version: '3.12'}
       - name: Bind exact Brain source and tests
         run: |
-          test "$(git hash-object canonical/runtime/prewave_direct_proof_preflight.py)" = "a6a4133ff429b768b47e2e49cd3f046d5b402477"
+          test "$(git hash-object canonical/runtime/prewave_direct_proof_preflight.py)" = "9c61e61e12cf2c773a980a8f31110ebf6d21be80"
           test "$(git hash-object canonical/tests/test_prewave_direct_proof_preflight.py)" = "e0af38fb07f3727dc49e00ff99fa7c543a4260b6"
       - run: PYTHONPATH=. python -m unittest -v canonical.tests.test_prewave_direct_proof_preflight
