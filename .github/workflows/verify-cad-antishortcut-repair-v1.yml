@@ -5,6 +5,7 @@ on:
     paths:
       - canonical/runtime/cad_t0_route_specific_candidate_v1.py
       - canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py
+      - canonical/tests/test_cad_t0_route_specific_candidate_v1.py
       - .github/workflows/verify-cad-antishortcut-repair-v1.yml
 permissions:
   contents: read
@@ -19,9 +20,10 @@ jobs:
       - name: Bind exact repaired Brain bytes
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "9a2838b146427c7ebaa9cb56795e6f2b202477c2"
-          test "$(git hash-object canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py)" = "50a3eeed9b4b0c141f7019e3c569d233d4840b95"
-      - name: Run exact anti-shortcut regression
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "aa32750b220a023617938b7be9476f6b3aac6704"
+          test "$(git hash-object canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py)" = "d1839617642147ce0bdc9b05dcccebe119ff86d5"
+          test "$(git hash-object canonical/tests/test_cad_t0_route_specific_candidate_v1.py)" = "6fa98b0fd04f86097cbd77f8657ba472e5d6b6dd"
+      - name: Run expanded render-equivalence anti-shortcut suite
         run: python -m unittest -v canonical.tests.test_cad_t0_source_structure_antishortcut_repair_v1
       - name: Re-run all frozen CAD geometry families
         run: python -m unittest -v canonical.tests.test_cad_t0_route_specific_candidate_v1
