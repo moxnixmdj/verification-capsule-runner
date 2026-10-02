@@ -1,0 +1,89 @@
+name: Verify prewave dependency cleanliness
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact independently verified controller blobs
+        run: |
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "0ce14dc593c29745b20d83c5f2868cac97e2e80f"
+          test "$(git hash-object canonical/runtime/m4_research_control.py)" = "3efb04cde34c344d4c95204b73215249383c46bc"
+          test "$(git hash-object canonical/runtime/shared_decision_primitives.py)" = "794e8d1ca9525564b592ffc3af899037183ef655"
+          test "$(git hash-object canonical/runtime/bound_capabilities/research_query_focus.py)" = "5403e1dc05716fcfc4f9a91b4534f55dc547eb7f"
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "81f73bca882d35603e5be43e8c40dd57e73ffce0"
+          test "$(git hash-object canonical/runtime/bound_capabilities/objective_relevance_bm25.py)" = "51abc98fd78a895e86600bc4fd7125722013b90d"
+      - name: Prove no direct hosted frontier-provider hook in operative controller cone
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          paths=[
+            Path("canonical/runtime/astra_runtime.py"),
+            Path("canonical/runtime/m4_research_control.py"),
+            Path("canonical/runtime/shared_decision_primitives.py"),
+            Path("canonical/runtime/bound_capabilities/research_query_focus.py"),
+            Path("canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py"),
+            Path("canonical/runtime/bound_capabilities/objective_relevance_bm25.py"),
+          ]
+          forbidden=[
+            "OPENAI_API_KEY","ANTHROPIC_API_KEY","GEMINI_API_KEY",
+            "api.openai.com","api.anthropic.com","generativelanguage.googleapis.com",
+            "sk-proj-","sk-ant-"
+          ]
+          hits=[]
+          for p in paths:
+            s=p.read_text(errors="replace")
+            for tok in forbidden:
+              if tok.lower() in s.lower():
+                hits.append((str(p),tok))
+          assert not hits,hits
+          print({"status":"PASS","operative_files":len(paths),"forbidden_provider_hits":0})
+          PY
+      - name: Verify substrate declaration and hard zero-cost dependency lock
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          manifest={
+            "model":"Qwen/Qwen3.5-9B",
+            "quantization_repo":"TheStageAI/Qwen3.5-9B-GGUF",
+            "quantization_file":"Qwen3.5-9B-M-TS-Q4_K_M.gguf",
+            "quantization_bytes":5060174144,
+            "quantization_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+            "model_license":"Apache-2.0",
+            "inference_runtime":"llama.cpp",
+            "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+            "transport":"LOCAL_HTTP_PLANNER_BRIDGE",
+            "opaque_target_provider":False,
+            "hard_paid_fallback":"FORBIDDEN",
+          }
+          assert manifest["opaque_target_provider"] is False
+          assert manifest["hard_paid_fallback"]=="FORBIDDEN"
+          assert manifest["transport"].startswith("LOCAL_")
+          assert len(manifest["quantization_sha256"])==64
+          int(manifest["quantization_sha256"],16)
+          assert manifest["quantization_bytes"]>0
+          print("RESULT_JSON="+json.dumps({
+            "status":"PASS",
+            "local_substrate":manifest["model"],
+            "quantization_sha256":manifest["quantization_sha256"],
+            "llama_cpp_commit":manifest["llama_cpp_commit"],
+            "opaque_target_provider":False,
+            "hard_paid_fallback":"FORBIDDEN",
+            "terminal_case_content_read":False
+          },sort_keys=True))
+          PY
+      - name: Re-run model-independence and controller composition regressions
+        run: |
+          PYTHONPATH=. python -m unittest -v \
+            canonical.tests.test_astra_runtime_model_independence \
+            canonical.tests.test_astra_runtime_verification \
+            canonical.tests.test_m4_research_control \
+            canonical.tests.test_open_research_query_focus_relevance
