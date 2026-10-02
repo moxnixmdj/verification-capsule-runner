@@ -1,0 +1,24 @@
+name: Verify composition slice v2
+on:
+  push:
+    branches:
+      - "verify-composition-slice-v2-20261002-1349"
+    paths:
+      - "capsules/composition_slice_v2/**"
+      - ".github/workflows/verify-composition-slice-v2.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact v2 slice
+        run: |
+          cd capsules/composition_slice_v2
+          export PYTHONPATH=.
+          python verify_independent.py
