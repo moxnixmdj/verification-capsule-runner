@@ -14,6 +14,7 @@ from typing import Any, Mapping
 
 from canonical.runtime import research_control_information_safe_candidate as candidate
 from canonical.runtime import research_control_information_safe_proof as proof
+from canonical.runtime.objective_route_promotion_transition import validate_promotion_transition
 
 BINDING = "canonical/governance/RESEARCH_T3_OBJECTIVE_TERMINAL_BINDING_V1.json"
 OBJECTIVE_INPUT = "canonical/governance/OBJECTIVE_ORACLE_DOMINANCE_LIVE_INPUT_V1.json"
@@ -22,9 +23,12 @@ BEHAVIOR = "ITERATIVE_RESEARCH_EVIDENCE_CONTROL_001"
 PROOF_MODE = "T3_MULTIPLEXED_DIRECT_OBJECTIVE_RESEARCH_CONTROL_GATE"
 
 
-def _git_blob_sha(path: Path) -> str:
-    data = path.read_bytes()
+def _git_blob_sha_bytes(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+
+
+def _git_blob_sha(path: Path) -> str:
+    return _git_blob_sha_bytes(path.read_bytes())
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -59,8 +63,6 @@ def validate(root: Path) -> dict[str, Any]:
         errors.append("BEHAVIOR_ID_MISMATCH")
     if binding.get("proof_mode") != PROOF_MODE:
         errors.append("PROOF_MODE_MISMATCH")
-    if binding.get("prewave_admissible") is not False:
-        errors.append("SOURCE_BINDING_MUST_REMAIN_PREPROMOTION")
     if binding.get("execution_authority") is not False or binding.get("promotion_authority") is not False:
         errors.append("SOURCE_BINDING_AUTHORITY_MUST_REMAIN_FALSE")
 
@@ -198,8 +200,22 @@ def validate(root: Path) -> dict[str, Any]:
     ):
         if gates.get(key) is not True:
             errors.append(f"ROUTE_GATE_NOT_FROZEN:{key}")
-    if gates.get("independent_verification_pass") is not False:
-        errors.append("INDEPENDENT_VERIFICATION_MUST_REMAIN_FALSE_BEFORE_EXTERNAL_RECEIPT")
+    errors.extend(
+        validate_promotion_transition(
+            root,
+            binding,
+            binding_path=BINDING,
+            behavior_id=BEHAVIOR,
+            prepromotion_status=(
+                "FROZEN_PREWAVE_BINDING__SELECTION_KERNEL_REBOUND__"
+                "INDEPENDENT_VERIFICATION_PENDING__ZERO_TERMINAL_RESULTS"
+            ),
+            promoted_status=(
+                "FROZEN_PREWAVE_BINDING__SELECTION_KERNEL_REBOUND__"
+                "INDEPENDENT_PASS__PREWAVE_ADMISSIBLE__ZERO_TERMINAL_RESULTS"
+            ),
+        )
+    )
 
     return {
         "schema": "PROJECT_BRAIN_RESEARCH_T3_OBJECTIVE_BINDING_VALIDATION_V1",
