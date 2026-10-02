@@ -38,4 +38,4 @@ jobs:
       - name: Verify exact V2 dependency cone and information boundaries
         run: PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_post_refreeze_guard_v2 canonical.tests.test_cad_t0_post_refreeze_binding_validator
 
-# sync-trigger-1
+# sync-trigger-2
