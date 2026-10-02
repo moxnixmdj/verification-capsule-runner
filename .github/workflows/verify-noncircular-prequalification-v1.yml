@@ -1,0 +1,21 @@
+name: Verify non-circular terminal prequalification
+on:
+  pull_request:
+    paths:
+      - 'capsules/noncircular_prequalification/**'
+      - '.github/workflows/verify-noncircular-prequalification-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object capsules/noncircular_prequalification/canonical/runtime/terminal_prequalification_reducer.py)" = "da929015fafabed2b5a134a2e95b6bff2f47349c"
+          test "$(git hash-object capsules/noncircular_prequalification/canonical/tests/test_terminal_prequalification_reducer.py)" = "ab083c8be117f49a91b8b1edd75566be1d4469c8"
+      - name: Run reducer regressions
+        working-directory: capsules/noncircular_prequalification
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_prequalification_reducer
