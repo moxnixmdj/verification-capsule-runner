@@ -178,6 +178,43 @@ def normalize_artifact_contract(entries):
     """Use the shared fail-closed artifact transport contract."""
     return legacy.normalize_artifact_contract(entries)
 
+def bind_preexposed_instruction(task_dir: Path):
+    """Bind a previously exposed exact instruction without re-surfacing its bytes."""
+    expected = CONFIG.get("preexposed_instruction_git_blob_sha")
+    if not expected:
+        return False
+    path = task_dir / "instruction.md"
+    if not path.is_file():
+        post("<!-- BRAIN_FAST_BURST_PREEXPOSED_INSTRUCTION_BLOCKED_V1 -->", {
+            "schema": "BRAIN_FAST_BURST_PREEXPOSED_INSTRUCTION_BLOCKED_V1",
+            "session_id": CONFIG["session_id"],
+            "task": CONFIG["task"],
+            "reason": "INSTRUCTION_MD_MISSING",
+        })
+        return None
+    raw = path.read_bytes()
+    got = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+    if got != expected:
+        post("<!-- BRAIN_FAST_BURST_PREEXPOSED_INSTRUCTION_BLOCKED_V1 -->", {
+            "schema": "BRAIN_FAST_BURST_PREEXPOSED_INSTRUCTION_BLOCKED_V1",
+            "session_id": CONFIG["session_id"],
+            "task": CONFIG["task"],
+            "reason": "PREEXPOSED_INSTRUCTION_BLOB_MISMATCH",
+            "expected_git_blob_sha": expected,
+            "actual_git_blob_sha": got,
+        })
+        return None
+    post("<!-- BRAIN_FAST_BURST_PREEXPOSED_INSTRUCTION_BOUND_V1 -->", {
+        "schema": "BRAIN_FAST_BURST_PREEXPOSED_INSTRUCTION_BOUND_V1",
+        "session_id": CONFIG["session_id"],
+        "task": CONFIG["task"],
+        "instruction_git_blob_sha": got,
+        "instruction_bytes_reexposed": False,
+        "authority": "CANONICAL_PREEXPOSURE_LEDGER_PLUS_EXACT_TASK_BLOB_IDENTITY",
+    })
+    return True
+
+
 def surface_instruction(task_dir: Path):
     """Surface only the official agent instruction after READY; fail closed."""
     path = task_dir / "instruction.md"
@@ -434,8 +471,12 @@ def main():
                     "sample_rank": lease["sample_rank"],
                     "instruction_exposed": False,
                 })
-                if not surface_instruction(task_dir):
+                prebound = bind_preexposed_instruction(task_dir)
+                if prebound is None:
                     return 0
+                if prebound is False:
+                    if not surface_instruction(task_dir):
+                        return 0
                 instruction_surfaced = True
                 continue
 
