@@ -1,0 +1,180 @@
+name: Falsify TB4 physical resource minimum assumption
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/falsify-tb4-physical-resource-minimum.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  falsify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Freeze exact public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/harbor-framework/terminal-bench.git /tmp/tb4
+          git -C /tmp/tb4 checkout -q 1dcda8716784493721921c23e4bc7f7d988b4494
+          test "$(git -C /tmp/tb4 rev-parse HEAD)" = "1dcda8716784493721921c23e4bc7f7d988b4494"
+
+          git clone -q https://github.com/harbor-framework/harbor.git /tmp/harbor
+          git -C /tmp/harbor checkout -q v0.20.0
+          git -C /tmp/harbor rev-parse HEAD > /tmp/harbor-head.txt
+
+      - name: Verify Harbor 0.20 Docker resource semantics and frozen TB4 metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, tomllib
+
+          harbor = pathlib.Path('/tmp/harbor/src/harbor/environments/docker/docker.py').read_text(encoding='utf-8')
+          required_literals = [
+              'EnvironmentResourceCapabilities(cpu_limit=True, memory_limit=True)',
+              'cpu_limit=self._resource_limit_value("cpu", auto_mode=ResourceMode.LIMIT)',
+              'memory_limit_mb=self._resource_limit_value(',
+              '"memory", auto_mode=ResourceMode.LIMIT',
+          ]
+          missing = [x for x in required_literals if x not in harbor]
+          assert not missing, ('HARBOR_LIMIT_SEMANTICS_NOT_PROVED', missing)
+
+          expected = {
+              'distributed-dedup': (8, 16384, 15000, 0),
+              'formal-crypto': (8, 4096, 10240, 0),
+              'fp8-rmsnorm-gemm': (4, 16384, 30720, 1),
+              'jax-speedrun-gpu': (16, 32768, 1024000, 1),
+              'lake-temp-glm': (8, 8192, 20480, 0),
+              'live-database-cutover': (16, 16384, 20480, 0),
+              'math-eval-grader': (8, 16384, 30720, 1),
+              'medical-claims-processing': (2, 16384, 20480, 0),
+              'shadow-relay': (8, 4096, 10240, 0),
+              'takens-embedding-lean': (4, 16384, 51200, 0),
+              'uefi-bootkit': (2, 16384, 10240, 0),
+              'wdm-design': (8, 16384, 10240, 0),
+          }
+          observed = {}
+          for task, exp in expected.items():
+              p = pathlib.Path('/tmp/tb4/tasks') / task / 'task.toml'
+              data = tomllib.loads(p.read_text(encoding='utf-8'))
+              env = data.get('environment') or {}
+              got = (
+                  int(env.get('cpus') or 0),
+                  int(env.get('memory_mb') or 0),
+                  int(env.get('storage_mb') or 0),
+                  int(env.get('gpus') or 0),
+              )
+              assert got == exp, (task, got, exp)
+              observed[task] = {
+                  'cpus': got[0], 'memory_mb': got[1],
+                  'storage_mb': got[2], 'gpus': got[3],
+              }
+
+          non_gpu = sorted(k for k,v in observed.items() if v['gpus'] == 0)
+          gpu = sorted(k for k,v in observed.items() if v['gpus'] > 0)
+          assert len(non_gpu) == 9, non_gpu
+          assert len(gpu) == 3, gpu
+
+          out = {
+              'schema': 'PROJECT_BRAIN_TB4_RESOURCE_SEMANTICS_PREFLIGHT_V1',
+              'tb4_commit': '1dcda8716784493721921c23e4bc7f7d988b4494',
+              'harbor_tag': 'v0.20.0',
+              'harbor_commit': pathlib.Path('/tmp/harbor-head.txt').read_text().strip(),
+              'harbor_docker_cpu_semantics': 'LIMIT',
+              'harbor_docker_memory_semantics': 'LIMIT',
+              'docker_backend_declares_cpu_request_or_guarantee': False,
+              'docker_backend_declares_memory_request_or_guarantee': False,
+              'resource_metadata_rows': observed,
+              'non_gpu_resource_exceed_task_count': len(non_gpu),
+              'gpu_task_count': len(gpu),
+              'task_instruction_files_read': 0,
+              'solution_files_read': 0,
+              'verifier_files_read': 0,
+              'fresh_acceptance_case_executions': 0,
+          }
+          pathlib.Path('/tmp/tb4-resource-semantics.json').write_text(
+              json.dumps(out, indent=2, sort_keys=True) + '\n'
+          )
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
+
+      - name: Falsify host-physical-minimum inference with Docker cgroup limits
+        shell: bash
+        run: |
+          set -euo pipefail
+          cleanup() { docker rm -f project-brain-limit-probe >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+
+          HOST_CPUS="$(nproc)"
+          HOST_MEM_MIB="$(awk '/MemTotal:/ {print int($2/1024)}' /proc/meminfo)"
+          HOST_FREE_MIB="$(df -Pm / | awk 'NR==2 {print $4}')"
+
+          docker pull -q alpine:3.21 >/dev/null
+          docker create             --name project-brain-limit-probe             --cpus=16             --memory=16384m             alpine:3.21 sh -c 'sleep 120' >/dev/null
+
+          NANO_CPUS="$(docker inspect -f '{{.HostConfig.NanoCpus}}' project-brain-limit-probe)"
+          MEMORY_LIMIT="$(docker inspect -f '{{.HostConfig.Memory}}' project-brain-limit-probe)"
+          test "$NANO_CPUS" = "16000000000"
+          test "$MEMORY_LIMIT" = "17179869184"
+
+          docker start project-brain-limit-probe >/dev/null
+          sleep 1
+          test "$(docker inspect -f '{{.State.Running}}' project-brain-limit-probe)" = "true"
+
+          CPU_MAX="$(docker exec project-brain-limit-probe sh -c 'cat /sys/fs/cgroup/cpu.max 2>/dev/null || true')"
+          MEMORY_MAX="$(docker exec project-brain-limit-probe sh -c 'cat /sys/fs/cgroup/memory.max 2>/dev/null || true')"
+
+          HOST_CPUS="$HOST_CPUS" HOST_MEM_MIB="$HOST_MEM_MIB" HOST_FREE_MIB="$HOST_FREE_MIB"           NANO_CPUS="$NANO_CPUS" MEMORY_LIMIT="$MEMORY_LIMIT" CPU_MAX="$CPU_MAX" MEMORY_MAX="$MEMORY_MAX"           python3 - <<'PY'
+          import json, os, pathlib
+          p = pathlib.Path('/tmp/tb4-resource-semantics.json')
+          d = json.loads(p.read_text())
+          d['observed_host'] = {
+              'physical_cpus': int(os.environ['HOST_CPUS']),
+              'mem_total_mib': int(os.environ['HOST_MEM_MIB']),
+              'free_storage_mib': int(os.environ['HOST_FREE_MIB']),
+          }
+          d['generic_docker_limit_probe'] = {
+              'requested_cpu_limit': 16,
+              'requested_memory_mib_limit': 16384,
+              'docker_nanocpus': int(os.environ['NANO_CPUS']),
+              'docker_memory_bytes': int(os.environ['MEMORY_LIMIT']),
+              'cgroup_cpu_max': os.environ['CPU_MAX'],
+              'cgroup_memory_max': os.environ['MEMORY_MAX'],
+              'container_started': True,
+          }
+          d['physical_host_ge_declared_limit_is_required_for_environment_construction'] = False
+          d['old_metadata_only_incompatibility_inference_falsified'] = (
+              d['observed_host']['physical_cpus'] < 16
+              and d['generic_docker_limit_probe']['docker_nanocpus'] == 16_000_000_000
+          )
+          assert d['old_metadata_only_incompatibility_inference_falsified'], d
+          d['nine_non_gpu_tasks_reclassified_as'] = 'ENVIRONMENT_BOOT_COMPATIBILITY_OPEN__NOT_PROVEN_INCOMPATIBLE_FROM_RESOURCE_METADATA'
+          d['three_gpu_tasks_remain'] = 'GPU_CARRIER_BLOCKED'
+          d['acceptance_credit_delta'] = 0
+          d['family_credit_delta'] = 0
+          d['execution_authority'] = False
+          print(json.dumps(d, indent=2, sort_keys=True))
+          p.write_text(json.dumps(d, indent=2, sort_keys=True) + '\n')
+          PY
+
+      - name: Preserve zero-exposure proof surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/tb4-resource-semantics.json'))
+          assert d['task_instruction_files_read'] == 0
+          assert d['solution_files_read'] == 0
+          assert d['verifier_files_read'] == 0
+          assert d['fresh_acceptance_case_executions'] == 0
+          assert d['acceptance_credit_delta'] == 0
+          assert d['execution_authority'] is False
+          print('PASS__TB4_METADATA_ONLY_PHYSICAL_MINIMUM_INFERENCE_FALSIFIED__ZERO_CASES')
+          PY
