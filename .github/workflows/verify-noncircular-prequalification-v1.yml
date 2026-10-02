@@ -15,7 +15,7 @@ jobs:
       - name: Bind exact Brain blobs
         run: |
           test "$(git hash-object capsules/noncircular_prequalification/canonical/runtime/terminal_prequalification_reducer.py)" = "da929015fafabed2b5a134a2e95b6bff2f47349c"
-          test "$(git hash-object capsules/noncircular_prequalification/canonical/tests/test_terminal_prequalification_reducer.py)" = "ab083c8be117f49a91b8b1edd75566be1d4469c8"
+          test "$(git hash-object capsules/noncircular_prequalification/canonical/tests/test_terminal_prequalification_reducer.py)" = "9b09e96c9bf0340d174b4a752148c0807be9043e"
       - name: Run reducer regressions
         working-directory: capsules/noncircular_prequalification
         run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_prequalification_reducer
