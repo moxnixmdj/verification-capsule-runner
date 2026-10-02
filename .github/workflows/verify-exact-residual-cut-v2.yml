@@ -1,0 +1,44 @@
+name: Verify exact residual cut v2 independently
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/global_proof_cut_compiler.py'
+      - 'verification/RESIDUAL_CUT_INPUT_V2.json'
+      - 'verification/RESIDUAL_EVIDENCE_SATURATION_V2.json'
+      - '.github/workflows/verify-exact-residual-cut-v2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Verify exact Brain source blobs
+        run: |
+          test "$(git hash-object verification/global_proof_cut_compiler.py)" = "6b13c2135eb9536a6cbfe00b6a478965c9e040ab"
+          test "$(git hash-object verification/RESIDUAL_CUT_INPUT_V2.json)" = "523b09c612f7a94ca9f358476d8d1de0f19eca75"
+          test "$(git hash-object verification/RESIDUAL_EVIDENCE_SATURATION_V2.json)" = "6fefa0c4a91cebdbee3c02395ccb565da3bb29a5"
+      - name: Compile exact cut and assert minimum
+        run: |
+          cd verification
+          python - <<'PY'
+          import json
+          from global_proof_cut_compiler import compile_cut
+          p=json.load(open("RESIDUAL_CUT_INPUT_V2.json"))
+          out=compile_cut(p)
+          print("RESULT_JSON="+json.dumps(out,sort_keys=True))
+          assert out["status"]=="EXACT_CUT",out
+          assert out["exact"] is True,out
+          assert out["open_obligations"]==["M0A","M1A","M1B"],out
+          assert set(out["selected_actions"])=={
+              "A1_M1B_DETERMINISTIC",
+              "A_M0A_COMPOSED_SEMANTIC_GRAPH_V1",
+              "A_M1A_DETERMINISTIC_PLUS_BOUNDED_RESIDUAL_V1",
+          },out
+          assert out["total_new_reality_units"]==2.0,out
+          assert out["max_dependency_depth"]==2,out
+          assert out["parallel_critical_path_wall_clock_units"]==1.0,out
+          PY
