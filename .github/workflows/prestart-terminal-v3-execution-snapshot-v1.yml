@@ -1,0 +1,74 @@
+name: Prestart terminal V3 execution snapshot V1
+on:
+  push:
+    branches:
+      - terminal-v3-execution-snapshot-20261002-v1
+    paths:
+      - '.github/workflows/prestart-terminal-v3-execution-snapshot-v1.yml'
+permissions:
+  contents: read
+jobs:
+  prestart:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Activate exact V3 snapshot assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='capsules/terminal-v3-snapshot/snapshot'
+          python - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          r=Path("capsules/terminal-v3-snapshot")
+          cap=json.loads((r/"TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3.json").read_text())
+          assert cap["execution_snapshot"]["commit_sha"]=="821712c059b139f3494723dca6e8d0fc82ee59a4"
+          for rel in cap["snapshot_blob_assertions"]:
+              src=r/"snapshot"/rel
+              dst=Path(rel)
+              assert src.is_file(), ("missing snapshot mirror",rel)
+              dst.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copyfile(src,dst)
+          print("ACTIVATED",len(cap["snapshot_blob_assertions"]),"EXACT_SNAPSHOT_ASSERTIONS")
+          PY
+      - name: Verify frozen snapshot authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee /tmp/authority.json
+          python - <<'PY'
+          import json
+          v=json.load(open("/tmp/authority.json"))
+          assert v["pass"] is True, v
+          assert v["launch_authority"] is True and v["execution_authority"] is True, v
+          assert v["route_count"] == 12, v
+          assert v["terminal_results_observed"] == 0 and v["fresh_terminal_evidence_consumed"] == 0, v
+          PY
+      - name: Run frozen terminal dependency regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m unittest -v \
+            canonical.tests.test_terminal_wave_launch_authority_reducer_v1 \
+            canonical.tests.test_terminal_parent_portfolio_launcher_v1 \
+            canonical.tests.test_terminal_parent_portfolio_runner_v1 \
+            canonical.tests.test_direct_route_terminal_executors_v1 \
+            canonical.tests.test_saccr_route_specific_terminal_executor_v1 \
+            canonical.tests.test_cad_t0_route_specific_terminal_executor_v1 \
+            canonical.tests.test_portfolio_multiplex_terminal_instrumentation_v1
+      - name: Static launch plan only
+        shell: bash
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime import terminal_parent_portfolio_launcher_v1 as L
+          out=L.build_launch_plan()
+          assert out["pass"] is True, out
+          assert out["preflight"]["active_contract_count"] == 12, out
+          assert out["direct_route_execution_count"] == 6, out
+          assert out["post_freeze_beacon_required"] is True, out
+          print("ZERO_TERMINAL_EVIDENCE_PRESTART_PASS")
+          PY
