@@ -6,6 +6,44 @@ from datetime import datetime, timezone
 
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 
+_ACTIVE_CONTINUOUS_OBS_CONTEXT=None
+_ACTIVE_CONTINUOUS_OBS_MODULE=None
+_ACTIVE_CONTINUOUS_OBS_MISSION_ID=None
+
+def _authorize_external_information(kind,payload):
+    if _ACTIVE_CONTINUOUS_OBS_CONTEXT is None or _ACTIVE_CONTINUOUS_OBS_MODULE is None:
+        raise Blocker("CONTINUOUS_OBS_INFORMATION_CONTEXT_NOT_BOUND")
+    raw_kind=str(kind)
+    if raw_kind in {"http_get","urlopen"}:
+        action_kind="EXACT_FETCH"
+        source=str((payload or {}).get("url") or "")
+    elif raw_kind in {"package_name_search","python_source_tree","pypi_wheel_closure"}:
+        action_kind="DISCOVERY_SEARCH"
+        source=str((payload or {}).get("goal") or (payload or {}).get("effect") or (payload or {}).get("project") or raw_kind)
+    elif raw_kind=="planner":
+        action_kind="PLANNER"
+        source="planner"
+    else:
+        action_kind="EXTERNAL_TOOL"
+        source=raw_kind
+    verdict=_ACTIVE_CONTINUOUS_OBS_MODULE.authorize_information_action(
+        _ACTIVE_CONTINUOUS_OBS_CONTEXT,
+        {"kind":action_kind,"source":source,"tool_kind":raw_kind},
+        root=ROOT,
+    )
+    verdict["mission_id"]=_ACTIVE_CONTINUOUS_OBS_MISSION_ID
+    evidence_id=_ACTIVE_CONTINUOUS_OBS_MISSION_ID or "UNBOUND"
+    p=EVID_DIR/f"{evidence_id}__INFORMATION_ADMISSION.jsonl"
+    p.parent.mkdir(parents=True,exist_ok=True)
+    with p.open("a",encoding="utf-8",newline="\n") as fh:
+        fh.write(json.dumps(verdict,sort_keys=True,separators=(",",":"))+"\n")
+    if not verdict.get("pass"):
+        raise Blocker(
+            "CONTINUOUS_OBS_INFORMATION_BLOCKED:"
+            +"|".join(verdict.get("errors") or ["UNKNOWN"])
+        )
+    return verdict
+
 def _load_runtime_helper(module_name):
     path=ROOT/"canonical"/"runtime"/(str(module_name)+".py")
     if not path.is_file():
@@ -110,6 +148,7 @@ def run_shell(step, prior_results=None):
     }
 
 def _external_tool_bridge(kind,payload):
+    _authorize_external_information(kind,payload)
     raw_dir=os.environ.get("PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR","").strip()
     if not raw_dir:
         return None
@@ -211,8 +250,9 @@ def _bridge_aware_urlopen(request, timeout=20, *args, **kwargs):
     return _ExternalBridgeHTTPResponse(raw,status,final_url,headers)
 
 def _activate_external_http_bridge():
-    if os.environ.get('PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR','').strip():
-        urllib.request.urlopen=_bridge_aware_urlopen
+    # Always wrap raw urllib access so the information boundary is enforced
+    # even when no external relay process is configured.
+    urllib.request.urlopen=_bridge_aware_urlopen
 
 def run_http(step):
     bridged=_external_tool_bridge("http_get",{
@@ -5629,11 +5669,23 @@ def _run_goal_unstamped(step, mission):
                   "relevance_verified_candidate_count":int(
                       source_frontend.get("relevance_verified_candidate_count") or 0
                   ),
+                  "claim_relation_evaluated_count":int(
+                      source_frontend.get("claim_relation_evaluated_count") or 0
+                  ),
                   "next_required_capability":source_frontend.get("next_required_capability"),
                   "capability_acquisition_attempted":False,
                   "policy":"BROAD_RESEARCH_DECOMPOSITION_ROUTES_TO_RESEARCH_SOURCE_FRONTEND_BEFORE_PACKAGE_ACQUISITION",
                 }
                 if status=="SOURCE_FRONTEND_READY":
+                    if int(source_frontend.get("claim_relation_evaluated_count") or 0)>0:
+                        payload["claim_relation_evaluated_count"]=int(
+                            source_frontend.get("claim_relation_evaluated_count") or 0
+                        )
+                        raise Blocker(
+                            "OPEN_ENDED_RESEARCH_RELATION_EVALUATED__"
+                            "DECISION_SYNTHESIS_AND_VERIFICATION_REQUIRED:"
+                            +json.dumps(payload,sort_keys=True)
+                        ) from e
                     if int(source_frontend.get("evidence_extracted_candidate_count") or 0)>0:
                         payload["evidence_extracted_candidate_count"]=int(
                             source_frontend.get("evidence_extracted_candidate_count") or 0
@@ -6037,6 +6089,35 @@ def main():
     mid=mission["mission_id"]
     mission_sha256=sha_file(mission_path)
     mission["_runtime_mission_path"]=mission_rel
+
+    # Continuous OBS is an execution invariant, not an external monitor.
+    # Every material step revalidates canonical state and all declared volatile
+    # world/dependency evidence. Any stale/unknown material dependency blocks.
+    continuous_obs=_load_runtime_helper("continuous_obs_runtime")
+    global _ACTIVE_CONTINUOUS_OBS_CONTEXT, _ACTIVE_CONTINUOUS_OBS_MODULE, _ACTIVE_CONTINUOUS_OBS_MISSION_ID
+    _ACTIVE_CONTINUOUS_OBS_CONTEXT=mission.get("continuous_obs")
+    _ACTIVE_CONTINUOUS_OBS_MODULE=continuous_obs
+    _ACTIVE_CONTINUOUS_OBS_MISSION_ID=mid
+    _activate_external_http_bridge()
+    def _continuous_obs_revalidate(event):
+        verdict=continuous_obs.validate_context(
+            mission.get("continuous_obs"),
+            root=ROOT,
+        )
+        verdict["event"]=str(event)
+        verdict["mission_id"]=mid
+        verdict["mission_sha256"]=mission_sha256
+        obs_path=EVID_DIR/f"{mid}__CONTINUOUS_OBS.jsonl"
+        obs_path.parent.mkdir(parents=True,exist_ok=True)
+        with obs_path.open("a",encoding="utf-8",newline="\n") as fh:
+            fh.write(json.dumps(verdict,sort_keys=True,separators=(",",":"))+"\n")
+        if not verdict.get("pass"):
+            raise Blocker(
+                "CONTINUOUS_OBS_BLOCKED:"+"|".join(verdict.get("errors") or ["UNKNOWN"])
+            )
+        return verdict
+
+    _continuous_obs_revalidate("MISSION_START")
     supervisor_agent_id,supervisor_task_id=_supervisor_binding_from_env()
     state_path=STATE_DIR/f"{mid}.json"
     state=readj(state_path) if state_path.exists() else {
@@ -6084,8 +6165,10 @@ def main():
             if not prior.get("replay_on_resume", False):
                 continue
             try:
+                _continuous_obs_revalidate(f"BEFORE_REHYDRATION_STEP:{j}")
                 result=execute_step(prior, context_results(state), mission)
                 ok=verify(prior,result)
+                _continuous_obs_revalidate(f"AFTER_REHYDRATION_STEP:{j}")
             except Exception as e:
                 blocker={
                   "schema":"PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1",
@@ -6124,8 +6207,10 @@ def main():
         step=mission["steps"][i]
         adapter=step["adapter"]
         try:
+            _continuous_obs_revalidate(f"BEFORE_STEP:{i}")
             result=execute_step(step, context_results(state), mission)
             ok=verify(step,result)
+            _continuous_obs_revalidate(f"AFTER_STEP_RECEIPT:{i}")
         except Exception as e:
             blocker={
               "schema":"PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1",
@@ -6158,6 +6243,7 @@ def main():
         state["status"]="RUNNING"
         state["updated_at_utc"]=utc()
         writej(state_path,state)
+    _continuous_obs_revalidate("BEFORE_TERMINAL_RECEIPT")
     state.pop("blocker",None)
     state["status"]="COMPLETE"; state["completed_at_utc"]=utc()
     writej(state_path,state)
