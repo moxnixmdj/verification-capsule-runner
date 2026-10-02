@@ -1,0 +1,56 @@
+name: Verify SA-CCR active-contract route
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/saccr_credit_kernel.py'
+      - 'canonical/runtime/saccr_active_contract_proof_v1.py'
+      - 'canonical/runtime/saccr_active_contract_candidate_v1.py'
+      - 'canonical/tests/test_saccr_active_contract_proof_v1.py'
+      - '.github/workflows/verify-saccr-active-contract.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/saccr_credit_kernel.py)" = "4a9536a391e21ec9895c1abdf45a673c0451ba3a"
+          test "$(git hash-object canonical/runtime/saccr_active_contract_proof_v1.py)" = "21938f83d3841af51837a22b7568a7f9ee2600f4"
+          test "$(git hash-object canonical/runtime/saccr_active_contract_candidate_v1.py)" = "904fa7b8a9d45719305db9dace395770841807bd"
+          test "$(git hash-object canonical/tests/test_saccr_active_contract_proof_v1.py)" = "6b29056ee6ffe950f266a0b699d48af5fdb3ea62"
+      - name: Compile
+        run: python3 -m py_compile canonical/runtime/saccr_credit_kernel.py canonical/runtime/saccr_active_contract_proof_v1.py canonical/runtime/saccr_active_contract_candidate_v1.py canonical/tests/test_saccr_active_contract_proof_v1.py
+      - name: Run frozen preflight
+        run: PYTHONPATH=. python3 -m unittest -v canonical.tests.test_saccr_active_contract_proof_v1
+      - name: Run fresh post-PR population
+        env:
+          PROJECT_BRAIN_POST_FREEZE_SEED: ${{ github.run_id }}
+        run: |
+          PYTHONPATH=. python3 - <<'PY'
+          import os, random
+          from canonical.runtime.saccr_active_contract_proof_v1 import generate_case, public_task, score_case
+          from canonical.runtime.saccr_active_contract_candidate_v1 import solve
+          root=int(os.environ["PROJECT_BRAIN_POST_FREEZE_SEED"])
+          rng=random.Random(root)
+          failures=[]
+          for i in range(1024):
+              seed=rng.randrange(1,2**31)
+              case=generate_case(seed)
+              public=public_task(case)
+              if "_oracle" in public:
+                  failures.append((i,seed,"ORACLE_LEAK"))
+                  continue
+              out=solve(public)
+              verdict=score_case(case,out)
+              if not verdict.get("pass"):
+                  failures.append((i,seed,verdict,out))
+          print({"root_seed":root,"cases":1024,"failure_count":len(failures),"failures":failures[:20]})
+          if failures:
+              raise SystemExit(1)
+          PY
