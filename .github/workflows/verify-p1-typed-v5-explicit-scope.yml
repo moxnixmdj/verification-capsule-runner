@@ -1,0 +1,19 @@
+name: Verify Brain P1 typed V5 explicit scope
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_typed_trajectory_v5_explicit_scope/**"
+      - ".github/workflows/verify-p1-typed-v5-explicit-scope.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs and explicit-scope behavior
+        run: python capsules/p1_typed_trajectory_v5_explicit_scope/verify.py
