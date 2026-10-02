@@ -1,0 +1,24 @@
+name: Verify tool discovery V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/tool_discovery_v3/**
+      - .github/workflows/verify-tool-discovery-v3.yml
+  push:
+    branches: [verify-tool-discovery-v3-20261002]
+    paths:
+      - capsules/tool_discovery_v3/**
+      - .github/workflows/verify-tool-discovery-v3.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: cd capsules/tool_discovery_v3 && PYTHONPATH=. python -m unittest -v canonical.tests.test_tool_discovery_information_safe_proof_v3
