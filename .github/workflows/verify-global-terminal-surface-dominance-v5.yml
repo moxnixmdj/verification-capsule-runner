@@ -24,6 +24,6 @@ jobs:
         run: |
           test "$(git hash-object canonical/runtime/proof_route_dominance.py)" = "78f4dc70846a773a420da9dc5cf8f76bee5e154b"
           test "$(git hash-object verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V5.json)" = "fb1e333b19e8fbd2c35dcaf1a128313631da92ae"
-          test "$(git hash-object verification/test_global_terminal_surface_dominance_v5.py)" = "673c5b7b9f3a6bdacd278f7f871a3e8a7bd255b5"
+          test "$(git hash-object verification/test_global_terminal_surface_dominance_v5.py)" = "e2f9bf7662593f9de74b4c235cb0a000414a5853"
       - name: Verify complete V5 dominance
-        run: PYTHONPATH=. python -m pytest -q verification/test_global_terminal_surface_dominance_v5.py
+        run: PYTHONPATH=. python verification/test_global_terminal_surface_dominance_v5.py
