@@ -1,0 +1,16 @@
+name: Verify Brain proof atom receipt index V2
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run V2 indexer tests
+        run: python -m unittest -v canonical.tests.test_proof_atom_receipt_index_v2
