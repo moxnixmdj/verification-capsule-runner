@@ -9,7 +9,7 @@ from canonical.runtime.terminal_route_closure_controller import evaluate
 
 
 class TerminalRouteClosureControllerTests(unittest.TestCase):
-    def run_basis(self, contracts, declared_closed=None):
+    def run_basis(self, contracts, declared_closed=None, open_domain=None):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             p = root / "canonical/governance"
@@ -28,6 +28,17 @@ class TerminalRouteClosureControllerTests(unittest.TestCase):
                 }),
                 encoding="utf-8",
             )
+            if open_domain is not None:
+                (p / "OPEN_DOMAIN_PREQUALIFICATION_DEADLOCK_AUDIT_V1.json").write_text(
+                    json.dumps({
+                        "status": "FAIL_CLOSED_CONTROLLER_DEFECT_FOUND__FINITE_SCOPE_EQUIVALENCE_MUST_NOT_BE_REQUIRED_FOR_CANONICAL_OPEN_DOMAIN_MATCHED_PROTOCOLS",
+                        "affected_contract_classes": list(open_domain),
+                        "corrected_prequalification_law": {
+                            "open_domain_matched_routes": "FREEZE_MATCHED_PROTOCOL_NOT_SYNTHETIC_WHOLE_SCOPE_PROOF"
+                        },
+                    }),
+                    encoding="utf-8",
+                )
             return evaluate(root)
 
     def test_closed_routes_are_removed_from_queue(self):
@@ -113,7 +124,6 @@ class TerminalRouteClosureControllerTests(unittest.TestCase):
         self.assertEqual(out["status"], "FAIL_CLOSED")
         self.assertIn("OPEN_ROUTE_WITHOUT_BLOCKER:A", out["errors"])
 
-
     def test_external_comparator_block_is_classified_and_not_scope_expansion(self):
         out = self.run_basis([
             {
@@ -163,6 +173,46 @@ class TerminalRouteClosureControllerTests(unittest.TestCase):
             ["ACTIONABLE", "BLOCKED"],
         )
 
+    def test_canonical_open_domain_legacy_scope_blocker_is_reclassified_first(self):
+        out = self.run_basis([
+            {
+                "behavior_id": "OPEN",
+                "portfolio": "T1_T3",
+                "proof_state": "INDEPENDENT_INFORMATION_SAFE_PREFLIGHT_PASS__WHOLE_SCOPE_ADMISSION_PENDING",
+                "blockers": [
+                    "WHOLE_OPEN_ENDED_CONTRACT_SCOPE_EQUIVALENCE_NOT_YET_PROVEN",
+                    "SCOPE_EQUIVALENT_PROOF_GATE_V2_NOT_YET_PASS",
+                    "POST_FREEZE_TERMINAL_POPULATION_BINDING_PENDING",
+                ],
+            },
+        ], open_domain=["OPEN"])
+        self.assertEqual(out["status"], "PASS")
+        row = out["queue"][0]
+        self.assertTrue(row["open_domain_matched_protocol"])
+        self.assertEqual(row["next_action_class"], "RECLASSIFY_TO_OPEN_DOMAIN_MATCHED_PROTOCOL")
+        self.assertEqual(row["blocker_classes"]["legacy_open_domain_scope_equivalence"], 2)
+        self.assertEqual(out["reclassification_required_behavior_ids"], ["OPEN"])
+
+    def test_invalid_open_domain_audit_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            p = root / "canonical/governance"
+            p.mkdir(parents=True)
+            (p / "ACTIVE_TERMINAL_PROOF_BASIS_V1.json").write_text(json.dumps({
+                "active_contract_count": 0,
+                "admissible_frozen_terminal_route_count": 0,
+                "contracts": [],
+            }))
+            (p / "OPEN_DOMAIN_PREQUALIFICATION_DEADLOCK_AUDIT_V1.json").write_text(json.dumps({
+                "status": "DRAFT",
+                "affected_contract_classes": ["OPEN"],
+                "corrected_prequalification_law": {"open_domain_matched_routes": "x"},
+            }))
+            out = evaluate(root)
+            self.assertEqual(out["status"], "FAIL_CLOSED")
+            self.assertTrue(out["errors"][0].startswith("OPEN_DOMAIN_AUDIT_INVALID:"))
+
+
 
 class TerminalRouteEvidenceFreshnessIntegrationTests(TerminalRouteClosureControllerTests):
     def test_changed_candidate_is_scheduled_for_exact_reverification(self):
@@ -179,9 +229,23 @@ class TerminalRouteEvidenceFreshnessIntegrationTests(TerminalRouteClosureControl
             self.assertEqual(row["next_action_class"],"REVERIFY_CHANGED_BYTES_BEFORE_ANY_SCOPE_OR_ACCEPTANCE_PROMOTION")
             self.assertTrue(row["evidence_freshness"]["stale"])
 
+    def test_newer_current_blob_revalidation_supersedes_old_candidate_binding(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); gov=root/"canonical/governance"; rt=root/"canonical/runtime"; ver=root/"canonical/verification"
+            gov.mkdir(parents=True); rt.mkdir(parents=True); ver.mkdir(parents=True)
+            data=b"NEW=1\n"; (rt/"candidate.py").write_bytes(data)
+            new_sha=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+            old=b"OLD=1\n"; old_sha=hashlib.sha1(b"blob "+str(len(old)).encode()+b"\0"+old).hexdigest()
+            (ver/"new.json").write_text(json.dumps({"status":"INDEPENDENT_PASS","exact_bound_blobs":{"canonical/runtime/candidate.py":new_sha}}),encoding="utf-8")
+            (ver/"old.json").write_text(json.dumps({"status":"INDEPENDENT_PASS","exact_bound_blobs":{"canonical/runtime/candidate.py":old_sha}}),encoding="utf-8")
+            (gov/"ACTIVE_TERMINAL_PROOF_BASIS_V1.json").write_text(json.dumps({"active_contract_count":1,"admissible_frozen_terminal_route_count":0,"contracts":[{"behavior_id":"X","portfolio":"T1","proof_state":"INDEPENDENT_PREFLIGHT_PASS","blockers":["POST_FREEZE_TERMINAL_POPULATION_BINDING_PENDING"],"candidate":"canonical/runtime/candidate.py","current_blob_revalidation":"canonical/verification/new.json","population_binding_verification":"canonical/verification/old.json"}]}),encoding="utf-8")
+            out=evaluate(root); self.assertFalse(out["queue"][0]["evidence_freshness"]["stale"])
+
     def test_acceptance_proof_has_specific_action(self):
         out=self.run_basis([{"behavior_id":"X","portfolio":"T2","proof_state":"PENDING","blockers":["REGISTRY_TERMINAL_ACCEPTANCE_PROOF_NOT_YET_TRUTHFULLY_ESTABLISHED"]}])
         self.assertEqual(out["queue"][0]["blocker_classes"]["acceptance_proof"],1)
         self.assertEqual(out["queue"][0]["next_action_class"],"ESTABLISH_REGISTERED_TERMINAL_ACCEPTANCE_PROOF")
 
-if __name__=="__main__": unittest.main()
+if __name__ == "__main__":
+    unittest.main()
