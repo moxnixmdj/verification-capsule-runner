@@ -30,7 +30,7 @@ jobs:
           assert got==expected,('AUDIT_BLOB_DRIFT',expected,got)
           spec=importlib.util.spec_from_file_location('donor_audit',src)
           mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-          out=mod.evaluate(Path('.'))
+          out=mod.evaluate(Path('.').resolve())
           assert out['pass'] is True,out
           assert out['target_capability_donor_runtime_dependencies']==[],out
           assert out['network_provider_dependencies']==[],out
