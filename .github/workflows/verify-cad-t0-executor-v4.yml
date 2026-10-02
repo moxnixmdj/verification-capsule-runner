@@ -28,4 +28,4 @@ jobs:
           test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json)" = "a636d1292e6f92d240fab420a9ee75ced7a05104"
           test "$(git hash-object canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "aa32750b220a023617938b7be9476f6b3aac6704"
       - name: Verify repinned executor and launch guard
-        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_route_specific_terminal_executor_v1
+        run: PYTHONPATH=.:canonical/runtime python -m unittest -v canonical.tests.test_cad_t0_route_specific_terminal_executor_v1
