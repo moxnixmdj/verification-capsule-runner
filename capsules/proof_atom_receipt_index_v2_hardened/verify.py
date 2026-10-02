@@ -4,16 +4,16 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 EXPECTED={
+  "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1",
   "canonical/runtime/proof_atom_receipt_index_v2.py": "7faf9f16acc2b18c501f0d08164833027d3d68fa",
   "canonical/tests/test_proof_atom_receipt_index_v2.py": "14103ef7c96330a281367409a5b76a0a74e7129d",
-  "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "7168f55492135d1cf5a865c27f564126db8746f7",
-  "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1",
   "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
-  "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json": "898e450c62c06cf6d1a4a3f826a255da9161a229"
+  "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json": "898e450c62c06cf6d1a4a3f826a255da9161a229",
+  "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "b9803927a2e1f2935686f1d37382e4d2d8d968ed"
 }
 
 def git_blob_sha(data: bytes) -> str:
-    return hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+    return hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
 
 for rel, expected in EXPECTED.items():
     data=(ROOT/rel).read_bytes()
