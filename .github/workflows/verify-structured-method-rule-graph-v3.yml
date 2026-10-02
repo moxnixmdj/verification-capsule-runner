@@ -1,0 +1,43 @@
+name: Verify structured method normalized rule graph v3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/governance/STRUCTURED_METHOD_SCOPE_AUDIT_V2.json'
+      - 'canonical/runtime/structured_method_normalized_rule_graph_v3.py'
+      - 'canonical/runtime/structured_method_normalized_rule_oracle_v3.py'
+      - 'canonical/tests/test_structured_method_normalized_rule_graph_v3.py'
+      - 'canonical/tests/test_structured_method_normalized_rule_oracle_v3.py'
+      - '.github/workflows/verify-structured-method-rule-graph-v3.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/STRUCTURED_METHOD_SCOPE_AUDIT_V2.json)" = "0ad87dc8afd5317b8033e366fa9f32f2c084d942"
+          test "$(git hash-object canonical/runtime/structured_method_normalized_rule_graph_v3.py)" = "79d3896818b03223348f05adf4fdcd574f6f355e"
+          test "$(git hash-object canonical/runtime/structured_method_normalized_rule_oracle_v3.py)" = "5d92b1360fbb1bb27baacc8a04adb3744abf690c"
+          test "$(git hash-object canonical/tests/test_structured_method_normalized_rule_graph_v3.py)" = "f212ae9d0f5cac342ae6adc9ba0cd67e416c790e"
+          test "$(git hash-object canonical/tests/test_structured_method_normalized_rule_oracle_v3.py)" = "f48657d8637eb03b3a0bbc02566d54871b800687"
+      - name: Run normalized rule graph and independent oracle tests
+        run: |
+          PYTHONPATH=. python -m unittest -v             canonical.tests.test_structured_method_normalized_rule_graph_v3             canonical.tests.test_structured_method_normalized_rule_oracle_v3
+      - name: Check scope-boundary claim remains narrow
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit=json.loads(Path("canonical/governance/STRUCTURED_METHOD_SCOPE_AUDIT_V2.json").read_text())
+          assert audit["behavior_id"]=="STRUCTURED_METHOD_COMPLETE_CALCULATION_GRAPH_001"
+          assert audit["minimum_residual_proof_basis"]==["NORMALIZED_RULE_EXPRESSION_GRAMMAR"]
+          assert audit["contract_boundary"]["ruling"]=="ARBITRARY_NATURAL_LANGUAGE_OR_UNSTATED_RULE_EXTRACTION_IS_OUTSIDE_THIS_CONTRACT_AND_MUST_NOT_BLOCK_SCOPE_EQUIVALENCE"
+          print("STRUCTURED_METHOD_V3_SCOPE_BOUNDARY_PASS")
+          PY
