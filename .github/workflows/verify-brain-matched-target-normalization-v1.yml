@@ -1,0 +1,30 @@
+name: Verify Brain matched target normalization v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/matched_target_normalization_v1/**'
+      - '.github/workflows/verify-brain-matched-target-normalization-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify exact Brain source blobs
+        env:
+          EXPECTED_JSON: >-
+            {"canonical/governance/OPUS55_MATCHED_TARGET_NORMALIZATION_CANDIDATE_V1.json":"515f24f3000218d324be4a7c774b42f790a6ebaa","canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json":"eb4bca0fe6a015d49d2854998fbe046c979c7ea9","canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json":"562536d9ba3f245a6bd24490a1eb3b30f27e0c3a","canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json":"f500b56e7349ce8c0f97cfd0bd1db4888ec6887c"}
+        run: |
+          python - <<'PY'
+          import json,os,subprocess
+          root="capsules/matched_target_normalization_v1"
+          for rel,want in json.loads(os.environ["EXPECTED_JSON"]).items():
+              got=subprocess.check_output(["git","hash-object",f"{root}/{rel}"],text=True).strip()
+              assert got==want,(rel,got,want)
+          print("EXACT_SOURCE_BLOBS_PASS")
+          PY
+      - name: Verify lossless matched target normalization
+        working-directory: capsules/matched_target_normalization_v1
+        run: python -m unittest test_matched_target_normalization_v1 -v
