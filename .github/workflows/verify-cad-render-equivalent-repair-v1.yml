@@ -1,0 +1,27 @@
+name: Verify CAD render-equivalent repair v1
+on:
+  pull_request:
+    paths:
+      - "capsules/cad_render_equivalent_repair_v1/**"
+      - ".github/workflows/verify-cad-render-equivalent-repair-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/cad_render_equivalent_repair_v1/canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "aa32750b220a023617938b7be9476f6b3aac6704"
+          test "$(git hash-object capsules/cad_render_equivalent_repair_v1/canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py)" = "8222cf83a7476cd453e06865b8e3aaff8a70b5db"
+      - name: Run render-equivalence regression
+        working-directory: capsules/cad_render_equivalent_repair_v1
+        run: |
+          set -euo pipefail
+          touch canonical/__init__.py canonical/runtime/__init__.py canonical/tests/__init__.py
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_source_structure_antishortcut_repair_v1
