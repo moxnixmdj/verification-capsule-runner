@@ -1,0 +1,18 @@
+name: Verify P1 V5 operative route binding
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run fail-closed operative route tests
+        run: python -m unittest -v canonical.tests.test_p1_v5_operative_route_binding_v1
+      - name: Run live binding verifier
+        run: python canonical/runtime/p1_v5_operative_route_binding_v1.py
