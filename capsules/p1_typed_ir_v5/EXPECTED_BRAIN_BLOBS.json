@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_P1_TYPED_IR_V5_PUBLIC_VERIFIER_EXPECTED_BLOBS_V1",
+  "source_brain_repository": "moxnixmdj/brain",
+  "source_brain_ref": "b9871d782adbd16cf628c673c3f91b481ba91755",
+  "exact_brain_blobs": {
+    "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py": "b571076490099addbfd142e635241b730a4d8cad",
+    "canonical/runtime/trajectory_failure_typed_ir_proof_v5.py": "7f68653520cae3de241fe8b5a654099bd934a7f8",
+    "canonical/tests/test_trajectory_failure_typed_ir_v5.py": "ee85eecc8d8f020651f528ab37731691dda9c31b",
+    "canonical/governance/P1_TYPED_IR_V5_SCOPE_RESCUE_ACTIVATION_V1.json": "5b4fbc1e1d9e2b7298a9b40197c0b91ac121e35e"
+  },
+  "targets": [
+    "P1_EXPLICIT_SCOPE_FAILURE_CLASS",
+    "P1_HETEROGENEOUS_INTERVENTION_RESCUE"
+  ],
+  "credit_delta": 0
+}
