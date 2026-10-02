@@ -120,5 +120,11 @@ jobs:
           pathlib.Path('/tmp/tb4-threshold-cut.json').write_text(json.dumps(out,sort_keys=True))
           print(json.dumps(out,indent=2,sort_keys=True))
           PY
-          BODY="$(cat /tmp/tb4-threshold-cut.json)"
-          gh pr comment "$PR_NUMBER" --repo moxnixmdj/verification-capsule-runner --body "`TB4_THRESHOLD_CUT_RESULT`"$'\n\n'"```json"$'\n'"$BODY"$'\n'"```"
+          python - <<'PY'
+          import pathlib
+          body=pathlib.Path('/tmp/tb4-threshold-cut.json').read_text()
+          pathlib.Path('/tmp/tb4-threshold-cut-comment.md').write_text(
+              'TB4_THRESHOLD_CUT_RESULT\n\n```json\n'+body+'\n```\n'
+          )
+          PY
+          gh pr comment "$PR_NUMBER" --repo moxnixmdj/verification-capsule-runner --body-file /tmp/tb4-threshold-cut-comment.md
