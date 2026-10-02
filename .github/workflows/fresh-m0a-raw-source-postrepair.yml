@@ -1,0 +1,29 @@
+name: Fresh M0A raw-source post-repair diagnostic
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/m0a_raw_source_brain_candidate_v2.py'
+      - 'canonical/runtime/bounded_predicate_argument_semantics.py'
+      - '.github/workflows/fresh-m0a-raw-source-postrepair.yml'
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Bind exact post-repair Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/m0a_raw_source_terminal_suite_v2.py)" = "63b5daacfa5623c38228d41f6a84e548890d252d"
+          test "$(git hash-object canonical/runtime/m0a_raw_source_brain_candidate_v2.py)" = "0aac96d27068bdad379703c1b0b8a7a32cacb2e2"
+          test "$(git hash-object canonical/runtime/bounded_predicate_argument_semantics.py)" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
+          test "$(git hash-object canonical/tests/test_m0a_raw_source_terminal_suite_v2.py)" = "6c4db6c0baa12d067cd277858fd9534cd794f871"
+      - name: Compile
+        run: python3 -m py_compile canonical/runtime/m0a_raw_source_terminal_suite_v2.py canonical/runtime/m0a_raw_source_brain_candidate_v2.py canonical/tests/test_m0a_raw_source_terminal_suite_v2.py
+      - name: Execute fresh post-repair diagnostic
+        env:
+          PYTHONPATH: .
+        run: |
+          export PROJECT_BRAIN_POST_FREEZE_SEED="$GITHUB_RUN_ID"
+          python3 -m unittest -v canonical.tests.test_m0a_raw_source_terminal_suite_v2
