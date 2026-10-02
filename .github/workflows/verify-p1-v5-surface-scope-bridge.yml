@@ -1,0 +1,19 @@
+name: Verify Brain P1 V5 direct-surface scope bridge
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_v5_surface_scope_bridge/**"
+      - ".github/workflows/verify-p1-v5-surface-scope-bridge.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain scope bridge blobs and three claim-bound relations
+        run: python capsules/p1_v5_surface_scope_bridge/verify.py
