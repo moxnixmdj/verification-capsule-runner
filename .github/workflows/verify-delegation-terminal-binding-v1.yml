@@ -1,0 +1,25 @@
+name: Verify delegation terminal population binding v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/delegation_terminal_binding_v1/**
+      - .github/workflows/verify-delegation-terminal-binding-v1.yml
+  push:
+    branches: [verify-delegation-terminal-binding-v1-20261002]
+    paths:
+      - capsules/delegation_terminal_binding_v1/**
+      - .github/workflows/verify-delegation-terminal-binding-v1.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run exact mirrored terminal binding tests
+        run: cd capsules/delegation_terminal_binding_v1 && PYTHONPATH=. python -m unittest -v canonical.tests.test_delegation_terminal_population_binding_v1
