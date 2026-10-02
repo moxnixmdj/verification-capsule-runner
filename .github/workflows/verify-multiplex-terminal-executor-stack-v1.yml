@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py)" = "c8fd67ab29286b1c536ffdc9d8a05afcde1d00c6"
+          test "$(git hash-object canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py)" = "efb581966170d2ab1edf267d287bb9c909f2b8d5"
           test "$(git hash-object canonical/tests/test_portfolio_multiplex_terminal_instrumentation_v1.py)" = "4f8690c5d3d8136f8659e34555282ac93845bb4c"
           test "$(git hash-object canonical/runtime/multiplex_terminal_instrumentation_reducer_v1.py)" = "9633949c5a0602ebd740f9fb15aaaf598e17f46f"
           test "$(git hash-object canonical/tests/test_multiplex_terminal_instrumentation_reducer_v1.py)" = "724387459a21d4c9cb3ae4174080d069083ef06d"
