@@ -103,3 +103,118 @@ class Tests(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main()
+
+
+# --- exact Brain CAD post-freeze population/oracle adapter verification ---
+import hashlib
+from pathlib import Path
+from cad_t0_geometry_population import (
+    FAMILIES as CAD_POP_FAMILIES,
+    SLOT_COUNT as CAD_POP_SLOT_COUNT,
+    derive_seed as cad_derive_seed,
+    generate_case as cad_generate_case,
+    generate_post_freeze as cad_generate_post_freeze,
+    public_case as cad_population_public_case,
+)
+from cad_t0_oracle_adapter import (
+    measure_result as cad_measure_result,
+    observe_candidate as cad_observe_candidate,
+    validate_ambiguity_witness as cad_validate_ambiguity_witness,
+)
+
+def _git_blob_sha(path):
+    data=Path(path).read_bytes()
+    return hashlib.sha1(b"blob "+str(len(data)).encode("ascii")+b"\0"+data).hexdigest()
+
+class _CadBB:
+    xlen=10.0; ylen=20.0; zlen=30.0
+
+class _CadShape:
+    def BoundingBox(self): return _CadBB()
+    def Volume(self): return 6000.0
+    def Area(self): return 2200.0
+    def Faces(self): return [0]*6
+    def Edges(self): return [0]*12
+    def Vertices(self): return [0]*8
+
+class _CadSolids:
+    def vals(self): return [_CadShape()]
+
+class _CadResult:
+    def solids(self): return _CadSolids()
+    def val(self): return _CadShape()
+
+class CadPopulationOracleExactBrainTests(unittest.TestCase):
+    def test_exact_brain_blobs(self):
+        self.assertEqual(
+            _git_blob_sha("independent/cad_t0_geometry_population.py"),
+            "64ca276410e2c1dbcd55cfad057e3eec0709790a",
+        )
+        self.assertEqual(
+            _git_blob_sha("independent/cad_t0_oracle_adapter.py"),
+            "a6e76e1865b9bd9829dbbcf38886486636f76e8a",
+        )
+
+    def test_post_freeze_population_is_deterministic_and_beacon_bound(self):
+        a=cad_generate_post_freeze("commitment-x","beacon-a")
+        b=cad_generate_post_freeze("commitment-x","beacon-a")
+        c=cad_generate_post_freeze("commitment-x","beacon-b")
+        self.assertEqual(a,b)
+        self.assertNotEqual(a,c)
+        self.assertEqual(len(a),CAD_POP_SLOT_COUNT)
+
+    def test_population_covers_declared_family_cycle(self):
+        seen={
+            cad_generate_case(
+                cad_derive_seed("commitment","beacon",f"CAD_T0_GEOMETRY_V1::slot::{i}"),i
+            )["_oracle"]["family"]
+            for i in range(len(CAD_POP_FAMILIES))
+        }
+        self.assertEqual(seen,set(CAD_POP_FAMILIES))
+
+    def test_public_projection_strips_hidden_reference_contract(self):
+        case=cad_generate_case(
+            cad_derive_seed("commitment","beacon","CAD_T0_GEOMETRY_V1::slot::0"),0
+        )
+        public=cad_population_public_case(case)
+        self.assertNotIn("_oracle",public)
+        self.assertNotIn("reference_geometry_contract",str(public))
+        self.assertNotIn("reference_constraint_graph",str(public))
+
+    def test_evaluator_measures_real_result_interface_not_candidate_metrics(self):
+        measured=cad_measure_result(_CadResult())
+        self.assertEqual(measured["volume"],6000.0)
+        self.assertEqual(measured["surface_area"],2200.0)
+        self.assertEqual(measured["bbox"],[10.0,20.0,30.0])
+        self.assertEqual(measured["topology_counts"],{"faces":6,"edges":12,"vertices":8})
+        case={"_oracle":{
+            "identifiable":True,
+            "reference_constraint_graph":{"x":1},
+            "reference_geometry_metrics":{
+                "volume":6000.0,"surface_area":2200.0,"bbox":[10.0,20.0,30.0],
+                "topology_counts":{"faces":6,"edges":12,"vertices":8},
+            },
+            "required_geometry_metrics":["volume","surface_area","bbox","topology_counts"],
+            "metric_tolerances":{
+                "volume":{"abs":0.05,"rel":1e-7},
+                "surface_area":{"abs":0.05,"rel":1e-7},
+                "bbox":{"abs":0.01,"rel":1e-7},
+                "topology_counts":{"abs":0,"rel":0},
+            },
+        }}
+        candidate={
+            "status":"SOLID",
+            "constraint_graph":{"x":1},
+            "candidate_geometry_metrics":{"volume":1.0},
+        }
+        obs=cad_observe_candidate(case,candidate,_CadResult())
+        self.assertTrue(obs["candidate_solid_valid"])
+        self.assertTrue(obs["end_to_end_final_geometry_correct"])
+        self.assertEqual(obs["candidate_geometry_metrics"]["volume"],6000.0)
+
+    def test_constructive_nonidentifiability_witness_fails_closed(self):
+        case={"_oracle":{"identifiable":False,"ambiguity_parameter":"depth_mm"}}
+        good={"status":"NONIDENTIFIABLE","ambiguity_witness":{"parameter":"depth_mm","alternatives":[10,20]}}
+        bad={"status":"NONIDENTIFIABLE","ambiguity_witness":{"parameter":"depth_mm","alternatives":[10,10]}}
+        self.assertTrue(cad_validate_ambiguity_witness(case,good))
+        self.assertFalse(cad_validate_ambiguity_witness(case,bad))
