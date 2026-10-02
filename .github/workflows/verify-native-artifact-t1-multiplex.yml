@@ -2,6 +2,14 @@ name: Verify native artifact T1 multiplex
 on:
   pull_request:
     branches: [main]
+    paths:
+      - canonical/governance/NATIVE_ARTIFACT_T1_MULTIPLEX_TERMINAL_BINDING_V1.json
+      - canonical/runtime/native_artifact_t1_multiplex_preflight.py
+      - canonical/tests/test_native_artifact_t1_multiplex_preflight.py
+      - canonical/runtime/native_artifact_cross_format_candidate_v1.py
+      - canonical/runtime/native_artifact_cross_format_proof_v1.py
+      - canonical/runtime/native_artifact_render_preservation_proof_v1.py
+      - .github/workflows/verify-native-artifact-t1-multiplex.yml
 permissions:
   contents: read
 jobs:
