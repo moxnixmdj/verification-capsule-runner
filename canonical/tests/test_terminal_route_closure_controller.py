@@ -163,9 +163,6 @@ class TerminalRouteClosureControllerTests(unittest.TestCase):
             ["ACTIONABLE", "BLOCKED"],
         )
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class TerminalRouteEvidenceFreshnessIntegrationTests(unittest.TestCase):
     def test_changed_candidate_is_scheduled_for_exact_reverification(self):
