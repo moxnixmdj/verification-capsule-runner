@@ -1,0 +1,18 @@
+name: Verify T3 research control multiplex binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/t3_research_control_multiplex/**
+      - .github/workflows/verify-t3-research-control-multiplex.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: cd capsules/t3_research_control_multiplex && python -m unittest -v test_binding
