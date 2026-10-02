@@ -1,4 +1,5 @@
 name: Verify CAD complete runtime closure v1
+# trigger: exact-current-72586
 on:
   pull_request:
     branches: [main]
