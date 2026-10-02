@@ -1,0 +1,22 @@
+name: Emit terminal V4 post-freeze beacon
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/emit-terminal-v4-post-freeze-beacon.yml
+permissions:
+  contents: read
+jobs:
+  emit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Emit V4 predeclared beacon material only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          echo "PACKAGE_COMMITMENT=4c1307e2b144e2a9b5a05c325b991123b06fa33dc073cbaafcad879475f7944f"
+          echo "GITHUB_ACTIONS_RUN_ID:${GITHUB_RUN_ID}"
+          echo "NO_TERMINAL_CASES_GENERATED=1"
+          echo "NO_TERMINAL_CASES_EXECUTED=1"
