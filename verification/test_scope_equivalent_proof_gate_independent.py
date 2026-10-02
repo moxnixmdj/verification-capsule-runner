@@ -52,6 +52,14 @@ class IndependentGateVerification(unittest.TestCase):
             x=base(); x["relation_receipts"].pop(relation)
             self.assertFalse(evaluate(x)["admissible"],relation)
 
+    def test_exact_relations_need_no_implication_receipts(self):
+        x=base()
+        x["population_relation"]="EXACT"
+        x["environment_relation"]="EXACT"
+        x["oracle_relation"]="EXACT"
+        x["relation_receipts"]={}
+        self.assertTrue(evaluate(x)["admissible"])
+
     def test_unproved_relation_fails(self):
         for key in ["population_relation","environment_relation","oracle_relation"]:
             x=base(); x[key]="SIMILAR_SEEMS_FINE"
