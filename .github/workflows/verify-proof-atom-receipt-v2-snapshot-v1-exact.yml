@@ -1,0 +1,22 @@
+name: Verify exact Brain proof-atom receipt pipeline
+
+on:
+  pull_request:
+    paths:
+      - "capsules/proof_atom_receipt_v2_snapshot_v1_exact/**"
+      - ".github/workflows/verify-proof-atom-receipt-v2-snapshot-v1-exact.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact pinned Brain bytes and adversarial suites
+        working-directory: capsules/proof_atom_receipt_v2_snapshot_v1_exact
+        run: python verify.py
