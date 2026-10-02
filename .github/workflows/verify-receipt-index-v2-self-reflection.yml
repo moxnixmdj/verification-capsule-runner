@@ -1,0 +1,19 @@
+name: Verify receipt index v2 self-reflection quarantine
+on:
+  pull_request:
+    paths:
+      - "capsules/proof_atom_receipt_index_v2_self_reflection/**"
+      - ".github/workflows/verify-receipt-index-v2-self-reflection.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs and adversarial tests
+        run: python capsules/proof_atom_receipt_index_v2_self_reflection/verify.py
