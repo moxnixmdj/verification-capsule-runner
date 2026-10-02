@@ -1,0 +1,16 @@
+name: Verify P2 T1 multiplex binding
+on:
+  pull_request:
+    paths:
+      - 'verification/p2_t1_binding.json'
+      - 'verification/verify_p2_t1_binding.py'
+      - '.github/workflows/verify-p2-t1-multiplex.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python verification/verify_p2_t1_binding.py
