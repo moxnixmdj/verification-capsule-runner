@@ -1,0 +1,79 @@
+name: Reduce terminal V3 postwave results
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'postwave/terminal_v3_result/**'
+      - 'canonical/runtime/terminal_contract_result_reducer_v1.py'
+      - 'canonical/runtime/terminal_family_adjudication_reducer_v1.py'
+      - 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json'
+      - 'canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json'
+      - 'canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json'
+      - '.github/workflows/reduce-terminal-v3-postwave.yml'
+permissions:
+  contents: read
+jobs:
+  reduce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact postwave reducer inputs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object postwave/terminal_v3_result/receipt.json)" = "bd86b4c53992b47a4a60b64a60ba03db9a442cfc"
+          test "$(git hash-object canonical/runtime/terminal_contract_result_reducer_v1.py)" = "6c3dffe0dab22efb155945ddc81d14ef7ab891f5"
+          test "$(git hash-object canonical/runtime/terminal_family_adjudication_reducer_v1.py)" = "183b21005084343bfaad65dd0efa9b1b27054d41"
+          test "$(git hash-object canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "ee187f611a0e82b2de495ee377682f39bc31dd31"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "eb4bca0fe6a015d49d2854998fbe046c979c7ea9"
+          test "$(git hash-object canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json)" = "813f0c7d89c2e67228589c47cb76bb9ee8ec175c"
+          test "$(git hash-object canonical/runtime/terminal_parent_portfolio_launcher_v1.py)" = "d7f20a66f1f534b06ea11782cb350a582c07d985"
+          test "$(git hash-object canonical/runtime/direct_route_terminal_executors_v1.py)" = "28ef55db77ac81e78bd5c67e4d2b39fef131b505"
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_terminal_executor_v1.py)" = "72586ea16289fbfc51460bc8abbb0cd9fee652a1"
+          test "$(git hash-object canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py)" = "dd8fba0f27691002babbc7ad1fc6b65d7bb57282"
+      - name: Install reducer import dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-input \
+            "pydantic>=2,<3" "cadquery==2.6.1" python-docx openpyxl python-pptx pypdf
+      - name: Reduce one-shot wave to 12 contracts and 19 families
+        env:
+          PYTHONPATH: .:canonical/runtime
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime import terminal_contract_result_reducer_v1 as cr
+          from canonical.runtime import terminal_family_adjudication_reducer_v1 as fr
+
+          receipt=json.loads(Path('postwave/terminal_v3_result/receipt.json').read_text())
+          assert receipt['artifact']['full_result_sha256']=='f4bec690aa0580cb532dbfd5985705bae8d153c9df31ffdf460b02f8b152e0f2'
+          assert receipt['terminal_results_observed']==1
+          assert receipt['fresh_terminal_evidence_consumed']==3352
+          wave=receipt['reduction_input']['wave']
+          commitment=receipt['package_commitment']
+          beacon=receipt['canonical_beacon']
+
+          contracts=cr.reduce_wave(wave,commitment=commitment,beacon=beacon)
+          assert contracts['valid'] is True, contracts
+          assert contracts['contract_count']==12, contracts
+          assert contracts['all_contracts_pass'] is True, contracts
+          assert contracts['errors']==[], contracts
+          assert all(r['pass'] is True and r['terminal_result'] is True for r in contracts['contract_verdicts'].values()), contracts
+
+          registry=json.loads(Path('canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json').read_text())
+          protocols=json.loads(Path('canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json').read_text())
+          closure=json.loads(Path('canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json').read_text())
+          families=fr.reduce_family_verdicts(contracts,registry,protocols,closure)
+          assert families['valid'] is True, families
+          assert families['family_count']==19, families
+          assert families['family_pass_count']==19, families
+          assert families['all_families_pass'] is True, families
+          assert families['errors'] if 'errors' in families else [] == [], families
+
+          print('TERMINAL_V3_CONTRACT_VERDICTS_JSON='+json.dumps(contracts,sort_keys=True,separators=(',',':')))
+          print('TERMINAL_V3_FAMILY_VERDICTS_JSON='+json.dumps(families,sort_keys=True,separators=(',',':')))
+          PY
