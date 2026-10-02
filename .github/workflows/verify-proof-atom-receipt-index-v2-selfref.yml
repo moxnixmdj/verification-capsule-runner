@@ -1,0 +1,44 @@
+name: Verify current proof atom receipt index v2 selfref
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/proof_atom_receipt_index_v2_selfref/**"
+      - ".github/workflows/verify-proof-atom-receipt-index-v2-selfref.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain identities and quarantine
+        run: |
+          cd capsules/proof_atom_receipt_index_v2_selfref
+          export PYTHONPATH=.
+          python independent_verify.py
+      - name: Run adversarial unit tests
+        run: |
+          cd capsules/proof_atom_receipt_index_v2_selfref
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/canonical_proof_atom_basis_v2.py canonical/runtime/proof_atom_receipt_index_v2.py
+          python -m unittest canonical.tests.test_proof_atom_receipt_index_v2 -v
+      - name: Replay 40-atom zero-credit index kernel
+        run: |
+          cd capsules/proof_atom_receipt_index_v2_selfref
+          export PYTHONPATH=.
+          python canonical/runtime/proof_atom_receipt_index_v2.py > index.json
+          python - <<'PY'
+          import json
+          p=json.load(open("index.json"))
+          assert p["status"].startswith("PASS"),p
+          assert p["canonical_atom_count"]==40,p
+          assert all(x["atom_id"].startswith("PA1:") for x in p["atoms"])
+          assert p["capability_credit_delta"]==0 and p["family_credit_delta"]==0
+          assert p["execution_authority"] is False and p["promotion_authority"] is False
+          assert "EXCLUDE_RECEIPT_INDEX_SELF_VERIFICATION_AND_DECLARED_CORPUS_RESTATEMENTS" in p["rule"]
+          print("current V2 kernel replay: PASS")
+          PY
