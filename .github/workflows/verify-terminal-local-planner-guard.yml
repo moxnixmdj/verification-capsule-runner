@@ -1,0 +1,19 @@
+name: Verify Brain terminal local planner guard
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - brain/astra_runtime_terminal_guard.py
+      - brain/test_terminal_local_planner_guard.py
+      - .github/workflows/verify-terminal-local-planner-guard.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: cd brain && python -m unittest -v test_terminal_local_planner_guard.py
