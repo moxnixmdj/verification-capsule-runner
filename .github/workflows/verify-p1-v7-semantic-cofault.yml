@@ -1,0 +1,41 @@
+name: Verify P1 V7 semantic cofault
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_v7_semantic_cofault_v1/**"
+      - ".github/workflows/verify-p1-v7-semantic-cofault.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain V7 blobs
+        run: |
+          cd capsules/p1_v7_semantic_cofault_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(rel).read_bytes()
+              actual=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert actual==expected,(rel,actual,expected)
+          print("exact Brain V7 blobs: PASS")
+          PY
+      - name: Compile exact V7 bytes
+        run: |
+          cd capsules/p1_v7_semantic_cofault_v1
+          export PYTHONPATH=.
+          python -m py_compile \
+            canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py \
+            canonical/runtime/trajectory_failure_typed_ir_proof_v7.py
+      - name: Replay full V7 suite
+        run: |
+          cd capsules/p1_v7_semantic_cofault_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_trajectory_failure_typed_ir_v7 -v
