@@ -1,11 +1,19 @@
 name: Verify global terminal surface dominance V3
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/proof_route_dominance.py'
+      - 'verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json'
+      - 'verification/test_global_terminal_surface_dominance_v3.py'
+      - '.github/workflows/verify-global-terminal-surface-dominance-v3.yml'
   pull_request:
     branches: [main]
     paths:
       - 'canonical/runtime/proof_route_dominance.py'
       - 'verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json'
+      - 'verification/test_global_terminal_surface_dominance_v3.py'
       - '.github/workflows/verify-global-terminal-surface-dominance-v3.yml'
   workflow_dispatch:
 
@@ -24,17 +32,4 @@ jobs:
           test "$(git hash-object canonical/runtime/proof_route_dominance.py)" = "64efeaad5d4295d5bd1a3bd53feae5170c22a8a4"
           test "$(git hash-object verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json)" = "931bdd17e6351477281dd81492521f9337de5121"
       - name: Evaluate dominance
-        run: |
-          PYTHONPATH=. python - <<'PY'
-          import json
-          from canonical.runtime.proof_route_dominance import evaluate
-          p=json.load(open("verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json"))
-          out=evaluate(p)
-          print(json.dumps(out,sort_keys=True,indent=2))
-          assert out["status"]=="COMPLETE", out
-          assert out["global_uncovered_obligations"]==[], out
-          bv=out["blocked_route_verdicts"]
-          assert len(bv)==14, len(bv)
-          assert all(x["redundant"] and not x["uncovered_obligations"] for x in bv), bv
-          assert len(out["admissible_routes"])>=10, out["admissible_routes"]
-          PY
+        run: PYTHONPATH=. python verification/test_global_terminal_surface_dominance_v3.py
