@@ -1,0 +1,15 @@
+{
+  "schema": "PROJECT_BRAIN_RECEIPT_SNAPSHOT_TRACKED_UNIVERSE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "harden-sealed-receipt-snapshot-universe-20261002-1904",
+  "brain_head_sha": "0bd02e995eb2d1b62478ff350ae01996a11ffc93",
+  "claim": "A clean Git worktree cannot omit an eligible tracked candidate file from the sealed V2 proof-atom receipt universe.",
+  "exact_brain_blobs": {
+    "canonical/runtime/proof_atom_receipt_snapshot_v1.py": "9d67664049fb800d2aca89905563062f0e59f506",
+    "canonical/tests/test_proof_atom_receipt_snapshot_v1.py": "bb4c934a7d7e1b06076d2f4c035974df8a5bae4a",
+    "canonical/governance/PROOF_ATOM_RECEIPT_SNAPSHOT_V1.json": "b13faf061771bc2ffdb557e0675ef6722bf70826",
+    "canonical/runtime/proof_atom_receipt_index_v2.py": "323383fb1eb29ee2726abe8a7ef0563bb948f48e",
+    "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1"
+  },
+  "expected_failure_sentinel": "CANDIDATE_UNIVERSE_NOT_EXHAUSTIVE"
+}
