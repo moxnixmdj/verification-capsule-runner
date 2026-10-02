@@ -1,0 +1,20 @@
+name: Verify atomic terminal authority derivation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/atomic_terminal_authority_v1/**
+      - .github/workflows/verify-atomic-terminal-authority-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify current exact authority derivation without terminal execution
+        run: python capsules/atomic_terminal_authority_v1/verify.py
