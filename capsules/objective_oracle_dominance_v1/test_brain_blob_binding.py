@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent
 EXPECTED = {
     "canonical/runtime/objective_oracle_dominance_compiler.py": "c00d59dd0ab7df6ffb0ba5c26a1cb2a5cd82203c",
     "canonical/tests/test_objective_oracle_dominance_compiler.py": "b4df7e088cd4da2889b0e3dc8b03ba9608e04b48",
-    "canonical/governance/OBJECTIVE_ORACLE_DOMINANCE_LIVE_INPUT_V1.json": "79d1c88b854f05b73d37734cbb2b4bf5000a5472",
+    "canonical/governance/OBJECTIVE_ORACLE_DOMINANCE_LIVE_INPUT_V1.json": "e9f197d3ab2c54f7b2488b3887d55f465630bb93",
 }
 
 def blob(path: Path) -> str:
