@@ -1,4 +1,5 @@
 name: Verify CAD anti-shortcut repair v1
+# exact-current-byte rerun
 on:
   pull_request:
     branches: [main]
