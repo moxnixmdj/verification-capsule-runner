@@ -55,6 +55,15 @@ jobs:
           s=s.replace('if not spacy.util.is_package("en_core_web_sm"):\n\tdownload(\'en_core_web_sm\')\n','')
           p.write_text(s)
           assert 'spacy' not in s.lower()
+
+          # The scorer unconditionally calls nltk.download('stopwords') even when
+          # the frozen corpus is already present. Remove only that bootstrap call;
+          # corpus lookup/scoring remains unchanged and missing data still fails.
+          u=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions_util.py')
+          us=u.read_text()
+          assert "    nltk.download('stopwords')\n" in us
+          us=us.replace("    nltk.download('stopwords')\n","")
+          u.write_text(us)
           u=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions_util.py')
           t=u.read_text()
           t=t.replace('nltk.download("punkt")','raise RuntimeError("PINNED_PUNKT_MISSING")')
@@ -68,8 +77,14 @@ jobs:
           NLTK_DATA: /tmp/nltk_data
         run: |
           python - <<'PY'
-          import random
+          import random, nltk
           from livebench.if_runner.ifbench import instructions_registry, evaluation_lib
+
+          # After imports have resolved against the staged frozen data, no runtime
+          # download is permitted. Any hidden network bootstrap fails closed.
+          def _no_download(*args, **kwargs):
+              raise RuntimeError("RUNTIME_NLTK_DOWNLOAD_FORBIDDEN")
+          nltk.download=_no_download
           random.seed(0)
           registry=instructions_registry.INSTRUCTION_DICT
           assert len(registry)==58, len(registry)
@@ -85,6 +100,9 @@ jobs:
               assert isinstance(desc,str) and desc
               args=inst.get_instruction_args() or {}
               assert isinstance(args,dict)
+              if "prompt" in args:
+                  inst.build_description(prompt="Synthetic prequalification prompt only.")
+                  args=inst.get_instruction_args() or {}
               probe="alpha beta gamma."
               direct=inst.check_following(probe)
               assert isinstance(direct,bool), (instruction_id,type(direct),direct)
@@ -103,4 +121,4 @@ jobs:
               rows.append(instruction_id)
           print({"status":"PASS","checker_count":len(rows),"terminal_case_content_read":0})
           PY
-# retrigger: 2026-10-02 terminal-prequalification
+# hermetic-repair: prompt-binding + zero-runtime-download
