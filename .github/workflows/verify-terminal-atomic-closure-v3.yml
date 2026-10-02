@@ -3,9 +3,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'canonical/governance/TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3.json'
-      - 'canonical/governance/**'
-      - 'canonical/verification/**'
+      - 'capsules/terminal_atomic_closure_v3/**'
       - '.github/workflows/verify-terminal-atomic-closure-v3.yml'
 permissions:
   contents: read
@@ -18,44 +16,68 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Recompute V3 closure commitment and exact snapshot roots
+      - name: Verify isolated V3 pre-beacon package
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib,json
+          import hashlib, json
           from pathlib import Path
-          p=Path('canonical/governance/TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3.json')
-          c=json.loads(p.read_text())
+
+          root=Path('capsules/terminal_atomic_closure_v3')
+          c=json.loads((root/'capsule.json').read_text())
+
           assert c['schema']=='PROJECT_BRAIN_TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3'
           assert c['execution_snapshot']['commit_sha']=='821712c059b139f3494723dca6e8d0fc82ee59a4'
-          assert c['prebeacon_invariants']['post_freeze_beacon'] is None
-          assert c['prebeacon_invariants']['terminal_results_observed']==0
-          assert c['prebeacon_invariants']['fresh_terminal_evidence_consumed']==0
-          assert c['prebeacon_invariants']['execution_authority_at_snapshot'] is True
+          pre=c['prebeacon_invariants']
+          assert pre['post_freeze_beacon'] is None
+          assert pre['terminal_results_observed']==0
+          assert pre['fresh_terminal_evidence_consumed']==0
+          assert pre['execution_authority_at_snapshot'] is True
+          assert pre['route_specific_launch_authority_at_snapshot'] is True
+          assert pre['candidate_mutation_after_freeze_allowed'] is False
+          assert pre['tuning_replay'] is False
+          assert pre['case_replacement'] is False
+          assert pre['incremental_spend_usd']==0
+
           def git_blob(path):
-              b=Path(path).read_bytes()
+              b=path.read_bytes()
               return hashlib.sha1(b'blob '+str(len(b)).encode()+bytes([0])+b).hexdigest()
-          for rel,expected in sorted(c['snapshot_blob_assertions'].items()):
-              actual=git_blob(rel)
+
+          for rel, expected in sorted(c['snapshot_blob_assertions'].items()):
+              p=root/'snapshot'/rel
+              assert p.is_file(), ('MISSING_SNAPSHOT_FILE',rel)
+              actual=git_blob(p)
               assert actual==expected,(rel,expected,actual)
+
           def canon(x):
-              return json.dumps(x,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
-          order=c['commitment_encoding']['ordered_components']
+              return json.dumps(x,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode('utf-8')
+
           chunks=[]
-          for name in order:
+          for name in c['commitment_encoding']['ordered_components']:
               raw=canon(c[name])
-              h=hashlib.sha256(raw).hexdigest()
-              assert h==c['component_sha256'][name],(name,h,c['component_sha256'][name])
+              got=hashlib.sha256(raw).hexdigest()
+              assert got==c['component_sha256'][name],(name,got,c['component_sha256'][name])
               chunks.append(raw)
           package=hashlib.sha256(b''.join(chunks)).hexdigest()
           assert package==c['package_commitment'],(package,c['package_commitment'])
-          auth=json.loads(Path('canonical/governance/TERMINAL_WAVE_EXECUTION_AUTHORITY_V1.json').read_text())
-          receipt=json.loads(Path('canonical/verification/TERMINAL_WAVE_LAUNCH_AUTHORITY_HARDENED_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json').read_text())
+          assert package=='5a347e796d124373b557424a51659e8bb69b854d09da0b407a5b30f109d9467a'
+
+          auth=json.loads((root/'snapshot/canonical/governance/TERMINAL_WAVE_EXECUTION_AUTHORITY_V1.json').read_text())
+          authority_receipt=json.loads((root/'snapshot/canonical/verification/TERMINAL_WAVE_LAUNCH_AUTHORITY_HARDENED_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json').read_text())
+          launcher_receipt=json.loads((root/'snapshot/canonical/verification/TERMINAL_PARENT_LAUNCHER_SA_CCR_REBIND_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json').read_text())
+
           assert auth['execution_authority'] is True
-          assert receipt['verdict']['launch_authority'] is True
-          assert receipt['verdict']['execution_authority'] is True
-          assert receipt['verdict']['failed_predicates']==[]
-          assert receipt['terminal_results_observed']==0
-          assert receipt['fresh_terminal_evidence_consumed']==0
+          assert auth['authorization']=='T0_T1_T2_T3_ROUTE_SPECIFIC_PARALLEL_TERMINAL_WAVE'
+          assert authority_receipt['verdict']['pass'] is True
+          assert authority_receipt['verdict']['launch_authority'] is True
+          assert authority_receipt['verdict']['execution_authority'] is True
+          assert authority_receipt['verdict']['route_count']==12
+          assert authority_receipt['verdict']['failed_predicates']==[]
+          assert authority_receipt['terminal_results_observed']==0
+          assert authority_receipt['fresh_terminal_evidence_consumed']==0
+          assert 'INDEPENDENT_PUBLIC_RUNNER_PASS' in launcher_receipt['status']
+          assert launcher_receipt['terminal_results_observed']==0
+          assert launcher_receipt['fresh_terminal_evidence_consumed']==0
+
           print('TERMINAL_ATOMIC_CLOSURE_V3_PASS',package)
           PY
