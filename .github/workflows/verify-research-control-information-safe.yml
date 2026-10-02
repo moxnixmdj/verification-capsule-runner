@@ -1,0 +1,35 @@
+name: Verify research-control information-safe preflight
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/research_control_information_safe_proof.py'
+      - 'canonical/runtime/research_control_information_safe_candidate.py'
+      - 'canonical/tests/test_research_control_information_safe.py'
+      - '.github/workflows/verify-research-control-information-safe.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run exact Brain research-control tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_research_control_information_safe
+      - name: Run fresh 1024-case cross-domain research-control grid
+        env:
+          PROJECT_BRAIN_PREFLIGHT_SEED: ${{ github.run_id }}
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import os
+          from canonical.runtime import research_control_information_safe_candidate as candidate
+          from canonical.runtime import research_control_information_safe_proof as proof
+          seed=int(os.environ["PROJECT_BRAIN_PREFLIGHT_SEED"])
+          out=proof.run_batch(seed,1024,candidate.next_action)
+          print({k:out[k] for k in ("seed","case_count","passed","failed","all_pass","by_domain")})
+          if not out["all_pass"]:
+              raise SystemExit(repr(out["failures"][:10]))
+          PY
