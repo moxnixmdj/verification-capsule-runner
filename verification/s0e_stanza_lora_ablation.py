@@ -1,6 +1,15 @@
 import json, os, re, pathlib
 import torch
 import stanza
+from stanza.models.common import bert_embedding
+
+# The released coref checkpoint sets the foundation-model load to cache-only.
+# GitHub runners start with an empty HF cache, so permit this dev-only probe to
+# fetch the declared XLM-R backbone while leaving cases, heads, adapter and scoring unchanged.
+_original_load_bert = bert_embedding.load_bert
+def _load_declared_backbone(model_name, local_files_only=False):
+    return _original_load_bert(model_name, local_files_only=False)
+bert_embedding.load_bert = _load_declared_backbone
 from huggingface_hub import snapshot_download
 
 MODEL_DIR="/tmp/stanza_s0e_lora"
@@ -102,6 +111,8 @@ out={
  "schema":"PROJECT_BRAIN_S0E_STANZA_LORA_ABLATION_DEV_V1",
  "stanza_version":stanza.__version__,
  "model_package":"udcoref_xlm-roberta-lora",
+ "backbone_model":"FacebookAI/xlm-roberta-large",
+ "backbone_resolved_commit":getattr(getattr(bert,"config",None),"_commit_hash",None),
  "backbone_repo":BACKBONE_REPO,
  "intervention":"DISABLE_PEFT_LORA_ADAPTER_ONLY__SAME_XLM_ROBERTA_BACKBONE_AND_COREF_HEADS",
  "full":fc,
