@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "149b9b70d16294f6a21c6774f3613c9d9a7ee28a"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "ee2e9c670cec9f2444e0849baa1625597ddd794b"
           test "$(git hash-object canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py)" = "3269341bba873ba241d89ec8f1be5ffbf87d71c2"
           test "$(git hash-object canonical/tests/test_tool_discovery_t2_t3_objective_binding_validator.py)" = "4f5cf6472e8f33c1a032fbe84b4fafce80dab278"
           test "$(git hash-object canonical/runtime/tool_discovery_information_safe_candidate.py)" = "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
