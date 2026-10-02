@@ -1,0 +1,38 @@
+name: Verify guarded reconciliation frontier
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/brain_tool_discovery_reconciliation_v1/**'
+      - '.github/workflows/verify-guarded-reconciliation-frontier.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact guard blobs
+        run: |
+          test "$(git hash-object capsules/brain_tool_discovery_reconciliation_v1/canonical/runtime/action_hypergraph_open_predicate_guard_v1.py)" = "449ce8e0beaed333ff616cd110c103a680031a6e"
+          test "$(git hash-object capsules/brain_tool_discovery_reconciliation_v1/canonical/verification/ACTION_HYPERGRAPH_OPEN_PREDICATE_GUARD_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "3adbf4d16e6c2a2d745d598831a656e7786cf375"
+      - name: Verify live open-predicate frontier
+        env:
+          PYTHONPATH: capsules/brain_tool_discovery_reconciliation_v1
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime.action_hypergraph_open_predicate_guard_v1 import evaluate
+          root=Path("capsules/brain_tool_discovery_reconciliation_v1")
+          def load(p): return json.loads((root/p).read_text())
+          out=evaluate(
+              load("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json"),
+              load("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json"),
+              load("canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V1.json"),
+          )
+          print(json.dumps(out,indent=2,sort_keys=True))
+          assert out["pass"], out
+          PY
