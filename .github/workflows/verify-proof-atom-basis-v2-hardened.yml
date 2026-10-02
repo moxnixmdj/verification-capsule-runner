@@ -1,19 +1,59 @@
-name: Verify hardened proof atom basis v2
+name: Verify hardened canonical proof atom basis v2
 on:
   pull_request:
-    paths:
-      - "capsules/proof_atom_basis_v2_hardened/**"
-      - ".github/workflows/verify-proof-atom-basis-v2-hardened.yml"
-  workflow_dispatch:
+    branches: [main]
+permissions:
+  contents: read
 jobs:
   verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    env:
+      PYTHONPATH: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Verify exact hardened Brain V2 blobs
-        run: python capsules/proof_atom_basis_v2_hardened/verify.py
+          python-version: '3.12'
+      - name: Run hardened regressions
+        run: python canonical/tests/test_canonical_proof_atom_basis_v2.py
+      - name: Verify activation pins and live projection
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from canonical.runtime.canonical_proof_atom_basis_v2 import compile_basis,atom_id
+
+          def blob(path):
+              b=Path(path).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+bytes([0])+b).hexdigest()
+
+          a=json.loads(Path("canonical/governance/CANONICAL_PROOF_ATOM_BASIS_V2_ACTIVATION_V1.json").read_text())
+          g=json.loads(Path("canonical/governance/CANONICAL_PROOF_ATOM_BASIS_V2.json").read_text())
+          f=json.loads(Path("canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json").read_text())
+          o=json.loads(Path("canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json").read_text())
+
+          assert a["runtime_git_blob_sha"]==blob("canonical/runtime/canonical_proof_atom_basis_v2.py")
+          assert a["tests_git_blob_sha"]==blob("canonical/tests/test_canonical_proof_atom_basis_v2.py")
+          assert a["inputs"]["frontier"]["git_blob_sha"]==blob("canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json")
+          assert a["inputs"]["refinement_overlay"]["git_blob_sha"]==blob("canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json")
+
+          out=compile_basis(f,o)
+          exp=g["expected_projection"]
+          assert out["status"].startswith("PASS"),out
+          assert out["global_unresolved_predicate_count"]==31
+          assert out["global_certificate_count"]==17
+          assert out["refined_parent_count"]==3
+          assert out["leaf_requirement_occurrence_count"]==40
+          assert out["leaf_atom_count"]==40
+          assert out["exact_duplicate_savings"]==0
+          assert out["max_structural_target_fanout"]==3
+          assert all(x["atom_id"].startswith("PA1:") for x in out["atoms"])
+          for x in out["atoms"]:
+              assert x["atom_id"]==atom_id(x["proposition"])
+          sem=next(x for x in o["refinements"] if x["mode"]=="INDEPENDENTLY_VERIFIED_SEMANTIC_REPLACEMENT")
+          assert sem["source_blob_sha"]=="89162df13fae66edabaa53ac9c8d95a88829e3ec"
+          assert sem["verification_receipt"]=="canonical/verification/MATCHED_SCOPE_HIERARCHICAL_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json"
+          assert out["new_reality_units_consumed"]==0
+          assert out["capability_credit_delta"]==0 and out["family_credit_delta"]==0
+          print("HARDENED_PROOF_ATOM_BASIS_V2_PASS")
+          PY
