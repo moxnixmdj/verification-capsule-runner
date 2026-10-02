@@ -1,0 +1,186 @@
+{
+  "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_AUTHORITY_V1",
+  "date": "2026-10-02",
+  "status": "ACTIVE_FAIL_CLOSED__TERMINAL_GOAL_NOT_ACHIEVED",
+  "truth": {
+    "terminal_execution": "3352/3352_PASS",
+    "contracts": "12/12_PASS",
+    "behavioral_families": "19/19_PASS",
+    "opus55_acceptance": "4/19_PASS__15/19_OPEN",
+    "global_postconditions": "INDEPENDENT_PASS",
+    "donor_cleanroom": "INDEPENDENT_PASS",
+    "achieved": false
+  },
+  "sources": {
+    "terminal_closure_manifest": {
+      "path": "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json",
+      "git_blob_sha": "886801ea0de58dd18e67c79f0adef6cdacc2b094"
+    },
+    "ownership_matrix": {
+      "path": "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json",
+      "git_blob_sha": "504fa844a931119b55e9ff94e641bda01a8dd2f0"
+    },
+    "acceptance_calibration": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_CALIBRATION_AUDIT_20261002_V3.json",
+      "git_blob_sha": "50d0319de27bd54ed8f6166545f640b20ec72ce9",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__4_OF_19_ACCEPTANCE_CALIBRATED__15_PENDING"
+    },
+    "residual_plan": {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_MINIMUM_PROOF_PLAN_V1.json",
+      "git_blob_sha": "fe0be44884bcbe39dfafcfde30cceb537f13acfe"
+    },
+    "global_postconditions": {
+      "path": "canonical/verification/GLOBAL_OWNERSHIP_POSTCONDITIONS_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+      "git_blob_sha": "e0dbd996c18bdb818693ab0d217d751594a03d0f"
+    },
+    "invalidated_bundle": {
+      "path": "canonical/verification/FINAL_TERMINAL_PROOF_BUNDLE_INVALIDATION_20261002_V1.json",
+      "git_blob_sha": "9dfda8e533e0d51985b2b32f709b1b238db1ef19"
+    },
+    "acceptance_residual_proof_kernel_v2": {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_PROOF_KERNEL_V2.json",
+      "git_blob_sha": "b5afd6da827066184c3476bea919f06d3cce4822"
+    },
+    "acceptance_residual_verdict_v2": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V2.json",
+      "git_blob_sha": "64e47d77a4f780b752f478c31b0d7a7c788ac04e",
+      "status": "SUPERSEDED_BY_V3"
+    },
+    "acceptance_residual_verdict_v3": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V3.json",
+      "git_blob_sha": "40f58c5e12370b90fe457e0e4c376962ae81e475",
+      "status": "SUPERSEDED_BY_V4"
+    },
+    "direct_scope_audit_decomposition": {
+      "path": "canonical/governance/OPUS55_DIRECT_SCOPE_AUDIT_RESIDUAL_DECOMPOSITION_V1.json",
+      "git_blob_sha": "3ad720497287591fda2ebe9af17ee9d55ecd184e"
+    },
+    "acceptance_residual_verdict_v4": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V4.json",
+      "git_blob_sha": "7d65c2b7f02d667a5b1e8b7646c45f944f30aacb",
+      "status": "SUPERSEDED_BY_V5"
+    },
+    "direct_judgment_source_blockers": {
+      "path": "canonical/governance/OPUS55_DIRECT_JUDGMENT_SOURCE_BLOCKERS_V1.json",
+      "git_blob_sha": "a76ee612853c01a8605d2029387d407fb75571c5"
+    },
+    "acceptance_residual_verdict_v5": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V5.json",
+      "status": "SUPERSEDED_BY_V6"
+    },
+    "tb4_full_carrier_compatibility": {
+      "path": "canonical/verification/TB4_FULL_CARRIER_COMPATIBILITY_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__STANDARD_GITHUB_RUNNER_INCOMPATIBLE"
+    },
+    "acceptance_residual_verdict_v6": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V6.json",
+      "status": "SUPERSEDED_BY_V7"
+    },
+    "tb4_conservative_threshold_cut": {
+      "path": "canonical/verification/TB4_CONSERVATIVE_THRESHOLD_CUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+      "git_blob_sha": "99721d680c57a1848fcf87ca8036770a6a4b9a0e",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__54_COMPATIBLE_TASKS__270_EXECUTABLE_SLOTS__220_SUCCESS_PASS_LOCK"
+    },
+    "acceptance_residual_verdict_v7": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V7.json",
+      "git_blob_sha": "33a8567ca389120c526bdc9f82d4cd2aece135c9",
+      "status": "SUPERSEDED_BY_V8_FAIL_CLOSED_ATTAINABILITY_CORRECTION"
+    },
+    "tb4_attainability_cut": {
+      "path": "canonical/verification/TB4_ATTAINABILITY_CUT_VERDICT_20261002_V1.json",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__180_LT_220__ROUTE_IMPOSSIBLE"
+    },
+    "acceptance_residual_verdict_v8": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V8.json",
+      "status": "SUPERSEDED_BY_V9_TOOL_LEARNING_ATOMIC_CLOSURE"
+    },
+    "acceptance_residual_verdict_v9": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V9.json",
+      "git_blob_sha": "b25b0ed71183dc9020687d3f529ff49a85edee14",
+      "status": "SUPERSEDED_BY_V10_DELEGATION_ATOMIC_CLOSURE"
+    },
+    "terminal_closure_basis_v2": {
+      "path": "canonical/verification/TERMINAL_CLOSURE_BASIS_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__COMPLETE_AND_NONSTALE_ACTION_FRONTIER__ZERO_CREDIT"
+    },
+    "terminal_projection_consistency": {
+      "governance_path": "canonical/governance/TERMINAL_PROJECTION_CONSISTENCY_V1.json",
+      "governance_git_blob_sha": "070bc8aaa460653999b507626e6d5a76a41af064",
+      "runtime_path": "canonical/runtime/terminal_projection_consistency_v1.py",
+      "runtime_git_blob_sha": "a804856c01c76bcd09ba2e9d1a1845f6c09afc01",
+      "tests_path": "canonical/tests/test_terminal_projection_consistency_v1.py",
+      "tests_git_blob_sha": "eb0a909d79fbb465860a243ebe3d5f5887cf6da6",
+      "workflow_path": ".github/workflows/verify-terminal-projection-consistency.yml",
+      "status": "ACTIVE_FAIL_CLOSED__DYNAMIC_RECEIPT_DERIVED_PROJECTION_FIREWALL"
+    },
+    "acceptance_calibration_governance": {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_CALIBRATION_V2.json",
+      "git_blob_sha": "8fddf939685a9437636f6f2d825df0989c77faf8",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__4_OF_19_ACCEPTANCE_CALIBRATED__15_PENDING__ZERO_CREDIT"
+    },
+    "acceptance_residual_verdict_v10": {
+      "path": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json",
+      "git_blob_sha": "18f2bdcb9bcced0a6f93747ba16d7829b882fe41",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__9_PROVED__0_OPEN__29_BLOCKED"
+    },
+    "post_delegation_acceptance_reconciliation": {
+      "path": "canonical/verification/POST_DELEGATION_ACCEPTANCE_RECONCILIATION_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json",
+      "git_blob_sha": "2e75978214c4ef422f4df66078e5fbd293715d6a",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__CURRENT_PROOF_COMPRESSION_HYPERGRAPH__4_OF_19__9_OF_38__29_OF_29_ACTION_COVERAGE"
+    },
+    "action_coverage_guard": {
+      "path": "canonical/verification/TERMINAL_ACTION_COVERAGE_GUARD_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json",
+      "git_blob_sha": "3174b5b49a3614bfdb2596cf13fc1ed8ef91b39e",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__CURRENT_PROOF_COMPRESSION_HYPERGRAPH__29_OF_29_UNPROVED_PREDICATES_COVERED"
+    },
+    "proof_compression_activation": {
+      "path": "canonical/verification/PROOF_COMPRESSION_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+      "git_blob_sha": "6735cbd7ba6023094d78c8f71d7dd7f2970b7216",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__EXACT_13_OF_13_ACTIVATION_BLOBS__ZERO_CREDIT"
+    },
+    "delegation_temporal_transport": {
+      "path": "canonical/verification/DELEGATION_TEMPORAL_PROOF_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+      "git_blob_sha": "5278abb7fcaa6b97189b67598c75e4df395e1788",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__ZERO_REPLAY__ZERO_CREDIT"
+    },
+    "delegation_ceiling_transmutation": {
+      "path": "canonical/verification/DELEGATION_TEMPORAL_CEILING_TRANSMUTATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+      "git_blob_sha": "5023cc222a44f99b57785f5954cc95a29b739193",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__EXACT_4_OF_19__ZERO_CREDIT"
+    }
+  },
+  "residual": [
+    "29_OF_38_ATOMIC_OPUS55_ACCEPTANCE_PREDICATES_BLOCKED__0_OPEN__9_PROVED",
+    "SUBAGENT_DELEGATION_AND_COORDINATION_ACCEPTANCE_CALIBRATED_BY_INDEPENDENT_TEMPORAL_CEILING_WITNESS__TOTAL_ACCEPTED_FAMILIES_4_OF_19",
+    "PROOF_COMPRESSION_KERNELS_ACTIVE_INDEPENDENT_PASS__ZERO_REALITY_PRECEDES_COMPARATOR_JUDGMENT_AND_COMPOSITION_WORK",
+    "CURRENT_THRESHOLD_ROUTE_MATHEMATICALLY_UNATTAINABLE__MAXIMUM_180_SUCCESSES_LT_220_REQUIRED",
+    "PENDING_STAGE_C_BATCH_REVOKED_BEFORE_EXECUTION__PRESERVE_UNSPENT",
+    "14_OTHER_PUBLIC_BAR_PREDICATES_BLOCKED_ON_SCORE_PRODUCING_BRAIN_ROUTES",
+    "11_MATCHED_OR_SUPERPORTFOLIO_PREDICATES_BLOCKED_ON_EXACT_OPUS55_COMPARATOR_OR_SCOPE_COMPLETE_STRONGER_PROOF",
+    "2_DIRECT_JUDGMENT_PREDICATES_BLOCKED_ON_INTERNAL_OPERATIVE_SOURCE",
+    "1_COMPOSITION_DEPENDENCY_PREDICATE_BLOCKED_ON_UPSTREAM_COMPONENT_PROOFS",
+    "REBUILD_FINAL_BUNDLE_AFTER_ACCEPTANCE_CLOSURE",
+    "FINAL_CLOSURE_AND_INDEPENDENT_FINALITY"
+  ],
+  "no_terminal_replay": true,
+  "next": "EXECUTE_ZERO_REALITY_PROOF_COMPRESSION_ON_29_BLOCKED_FRONTIER__RECOMPUTE_AFTER_EACH_CAUSAL_CLOSURE__TB4_REALITY_REMAINS_REVOKED_UNTIL_MACHINE_VERIFIED_UPPER_BOUND_GE_220",
+  "rule": "DERIVED_POINTER_ONLY__CURRENT_ACCEPTANCE_CALIBRATION_V3_AND_RESIDUAL_V10_ARE_LOAD_BEARING__DYNAMIC_TERMINAL_PROJECTION_FIREWALL_ACTIVE__PROOF_COMPRESSION_PRECEDES_NEW_REALITY__RECOMPUTE_IF_ANY_SOURCE_BLOB_CHANGES",
+  "atomic_acceptance_frontier": {
+    "proved": 9,
+    "open_direct": 0,
+    "blocked": 29,
+    "total": 38,
+    "authorized_acceptance_case_actions": [],
+    "source": "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json"
+  },
+  "tb4_threshold_execution": {
+    "full_population_trial_slots": 330,
+    "required_successes": 220,
+    "hardware_compatible_trial_capacity": 270,
+    "irreversibly_zero_hardware_compatible_task_count": 18,
+    "maximum_still_creditable_task_count": 36,
+    "maximum_attainable_successes": 180,
+    "execution_authorized": false,
+    "state": "INDEPENDENT_PASS__IMPOSSIBLE_UNDER_CURRENT_FROZEN_NO_REPLAY_RULES"
+  }
+}
