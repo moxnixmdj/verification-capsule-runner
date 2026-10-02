@@ -15,6 +15,7 @@ on:
       - "canonical/runtime/contract_native_proof_suites.py"
       - ".github/workflows/verify-p1-v4-residual-discharge.yml"
       - "verification-trigger/p1-v4-residual-discharge.txt"
+      - "capsules/p1_typed_ir_v5/**"
 
 jobs:
   verify:
@@ -30,3 +31,15 @@ jobs:
         run: python -m canonical.runtime.p1_v4_scope_safe_residual_discharge_v1
       - name: Run fail-closed mutation tests
         run: python -m unittest canonical.tests.test_p1_v4_scope_safe_residual_discharge_v1 -v
+
+  verify-p1-v5-independent:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Execute exact content-addressed P1 V5 independent verifier
+        run: python capsules/p1_typed_ir_v5/verify.py
