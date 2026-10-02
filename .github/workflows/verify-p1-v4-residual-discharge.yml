@@ -14,6 +14,7 @@ on:
       - "canonical/runtime/terminal_parent_portfolio_runner_v1.py"
       - "canonical/runtime/contract_native_proof_suites.py"
       - ".github/workflows/verify-p1-v4-residual-discharge.yml"
+      - "verification-trigger/p1-v4-residual-discharge.txt"
 
 jobs:
   verify:
