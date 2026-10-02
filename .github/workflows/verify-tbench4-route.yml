@@ -29,3 +29,17 @@ jobs:
           harbor run --help >/dev/null
           harbor version show --help >/dev/null
           docker version >/dev/null
+      - name: Resolve dataset metadata without task content
+        run: |
+          harbor version show terminal-bench/terminal-bench@4.0.0 --json > /tmp/tb4.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/tb4.json'))
+          assert p['package']=='terminal-bench/terminal-bench'
+          assert p['type']=='dataset'
+          assert p['visibility']=='public'
+          assert '4.0.0' in p.get('tags',[])
+          assert str(p.get('content_hash','')).startswith('sha256:')
+          assert 'files' not in p and 'tasks' not in p
+          print({'status':'PASS','revision':p.get('revision'),'content_hash':p.get('content_hash'),'terminal_case_content_read':0})
+          PY
