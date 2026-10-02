@@ -86,7 +86,7 @@ jobs:
           assert sp["pass"] is True, sp
 
           assert set(D.bound_behavior_ids()) == {
-            D.BROWSER_ID,D.DELEGATION_ID,D.TOOL_ID,D.RESEARCH_ID
+            D.SA_CCR_ID,D.BROWSER_ID,D.DELEGATION_ID,D.TOOL_ID,D.RESEARCH_ID
           }, D.bound_behavior_ids()
           print("ZERO_TERMINAL_EVIDENCE_RUNTIME_CLOSURE_PASS")
           PY
