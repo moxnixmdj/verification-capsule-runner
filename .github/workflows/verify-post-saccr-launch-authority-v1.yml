@@ -1,0 +1,37 @@
+name: Verify post-SA-CCR terminal launch authority V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/governance/TERMINAL_PARENT_LAUNCHER_BINDING_V1.json
+      - canonical/verification/TERMINAL_PARENT_LAUNCHER_SA_CCR_REBIND_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json
+      - .github/workflows/verify-post-saccr-launch-authority-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Derive exact current authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_wave_launch_authority_reducer_v1 canonical.tests.test_terminal_parent_portfolio_launcher_v1
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee /tmp/authority.json
+          python - <<'PY'
+          import json
+          a=json.load(open("/tmp/authority.json"))
+          assert a["pass"] is True, a
+          assert a["launch_authority"] is True, a
+          assert a["execution_authority"] is True, a
+          assert a["failed_predicates"] == [], a
+          assert a["route_count"] == 12, a
+          assert a["terminal_results_observed"] == 0, a
+          assert a["fresh_terminal_evidence_consumed"] == 0, a
+          print(json.dumps(a,sort_keys=True))
+          PY
