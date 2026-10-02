@@ -1,0 +1,91 @@
+name: Verify global certificate abductive residual execution
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute global residual cut from verified scheduling edges
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime.abductive_residual_theorem_v1 import evaluate
+
+          root=Path(".")
+          candidate=json.loads((root/"canonical/governance/GLOBAL_CERTIFICATE_ABDUCTIVE_RESIDUAL_EXECUTION_V1.json").read_text())
+          frontier=json.loads((root/"canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json").read_text())
+          matched=json.loads((root/"canonical/governance/MATCHED_SCOPE_BINDING_SUBFRONTIER_V1.json").read_text())
+          activation=json.loads((root/"canonical/governance/TERMINAL_SCHEDULING_ACTIVATION_V6.json").read_text())
+          matched_receipt=json.loads((root/"canonical/verification/MATCHED_SCOPE_HIERARCHICAL_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json").read_text())
+
+          assert candidate["schema"]=="PROJECT_BRAIN_GLOBAL_CERTIFICATE_ABDUCTIVE_RESIDUAL_EXECUTION_V1"
+          assert "INDEPENDENT_PUBLIC_RUNNER_PASS" in matched_receipt["status"]
+          assert activation["status"].startswith("ACTIVE_INDEPENDENT_PASS")
+          assert set(matched["unresolved_predicates"])==set(
+              next(c for c in frontier["certificates"] if c["id"]=="MATCHED_SCOPE_BINDING_CERTIFICATE")["target_predicates"]
+          )
+
+          rules=[]
+          for cert in frontier["certificates"]:
+              if cert["id"]=="MATCHED_SCOPE_BINDING_CERTIFICATE":
+                  continue
+              rules.append({
+                  "edge_id":"GLOBAL::"+cert["id"],
+                  "if_all":cert["requires"],
+                  "then":cert["target_predicates"],
+                  "verified":True,
+                  "independent":True,
+                  "receipt":"canonical/governance/TERMINAL_SCHEDULING_ACTIVATION_V6.json",
+              })
+          for cert in matched["certificates"]:
+              rules.append({
+                  "edge_id":"MATCHED::"+cert["id"],
+                  "if_all":cert["requires"],
+                  "then":cert["target_predicates"],
+                  "verified":True,
+                  "independent":True,
+                  "receipt":"canonical/verification/MATCHED_SCOPE_HIERARCHICAL_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+              })
+
+          doc={"targets":frontier["unresolved_predicates"],"baseline_facts":[],"implications":rules}
+          out=evaluate(doc)
+          expected=candidate["result"]
+          assert out["status"]=="EXACT_WEAKEST_SUFFICIENT_RESIDUALS_COMPUTED",out
+          assert out["target_count"]==31==expected["target_count"],out
+          assert out["verified_rule_count"]==27==expected["verified_scheduling_rule_count"],out
+          assert out["atom_count"]==71==expected["atom_count"],out
+          assert len(out["primitive_residual_facts"])==40==expected["primitive_residual_fact_count"],out
+          assert out["minimum_joint_residual_size"]==40==expected["minimum_joint_residual_size"],out
+          assert len(out["minimum_joint_residual_sets"])==1,out
+          assert len(out["minimum_joint_residual_sets"][0])==40,out
+          assert out["new_reality_units_consumed"]==0
+          assert out["capability_credit_delta"]==0 and out["family_credit_delta"]==0
+          assert out["execution_authority"] is False and out["promotion_authority"] is False
+
+          # Exact shared grouping expected from current coarse multi-target rules.
+          groups={tuple(x["targets"]): x for x in out["shared_residual_groups"]}
+          assert tuple(sorted(["AUTOMATIONBENCH_GE_40","LIVEBENCH_IF_GE_65_7","TB_SCIENCE_GE_58_7"])) in groups
+          assert tuple(sorted(["CODING_CURSORBENCH_GE_57_8","CODING_FRONTIERCODE_GE_54_4"])) in groups
+          assert tuple(sorted(["ARTIFACT_AA_BRIEFCASE_GE_1822","PROWORK_AA_BRIEFCASE_GE_1822"])) in groups
+          assert len(out["shared_residual_groups"])==3,out["shared_residual_groups"]
+
+          print(json.dumps({
+              "target_count":out["target_count"],
+              "verified_rule_count":out["verified_rule_count"],
+              "atom_count":out["atom_count"],
+              "primitive_residual_fact_count":len(out["primitive_residual_facts"]),
+              "minimum_joint_residual_size":out["minimum_joint_residual_size"],
+              "shared_residual_group_count":len(out["shared_residual_groups"]),
+              "new_reality_units_consumed":out["new_reality_units_consumed"],
+          },sort_keys=True))
+          PY
