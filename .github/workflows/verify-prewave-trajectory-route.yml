@@ -1,0 +1,22 @@
+name: Verify trajectory information-safe prewave route
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/trajectory_failure_information_safe_candidate.py'
+      - 'canonical/runtime/trajectory_failure_information_safe_proof.py'
+      - 'canonical/tests/test_trajectory_failure_information_safe.py'
+      - 'verification/prewave_trajectory_capsule_v1.json'
+      - '.github/workflows/verify-prewave-trajectory-route.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify information boundary and causal rescue behavior
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_trajectory_failure_information_safe
