@@ -13,3 +13,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: python verification/selection_kernel_route_rebinds/verify_tool_and_kernel.py
+      - run: python verification/selection_kernel_route_rebinds/verify_delegation_rebind.py
