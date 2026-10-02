@@ -38,7 +38,7 @@ jobs:
       - name: Compile live seven-obligation residual
         run: |
           set -euo pipefail
-          python canonical/runtime/global_residual_proof_compiler.py canonical/governance/GLOBAL_RESIDUAL_PROOF_COMPILER_LIVE_INPUT_V1.json > /tmp/global-residual.json
+          PYTHONPATH=. python canonical/runtime/global_residual_proof_compiler.py canonical/governance/GLOBAL_RESIDUAL_PROOF_COMPILER_LIVE_INPUT_V1.json > /tmp/global-residual.json
           python - <<'PY'
           import json
           p=json.load(open("/tmp/global-residual.json"))
