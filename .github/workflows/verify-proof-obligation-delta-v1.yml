@@ -18,10 +18,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact blobs and fail-closed obligation algebra
+      - name: Verify exact blobs, fail-closed algebra, and live synthesis residual
         run: |
           cd capsules/proof_obligation_delta_v1
           export PYTHONPATH=.
           python -m py_compile canonical/runtime/proof_obligation_delta_compiler_v1.py
           python -m unittest canonical.tests.test_proof_obligation_delta_compiler_v1 -v
+          python -m unittest canonical.tests.test_synthesis_delta_application_v1 -v
           python -m unittest test_brain_blob_binding -v
