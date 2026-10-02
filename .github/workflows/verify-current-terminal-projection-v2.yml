@@ -1,0 +1,26 @@
+name: Verify current terminal projection v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/current_terminal_projection_v2/**"
+      - ".github/workflows/verify-current-terminal-projection-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact current terminal projection
+        run: |
+          cd capsules/current_terminal_projection_v2
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_terminal_projection_consistency_v1 -v
+          python canonical/runtime/terminal_projection_consistency_v1.py
