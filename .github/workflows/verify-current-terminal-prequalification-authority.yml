@@ -1,0 +1,34 @@
+name: Verify current terminal prequalification authority
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/terminal_prequalification_reducer.py
+      - canonical/tests/test_terminal_prequalification_reducer.py
+      - canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json
+      - canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json
+      - canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json
+      - canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json
+      - .github/workflows/verify-current-terminal-prequalification-authority.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact current Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/terminal_prequalification_reducer.py)" = "da929015fafabed2b5a134a2e95b6bff2f47349c"
+          test "$(git hash-object canonical/tests/test_terminal_prequalification_reducer.py)" = "9b09e96c9bf0340d174b4a752148c0807be9043e"
+          test "$(git hash-object canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json)" = "1d905389d395ab67dbb7e6e1290e741ab3cb44cb"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "d1dc7f28738ba24a3ca5919755e03190fbf30939"
+      - name: Run reducer tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_prequalification_reducer
+      - name: Evaluate current live prequalification
+        run: PYTHONPATH=. python canonical/runtime/terminal_prequalification_reducer.py .
