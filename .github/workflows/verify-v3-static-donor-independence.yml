@@ -26,7 +26,7 @@ jobs:
           src=Path('ownership_verification/terminal_candidate_donor_independence_audit_v1.py')
           b=src.read_bytes()
           got=hashlib.sha1(b'blob '+str(len(b)).encode()+bytes([0])+b).hexdigest()
-          expected='e2b88ed9b4caca8f789cb12e78ae0374e67ebe9f'
+          expected='0ed69641693538f15b7e1658f5ac5e80031afb26'
           assert got==expected,('AUDIT_BLOB_DRIFT',expected,got)
           spec=importlib.util.spec_from_file_location('donor_audit',src)
           mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
