@@ -1,0 +1,37 @@
+name: Verify contract-native Brain candidate adapters
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/contract_native_brain_candidate.py'
+      - 'canonical/runtime/contract_native_proof_suites.py'
+      - 'canonical/tests/test_contract_native_brain_candidate.py'
+      - '.github/workflows/verify-contract-native-brain-candidate-v2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/contract_native_brain_candidate.py)" = "afc18af1d1da6f25166c6cc57dcbc0cd3070bb85"
+          test "$(git hash-object canonical/runtime/contract_native_proof_suites.py)" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          test "$(git hash-object canonical/tests/test_contract_native_brain_candidate.py)" = "c97680cdcdf50a841c168f080e28f2a153ef7916"
+      - name: Compile
+        run: python -m py_compile canonical/runtime/contract_native_brain_candidate.py canonical/runtime/contract_native_proof_suites.py canonical/tests/test_contract_native_brain_candidate.py
+      - name: Run fresh-seed candidate adapter suite
+        env: {PYTHONPATH: .}
+        run: python -m unittest -v canonical.tests.test_contract_native_brain_candidate
+      - name: Enforce oracle separation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("canonical/runtime/contract_native_brain_candidate.py").read_text()
+          assert "contract_native_proof_suites" not in s
+          assert "_oracle" not in s
+          print("CANDIDATE_ORACLE_SEPARATION_PASS")
+          PY
