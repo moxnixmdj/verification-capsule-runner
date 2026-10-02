@@ -1,7 +1,11 @@
-import json, os, re
+import json, os, re, pathlib
+import torch
 import stanza
+from huggingface_hub import snapshot_download
 
 MODEL_DIR="/tmp/stanza_s0e_lora"
+BACKBONE_REPO="FacebookAI/xlm-roberta-large"
+BACKBONE_DIR="/tmp/xlm_roberta_large_s0e"
 CASES=[
   {"id":"DEV_MANIFEST_IT","text":"The manifest was created by the builder. It contains three files.","pairs":[["manifest","it"]]},
   {"id":"DEV_ALICE_BOB","text":"Alice gave Bob the report after the meeting. She emailed him a copy.","pairs":[["alice","she"],["bob","him"]]},
@@ -10,7 +14,32 @@ CASES=[
   {"id":"DEV_COMMONSENSE_LARGE","text":"The trophy does not fit in the suitcase because it is too large.","pairs":[["trophy","it"]]},
 ]
 
+# Download only the frozen development resources. No heldout or terminal case is touched.
 stanza.download("en", processors="tokenize,coref", model_dir=MODEL_DIR, verbose=False)
+
+# Stanza's coref package stores only the PEFT/task delta. Materialize the exact
+# generic backbone separately and rewrite the checkpoint config to the local
+# path so execution does not depend on cache/offline heuristics.
+backbone_path=snapshot_download(
+    BACKBONE_REPO,
+    local_dir=BACKBONE_DIR,
+    allow_patterns=["*.json","*.txt","*.model","*.safetensors"],
+)
+coref_pts=sorted(pathlib.Path(MODEL_DIR).rglob("*coref*.pt"))
+if not coref_pts:
+    coref_pts=sorted(pathlib.Path(MODEL_DIR).rglob("*.pt"))
+if not coref_pts:
+    raise RuntimeError("no Stanza coref checkpoint found")
+src_ckpt=coref_pts[0]
+state=torch.load(src_ckpt,map_location="cpu",weights_only=True)
+config=state.get("config")
+if not isinstance(config,dict):
+    raise RuntimeError("checkpoint config missing")
+config["bert_model"]=str(backbone_path)
+patched=pathlib.Path(MODEL_DIR)/"en"/"coref"/"udcoref_xlm-roberta-lora-localbackbone.pt"
+patched.parent.mkdir(parents=True,exist_ok=True)
+torch.save(state,patched)
+
 pipe=stanza.Pipeline(
     "en",
     processors="tokenize,coref",
@@ -18,6 +47,7 @@ pipe=stanza.Pipeline(
     download_method=None,
     use_gpu=False,
     coref_use_zeros=False,
+    coref_model_path=str(patched),
     verbose=False,
 )
 coref_model=pipe.processors["coref"]._model
@@ -72,6 +102,7 @@ out={
  "schema":"PROJECT_BRAIN_S0E_STANZA_LORA_ABLATION_DEV_V1",
  "stanza_version":stanza.__version__,
  "model_package":"udcoref_xlm-roberta-lora",
+ "backbone_repo":BACKBONE_REPO,
  "intervention":"DISABLE_PEFT_LORA_ADAPTER_ONLY__SAME_XLM_ROBERTA_BACKBONE_AND_COREF_HEADS",
  "full":fc,
  "no_lora":nc,
