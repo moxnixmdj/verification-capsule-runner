@@ -1,0 +1,35 @@
+name: Verify native artifact preservation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/native_artifact_information_safe_candidate.py'
+      - 'canonical/runtime/native_artifact_information_safe_proof.py'
+      - 'canonical/tests/test_native_artifact_information_safe.py'
+      - '.github/workflows/verify-native-artifact-info-safe.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run cross-format preservation tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_native_artifact_information_safe
+      - name: Run fresh 800-case cross-format grid
+        env:
+          PROJECT_BRAIN_POST_FREEZE_SEED: ${{ github.run_id }}
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import os
+          from canonical.runtime import native_artifact_information_safe_proof as proof
+          from canonical.runtime import native_artifact_information_safe_candidate as candidate
+          seed=int(os.environ["PROJECT_BRAIN_POST_FREEZE_SEED"])
+          out=proof.run_batch(seed,800,candidate.apply_edit)
+          print("PROJECT_BRAIN_NATIVE_ARTIFACT_RESULT",out)
+          if not out.get("all_pass"):
+              raise SystemExit(1)
+          PY
