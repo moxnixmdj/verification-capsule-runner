@@ -1,0 +1,27 @@
+name: Verify fixed-point v2 gate consistency
+
+on:
+  push:
+    branches:
+      - "verify-fixed-point-v2-gate-consistency-20261002-1333"
+    paths:
+      - "capsules/fixed_point_v2_gate_consistency/**"
+      - ".github/workflows/verify-fixed-point-v2-gate-consistency.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify mirrored blobs and fixed-point gate consistency
+        run: |
+          cd capsules/fixed_point_v2_gate_consistency
+          export PYTHONPATH=.
+          python verify_independent.py
