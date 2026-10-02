@@ -123,7 +123,12 @@ def solve(public: Mapping[str, Any]) -> dict[str, Any]:
             }
         condition = None
         if "condition" in parsed:
-            condition = parsed["condition"]["text"]
+            c = parsed["condition"]
+            condition = c["text"]
+            if c.get("relation") == "CONDITION_AFTER":
+                condition = "after " + condition
+            elif c.get("relation") == "CONDITION_UNLESS":
+                condition = "unless " + condition
         semantic = {
             "subject": g["subject"],
             "predicate": pred,
