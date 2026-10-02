@@ -5,6 +5,8 @@ on:
     paths:
       - verification/livebench_if_58_checker_preflight.py
       - .github/workflows/verify-livebench-if-58-checkers.yml
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
