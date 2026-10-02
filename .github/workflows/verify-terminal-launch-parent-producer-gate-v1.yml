@@ -1,0 +1,103 @@
+name: Verify terminal launch parent producer gate v1
+on:
+  pull_request:
+    paths:
+      - "capsules/terminal_launch_parent_producer_gate_v1/**"
+      - ".github/workflows/verify-terminal-launch-parent-producer-gate-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/terminal_launch_parent_producer_gate_v1/canonical/runtime/terminal_wave_launch_authority_reducer_v1.py)" = "48ceab4c3e97b80f25d1ae648348b5c86ad0ba54"
+          test "$(git hash-object capsules/terminal_launch_parent_producer_gate_v1/canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py)" = "2b3cfde2f7a9b78a23a01affab3c81eacef48dbf"
+          test "$(git hash-object capsules/terminal_launch_parent_producer_gate_v1/canonical/governance/TERMINAL_PARENT_CASE_PRODUCER_MANIFEST_V1.json)" = "64f02a51c2f4b61230c914c3a3b19e3480e67660"
+          test "$(git hash-object capsules/terminal_launch_parent_producer_gate_v1/canonical/runtime/terminal_parent_portfolio_launcher_v1.py)" = "5c7b5da3eb136ad1eb75885d0f199a674869fe2c"
+          test "$(git hash-object capsules/terminal_launch_parent_producer_gate_v1/canonical/tests/test_terminal_parent_portfolio_launcher_v1.py)" = "c9d31ad151bacba3053f9060d908de3015597f9f"
+      - name: Run exact launch-authority reducer tests
+        working-directory: capsules/terminal_launch_parent_producer_gate_v1
+        run: |
+          set -euo pipefail
+          touch canonical/__init__.py canonical/runtime/__init__.py canonical/tests/__init__.py
+          cat > canonical/runtime/terminal_prequalification_reducer.py <<'PY'
+          def evaluate(root):
+              return {"pass": False, "execution_authority": False}
+          PY
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_wave_launch_authority_reducer_v1
+      - name: Run exact launcher tests with dependency stubs
+        working-directory: capsules/terminal_launch_parent_producer_gate_v1
+        run: |
+          set -euo pipefail
+          cat > canonical/runtime/direct_route_terminal_executors_v1.py <<'PY'
+          SA_CCR_ID="SA"
+          BROWSER_ID="BROWSER"
+          DELEGATION_ID="DELEGATION"
+          TOOL_ID="TOOL"
+          RESEARCH_ID="RESEARCH"
+          def bound_behavior_ids():
+              return tuple(sorted((SA_CCR_ID,BROWSER_ID,DELEGATION_ID,TOOL_ID,RESEARCH_ID)))
+          def execute_direct_route(behavior_id, **kwargs):
+              return {"behavior_id":behavior_id,"pass":True,"terminal_result":True}
+          PY
+          cat > canonical/runtime/cad_t0_route_specific_terminal_executor_v1.py <<'PY'
+          BEHAVIOR_ID="CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001"
+          def execute_cad_route(**kwargs):
+              return {"behavior_id":BEHAVIOR_ID,"pass":True,"terminal_result":True}
+          PY
+          cat > canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py <<'PY'
+          M0="SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001"
+          BINDINGS={
+              M0:{"portfolios":("T0","T1","T2","T3"),"binding_blob":"m0"},
+              "STRUCTURED":{"portfolios":("T0","T1"),"binding_blob":"structured"},
+              "P1":{"portfolios":("T0","T2"),"binding_blob":"p1"},
+              "P2":{"portfolios":("T1",),"binding_blob":"p2"},
+              "NATIVE":{"portfolios":("T1",),"binding_blob":"native"},
+              "P3":{"portfolios":("T1","T3"),"binding_blob":"p3"},
+              "CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001":{"portfolios":("T0",),"binding_blob":"cad"},
+          }
+          def bound_behavior_ids():
+              return tuple(sorted(BINDINGS))
+          def validate_parent_observation(behavior_id,row):
+              errors=[]
+              b=BINDINGS.get(behavior_id)
+              if b is None: errors.append("UNBOUND")
+              if b and row.get("portfolio") not in b["portfolios"]: errors.append("PORTFOLIO")
+              if b and row.get("binding_blob")!=b["binding_blob"]: errors.append("BINDING")
+              if row.get("load_bearing") not in (True,False): errors.append("LOAD")
+              if row.get("direct_instrumentation_pass") not in (True,False): errors.append("DIRECT")
+              if row.get("parent_terminal_acceptance_pass") not in (True,False): errors.append("PARENT")
+              if row.get("case_replaced") is not False: errors.append("REPLACE")
+              if row.get("tuning_replay") is not False: errors.append("REPLAY")
+              if row.get("result_to_runtime_feedback") is not False: errors.append("FEEDBACK")
+              return {"valid":not errors,"errors":errors}
+          def reduce_behavior_receipts(behavior_id,rows):
+              bad=[r for r in rows if r.get("load_bearing") is True and not (r.get("direct_instrumentation_pass") is True and r.get("parent_terminal_acceptance_pass") is True)]
+              return {"status":"PASS_COMPONENT" if rows and not bad else "FAIL_CLOSED"}
+          PY
+          cat > canonical/runtime/terminal_wave_launch_authority_reducer_v1.py <<'PY'
+          def evaluate(root):
+              return {"launch_authority": False, "failed_predicates":["PARENT_PRODUCER_MISSING:T0"]}
+          PY
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_parent_portfolio_launcher_v1
+      - name: Assert live producer manifest is fail-closed
+        working-directory: capsules/terminal_launch_parent_producer_gate_v1
+        run: |
+          python - <<'PY'
+          import json
+          p="canonical/governance/TERMINAL_PARENT_CASE_PRODUCER_MANIFEST_V1.json"
+          x=json.load(open(p))
+          assert x["bound_parent_producer_count"] == 0, x
+          assert x["required_parent_producer_count"] == 4, x
+          assert x["launch_ready"] is False, x
+          assert set(x["portfolios"]) == {"T0","T1","T2","T3"}, x
+          assert all(v["producer"] is None for v in x["portfolios"].values()), x
+          print("fail-closed 0/4 parent producer state verified")
+          PY
