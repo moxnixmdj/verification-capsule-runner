@@ -1,0 +1,32 @@
+{
+  "schema": "PROJECT_BRAIN_M0A_STANZA_COREF_DEV_PROBE_V1",
+  "date": "2026-10-02",
+  "status": "FROZEN_BEFORE_DONOR_OUTPUT__DEV_ONLY__ZERO_CAPABILITY_CREDIT",
+  "purpose": "TEST_CURRENT_SPECIALIZED_COREFERENCE_AS_AN_INDEPENDENT_SOURCE_TRACEABLE_PROPOSAL_GENERATOR_FOR_M0A_REFERENCE_BINDING_ONLY",
+  "donor": {
+    "repository": "stanfordnlp/stanza",
+    "release": "v1.14.0",
+    "release_commit": "1f4bfdd2bff400969444cf9f290d402448c9d6d5",
+    "source_license": "Apache-2.0",
+    "model_weight_license_status": "UNKNOWN_UNTIL_PROVEN__EPHEMERAL_DEV_PROPOSAL_USE_ONLY"
+  },
+  "source_corpus": "verification/m0a_olmo_contrastive_dev.json",
+  "admitted_cases": [
+    "DEV_PRONOUN_SINGULAR_001",
+    "DEV_PLURAL_PRONOUN_001",
+    "DEV_FORMER_LATTER_001",
+    "DEV_CONDITIONAL_ANAPHORA_001",
+    "DEV_DEMONSTRATIVE_EVENT_001"
+  ],
+  "excluded_from_coref_score": [
+    "DEV_ELLIPSIS_TOO_001",
+    "DEV_RESPECTIVELY_001"
+  ],
+  "acceptance": "REPORT_EXACT_MENTION_CHAINS_AND_EXPECTED_REFERENCE_LINKS__NO_SINGLE_DONOR_OUTPUT_IS_AUTHORITY",
+  "consensus_route": "canonical/capabilities/opus55/M0A_SEMANTIC_GRAPH_CONSENSUS_001.json",
+  "heldout_exposed": 0,
+  "fresh_terminal_evidence_consumed": 0,
+  "incremental_spend_usd": 0,
+  "capability_credit_delta": 0,
+  "family_credit_delta": 0
+}
