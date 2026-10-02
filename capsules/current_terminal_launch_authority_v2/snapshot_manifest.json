@@ -30,7 +30,8 @@
     "canonical/governance/TERMINAL_PARENT_LAUNCHER_BINDING_V1.json": "8a40fd5139830650adaacd984a9133258292398c",
     "canonical/verification/TERMINAL_PARENT_PORTFOLIO_LAUNCHER_SA_CCR_REBIND_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "fa423a7bf2563d7b25201ef95610db0246752f72",
     "canonical/runtime/terminal_parent_portfolio_launcher_v1.py": "d7f20a66f1f534b06ea11782cb350a582c07d985",
-    "canonical/tests/test_terminal_parent_portfolio_launcher_v1.py": "01996bc0cca7246c0dcfea5b1602c4740fa3e45d"
+    "canonical/tests/test_terminal_parent_portfolio_launcher_v1.py": "01996bc0cca7246c0dcfea5b1602c4740fa3e45d",
+    "canonical/verification/TERMINAL_PARENT_LAUNCHER_SA_CCR_REBIND_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "db27f7965259d5e53b23924791e891fb78f45c4b"
   },
   "expected_verdict": {
     "prequalification_pass": true,
