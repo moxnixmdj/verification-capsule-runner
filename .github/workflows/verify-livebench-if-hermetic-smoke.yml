@@ -1,4 +1,5 @@
 name: Verify LiveBench IF hermetic 58-checker smoke
+# PR verification capsule
 
 on:
   pull_request:
