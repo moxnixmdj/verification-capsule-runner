@@ -22,10 +22,13 @@ jobs:
           set -euo pipefail
           test "$(git hash-object canonical/runtime/cad_t0_post_refreeze_binding_validator.py)" = "6b5b53317ca46b331fe4095ed99e48698e2b73b9"
           test "$(git hash-object canonical/tests/test_cad_t0_post_refreeze_binding_validator.py)" = "01045d73982ea3b7be381c6e64521b2ff26649b5"
-          test "$(git hash-object canonical/governance/CAD_T0_CANDIDATE_FREEZE_V2.json)" = "039056ad65c1721d871d378ff0497fc461ab4df2"
-          test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V2.json)" = "7a6f04e08587ff5471ab406c04ab8acd76cc16eb"
+          test "$(git hash-object canonical/governance/CAD_T0_CANDIDATE_FREEZE_V2.json)" = "5f9ef8b00ab9f62f5353e60c5b20da9dc83e97fb"
+          test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V2.json)" = "5077d2177646dfffb8110aae856dbab7490558e6"
           test "$(git hash-object canonical/verification/CAD_T0_POPULATION_ORACLE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "d27aece637d10e46bff72b762f5743d5048c7af0"
           test "$(git hash-object canonical/verification/M1A_POSITIONED_OCR_TSV_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "949612638affa5891fe74517ad6b83371a783f69"
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "aa32750b220a023617938b7be9476f6b3aac6704"
+          test "$(git hash-object canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py)" = "8222cf83a7476cd453e06865b8e3aaff8a70b5db"
+          test "$(git hash-object canonical/verification/CAD_T0_SOURCE_STRUCTURE_ANTISHORTCUT_REPAIR_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "424f3899cd036bf8753e070149315195e575065c"
       - name: Run fail-closed binding regressions
         working-directory: capsules/cad_t0_post_refreeze
         run: PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_post_refreeze_binding_validator
