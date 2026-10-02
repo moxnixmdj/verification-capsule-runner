@@ -1,0 +1,54 @@
+name: Verify delegation terminal acceptance mode v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/governance/DELEGATION_TERMINAL_POPULATION_BINDING_V1.json'
+      - 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json'
+      - 'canonical/verification/DELEGATION_TERMINAL_POPULATION_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
+      - '.github/workflows/verify-delegation-terminal-acceptance-mode-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/DELEGATION_TERMINAL_POPULATION_BINDING_V1.json)" = "d3fd84fe832734b87207b04c5ff5d2ff54f752a9"
+          test "$(git hash-object canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "37ddce871d5af586857fc288f2657a4583785f65"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "2dd58b95753bca92bb05e21110b0b60f4c96f7ed"
+          test "$(git hash-object canonical/verification/DELEGATION_TERMINAL_POPULATION_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "3965db684d7104c5829ce1fcfa8ee08d2cd42cfc"
+      - name: Verify delegation registry acceptance semantics
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path(".")
+          binding=json.loads((root/"canonical/governance/DELEGATION_TERMINAL_POPULATION_BINDING_V1.json").read_text())
+          registry=json.loads((root/"canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json").read_text())
+          protocol=json.loads((root/"canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json").read_text())
+          prior=json.loads((root/"canonical/verification/DELEGATION_TERMINAL_POPULATION_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json").read_text())
+          mode=binding["proof_mode"]
+          assert mode in registry["terminal_acceptance_proof_modes"], (mode,registry["terminal_acceptance_proof_modes"])
+          assert binding["proof_mode_basis"]=="THEORETICAL_CEILING"
+          assert binding["acceptance"]["terminal_acceptance_proof_mode"]==mode
+          assert binding["acceptance"]["allowed_failed_cases"]==0
+          assert binding["population"]["sample_count"]==512
+          assert binding["population"]["post_freeze_beacon"] is None
+          assert binding["population"]["adaptive_case_selection"] is False
+          assert binding["population"]["case_replacement"] is False
+          assert binding["population"]["replay_for_tuning"] is False
+          assert binding["terminal_results_observed"]==0
+          assert binding["execution_authority"] is False
+          assert prior["workflow_conclusion"]=="success"
+          assert "FRESH_512_CASE_PRE_BEACON_POPULATION_PASSES" in prior["verified"]
+          assert "ALL_SIX_FROZEN_DELEGATION_CASE_CLASSES_PRESENT" in prior["verified"]
+          assert protocol["route_specific_requirements"]["acceptance"].startswith("MUST_USE_ONE_OF_THE_REGISTRY_TERMINAL_ACCEPTANCE_PROOF_MODES")
+          print({"status":"PASS","proof_mode":mode,"sample_count":binding["population"]["sample_count"]})
+          PY
