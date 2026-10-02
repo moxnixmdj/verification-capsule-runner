@@ -21,11 +21,11 @@ jobs:
       NLTK_DATA: /tmp/nltk_data
       LIVEBENCH_ROOT: /tmp/LiveBench
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
 
       - name: Pin and verify upstream LiveBench source
         shell: bash
@@ -50,7 +50,12 @@ jobs:
           echo "c4230d80640def9071599ff56b1b5950fe13a2a94c0da98c5deab12431b24330  /tmp/wheels/emoji-2.16.0-py3-none-any.whl" | sha256sum -c -
           echo "198a7413033c32d7b31e21962efb3f284bcea80d3346e954b938ca1ebe6bee20  /tmp/wheels/syllapy-0.7.2-py3-none-any.whl" | sha256sum -c -
           echo "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922  /tmp/wheels/setuptools-80.9.0-py3-none-any.whl" | sha256sum -c -
-          sha256sum /tmp/wheels/click-8.5.0-py3-none-any.whl /tmp/wheels/cloudpickle-3.1.2-py3-none-any.whl /tmp/wheels/defusedxml-0.7.1-py2.py3-none-any.whl /tmp/wheels/joblib-1.6.0-py3-none-any.whl /tmp/wheels/regex-2026.9.29-*.whl /tmp/wheels/tqdm-4.70.1-py3-none-any.whl
+          echo "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360  /tmp/wheels/click-8.5.0-py3-none-any.whl" | sha256sum -c -
+          echo "9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a  /tmp/wheels/cloudpickle-3.1.2-py3-none-any.whl" | sha256sum -c -
+          echo "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61  /tmp/wheels/defusedxml-0.7.1-py2.py3-none-any.whl" | sha256sum -c -
+          echo "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba  /tmp/wheels/joblib-1.6.0-py3-none-any.whl" | sha256sum -c -
+          echo "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0  /tmp/wheels/regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl" | sha256sum -c -
+          echo "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73  /tmp/wheels/tqdm-4.70.1-py3-none-any.whl" | sha256sum -c -
           python -m pip install --no-index --find-links=/tmp/wheels /tmp/wheels/nltk-3.10.3-py3-none-any.whl /tmp/wheels/emoji-2.16.0-py3-none-any.whl /tmp/wheels/syllapy-0.7.2-py3-none-any.whl /tmp/wheels/setuptools-80.9.0-py3-none-any.whl
 
       - name: Materialize frozen NLTK data
