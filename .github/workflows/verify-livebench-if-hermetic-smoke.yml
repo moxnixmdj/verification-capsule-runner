@@ -91,3 +91,4 @@ jobs:
               rows.append(instruction_id)
           print({"status":"PASS","checker_count":len(rows),"terminal_case_content_read":0})
           PY
+# retrigger: 2026-10-02 terminal-prequalification
