@@ -1,0 +1,91 @@
+name: Verify composition memory owned-family bridge
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/composition_memory_owned_family_bridge_v1/**"
+      - ".github/workflows/verify-composition-memory-owned-family-bridge.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs and scoped derivation
+        run: |
+          cd capsules/composition_memory_owned_family_bridge_v1
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          exp=json.loads(Path("EXPECTED_BRAIN_BLOBS.json").read_text())
+          for p, want in exp["exact_brain_blobs"].items():
+              b=Path(p).read_bytes()
+              got=hashlib.sha1(f"blob {len(b)}\0".encode()+b).hexdigest()
+              assert got==want,(p,got,want)
+
+          bridge=json.loads(Path("canonical/governance/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V1.json").read_text())
+          env=json.loads(Path("canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json").read_text())
+          prot=json.loads(Path("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json").read_text())
+          manifest=json.loads(Path("canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json").read_text())
+          mem=json.loads(Path("canonical/capabilities/opus55/OPUS55_LONG_HORIZON_MEMORY_AND_CONTINUITY_V1.json").read_text())
+
+          assert env["target_family_count"]==19
+          fams={x["id"]:x for x in env["families"]}
+          assert len(fams)==19
+          assert fams["MULTI_CAPABILITY_COMPOSITION"]["useful_behavior"]=="Compose reasoning, research, tools, code, memory, actions and verification into one causal execution system."
+          literal_memory=[fid for fid,x in fams.items() if fid!="MULTI_CAPABILITY_COMPOSITION" and "memory" in x["useful_behavior"].lower()]
+          assert literal_memory==["LONG_HORIZON_MEMORY_AND_CONTINUITY"],literal_memory
+          assert fams["LONG_HORIZON_MEMORY_AND_CONTINUITY"]["useful_behavior"]=="Use memory across sessions, preserve project state and resume long-running work coherently."
+
+          pp={x["family"]:x for x in prot["protocols"]}
+          assert len(pp)==19
+          assert pp["LONG_HORIZON_MEMORY_AND_CONTINUITY"]["status"]=="PASS"
+          comp=pp["MULTI_CAPABILITY_COMPOSITION"]
+          assert comp["status"]=="DEFINED_RESULT_OPEN"
+          assert "Every isolated component used in the claim has its own scoped proof" in comp["acceptance"]
+
+          assert manifest["claim_id"]=="MULTI_CAPABILITY_COMPOSITION::FROZEN_PROTOCOL_V1"
+          assert manifest["isolated_component_interface_count"]==12
+          ms=[x for x in manifest["interfaces"] if x["component_id"]=="memory"]
+          assert len(ms)==1
+          m=ms[0]
+          assert m["interface_id"]=="browser/computer action+memory+recovery"
+          assert m["required_properties"]==["SCOPED_ACCEPTANCE_PROOF"]
+          assert m["family_binding"] is None and m["receipt_binding"] is None
+
+          assert mem["family"]=="LONG_HORIZON_MEMORY_AND_CONTINUITY"
+          assert mem["status"]=="VERIFIED_OWNED_EQUAL_OR_BETTER"
+          assert mem["decision"]["ownership_status"]=="VERIFIED_OWNED_EQUAL_OR_BETTER"
+          assert mem["decision"]["parent_family_closed_for_claim_scope"] is True
+          assert mem["ownership_tests"]["ownership_package_test"]=="PASS"
+          assert mem["ownership_tests"]["no_hidden_capability_provider_test"]=="PASS"
+          assert mem["brain_owned_route"]["external_hidden_capability_provider_required"] is False
+          assert mem["brain_owned_route"]["incremental_spend_usd"]==0
+
+          assert bridge["claim_id"]==manifest["claim_id"]
+          assert bridge["component_binding"]["component_id"]=="memory"
+          assert bridge["component_binding"]["interface_id"]==m["interface_id"]
+          assert bridge["component_binding"]["proved_properties_after_independent_verification"]==m["required_properties"]
+          assert bridge["derivation"]["closed_world_terminal_family_count"]==19
+          assert bridge["derivation"]["memory_family_id"]=="LONG_HORIZON_MEMORY_AND_CONTINUITY"
+          assert bridge["derivation"]["memory_family_protocol_status"]=="PASS"
+          assert bridge["derivation"]["owned_memory_package_status"]=="VERIFIED_OWNED_EQUAL_OR_BETTER"
+          assert bridge["derivation"]["owned_memory_parent_family_closed_for_claim_scope"] is True
+          assert bridge["scope_guard"]["included_scope"]==mem["claim_scope"]
+          assert bridge["scope_guard"]["excluded_scope"]==mem["excluded_scope"]
+          assert "NO_GENERAL_SEMANTIC_MEMORY_INHERITANCE" in bridge["scope_guard"]["rule"]
+          cr=bridge["candidate_receipt"]
+          assert cr["component_id"]=="memory" and cr["interface_id"]==m["interface_id"]
+          assert cr["proved_properties"]==["SCOPED_ACCEPTANCE_PROOF"]
+          assert cr["contamination_clean"] is True and cr["acceptance_scoped"] is True
+          assert cr["source_family"]=="LONG_HORIZON_MEMORY_AND_CONTINUITY"
+          assert cr["verified"] is False and cr["independent"] is False
+          for k in ("capability_credit_delta","family_credit_delta"):
+              assert bridge[k]==0
+          assert bridge["execution_authority"] is False and bridge["promotion_authority"] is False
+          print(json.dumps({"status":"PASS","family_count":19,"memory_family":"LONG_HORIZON_MEMORY_AND_CONTINUITY","component_id":"memory","interface_id":m["interface_id"],"proved_property":"SCOPED_ACCEPTANCE_PROOF","capability_credit_delta":0,"family_credit_delta":0},sort_keys=True))
+          PY
