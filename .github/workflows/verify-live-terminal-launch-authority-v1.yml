@@ -63,6 +63,25 @@ jobs:
           assert a["fresh_terminal_evidence_consumed"]==0, a
           print("EXACT_CURRENT_TERMINAL_LAUNCH_AUTHORITY=PASS")
           PY
+      - name: Derive exact current launch authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . > /tmp/launch_authority.json
+          cat /tmp/launch_authority.json
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/launch_authority.json"))
+          assert d.get("pass") is True, d
+          assert d.get("launch_authority") is True, d
+          assert d.get("execution_authority") is True, d
+          assert d.get("failed_predicates") == [], d
+          assert d.get("terminal_results_observed", 0) == 0, d
+          assert d.get("fresh_terminal_evidence_consumed", 0) == 0, d
+          assert d.get("capability_credit_delta", 0) == 0, d
+          assert d.get("family_credit_delta", 0) == 0, d
+          print("EXACT_CURRENT_LAUNCH_AUTHORITY_TRUE")
+          PY
       - name: Assert no terminal evidence was consumed
         run: |
           python - <<'PY'
