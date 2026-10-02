@@ -1,0 +1,26 @@
+name: Verify structured-method AST v2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/structured_method_expression_ast_candidate_v2.py'
+      - 'canonical/runtime/structured_method_expression_ast_proof_v2.py'
+      - 'canonical/tests/test_structured_method_expression_ast_v2.py'
+      - '.github/workflows/verify-structured-method-ast-v2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/structured_method_expression_ast_candidate_v2.py)" = "be6ab24f165a64d5f3963818fc9f06bbeca7f353"
+          test "$(git hash-object canonical/runtime/structured_method_expression_ast_proof_v2.py)" = "7e75e94f71732e07102333bb803c1332d790d518"
+          test "$(git hash-object canonical/tests/test_structured_method_expression_ast_v2.py)" = "39b3497130d77ba42cb50312d144d16beda591ea"
+      - name: Run independent structured-method AST suite
+        run: python -m unittest -v canonical.tests.test_structured_method_expression_ast_v2
