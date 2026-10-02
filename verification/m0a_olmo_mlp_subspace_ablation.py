@@ -118,7 +118,7 @@ for layer_id in LAYERS:
                 case_id: base_by[case_id]["margin"] - ab_by[case_id]["margin"]
                 for case_id in base_by
             },
-            "material": loss >= 0.10 or bool(flips),
+            "material": useful_loss >= 0.10 or bool(flips),
         })
 
 rows.sort(
@@ -140,7 +140,10 @@ out = {
     "baseline": baseline,
     "baseline_correct_case_ids": baseline_correct_ids,
     "baseline_correct_subset_mean_margin": baseline_correct_mean,
-    "material_rule": "BASELINE_MEAN_MARGIN_MINUS_ABLATED_MEAN_MARGIN_GE_0_10_OR_ANY_BASELINE_CORRECT_CASE_FLIPS_WRONG",
+    "useful_signal_set": "ONLY_CASES_CORRECTLY_PREFERRED_BY_THE_UNABLATED_BASELINE",
+    "known_baseline_failure": "DEV_FORMER_LATTER_001",
+    "material_rule": "USEFUL_BASELINE_CORRECT_MEAN_MARGIN_MINUS_ABLATED_USEFUL_MEAN_MARGIN_GE_0_10_OR_ANY_USEFUL_BASELINE_CORRECT_CASE_FLIPS_WRONG",
+    "known_failure_rule": "IMPROVEMENT_OR_DEGRADATION_ON_DEV_FORMER_LATTER_001_IS_DIAGNOSTIC_ONLY_AND_CANNOT_MAKE_A_GROUP_MATERIAL",
     "ranked_group_ablation": rows,
     "material_groups": [
         {
@@ -156,7 +159,7 @@ out = {
         if any(x["material"] for x in rows)
         else "DISTRIBUTED_WITHIN_MATERIAL_MLP_BRANCHES_AT_EIGHT_GROUP_GRANULARITY"
     ),
-    "known_boundary": "NECESSITY_ON_FROZEN_DEV_ONLY__NOT_SUFFICIENCY__NOT_OWNERSHIP__NOT_SEMANTIC_AUTHORITY",
+    "known_boundary": "MATERIALITY_IS_NECESSITY_EVIDENCE_ON_ALREADY_CORRECT_DEV_SIGNAL_ONLY__NOT_SUFFICIENCY__NOT_OWNERSHIP__NOT_SEMANTIC_AUTHORITY",
     "heldout_exposed": 0,
     "fresh_terminal_evidence_consumed": 0,
     "capability_credit": False,
