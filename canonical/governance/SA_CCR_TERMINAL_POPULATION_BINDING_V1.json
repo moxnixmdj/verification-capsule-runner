@@ -1,0 +1,59 @@
+{
+  "schema": "PROJECT_BRAIN_SA_CCR_TERMINAL_POPULATION_BINDING_V1",
+  "date": "2026-10-02",
+  "status": "PRE_BEACON_FROZEN__ZERO_TERMINAL_RESULTS__INDEPENDENT_BINDING_VERIFICATION_PENDING",
+  "behavior_id": "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001",
+  "proof_mode": "ABSOLUTE_BEHAVIORAL_PROTOCOL",
+  "exact_blobs": {
+    "candidate": "ff2fa256738ffbe5b15bb813a11c82046692b5e8",
+    "independent_oracle": "8eb94b8e8b00e3ace662e7fac2e8b6a8f7bb2200",
+    "route_manifest": "04b030ef0bf13cf9e39f4c6a31077ca2ff0a5394",
+    "scope_gate_receipt": "31ea53c081997b2ebca7b9823aa1fc154d5b3293"
+  },
+  "population": {
+    "sample_count": 2000,
+    "generator": "canonical/runtime/saccr_credit_information_safe_proof.py",
+    "route_population_version": "SA_CCR_TERMINAL_POPULATION_V1",
+    "case_id_rule": "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001::SA_CCR_TERMINAL_POPULATION_V1::slot::<index>",
+    "post_freeze_beacon": null,
+    "seed_rule": "uint64_be(first_8_bytes(SHA256('PROJECT_BRAIN_TERMINAL_V2\\0'+commitment+'\\0'+post_freeze_beacon+'\\0'+case_id)))",
+    "adaptive_case_selection": false,
+    "case_replacement": false,
+    "replay_for_tuning": false
+  },
+  "acceptance": {
+    "rule": "ALL_2000_CASES_PASS_ALL_HIDDEN_INTERMEDIATE_AND_FINAL_ORACLE_CHECKS__ZERO_CASE_REPLACEMENT__ZERO_TUNING_REPLAY",
+    "required_intermediates": [
+      "SUPERVISORY_DURATION",
+      "ADJUSTED_NOTIONAL",
+      "DELTA",
+      "MATURITY_FACTOR",
+      "EFFECTIVE_NOTIONAL",
+      "SUPERVISORY_FACTOR",
+      "CORRELATION",
+      "ENTITY_AGGREGATION",
+      "CREDIT_ADDON"
+    ],
+    "allowed_failed_cases": 0,
+    "case_local_execution_failure_counts_as_failure": true
+  },
+  "scope_gate": {
+    "status": "INDEPENDENT_PASS__ADMISSIBLE_SUBSTITUTION__ZERO_TERMINAL_RESULT",
+    "receipt": "canonical/verification/SA_CCR_SCOPE_GATE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+    "unresolved_required_dimensions": []
+  },
+  "information_boundary": {
+    "candidate_receives_hidden_oracle": false,
+    "candidate_receives_reference_solution": false,
+    "load_bearing_oracle_hidden": true
+  },
+  "dependency_mode": "ZERO_INCREMENTAL_SPEND__OWNED_CANDIDATE__INDEPENDENT_ORACLE",
+  "commitment_components_sha256": "b4f98c01a4a5d52ca026c585309ec2851731b36450154ab422ded1927084912c",
+  "pre_beacon_frozen": true,
+  "terminal_results_observed": 0,
+  "fresh_terminal_evidence_consumed": 0,
+  "execution_authority": false,
+  "capability_credit_delta": 0,
+  "family_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
