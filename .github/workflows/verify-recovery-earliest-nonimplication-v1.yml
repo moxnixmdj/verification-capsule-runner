@@ -1,0 +1,27 @@
+name: Verify recovery earliest nonimplication guard v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/recovery_earliest_disjunction_guard_v1/**"
+      - ".github/workflows/verify-recovery-earliest-nonimplication-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify strict-earliest nonimplication guard
+        run: |
+          cd capsules/recovery_earliest_disjunction_guard_v1
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/recovery_t0_t2_acceptance_ceiling_lifter_v1.py
+          python -m unittest canonical.tests.test_recovery_t0_t2_acceptance_ceiling_lifter_v1 -v
+          python verify_independent.py
