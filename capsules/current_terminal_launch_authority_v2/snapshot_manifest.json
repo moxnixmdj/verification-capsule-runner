@@ -1,16 +1,16 @@
 {
-  "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_LAUNCH_AUTHORITY_CAPSULE_V2",
+  "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_LAUNCH_AUTHORITY_CAPSULE_V3",
   "date": "2026-10-02",
   "brain_snapshot_blobs": {
-    "canonical/runtime/terminal_wave_launch_authority_reducer_v1.py": "48ceab4c3e97b80f25d1ae648348b5c86ad0ba54",
-    "canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py": "2b3cfde2f7a9b78a23a01affab3c81eacef48dbf",
+    "canonical/runtime/terminal_wave_launch_authority_reducer_v1.py": "0b5b5e8229cc3e5ee950169469811e7576c43514",
+    "canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py": "352a01602259011d8d40f5db2d2b84e4c771a713",
     "canonical/runtime/terminal_prequalification_reducer.py": "da929015fafabed2b5a134a2e95b6bff2f47349c",
     "canonical/tests/test_terminal_prequalification_reducer.py": "9b09e96c9bf0340d174b4a752148c0807be9043e",
     "canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json": "5d20073180fdcfd6e36145f4c820271eb1ee275f",
     "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "afa00109031d638fef32cc3fe10be18786605c39",
     "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json": "9c60356ab509a16df5104777f360b9fb18255842",
     "canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json": "d1dc7f28738ba24a3ca5919755e03190fbf30939",
-    "canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json": "e90ad37c122899fc2de567bcfda054803ffc9c36",
+    "canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json": "3ffc4484ab4ac69f60258859d5d6e2a7cc8024a7",
     "canonical/governance/TERMINAL_PARENT_CASE_PRODUCER_MANIFEST_V1.json": "5ff24e390056ba8e980ad3b88116149869ee85ce",
     "canonical/runtime/saccr_route_specific_terminal_executor_v1.py": "9810e3f9a2dd94dc372b6b9a865510795d0262fd",
     "canonical/tests/test_saccr_route_specific_terminal_executor_v1.py": "59e01148f9cc0cff741e81b3238e023358a2a88a",
@@ -26,7 +26,11 @@
     "canonical/verification/CURRENT_EXECUTOR_SNAPSHOT_V3_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "f8aac465750ab4b2618e470e163207ddcc6ac272",
     "canonical/verification/DIRECT_ROUTE_TERMINAL_EXECUTORS_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json": "a1b23e9c35a8be1dce5cec6de7f25685aca803dc",
     "canonical/verification/CAD_T0_ROUTE_SPECIFIC_TERMINAL_EXECUTOR_COMPLETE_CLOSURE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "f747b6f36f183a1eead5f01046ff44cd61c6420a",
-    "canonical/verification/TERMINAL_PARENT_PORTFOLIO_RUNNER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "fe83639e80cf4a6da8a966764d07c9b0a819578b"
+    "canonical/verification/TERMINAL_PARENT_PORTFOLIO_RUNNER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "fe83639e80cf4a6da8a966764d07c9b0a819578b",
+    "canonical/governance/TERMINAL_PARENT_LAUNCHER_BINDING_V1.json": "8a40fd5139830650adaacd984a9133258292398c",
+    "canonical/verification/TERMINAL_PARENT_PORTFOLIO_LAUNCHER_SA_CCR_REBIND_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "fa423a7bf2563d7b25201ef95610db0246752f72",
+    "canonical/runtime/terminal_parent_portfolio_launcher_v1.py": "d7f20a66f1f534b06ea11782cb350a582c07d985",
+    "canonical/tests/test_terminal_parent_portfolio_launcher_v1.py": "01996bc0cca7246c0dcfea5b1602c4740fa3e45d"
   },
   "expected_verdict": {
     "prequalification_pass": true,
@@ -36,5 +40,6 @@
     "failed_predicates": []
   },
   "terminal_results_observed": 0,
-  "fresh_terminal_evidence_consumed": 0
+  "fresh_terminal_evidence_consumed": 0,
+  "note": "Refreshed after independently verified SA-CCR route-specific top-level launcher rebind; zero terminal evidence."
 }
