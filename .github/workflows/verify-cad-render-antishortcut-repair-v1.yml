@@ -1,0 +1,21 @@
+name: Verify CAD render anti-shortcut repair v1
+on:
+  push:
+    branches: [verify-cad-render-antishortcut-repair-v1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact Brain blob bindings
+        run: python -m pytest -q capsules/cad_render_antishortcut_repair_v1/test_brain_blob_binding.py
+      - name: Run render-equivalent anti-shortcut regression
+        env:
+          PYTHONPATH: capsules/cad_render_antishortcut_repair_v1
+        run: python -m unittest -v capsules/cad_render_antishortcut_repair_v1/canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py
