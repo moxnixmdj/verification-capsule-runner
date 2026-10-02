@@ -100,7 +100,7 @@ for layer_idx in CANDIDATE_LAYERS:
             "baseline_minus_ablated_mean_margin":drop,
             "baseline_correct_to_wrong_flips":flips,
             "baseline_wrong_to_correct_rescues":rescues,
-            "material":drop>=0.05 or bool(flips),
+            "material":drop>=0.10 or bool(flips),
             "rows":ab["rows"],
         })
 
