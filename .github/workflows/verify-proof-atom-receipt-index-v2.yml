@@ -1,0 +1,19 @@
+name: Verify proof atom receipt index v2
+on:
+  pull_request:
+    paths:
+      - "capsules/proof_atom_receipt_index_v2/**"
+      - ".github/workflows/verify-proof-atom-receipt-index-v2.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify exact Brain V2 receipt-index bytes
+        run: python capsules/proof_atom_receipt_index_v2/verify.py
