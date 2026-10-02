@@ -1,0 +1,19 @@
+name: Verify composition memory owned-family bridge v1
+
+on:
+  pull_request:
+    paths:
+      - "capsules/composition_memory_owned_family_bridge_v1/**"
+      - ".github/workflows/verify-composition-memory-owned-family-bridge-v1.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain bytes and fail-closed memory binding
+        run: python capsules/composition_memory_owned_family_bridge_v1/verify.py
