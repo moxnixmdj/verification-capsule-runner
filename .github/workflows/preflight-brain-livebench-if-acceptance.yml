@@ -28,7 +28,7 @@ jobs:
           test "$(git hash-object canonical/tests/test_instruction_following_brain_configuration_v1.py)" = "4f712136cfad35f24253a6bce7a07efbbecc8c30"
           test "$(git hash-object canonical/runtime/explicit_compound_requirement_decomposer.py)" = "06da82ccd7cf5ba37b78d1d664b5638caa4e1956"
           test "$(git hash-object canonical/runtime/bounded_predicate_argument_semantics.py)" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
-          test "$(git hash-object acceptance/livebench_if/LIVEBENCH_IF_PUBLIC_BAR_EXECUTION_PROTOCOL_V1.json)" = "ac3d696902469a1ff2bdad287df1dc793140d4e1"
+          test "$(git hash-object acceptance/livebench_if/LIVEBENCH_IF_PUBLIC_BAR_EXECUTION_PROTOCOL_V1.json)" = "5c2a8d2caaef67160507f70ea1c7c001345c2810"
           test "$(git hash-object acceptance/livebench_if/generate.py)" = "7bdc2f5466e3e772797d4c3a0a90a957e1869111"
           test "$(git hash-object acceptance/livebench_if/score.py)" = "71a9ff81c95bd451742ca9e5ca779e82441ec400"
       - name: Run Brain configuration tests and compile carrier
@@ -52,7 +52,8 @@ jobs:
           mkdir -p /tmp/pyarrow-wheel
           python -m pip download --no-deps --only-binary=:all: --platform manylinux_2_28_x86_64 --python-version 312 --implementation cp --abi cp312 -d /tmp/pyarrow-wheel pyarrow==21.0.0
           ls -l /tmp/pyarrow-wheel
-          sha256sum /tmp/pyarrow-wheel/*
+          echo 'b7ae0bbdc8c6674259b25bef5d2a1d6af5d39d7200c819cf99e07f7dfef1c51e  /tmp/pyarrow-wheel/pyarrow-21.0.0-cp312-cp312-manylinux_2_28_x86_64.whl' | sha256sum -c -
+          test "$(stat -c '%s' /tmp/pyarrow-wheel/pyarrow-21.0.0-cp312-cp312-manylinux_2_28_x86_64.whl)" = "42829529"
 
       - name: Verify frozen dataset artifact without opening cases
         shell: bash
