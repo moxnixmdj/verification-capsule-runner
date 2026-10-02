@@ -1,0 +1,82 @@
+name: Verify research T3 objective binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/research_t3_objective_binding/**'
+      - '.github/workflows/verify-research-t3-objective-binding.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Verify exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          R=capsules/research_t3_objective_binding
+          test "$(git hash-object $R/canonical/governance/RESEARCH_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "5dce318172f31c86bf3cfd95170c7b11cad7874e"
+          test "$(git hash-object $R/canonical/runtime/research_t3_objective_binding_validator.py)" = "78e600366392cca51ebb4365f91ea61e6bc7cb85"
+          test "$(git hash-object $R/canonical/tests/test_research_t3_objective_binding_validator.py)" = "c418c49559f30f1037f91f942d25ea2dbbe6c6ee"
+          test "$(git hash-object $R/canonical/runtime/research_control_information_safe_candidate.py)" = "cd6bf6e4163bbba64878b856766b1af4372d68bc"
+          test "$(git hash-object $R/canonical/runtime/research_control_information_safe_proof.py)" = "16c47efee0e0e38f479163d1285d7079798efdaf"
+          test "$(git hash-object $R/canonical/tests/test_research_control_information_safe.py)" = "ab540c8bb91bd9e7fb024f7d94d13253a7fc3d05"
+          test "$(git hash-object $R/canonical/verification/RESEARCH_CONTROL_INFORMATION_SAFE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "860cd929e3b7fdab6befec5bf052479dc4ae41ac"
+          test "$(git hash-object $R/canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "274a3d996f98799b56c6cf943537e6fa4080ebfb"
+          test "$(git hash-object $R/canonical/governance/OUTER_TERMINAL_MULTIPLEX_PORTFOLIOS_V1.json)" = "7c49e3a44dc9a827e84a12b572ea6b8e9b2fa1f5"
+          test "$(git hash-object $R/canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "afa00109031d638fef32cc3fe10be18786605c39"
+          test "$(git hash-object $R/canonical/governance/T3_RESEARCH_CONTROL_MULTIPLEX_TERMINAL_BINDING_V1.json)" = "46834cff249f02cec1046e2f7188e1b5e1b24ab1"
+          test "$(git hash-object $R/canonical/governance/OBJECTIVE_ORACLE_DOMINANCE_LIVE_INPUT_V1.json)" = "c1dad2dcb63be8d9dd50ba5212a5b099966f1f07"
+      - name: Run exact Brain regression and binding tests
+        working-directory: capsules/research_t3_objective_binding
+        run: |
+          python -m unittest -v             canonical.tests.test_research_control_information_safe             canonical.tests.test_research_t3_objective_binding_validator
+      - name: Run binding validator
+        working-directory: capsules/research_t3_objective_binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m canonical.runtime.research_t3_objective_binding_validator . > verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json", encoding="utf-8"))
+          assert v["pass"] is True, v
+          assert v["status"] == "PASS", v
+          assert v["terminal_results_observed"] == 0, v
+          assert v["fresh_terminal_evidence_consumed"] == 0, v
+          assert v["execution_authority"] is False, v
+          assert v["promotion_authority"] is False, v
+          assert v["capability_credit_delta"] == 0, v
+          assert v["family_credit_delta"] == 0, v
+          print(json.dumps(v, indent=2, sort_keys=True))
+          PY
+      - name: Fresh independent 2048-case six-domain diagnostic
+        working-directory: capsules/research_t3_objective_binding
+        run: |
+          python - <<'PY'
+          import json
+          from canonical.runtime import research_control_information_safe_candidate as candidate
+          from canonical.runtime import research_control_information_safe_proof as proof
+          out=proof.run_batch(55201931,2048,candidate.next_action)
+          assert out["all_pass"] is True, out
+          assert out["passed"] == 2048 and out["failed"] == 0, out
+          assert set(out["by_domain"]) == set(proof.DOMAINS), out
+          assert out["terminal_authority"] is False, out
+          assert out["capability_credit_delta"] == 0, out
+          print(json.dumps({
+            "status":"INDEPENDENT_DIAGNOSTIC_PASS",
+            "cases":out["case_count"],
+            "passed":out["passed"],
+            "failed":out["failed"],
+            "by_domain":out["by_domain"],
+            "terminal_results_observed":0,
+            "fresh_terminal_evidence_consumed":0,
+            "terminal_authority":False,
+            "capability_credit_delta":0,
+            "family_credit_delta":0
+          }, indent=2, sort_keys=True))
+          PY
