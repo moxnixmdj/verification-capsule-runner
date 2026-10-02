@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1",
   "date": "2026-10-02",
-  "status": "ACTIVE_FAIL_CLOSED__12_CONTRACT_PROOF_BASIS_RESYNCHRONIZED__12_OF_12_TERMINAL_ROUTES_FROZEN_ADMISSIBLE__AWAITING_REDUCER_DERIVED_AUTHORITY",
+  "status": "ACTIVE_FAIL_CLOSED__12_CONTRACT_PROOF_BASIS_RESYNCHRONIZED__12_OF_12_TERMINAL_ROUTES_FROZEN_ADMISSIBLE__REDUCER_VERDICT_PENDING",
   "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
   "exact_cut": "canonical/governance/OUTER_GLOBAL_MINIMUM_REALITY_CUT_VERDICT_V2.json",
   "portfolios": "canonical/governance/OUTER_TERMINAL_MULTIPLEX_PORTFOLIOS_V1.json",
@@ -70,9 +70,10 @@
       "cad_remaining_prequal_blocker_count": 1,
       "cad_scorer_independent_verification": "canonical/verification/CAD_T0_MULTIPLEX_SCORER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
       "closed_bindings": [
+        "CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
         "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
         "STRUCTURED_METHOD_COMPLETE_CALCULATION_GRAPH_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
-        "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001__T0_T2_MULTIPLEXED_DETERMINISTIC_INTERVENTION_RESCUE_GATE_INDEPENDENT_PASS"
+        "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE"
       ]
     },
     "T1_PROFESSIONAL_FINANCE_ARTIFACT_SYNTHESIS_VISION_PORTFOLIO": {
@@ -115,9 +116,11 @@
       "blockers": [],
       "livebench_if_prequalification": "PASS__ADAPTER_DATASET_DEPENDENCIES_HERMETIC_RUNTIME_AND_58_OF_58_SYNTHETIC_GOOD_BAD_BOUNDARIES_INDEPENDENTLY_VERIFIED",
       "closed_bindings": [
+        "BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
         "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
-        "TASK_TO_DELEGATION_GRAPH_001__T2_DIRECT_OBJECTIVE_TERMINAL_BINDING_INDEPENDENT_PASS",
-        "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001__T0_T2_MULTIPLEXED_DETERMINISTIC_INTERVENTION_RESCUE_GATE_INDEPENDENT_PASS"
+        "TASK_TO_DELEGATION_GRAPH_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
+        "TOOL_ROUTE_DISCOVERY_AND_SELECTION_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
+        "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE"
       ],
       "automationbench_public_scope_binding": "canonical/governance/AUTOMATIONBENCH_PUBLIC_SCOPE_BINDING_V1.json",
       "global_surface_dominance_v3": "canonical/governance/GLOBAL_TERMINAL_SURFACE_DOMINANCE_V3_VERDICT.json",
@@ -148,7 +151,9 @@
       "authority_source": "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json",
       "closed_bindings": [
         "EVIDENCE_TO_AUDIENCE_SYNTHESIS_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
-        "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE"
+        "ITERATIVE_RESEARCH_EVIDENCE_CONTROL_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
+        "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE",
+        "TOOL_ROUTE_DISCOVERY_AND_SELECTION_001__PREWAVE_ROUTE_FROZEN_ADMISSIBLE"
       ]
     }
   },
@@ -212,12 +217,8 @@
   ],
   "execution_authority": false,
   "next": [
-    "RECLASSIFY_REMAINING_ROUTE_BLOCKERS_BY_CANONICAL_PROOF_MODE",
-    "CLOSE_FINITE_OR_FORMAL_ABSOLUTE_ROUTES_WITH_SCOPE_GATE_V2_ONLY_WHERE_DOMAIN_IS_ACTUALLY_BOUNDED",
-    "FOR_OPEN_DOMAIN_MATCHED_ROUTES_FREEZE_COMPARATOR_IDENTITY_SYMMETRIC_HARNESS_SOURCE_POOL_SCORER_AND_POST_FREEZE_SELECTOR",
-    "FAIL_CLOSED_IF_EXACT_OPUS_5_5_COMPARATOR_IS_REQUIRED_BUT_UNAVAILABLE_AT_ZERO_INCREMENTAL_SPEND",
-    "RUN_CANONICAL_PREQUALIFICATION_REDUCER_AFTER_RECLASSIFICATION",
-    "EXECUTE_T0_T1_T2_T3_ONLY_IF_ALL_PREWAVE_PREDICATES_PASS"
+    "RUN_CANONICAL_NONCIRCULAR_PREQUALIFICATION_REDUCER",
+    "AUTHORIZE_T0_T1_T2_T3_ONLY_IF_REDUCER_FAILED_PREDICATES_EMPTY"
   ],
   "capability_credit_delta": 0,
   "family_credit_delta": 0,
@@ -237,7 +238,7 @@
     "brain_route_and_dependency_manifest_frozen": "canonical/governance/PREWAVE_BRAIN_ROUTE_DEPENDENCY_MANIFEST_V2.json",
     "no_known_opaque_target_capability_provider_in_operative_brain_route": "canonical/governance/PREWAVE_OPAQUE_PROVIDER_DEPENDENCY_CLEANLINESS_AUDIT_V1.json",
     "no_known_unresolved_composition_defect_before_wave": "canonical/governance/PREWAVE_OPAQUE_PROVIDER_DEPENDENCY_CLEANLINESS_AUDIT_V1.json",
-    "four_portfolios_pairwise_execution_independent": "FROZEN_VERIFIED__GLOBAL_TERMINAL_SELECTION_KERNEL_V1__PORTFOLIO_MULTIPLEXING_NO_CROSS_BEHAVIOR_SCORE_INHERITANCE",
+    "four_portfolios_pairwise_execution_independent": "PASS__FROZEN__ALL_12_ROUTE_AND_POPULATION_BINDINGS_COMPLETE",
     "livebench_if_verifier_source_bytes_frozen": true,
     "finance_and_accounting_index_surface_accounted_for": true,
     "proof_route_dominance_independently_verified": "canonical/verification/PREQUALIFICATION_PROOF_PRIMITIVES_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
@@ -310,7 +311,7 @@
     "saccr_information_safe_independent_preflight": "canonical/verification/SA_CCR_INFORMATION_SAFE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
     "p2_p3_information_safe_independent_preflight": "canonical/verification/P2_P3_INFORMATION_SAFE_PREFLIGHT_VERIFICATION_20261002_V1.json",
     "terminal_prequalification_reducer_12_contract_current_independent_pass": "canonical/verification/TERMINAL_PREQUALIFICATION_12_CONTRACT_CURRENT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
-    "active_terminal_proof_basis_blob_sha": "411f054140f25c4b0c71dc7287c48893ff550082",
+    "active_terminal_proof_basis_blob_sha": "6b2f2d1f9feddb55862f99a58a0c57741b27c24e",
     "p2_information_safe_independent_preflight": "canonical/verification/P2_P3_INFORMATION_SAFE_PREFLIGHT_VERIFICATION_20261002_V1.json",
     "p3_v2_information_safe_preflight_authority": "INVALIDATED_FOR_P3_BY_STANCE_SUPPORT_LEAK__ZERO_TERMINAL_AUTHORITY",
     "p3_raw_evidence_v3_independent_preflight": "INDEPENDENT_PASS_BOUNDED_ONLY__canonical/verification/P3_INFORMATION_SAFE_V3_PREFLIGHT_VERIFICATION_20261002_V1.json",
@@ -334,25 +335,26 @@
     "open_domain_bounded_synthetic_whole_scope_promotion_forbidden": true,
     "delegation_current_candidate_oracle_revalidation": "PENDING_AFTER_EXACT_BLOB_CHANGE",
     "admissible_frozen_terminal_routes": [
-      "CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001",
-      "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001",
-      "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001",
-      "STRUCTURED_METHOD_COMPLETE_CALCULATION_GRAPH_001",
-      "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001",
-      "PROFESSIONAL_ARTIFACT_PLAN_AND_QUALITY_JUDGMENT_001",
-      "NATIVE_ARTIFACT_STRUCTURED_EDIT_PRESERVATION_001",
-      "EVIDENCE_TO_AUDIENCE_SYNTHESIS_001",
       "BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001",
+      "CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001",
+      "EVIDENCE_TO_AUDIENCE_SYNTHESIS_001",
+      "ITERATIVE_RESEARCH_EVIDENCE_CONTROL_001",
+      "NATIVE_ARTIFACT_STRUCTURED_EDIT_PRESERVATION_001",
+      "PROFESSIONAL_ARTIFACT_PLAN_AND_QUALITY_JUDGMENT_001",
+      "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001",
+      "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001",
+      "STRUCTURED_METHOD_COMPLETE_CALCULATION_GRAPH_001",
       "TASK_TO_DELEGATION_GRAPH_001",
       "TOOL_ROUTE_DISCOVERY_AND_SELECTION_001",
-      "ITERATIVE_RESEARCH_EVIDENCE_CONTROL_001"
+      "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001"
     ],
     "delegation_t2_direct_objective_binding": "canonical/governance/DELEGATION_T2_OBJECTIVE_TERMINAL_BINDING_V1.json",
     "delegation_t2_direct_objective_independent_verification": "canonical/verification/DELEGATION_T2_OBJECTIVE_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
     "browser_t2_objective_binding": "canonical/governance/BROWSER_T2_OBJECTIVE_TERMINAL_BINDING_V1.json",
     "browser_t2_objective_binding_verification": "canonical/verification/BROWSER_T2_OBJECTIVE_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
     "tool_discovery_t2_t3_objective_binding": "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json",
-    "tool_discovery_t2_t3_objective_binding_verification": "canonical/verification/TOOL_DISCOVERY_T2_T3_OBJECTIVE_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json"
+    "tool_discovery_t2_t3_objective_binding_verification": "canonical/verification/FINAL_OBJECTIVE_BINDINGS_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+    "research_t3_objective_binding_verification": "canonical/verification/RESEARCH_T3_OBJECTIVE_BINDING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json"
   },
   "route_audit_summary": {
     "surface_count": 14,
@@ -362,12 +364,12 @@
     "public_score_only_no_exact_executable_route_found_count": 2,
     "zero_cost_executable_surface_count": 0,
     "portfolio_prequalification_pass_count": 4,
-    "conclusion": "LIVE_12_CONTRACT_BASIS_HAS_12_FROZEN_ADMISSIBLE_ROUTES__ZERO_STRUCTURAL_PREWAVE_BLOCKERS__AUTHORITY_DERIVED_ONLY_BY_CANONICAL_REDUCER",
+    "conclusion": "LIVE_12_CONTRACT_BASIS_IS_TERMINAL_PREWAVE_AUTHORITY__12_ROUTES_FROZEN_ADMISSIBLE__ZERO_OPEN_CONTRACT_ROUTES__REDUCER_PASS_PENDING",
     "unresolved_identity_or_access_count": 1,
     "deleted_required_execution_routes_by_dominance_v2": 5,
     "required_private_or_nonreproducible_execution_route_count": 0,
     "required_named_benchmark_execution_route_count": 0,
-    "global_uncovered_behavioral_obligation_count": 0,
+    "global_uncovered_behavioral_obligation_count": 4,
     "global_surface_dominance_v3": "canonical/governance/GLOBAL_TERMINAL_SURFACE_DOMINANCE_V3_VERDICT.json",
     "portfolio_prequalification_input_blocker_count": 0
   },
@@ -404,7 +406,8 @@
       "FINITE_POPULATION_PROOF",
       "PREWAVE_CONTROLLER_COMPOSITION"
     ],
-    "terminal_wave_authority": false
+    "terminal_wave_authority": false,
+    "note": "AWAIT_CANONICAL_PREQUALIFICATION_REDUCER_PASS_ON_RECONCILED_12_OF_12_STATE"
   },
   "prewave_controller_composition": {
     "status": "INDEPENDENT_PASS",
@@ -428,7 +431,7 @@
     "v4_independent_verification": "canonical/verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_V4_CURRENT_FAIL_CLOSED_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json"
   },
   "active_terminal_proof_basis": "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json",
-  "active_terminal_proof_basis_blob_sha": "e2b95e407bd83943ffc74bfb0bf72092def38ba7",
+  "active_terminal_proof_basis_blob_sha": "2ba39428f0065f0d8739c43935f7026ba6eedcfb",
   "population_protocol": "canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json",
   "superseded_ten_obligation_package": {
     "path": "canonical/governance/TERMINAL_REPLACEMENT_CANDIDATE_PACKAGE_FREEZE_V1.json",
@@ -439,14 +442,14 @@
   "active_contract_count": 12,
   "admissible_frozen_terminal_route_count": 12,
   "last_basis_resynchronization": {
-    "basis_blob_sha": "411f054140f25c4b0c71dc7287c48893ff550082",
-    "method": "MECHANICAL_RECONCILIATION_FROM_ACTIVE_BASIS__NO_TERMINAL_CREDIT",
+    "basis_blob_sha": "2ba39428f0065f0d8739c43935f7026ba6eedcfb",
+    "method": "MECHANICAL_RECONCILIATION_FROM_ACTIVE_12_OF_12_BASIS__NO_TERMINAL_CREDIT",
     "date": "2026-10-02"
   },
   "derived_state_reconciliation": {
     "authority": "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json",
-    "authority_blob_sha": "411f054140f25c4b0c71dc7287c48893ff550082",
-    "rule": "PORTFOLIO_BLOCKERS_COUNTS_AND_ROUTE_CLOSURE_DERIVED_FROM_CURRENT_ACTIVE_BASIS__SELF_ASSERTED_EXECUTION_AUTHORITY_FORBIDDEN",
+    "authority_blob_sha": "2ba39428f0065f0d8739c43935f7026ba6eedcfb",
+    "rule": "ROUTE_COUNTS_PORTFOLIO_BLOCKERS_AND_PREWAVE_BINDINGS_DERIVED_FROM_CURRENT_ACTIVE_BASIS__TERMINAL_EXECUTION_AUTHORITY_REMAINS_REDUCER_DERIVED",
     "current_admissible_route_count": 12,
     "current_open_route_count": 0
   }
