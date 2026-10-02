@@ -1,0 +1,20 @@
+name: Verify CAD T0 post-refreeze binding V4
+on:
+  push:
+    branches: [verify-cad-t0-post-refreeze-binding-v4-20261002]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - name: Validate exact V4 frozen package
+        run: |
+          cd capsules/cad_t0_post_refreeze_binding_v4
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_post_refreeze_binding_v4_validator
+          PYTHONPATH=. python canonical/runtime/cad_t0_post_refreeze_binding_v4_validator.py .
