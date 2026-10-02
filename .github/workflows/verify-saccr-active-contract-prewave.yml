@@ -1,0 +1,43 @@
+name: Verify SA-CCR active-contract prewave route
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/saccr_credit_kernel.py'
+      - 'canonical/runtime/saccr_active_contract_proof_v1.py'
+      - 'canonical/runtime/saccr_active_contract_candidate_v1.py'
+      - 'canonical/tests/test_saccr_active_contract_proof_v1.py'
+      - '.github/workflows/verify-saccr-active-contract-prewave.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run exact Brain prewave tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_saccr_active_contract_proof_v1
+      - name: Run fresh 1024-case independent-oracle stress preflight
+        env:
+          PROJECT_BRAIN_PREFLIGHT_SEED: ${{ github.run_id }}
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import os
+          from canonical.runtime.saccr_active_contract_proof_v1 import generate_case, public_task, score_case
+          from canonical.runtime.saccr_active_contract_candidate_v1 import solve
+          base=int(os.environ["PROJECT_BRAIN_PREFLIGHT_SEED"])
+          failures=[]
+          for i in range(1024):
+              c=generate_case(base*4099+i)
+              out=solve(public_task(c))
+              v=score_case(c,out)
+              if v.get("pass") is not True:
+                  failures.append((i,v,out))
+                  break
+          print({"cases":1024,"failures":len(failures),"seed":base})
+          if failures:
+              raise SystemExit(repr(failures[0]))
+          PY
