@@ -16,7 +16,7 @@ EXPECTED = {
     "canonical/governance/P1_COMPOSITE_PROOF_RESTORATION_ACTIVATION_V3.json": "f76b3a96c7ac9495c696a44ba2f887ae940d1596",
     "canonical/verification/P1_COMPOSITE_PROOF_RESTORATION_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json": "0e288acce32d06742db2a7b940820a74f9731073",
     "canonical/governance/OPUS55_SYNTHESIS_ZERO_REALITY_DISCHARGE_EXHAUSTION_V1.json": "e61741612bafd85697635b0fea97bd93812454cd",
-    "canonical/tests/test_p1_scope_restoration_projection_v3.py": "fc28f50ebfd250b1755d553109bf023af1a951dd",
+    "canonical/tests/test_p1_scope_restoration_projection_v3.py": "898edea852a5234e4ca2c2f93b3ed9967022197a",
 }
 
 
