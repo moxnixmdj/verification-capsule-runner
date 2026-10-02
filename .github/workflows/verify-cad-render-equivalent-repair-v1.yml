@@ -18,6 +18,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Verify exact repaired Brain candidate blob
-        run: test "$(git rev-parse HEAD:canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "badbce2b330cd4a8e1c64e2f0fa88f79123a94f2"
+        run: test "$(git rev-parse HEAD:canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "339ccc871754fe69ee901549d14ee367ca01ee4f"
       - name: Run render-equivalent antishortcut repair regression
         run: python -m unittest -v canonical.tests.test_cad_t0_source_structure_antishortcut_repair_v1
