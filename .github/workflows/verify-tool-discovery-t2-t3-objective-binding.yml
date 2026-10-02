@@ -18,8 +18,8 @@ jobs:
       - name: Bind exact Brain blobs
         run: |
           set -euo pipefail
-          test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "ee2e9c670cec9f2444e0849baa1625597ddd794b"
-          test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py)" = "3269341bba873ba241d89ec8f1be5ffbf87d71c2"
+          test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "c68ab0f9480dacc758171df74e891e1ac817c7d3"
+          test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py)" = "c042cbc05e753f8d1454f134eca58a27a4d65051"
           test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/tests/test_tool_discovery_t2_t3_objective_binding_validator.py)" = "4f5cf6472e8f33c1a032fbe84b4fafce80dab278"
           test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/runtime/tool_discovery_information_safe_candidate.py)" = "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
           test "$(git hash-object capsules/tool_discovery_t2_t3_objective/canonical/runtime/tool_discovery_information_safe_proof_v2.py)" = "5e8a953864e13ec76768c3e8920644107c65a644"
