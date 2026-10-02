@@ -1,0 +1,19 @@
+name: Verify exact Brain Harbor adapter
+on:
+  push:
+    branches: [main]
+    paths:
+      - verify/harbor_brain_adapter_exact.py
+      - .github/workflows/verify-harbor-brain-adapter-exact.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python verify/harbor_brain_adapter_exact.py
