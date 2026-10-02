@@ -35,9 +35,16 @@ jobs:
           assert p["all_objective_specs_complete"] is True, p
           assert p["all_prewave_routes_ready_for_promotion_law"] is False, p
           assert len(p["contracts"]) == 4, p
+          by_id={row["behavior_id"]: row for row in p["contracts"]}
           for row in p["contracts"]:
               assert row["stronger_direct_behavioral_route_structurally_available"] is True, row
               assert row["weaker_comparator_structurally_unnecessary_if_route_verified"] is True, row
+          delegation=by_id["TASK_TO_DELEGATION_GRAPH_001"]
+          assert delegation["weaker_comparator_deletion_authorized_now"] is True, delegation
+          assert delegation["open_route_gates"] == [], delegation
+          for bid,row in by_id.items():
+              if bid == "TASK_TO_DELEGATION_GRAPH_001":
+                  continue
               assert row["weaker_comparator_deletion_authorized_now"] is False, row
               assert row["open_route_gates"], row
           assert p["execution_authority"] is False, p
