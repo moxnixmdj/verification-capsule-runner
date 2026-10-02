@@ -1,5 +1,9 @@
 name: Verify structured-method scope Gate V2
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-structured-method-scope-gate-v2.yml'
   pull_request:
     branches: [main]
     paths:
