@@ -1,0 +1,60 @@
+name: Verify terminal projection 4-of-19 9-of-38 v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/terminal_projection_4of19_9of38_v1/**'
+      - '.github/workflows/verify-terminal-projection-4of19-9of38-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Decode exact mirrored Brain projection
+        run: |
+          python - <<'PY'
+          import base64
+          from pathlib import Path
+          root=Path("capsules/terminal_projection_4of19_9of38_v1")
+          encoded=root/"encoded"
+          for src in encoded.glob("*.b64"):
+              rel=src.name[:-4].replace("__","/")
+              dst=root/rel
+              dst.parent.mkdir(parents=True,exist_ok=True)
+              dst.write_bytes(base64.b64decode(src.read_text()))
+          print("DECODE_PASS")
+          PY
+
+      - name: Verify exact 10 Brain blob identities
+        env:
+          EXPECTED_JSON: '{"canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"192a4ccf6064ac82813c9de7b0cab578476e6ec6","canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json":"2b39a290603c6f0a4a2e59f59ebf49adc5e63153","canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json":"7fe34915c98a416c85ac8a62aa0ae6802b2ae39c","canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_MINIMUM_PROOF_PLAN_V1.json":"72d71fcb12441ad39257eca8fadefbbea4d7f3ed","canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_PROOF_KERNEL_V2.json":"7aeb3ba02f734c92c43092a851f84d5b1c95421b","canonical/governance/TERMINAL_PROJECTION_CONSISTENCY_V1.json":"5e0653c4c2c1550e0004884b29e02c379ec4d722","canonical/verification/OPUS55_ACCEPTANCE_CALIBRATION_AUDIT_20261002_V3.json":"c50034c670f797d91fa443d244853071f09bd37a","canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json":"52f3a973d277b1a4d58e37da268f3515b97765ca","canonical/runtime/terminal_projection_consistency_v1.py":"6ab3ddba49501a9336778b6e033b53919915ff77","canonical/tests/test_terminal_projection_consistency_v1.py":"1bf21e7ec7b3d75c3ca8f8ea88ab267a8ce54aa0"}'
+        run: |
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path("capsules/terminal_projection_4of19_9of38_v1")
+          expected=json.loads(os.environ["EXPECTED_JSON"])
+          for rel,want in sorted(expected.items()):
+              data=(root/rel).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+              assert got==want,(rel,got,want)
+          print("EXACT_10_BRAIN_BLOBS_PASS")
+          PY
+
+      - name: Recompute projection consistency and adversarial tests
+        env:
+          PYTHONPATH: capsules/terminal_projection_4of19_9of38_v1
+        run: |
+          cd capsules/terminal_projection_4of19_9of38_v1
+          python -m unittest canonical.tests.test_terminal_projection_consistency_v1 -v
+          python canonical/runtime/terminal_projection_consistency_v1.py
