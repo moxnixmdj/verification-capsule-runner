@@ -12,9 +12,30 @@ def base_contract():
         "behavior_id": "BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001",
         "required_dimensions": ["TARGET", "FRESHNESS", "RECOVERY"],
         "dimensions": [
-            {"id": "TARGET", "mechanism": "hidden admissible target/action oracle", "objective": True, "falsifiable": True, "hidden_from_candidate": True, "terminal_load_bearing": True},
-            {"id": "FRESHNESS", "mechanism": "state-version and stale-action rejection oracle", "objective": True, "falsifiable": True, "hidden_from_candidate": True, "terminal_load_bearing": True},
-            {"id": "RECOVERY", "mechanism": "forced mismatch then terminal rescue oracle", "objective": True, "falsifiable": True, "hidden_from_candidate": True, "terminal_load_bearing": True},
+            {
+                "id": "TARGET",
+                "mechanism": "hidden admissible target/action oracle",
+                "objective": True,
+                "falsifiable": True,
+                "hidden_from_candidate": True,
+                "terminal_load_bearing": True,
+            },
+            {
+                "id": "FRESHNESS",
+                "mechanism": "state-version and stale-action rejection oracle",
+                "objective": True,
+                "falsifiable": True,
+                "hidden_from_candidate": True,
+                "terminal_load_bearing": True,
+            },
+            {
+                "id": "RECOVERY",
+                "mechanism": "forced mismatch then terminal rescue oracle",
+                "objective": True,
+                "falsifiable": True,
+                "hidden_from_candidate": True,
+                "terminal_load_bearing": True,
+            },
         ],
         "candidate_receives_hidden_oracle": False,
         "weaker_comparator_dependency": "EXACT_OPUS_5_5",
@@ -71,13 +92,19 @@ class ObjectiveOracleDominanceCompilerTests(unittest.TestCase):
         c["candidate_receives_hidden_oracle"] = True
         out = compile_dominance({"schema": SCHEMA, "contracts": [c]})
         self.assertFalse(out["pass"])
-        self.assertIn("BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001:CANDIDATE_HIDDEN_ORACLE_BOUNDARY_INVALID", out["errors"])
+        self.assertIn(
+            "BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001:CANDIDATE_HIDDEN_ORACLE_BOUNDARY_INVALID",
+            out["errors"],
+        )
 
     def test_duplicate_behavior_fails_closed(self):
         c = base_contract()
         out = compile_dominance({"schema": SCHEMA, "contracts": [c, copy.deepcopy(c)]})
         self.assertFalse(out["pass"])
-        self.assertIn("BEHAVIOR_ID_DUPLICATE:BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001", out["errors"])
+        self.assertIn(
+            "BEHAVIOR_ID_DUPLICATE:BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001",
+            out["errors"],
+        )
 
 if __name__ == "__main__":
     unittest.main()
