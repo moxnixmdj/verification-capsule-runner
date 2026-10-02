@@ -1,0 +1,19 @@
+name: Verify hardened proof atom receipt snapshot v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/proof_atom_receipt_snapshot_v1_hardened/**"
+      - ".github/workflows/verify-hardened-proof-atom-receipt-snapshot-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify exact hardened Brain receipt-index and snapshot bytes
+        run: python capsules/proof_atom_receipt_snapshot_v1_hardened/verify.py
