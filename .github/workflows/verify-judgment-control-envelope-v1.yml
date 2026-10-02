@@ -1,11 +1,12 @@
 name: Verify dual judgment control envelope v1
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - verify/judgment-control-envelope-v1-20261002
 permissions:
   contents: read
 concurrency:
-  group: dual-judgment-control-${{ github.event.pull_request.number }}
+  group: dual-judgment-control-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   verify:
