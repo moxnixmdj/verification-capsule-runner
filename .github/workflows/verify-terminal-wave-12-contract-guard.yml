@@ -1,0 +1,25 @@
+name: Verify 12-contract terminal wave guard
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/terminal_replacement_wave.py'
+      - 'canonical/tests/test_terminal_replacement_wave.py'
+      - '.github/workflows/verify-terminal-wave-12-contract-guard.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain guard blobs
+        run: |
+          test "$(git hash-object canonical/runtime/terminal_replacement_wave.py)" = "a8067cd63e27c27635798faf222c7e0058e59e22"
+          test "$(git hash-object canonical/tests/test_terminal_replacement_wave.py)" = "a54fa68c724b3e74f48cb006ba738249031c30ac"
+      - name: Run terminal wave guard tests
+        run: python -m unittest canonical.tests.test_terminal_replacement_wave -v
