@@ -1,0 +1,50 @@
+name: Verify Brain P1 scope rescue supplement
+
+on:
+  pull_request:
+    paths:
+      - "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py"
+      - "canonical/runtime/p1_scope_rescue_supplement_v1.py"
+      - "canonical/tests/test_p1_scope_rescue_supplement_v1.py"
+      - "canonical/governance/P1_SCOPE_RESCUE_SUPPLEMENT_V1.json"
+      - ".github/workflows/verify-p1-scope-rescue-supplement.yml"
+      - "verification-trigger/p1-scope-rescue-supplement.txt"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run frozen supplement tests
+        run: python -m unittest canonical.tests.test_p1_scope_rescue_supplement_v1 -v
+      - name: Execute once with post-freeze seed
+        run: python -m canonical.runtime.p1_scope_rescue_supplement_v1 --seed "$GITHUB_RUN_ID" --out p1_scope_rescue_result.json
+      - name: Verify frozen result contract
+        run: |
+          python - <<'PY'
+          import json, os
+          x=json.load(open("p1_scope_rescue_result.json", encoding="utf-8"))
+          assert x["pass"] is True, x.get("failures", [])[:1]
+          assert x["status"] == "PASS"
+          assert x["post_freeze_seed"] == int(os.environ["GITHUB_RUN_ID"])
+          assert x["case_count"] == 96
+          assert x["expected_case_count"] == 96
+          assert x["explicit_scope_cases"] > 0
+          assert x["candidate_terminal_rescue_passes"] == 96
+          assert x["symptom_only_negative_control_passes"] == 96
+          assert x["interaction_partial_repair_negative_control_checks"] == 96
+          assert x["terminal_v3_replayed"] is False
+          assert x["old_terminal_case_executions_consumed"] == 0
+          assert x["fresh_supplement_case_executions"] == 96
+          assert x["incremental_spend_usd"] == 0
+          assert x["promotion_authority"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-scope-rescue-supplement-result
+          path: p1_scope_rescue_result.json
