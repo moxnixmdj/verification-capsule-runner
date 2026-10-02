@@ -1,0 +1,23 @@
+name: Verify terminal wave launch authority reducer v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/terminal_wave_launch_authority_reducer_v1.py
+      - canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py
+      - .github/workflows/verify-terminal-wave-launch-authority-reducer-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bind exact Brain reducer blobs
+        run: |
+          test "$(git hash-object canonical/runtime/terminal_wave_launch_authority_reducer_v1.py)" = "3b37e9ac4d91e9909c72e2067ef631ca7d1cbbe6"
+          test "$(git hash-object canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py)" = "1b01e3118f47b991fe3bd1b60cc3c1b597499cfc"
+      - run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_wave_launch_authority_reducer_v1
