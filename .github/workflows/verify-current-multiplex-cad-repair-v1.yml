@@ -1,0 +1,33 @@
+name: Verify current multiplex and CAD repair v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py
+      - canonical/tests/test_portfolio_multiplex_terminal_instrumentation_v1.py
+      - canonical/runtime/cad_t0_route_specific_candidate_v1.py
+      - canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py
+      - .github/workflows/verify-current-multiplex-cad-repair-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact current Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py)" = "dd8fba0f27691002babbc7ad1fc6b65d7bb57282"
+          test "$(git hash-object canonical/tests/test_portfolio_multiplex_terminal_instrumentation_v1.py)" = "4f8690c5d3d8136f8659e34555282ac93845bb4c"
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "aa32750b220a023617938b7be9476f6b3aac6704"
+          test "$(git hash-object canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py)" = "8222cf83a7476cd453e06865b8e3aaff8a70b5db"
+      - name: Verify exact multiplex bindings and receipt guards
+        run: python -m unittest -v canonical.tests.test_portfolio_multiplex_terminal_instrumentation_v1
+      - name: Verify repaired render-equivalent CAD anti-shortcut
+        run: python -m unittest -v canonical.tests.test_cad_t0_source_structure_antishortcut_repair_v1
+      - name: Re-run all frozen CAD geometry families
+        run: python -m unittest -v canonical.tests.test_cad_t0_route_specific_candidate_v1
