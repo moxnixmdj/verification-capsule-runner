@@ -1,0 +1,49 @@
+name: Verify Harbor terminal carrier preflight
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact Harbor release
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir 'harbor==0.23.0'
+          harbor --help >/tmp/harbor-help.txt
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          print({"harbor_version":"0.23.0"})
+          PY
+      - name: Verify local Docker carrier
+        run: |
+          docker version
+          docker info --format '{{json .ServerVersion}}'
+          docker run --rm hello-world >/tmp/docker-hello.txt
+      - name: Verify dataset discovery without task-case reads
+        run: |
+          harbor datasets list >/tmp/datasets.txt
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("/tmp/datasets.txt").read_text(errors="replace")
+          lower=s.lower()
+          assert "terminal-bench" in lower, s[-4000:]
+          print({"dataset_list_contains_terminal_bench":True,"task_case_content_read":False})
+          PY
+      - name: Verify run CLI exposes local execution controls
+        run: |
+          harbor run --help >/tmp/run-help.txt
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("/tmp/run-help.txt").read_text(errors="replace").lower()
+          for token in ("dataset","agent"):
+              assert token in s, (token,s[-4000:])
+          print({"run_cli":"PASS","terminal_results_observed":0})
+          PY
