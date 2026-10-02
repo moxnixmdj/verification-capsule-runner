@@ -1,0 +1,3 @@
+set -e
+cd /app
+echo WAL_SUBMISSION_SESSION_START
