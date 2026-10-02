@@ -13,3 +13,5 @@ assert all(v["redundant"] and v["uncovered_obligations"]==[] for v in blocked.va
 assert out["obligation_support"]["SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001"]==["COMPOSED_RAW_SOURCE_TO_ACCEPTANCE_TERMINAL_PROOF"], out
 assert "VERIFIED_ACCEPTANCE_COMPILER_DIRECT" not in out["admissible_routes"], out
 print("GLOBAL_TERMINAL_SURFACE_DOMINANCE_V4: PASS")
+
+# independent-pr-trigger-v4
