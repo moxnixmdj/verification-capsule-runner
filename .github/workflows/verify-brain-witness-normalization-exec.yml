@@ -1,0 +1,29 @@
+name: Verify Brain witness normalization exec
+
+on:
+  push:
+    branches:
+      - "verify-brain-witness-normalization-v1-exec-20261002-1326"
+    paths:
+      - "capsules/brain_witness_normalization_v1_exec/**"
+      - ".github/workflows/verify-brain-witness-normalization-exec.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored blobs and fail-closed normalization
+        run: |
+          cd capsules/brain_witness_normalization_v1_exec
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/brain_witness_normalization_verifier_v1.py
+          python canonical/tests/test_brain_witness_normalization_v1.py
+          python verify_independent.py
