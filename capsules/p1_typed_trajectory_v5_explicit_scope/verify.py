@@ -15,11 +15,18 @@ for rel,expected in M["exact_brain_blobs"].items():
 subprocess.run([sys.executable,"-m","py_compile",
     str(ROOT/"canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py"),
     str(ROOT/"canonical/runtime/trajectory_failure_typed_ir_proof_v5.py")],check=True)
-subprocess.run([sys.executable,"-m","pytest","-q",
-    str(ROOT/"canonical/tests/test_trajectory_failure_typed_ir_v5.py")],
-    cwd=ROOT,check=True)
-
 sys.path.insert(0,str(ROOT))
+import importlib.util
+test_path=ROOT/"canonical/tests/test_trajectory_failure_typed_ir_v5.py"
+spec=importlib.util.spec_from_file_location("test_v5",test_path)
+test_mod=importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(test_mod)
+tests=[getattr(test_mod,n) for n in dir(test_mod) if n.startswith("test_") and callable(getattr(test_mod,n))]
+assert tests, "NO_TESTS_DISCOVERED"
+for fn in tests:
+    fn()
+
 from canonical.runtime import trajectory_failure_typed_ir_candidate_v5 as c
 from canonical.runtime import trajectory_failure_typed_ir_proof_v5 as p
 
