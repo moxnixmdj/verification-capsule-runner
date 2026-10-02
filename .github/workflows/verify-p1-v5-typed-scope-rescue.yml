@@ -1,0 +1,22 @@
+name: Verify Brain P1 V5 typed scope and rescue
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_v5_typed_scope_rescue/**"
+      - ".github/workflows/verify-p1-v5-typed-scope-rescue.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain P1 V5 bytes and typed intervention envelope
+        run: python capsules/p1_v5_typed_scope_rescue/verify.py
