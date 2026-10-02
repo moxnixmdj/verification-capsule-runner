@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_P1_V5_INTERVENTION_REPLAY_FALSIFICATION_PUBLIC_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "a517409dfc4bf4c20b91e4282d63c54ae41b2f98",
+  "exact_brain_blobs": {
+    "canonical/runtime/p1_v5_intervention_replay_semantic_audit_v1.py": "47e6c675e3c3abd935da1a128c3850fa57a01e2c",
+    "canonical/tests/test_p1_v5_intervention_replay_semantic_audit_v1.py": "a9bf57a5ffd2a5b78de6eff65307a060a62f1300",
+    "canonical/governance/P1_V5_INTERVENTION_REPLAY_FALSIFICATION_V1.json": "a30d255429bc7d564c74d78cdef54ba3f92ed780",
+    "canonical/runtime/trajectory_failure_typed_ir_proof_v5.py": "3fc600a8176dac250219e3d98b92cf93d8fceef5",
+    "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py": "2a8613ddac7402c7e6d2f349f9d3c32d3fb95e1d"
+  }
+}
