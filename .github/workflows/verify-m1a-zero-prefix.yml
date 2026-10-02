@@ -1,0 +1,22 @@
+name: Verify M1A zero-reality prefix
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/m1a_zero_prefix/**'
+      - '.github/workflows/verify-m1a-zero-prefix.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Bind exact Brain mechanisms
+        run: |
+          test "$(git hash-object verification/m1a_zero_prefix/compound_visual_feature_resolver.py)" = "806d607fe5a8f3d032e765953e4c759f4ded25a8"
+          test "$(git hash-object verification/m1a_zero_prefix/engineering_feature_notation.py)" = "0cfc67d1288236c4cc34ae478a369074375a3161"
+          test "$(git hash-object verification/m1a_zero_prefix/declarative_spatial_notation.py)" = "776ddfab85f0d21781cab2670dd78457381246f9"
+      - run: cd verification/m1a_zero_prefix && python -m unittest -v test_m1a_zero_prefix
