@@ -16,6 +16,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install exact promoted V4 binding snapshot
+        shell: bash
+        run: |
+          cp capsules/cad_v4_terminal_executor/CAD_T0_POST_REFREEZE_BINDING_V4.json canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json
+          test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json)" = "a636d1292e6f92d240fab420a9ee75ced7a05104"
       - name: Verify frozen dependency identities
         shell: bash
         run: |
