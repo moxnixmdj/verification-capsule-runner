@@ -33,5 +33,12 @@ jobs:
           test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_PORTFOLIO_RUNNER_BINDING_V1.json')" = "5212f5996dbc83e87a308b8c9d9d1d9ed3da5aab"
           test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_CASE_PRODUCER_MANIFEST_V1.json')" = "5ff24e390056ba8e980ad3b88116149869ee85ce"
           test "$(git hash-object 'canonical/runtime/terminal_wave_launch_authority_reducer_v1.py')" = "48ceab4c3e97b80f25d1ae648348b5c86ad0ba54"
+          test "$(git hash-object 'canonical/runtime/terminal_prequalification_reducer.py')" = "da929015fafabed2b5a134a2e95b6bff2f47349c"
+          test "$(git hash-object 'canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json')" = "9c60356ab509a16df5104777f360b9fb18255842"
+          test "$(git hash-object 'canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json')" = "5d20073180fdcfd6e36145f4c820271eb1ee275f"
+          test "$(git hash-object 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json')" = "d1dc7f28738ba24a3ca5919755e03190fbf30939"
+          test "$(git hash-object 'canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json')" = "e90ad37c122899fc2de567bcfda054803ffc9c36"
       - name: Run launcher authority and concrete-runner wiring regressions
         run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_parent_portfolio_launcher_v1
+      - name: Derive full live terminal launch authority
+        run: PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee terminal_launch_authority_verdict.json
