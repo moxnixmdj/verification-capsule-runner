@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_HARBOR_COMMAND_V1",
+  "session_id": "SYNTHETIC-HARBOR-SESSION",
+  "step": 0,
+  "action": {
+    "type": "terminal_exec",
+    "args": {
+      "command": "printf SYNTHETIC_HARBOR_OK",
+      "timeout_sec": 30
+    }
+  }
+}
