@@ -1,0 +1,26 @@
+name: Verify Research T3 objective binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/research_t3_objective_v1/**'
+      - '.github/workflows/verify-research-t3-objective-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs and Research binding
+        run: |
+          set -euo pipefail
+          cd capsules/research_t3_objective_v1
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_research_t3_objective_binding_validator test_brain_blob_binding
+          PYTHONPATH=. python canonical/runtime/research_t3_objective_binding_validator.py
