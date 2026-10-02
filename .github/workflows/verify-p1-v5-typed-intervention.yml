@@ -1,0 +1,28 @@
+name: Verify Brain P1 V5 typed intervention envelope
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_v5_typed_intervention/**"
+      - ".github/workflows/verify-p1-v5-typed-intervention.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Brain unit tests
+        run: |
+          cd capsules/p1_v5_typed_intervention
+          mkdir -p canonical/runtime canonical/tests
+          cp candidate.py canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py
+          cp proof.py canonical/runtime/trajectory_failure_typed_ir_proof_v5.py
+          cp brain_tests.py canonical/tests/test_trajectory_failure_typed_ir_v5.py
+          touch canonical/__init__.py canonical/runtime/__init__.py canonical/tests/__init__.py
+          PYTHONPATH=. python -m unittest canonical.tests.test_trajectory_failure_typed_ir_v5 -v
+      - name: Independent exact-byte and envelope verification
+        run: python capsules/p1_v5_typed_intervention/verify.py
