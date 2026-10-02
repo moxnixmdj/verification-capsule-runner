@@ -55,6 +55,12 @@ jobs:
           s=s.replace('if not spacy.util.is_package("en_core_web_sm"):\n\tdownload(\'en_core_web_sm\')\n','')
           p.write_text(s)
           assert 'spacy' not in s.lower()
+          u=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions_util.py')
+          t=u.read_text()
+          t=t.replace('nltk.download("punkt")','raise RuntimeError("PINNED_PUNKT_MISSING")')
+          t=t.replace("nltk.download('stopwords')",'nltk.data.find("corpora/stopwords")')
+          u.write_text(t)
+          assert 'nltk.download' not in t
           PY
       - name: Run all 58 checker runtime smoke paths without terminal cases
         env:
@@ -68,9 +74,14 @@ jobs:
           registry=instructions_registry.INSTRUCTION_DICT
           assert len(registry)==58, len(registry)
           rows=[]
+          synthetic_args={
+              'ratio:overlap': {'reference_text':'alpha beta gamma delta epsilon zeta','percentage':50},
+              'repeat:repeat_change': {'prompt_to_repeat':'alpha beta gamma delta'},
+              'repeat:repeat_span': {'prompt_to_repeat':'alpha beta gamma delta epsilon','n_start':1,'n_end':3},
+          }
           for i,(instruction_id, cls) in enumerate(registry.items()):
               inst=cls(instruction_id)
-              desc=inst.build_description()
+              desc=inst.build_description(**synthetic_args.get(instruction_id,{}))
               assert isinstance(desc,str) and desc
               args=inst.get_instruction_args() or {}
               assert isinstance(args,dict)
