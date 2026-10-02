@@ -1,0 +1,27 @@
+name: Verify P1 composite proof role reconciliation
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_composite_proof_v1/**"
+      - ".github/workflows/verify-p1-composite-proof-role-v1.yml"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify narrow terminal scope audit
+        working-directory: capsules/p1_composite_proof_v1
+        run: python canonical/runtime/p1_terminal_execution_scope_audit_v1.py
+      - name: Verify composite role reconciliation
+        working-directory: capsules/p1_composite_proof_v1
+        run: python canonical/runtime/p1_composite_proof_role_reconciliation_v1.py
+      - name: Run composite adversarial tests
+        working-directory: capsules/p1_composite_proof_v1
+        run: python -m unittest canonical.tests.test_p1_composite_proof_role_reconciliation_v1 -v
+
+# v2 diagnostic trigger: split fail-closed stages
