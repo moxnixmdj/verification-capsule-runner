@@ -28,4 +28,9 @@ jobs:
           python -m py_compile independent/cad_t0_oracle_adapter.py
           python -m py_compile test_cad_t0_geometry_population_and_oracle.py
       - name: Run independent fail-closed tests
-        run: PYTHONPATH=independent python -m unittest -v test_cad_t0_geometry_population_and_oracle.py
+        run: |
+          set -euo pipefail
+          mkdir -p canonical/runtime
+          cp independent/cad_t0_geometry_population.py canonical/runtime/cad_t0_geometry_population.py
+          cp independent/cad_t0_oracle_adapter.py canonical/runtime/cad_t0_oracle_adapter.py
+          PYTHONPATH=. python -m unittest -v test_cad_t0_geometry_population_and_oracle.py
