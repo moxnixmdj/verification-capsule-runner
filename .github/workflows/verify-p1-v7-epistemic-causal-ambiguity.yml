@@ -1,0 +1,21 @@
+name: Verify P1 V7 epistemic causal ambiguity
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_v7_epistemic_causal_ambiguity/**"
+      - ".github/workflows/verify-p1-v7-epistemic-causal-ambiguity.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run V7 exact tests
+        working-directory: capsules/p1_v7_epistemic_causal_ambiguity
+        run: python -m unittest canonical.tests.test_trajectory_failure_typed_ir_v7 -v
+      - name: Run independent exact-byte verifier
+        working-directory: capsules/p1_v7_epistemic_causal_ambiguity
+        run: python verify.py
