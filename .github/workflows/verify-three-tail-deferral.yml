@@ -1,0 +1,25 @@
+name: Verify three-tail proof-only deferral
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/residual_dependency_eliminator.py'
+      - 'verification/zero_reality_residual_subtraction_input_v3.json'
+      - 'verification/test_three_tail_deferral_independent.py'
+      - '.github/workflows/verify-three-tail-deferral.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object verification/residual_dependency_eliminator.py)" = "72200764ed748e7de0841dd2152e5a0e7157a795"
+          test "$(git hash-object verification/zero_reality_residual_subtraction_input_v3.json)" = "6ae7137121839ede73e051ba01e73948564a1b42"
+      - name: Run negative-control deferral verification
+        run: cd verification && python -m unittest -v test_three_tail_deferral_independent
