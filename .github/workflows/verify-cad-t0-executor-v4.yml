@@ -1,4 +1,5 @@
 name: Verify CAD T0 executor V4
+# exact-current-executor: 72586ea16289fbfc51460bc8abbb0cd9fee652a1
 
 on:
   pull_request:
