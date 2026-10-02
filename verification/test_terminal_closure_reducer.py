@@ -1,7 +1,7 @@
 import unittest
 from copy import deepcopy
 
-from terminal_closure_reducer import evaluate_manifest
+from terminal_closure_reducer import evaluate_manifest, evaluate_frontier_state
 
 
 def passing_manifest():
@@ -36,10 +36,32 @@ def passing_manifest():
     }
 
 
+def passing_frontier():
+    active={
+        "atomic_preproof_frontier":{
+            "implementation_authority_count":0,
+            "execute_now":False,
+        }
+    }
+    universe={
+        "atomic_preproof_frontier":{
+            "implementation_authority_count":0,
+            "execute_now":False,
+        },
+        "global_cut":{"atomic_preproof_survivor_count":0},
+        "execution_authority":{"fresh_terminal_evidence_allowed":True},
+    }
+    preq={
+        "prequalification_progress":{"zero_preproof_implementation_residuals":True},
+        "execution_authority":True,
+    }
+    return active,universe,preq
+
+
 class TerminalClosureTests(unittest.TestCase):
     def test_complete_passes(self):
         out=evaluate_manifest(passing_manifest())
-        self.assertTrue(out["achieved"])
+        self.assertTrue(out["achieved"],out)
         self.assertEqual(out["failed_predicates"],[])
 
     def test_every_single_terminal_predicate_fails_closed(self):
@@ -81,6 +103,34 @@ class TerminalClosureTests(unittest.TestCase):
         out=evaluate_manifest(m)
         self.assertFalse(out["achieved"])
         self.assertTrue(any(x.startswith("COUNTER_PREDICATE_CONTRADICTION") for x in out["failed_predicates"]))
+
+    def test_valid_frontier_derives_execution_authority(self):
+        out=evaluate_frontier_state(*passing_frontier())
+        self.assertEqual(out["status"],"PASS",out)
+        self.assertTrue(out["execution_authority"],out)
+        self.assertTrue(out["fresh_terminal_evidence_allowed"],out)
+
+    def test_frontier_count_contradiction_fails_closed(self):
+        args=list(passing_frontier())
+        args[0]["atomic_preproof_frontier"]["implementation_authority_count"]=1
+        out=evaluate_frontier_state(*args)
+        self.assertEqual(out["status"],"FAIL_CLOSED",out)
+        self.assertFalse(out["execution_authority"],out)
+        self.assertIn("IMPLEMENTATION_AUTHORITY_COUNT_CONTRADICTION:1:0",out["failed_invariants"])
+
+    def test_fresh_evidence_authority_contradiction_fails_closed(self):
+        args=list(passing_frontier())
+        args[1]["execution_authority"]["fresh_terminal_evidence_allowed"]=False
+        out=evaluate_frontier_state(*args)
+        self.assertEqual(out["status"],"FAIL_CLOSED",out)
+        self.assertIn("FRESH_TERMINAL_EVIDENCE_AUTHORITY_CONTRADICTION",out["failed_invariants"])
+
+    def test_prequalification_zero_preproof_contradiction_fails_closed(self):
+        args=list(passing_frontier())
+        args[2]["prequalification_progress"]["zero_preproof_implementation_residuals"]=False
+        out=evaluate_frontier_state(*args)
+        self.assertEqual(out["status"],"FAIL_CLOSED",out)
+        self.assertIn("PREQUALIFICATION_ZERO_PREPROOF_CONTRADICTS_ACTIVE_FRONTIER",out["failed_invariants"])
 
 
 if __name__=="__main__":
