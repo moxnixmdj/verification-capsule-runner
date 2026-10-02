@@ -1,0 +1,60 @@
+name: Verify V2 proof atom receipt index
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact mirrored Brain blobs
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/proof_atom_receipt_index_v2.py":"1b9e2983a46e8526190abbc2d041070f846bc825",
+            "canonical/tests/test_proof_atom_receipt_index_v2.py":"20f3f69986776beb22bba59edc06dac7c536fb6e",
+            "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json":"c941bfda4839f74082f52a57fd8a952ce236fb92",
+            "canonical/runtime/canonical_proof_atom_basis_v2.py":"5b5957f353edab6c86a34f947ef253099822b0d1",
+            "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json":"4b5517dbd12978f8ffe481fb775e85592c7790c8",
+            "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json":"898e450c62c06cf6d1a4a3f826a255da9161a229",
+          }
+          for p,want in expected.items():
+              b=Path(p).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(b)).encode()+bytes([0])+b).hexdigest()
+              assert got==want,(p,want,got)
+          print("EXACT_BLOB_MATCH_PASS")
+          PY
+      - name: Run adversarial index tests
+        run: python -m unittest -v canonical.tests.test_proof_atom_receipt_index_v2
+      - name: Verify live basis projection and zero-credit semantics
+        run: |
+          python - <<'PY'
+          import json,tempfile
+          from pathlib import Path
+          from canonical.runtime.proof_atom_receipt_index_v2 import build_index
+          f=json.loads(Path("canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json").read_text())
+          o=json.loads(Path("canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json").read_text())
+          with tempfile.TemporaryDirectory() as td:
+              out=build_index(f,o,root=Path(td))
+          assert out["status"].startswith("PASS"),out
+          assert out["canonical_atom_count"]==40,out
+          assert out["scanned_file_count"]==0,out
+          assert out["candidate_match_count"]==0,out
+          assert out["atoms_with_candidate_matches"]==0,out
+          assert out["atoms_without_candidate_matches"]==40,out
+          assert all(x["atom_id"].startswith("PA1:") for x in out["atoms"]),out
+          assert all(x["candidate_only"] is True for x in out["atoms"]),out
+          assert out["new_reality_units_consumed"]==0,out
+          assert out["capability_credit_delta"]==0 and out["family_credit_delta"]==0,out
+          assert out["execution_authority"] is False and out["promotion_authority"] is False,out
+          print("V2_RECEIPT_INDEXER_PASS")
+          PY
