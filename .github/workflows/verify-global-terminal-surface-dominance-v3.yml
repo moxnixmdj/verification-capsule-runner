@@ -1,40 +1,23 @@
 name: Verify global terminal surface dominance V3
-
 on:
   pull_request:
     branches: [main]
     paths:
       - 'canonical/runtime/proof_route_dominance.py'
-      - 'verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json'
+      - 'canonical/tests/test_global_terminal_surface_dominance_v3.py'
       - '.github/workflows/verify-global-terminal-surface-dominance-v3.yml'
-  workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
-        with: {python-version: '3.12'}
-      - name: Bind exact Brain blobs
-        run: |
-          test "$(git hash-object canonical/runtime/proof_route_dominance.py)" = "64efeaad5d4295d5bd1a3bd53feae5170c22a8a4"
-          test "$(git hash-object verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json)" = "931bdd17e6351477281dd81492521f9337de5121"
-      - name: Evaluate dominance
-        run: |
-          PYTHONPATH=. python - <<'PY'
-          import json
-          from canonical.runtime.proof_route_dominance import evaluate
-          p=json.load(open("verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json"))
-          out=evaluate(p)
-          print(json.dumps(out,sort_keys=True,indent=2))
-          assert out["status"]=="COMPLETE", out
-          assert out["global_uncovered_obligations"]==[], out
-          bv=out["blocked_route_verdicts"]
-          assert len(bv)==14, len(bv)
-          assert all(x["redundant"] and not x["uncovered_obligations"] for x in bv), bv
-          assert len(out["admissible_routes"])>=10, out["admissible_routes"]
-          PY
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m py_compile canonical/runtime/proof_route_dominance.py canonical/tests/test_global_terminal_surface_dominance_v3.py
+      - name: Verify V3 nonweakening dominance
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_global_terminal_surface_dominance_v3
