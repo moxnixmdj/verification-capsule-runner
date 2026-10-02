@@ -45,12 +45,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/wheels
-          python -m pip download --no-deps --only-binary=:all: -d /tmp/wheels nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 setuptools==80.9.0
+          python -m pip download --no-deps --only-binary=:all: -d /tmp/wheels nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 setuptools==80.9.0 click==8.5.0 cloudpickle==3.1.2 defusedxml==0.7.1 joblib==1.6.0 regex==2026.9.29 tqdm==4.70.1
           echo "ff9598a8e20518ee0d557745890cc4435b9578489e2dcbc69c4f81fa060caf7c  /tmp/wheels/nltk-3.10.3-py3-none-any.whl" | sha256sum -c -
           echo "c4230d80640def9071599ff56b1b5950fe13a2a94c0da98c5deab12431b24330  /tmp/wheels/emoji-2.16.0-py3-none-any.whl" | sha256sum -c -
           echo "198a7413033c32d7b31e21962efb3f284bcea80d3346e954b938ca1ebe6bee20  /tmp/wheels/syllapy-0.7.2-py3-none-any.whl" | sha256sum -c -
           echo "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922  /tmp/wheels/setuptools-80.9.0-py3-none-any.whl" | sha256sum -c -
-          python -m pip install /tmp/wheels/*.whl
+          sha256sum /tmp/wheels/click-8.5.0-py3-none-any.whl /tmp/wheels/cloudpickle-3.1.2-py3-none-any.whl /tmp/wheels/defusedxml-0.7.1-py2.py3-none-any.whl /tmp/wheels/joblib-1.6.0-py3-none-any.whl /tmp/wheels/regex-2026.9.29-*.whl /tmp/wheels/tqdm-4.70.1-py3-none-any.whl
+          python -m pip install --no-index --find-links=/tmp/wheels /tmp/wheels/nltk-3.10.3-py3-none-any.whl /tmp/wheels/emoji-2.16.0-py3-none-any.whl /tmp/wheels/syllapy-0.7.2-py3-none-any.whl /tmp/wheels/setuptools-80.9.0-py3-none-any.whl
 
       - name: Materialize frozen NLTK data
         shell: bash
