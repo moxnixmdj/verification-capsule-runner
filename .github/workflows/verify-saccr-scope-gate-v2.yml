@@ -1,5 +1,7 @@
 name: Verify SA-CCR scope gate V2
 on:
+  push:
+    branches: ['verify/saccr-scope-gate-v2-20261002']
   pull_request:
     branches: [main]
     paths:
