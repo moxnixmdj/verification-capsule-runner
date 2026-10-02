@@ -1,0 +1,58 @@
+name: Verify proof atom receipt index v2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/proof_atom_receipt_index_v2/**"
+      - ".github/workflows/verify-proof-atom-receipt-index-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/proof_atom_receipt_index_v2
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              local=pathlib.Path(src)
+              data=local.read_bytes()
+              actual=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert actual==expected,(src,actual,expected)
+          print("exact Brain V2 blob identities: PASS")
+          PY
+      - name: Verify V2 indexer and adversarial tests
+        run: |
+          cd capsules/proof_atom_receipt_index_v2
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/canonical_proof_atom_basis_v2.py canonical/runtime/proof_atom_receipt_index_v2.py
+          python -m unittest canonical.tests.test_proof_atom_receipt_index_v2 -v
+      - name: Verify live V2 basis projection and zero-credit invariant
+        run: |
+          cd capsules/proof_atom_receipt_index_v2
+          export PYTHONPATH=.
+          python canonical/runtime/proof_atom_receipt_index_v2.py > index.json
+          python - <<'PY'
+          import json
+          p=json.load(open("index.json"))
+          assert p["status"].startswith("PASS"),p
+          assert p["canonical_atom_count"]==40,p
+          assert all(x["atom_id"].startswith("PA1:") for x in p["atoms"])
+          assert p["capability_credit_delta"]==0
+          assert p["family_credit_delta"]==0
+          assert p["execution_authority"] is False
+          assert p["promotion_authority"] is False
+          print(json.dumps({
+            "status":"PASS",
+            "canonical_atom_count":p["canonical_atom_count"],
+            "pa1_identity_continuity":True,
+            "zero_credit":True
+          },indent=2,sort_keys=True))
+          PY
