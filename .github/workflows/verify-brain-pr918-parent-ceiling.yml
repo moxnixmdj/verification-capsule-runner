@@ -1,0 +1,23 @@
+name: Verify Brain PR918 parent ceiling witness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verification/brain_pr918/**"
+      - ".github/workflows/verify-brain-pr918-parent-ceiling.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify exact Brain PR918 ceiling witness
+        run: python verification/brain_pr918/verify.py
