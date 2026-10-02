@@ -1,0 +1,27 @@
+name: Verify SA-CCR scope gate V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/scope_equivalent_proof_gate_v2.py'
+      - 'verification/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json'
+      - 'verification/SA_CCR_SCOPE_EQUIVALENCE_RELATION_V1.json'
+      - 'verification/test_saccr_scope_gate_v2.py'
+      - '.github/workflows/verify-saccr-scope-gate-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/scope_equivalent_proof_gate_v2.py)" = "2d05172becfc559de3ff1e4e5623c5180028be1b"
+          test "$(git hash-object verification/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json)" = "e1334040617340b232d74c187116aedc09236398"
+          test "$(git hash-object verification/SA_CCR_SCOPE_EQUIVALENCE_RELATION_V1.json)" = "2a330aaae7ed626c13bdd0bbeff7ec5564d977b5"
+      - name: Verify scope gate
+        run: PYTHONPATH=. python verification/test_saccr_scope_gate_v2.py
