@@ -26,11 +26,11 @@ def load(name,path):
     spec=importlib.util.spec_from_file_location(name,ROOT/path)
     mod=importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    sys.modules[name]=mod
     spec.loader.exec_module(mod)
     return mod
 
 agent=load("brain_harbor_agent_exact","verification/harbor_brain_agent_exact.py")
-sys.modules["brain_harbor_transport_exact"]=types.ModuleType("brain_harbor_transport_exact")
 transport=load("brain_harbor_transport_exact","verification/harbor_environment_transport_exact.py")
 
 class FakeEnv:
