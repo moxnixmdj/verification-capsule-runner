@@ -1,0 +1,10 @@
+{
+  "command_sha256": "b9d5ebda03ba5d3f4f139d741b6d478002760fe33ded0707fc7b557584892d63",
+  "duration_sec": 0.079,
+  "exit_code": 1,
+  "schema": "BRAIN_SESSION_MINI_SWE_OBSERVATION_V1",
+  "session_id": "layout-config-recreation2-20261002-v1",
+  "stderr": "Traceback (most recent call last):\n  File \"<stdin>\", line 8, in <module>\nModuleNotFoundError: No module named 'cv2'\n",
+  "stdout": "MODULES {\"cv2\": \"ERR:ModuleNotFoundError(\\\"No module named 'cv2'\\\")\", \"numpy\": \"ERR:ModuleNotFoundError(\\\"No module named 'numpy'\\\")\", \"scipy\": \"ERR:ModuleNotFoundError(\\\"No module named 'scipy'\\\")\"}\n",
+  "step": 1
+}
