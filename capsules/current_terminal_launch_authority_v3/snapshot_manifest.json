@@ -1,0 +1,18 @@
+{
+  "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_LAUNCH_AUTHORITY_CAPSULE_V3",
+  "date": "2026-10-02",
+  "base_capsule": "capsules/current_terminal_launch_authority_v2",
+  "replacement": {
+    "path": "canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json",
+    "brain_blob_sha": "62e888a0ca582306dc1125521178466767c8cd5e"
+  },
+  "expected_verdict": {
+    "prequalification_pass": true,
+    "launch_authority": true,
+    "execution_authority": true,
+    "route_count": 12,
+    "failed_predicates": []
+  },
+  "terminal_results_observed": 0,
+  "fresh_terminal_evidence_consumed": 0
+}
