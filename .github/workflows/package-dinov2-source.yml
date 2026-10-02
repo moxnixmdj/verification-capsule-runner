@@ -1,0 +1,39 @@
+name: Package pinned DINOv2 source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/package-dinov2-source.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Acquire pinned source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/dinov2_source_package"
+          mkdir -p "$out"
+          commit="7764ea0f912e53c92e82eb78a2a1631e92725fc8"
+          url="https://codeload.github.com/facebookresearch/dinov2/tar.gz/$commit"
+          curl --fail --location --retry 4 --proto '=https' --tlsv1.2 "$url" -o "$out/dinov2-$commit.tar.gz"
+          size="$(stat -c '%s' "$out/dinov2-$commit.tar.gz")"
+          sha="$(sha256sum "$out/dinov2-$commit.tar.gz" | awk '{print $1}')"
+          python -c 'import json,sys; p,sha,size=sys.argv[1],sys.argv[2],int(sys.argv[3]); d={"schema":"PROJECT_BRAIN_INTERNALIZED_DINOV2_SOURCE_V1","date":"2026-10-02","status":"PINNED_SOURCE_ARCHIVE_READY_FOR_DURABLE_DRIVE_MIRROR__ZERO_CAPABILITY_CREDIT","repository":"facebookresearch/dinov2","commit":"7764ea0f912e53c92e82eb78a2a1631e92725fc8","license":"Apache-2.0","source_archive_sha256":sha,"source_archive_size_bytes":size,"incremental_spend_usd":0}; open(p,"w",encoding="utf-8").write(json.dumps(d,indent=2,sort_keys=True)+"\n")' "$out/SOURCE_MANIFEST.json" "$sha" "$size"
+          (cd "$out" && sha256sum * > PACKAGE_SHA256SUMS.txt)
+          echo "source_size_bytes=$size"
+          echo "source_sha256=$sha"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brain-dinov2-pinned-source-package
+          path: ${{ runner.temp }}/dinov2_source_package/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
