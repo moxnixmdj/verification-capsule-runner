@@ -1,0 +1,135 @@
+name: Execute terminal V3 wave ONCE
+on:
+  push:
+    branches:
+      - terminal-v3-execution-snapshot-20261002-v1
+    paths:
+      - '.github/workflows/execute-terminal-v3-wave-once.yml'
+permissions:
+  contents: read
+jobs:
+  terminal-wave:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install frozen zero-cost runtime environment
+        run: >-
+          python -m pip install --disable-pip-version-check --no-input
+          "pydantic>=2,<3" "cadquery==2.6.1"
+          python-docx openpyxl python-pptx pypdf
+      - name: Activate exact V3 frozen snapshot assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          r=Path("capsules/terminal-v3-snapshot")
+          cap=json.loads((r/"TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3.json").read_text())
+          assert cap["execution_snapshot"]["commit_sha"]=="821712c059b139f3494723dca6e8d0fc82ee59a4"
+          assert cap["package_commitment"]=="5a347e796d124373b557424a51659e8bb69b854d09da0b407a5b30f109d9467a"
+          assert cap["prebeacon_invariants"]["post_freeze_beacon"] is None
+          assert cap["prebeacon_invariants"]["terminal_results_observed"]==0
+          assert cap["prebeacon_invariants"]["fresh_terminal_evidence_consumed"]==0
+          for rel in cap["snapshot_blob_assertions"]:
+              src=r/"snapshot"/rel
+              dst=Path(rel)
+              assert src.is_file(), ("missing snapshot mirror",rel)
+              dst.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copyfile(src,dst)
+          print("ACTIVATED_EXACT_V3_SNAPSHOT",len(cap["snapshot_blob_assertions"]))
+          PY
+      - name: Final fail-closed authority check before case generation
+        env:
+          PYTHONPATH: ".:canonical/runtime"
+        shell: bash
+        run: |
+          set -euo pipefail
+          python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee terminal-v3-authority-before-wave.json
+          python - <<'PY'
+          import json
+          v=json.load(open("terminal-v3-authority-before-wave.json"))
+          assert v["pass"] is True, v
+          assert v["launch_authority"] is True and v["execution_authority"] is True, v
+          assert v["route_count"] == 12, v
+          assert v["terminal_results_observed"] == 0, v
+          assert v["fresh_terminal_evidence_consumed"] == 0, v
+          PY
+      - name: Execute exact frozen terminal wave exactly once
+        id: execute
+        env:
+          PYTHONPATH: ".:canonical/runtime"
+          TERMINAL_COMMITMENT: "5a347e796d124373b557424a51659e8bb69b854d09da0b407a5b30f109d9467a"
+          TERMINAL_BEACON: ${{ github.run_id }}
+        shell: bash
+        run: |
+          set +e
+          python - <<'PY'
+          import json, os, traceback
+          from pathlib import Path
+          from canonical.runtime import terminal_parent_portfolio_launcher_v1 as launcher
+
+          commitment=os.environ["TERMINAL_COMMITMENT"]
+          beacon=os.environ["TERMINAL_BEACON"]
+          envelope={
+              "schema":"PROJECT_BRAIN_TERMINAL_V3_ONE_SHOT_EXECUTION_RECEIPT_V1",
+              "candidate_package_commitment":commitment,
+              "post_freeze_beacon":beacon,
+              "github_run_id":beacon,
+              "frozen_brain_commit":"821712c059b139f3494723dca6e8d0fc82ee59a4",
+              "case_replacement":False,
+              "tuning_replay":False,
+              "incremental_spend_usd":0,
+          }
+          exit_code=0
+          try:
+              result=launcher.execute_wave(
+                  commitment=commitment,
+                  beacon=beacon,
+                  root=Path("."),
+              )
+              envelope["launcher_returned"]=True
+              envelope["result"]=result
+              envelope["pass"]=result.get("pass") is True
+              envelope["terminal_result"]=result.get("terminal_result") is True
+              if not envelope["pass"]:
+                  exit_code=2
+          except BaseException as exc:
+              envelope["launcher_returned"]=False
+              envelope["pass"]=False
+              envelope["terminal_result"]="PARTIAL_OR_UNKNOWN__DO_NOT_REPLAY"
+              envelope["exception_type"]=type(exc).__name__
+              envelope["exception"]=str(exc)
+              envelope["traceback"]=traceback.format_exc()
+              exit_code=3
+          Path("terminal-v3-wave-result.json").write_text(
+              json.dumps(envelope,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          summary={
+              "schema":envelope["schema"],
+              "github_run_id":beacon,
+              "pass":envelope["pass"],
+              "launcher_returned":envelope["launcher_returned"],
+              "terminal_result":envelope["terminal_result"],
+              "exception_type":envelope.get("exception_type"),
+          }
+          print(json.dumps(summary,sort_keys=True))
+          raise SystemExit(exit_code)
+          PY
+          code=$?
+          echo "execution_exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+      - name: Upload immutable terminal receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-v3-one-shot-receipt-${{ github.run_id }}
+          path: |
+            terminal-v3-authority-before-wave.json
+            terminal-v3-wave-result.json
+          if-no-files-found: warn
+          retention-days: 90
