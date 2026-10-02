@@ -1,0 +1,36 @@
+name: Verify SA-CCR scope Gate V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/scope_equivalent_proof_gate_v2.py'
+      - 'canonical/governance/SA_CCR_INFORMATION_SAFE_TERMINAL_ROUTE_V1.json'
+      - 'canonical/governance/SA_CCR_ACTIVE_CONTRACT_SCOPE_CLOSURE_V1.json'
+      - 'canonical/verification/SA_CCR_INFORMATION_SAFE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
+      - 'canonical/governance/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json'
+      - 'canonical/tests/test_saccr_scope_equivalent_gate_v2.py'
+      - '.github/workflows/verify-saccr-scope-gate-v2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/scope_equivalent_proof_gate_v2.py)" = "2d05172becfc559de3ff1e4e5623c5180028be1b"
+          test "$(git hash-object canonical/governance/SA_CCR_INFORMATION_SAFE_TERMINAL_ROUTE_V1.json)" = "04b030ef0bf13cf9e39f4c6a31077ca2ff0a5394"
+          test "$(git hash-object canonical/governance/SA_CCR_ACTIVE_CONTRACT_SCOPE_CLOSURE_V1.json)" = "93c74c5d9d4e49c4f9524d3724a552665da6a702"
+          test "$(git hash-object canonical/verification/SA_CCR_INFORMATION_SAFE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "e95a7e4bababb44f21c218535c362b03fd75e912"
+          test "$(git hash-object canonical/governance/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json)" = "6c6927a1ce107cd00bbe40841261baa9798b2750"
+          test "$(git hash-object canonical/tests/test_saccr_scope_equivalent_gate_v2.py)" = "9003c754a0ad8654e5a8944179f75b7bd81aec6a"
+      - name: Run Gate V2 self-test
+        run: PYTHONPATH=. python3 canonical/runtime/scope_equivalent_proof_gate_v2.py --self-test
+      - name: Run SA-CCR scope declaration tests
+        run: PYTHONPATH=. python3 -m unittest -v canonical.tests.test_saccr_scope_equivalent_gate_v2
+      - name: Evaluate SA-CCR Gate V2 input
+        run: PYTHONPATH=. python3 canonical/runtime/scope_equivalent_proof_gate_v2.py canonical/governance/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json
