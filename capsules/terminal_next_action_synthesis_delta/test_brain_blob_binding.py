@@ -11,7 +11,7 @@ EXPECTED={
 "canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V1.json":"15589dccf0bc9109594a791d702bfc93d5795c4d",
 "canonical/runtime/acceptance_ir_compiler_v1.py":"c6961bcd87e16c9ff63b4c365e8547a0885b2eb4",
 "canonical/runtime/terminal_next_action_compiler_v1.py":"2f07e4132ab112ef6aa40f0c2ad05f1049edb287",
-"canonical/tests/test_terminal_next_action_compiler_v1.py":"b437c8cf09902c3f27c1ab5940105a5a5528814b",
+"canonical/tests/test_terminal_next_action_compiler_v1.py":"db5c6d2cdf5c1208392be48dc8a91ec32521f4da",
 "canonical/verification/OPUS55_SYNTHESIS_PROOF_OBLIGATION_DELTA_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"dc3045403cabfc2adac373afb7089647bb971635",
 }
 def sha(path:Path)->str:
