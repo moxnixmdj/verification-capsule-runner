@@ -20,6 +20,8 @@ jobs:
         shell: bash
         run: |
           cp capsules/cad_v4_terminal_executor/CAD_T0_POST_REFREEZE_BINDING_V4.json canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json
+          cp capsules/cad_v4_terminal_executor/TERMINAL_WAVE_EXECUTION_AUTHORITY_V1.json canonical/governance/TERMINAL_WAVE_EXECUTION_AUTHORITY_V1.json
+          cp capsules/cad_v4_terminal_executor/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json
           test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json)" = "a636d1292e6f92d240fab420a9ee75ced7a05104"
       - name: Verify frozen dependency identities
         shell: bash
