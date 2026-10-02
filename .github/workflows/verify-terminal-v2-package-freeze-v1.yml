@@ -1,0 +1,87 @@
+name: Verify terminal V2 package freeze V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/governance/TERMINAL_V2_*_MANIFEST_V1.json
+      - .github/workflows/verify-terminal-v2-package-freeze-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact current freeze and compute package commitment
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . > /tmp/authority.json
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          order = [
+            "canonical/governance/TERMINAL_V2_CANDIDATE_BLOB_MANIFEST_V1.json",
+            "canonical/governance/TERMINAL_V2_EVALUATOR_ORACLE_MANIFEST_V1.json",
+            "canonical/governance/TERMINAL_V2_POPULATION_MANIFEST_V1.json",
+            "canonical/governance/TERMINAL_V2_DEPENDENCY_MANIFEST_V1.json",
+            "canonical/governance/TERMINAL_V2_ACCEPTANCE_RULE_MANIFEST_V1.json",
+          ]
+
+          def git_blob_sha(path):
+              data=Path(path).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(data)).encode()+bytes([0])+data).hexdigest()
+
+          checked=0
+          manifest_blobs={}
+          for mp in order:
+              m=json.loads(Path(mp).read_text())
+              assert m.get("post_freeze_beacon_known") is False, (mp,m)
+              assert m.get("zero_terminal_results") is True, (mp,m)
+              assert m.get("incremental_spend_usd") == 0, (mp,m)
+              bindings=m.get("bindings")
+              assert isinstance(bindings,dict) and bindings, (mp,m)
+              for path, expected in sorted(bindings.items()):
+                  p=Path(path)
+                  assert p.is_file(), ("missing",mp,path)
+                  actual=git_blob_sha(path)
+                  assert actual == expected, ("drift",mp,path,expected,actual)
+                  checked += 1
+              manifest_blobs[mp]=git_blob_sha(mp)
+
+          authority=json.load(open("/tmp/authority.json"))
+          assert authority["pass"] is True, authority
+          assert authority["launch_authority"] is True, authority
+          assert authority["execution_authority"] is True, authority
+          assert authority["failed_predicates"] == [], authority
+          assert authority["route_count"] == 12, authority
+          assert authority["terminal_results_observed"] == 0, authority
+          assert authority["fresh_terminal_evidence_consumed"] == 0, authority
+
+          h=hashlib.sha256()
+          for mp in order:
+              h.update(Path(mp).read_bytes())
+          commitment=h.hexdigest()
+          out={
+              "schema":"PROJECT_BRAIN_TERMINAL_V2_PACKAGE_FREEZE_VERDICT_V1",
+              "status":"INDEPENDENT_PUBLIC_RUNNER_PASS",
+              "manifest_order":order,
+              "manifest_git_blob_shas":manifest_blobs,
+              "binding_checks":checked,
+              "package_commitment":commitment,
+              "authority":authority,
+              "post_freeze_beacon":None,
+              "terminal_results_observed":0,
+              "fresh_terminal_evidence_consumed":0,
+              "incremental_spend_usd":0,
+              "capability_credit_delta":0,
+              "family_credit_delta":0
+          }
+          Path("/tmp/freeze-verdict.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
