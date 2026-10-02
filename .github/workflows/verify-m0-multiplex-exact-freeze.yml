@@ -1,0 +1,52 @@
+name: Verify M0 multiplex exact prewave freeze
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/governance/M0_PORTFOLIO_MULTIPLEX_TERMINAL_BINDING_V1.json'
+      - 'canonical/runtime/m0a_raw_source_brain_candidate_v2.py'
+      - 'canonical/runtime/m0a_raw_source_terminal_suite_v2.py'
+      - 'canonical/runtime/source_contract_compiler.py'
+      - 'canonical/runtime/independent_acceptance_model.py'
+      - 'canonical/runtime/requirement_acceptance_compiler.py'
+      - '.github/workflows/verify-m0-multiplex-exact-freeze.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/M0_PORTFOLIO_MULTIPLEX_TERMINAL_BINDING_V1.json)" = "4be9d1fc4b294c18aad9853d7583b59270f3ea10"
+          test "$(git hash-object canonical/runtime/m0a_raw_source_brain_candidate_v2.py)" = "0aac96d27068bdad379703c1b0b8a7a32cacb2e2"
+          test "$(git hash-object canonical/runtime/m0a_raw_source_terminal_suite_v2.py)" = "63b5daacfa5623c38228d41f6a84e548890d252d"
+          test "$(git hash-object canonical/runtime/source_contract_compiler.py)" = "ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231"
+          test "$(git hash-object canonical/runtime/independent_acceptance_model.py)" = "710298c5d7154b5a3c2a4a1700420c40cb2fa55a"
+          test "$(git hash-object canonical/runtime/requirement_acceptance_compiler.py)" = "c306ac6191e2d6f6d84445d7a698eeec8676a0ef"
+      - name: Validate frozen prewave binding
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("canonical/governance/M0_PORTFOLIO_MULTIPLEX_TERMINAL_BINDING_V1.json").read_text())
+          assert d["behavior_id"]=="SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001"
+          assert d["portfolio_bindings"]==["T0","T1","T2","T3"]
+          assert d["status"].startswith("FROZEN_PREWAVE_BINDING__EXACT_BLOBS_BOUND")
+          assert d["exact_blob_bindings"]=={"canonical/runtime/m0a_raw_source_brain_candidate_v2.py":"0aac96d27068bdad379703c1b0b8a7a32cacb2e2","canonical/runtime/m0a_raw_source_terminal_suite_v2.py":"63b5daacfa5623c38228d41f6a84e548890d252d","canonical/runtime/source_contract_compiler.py":"ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231","canonical/runtime/independent_acceptance_model.py":"710298c5d7154b5a3c2a4a1700420c40cb2fa55a","canonical/runtime/requirement_acceptance_compiler.py":"c306ac6191e2d6f6d84445d7a698eeec8676a0ef"}
+          assert d["terminal_acceptance"]["prewave_binding_is_terminal_result"] is False
+          assert d["terminal_acceptance"]["standalone_synthetic_whole_domain_score_forbidden"] is True
+          assert d["contamination"]["post_freeze_case_specific_tuning"] is False
+          assert d["contamination"]["case_replacement"] is False
+          assert d["execution_authority"] is False
+          assert d["terminal_results_observed"]==0
+          assert d["fresh_terminal_evidence_consumed"]==0
+          assert d["capability_credit_delta"]==0
+          assert d["family_credit_delta"]==0
+          assert d["incremental_spend_usd"]==0
+          print("M0 multiplex exact prewave freeze: PASS")
+          PY
