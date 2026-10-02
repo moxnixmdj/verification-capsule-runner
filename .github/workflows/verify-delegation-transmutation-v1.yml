@@ -1,0 +1,94 @@
+name: Verify delegation acceptance transmutation v1
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/delegation_transmutation_v1/**'
+      - '.github/workflows/verify-delegation-transmutation-v1.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify exact mirrored Brain blob identities
+        run: |
+          python - <<'PY'
+          import subprocess
+          expected = {
+            "capsules/delegation_transmutation_v1/canonical/runtime/acceptance_proof_transmuter_v1.py": "0580f9819b5465c9617f0a1e8ff9a96902eedfc6",
+            "capsules/delegation_transmutation_v1/canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "eb4bca0fe6a015d49d2854998fbe046c979c7ea9",
+            "capsules/delegation_transmutation_v1/canonical/governance/OPUS55_ACCEPTANCE_PROOF_TRANSMUTATION_INPUT_V1.json": "96052a6b5178305b37a2526fb25c3f53fa33b9b5",
+            "capsules/delegation_transmutation_v1/canonical/governance/DELEGATION_ACCEPTANCE_CEILING_WITNESS_V1.json": "cb3b7c4b6c4e1f2a0471c6b6be72c4ca9ebddc80",
+            "capsules/delegation_transmutation_v1/canonical/verification/DELEGATION_TEMPORAL_PROOF_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "5278abb7fcaa6b97189b67598c75e4df395e1788",
+            "capsules/delegation_transmutation_v1/canonical/tests/test_delegation_temporal_ceiling_transmutation_v1.py": "c486ef7e678a0bb8e0c6d4607c1ac9e2cf2de9bc",
+          }
+          for path, want in expected.items():
+              got = subprocess.check_output(["git","hash-object",path], text=True).strip()
+              assert got == want, (path, got, want)
+          print("EXACT_BLOB_IDENTITY_PASS", len(expected))
+          PY
+
+      - name: Run fail-closed delegation transmutation tests
+        working-directory: capsules/delegation_transmutation_v1
+        run: |
+          python -m unittest -v canonical.tests.test_delegation_temporal_ceiling_transmutation_v1
+
+      - name: Recompute exact 4 of 19 transmutation
+        working-directory: capsules/delegation_transmutation_v1
+        run: |
+          python - <<'PY'
+          import json
+          from canonical.runtime.acceptance_proof_transmuter_v1 import evaluate
+          load=lambda p: json.load(open(p,encoding="utf-8"))
+          protocols=load("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json")
+          inp=load("canonical/governance/OPUS55_ACCEPTANCE_PROOF_TRANSMUTATION_INPUT_V1.json")
+          witness=load("canonical/governance/DELEGATION_ACCEPTANCE_CEILING_WITNESS_V1.json")
+          receipt=load("canonical/verification/DELEGATION_TEMPORAL_PROOF_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json")
+          assert receipt["public_verifier"]["conclusion"]=="success"
+          assert receipt["terminal_results_replayed"]==0
+          assert receipt["fresh_terminal_evidence_consumed"]==0
+          assert witness["verified"] is True
+          assert witness["independent"] is True
+          assert witness["contamination_clean"] is True
+          assert witness["binds_frozen_protocol"] is True
+          assert witness["closes_entire_protocol"] is True
+          assert witness["result"] == {
+              "direction":"higher",
+              "brain_lower_bound":1,
+              "theoretical_upper_bound":1,
+          }
+          out=evaluate(protocols, inp)
+          assert out["status"]=="PASS", out
+          assert out["family_count"]==19, out
+          assert out["closed_family_count"]==4, out
+          assert out["open_family_count"]==15, out
+          row=next(r for r in out["families"] if r["family"]=="SUBAGENT_DELEGATION_AND_COORDINATION")
+          assert row["result_status"]=="PASS", row
+          assert row["closure_mode"]=="ABSOLUTE_DOMINANCE", row
+          assert row["witness_id"]=="DELEGATION_TEMPORAL_TERMINAL_CEILING_ABSOLUTE_DOMINANCE_20261002_V1", row
+          assert row["witness_reason"]=="THEORETICAL_CEILING_DOMINANCE", row
+          print("DELEGATION_TRANSMUTATION_4_OF_19_PASS")
+          PY
+
+      - name: Assert no replay or direct promotion authority
+        working-directory: capsules/delegation_transmutation_v1
+        run: |
+          python - <<'PY'
+          import json
+          w=json.load(open("canonical/governance/DELEGATION_ACCEPTANCE_CEILING_WITNESS_V1.json",encoding="utf-8"))
+          r=json.load(open("canonical/verification/DELEGATION_TEMPORAL_PROOF_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",encoding="utf-8"))
+          assert w["promotion_authority"] is False
+          assert w["capability_credit_delta"]==0
+          assert w["family_credit_delta"]==0
+          assert r["terminal_results_replayed"]==0
+          assert r["fresh_terminal_evidence_consumed"]==0
+          assert r["incremental_spend_usd"]==0
+          assert r["capability_credit_delta"]==0
+          assert r["family_credit_delta"]==0
+          print("ZERO_REPLAY_ZERO_CREDIT_PASS")
+          PY
