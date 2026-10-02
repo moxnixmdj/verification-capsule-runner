@@ -1,0 +1,26 @@
+name: Verify matched target normalization v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/matched_target_normalization_v2/**"
+      - ".github/workflows/verify-matched-target-normalization-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify 13-target exact literal provenance
+        run: |
+          cd capsules/matched_target_normalization_v2
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/matched_target_normalization_provenance_verifier_v1.py
+          python canonical/tests/test_matched_target_normalization_provenance_v2.py
