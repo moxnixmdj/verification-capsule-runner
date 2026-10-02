@@ -1549,11 +1549,8 @@ WORD_LIST = [
 ]  # pylint: disable=line-too-long
 
 def download_nltk_resources():
-    """Download 'punkt' if not already installed"""
-    try:
-        nltk.data.find("tokenizers/punkt")
-    except LookupError:
-        nltk.download("punkt")
+    """Fail closed if the pinned local punkt resource is unavailable."""
+    nltk.data.find("tokenizers/punkt")
 
 
 
