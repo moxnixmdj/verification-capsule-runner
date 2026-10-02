@@ -26,12 +26,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_runner_v1.py')" = "d8f25e9e37d7ab93eab254c77d1a6ff211fff4f3"
-          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_runner_v1.py')" = "28cc776b808fe8787efe5bf0f33a459e544c32df"
-          test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_launcher_v1.py')" = "6850a0998784d7d8b8cf488985223d2644bd7d44"
-          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_launcher_v1.py')" = "9dfcef0e41c2d8ad34376a59559c5ca0d5c0f40f"
-          test "$(git hash-object 'canonical/runtime/terminal_wave_launch_authority_reducer_v1.py')" = "cdec77b1e1158e77e80cca45a3b8a2de24ad4bf5"
-          test "$(git hash-object 'canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py')" = "7bb12661e2d6205af0193f3fff2c919a768f780d"
+          test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_runner_v1.py')" = "05c9adf60b76a8b2e0ccd139a90c4c7fd9d34449"
+          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_runner_v1.py')" = "7735a0851c87463b1a19bd9ffcfbee44812296f0"
+          test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_launcher_v1.py')" = "d7f20a66f1f534b06ea11782cb350a582c07d985"
+          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_launcher_v1.py')" = "01996bc0cca7246c0dcfea5b1602c4740fa3e45d"
+          test "$(git hash-object 'canonical/runtime/terminal_wave_launch_authority_reducer_v1.py')" = "0b5b5e8229cc3e5ee950169469811e7576c43514"
+          test "$(git hash-object 'canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py')" = "352a01602259011d8d40f5db2d2b84e4c771a713"
           test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_PORTFOLIO_RUNNER_BINDING_V1.json')" = "5212f5996dbc83e87a308b8c9d9d1d9ed3da5aab"
           test "$(git hash-object 'canonical/runtime/m0a_raw_source_terminal_suite_v2.py')" = "63b5daacfa5623c38228d41f6a84e548890d252d"
           test "$(git hash-object 'canonical/runtime/m0a_raw_source_brain_candidate_v2.py')" = "0aac96d27068bdad379703c1b0b8a7a32cacb2e2"
