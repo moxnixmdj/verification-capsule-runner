@@ -1,0 +1,24 @@
+name: Verify future matched scope nontransport v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/future_matched_scope_nontransport_v1/**"
+      - ".github/workflows/verify-future-matched-scope-nontransport-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify future matched scope nontransport
+        run: |
+          cd capsules/future_matched_scope_nontransport_v1
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/future_matched_scope_nontransport_v1.py
+          python -m unittest canonical.tests.test_future_matched_scope_nontransport_v1 -v
+          python canonical/runtime/future_matched_scope_nontransport_v1.py
