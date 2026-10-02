@@ -7,9 +7,10 @@ requires:
 3. exact 12-route executor manifest;
 4. current executor + test Git blob identities;
 5. independent public-runner receipt for every current executor blob;
-6. four real independently verified T0/T1/T2/T3 parent-case producers plus the exact frozen producer schedule binding;\n7. zero terminal results/evidence before launch.
+6. four real independently verified T0/T1/T2/T3 parent-case producers;
+7. zero terminal results/evidence before launch.
 
-This reducer grants no capability or family credit and does not create a beacon.
+This reducer grants no capability or family credit and does not create a beacon.\nIt also binds the exact independently verified top-level launcher bytes.
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ SCHEMA = "PROJECT_BRAIN_TERMINAL_WAVE_LAUNCH_AUTHORITY_VERDICT_V1"
 MANIFEST = "canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json"
 BASIS = "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json"
 PARENT_PRODUCERS = "canonical/governance/TERMINAL_PARENT_CASE_PRODUCER_MANIFEST_V1.json"
+LAUNCHER_BINDING = "canonical/governance/TERMINAL_PARENT_LAUNCHER_BINDING_V1.json"
 PARENT_PORTFOLIOS = ("T0", "T1", "T2", "T3")
 
 
@@ -53,6 +55,7 @@ def evaluate_documents(
     manifest: dict[str, Any],
     basis: dict[str, Any],
     parent_producers: dict[str, Any],
+    launcher_binding: dict[str, Any],
     *,
     load_verification: Callable[[str], dict[str, Any]],
     blob_sha: Callable[[str], str | None],
@@ -61,6 +64,47 @@ def evaluate_documents(
 
     if prequalification.get("pass") is not True or prequalification.get("execution_authority") is not True:
         errors.append("PREQUALIFICATION_NOT_AUTHORIZED")
+
+    # The top-level launcher is load-bearing. Authority must bind its exact
+    # current bytes and independent verification, not merely its child routes.
+    if not _independent_pass_status(launcher_binding.get("status")):
+        errors.append("LAUNCHER_BINDING_STATUS_NOT_CURRENT_INDEPENDENT_PASS")
+    if launcher_binding.get("launch_ready") is not True:
+        errors.append("LAUNCHER_BINDING_NOT_READY")
+    launcher = launcher_binding.get("launcher")
+    launcher_tests = launcher_binding.get("tests")
+    launcher_sha = launcher_binding.get("launcher_blob_sha")
+    launcher_test_sha = launcher_binding.get("launcher_test_blob_sha")
+    if not all(isinstance(x, str) and x for x in (launcher, launcher_tests, launcher_sha, launcher_test_sha)):
+        errors.append("LAUNCHER_BINDING_FIELDS_MISSING")
+    else:
+        if blob_sha(launcher) != launcher_sha:
+            errors.append("LAUNCHER_BLOB_DRIFT")
+        if blob_sha(launcher_tests) != launcher_test_sha:
+            errors.append("LAUNCHER_TEST_BLOB_DRIFT")
+    launcher_receipt_path = launcher_binding.get("independent_verification")
+    if not isinstance(launcher_receipt_path, str) or not launcher_receipt_path:
+        errors.append("LAUNCHER_INDEPENDENT_RECEIPT_MISSING")
+    else:
+        try:
+            launcher_receipt = load_verification(launcher_receipt_path)
+        except Exception:
+            errors.append("LAUNCHER_INDEPENDENT_RECEIPT_UNREADABLE")
+        else:
+            if not _independent_pass_status(launcher_receipt.get("status")):
+                errors.append("LAUNCHER_INDEPENDENT_RECEIPT_NOT_PASS")
+            if launcher_receipt.get("terminal_results_observed", 0) != 0:
+                errors.append("LAUNCHER_RECEIPT_TERMINAL_RESULTS_NONZERO")
+            if launcher_receipt.get("fresh_terminal_evidence_consumed", 0) != 0:
+                errors.append("LAUNCHER_RECEIPT_FRESH_TERMINAL_EVIDENCE_NONZERO")
+            exact = launcher_receipt.get("exact_brain_blobs")
+            if not isinstance(exact, dict):
+                errors.append("LAUNCHER_RECEIPT_EXACT_BLOBS_MISSING")
+            elif all(isinstance(x, str) and x for x in (launcher, launcher_tests, launcher_sha, launcher_test_sha)):
+                if exact.get(launcher) != launcher_sha:
+                    errors.append("LAUNCHER_RECEIPT_BLOB_NOT_CURRENT")
+                if exact.get(launcher_tests) != launcher_test_sha:
+                    errors.append("LAUNCHER_RECEIPT_TEST_BLOB_NOT_CURRENT")
 
     producer_rows = parent_producers.get("portfolios")
     if not isinstance(producer_rows, dict):
@@ -124,15 +168,6 @@ def evaluate_documents(
                 errors.append("PARENT_PRODUCER_RECEIPT_BLOB_NOT_CURRENT:" + portfolio)
             if exact.get(tests) != test_sha:
                 errors.append("PARENT_PRODUCER_RECEIPT_TEST_BLOB_NOT_CURRENT:" + portfolio)
-            runner_binding = row.get("runner_binding")
-            if not isinstance(runner_binding, str) or not runner_binding:
-                errors.append("PARENT_PRODUCER_RUNNER_BINDING_MISSING:" + portfolio)
-            else:
-                expected_binding_sha = exact.get(runner_binding)
-                if not isinstance(expected_binding_sha, str) or not expected_binding_sha:
-                    errors.append("PARENT_PRODUCER_RECEIPT_BINDING_BLOB_MISSING:" + portfolio)
-                elif blob_sha(runner_binding) != expected_binding_sha:
-                    errors.append("PARENT_PRODUCER_RUNNER_BINDING_BLOB_DRIFT:" + portfolio)
         verified = set(receipt.get("verified") or ())
         needed = {
             "REAL_PARENT_CASE_PRODUCER",
@@ -278,6 +313,7 @@ def evaluate(root: Path) -> dict[str, Any]:
         manifest = _load(root, MANIFEST)
         basis = _load(root, BASIS)
         parent_producers = _load(root, PARENT_PRODUCERS)
+        launcher_binding = _load(root, LAUNCHER_BINDING)
     except Exception as exc:
         return {
             "schema": SCHEMA,
@@ -302,6 +338,7 @@ def evaluate(root: Path) -> dict[str, Any]:
         manifest,
         basis,
         parent_producers,
+        launcher_binding,
         load_verification=load_receipt,
         blob_sha=blob,
     )
