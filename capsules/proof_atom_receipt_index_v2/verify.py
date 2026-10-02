@@ -11,9 +11,9 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 EXPECTED = {
-    "canonical/runtime/proof_atom_receipt_index_v2.py": "710071856e15f1561deb17347e7cf9cb0c477322",
-    "canonical/tests/test_proof_atom_receipt_index_v2.py": "80f7a5ca4d4a7c35b0997f3e552c0ee23d3a0bfa",
-    "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "27fa9deb9ef591adb9e33b24bd8e971a74ef5e89",
+    "canonical/runtime/proof_atom_receipt_index_v2.py": "5f11b47dc27bfb019bef13cf64a0ef25d7ba1a1f",
+    "canonical/tests/test_proof_atom_receipt_index_v2.py": "14103ef7c96330a281367409a5b76a0a74e7129d",
+    "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "7168f55492135d1cf5a865c27f564126db8746f7",
     "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1",
     "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
     "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json": "898e450c62c06cf6d1a4a3f826a255da9161a229",
@@ -93,6 +93,16 @@ with tempfile.TemporaryDirectory() as td:
     row = next(x for x in out["atoms"] if x["proposition"] == TARGET)
     assert row["candidate_match_count"] == 0, row
 
+# Sealed snapshot self-reflection cannot bootstrap evidence.
+with tempfile.TemporaryDirectory() as td:
+    root = Path(td)
+    p = root / "canonical/verification/PROOF_ATOM_RECEIPT_SNAPSHOT_20261002_V1.json"
+    p.parent.mkdir(parents=True)
+    p.write_text(json.dumps({"index": {"atoms": [{"proposition": TARGET}]}}) + "\n", encoding="utf-8")
+    out = build_index(frontier, overlay, root=root)
+    row = next(x for x in out["atoms"] if x["proposition"] == TARGET)
+    assert row["candidate_match_count"] == 0, row
+
 # Declared-corpus lexical projections cannot bootstrap evidence.
 with tempfile.TemporaryDirectory() as td:
     root = Path(td)
@@ -134,6 +144,7 @@ required_rules = {
     "ZERO_FRESH_REALITY",
     "RECEIPT_INDEX_SELF_VERIFICATION_ARTIFACTS_EXCLUDED_FROM_CANDIDATE_EVIDENCE",
     "DECLARED_CONTENT_ADDRESSED_EVIDENCE_CORPUS_RESTATEMENTS_EXCLUDED_FROM_CANDIDATE_EVIDENCE",
+    "RECEIPT_SNAPSHOT_SELF_VERIFICATION_ARTIFACTS_EXCLUDED_FROM_CANDIDATE_EVIDENCE",
 }
 assert required_rules.issubset(set(gov["hard_rules"])), gov["hard_rules"]
 assert gov["source_basis"]["expected_canonical_atoms"] == 40
@@ -165,6 +176,7 @@ print(json.dumps({
     "match_truncation_honesty_verified": True,
     "self_reflection_quarantine_verified": True,
     "declared_corpus_restatement_quarantine_verified": True,
+    "sealed_snapshot_self_reflection_quarantine_verified": True,
     "capability_credit_delta": 0,
     "family_credit_delta": 0,
     "execution_authority": False,
