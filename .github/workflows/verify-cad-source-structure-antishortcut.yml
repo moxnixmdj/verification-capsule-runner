@@ -1,0 +1,22 @@
+name: Verify CAD source-structure antishortcut falsification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/cad_source_structure_antishortcut/**'
+      - '.github/workflows/verify-cad-source-structure-antishortcut.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain candidate blob
+        run: test "$(git hash-object capsules/cad_source_structure_antishortcut/canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "4356304e18e1cbe6902feef02f1d1905eb6204a1"
+      - name: Run antishortcut falsification
+        working-directory: capsules/cad_source_structure_antishortcut
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_source_structure_antishortcut
