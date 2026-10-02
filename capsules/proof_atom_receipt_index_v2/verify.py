@@ -11,9 +11,9 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 EXPECTED = {
-    "canonical/runtime/proof_atom_receipt_index_v2.py": "5f11b47dc27bfb019bef13cf64a0ef25d7ba1a1f",
+    "canonical/runtime/proof_atom_receipt_index_v2.py": "7faf9f16acc2b18c501f0d08164833027d3d68fa",
     "canonical/tests/test_proof_atom_receipt_index_v2.py": "14103ef7c96330a281367409a5b76a0a74e7129d",
-    "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "7168f55492135d1cf5a865c27f564126db8746f7",
+    "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "b9803927a2e1f2935686f1d37382e4d2d8d968ed",
     "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1",
     "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
     "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json": "898e450c62c06cf6d1a4a3f826a255da9161a229",
@@ -145,6 +145,7 @@ required_rules = {
     "RECEIPT_INDEX_SELF_VERIFICATION_ARTIFACTS_EXCLUDED_FROM_CANDIDATE_EVIDENCE",
     "DECLARED_CONTENT_ADDRESSED_EVIDENCE_CORPUS_RESTATEMENTS_EXCLUDED_FROM_CANDIDATE_EVIDENCE",
     "RECEIPT_SNAPSHOT_SELF_VERIFICATION_ARTIFACTS_EXCLUDED_FROM_CANDIDATE_EVIDENCE",
+    "RECEIPT_SNAPSHOT_SELF_VERIFICATION_EXCLUSION_ENFORCED_IN_RUNTIME",
 }
 assert required_rules.issubset(set(gov["hard_rules"])), gov["hard_rules"]
 assert gov["source_basis"]["expected_canonical_atoms"] == 40
