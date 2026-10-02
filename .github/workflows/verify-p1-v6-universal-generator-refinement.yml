@@ -1,0 +1,19 @@
+name: Verify Brain P1 V6 universal generator refinement
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_v6_universal_generator_refinement/**"
+      - ".github/workflows/verify-p1-v6-universal-generator-refinement.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain theorem and dependencies
+        run: python capsules/p1_v6_universal_generator_refinement/verify.py
