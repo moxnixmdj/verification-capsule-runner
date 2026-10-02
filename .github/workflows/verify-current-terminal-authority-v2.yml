@@ -1,0 +1,74 @@
+name: Verify current terminal authority v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/terminal_prequalification_reducer.py'
+      - 'canonical/tests/test_terminal_prequalification_reducer.py'
+      - 'canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json'
+      - 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json'
+      - 'canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json'
+      - 'canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json'
+      - '.github/workflows/verify-current-terminal-authority-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact current Brain authority blobs
+        run: |
+          test "$(git hash-object canonical/runtime/terminal_prequalification_reducer.py)" = "da929015fafabed2b5a134a2e95b6bff2f47349c"
+          test "$(git hash-object canonical/tests/test_terminal_prequalification_reducer.py)" = "9b09e96c9bf0340d174b4a752148c0807be9043e"
+          test "$(git hash-object canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json)" = "5d20073180fdcfd6e36145f4c820271eb1ee275f"
+          test "$(git hash-object canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "afa00109031d638fef32cc3fe10be18786605c39"
+          test "$(git hash-object canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json)" = "1d905389d395ab67dbb7e6e1290e741ab3cb44cb"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "d1dc7f28738ba24a3ca5919755e03190fbf30939"
+          test "$(git hash-object canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json)" = "832a10cfbb2de362370ec0eee8ccedc86f52aeb3"
+      - name: Reducer regression suite
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_prequalification_reducer
+      - name: Derive live current authority
+        run: |
+          python canonical/runtime/terminal_prequalification_reducer.py . > /tmp/verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open('/tmp/verdict.json'))
+          assert v['pass'] is True, v
+          assert v['execution_authority'] is True, v
+          assert v['authorization']=='T0_T1_T2_T3_PARALLEL_TERMINAL_WAVE', v
+          assert v['failed_predicates']==[], v
+          print(json.dumps(v,sort_keys=True))
+          PY
+      - name: Require twelve independently bound route executors
+        run: |
+          python - <<'PY'
+          import json
+          p='canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json'
+          m=json.load(open(p))
+          assert m['route_count']==12, m
+          assert m['bound_executor_count']==12, m
+          assert len(m['routes'])==12, m
+          assert len({r['behavior_id'] for r in m['routes']})==12, m
+          for r in m['routes']:
+              status=str(r.get('executor_status',''))
+              assert ('INDEPENDENT' in status or 'INDEPENDENTLY' in status), (r['behavior_id'],status)
+              receipt=r.get('independent_executor_verification') or r.get('executor_independent_verification')
+              assert isinstance(receipt,str) and receipt.startswith('canonical/verification/'), r
+              assert r.get('terminal_result_status')=='NOT_EXECUTED', r
+          cad=next(r for r in m['routes'] if r['behavior_id']=='CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001')
+          assert cad['executor_blob_sha']=='4a90d2e6838a6b5fd4a8411de3a3dd654e84ec1c', cad
+          assert cad['executor_test_blob_sha']=='49e911745bca7c3b36a7af5e726910d942d538ab', cad
+          assert cad['independent_executor_verification']=='canonical/verification/CAD_T0_ROUTE_SPECIFIC_TERMINAL_EXECUTOR_V4_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json', cad
+          assert m.get('launch_authority') is False, m
+          assert m.get('terminal_results_observed')==0, m
+          assert m.get('fresh_terminal_evidence_consumed')==0, m
+          print('CURRENT_12_OF_12_EXECUTOR_MANIFEST_PASS')
+          PY
