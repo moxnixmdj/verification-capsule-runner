@@ -1,0 +1,23 @@
+name: Verify Brain multiplex exhaustive synthesis witness v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/multiplex_exhaustive_synthesis_v1/**"
+      - ".github/workflows/verify-multiplex-exhaustive-synthesis-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Exact-content fail-closed synthesis witness verification
+        run: |
+          cd capsules/multiplex_exhaustive_synthesis_v1
+          export PYTHONPATH=.
+          python canonical/tests/test_multiplex_exhaustive_family_witness_v1.py
+          python verify_exact_blobs.py
