@@ -1,0 +1,25 @@
+name: Verify M0A raw-source diagnostic v2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bounded_predicate_argument_semantics.py
+      - canonical/runtime/explicit_compound_requirement_decomposer.py
+      - canonical/runtime/source_grounded_coreference.py
+      - canonical/runtime/requirement_acceptance_compiler.py
+      - canonical/runtime/independent_acceptance_model.py
+      - canonical/runtime/m0a_raw_source_terminal_suite_v2.py
+      - canonical/runtime/m0a_raw_source_brain_candidate_v2.py
+      - canonical/tests/test_m0a_raw_source_terminal_suite_v2.py
+      - .github/workflows/verify-m0a-raw-source-diagnostic-v2.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: PROJECT_BRAIN_POST_FREEZE_SEED=1311768467463790320 PYTHONPATH=. python -m unittest -v canonical.tests.test_m0a_raw_source_terminal_suite_v2
