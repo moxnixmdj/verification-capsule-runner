@@ -40,8 +40,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "c68ab0f9480dacc758171df74e891e1ac817c7d3"
-          test "$(git hash-object canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py)" = "c042cbc05e753f8d1454f134eca58a27a4d65051"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "6bcabc0a7d0525532ce7b80e132278f7c99caa43"
+          test "$(git hash-object canonical/runtime/tool_discovery_t2_t3_objective_binding_validator.py)" = "bc25cb98eb2f8ec3b8450b0387c718bbe1c6034a"
           test "$(git hash-object canonical/tests/test_tool_discovery_t2_t3_objective_binding_validator.py)" = "4f5cf6472e8f33c1a032fbe84b4fafce80dab278"
       - name: Run tool-discovery binding verification
         working-directory: capsules/final_three_objective_bindings
