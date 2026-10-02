@@ -1,0 +1,18 @@
+name: Verify P3 information-safe v3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/p3_info_safe_v3/**
+      - .github/workflows/verify-p3-info-safe-v3.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: cd capsules/p3_info_safe_v3 && PYTHONPATH=. python -m unittest -v canonical.tests.test_p3_information_safe_proof_v3
