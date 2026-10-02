@@ -18,7 +18,7 @@ jobs:
           python-version: '3.12'
       - name: Verify exact Brain blobs and adversarial scope firewall
         env:
-          EXPECTED_JSON: '{"canonical/runtime/protocol_implication_scope_algebra_v2.py":"bb5bfbdccc64df159f824e1b6862dc0cf54e7d8d","canonical/tests/test_protocol_implication_scope_algebra_v2.py":"774dfa9842ecef738d2cbf5cb5458b379300051a","canonical/governance/PROTOCOL_IMPLICATION_SCOPE_ALGEBRA_V2_CANDIDATE.json":"d23770341bb9491a90daede4e4fddbf5a052962e"}'
+          EXPECTED_JSON: '{"canonical/runtime/protocol_implication_scope_algebra_v2.py":"6aba64c26433b4a8646d5d96bb07e5ba5b46ca1b","canonical/tests/test_protocol_implication_scope_algebra_v2.py":"774dfa9842ecef738d2cbf5cb5458b379300051a","canonical/governance/PROTOCOL_IMPLICATION_SCOPE_ALGEBRA_V2_CANDIDATE.json":"d23770341bb9491a90daede4e4fddbf5a052962e"}'
         run: |
           set -euo pipefail
           python - <<'PY'
