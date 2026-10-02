@@ -1,0 +1,27 @@
+name: Verify recovery semantic implication v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/recovery_semantic_implication_v1/**"
+      - ".github/workflows/verify-recovery-semantic-implication-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify narrow positive edge and countermodel
+        run: |
+          cd capsules/recovery_semantic_implication_v1
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/recovery_semantic_implication_audit_v1.py
+          python -m pytest canonical/tests/test_recovery_semantic_implication_audit_v1.py -q
+          python verify_independent.py
