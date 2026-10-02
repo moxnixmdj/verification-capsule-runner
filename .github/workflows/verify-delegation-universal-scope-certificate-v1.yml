@@ -1,8 +1,9 @@
 name: Verify Brain delegation universal scope certificate v1
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - 'verify/delegation-universal-scope-v1-fast-20261002-1917'
     paths:
       - 'capsules/delegation_universal_scope_certificate_v1/**'
       - '.github/workflows/verify-delegation-universal-scope-certificate-v1.yml'
