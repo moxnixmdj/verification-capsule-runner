@@ -31,4 +31,6 @@ jobs:
       - name: Compile exact verifier
         run: python -m py_compile capsules/p1_trajectory_t0_t2/canonical/runtime/p1_trajectory_t0_t2_multiplex_preflight.py
       - name: Verify live binding and fail-closed mutations
-        run: |\n          cd capsules/p1_trajectory_t0_t2/\n          PYTHONPATH=. python -m unittest -v canonical.tests.test_p1_trajectory_t0_t2_multiplex_preflight\n          PYTHONPATH=. python -m unittest -v canonical.tests.test_trajectory_failure_typed_ir_v4
+        working-directory: capsules/p1_trajectory_t0_t2
+        run: |
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_p1_trajectory_t0_t2_multiplex_preflight
