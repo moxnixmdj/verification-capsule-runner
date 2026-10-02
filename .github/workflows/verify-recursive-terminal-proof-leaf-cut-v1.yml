@@ -1,0 +1,63 @@
+name: Verify recursive terminal proof leaf cut v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/recursive_terminal_proof_leaf_cut_v1/**"
+      - ".github/workflows/verify-recursive-terminal-proof-leaf-cut-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/recursive_terminal_proof_leaf_cut_v1
+          check() { actual="$(git hash-object "$1")"; test "$actual" = "$2" || { echo "$1 expected $2 got $actual"; exit 1; }; }
+          check canonical/runtime/terminal_proof_leaf_cut_v1.py 42ddffef9d4fc0d3e6adf5888c1e4d8cbdeac6b5
+          check canonical/tests/test_terminal_proof_leaf_cut_v1.py 4aae680889a7a8aa7b0c597a2ae39821c424928d
+          check canonical/governance/TERMINAL_CERTIFICATE_REQUIREMENT_LEAF_GRAPH_V1.json a0b9a077f1f3bde13e19893ed6dbb0fb4d0e1ee8
+          check canonical/tests/test_terminal_certificate_requirement_leaf_graph_v1.py c1755527a567d566b576c5421f72d00163b3d87b
+          check canonical/runtime/terminal_certificate_cut_v1.py 7ad852e65e47a6ab3110b02dac402b126cac78b7
+          check canonical/tests/test_terminal_certificate_cut_v2.py 6efb4294ddd58d95b5bad7c3cb73676d5eb2e643
+          check canonical/tests/test_terminal_certificate_activation_integrity_v1.py da19ad535a7079aaafcbc23f60c8a7a94c003f92
+          check canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V1.json a51ed8bf137a63792ed44a2f3d6ef3a8b1ae2669
+          check canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V2.json dcdfd915b8dcfee94f5ebf214be8d39674f91445
+          check canonical/governance/TERMINAL_CERTIFICATE_CUT_ACTIVATION_V2.json 3c0b3bd21edd78e85eab5ff5af2ea5ae32e500b5
+      - name: Compile runtimes
+        run: |
+          cd capsules/recursive_terminal_proof_leaf_cut_v1
+          python -m py_compile canonical/runtime/terminal_certificate_cut_v1.py canonical/runtime/terminal_proof_leaf_cut_v1.py
+      - name: Verify canonical activation and exact certificate cut
+        run: |
+          cd capsules/recursive_terminal_proof_leaf_cut_v1
+          export PYTHONPATH=.
+          python canonical/tests/test_terminal_certificate_activation_integrity_v1.py
+          python canonical/tests/test_terminal_certificate_cut_v2.py
+      - name: Verify recursive leaf cut and live leaf graph
+        run: |
+          cd capsules/recursive_terminal_proof_leaf_cut_v1
+          export PYTHONPATH=.
+          python - <<'PY'
+          import importlib
+          modules = [
+              "canonical.tests.test_terminal_proof_leaf_cut_v1",
+              "canonical.tests.test_terminal_certificate_requirement_leaf_graph_v1",
+          ]
+          count = 0
+          for module_name in modules:
+              module = importlib.import_module(module_name)
+              for name in sorted(dir(module)):
+                  if name.startswith("test_"):
+                      getattr(module, name)()
+                      count += 1
+          print(f"PASS {count} test functions")
+          PY
