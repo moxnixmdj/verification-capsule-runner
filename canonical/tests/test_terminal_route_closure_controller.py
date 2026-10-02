@@ -164,7 +164,7 @@ class TerminalRouteClosureControllerTests(unittest.TestCase):
         )
 
 
-class TerminalRouteEvidenceFreshnessIntegrationTests(unittest.TestCase):
+class TerminalRouteEvidenceFreshnessIntegrationTests(TerminalRouteClosureControllerTests):
     def test_changed_candidate_is_scheduled_for_exact_reverification(self):
         import hashlib
         with tempfile.TemporaryDirectory() as td:
