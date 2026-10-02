@@ -1,0 +1,18 @@
+name: Verify proof optimizer primitives
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/proof_optimizer_primitives/**
+      - .github/workflows/verify-proof-optimizer-primitives.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: cd capsules/proof_optimizer_primitives && PYTHONPATH=. python -m unittest -v canonical.tests.test_proof_coverage_compiler canonical.tests.test_build_current_proof_coverage_manifest canonical.tests.test_proof_dependency_guard test_brain_blob_binding
