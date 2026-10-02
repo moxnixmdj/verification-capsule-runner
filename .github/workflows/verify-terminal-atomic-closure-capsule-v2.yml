@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "capsules/terminal_atomic_closure_v2/**"
+      - "capsules/saccr_corrected_launcher_v1/**"
 permissions:
   contents: read
 jobs:
@@ -55,3 +56,10 @@ jobs:
           assert "FIRST_AUTHORIZED_TERMINAL_WAVE_PUBLIC_RUNNER_ID" in kernel["seed_policy"]["post_freeze_beacon"]
           print("CAPSULE_V2_PASS",commitment)
           PY
+
+      - name: Verify SA-CCR corrected launcher when capsule is present
+        run: |
+          set -euo pipefail
+          if [ -f capsules/saccr_corrected_launcher_v1/input.json ]; then
+            python verifiers/verify_saccr_corrected_launcher_v1.py
+          fi
