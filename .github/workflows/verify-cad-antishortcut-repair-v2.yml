@@ -1,0 +1,27 @@
+name: Verify CAD antishortcut repair v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/cad_antishortcut_repair_v2/**'
+      - '.github/workflows/verify-cad-antishortcut-repair-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs
+        run: |
+          test "$(git hash-object capsules/cad_antishortcut_repair_v2/canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "badbce2b330cd4a8e1c64e2f0fa88f79123a94f2"
+          test "$(git hash-object capsules/cad_antishortcut_repair_v2/canonical/runtime/cad_t0_geometry_population.py)" = "64ca276410e2c1dbcd55cfad057e3eec0709790a"
+      - name: Run repair verification
+        working-directory: capsules/cad_antishortcut_repair_v2
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_antishortcut_repair_v2
