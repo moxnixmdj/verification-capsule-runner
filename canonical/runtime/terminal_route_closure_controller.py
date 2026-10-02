@@ -11,8 +11,11 @@ Scheduling law:
    new whole-scope mechanism.
 4. Shared multi-portfolio contracts get higher leverage.
 5. Open-domain matched protocols are distinct from finite scope-equivalence proofs.
-6. Exact-comparator gaps with no authorized zero-cost route are marked external-blocked and must not consume clean terminal cases.
-7. Unknown state fails closed and is scheduled for reconciliation, not promotion.
+6. Canonically affected open-domain contracts with stale finite whole-scope blockers
+   are reclassified before any proof work is scheduled.
+7. Exact-comparator gaps with no authorized zero-cost route are marked external-blocked
+   and must not consume clean terminal cases.
+8. Unknown state fails closed and is scheduled for reconciliation, not promotion.
 """
 from __future__ import annotations
 
@@ -24,6 +27,7 @@ from typing import Any
 from canonical.runtime.terminal_route_evidence_freshness import evaluate_row_evidence_freshness
 
 BASIS = "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json"
+OPEN_DOMAIN_AUDIT = "canonical/governance/OPEN_DOMAIN_PREQUALIFICATION_DEADLOCK_AUDIT_V1.json"
 
 _BINDING_TOKENS = (
     "POST_FREEZE",
@@ -67,6 +71,25 @@ def _load(root: Path) -> dict[str, Any]:
     return data
 
 
+def _load_open_domain_contracts(root: Path) -> set[str]:
+    path = root / OPEN_DOMAIN_AUDIT
+    if not path.exists():
+        return set()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("OPEN_DOMAIN_AUDIT_NOT_OBJECT")
+    status = data.get("status")
+    affected = data.get("affected_contract_classes")
+    law = data.get("corrected_prequalification_law")
+    if not isinstance(status, str) or "FINITE_SCOPE_EQUIVALENCE_MUST_NOT_BE_REQUIRED" not in status:
+        raise ValueError("OPEN_DOMAIN_AUDIT_NOT_CANONICALLY_ACTIVE")
+    if not isinstance(affected, list) or any(not isinstance(x, str) or not x for x in affected):
+        raise ValueError("OPEN_DOMAIN_AFFECTED_CONTRACTS_INVALID")
+    if not isinstance(law, dict) or "open_domain_matched_routes" not in law:
+        raise ValueError("OPEN_DOMAIN_CORRECTED_LAW_MISSING")
+    return set(affected)
+
+
 def _portfolio_count(value: Any) -> int:
     if not isinstance(value, str) or not value:
         return 0
@@ -91,22 +114,20 @@ def _classify(blocker: str) -> str:
     return "OTHER"
 
 
-def _next_action(stale: int, acceptance_proof: int, external: int, protocol: int, expansion: int, other: int, binding: int, gate: int) -> str:
-    if stale:
-        return "REVERIFY_CHANGED_BYTES_BEFORE_ANY_SCOPE_OR_ACCEPTANCE_PROMOTION"
-    if acceptance_proof:
-        return "ESTABLISH_REGISTERED_TERMINAL_ACCEPTANCE_PROOF"
-    if external:
-        return "EXTERNAL_BLOCKED__FREEZE_INTERNAL_PROTOCOL_FIELDS_ONLY__DO_NOT_SPEND_CLEAN_CASES"
-    if protocol and expansion == 0 and other == 0:
-        return "FREEZE_OPEN_DOMAIN_MATCHED_PROTOCOL"
-    if expansion == 0 and other == 0 and protocol == 0 and (binding or gate):
-        return "FREEZE_BINDING_AND_ACCEPTANCE"
-    return "CLOSE_SCOPE_EQUIVALENCE_THEN_FREEZE_BINDING"
-
-
 def evaluate(root: Path) -> dict[str, Any]:
     basis = _load(root)
+    try:
+        open_domain_contracts = _load_open_domain_contracts(root)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return {
+            "schema": "PROJECT_BRAIN_TERMINAL_ROUTE_CLOSURE_QUEUE_V1",
+            "status": "FAIL_CLOSED",
+            "execution_authority": False,
+            "promotion_authority": False,
+            "errors": ["OPEN_DOMAIN_AUDIT_INVALID:" + str(exc)],
+            "queue": [],
+        }
+
     rows = basis.get("contracts")
     if not isinstance(rows, list):
         return {
@@ -120,6 +141,7 @@ def evaluate(root: Path) -> dict[str, Any]:
     errors: list[str] = []
     closed: list[str] = []
     queue: list[dict[str, Any]] = []
+    reclassification_required: list[str] = []
 
     seen: set[str] = set()
     for i, row in enumerate(rows):
@@ -177,20 +199,39 @@ def evaluate(root: Path) -> dict[str, Any]:
             )
         )
         leverage = _portfolio_count(row.get("portfolio"))
+        is_open_domain = bid in open_domain_contracts
+        legacy_open_domain_scope = is_open_domain and (gate + expansion > 0)
 
-        # Lower score closes sooner. Expansion and unknown work are expensive.
-        score = (
-            external * 1000
-            + stale * 0
-            + acceptance_proof * 2
-            + expansion * 100
-            + other * 50
-            + gate * 10
-            + protocol * 4
-            + binding
-            - min(leverage, 4) * 3
-            - (8 if preflight else 0)
-        )
+        if stale:
+            score = -2000 - min(leverage, 4) * 3
+            next_action = "REVERIFY_CHANGED_BYTES_BEFORE_ANY_SCOPE_OR_ACCEPTANCE_PROMOTION"
+        elif legacy_open_domain_scope:
+            score = -1000 - min(leverage, 4) * 3
+            next_action = "RECLASSIFY_TO_OPEN_DOMAIN_MATCHED_PROTOCOL"
+            reclassification_required.append(bid)
+        else:
+            score = (
+                external * 1000
+                + expansion * 100
+                + other * 50
+                + acceptance_proof * 2
+                + gate * 10
+                + protocol * 4
+                + binding
+                - min(leverage, 4) * 3
+                - (8 if preflight else 0)
+            )
+            if acceptance_proof:
+                next_action = "ESTABLISH_REGISTERED_TERMINAL_ACCEPTANCE_PROOF"
+            elif external:
+                next_action = "EXTERNAL_BLOCKED__FREEZE_INTERNAL_PROTOCOL_FIELDS_ONLY__DO_NOT_SPEND_CLEAN_CASES"
+            elif protocol and expansion == 0 and other == 0:
+                next_action = "FREEZE_OPEN_DOMAIN_MATCHED_PROTOCOL"
+            elif expansion == 0 and other == 0 and protocol == 0 and (binding or gate):
+                next_action = "FREEZE_BINDING_AND_ACCEPTANCE"
+            else:
+                next_action = "CLOSE_SCOPE_EQUIVALENCE_THEN_FREEZE_BINDING"
+
         queue.append({
             "behavior_id": bid,
             "portfolio": row.get("portfolio"),
@@ -207,11 +248,13 @@ def evaluate(root: Path) -> dict[str, Any]:
                 "open_domain_protocol": protocol,
                 "external_block": external,
                 "other": other,
+                "legacy_open_domain_scope_equivalence": (gate + expansion) if legacy_open_domain_scope else 0,
             },
+            "open_domain_matched_protocol": is_open_domain,
             "independent_or_information_safe_preflight_present": preflight,
             "portfolio_leverage": leverage,
             "priority_score": score,
-            "next_action_class": _next_action(stale, acceptance_proof, external, protocol, expansion, other, binding, gate),
+            "next_action_class": next_action,
         })
 
     queue.sort(key=lambda x: (x["priority_score"], x["behavior_id"]))
@@ -232,11 +275,15 @@ def evaluate(root: Path) -> dict[str, Any]:
         "closed_route_count": len(closed),
         "open_route_count": len(queue),
         "closed_behavior_ids": sorted(closed),
+        "open_domain_deadlock_audit_applied": bool(open_domain_contracts),
+        "open_domain_contract_count": len(open_domain_contracts),
+        "reclassification_required_behavior_ids": sorted(reclassification_required),
         "queue": queue,
         "top_priority_behavior_id": queue[0]["behavior_id"] if queue else None,
         "errors": sorted(set(errors)),
         "rule": (
             "SCHEDULER_ONLY__NO_CAPABILITY_CREDIT__NO_TERMINAL_EXECUTION_AUTHORITY__"
+            "CANONICAL_OPEN_DOMAIN_MATCHED_ROUTES_MUST_NOT_BE_SENT_TO_IMPOSSIBLE_FINITE_SCOPE_EQUIVALENCE__"
             "ACTUAL_PROMOTION_REQUIRES_ACTIVE_BASIS_AND_PREQUALIFICATION_REDUCERS"
         ),
     }
