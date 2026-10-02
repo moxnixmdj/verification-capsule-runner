@@ -1,0 +1,118 @@
+name: Verify recovery T0 T2 acceptance ceiling v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/recovery_t0_t2_acceptance_ceiling_lifter_v1.py'
+      - 'canonical/governance/RECOVERY_T0_T2_ACCEPTANCE_SCOPE_RELATION_V1.json'
+      - 'canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json'
+      - 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json'
+      - 'canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json'
+      - 'canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json'
+      - '.github/workflows/verify-recovery-t0-t2-ceiling-v1.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact mirrored Brain blobs
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/recovery_t0_t2_acceptance_ceiling_lifter_v1.py":"88ad2429bb06f26d5b28e5188d38214fd1bb9554",
+            "canonical/governance/RECOVERY_T0_T2_ACCEPTANCE_SCOPE_RELATION_V1.json":"3df22797c468a085d05a6185c5bb57acbdc6242a",
+            "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json":"eb4bca0fe6a015d49d2854998fbe046c979c7ea9",
+            "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json":"ee187f611a0e82b2de495ee377682f39bc31dd31",
+            "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json":"562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+            "canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json":"8703c6aa08227467a619a7ae90d0d61f8e54da39",
+          }
+          def git_blob(path):
+              b=Path(path).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+bytes([0])+b).hexdigest()
+          for p,s in expected.items():
+              got=git_blob(p)
+              assert got==s,(p,s,got)
+          print("EXACT_BRAIN_BLOBS_PASS",len(expected))
+          PY
+      - name: Fetch immutable terminal V3 artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11214610934/zip \
+            -o /tmp/terminal-v3.zip
+          mkdir -p /tmp/terminal-v3
+          unzip -q /tmp/terminal-v3.zip -d /tmp/terminal-v3
+          test -f /tmp/terminal-v3/full_result.json
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          b=Path("/tmp/terminal-v3/full_result.json").read_bytes()
+          got=hashlib.sha256(b).hexdigest()
+          assert got=="f4bec690aa0580cb532dbfd5985705bae8d153c9df31ffdf460b02f8b152e0f2",(got,len(b))
+          print("IMMUTABLE_TERMINAL_ARTIFACT_PASS",got,len(b))
+          PY
+      - name: Recompute recovery ceiling and falsify mutations
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import copy,json
+          from pathlib import Path
+          from canonical.runtime.recovery_t0_t2_acceptance_ceiling_lifter_v1 import evaluate
+          def load(p): return json.loads(Path(p).read_text())
+          raw=load("/tmp/terminal-v3/full_result.json")
+          terminal={
+            "status":"ONE_SHOT_TERMINAL_WAVE_PASS__IMMUTABLE_PUBLIC_RUNNER_RECEIPT__NO_REPLAY_AUTHORIZED",
+            "artifact":{"full_result_sha256":"f4bec690aa0580cb532dbfd5985705bae8d153c9df31ffdf460b02f8b152e0f2"},
+            "reduction_input":{"wave":raw},
+            "result_guards":{
+              "no_case_replacement":raw.get("no_case_replacement"),
+              "no_tuning_replay":raw.get("no_tuning_replay"),
+              "result_to_runtime_feedback_during_wave":raw.get("result_to_runtime_feedback_during_wave"),
+            },
+          }
+          docs=dict(
+            protocols=load("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json"),
+            registry=load("canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json"),
+            predicates=load("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json"),
+            binding=load("canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json"),
+            terminal=terminal,
+            relation=load("canonical/governance/RECOVERY_T0_T2_ACCEPTANCE_SCOPE_RELATION_V1.json"),
+          )
+          out=evaluate(**docs)
+          assert out.get("pass") is True,out
+          assert out.get("source_case_count")==60,out
+          w=out["candidate_witness"]
+          assert w["closes_entire_protocol"] is True
+          assert w["result"]=={"direction":"higher","brain_lower_bound":1.0,"theoretical_upper_bound":1.0}
+          assert w["hard_invariants"]["critical_fail_closed_misses"]["brain_upper_bound"]==0.0
+          assert w["verified"] is False and w["independent"] is False
+
+          bad=copy.deepcopy(docs)
+          bad["binding"]=copy.deepcopy(docs["binding"])
+          bad["binding"]["evaluator"]["required_checks"]=[
+            x for x in bad["binding"]["evaluator"]["required_checks"]
+            if x!="AUTHORITY_SCOPE_TOOL_STATE_PROVENANCE_AND_DEPENDENCY_FAILURE_CLASSES_ARE_LOAD_BEARING_WHEN_PRESENT"
+          ]
+          assert evaluate(**bad).get("pass") is False
+
+          bad2=copy.deepcopy(docs)
+          bad2["terminal"]=copy.deepcopy(terminal)
+          for row in bad2["terminal"]["reduction_input"]["wave"]["parent_portfolio_receipts"]["T2"]:
+              if row.get("behavior_id")=="TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001":
+                  row["direct_instrumentation_pass"]=False
+          assert evaluate(**bad2).get("pass") is False
+
+          print("RECOVERY_T0_T2_CEILING_CANDIDATE_PASS__ADVERSARIAL_FAIL_CLOSED")
+          print(json.dumps(out,sort_keys=True))
+          PY
