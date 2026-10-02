@@ -61,6 +61,32 @@ with sync_playwright() as p:
         after=page.locator("body").inner_text(timeout=10000)
         out["post_selector_body_excerpt"]=after[:10000]
 
+        # Some selectors virtualize/filter the catalog. Search visible selector inputs for Opus.
+        search_attempts=[]
+        try:
+            inputs=page.locator("input")
+            for ii in range(inputs.count()):
+                inp=inputs.nth(ii)
+                if not inp.is_visible():
+                    continue
+                ph=inp.get_attribute("placeholder") or ""
+                val=inp.get_attribute("value") or ""
+                typ=inp.get_attribute("type") or ""
+                search_attempts.append({"i":ii,"placeholder":ph,"value":val,"type":typ})
+                if any(k in ph.lower() for k in ["search","model","filter"]) or typ in ("search","text",""):
+                    try:
+                        inp.fill("opus")
+                        page.wait_for_timeout(1800)
+                        filtered=page.locator("body").inner_text(timeout=10000)
+                        if "opus" in filtered.lower():
+                            out["post_search_body_excerpt"]=filtered[-12000:]
+                            break
+                    except Exception:
+                        pass
+        except Exception as e:
+            out["errors"].append("SELECTOR_SEARCH:"+type(e).__name__+":"+str(e)[:500])
+        out["visible_input_inventory"]=search_attempts[:20]
+
         target_locator=None
         for target in TARGETS:
             for exact in (True,False):
