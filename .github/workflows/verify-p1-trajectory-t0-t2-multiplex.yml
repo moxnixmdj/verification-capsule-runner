@@ -20,7 +20,7 @@ jobs:
           set -euo pipefail
           test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/runtime/p1_trajectory_t0_t2_multiplex_preflight.py)" = "d2f8135b62cb6593f3fb1b1ee9d8f0b92ad31f46"
           test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/tests/test_p1_trajectory_t0_t2_multiplex_preflight.py)" = "5742ec1f6ee3ff3a0edee7d511c9523f0d2a68e3"
-          test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json)" = "0a98176de7e26c9a505d0a9045a0a8b1d08980be"
+          test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json)" = "8703c6aa08227467a619a7ae90d0d61f8e54da39"
           test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/governance/TERMINAL_PORTFOLIO_BINDING_MANIFESTS_V1.json)" = "8b439403a05b4a912f06a8866db25f6e53b52473"
           test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/runtime/trajectory_failure_information_safe_candidate_v2.py)" = "1d589df945ca35e65705ce7f44517cef707ca3a9"
           test "$(git hash-object capsules/p1_trajectory_t0_t2/canonical/runtime/trajectory_failure_information_safe_proof_v2.py)" = "53e1c196b7e6f62a0897aae2327f68af4a2c3bf6"
@@ -31,4 +31,4 @@ jobs:
       - name: Compile exact verifier
         run: python -m py_compile capsules/p1_trajectory_t0_t2/canonical/runtime/p1_trajectory_t0_t2_multiplex_preflight.py
       - name: Verify live binding and fail-closed mutations
-        run: cd capsules/p1_trajectory_t0_t2/ && PYTHONPATH=. python -m unittest -v canonical.tests.test_p1_trajectory_t0_t2_multiplex_preflight
+        run: |\n          cd capsules/p1_trajectory_t0_t2/\n          PYTHONPATH=. python -m unittest -v canonical.tests.test_p1_trajectory_t0_t2_multiplex_preflight\n          PYTHONPATH=. python -m unittest -v canonical.tests.test_trajectory_failure_typed_ir_v4
