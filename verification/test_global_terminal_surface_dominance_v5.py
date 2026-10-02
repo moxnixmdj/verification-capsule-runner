@@ -6,7 +6,7 @@ from canonical.runtime.proof_route_dominance import evaluate
 ROOT=Path(__file__).resolve().parents[1]
 PAYLOAD=ROOT/"verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V5.json"
 
-def test_current_v5_is_complete_and_deletes_only_dominated_surfaces():
+def verify() -> None:
     payload=json.loads(PAYLOAD.read_text(encoding="utf-8"))
     out=evaluate(payload)
     assert out["status"]=="COMPLETE", out
@@ -21,3 +21,7 @@ def test_current_v5_is_complete_and_deletes_only_dominated_surfaces():
     assert "ADMITTED_M0_PORTFOLIO_MULTIPLEX_TERMINAL_ROUTE" in out["admissible_routes"]
     assert payload["fresh_terminal_evidence_consumed"]==0
     assert payload["incremental_spend_usd"]==0
+
+if __name__=="__main__":
+    verify()
+    print("V5_SURFACE_DOMINANCE_PASS")
