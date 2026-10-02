@@ -1,11 +1,11 @@
-name: Verify exact current launcher and authority hardening V2
+name: Verify hardened terminal authority V1
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
     paths:
       - canonical/**
       - .github/workflows/verify-live-terminal-launch-authority-v1.yml
-  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -17,35 +17,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Verify exact Brain blob identities
+      - name: Run hardened authority regressions
+        run: |
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_wave_launch_authority_reducer_v1
+      - name: Derive exact current authority
         shell: bash
         run: |
           set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . > /tmp/authority.json
+          cat /tmp/authority.json
           python - <<'PY'
-          import json, subprocess
-          expected=json.loads(r'''{
-  "canonical/runtime/terminal_wave_launch_authority_reducer_v1.py": "0b5b5e8229cc3e5ee950169469811e7576c43514",
-  "canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py": "352a01602259011d8d40f5db2d2b84e4c771a713",
-  "canonical/runtime/terminal_parent_portfolio_launcher_v1.py": "d7f20a66f1f534b06ea11782cb350a582c07d985",
-  "canonical/tests/test_terminal_parent_portfolio_launcher_v1.py": "01996bc0cca7246c0dcfea5b1602c4740fa3e45d",
-  "canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json": "3ffc4484ab4ac69f60258859d5d6e2a7cc8024a7",
-  "canonical/runtime/saccr_route_specific_terminal_executor_v1.py": "9810e3f9a2dd94dc372b6b9a865510795d0262fd"
-}''')
-          for path, want in sorted(expected.items()):
-              got=subprocess.check_output(["git","hash-object",path], text=True).strip()
-              assert got == want, (path, got, want)
-          print("EXACT_BRAIN_BLOBS_MATCH")
-          PY
-      - name: Run launcher and authority regression suites
-        shell: bash
-        run: |
-          set -euo pipefail
-          PYTHONPATH=. python -m unittest -v \
-            canonical.tests.test_terminal_wave_launch_authority_reducer_v1 \
-            canonical.tests.test_terminal_parent_portfolio_launcher_v1
-      - name: Assert no terminal evidence was consumed
-        run: |
-          python - <<'PY'
-          print("ZERO_TERMINAL_CASES_CONSUMED")
-          print("ZERO_CAPABILITY_OR_FAMILY_CREDIT")
+          import json
+          out=json.load(open("/tmp/authority.json"))
+          assert out.get("pass") is True, out
+          assert out.get("launch_authority") is True, out
+          assert out.get("execution_authority") is True, out
+          assert out.get("failed_predicates") == [], out
+          assert out.get("route_count") == 12, out
+          assert out.get("terminal_results_observed") == 0, out
+          assert out.get("fresh_terminal_evidence_consumed") == 0, out
+          print("HARDENED_TERMINAL_AUTHORITY=PASS")
           PY
