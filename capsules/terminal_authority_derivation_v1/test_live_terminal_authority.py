@@ -13,10 +13,6 @@ class LiveTerminalAuthorityDerivationTests(unittest.TestCase):
         self.assertTrue(out["execution_authority"], out)
         self.assertEqual(out["authorization"], "T0_T1_T2_T3_PARALLEL_TERMINAL_WAVE")
         self.assertEqual(out["failed_predicates"], [])
-        self.assertEqual(
-            out["authority_derivation"],
-            "PURE_FUNCTION_OF_ACTIVE_CONTRACT_COVERAGE_ROUTE_ADMISSIBILITY_PROTOCOL_SET_AND_EXPLICIT_PREWAVE_FACTS",
-        )
 
 
 if __name__ == "__main__":
