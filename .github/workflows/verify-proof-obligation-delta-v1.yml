@@ -1,4 +1,5 @@
 name: Verify proof obligation delta v1
+# force current exact-snapshot verification
 
 on:
   pull_request:
