@@ -13,7 +13,6 @@ from __future__ import annotations
 import html
 import json
 import re
-import xml.etree.ElementTree as ET
 from typing import Any, Mapping
 
 SCHEMA = "PROJECT_BRAIN_CAD_T0_ROUTE_SPECIFIC_CANDIDATE_V1"
@@ -23,63 +22,51 @@ class CandidateError(ValueError):
     pass
 
 
-def _coord(value: Any, fallback: float) -> float:
-    """Parse the first SVG coordinate number; fail to a stable source-order fallback."""
-    if value is None:
-        return fallback
-    m = re.search(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)", str(value))
-    return float(m.group(0)) if m else fallback
+def _attr_number(attrs: str, name: str) -> float | None:
+    pattern = "\\b" + re.escape(name) + "\\s*=\\s*[\"']\\s*([-+]?[0-9]+(?:\\.[0-9]+)?)"
+    m = re.search(pattern, attrs, re.I)
+    if not m:
+        return None
+    try:
+        return float(m.group(1))
+    except ValueError:
+        return None
 
 
 def _texts(svg: Any) -> list[str]:
-    """Reconstruct rendered text lines independent of SVG <text> node boundaries.
-
-    Text fragments sharing the same rendered y coordinate are ordered by x and
-    concatenated with their original leading/trailing whitespace preserved. This
-    makes semantically identical drawings invariant to source-node splitting,
-    including splits inside numeric tokens.
-    """
+    """Reconstruct rendered text lines independently of SVG source-node boundaries."""
     if not isinstance(svg, str) or not svg.strip():
         raise CandidateError("DRAWING_SVG_REQUIRED")
-    try:
-        root = ET.fromstring(svg)
-    except ET.ParseError as exc:
-        raise CandidateError("DRAWING_SVG_XML_INVALID") from exc
 
-    grouped: dict[tuple[str, float], list[tuple[float, int, str]]] = {}
-    unpositioned: list[tuple[int, str]] = []
-    seq = 0
-    for elem in root.iter():
-        if elem.tag.rsplit("}", 1)[-1].lower() != "text":
+    groups: dict[tuple[str, float | int], list[tuple[float, int, str]]] = {}
+    first_seen: dict[tuple[str, float | int], int] = {}
+    count = 0
+    for m in re.finditer(r"<text\b([^>]*)>(.*?)</text>", svg, flags=re.I | re.S):
+        attrs, raw = m.group(1), m.group(2)
+        text = html.unescape(re.sub(r"<[^>]+>", "", raw))
+        if not text.strip():
             continue
-        raw = html.unescape("".join(elem.itertext()))
-        if not raw.strip():
-            continue
-        y_attr = elem.attrib.get("y")
-        x_attr = elem.attrib.get("x")
-        if y_attr is None:
-            unpositioned.append((seq, raw.strip()))
+        x = _attr_number(attrs, "x")
+        y = _attr_number(attrs, "y")
+        key: tuple[str, float | int]
+        if y is None:
+            key = ("node", count)
         else:
-            y = _coord(y_attr, float(seq))
-            x = _coord(x_attr, float(seq))
-            # String namespace keeps positioned and fallback groups disjoint.
-            key = ("y", round(y, 6))
-            grouped.setdefault(key, []).append((x, seq, raw))
-        seq += 1
+            key = ("y", round(y, 9))
+        first_seen.setdefault(key, count)
+        groups.setdefault(key, []).append((x if x is not None else float(count), count, text))
+        count += 1
 
-    rows: list[tuple[float, int, str]] = []
-    for (_, y), frags in grouped.items():
-        frags.sort(key=lambda z: (z[0], z[1]))
-        rendered = "".join(raw for _, _, raw in frags).strip()
+    rows: list[str] = []
+    for key in sorted(groups, key=lambda k: first_seen[k]):
+        fragments = sorted(groups[key], key=lambda row: (row[0], row[1]))
+        rendered = "".join(fragment for _, _, fragment in fragments)
+        rendered = re.sub(r"\s+", " ", rendered).strip()
         if rendered:
-            rows.append((y, min(z[1] for z in frags), rendered))
-    # SVG y grows downward, matching the generator's visual row order.
-    rows.sort(key=lambda z: (z[0], z[1]))
-    out = [row for _, _, row in rows]
-    out.extend(text for _, text in sorted(unpositioned))
-    if not out:
+            rows.append(rendered)
+    if not rows:
         raise CandidateError("DRAWING_TEXT_EMPTY")
-    return out
+    return rows
 
 def _one(pattern: str, rows: list[str], label: str, flags: int = 0):
     hits = []
