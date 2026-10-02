@@ -1,0 +1,31 @@
+name: Verify native artifact T1 multiplex
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object 'canonical/governance/NATIVE_ARTIFACT_T1_MULTIPLEX_TERMINAL_BINDING_V1.json')" = '24305922dbe3e1a940a107b6686b004907dfb395'
+          test "$(git hash-object 'canonical/runtime/native_artifact_t1_multiplex_preflight.py')" = 'dc0c21da502ca4dccbb3b9f717f9ce13962679a6'
+          test "$(git hash-object 'canonical/tests/test_native_artifact_t1_multiplex_preflight.py')" = 'd1df62838904beb862efc6baefaf5b935ad954ae'
+          test "$(git hash-object 'canonical/runtime/native_artifact_cross_format_candidate_v1.py')" = 'f3e5090647dd9029ab9f46efd06dc0c0d0addbc3'
+          test "$(git hash-object 'canonical/runtime/native_artifact_cross_format_proof_v1.py')" = '904eb61171f5ee775ff7824c1be7778d7acc4a23'
+          test "$(git hash-object 'canonical/runtime/native_artifact_render_preservation_proof_v1.py')" = '39374e775d54cdc58315d7a1f877d834282a64f7'
+      - run: python -m unittest -v canonical.tests.test_native_artifact_t1_multiplex_preflight
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          from canonical.runtime.native_artifact_t1_multiplex_preflight import evaluate
+          out=evaluate(Path("."))
+          print(out)
+          assert out["pass"], out
+          PY
