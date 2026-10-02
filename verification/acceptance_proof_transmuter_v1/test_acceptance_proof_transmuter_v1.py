@@ -1,5 +1,9 @@
+import json
 import unittest
+from pathlib import Path
 from acceptance_proof_transmuter_v1 import evaluate
+
+ROOT = Path(__file__).resolve().parent
 
 def protocols():
     return {"protocols":[
@@ -55,6 +59,15 @@ class Tests(unittest.TestCase):
 
     def test_malformed_evidence_fails_closed(self):
         self.assertEqual(evaluate(protocols(),{"evidence":"bad"})["status"],"FAIL_CLOSED")
+
+    def test_frozen_live_input_remains_2_closed_17_open(self):
+        p=json.loads((ROOT/"OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json").read_text())
+        e=json.loads((ROOT/"OPUS55_ACCEPTANCE_PROOF_TRANSMUTATION_INPUT_V1.json").read_text())
+        out=evaluate(p,e)
+        self.assertEqual(out["status"],"PASS")
+        self.assertEqual((out["family_count"],out["closed_family_count"],out["open_family_count"]),(19,2,17))
+        self.assertEqual(out["capability_credit_delta"],0)
+        self.assertEqual(out["family_credit_delta"],0)
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
