@@ -1,0 +1,37 @@
+name: Verify current CAD V4 terminal executor
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/cad_v4_terminal_executor/**
+      - .github/workflows/verify-cad-v4-terminal-executor-current.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify frozen dependency identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_candidate_v1.py)" = "aa32750b220a023617938b7be9476f6b3aac6704"
+          test "$(git hash-object canonical/runtime/cad_t0_geometry_population.py)" = "64ca276410e2c1dbcd55cfad057e3eec0709790a"
+          test "$(git hash-object canonical/runtime/cad_t0_oracle_adapter.py)" = "a6e76e1865b9bd9829dbbcf38886486636f76e8a"
+          test "$(git hash-object canonical/runtime/cad_t0_multiplex_scorer.py)" = "89833581dc4ac67498753feb94e2ff69bad3b7f1"
+          test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json)" = "a636d1292e6f92d240fab420a9ee75ced7a05104"
+      - name: Install exact current executor snapshot
+        shell: bash
+        run: |
+          cp capsules/cad_v4_terminal_executor/cad_t0_route_specific_terminal_executor_v1.py canonical/runtime/cad_t0_route_specific_terminal_executor_v1.py
+          cp capsules/cad_v4_terminal_executor/test_cad_t0_route_specific_terminal_executor_v1.py canonical/tests/test_cad_t0_route_specific_terminal_executor_v1.py
+          test "$(git hash-object canonical/runtime/cad_t0_route_specific_terminal_executor_v1.py)" = "4a90d2e6838a6b5fd4a8411de3a3dd654e84ec1c"
+          test "$(git hash-object canonical/tests/test_cad_t0_route_specific_terminal_executor_v1.py)" = "49e911745bca7c3b36a7af5e726910d942d538ab"
+      - run: python -m pip install --disable-pip-version-check --no-input "pydantic>=2,<3" "cadquery==2.6.1"
+      - name: Run current CAD V4 executor preterminal tests
+        run: PYTHONPATH=.:canonical/runtime python -m unittest -v canonical.tests.test_cad_t0_route_specific_terminal_executor_v1
