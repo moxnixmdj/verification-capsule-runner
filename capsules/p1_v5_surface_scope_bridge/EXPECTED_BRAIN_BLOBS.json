@@ -1,0 +1,15 @@
+{
+  "schema": "PROJECT_BRAIN_P1_V5_SURFACE_SCOPE_BRIDGE_PUBLIC_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "exact_brain_blobs": {
+    "canonical/runtime/p1_v5_direct_surface_scope_relation_v1.py": "6f20e007ef53d928943c942e21577ce7e5c0803f",
+    "canonical/tests/test_p1_v5_direct_surface_scope_relation_v1.py": "6e391c76e6fdc1762bc6e98f9b5fdae44c3ead3f",
+    "canonical/governance/P1_V5_DIRECT_SURFACE_SCOPE_RELATION_V1.json": "44bbcdb2a7c8cd8d3a59657719f6203eb6b3d59b",
+    "canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json": "8703c6aa08227467a619a7ae90d0d61f8e54da39",
+    "canonical/governance/TERMINAL_PORTFOLIO_BINDING_MANIFESTS_V1.json": "8b439403a05b4a912f06a8866db25f6e53b52473",
+    "canonical/governance/FOUR_UNCOVERED_BEHAVIORAL_PROOF_CONTRACTS_V1.json": "8c7ffe3d9ff789eddd286496f6de3ce84472c909",
+    "canonical/governance/CONTRACT_NATIVE_ABSOLUTE_PROOF_SUITES_V1.json": "d8cf10dfbe041f63a43ccf43bd5dcdc8fe6f9e2b",
+    "canonical/governance/CONTRACT_NATIVE_PRIVATE_SURFACE_PROOF_ROUTES_V1.json": "75cd1ad0ec0739ebd894cf6075af5837b93d83f8",
+    "canonical/governance/P1_TYPED_INTERVENTION_ENVELOPE_V5.json": "26cd9f4c626d4754200c64c3f298383580d67c14"
+  }
+}
