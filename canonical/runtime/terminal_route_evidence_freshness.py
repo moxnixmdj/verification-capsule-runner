@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 VERIFICATION_KEYS = (
+    "current_blob_revalidation",
     "terminal_acceptance_mode_verification",
     "population_binding_verification",
     "scope_gate_verification",
