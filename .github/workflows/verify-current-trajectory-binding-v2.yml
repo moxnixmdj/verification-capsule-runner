@@ -29,11 +29,32 @@ jobs:
           test "$(git hash-object canonical/runtime/trajectory_failure_typed_ir_proof_v4.py)" = "6e1dfaa6b63fc629d55d07b2361bf625f11a5ce3"
           test "$(git hash-object canonical/tests/test_trajectory_failure_typed_ir_v4.py)" = "70a224fec7341775e46bb1bfb8bd2d33b3c355b3"
           test "$(git hash-object canonical/verification/TRAJECTORY_TYPED_IR_V4_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "ee69a93c45a2b16676c49bfb0a01749a5c4ea1e2"
-      - name: Run fail-closed current binding and typed-V4 tests
+      - name: Run fail-closed prewave binding tests
+        working-directory: capsules/p1_trajectory_t0_t2
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_p1_trajectory_t0_t2_multiplex_preflight
+      - name: Evaluate current prewave binding
         working-directory: capsules/p1_trajectory_t0_t2
         run: |
-          PYTHONPATH=. python -m unittest -v canonical.tests.test_p1_trajectory_t0_t2_multiplex_preflight
-          PYTHONPATH=. python -m unittest -v canonical.tests.test_trajectory_failure_typed_ir_v4
+          PYTHONPATH=. python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime.p1_trajectory_t0_t2_multiplex_preflight import evaluate
+          out=evaluate(Path("."))
+          print(json.dumps(out,indent=2,sort_keys=True))
+          assert out["pass"], out
+          PY
+      - name: Run every typed-V4 test function
+        working-directory: capsules/p1_trajectory_t0_t2
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from canonical.tests import test_trajectory_failure_typed_ir_v4 as t
+          names=sorted(n for n in dir(t) if n.startswith("test_") and callable(getattr(t,n)))
+          assert names
+          for name in names:
+              getattr(t,name)()
+              print("PASS",name)
+          print("typed_v4_test_count",len(names))
+          PY
       - name: Record pass
         env:
           GH_TOKEN: ${{ github.token }}
