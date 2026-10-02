@@ -21,8 +21,8 @@ jobs:
           python - <<'PY'
           import hashlib, pathlib
           expected = {
-            "canonical/runtime/rs_archive_clone_stage_b_verifier_v1.py":"beb3ade191dced6aec40039fa32273f8f96d3b78",
-            "canonical/tests/test_rs_archive_clone_stage_b_verifier_v1.py":"130d55f2722ccb0a34f69e9b397c527ef9d353af",
+            "canonical/runtime/rs_archive_clone_stage_b_verifier_v1.py":"a17df2ac6faf48b2fa2fb019248e2ec19b7e8c2e",
+            "canonical/tests/test_rs_archive_clone_stage_b_verifier_v1.py":"737c3d769ec6569ffcdd19f52f04d65ffcd680e7",
             "canonical/capabilities/opus55/RS_ARCHIVE_CLONE_RANK24_STAGE_B_CONTRACT_V1.json":"bf2188ca2d91de7fcac73a25bfc61b79e4474419",
             "canonical/capabilities/opus55/RS_ARCHIVE_CLONE_RANK24_STAGE_B_SOURCE_ACCOUNTING_V1.json":"509c20394ba731d94c54ce4169a1fbad1cf4e051",
             "canonical/capabilities/opus55/RS_ARCHIVE_CLONE_RANK24_CONTAMINATION_LEDGER_V1.json":"a686f406eac1d9f6e55007705c4c7adfacb035fd",
