@@ -1,4 +1,5 @@
 name: Verify LiveBench IF hermetic 58-checker smoke
+# receipt-retrigger: v2
 
 on:
   pull_request:
