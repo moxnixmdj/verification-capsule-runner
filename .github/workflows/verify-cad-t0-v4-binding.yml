@@ -1,0 +1,33 @@
+name: Verify CAD T0 V4 post-refreeze binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/governance/CAD_T0_CANDIDATE_FREEZE_V4.json
+      - canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json
+      - canonical/runtime/cad_t0_post_refreeze_binding_v4_validator.py
+      - canonical/tests/test_cad_t0_post_refreeze_binding_v4_validator.py
+      - canonical/verification/CURRENT_EXECUTOR_SNAPSHOT_V3_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json
+      - canonical/governance/CAD_T0_EVALUATOR_OBSERVATION_SCHEMA_V1.json
+      - .github/workflows/verify-cad-t0-v4-binding.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain V4 blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/CAD_T0_CANDIDATE_FREEZE_V4.json)" = "37b4286ddd927da316b59c764f65f542f8a774b9"
+          test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V4.json)" = "c83d6472af9c623c260054f7f039242df93188cd"
+          test "$(git hash-object canonical/runtime/cad_t0_post_refreeze_binding_v4_validator.py)" = "85337648de81884da3c94408e45de60a8fbfb2c5"
+          test "$(git hash-object canonical/tests/test_cad_t0_post_refreeze_binding_v4_validator.py)" = "54e8fee3801d7697dcf43d6bdc88644524ffa7a7"
+          test "$(git hash-object canonical/verification/CURRENT_EXECUTOR_SNAPSHOT_V3_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "f8aac465750ab4b2618e470e163207ddcc6ac272"
+          test "$(git hash-object canonical/governance/CAD_T0_EVALUATOR_OBSERVATION_SCHEMA_V1.json)" = "2bc87504a54c76003f715be9a52c6e635c8991a6"
+      - name: Validate V4 binding
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_post_refreeze_binding_v4_validator
