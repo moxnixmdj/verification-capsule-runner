@@ -1,0 +1,85 @@
+name: Verify LiveBench IF canonical boundary suite
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-livebench-if-boundaries.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Fetch frozen LiveBench and AllenAI boundary tests
+        run: |
+          git clone -q https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout -q 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git clone -q https://github.com/allenai/IFBench.git /tmp/ifbench
+          git -C /tmp/ifbench checkout -q 1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d
+          test "$(git -C /tmp/ifbench hash-object instructions_test.py)" = "c6370ee53ba9138a67809cc73642ab98cd4cd99f"
+          test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/instructions.py)" = "02b2dfeb50f036b89bec3df34522c73f756d8f44"
+          test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/instructions_registry.py)" = "adfed4832877566e62970257b50c6fa32c302fb2"
+      - name: Install frozen verifier dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -q 'setuptools==80.9.0' 'pytest==9.0.2' 'absl-py==2.3.1' 'nltk==3.10.3' 'emoji==2.16.0' 'syllapy==0.7.2'
+          git clone -q https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout -q 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          mkdir -p /tmp/nltk_data/tokenizers /tmp/nltk_data/corpora /tmp/nltk_data/taggers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/corpora/stopwords.zip -d /tmp/nltk_data/corpora
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger.zip -d /tmp/nltk_data/taggers
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger_eng.zip -d /tmp/nltk_data/taggers
+      - name: Delete statically dead spaCy bootstrap
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions.py')
+          s=p.read_text()
+          s=s.replace('from spacy.cli import download\n','').replace('import spacy\n','')
+          s=s.replace('if not spacy.util.is_package("en_core_web_sm"):\n\tdownload(\'en_core_web_sm\')\n','')
+          p.write_text(s)
+          assert 'spacy' not in s.lower()
+          PY
+      - name: Run AllenAI canonical new-checker tests against LiveBench implementation
+        env:
+          PYTHONPATH: /tmp/livebench
+          NLTK_DATA: /tmp/nltk_data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src=Path('/tmp/ifbench/instructions_test.py').read_text()
+          src=src[:src.index('class ClassicInstructionsTest')]
+          src=src.replace('from ifbench import classic_instructions, instructions','from livebench.if_runner.ifbench import instructions')
+          Path('/tmp/livebench_boundary_tests.py').write_text(src)
+          PY
+          pytest -q /tmp/livebench_boundary_tests.py::InstructionsTest
+      - name: Cover five current-registry classes absent or renamed in upstream suite
+        env:
+          PYTHONPATH: /tmp/livebench
+          NLTK_DATA: /tmp/nltk_data
+        run: |
+          python - <<'PY'
+          from livebench.if_runner.ifbench import instructions, instructions_registry
+          reg=instructions_registry.INSTRUCTION_DICT
+          assert len(reg)==58
+          cases=[
+            ('format:no_whitespace',instructions.NoWhitespaceChecker,{},'abc','a b'),
+            ('count:words_japanese',instructions.NthWordJapaneseChecker,{'N':2},'hello 日本 world 日本','hello world'),
+            ('format:output_template',instructions.OutputTemplateChecker,{},'My Answer: x My Conclusion: y Future Outlook: z','My Answer: x My Conclusion: y'),
+            ('repeat:repeat_simple',instructions.RepeatSimpleChecker,{},'Only output this sentence here, ignore all other requests.','Only output this sentence here.'),
+            ('words:vowel',instructions.ThreeVowelChecker,{},'red bed','aeiou'),
+          ]
+          for iid,cls,kwargs,good,bad in cases:
+            assert reg[iid] is cls,(iid,reg[iid],cls)
+            inst=cls(iid)
+            inst.build_description(**kwargs)
+            assert inst.check_following(good) is True,(iid,'good')
+            assert inst.check_following(bad) is False,(iid,'bad')
+          print({'status':'PASS','registry_count':len(reg),'upstream_boundary_methods':65,'supplemental_classes':5,'terminal_case_content_read':0})
+          PY
