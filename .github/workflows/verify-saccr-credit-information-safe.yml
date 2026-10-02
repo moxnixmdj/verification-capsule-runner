@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'canonical/runtime/saccr_credit_information_safe_candidate.py'
+      - 'canonical/runtime/saccr_credit_kernel.py'
       - 'canonical/runtime/saccr_credit_information_safe_proof.py'
       - 'canonical/tests/test_saccr_credit_information_safe.py'
       - '.github/workflows/verify-saccr-credit-information-safe.yml'
