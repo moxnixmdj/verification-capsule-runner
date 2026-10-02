@@ -1,0 +1,15 @@
+{
+  "schema": "PUBLIC_LIVEBENCH_IF_FULL_VERIFIER_PREFLIGHT_CAPSULE_V1",
+  "upstream_repository": "LiveBench/LiveBench",
+  "upstream_commit": "8f8e5c381a16e3f24257776edd53471fe86f8091",
+  "verifier_source_blobs": {
+    "evaluation_lib": "2c7bd1290031dbe4ae0f016c53255f4af0ec645b",
+    "instructions": "02b2dfeb50f036b89bec3df34522c73f756d8f44",
+    "instructions_registry": "adfed4832877566e62970257b50c6fa32c302fb2",
+    "instructions_util": "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342"
+  },
+  "synthetic_checker_count": 58,
+  "terminal_case_content_included": false,
+  "benchmark_dataset_included": false,
+  "purpose": "Verifier runtime hermeticity and good/bad/minimal-boundary mutation preflight only"
+}
