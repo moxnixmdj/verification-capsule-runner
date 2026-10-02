@@ -24,8 +24,8 @@ jobs:
           check() { actual="$(git hash-object "$1")"; test "$actual" = "$2" || { echo "$1 expected $2 got $actual"; exit 1; }; }
           check canonical/runtime/terminal_proof_leaf_cut_v1.py 42ddffef9d4fc0d3e6adf5888c1e4d8cbdeac6b5
           check canonical/tests/test_terminal_proof_leaf_cut_v1.py 4aae680889a7a8aa7b0c597a2ae39821c424928d
-          check canonical/governance/TERMINAL_CERTIFICATE_REQUIREMENT_LEAF_GRAPH_V1.json a0b9a077f1f3bde13e19893ed6dbb0fb4d0e1ee8
-          check canonical/tests/test_terminal_certificate_requirement_leaf_graph_v1.py c1755527a567d566b576c5421f72d00163b3d87b
+          check canonical/governance/TERMINAL_CERTIFICATE_REQUIREMENT_LEAF_GRAPH_V1.json a0b9a077f1f3bde13e19893ed6dbb0fb4d0e1ee8\n          check canonical/governance/TERMINAL_CERTIFICATE_REQUIREMENT_LEAF_GRAPH_V2.json 96104d86f185d615f3b5d84063ae69be2c61932b
+          check canonical/tests/test_terminal_certificate_requirement_leaf_graph_v1.py c1755527a567d566b576c5421f72d00163b3d87b\n          check canonical/tests/test_terminal_certificate_requirement_leaf_graph_v2.py 858dd8195347c807eb8aceca779331bffc144a16
           check canonical/runtime/terminal_certificate_cut_v1.py 7ad852e65e47a6ab3110b02dac402b126cac78b7
           check canonical/tests/test_terminal_certificate_cut_v2.py 6efb4294ddd58d95b5bad7c3cb73676d5eb2e643
           check canonical/tests/test_terminal_certificate_activation_integrity_v1.py da19ad535a7079aaafcbc23f60c8a7a94c003f92
@@ -50,7 +50,7 @@ jobs:
           import importlib
           modules = [
               "canonical.tests.test_terminal_proof_leaf_cut_v1",
-              "canonical.tests.test_terminal_certificate_requirement_leaf_graph_v1",
+              "canonical.tests.test_terminal_certificate_requirement_leaf_graph_v1",\n              "canonical.tests.test_terminal_certificate_requirement_leaf_graph_v2",
           ]
           count = 0
           for module_name in modules:
