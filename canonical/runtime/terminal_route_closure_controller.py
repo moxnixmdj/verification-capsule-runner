@@ -91,6 +91,20 @@ def _classify(blocker: str) -> str:
     return "OTHER"
 
 
+def _next_action(stale: int, acceptance_proof: int, external: int, protocol: int, expansion: int, other: int, binding: int, gate: int) -> str:
+    if stale:
+        return "REVERIFY_CHANGED_BYTES_BEFORE_ANY_SCOPE_OR_ACCEPTANCE_PROMOTION"
+    if acceptance_proof:
+        return "ESTABLISH_REGISTERED_TERMINAL_ACCEPTANCE_PROOF"
+    if external:
+        return "EXTERNAL_BLOCKED__FREEZE_INTERNAL_PROTOCOL_FIELDS_ONLY__DO_NOT_SPEND_CLEAN_CASES"
+    if protocol and expansion == 0 and other == 0:
+        return "FREEZE_OPEN_DOMAIN_MATCHED_PROTOCOL"
+    if expansion == 0 and other == 0 and protocol == 0 and (binding or gate):
+        return "FREEZE_BINDING_AND_ACCEPTANCE"
+    return "CLOSE_SCOPE_EQUIVALENCE_THEN_FREEZE_BINDING"
+
+
 def evaluate(root: Path) -> dict[str, Any]:
     basis = _load(root)
     rows = basis.get("contracts")
@@ -197,23 +211,7 @@ def evaluate(root: Path) -> dict[str, Any]:
             "independent_or_information_safe_preflight_present": preflight,
             "portfolio_leverage": leverage,
             "priority_score": score,
-            "next_action_class": (
-                "REVERIFY_CHANGED_BYTES_BEFORE_ANY_SCOPE_OR_ACCEPTANCE_PROMOTION"
-                if stale
-                else ("ESTABLISH_REGISTERED_TERMINAL_ACCEPTANCE_PROOF"
-                if acceptance_proof
-                else ("EXTERNAL_BLOCKED__FREEZE_INTERNAL_PROTOCOL_FIELDS_ONLY__DO_NOT_SPEND_CLEAN_CASES"
-                if external
-                else (
-                    "FREEZE_OPEN_DOMAIN_MATCHED_PROTOCOL"
-                    if protocol and expansion == 0 and other == 0
-                    else (
-                        "FREEZE_BINDING_AND_ACCEPTANCE"
-                        if expansion == 0 and other == 0 and protocol == 0 and (binding or gate)
-                        else "CLOSE_SCOPE_EQUIVALENCE_THEN_FREEZE_BINDING"
-                    )
-                ))
-            ),
+            "next_action_class": _next_action(stale, acceptance_proof, external, protocol, expansion, other, binding, gate),
         })
 
     queue.sort(key=lambda x: (x["priority_score"], x["behavior_id"]))
