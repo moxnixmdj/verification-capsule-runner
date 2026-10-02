@@ -1,0 +1,41 @@
+name: Verify evidence audience information-safe V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/runtime/bounded_claim_support.py
+      - canonical/runtime/evidence_audience_information_safe_proof_v1.py
+      - canonical/runtime/evidence_audience_information_safe_candidate_v1.py
+      - canonical/tests/test_evidence_audience_information_safe_v1.py
+      - .github/workflows/verify-evidence-audience-information-safe-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: PYTHONPATH=. python -m unittest -v canonical.tests.test_evidence_audience_information_safe_v1
+      - name: Run fresh information-safe grid
+        env:
+          PROJECT_BRAIN_PREFLIGHT_SEED: ${{ github.run_id }}
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import json, os
+          from canonical.runtime import evidence_audience_information_safe_proof_v1 as s
+          from canonical.runtime import evidence_audience_information_safe_candidate_v1 as c
+          base=int(os.environ["PROJECT_BRAIN_PREFLIGHT_SEED"])
+          passed=0; total=0; reasons={}
+          for i in range(256):
+              case=s.generate_case(base^i,unsupported=(i%5==0))
+              out=c.solve(s.public_task(case))
+              v=s.score_case(case,out)
+              total+=1; passed+=int(v.get("pass") is True)
+              reasons[v.get("reason","?")]=reasons.get(v.get("reason","?"),0)+1
+          result={"passed":passed,"total":total,"reasons":reasons,"all_pass":passed==total}
+          print("PROJECT_BRAIN_EVIDENCE_AUDIENCE_RESULT "+json.dumps(result,sort_keys=True))
+          if not result["all_pass"]: raise SystemExit(1)
+          PY
