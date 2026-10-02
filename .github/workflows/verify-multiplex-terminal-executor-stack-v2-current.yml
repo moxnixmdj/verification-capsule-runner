@@ -1,0 +1,39 @@
+name: Verify multiplex terminal executor stack v2 current
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/multiplex_terminal_executor_stack_v2_current/**'
+      - '.github/workflows/verify-multiplex-terminal-executor-stack-v2-current.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact current Brain blobs
+        run: |
+          set -euo pipefail
+          B=capsules/multiplex_terminal_executor_stack_v2_current
+          test "$(git hash-object "$B/canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py")" = "c8fd67ab29286b1c536ffdc9d8a05afcde1d00c6"
+          test "$(git hash-object "$B/canonical/runtime/multiplex_terminal_instrumentation_reducer_v1.py")" = "9633949c5a0602ebd740f9fb15aaaf598e17f46f"
+          test "$(git hash-object "$B/canonical/tests/test_portfolio_multiplex_terminal_instrumentation_v1.py")" = "4f8690c5d3d8136f8659e34555282ac93845bb4c"
+          test "$(git hash-object "$B/canonical/tests/test_multiplex_terminal_instrumentation_reducer_v1.py")" = "724387459a21d4c9cb3ae4174080d069083ef06d"
+          test "$(git hash-object "$B/canonical/governance/M0_PORTFOLIO_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "d34a284f7c1f99fd93d420f3a5aba93851b29ef6"
+          test "$(git hash-object "$B/canonical/governance/NATIVE_ARTIFACT_T1_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "977e18ce2c19f7bb8a429a8f1c99407ff3000e92"
+          test "$(git hash-object "$B/canonical/governance/STRUCTURED_METHOD_PORTFOLIO_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "6d2e9adbd45af41c26c543f69769a6f9c69d52ac"
+          test "$(git hash-object "$B/canonical/governance/P2_PROFESSIONAL_QUALITY_T1_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "8d5888a8299d1b8addd629be01fe9a6dc46b1a7d"
+          test "$(git hash-object "$B/canonical/governance/P3_SYNTHESIS_T1_T3_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "ad790afa864bd8f770c3d8a6e3ac901ed2843d26"
+          test "$(git hash-object "$B/canonical/governance/CAD_ACTIVE_CONTRACT_END_TO_END_PROOF_ROUTE_V1.json")" = "c0f55a55091186c5ab785b670f935bbc6a2f9432"
+          test "$(git hash-object "$B/canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "8703c6aa08227467a619a7ae90d0d61f8e54da39"
+      - name: Verify current stack
+        working-directory: capsules/multiplex_terminal_executor_stack_v2_current
+        run: |
+          PYTHONPATH=. python -m unittest -v             canonical.tests.test_portfolio_multiplex_terminal_instrumentation_v1             canonical.tests.test_multiplex_terminal_instrumentation_reducer_v1
