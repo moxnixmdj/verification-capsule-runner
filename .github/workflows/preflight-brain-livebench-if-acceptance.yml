@@ -45,6 +45,15 @@ jobs:
               print('PASS',name)
           PY
           python -m py_compile acceptance/livebench_if/generate.py acceptance/livebench_if/score.py
+      - name: Freeze Parquet reader wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pyarrow-wheel
+          python -m pip download --no-deps --only-binary=:all: --platform manylinux_2_28_x86_64 --python-version 312 --implementation cp --abi cp312 -d /tmp/pyarrow-wheel pyarrow==21.0.0
+          ls -l /tmp/pyarrow-wheel
+          sha256sum /tmp/pyarrow-wheel/*
+
       - name: Verify frozen dataset artifact without opening cases
         shell: bash
         run: |
