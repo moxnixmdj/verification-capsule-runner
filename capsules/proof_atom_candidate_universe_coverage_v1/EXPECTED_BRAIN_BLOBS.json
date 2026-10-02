@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_PROOF_ATOM_CANDIDATE_UNIVERSE_COVERAGE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "5b1a545d399dd46ad525ab5f41329e60874141cb",
+  "exact_brain_blobs": {
+    "canonical/runtime/proof_atom_candidate_universe_coverage_v1.py": "44581083448c4acd025696687feb13a28a6d47de",
+    "canonical/tests/test_proof_atom_candidate_universe_coverage_v1.py": "9fee4ad8887645dce507291df6e87d88ba1ce062",
+    "canonical/governance/PROOF_ATOM_CANDIDATE_UNIVERSE_COVERAGE_V1.json": "47c67a05096100634c29f9a91ae68322ca36480f",
+    "canonical/runtime/proof_atom_receipt_index_v2.py": "7faf9f16acc2b18c501f0d08164833027d3d68fa",
+    "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1"
+  },
+  "expected": {
+    "no_credit": true,
+    "configured_candidate_scope_explicit": true,
+    "supported_text_scope_explicit": true,
+    "full_search_root_scope_explicit": true,
+    "oversize_and_unsupported_not_silently_negative": true
+  }
+}
