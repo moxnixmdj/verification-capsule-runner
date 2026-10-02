@@ -1,0 +1,79 @@
+name: Verify current SA-CCR 512 terminal binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/saccr_credit_kernel.py'
+      - 'canonical/runtime/saccr_credit_information_safe_candidate.py'
+      - 'canonical/runtime/saccr_credit_information_safe_proof.py'
+      - 'canonical/runtime/saccr_terminal_population_binding_v1.py'
+      - 'canonical/tests/test_saccr_terminal_population_binding_v1.py'
+      - 'canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json'
+      - 'canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json'
+      - '.github/workflows/verify-saccr-current-512-binding.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact current Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/saccr_credit_kernel.py)" = "4a9536a391e21ec9895c1abdf45a673c0451ba3a"
+          test "$(git hash-object canonical/runtime/saccr_credit_information_safe_candidate.py)" = "ff2fa256738ffbe5b15bb813a11c82046692b5e8"
+          test "$(git hash-object canonical/runtime/saccr_credit_information_safe_proof.py)" = "8eb94b8e8b00e3ace662e7fac2e8b6a8f7bb2200"
+          test "$(git hash-object canonical/runtime/saccr_terminal_population_binding_v1.py)" = "ab3a32e65f8ec6de07b8eb294ed1c3e723b34bd9"
+          test "$(git hash-object canonical/tests/test_saccr_terminal_population_binding_v1.py)" = "6f62177ffa02848024c81ea9ef134bbabe6c8e4b"
+          test "$(git hash-object canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json)" = "777cdf77f7fef02e8675d51d5bebaf16fb0e77b1"
+          test "$(git hash-object canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "5af6db8b0e47c978043f07bc5005f8597e9128dd"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "baf43825cafd30cb1db63a4f60509f619885d5a5"
+      - name: Verify frozen binding manifest
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path("canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json").read_text())
+          assert p["schema"]=="PROJECT_BRAIN_SA_CCR_TERMINAL_POPULATION_BINDING_V1"
+          assert p["behavior_id"]=="SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001"
+          assert p["terminal_population"]["sample_count"]==512
+          assert p["terminal_population"]["adaptive_case_selection"] is False
+          assert p["terminal_population"]["replay_for_tuning"] is False
+          assert p["terminal_population"]["case_replacement"] is False
+          assert p["acceptance_rule"]["required_case_pass_fraction"]==1
+          assert p["acceptance_rule"]["final_rule"]=="ALL_512_CASES_EXACT_PASS_AND_ALL_FROZEN_METHOD_BRANCH_COVERAGE_PRESENT"
+          assert p["information_boundary"]["hidden_oracle_never_candidate_visible"] is True
+          assert p["information_boundary"]["reference_solution_never_candidate_visible"] is True
+          assert p["terminal_results_observed"]==0
+          assert p["fresh_terminal_evidence_consumed"]==0
+          assert p["execution_authority"] is False
+          s=json.loads(Path("canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json").read_text())
+          assert s["workflow_conclusion"]=="success"
+          assert s["gate_verdict"]["admissible"] is True
+          assert s["gate_verdict"]["errors"]==[]
+          print("CURRENT_SACCR_512_BINDING_MANIFEST_PASS")
+          PY
+      - name: Run current Brain terminal-binding tests
+        run: |
+          python3 -m unittest canonical.tests.test_saccr_terminal_population_binding_v1 -v
+      - name: Fresh independent 512-case pre-beacon executor smoke
+        run: |
+          python3 - <<'PY'
+          from canonical.runtime import saccr_terminal_population_binding_v1 as t
+          out=t.run_population("INDEPENDENT_PREFLIGHT_COMMITMENT_20261002","INDEPENDENT_PREFLIGHT_BEACON_20261002")
+          assert out["pass"] is True, out
+          assert out["sample_count"]==512
+          assert out["executed_count"]==512
+          assert out["failed_slots"]==[]
+          assert out["coverage_missing"]==[]
+          assert out["case_replacement"] is False
+          print("CURRENT_SACCR_512_EXECUTOR_PREFLIGHT_PASS")
+          PY
