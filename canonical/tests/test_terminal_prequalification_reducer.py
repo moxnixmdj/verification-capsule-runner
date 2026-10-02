@@ -179,5 +179,19 @@ class TerminalPrequalificationReducerTests(unittest.TestCase):
             )
 
 
+    def test_bound_live_12_of_12_state_authorizes_terminal_wave(self):
+        root = Path(__file__).resolve().parents[2]
+        out = evaluate(root)
+        self.assertTrue(out["pass"], out)
+        self.assertTrue(out["execution_authority"], out)
+        self.assertEqual(out["failed_predicates"], [], out)
+        self.assertEqual(
+            out["authorization"],
+            "T0_T1_T2_T3_PARALLEL_TERMINAL_WAVE",
+            out,
+        )
+
+
+
 if __name__ == "__main__":
     unittest.main()
