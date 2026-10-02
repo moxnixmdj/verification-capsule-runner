@@ -6,7 +6,7 @@ from acceptance_contract import (
   validate_lease_revalidation, validate_total_lease_budget,
   terminal_acceptance_errors, audit_required_graph
 )
-from controller_fast import runtime_authority_errors
+from controller_fast import runtime_authority_errors, bind_preexposed_instruction
 
 def obs(commit, mode="EXACT_FETCH_ONLY"):
     return {
@@ -68,6 +68,33 @@ class TestAcceptanceContract(unittest.TestCase):
       "max_age_seconds":60,"evidence":["direct world-state observation"]
     }
     self.assertTrue(any(e.startswith("CONTINUOUS_OBS_VOLATILE_DEPENDENCY_STALE") for e in validate_continuous_obs_context(x,expected_brain_commit="a"*40)))
+
+
+  def test_preexposed_instruction_binding_matches_git_blob_without_reexposure(self):
+    import hashlib, tempfile
+    from pathlib import Path
+    import controller_fast
+    old=getattr(controller_fast,"CONFIG",None)
+    posts=[]
+    try:
+      with tempfile.TemporaryDirectory() as td:
+        p=Path(td); raw=b"frozen instruction\n"; (p/"instruction.md").write_bytes(raw)
+        blob=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+        controller_fast.CONFIG={"session_id":"s1","task":"t1","preexposed_instruction_git_blob_sha":blob}
+        old_post=controller_fast.post
+        controller_fast.post=lambda marker,payload: posts.append((marker,payload))
+        self.assertTrue(bind_preexposed_instruction(p))
+        self.assertEqual(posts[-1][1]["instruction_bytes_reexposed"],False)
+        self.assertNotIn("instruction",posts[-1][1])
+        controller_fast.CONFIG["preexposed_instruction_git_blob_sha"]="0"*40
+        self.assertIsNone(bind_preexposed_instruction(p))
+        self.assertEqual(posts[-1][1]["reason"],"PREEXPOSED_INSTRUCTION_BLOB_MISMATCH")
+        controller_fast.post=old_post
+    finally:
+      if old is None:
+        try: del controller_fast.CONFIG
+        except AttributeError: pass
+      else: controller_fast.CONFIG=old
 
   def test_stage_c_open_discovery_is_rejected(self):
     lease={
