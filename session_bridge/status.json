@@ -1,6 +1,7 @@
 {
+  "next_step": 0,
+  "runtime_boundary": "COMMANDS_EXECUTE_ONLY_INSIDE_BUILT_TASK_CONTAINER",
   "session_id": "layout-config-recreation2-20261002-v1",
-  "status": "BUILDING_RUNTIME",
-  "task": "layout-config-recreation2",
-  "terminal_bench_ref": "452bf305c6daa62fc59061d22133a7cbc7c1572e"
+  "status": "READY_FOR_COMMAND",
+  "task": "layout-config-recreation2"
 }
