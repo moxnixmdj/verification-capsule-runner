@@ -1,6 +1,13 @@
 name: Verify CAD anti-shortcut repair v1
 # exact-current-byte rerun
 on:
+  push:
+    branches: [main]
+    paths:
+      - canonical/runtime/cad_t0_route_specific_candidate_v1.py
+      - canonical/tests/test_cad_t0_source_structure_antishortcut_repair_v1.py
+      - canonical/tests/test_cad_t0_route_specific_candidate_v1.py
+      - .github/workflows/verify-cad-antishortcut-repair-v1.yml
   pull_request:
     branches: [main]
     paths:
