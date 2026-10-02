@@ -25,5 +25,5 @@ jobs:
           test "$(git hash-object verification/drawing_perspective_rectification.py)" = "cceb48f7d971e13b9ac3a5d9c8c3cf94e0eb632c"
           test "$(git hash-object verification/drawing_robust_preprocess.py)" = "8e95ffffbf5b0c8a37ccd7505b447eedbdcc4c8c"
           test "$(git hash-object verification/gdt_feature_control_parser.py)" = "de02499836fb41883cb0feadcaa9554604a260e3"
-          test "$(git hash-object verification/explicit_definition_reference_graph.py)" = "b6d4676aa88b936f11fc088afa64cf57c066ed9e"
+          test "$(git hash-object verification/explicit_definition_reference_graph.py)" = "950f073b35b9d7f42c76c518711462f00e89b262"
       - run: cd verification && python -m unittest -v test_m0a_m1a_hardening_independent
