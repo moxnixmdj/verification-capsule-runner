@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_TERMINAL_WAVE_EXECUTION_REQUEST_V3",
+  "date": "2026-10-02",
+  "execution_snapshot_commit": "821712c059b139f3494723dca6e8d0fc82ee59a4",
+  "package_commitment": "5a347e796d124373b557424a51659e8bb69b854d09da0b407a5b30f109d9467a",
+  "post_freeze_beacon": "36977020853",
+  "allow_replay": false,
+  "case_replacement": false,
+  "tuning_replay": false,
+  "purpose": "Execute the independently frozen and beacon-bound Brain terminal wave exactly once on a content-verified public carrier."
+}
