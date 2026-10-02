@@ -1,14 +1,14 @@
 {
   "schema": "PROJECT_BRAIN_SA_CCR_TERMINAL_POPULATION_BINDING_V1",
   "date": "2026-10-02",
-  "status": "PRE_BEACON_FROZEN__ZERO_TERMINAL_RESULTS__INDEPENDENT_BINDING_VERIFICATION_PENDING",
+  "status": "PRE_BEACON_FROZEN__ZERO_TERMINAL_RESULTS",
   "behavior_id": "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001",
   "proof_mode": "ABSOLUTE_BEHAVIORAL_PROTOCOL",
   "exact_blobs": {
     "candidate": "ff2fa256738ffbe5b15bb813a11c82046692b5e8",
     "independent_oracle": "8eb94b8e8b00e3ace662e7fac2e8b6a8f7bb2200",
-    "route_manifest": "04b030ef0bf13cf9e39f4c6a31077ca2ff0a5394",
-    "scope_gate_receipt": "31ea53c081997b2ebca7b9823aa1fc154d5b3293"
+    "route_manifest": "688cfcd238b49901e9a1438d1f40c093047b56dc",
+    "scope_gate_receipt": "5af6db8b0e47c978043f07bc5005f8597e9128dd"
   },
   "population": {
     "sample_count": 2000,
@@ -38,8 +38,8 @@
     "case_local_execution_failure_counts_as_failure": true
   },
   "scope_gate": {
-    "status": "INDEPENDENT_PASS__ADMISSIBLE_SUBSTITUTION__ZERO_TERMINAL_RESULT",
-    "receipt": "canonical/verification/SA_CCR_SCOPE_GATE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+    "status": "INDEPENDENT_PASS__EXACT_CURRENT_SCOPE_INPUT_ADMISSIBLE_SUBSTITUTION__ZERO_TERMINAL_RESULT",
+    "receipt": "canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
     "unresolved_required_dimensions": []
   },
   "information_boundary": {
@@ -48,7 +48,7 @@
     "load_bearing_oracle_hidden": true
   },
   "dependency_mode": "ZERO_INCREMENTAL_SPEND__OWNED_CANDIDATE__INDEPENDENT_ORACLE",
-  "commitment_components_sha256": "b4f98c01a4a5d52ca026c585309ec2851731b36450154ab422ded1927084912c",
+  "commitment_components_sha256": "86ac5eb685e17113b5c58614d5591afddcc0d57c3a4ec23dde404a35a53db5a3",
   "pre_beacon_frozen": true,
   "terminal_results_observed": 0,
   "fresh_terminal_evidence_consumed": 0,
