@@ -1,0 +1,28 @@
+name: Verify delegation terminal population binding v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/delegation_terminal_population_binding_v1.py'
+      - 'canonical/tests/test_delegation_terminal_population_binding_v1.py'
+      - '.github/workflows/verify-delegation-terminal-binding-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object 'canonical/runtime/delegation_whole_scope_candidate_v2.py')" = '9f2c3aa42352cba66967afb1f8a3f45357833c41'
+          test "$(git hash-object 'canonical/runtime/delegation_whole_scope_proof_v2.py')" = '5785b07f482e38acdf7916e5414d90c2c0c305b7'
+          test "$(git hash-object 'canonical/runtime/delegation_terminal_population_binding_v1.py')" = 'fae6d0bf2efbcb9b8fe2a2a627900889c5ec6cab'
+          test "$(git hash-object 'canonical/tests/test_delegation_terminal_population_binding_v1.py')" = 'e060355aa2cdc800a9b7d0d8af587c3d13a62b03'
+      - name: Execute delegation terminal binding preflight
+        run: python -m unittest -v canonical.tests.test_delegation_terminal_population_binding_v1
