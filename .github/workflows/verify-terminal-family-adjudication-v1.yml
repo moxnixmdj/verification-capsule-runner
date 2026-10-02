@@ -1,0 +1,46 @@
+name: Verify terminal family adjudication V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/terminal_family_adjudication_reducer_v1.py'
+      - 'canonical/tests/test_terminal_family_adjudication_reducer_v1.py'
+      - 'canonical/governance/TERMINAL_FAMILY_ADJUDICATION_POLICY_V1.json'
+      - 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V6.json'
+      - 'canonical/verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_V6_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
+      - '.github/workflows/verify-terminal-family-adjudication-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Bind exact Brain family adjudication bytes
+        run: |
+          test "$(git hash-object canonical/runtime/terminal_family_adjudication_reducer_v1.py)" = "183b21005084343bfaad65dd0efa9b1b27054d41"
+          test "$(git hash-object canonical/tests/test_terminal_family_adjudication_reducer_v1.py)" = "be40006da7be9aa4a0477cefe3d4986a0cdc979c"
+          test "$(git hash-object canonical/governance/TERMINAL_FAMILY_ADJUDICATION_POLICY_V1.json)" = "ce16854ee8c113cd4113c02c835e9863a097632d"
+          test "$(git hash-object canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "ee187f611a0e82b2de495ee377682f39bc31dd31"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V6.json)" = "d7f31958b3de17478ee45b8b2f8490cdc59c17ca"
+          test "$(git hash-object canonical/verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_V6_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "e9d405576c540388b48d74da0f2e498c03e4684a"
+      - name: Run fail-closed family reducer regressions
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_family_adjudication_reducer_v1
+      - name: Recompute exact current prewave family sufficiency
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime.terminal_family_adjudication_reducer_v1 import evaluate
+          out=evaluate()
+          assert out["pass"] is True, out
+          assert out["family_adjudication_ready"] is True, out
+          assert out["active_contract_count"] == 12, out
+          assert out["mapped_open_family_count"] == 17, out
+          assert out["preexisting_pass_family_count"] == 2, out
+          assert out["terminal_family_count"] == 19, out
+          assert out["orphan_active_contracts"] == [], out
+          assert out["terminal_results_observed"] == 0, out
+          print(out)
+          PY
