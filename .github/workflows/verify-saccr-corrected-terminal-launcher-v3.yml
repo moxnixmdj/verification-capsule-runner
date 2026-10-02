@@ -8,6 +8,7 @@ on:
       - canonical/runtime/terminal_parent_portfolio_runner_v1.py
       - canonical/runtime/terminal_wave_launch_authority_reducer_v1.py
       - .github/workflows/verify-saccr-corrected-terminal-launcher-v3.yml
+      - capsules/saccr_corrected_terminal_launcher_v3/**
 permissions:
   contents: read
 jobs:
