@@ -1,0 +1,161 @@
+name: Execute terminal V3 wave once
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'terminal_runs/terminal_v3_wave/request.json'
+      - '.github/workflows/execute-terminal-v3-wave-once.yml'
+permissions:
+  contents: read
+jobs:
+  terminal-wave:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify frozen one-shot carrier bytes
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          req=json.loads(Path('terminal_runs/terminal_v3_wave/request.json').read_text())
+          assert req['schema']=='PROJECT_BRAIN_TERMINAL_V3_ONE_SHOT_EXECUTION_REQUEST_V1'
+          assert req['execution_snapshot_commit']=='821712c059b139f3494723dca6e8d0fc82ee59a4'
+          assert req['package_commitment']=='5a347e796d124373b557424a51659e8bb69b854d09da0b407a5b30f109d9467a'
+          assert req['canonical_beacon']=='36977020853'
+          assert req['single_shot'] is True
+          assert req['case_replacement'] is False
+          assert req['tuning_replay'] is False
+          assert req['result_to_runtime_feedback_during_wave'] is False
+          def git_blob(path):
+              b=Path(path).read_bytes()
+              return hashlib.sha1(b'blob '+str(len(b)).encode()+bytes([0])+b).hexdigest()
+          for path,expected in req['closure_blobs'].items():
+              p=Path(path)
+              assert p.is_file(),('MISSING_CLOSURE_FILE',path)
+              got=git_blob(p)
+              assert got==expected,('CLOSURE_BLOB_DRIFT',path,expected,got)
+          assert len(req['closure_blobs'])==53
+          print('TERMINAL_V3_CARRIER_53_OF_53_EXACT')
+          PY
+      - name: Install frozen execution dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-input \
+            "pydantic>=2,<3" "cadquery==2.6.1" python-docx openpyxl python-pptx pypdf
+      - name: Fail-closed launch preflight
+        env:
+          PYTHONPATH: .:canonical/runtime
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from canonical.runtime import terminal_wave_launch_authority_reducer_v1 as authority
+          from canonical.runtime import terminal_parent_portfolio_launcher_v1 as launcher
+          from canonical.runtime import terminal_parent_portfolio_runner_v1 as parent
+          from canonical.runtime import saccr_route_specific_terminal_executor_v1 as saccr
+          from canonical.runtime import cad_t0_route_specific_terminal_executor_v1 as cad
+          a=authority.evaluate(Path('.'))
+          assert a.get('launch_authority') is True and a.get('route_count')==12 and a.get('failed_predicates')==[],a
+          assert launcher.static_route_preflight().get('pass') is True
+          assert launcher.build_launch_plan().get('pass') is True
+          assert parent.static_preflight().get('pass') is True
+          assert saccr.static_preflight(Path('.')).get('pass') is True
+          assert cad.static_dependency_preflight(Path('.')).get('pass') is True
+          print('TERMINAL_V3_FAIL_CLOSED_PREFLIGHT_PASS')
+          PY
+      - name: Execute exact frozen terminal wave once
+        env:
+          PYTHONPATH: .:canonical/runtime
+        run: |
+          set -euo pipefail
+          mkdir -p terminal_runs/terminal_v3_wave/out
+          python - <<'PY'
+          import hashlib,json,traceback
+          from pathlib import Path
+          from canonical.runtime import terminal_parent_portfolio_launcher_v1 as launcher
+
+          commitment='5a347e796d124373b557424a51659e8bb69b854d09da0b407a5b30f109d9467a'
+          beacon='36977020853'
+          out_path=Path('terminal_runs/terminal_v3_wave/out/full_result.json')
+          summary_path=Path('terminal_runs/terminal_v3_wave/out/summary.json')
+          try:
+              result=launcher.execute_wave(commitment=commitment,beacon=beacon,root=Path('.'))
+              payload=json.dumps(result,sort_keys=True,separators=(',',':')).encode()
+              out_path.write_bytes(payload)
+              direct={}
+              for bid,row in sorted((result.get('direct_results') or {}).items()):
+                  direct[bid]={
+                      'pass':row.get('pass'),
+                      'status':row.get('status'),
+                      'case_count':row.get('case_count'),
+                      'pass_count':row.get('pass_count'),
+                      'failed_count':row.get('failed_count'),
+                      'all_pass':row.get('all_pass'),
+                      'terminal_result':row.get('terminal_result'),
+                  }
+              parents={}
+              total_parent_cases=0
+              for portfolio,rows in sorted((result.get('parent_portfolio_receipts') or {}).items()):
+                  parents[portfolio]=[]
+                  for row in rows:
+                      cr={
+                          'behavior_id':row.get('behavior_id'),
+                          'pass':row.get('pass'),
+                          'status':row.get('status'),
+                          'case_count':row.get('case_count'),
+                          'failure_count':row.get('failure_count'),
+                          'load_bearing':row.get('load_bearing'),
+                      }
+                      if isinstance(row.get('case_count'),int):
+                          total_parent_cases+=row['case_count']
+                      parents[portfolio].append(cr)
+              total_direct_cases=sum(int(x.get('case_count') or 0) for x in direct.values())
+              summary={
+                  'schema':'PROJECT_BRAIN_TERMINAL_V3_WAVE_SUMMARY_V1',
+                  'execution_snapshot_commit':'821712c059b139f3494723dca6e8d0fc82ee59a4',
+                  'package_commitment':commitment,
+                  'beacon':beacon,
+                  'status':result.get('status'),
+                  'pass':result.get('pass'),
+                  'terminal_result':result.get('terminal_result'),
+                  'direct_failures':result.get('direct_failures'),
+                  'direct':direct,
+                  'parents':parents,
+                  'parent_reduction_status':(result.get('parent_reduction') or {}).get('status'),
+                  'parent_reduction_pass':(result.get('parent_reduction') or {}).get('pass'),
+                  'total_direct_cases':total_direct_cases,
+                  'total_parent_cases_reported':total_parent_cases,
+                  'full_result_sha256':hashlib.sha256(payload).hexdigest(),
+                  'full_result_bytes':len(payload),
+                  'no_case_replacement':result.get('no_case_replacement'),
+                  'no_tuning_replay':result.get('no_tuning_replay'),
+                  'result_to_runtime_feedback_during_wave':result.get('result_to_runtime_feedback_during_wave'),
+              }
+              summary_path.write_text(json.dumps(summary,sort_keys=True,indent=2)+'\n')
+              print('TERMINAL_V3_WAVE_SUMMARY_JSON='+json.dumps(summary,sort_keys=True,separators=(',',':')))
+          except Exception as exc:
+              summary={
+                  'schema':'PROJECT_BRAIN_TERMINAL_V3_WAVE_INFRA_EXCEPTION_V1',
+                  'execution_snapshot_commit':'821712c059b139f3494723dca6e8d0fc82ee59a4',
+                  'package_commitment':commitment,
+                  'beacon':beacon,
+                  'exception_type':type(exc).__name__,
+                  'exception':str(exc),
+                  'traceback':traceback.format_exc(),
+              }
+              summary_path.write_text(json.dumps(summary,sort_keys=True,indent=2)+'\n')
+              print('TERMINAL_V3_WAVE_INFRA_EXCEPTION_JSON='+json.dumps(summary,sort_keys=True,separators=(',',':')))
+              raise
+          PY
+      - name: Upload immutable terminal receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-v3-wave-receipts
+          path: terminal_runs/terminal_v3_wave/out/
+          if-no-files-found: warn
+          retention-days: 90
