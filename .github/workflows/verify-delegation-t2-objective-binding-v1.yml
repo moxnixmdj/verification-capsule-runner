@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/governance/DELEGATION_T2_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "65cf321cb1d08c06a236cd4d818dfdec3eb77c95"
+          test "$(git hash-object canonical/governance/DELEGATION_T2_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "a1e441567b132d71713ed55dfc51f01d8de112d1"
           test "$(git hash-object canonical/runtime/delegation_t2_objective_binding_validator.py)" = "f92ba723631776fcd59caa17d448c1a53446cc40"
           test "$(git hash-object canonical/tests/test_delegation_t2_objective_binding_validator.py)" = "59d40c4bb2684b161d98970617add5ca100d482c"
           test "$(git hash-object canonical/runtime/delegation_whole_scope_candidate_v2.py)" = "f1a93ee66d90093de61dc17c6ebf2e24073df522"
