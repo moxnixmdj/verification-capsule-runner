@@ -1,0 +1,33 @@
+name: Verify P1 V5 typed intervention carrier
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run exact V5 adversarial suite
+        run: python -m unittest -v canonical.tests.test_trajectory_failure_typed_ir_v5
+      - name: Recompute full V5 cross-product
+        run: |
+          python - <<'PY'
+          from canonical.runtime import trajectory_failure_typed_ir_candidate_v5 as c
+          from canonical.runtime import trajectory_failure_typed_ir_proof_v5 as p
+          cases=p.suite_cases()
+          assert len(cases)==192
+          failures=[]
+          for case in cases:
+              out=c.solve(p.public_task(case))
+              verdict=p.score_case(case,out)
+              if verdict.get("pass") is not True:
+                  failures.append((case["seed"],verdict,out))
+          assert failures==[],failures
+          assert len([x for x in cases if x["_oracle"]["mechanisms"]["A1"][0]=="SCOPE"])==24
+          print("P1_V5_192_OF_192_PASS__24_SCOPE_CASES__ZERO_CREDIT")
+          PY
