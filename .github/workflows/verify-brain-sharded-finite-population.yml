@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'canonical/runtime/sharded_finite_population_proof.py'
+      - 'canonical/runtime/finite_population_proof.py'
       - 'canonical/tests/test_sharded_finite_population_proof.py'
       - '.github/workflows/verify-brain-sharded-finite-population.yml'
   workflow_dispatch:
@@ -19,12 +20,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with: {python-version: '3.12'}
-      - name: Bind exact Brain source and tests
+      - name: Bind exact Brain source, dependency, and tests
         run: |
           test "$(git hash-object canonical/runtime/sharded_finite_population_proof.py)" = "67e2ed81e17d24618094d8e32a1ffa968a3ef449"
+          test "$(git hash-object canonical/runtime/finite_population_proof.py)" = "20980ac7ddb4cab713c847ac03e5a6fa40748154"
           test "$(git hash-object canonical/tests/test_sharded_finite_population_proof.py)" = "db871b2a51b678c1a5e91afc45a80924066077ba"
-      - name: Mirror exact finite population dependency
-        run: |
-          mkdir -p canonical/runtime
-          curl --fail --silent --show-error --location https://raw.githubusercontent.com/moxnixmdj/brain/6f017c907f82e6f590e358d9ff5ad826c45e5f16/canonical/runtime/finite_population_proof.py -o canonical/runtime/finite_population_proof.py
       - run: PYTHONPATH=. python -m unittest -v canonical.tests.test_sharded_finite_population_proof
