@@ -1,0 +1,19 @@
+name: Verify P1 zero-reality exhaustion v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_zero_reality_exhaustion_v1/**"
+      - ".github/workflows/verify-p1-zero-reality-exhaustion-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain P1 exhaustion gate and live fixed point
+        run: python capsules/p1_zero_reality_exhaustion_v1/verify.py
