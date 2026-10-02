@@ -1,10 +1,11 @@
-name: Verify live terminal launch authority V1
+name: Verify exact current launcher and authority hardening V2
 on:
   pull_request:
     branches: [main]
     paths:
       - canonical/**
       - .github/workflows/verify-live-terminal-launch-authority-v1.yml
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -16,21 +17,76 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Derive launch authority from exact current Brain state
+      - name: Verify exact Brain blob identities
         shell: bash
         run: |
           set -euo pipefail
-          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee /tmp/authority.json
+          python - <<'PY'
+          import json, subprocess
+          expected=json.loads(r'''{
+  "canonical/runtime/terminal_wave_launch_authority_reducer_v1.py": "0b5b5e8229cc3e5ee950169469811e7576c43514",
+  "canonical/tests/test_terminal_wave_launch_authority_reducer_v1.py": "352a01602259011d8d40f5db2d2b84e4c771a713",
+  "canonical/runtime/terminal_parent_portfolio_launcher_v1.py": "d7f20a66f1f534b06ea11782cb350a582c07d985",
+  "canonical/tests/test_terminal_parent_portfolio_launcher_v1.py": "01996bc0cca7246c0dcfea5b1602c4740fa3e45d",
+  "canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json": "3ffc4484ab4ac69f60258859d5d6e2a7cc8024a7",
+  "canonical/runtime/saccr_route_specific_terminal_executor_v1.py": "9810e3f9a2dd94dc372b6b9a865510795d0262fd",
+  "canonical/governance/TERMINAL_PARENT_LAUNCHER_BINDING_V1.json": "8a40fd5139830650adaacd984a9133258292398c",
+  "canonical/verification/TERMINAL_PARENT_LAUNCHER_SA_CCR_REBIND_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "db27f7965259d5e53b23924791e891fb78f45c4b"
+}''')
+          for path, want in sorted(expected.items()):
+              got=subprocess.check_output(["git","hash-object",path], text=True).strip()
+              assert got == want, (path, got, want)
+          print("EXACT_BRAIN_BLOBS_MATCH")
+          PY
+      - name: Run launcher and authority regression suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m unittest -v \
+            canonical.tests.test_terminal_wave_launch_authority_reducer_v1 \
+            canonical.tests.test_terminal_parent_portfolio_launcher_v1
+      - name: Derive exact current terminal launch authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee /tmp/live-authority.json
           python - <<'PY'
           import json
-          p="/tmp/authority.json"
-          data=json.load(open(p))
-          assert data["pass"] is True, data
-          assert data["launch_authority"] is True, data
-          assert data["execution_authority"] is True, data
-          assert data["failed_predicates"] == [], data
-          assert data["route_count"] == 12, data
-          assert data["terminal_results_observed"] == 0, data
-          assert data["fresh_terminal_evidence_consumed"] == 0, data
-          print(json.dumps(data, sort_keys=True))
+          a=json.load(open("/tmp/live-authority.json"))
+          assert a["pass"] is True, a
+          assert a["launch_authority"] is True, a
+          assert a["execution_authority"] is True, a
+          assert a["authorization"]=="T0_T1_T2_T3_ROUTE_SPECIFIC_PARALLEL_TERMINAL_WAVE", a
+          assert a["route_count"]==12, a
+          assert a["failed_predicates"]==[], a
+          assert a["terminal_results_observed"]==0, a
+          assert a["fresh_terminal_evidence_consumed"]==0, a
+          print("EXACT_CURRENT_TERMINAL_LAUNCH_AUTHORITY=PASS")
           PY
+      - name: Derive exact current launch authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . > /tmp/launch_authority.json
+          cat /tmp/launch_authority.json
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/launch_authority.json"))
+          assert d.get("pass") is True, d
+          assert d.get("launch_authority") is True, d
+          assert d.get("execution_authority") is True, d
+          assert d.get("failed_predicates") == [], d
+          assert d.get("terminal_results_observed", 0) == 0, d
+          assert d.get("fresh_terminal_evidence_consumed", 0) == 0, d
+          assert d.get("capability_credit_delta", 0) == 0, d
+          assert d.get("family_credit_delta", 0) == 0, d
+          print("EXACT_CURRENT_LAUNCH_AUTHORITY_TRUE")
+          PY
+      - name: Assert no terminal evidence was consumed
+        run: |
+          python - <<'PY'
+          print("ZERO_TERMINAL_CASES_CONSUMED")
+          print("ZERO_CAPABILITY_OR_FAMILY_CREDIT")
+          PY
+
+# exact-current-trigger: post-saccr-launcher-authority-v2
