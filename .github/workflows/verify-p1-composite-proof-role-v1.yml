@@ -1,0 +1,21 @@
+name: Verify P1 composite proof role reconciliation
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_composite_proof_v1/**"
+      - ".github/workflows/verify-p1-composite-proof-role-v1.yml"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored composite proof
+        working-directory: capsules/p1_composite_proof_v1
+        run: |
+          python canonical/runtime/p1_composite_proof_role_reconciliation_v1.py
+          python -m unittest canonical.tests.test_p1_composite_proof_role_reconciliation_v1 -v
