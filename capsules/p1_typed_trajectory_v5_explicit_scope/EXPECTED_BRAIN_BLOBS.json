@@ -1,0 +1,24 @@
+{
+  "schema": "PROJECT_BRAIN_P1_TYPED_V5_EXPLICIT_SCOPE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_branch": "brain/p1-explicit-scope-v5-20261002",
+  "exact_brain_blobs": {
+    "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py": "b571076490099addbfd142e635241b730a4d8cad",
+    "canonical/runtime/trajectory_failure_typed_ir_proof_v5.py": "4a4f65e4a93938afa5d781e3994130f6dbe7aaf5",
+    "canonical/tests/test_trajectory_failure_typed_ir_v5.py": "38f79d2461dadc7e0945cd9e78c9fa42e8177238",
+    "canonical/governance/P1_TYPED_TRAJECTORY_V5_EXPLICIT_SCOPE_ACTIVATION_V1.json": "fb25aa12e9847534eb2bf9e85e3aa118cde31eda"
+  },
+  "expected_case_count": 192,
+  "expected_mechanism_classes": [
+    "AUTHORITY",
+    "SCOPE",
+    "SCHEMA",
+    "PROVENANCE",
+    "INVARIANT",
+    "STATE_TRANSITION",
+    "TOOL_CONTRACT",
+    "DEPENDENCY"
+  ],
+  "required_scope_residual": "P1_EXPLICIT_SCOPE_FAILURE_CLASS",
+  "forbidden_rescue_credit": "P1_HETEROGENEOUS_INTERVENTION_RESCUE"
+}
