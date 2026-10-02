@@ -1,5 +1,5 @@
 import unittest
-from canonical.runtime.acceptance_capability_source_gate_v2 import evaluate
+from acceptance_capability_source_gate_v2 import evaluate
 
 def owned_no_model():
     return {
