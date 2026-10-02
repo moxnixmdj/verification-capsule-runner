@@ -88,3 +88,5 @@ jobs:
           print("ZERO_TERMINAL_CASES_CONSUMED")
           print("ZERO_CAPABILITY_OR_FAMILY_CREDIT")
           PY
+
+# exact-current-trigger: post-saccr-launcher-authority-v2
