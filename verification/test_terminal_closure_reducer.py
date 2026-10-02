@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from canonical.runtime.terminal_closure_reducer import evaluate_manifest
+from terminal_closure_reducer import evaluate_manifest
 
 
 def passing_manifest():
