@@ -1,0 +1,37 @@
+name: Verify post-no-abort terminal authority V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - canonical/**
+      - .github/workflows/verify-post-no-abort-authority-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run hardened authority reducer regressions
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_wave_launch_authority_reducer_v1
+      - name: Derive exact current authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee /tmp/authority.json
+          python - <<'PY'
+          import json
+          out=json.load(open("/tmp/authority.json"))
+          assert out["pass"] is True, out
+          assert out["launch_authority"] is True, out
+          assert out["execution_authority"] is True, out
+          assert out["route_count"] == 12, out
+          assert out["failed_predicates"] == [], out
+          assert out["terminal_results_observed"] == 0, out
+          assert out["fresh_terminal_evidence_consumed"] == 0, out
+          print("POST_NO_ABORT_TERMINAL_AUTHORITY=PASS")
+          PY
