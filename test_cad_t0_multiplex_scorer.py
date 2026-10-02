@@ -218,3 +218,39 @@ class CadPopulationOracleExactBrainTests(unittest.TestCase):
         bad={"status":"NONIDENTIFIABLE","ambiguity_witness":{"parameter":"depth_mm","alternatives":[10,10]}}
         self.assertTrue(cad_validate_ambiguity_witness(case,good))
         self.assertFalse(cad_validate_ambiguity_witness(case,bad))
+
+
+import tempfile
+import cad_t0_post_refreeze_composition_guard_v2 as cad_v2_guard
+
+class CadPostRefreezeCompositionExactBrainTests(unittest.TestCase):
+    def test_exact_guard_and_authority_blobs(self):
+        expected={
+            "independent/cad_t0_post_refreeze_composition_guard_v2.py":"46ce4df48c96a46415710d0fd9caec8d66435a78",
+            "independent/cad_t0_candidate_freeze_v2.json":"039056ad65c1721d871d378ff0497fc461ab4df2",
+            "independent/cad_t0_post_refreeze_binding_v2.json":"7a6f04e08587ff5471ab406c04ab8acd76cc16eb",
+            "independent/m1a_positioned_ocr_bridge_receipt.json":"949612638affa5891fe74517ad6b83371a783f69",
+            "independent/cad_t0_population_oracle_receipt.json":"d27aece637d10e46bff72b762f5743d5048c7af0",
+        }
+        for p,sha in expected.items():
+            self.assertEqual(_git_blob_sha(p),sha,p)
+
+    def test_exact_post_refreeze_composition_guard_passes(self):
+        mirrors={
+            "independent/cad_t0_candidate_freeze_v2.json":cad_v2_guard.FREEZE,
+            "independent/cad_t0_post_refreeze_binding_v2.json":cad_v2_guard.BINDING,
+            "independent/m1a_positioned_ocr_bridge_receipt.json":cad_v2_guard.OCR_RECEIPT,
+            "independent/cad_t0_population_oracle_receipt.json":cad_v2_guard.POP_RECEIPT,
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            for src,dst in mirrors.items():
+                target=root/dst
+                target.parent.mkdir(parents=True,exist_ok=True)
+                target.write_bytes(Path(src).read_bytes())
+            out=cad_v2_guard.evaluate(root)
+        self.assertTrue(out["pass"],out)
+        self.assertTrue(out["prewave_route_ready_for_promotion_law"])
+        self.assertFalse(out["execution_authority"])
+        self.assertEqual(out["terminal_results_observed"],0)
+        self.assertEqual(out["fresh_terminal_evidence_consumed"],0)
