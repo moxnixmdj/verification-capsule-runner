@@ -1,0 +1,130 @@
+name: Qualify AutomationBench zero-cost substrate V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/qualify-automationbench-zero-cost-substrate-v1.yml'
+      - 'candidate/automationbench_substrate_v1/**'
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run synthetic non-benchmark substrate qualification
+        env:
+          PYTHONPATH: candidate/automationbench_substrate_v1
+        run: |
+          python - <<'PY'
+          import importlib.util, json, statistics, time, urllib.request
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+          from pathlib import Path
+
+          spec=importlib.util.spec_from_file_location('gw',Path('candidate/automationbench_substrate_v1/runtime.py'))
+          gw=importlib.util.module_from_spec(spec); spec.loader.exec_module(gw)
+
+          endpoint='https://text.pollinations.ai/'
+          candidates=['openai-fast','openai','openai-large','gpt-5.5','mistral','claude-large']
+
+          cases=[
+            {
+              'id':'crm_close',
+              'messages':[{'role':'user','content':'Close lead L-7. Use the appropriate tool and do not send email.'}],
+              'tools':[
+                {'type':'function','function':{'name':'crm_update','description':'Update CRM lead stage','parameters':{'type':'object','properties':{'id':{'type':'string'},'stage':{'type':'string','enum':['open','won','lost']}},'required':['id','stage'],'additionalProperties':False}}},
+                {'type':'function','function':{'name':'send_email','description':'Send an email','parameters':{'type':'object','properties':{'to':{'type':'string'},'body':{'type':'string'}},'required':['to','body'],'additionalProperties':False}}},
+              ],
+              'expect':('crm_update',{'id':'L-7','stage':'won'})
+            },
+            {
+              'id':'ticket_archive',
+              'messages':[{'role':'user','content':'Archive support ticket T-9. Do not add a note.'}],
+              'tools':[
+                {'type':'function','function':{'name':'archive_ticket','description':'Archive a support ticket','parameters':{'type':'object','properties':{'ticket_id':{'type':'string'}},'required':['ticket_id'],'additionalProperties':False}}},
+                {'type':'function','function':{'name':'add_note','description':'Add note to ticket','parameters':{'type':'object','properties':{'ticket_id':{'type':'string'},'text':{'type':'string'}},'required':['ticket_id','text'],'additionalProperties':False}}},
+              ],
+              'expect':('archive_ticket',{'ticket_id':'T-9'})
+            },
+            {
+              'id':'calendar_cancel',
+              'messages':[{'role':'user','content':'Cancel calendar event E42.'}],
+              'tools':[
+                {'type':'function','function':{'name':'calendar_cancel','description':'Cancel event','parameters':{'type':'object','properties':{'event_id':{'type':'string'}},'required':['event_id'],'additionalProperties':False}}},
+                {'type':'function','function':{'name':'calendar_move','description':'Move event','parameters':{'type':'object','properties':{'event_id':{'type':'string'},'date':{'type':'string'}},'required':['event_id','date'],'additionalProperties':False}}},
+              ],
+              'expect':('calendar_cancel',{'event_id':'E42'})
+            },
+            {
+              'id':'invoice_status',
+              'messages':[{'role':'user','content':'Mark invoice INV-3 as paid.'}],
+              'tools':[
+                {'type':'function','function':{'name':'invoice_update','description':'Update invoice','parameters':{'type':'object','properties':{'invoice_id':{'type':'string'},'status':{'type':'string','enum':['open','paid','void']}},'required':['invoice_id','status'],'additionalProperties':False}}},
+                {'type':'function','function':{'name':'invoice_refund','description':'Refund invoice','parameters':{'type':'object','properties':{'invoice_id':{'type':'string'}},'required':['invoice_id'],'additionalProperties':False}}},
+              ],
+              'expect':('invoice_update',{'invoice_id':'INV-3','status':'paid'})
+            },
+            {
+              'id':'candidate_reject',
+              'messages':[{'role':'user','content':'Reject candidate C17. Do not schedule an interview.'}],
+              'tools':[
+                {'type':'function','function':{'name':'candidate_update','description':'Update candidate status','parameters':{'type':'object','properties':{'candidate_id':{'type':'string'},'status':{'type':'string','enum':['active','rejected','hired']}},'required':['candidate_id','status'],'additionalProperties':False}}},
+                {'type':'function','function':{'name':'schedule_interview','description':'Schedule interview','parameters':{'type':'object','properties':{'candidate_id':{'type':'string'},'slot':{'type':'string'}},'required':['candidate_id','slot'],'additionalProperties':False}}},
+              ],
+              'expect':('candidate_update',{'candidate_id':'C17','status':'rejected'})
+            },
+          ]
+
+          def query(model,prompt):
+              body=json.dumps({'messages':[{'role':'user','content':prompt}],'model':model,'jsonMode':True}).encode()
+              req=urllib.request.Request(endpoint,data=body,headers={'Content-Type':'application/json','User-Agent':'ProjectBrain-SubstrateQual/1.0'},method='POST')
+              t=time.monotonic()
+              with urllib.request.urlopen(req,timeout=60) as r:
+                  raw=r.read(30000).decode('utf-8','replace')
+              return {'text':raw,'model':model,'transport':'ZERO_INCREMENTAL_PUBLIC_PROPOSAL_ENDPOINT','duration_s':time.monotonic()-t}
+
+          def one(model,case):
+              payload={'model':'brain-automation-v1','messages':case['messages'],'tools':case['tools']}
+              t=time.monotonic()
+              try:
+                  out=gw.decide(payload,lambda prompt:query(model,prompt))
+                  ok=out.get('kind')=='tool' and out.get('name')==case['expect'][0] and out.get('arguments')==case['expect'][1]
+                  return {'model':model,'case':case['id'],'pass':ok,'duration_s':round(time.monotonic()-t,3),'result':out if ok else {'kind':out.get('kind'),'name':out.get('name'),'arguments':out.get('arguments')}}
+              except Exception as e:
+                  return {'model':model,'case':case['id'],'pass':False,'duration_s':round(time.monotonic()-t,3),'error':type(e).__name__+':'+str(e)[:300]}
+
+          rows=[]
+          with ThreadPoolExecutor(max_workers=5) as ex:
+              futs=[ex.submit(one,m,c) for m in candidates for c in cases]
+              for f in as_completed(futs):
+                  rows.append(f.result())
+
+          summary=[]
+          for model in candidates:
+              rs=[r for r in rows if r['model']==model]
+              passes=sum(bool(r['pass']) for r in rs)
+              med=statistics.median(r['duration_s'] for r in rs)
+              summary.append({'model':model,'passes':passes,'total':len(rs),'pass_rate':passes/len(rs),'median_duration_s':round(med,3),'all_no_api_key':True})
+          ranked=sorted(summary,key=lambda x:(-x['passes'],x['median_duration_s'],x['model']))
+          winner=ranked[0]
+          out={
+            'schema':'PROJECT_BRAIN_AUTOMATIONBENCH_ZERO_COST_SUBSTRATE_QUALIFICATION_V1',
+            'qualification_scope':'SYNTHETIC_NON_BENCHMARK_TOOL_SELECTION_AND_ARGUMENT_COMPLIANCE_ONLY',
+            'candidate_models':candidates,
+            'cases_per_model':len(cases),
+            'results':sorted(rows,key=lambda x:(x['model'],x['case'])),
+            'summary':ranked,
+            'selected':winner,
+            'selection_rule':'MAX_EXACT_PASSES_THEN_MIN_MEDIAN_LATENCY_THEN_LEXICAL_MODEL_ID',
+            'benchmark_cases_read':0,
+            'benchmark_cases_executed':0,
+            'api_key_supplied':False,
+            'incremental_spend_usd':0,
+          }
+          print(json.dumps(out,indent=2,sort_keys=True))
+          Path('/tmp/substrate-qualification.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          assert winner['passes']>0,out
+          PY
