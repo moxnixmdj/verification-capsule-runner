@@ -1,4 +1,3 @@
-"""Exact mirror from Brain for independent verification."""
 """Zero-terminal-evidence mutation preflight for the four frozen direct proof routes.
 
 This module validates the *proof machinery*, not Brain capability.  Each route has
