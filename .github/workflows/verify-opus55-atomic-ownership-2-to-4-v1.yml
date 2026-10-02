@@ -46,4 +46,6 @@ jobs:
           PYTHONPATH: capsules/opus55_atomic_ownership_2_to_4_v1
         run: python -m unittest -v canonical.tests.test_opus55_atomic_family_ownership_promotion_v1
       - name: Compile exact atomic ownership verdict
+        env:
+          PYTHONPATH: capsules/opus55_atomic_ownership_2_to_4_v1
         run: python capsules/opus55_atomic_ownership_2_to_4_v1/canonical/runtime/opus55_atomic_family_ownership_promotion_v1.py
