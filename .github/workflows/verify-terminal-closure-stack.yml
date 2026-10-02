@@ -1,0 +1,31 @@
+name: Verify terminal closure compiler stack
+on:
+  pull_request:
+    paths:
+      - 'capsules/terminal_closure_stack/**'
+      - '.github/workflows/verify-terminal-closure-stack.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/runtime/terminal_proof_supercompiler.py)" = "c7a4b8bc29d041fcc04fbcfa8a79db44fa9fe370"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_terminal_proof_supercompiler.py)" = "e91e2c2dc3f7978d115fdd45efdfe4b66e9af33a"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/runtime/prewave_anti_circularity_compiler.py)" = "e610b392fdb8bce337b748f2924b1134ccdfbbd9"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_prewave_anti_circularity_compiler.py)" = "6c69bfb96d5c28916774b4d0e044d981b2e48f60"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/runtime/generated_terminal_state_compiler.py)" = "24acf38a28b97068986f957feba3d8edf6ed8073"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_generated_terminal_state_compiler.py)" = "a93b1c8ccf85d9b2850be49e7cee5cb3bb434a47"
+      - name: Run compiler tests
+        working-directory: capsules/terminal_closure_stack
+        run: |
+          python -m unittest -v             canonical.tests.test_terminal_proof_supercompiler             canonical.tests.test_prewave_anti_circularity_compiler             canonical.tests.test_generated_terminal_state_compiler
