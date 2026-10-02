@@ -1,0 +1,24 @@
+name: Verify matched statistical acceptance v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/matched_statistical_acceptance.py'
+      - 'canonical/tests/test_matched_statistical_acceptance.py'
+      - '.github/workflows/verify-matched-statistical-acceptance.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/matched_statistical_acceptance.py)" = "992bd4d6b5da4a5ea8b69fd71ca7c3772f5e1e7a"
+          test "$(git hash-object canonical/tests/test_matched_statistical_acceptance.py)" = "adccf002d4f97ebe961859d0eda9665519004fae"
+      - name: Run matched statistical acceptance tests
+        run: PYTHONPATH=. python -m unittest canonical.tests.test_matched_statistical_acceptance -v
