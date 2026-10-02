@@ -1,0 +1,26 @@
+name: Verify synthesis required coverage ceiling v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/synthesis_required_coverage_ceiling_v1/**"
+      - ".github/workflows/verify-synthesis-required-coverage-ceiling-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify synthesis coverage ceiling
+        run: |
+          cd capsules/synthesis_required_coverage_ceiling_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_synthesis_required_claim_coverage_ceiling_lift_v1 -v
+          python canonical/runtime/synthesis_required_claim_coverage_ceiling_lift_verifier_v1.py
