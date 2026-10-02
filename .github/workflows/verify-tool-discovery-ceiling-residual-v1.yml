@@ -71,6 +71,9 @@ jobs:
           assert w["source_case_count"]==180
           assert w["result"]["brain_lower_bound"]==1
           assert w["result"]["theoretical_upper_bound"]==1
-          assert w["incremental_spend_usd"]==0
+          v=json.load(open(f"{base}/verification/TERMINAL_CEILING_WITNESS_LIFTER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json"))
+          assert v["fresh_acceptance_cases_consumed"]==0
+          assert v["terminal_results_replayed"]==0
+          assert v["incremental_spend_usd"]==0
           print("PROVENANCE_AND_ZERO_REALITY_PASS")
           PY
