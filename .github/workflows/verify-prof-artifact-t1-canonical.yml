@@ -1,0 +1,15 @@
+name: Verify canonical professional artifact T1 binding
+on:
+  pull_request:
+    paths:
+      - 'verification/prof_artifact_t1_binding.json'
+      - 'verification/verify_prof_artifact_t1.py'
+      - '.github/workflows/verify-prof-artifact-t1-canonical.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python verification/verify_prof_artifact_t1.py
