@@ -34,3 +34,5 @@ jobs:
           assert data["fresh_terminal_evidence_consumed"] == 0, data
           print(json.dumps(data, sort_keys=True))
           PY
+
+# exact-current V3 replay trigger
