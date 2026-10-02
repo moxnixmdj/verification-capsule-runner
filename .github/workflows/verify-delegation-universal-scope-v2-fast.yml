@@ -1,0 +1,66 @@
+name: Verify delegation universal scope v2 fast
+
+on:
+  push:
+    branches:
+      - verify/delegation-universal-scope-v2-fast-20261002-1933
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact mirrored Brain blob identities
+        shell: bash
+        run: |
+          python - <<'PY'
+          import subprocess
+          root="capsules/delegation_universal_scope_v2"
+          expected={
+            "canonical/runtime/delegation_receipt_history_candidate_v4.py":"e4faa96bacb3d948e960899ba44ec75485703991",
+            "canonical/tests/test_delegation_receipt_history_candidate_v4.py":"bf0f4edff4a7553d3e36812da38068e0e06ccdff",
+            "canonical/runtime/delegation_whole_scope_candidate_v2.py":"f1a93ee66d90093de61dc17c6ebf2e24073df522",
+            "canonical/runtime/delegation_whole_scope_proof_v2.py":"928466401b36e4f3b09c517950cc050432a0616f",
+            "canonical/governance/TASK_TO_DELEGATION_SCOPE_RELATION_V2.json":"be855e285f0b64ec951b5ea870b4d4cc166740c9",
+            "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json":"eb4bca0fe6a015d49d2854998fbe046c979c7ea9",
+            "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json":"ec2d931860e7cd7d9f73a658706f8c33fca3a10d",
+            "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json":"af83f4899169e81017767c3316ddcf6b61da5ef6",
+            "canonical/governance/DELEGATION_RECEIPT_HISTORY_SCOPE_REPAIR_V1.json":"60303b1dd081984e1218c8c2e978c7b1497df9e8",
+            "canonical/runtime/delegation_universal_scope_certificate_v2.py":"4045e5ac7252728c76e8f74da18d578d5e52e364",
+            "canonical/tests/test_delegation_universal_scope_certificate_v2.py":"cdfb10a4dca18bd60cb8ff9dae4840285c0cc60d",
+            "canonical/governance/DELEGATION_UNIVERSAL_SCOPE_CERTIFICATE_V2.json":"f8afc1fbffc1d422817ce7645c8c4c26f2a2dae4",
+          }
+          bad=[]
+          for rel,want in expected.items():
+              got=subprocess.check_output(["git","hash-object",f"{root}/{rel}"],text=True).strip()
+              if got != want:
+                  bad.append(f"{rel}: {got} != {want}")
+          if bad:
+              raise SystemExit("\n".join(bad))
+          print(f"EXACT_BLOB_IDENTITY_PASS {len(expected)}/{len(expected)}")
+          PY
+      - name: Run V4 history carrier tests
+        env:
+          PYTHONPATH: capsules/delegation_universal_scope_v2
+        run: python -m unittest -v canonical.tests.test_delegation_receipt_history_candidate_v4
+      - name: Run universal certificate premise tests
+        env:
+          PYTHONPATH: capsules/delegation_universal_scope_v2
+        run: python -m unittest -v canonical.tests.test_delegation_universal_scope_certificate_v2
+      - name: Run independent finite-history model checker
+        working-directory: capsules/delegation_universal_scope_v2
+        env:
+          PYTHONPATH: .
+        run: python independent_verify.py
+      - name: Compile exact universal scope certificate
+        working-directory: capsules/delegation_universal_scope_v2
+        env:
+          PYTHONPATH: .
+        run: python canonical/runtime/delegation_universal_scope_certificate_v2.py
