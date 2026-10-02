@@ -45,6 +45,9 @@ model=AutoModelForCausalLM.from_pretrained(
 model.eval()
 baseline=evaluate(model,tok)
 base_by={x["id"]:x for x in baseline["rows"]}
+useful_ids=sorted(x["id"] for x in baseline["rows"] if x["correct_preferred"])
+known_failures=sorted(x["id"] for x in baseline["rows"] if not x["correct_preferred"])
+baseline_useful_mean=statistics.mean(base_by[cid]["margin"] for cid in useful_ids)
 rows=[]
 
 for layer_id in LAYERS:
@@ -71,20 +74,24 @@ for layer_id in LAYERS:
             ab=evaluate(model,tok)
         finally:
             handle.remove()
-        flips=[x["id"] for x in ab["rows"] if base_by[x["id"]]["correct_preferred"] and not x["correct_preferred"]]
-        loss=baseline["mean_margin"]-ab["mean_margin"]
+        ab_by={x["id"]:x for x in ab["rows"]}
+        flips=[cid for cid in useful_ids if not ab_by[cid]["correct_preferred"]]
+        useful_mean=statistics.mean(ab_by[cid]["margin"] for cid in useful_ids)
+        useful_loss=baseline_useful_mean-useful_mean
         rows.append({
             "layer":layer_id,"group":group,"start":lo,"end":hi,"width":hi-lo,
             "ablated_correct_count":ab["correct_count"],
             "ablated_accuracy":ab["accuracy"],
-            "ablated_mean_margin":ab["mean_margin"],
-            "baseline_minus_ablated_mean_margin":loss,
-            "baseline_correct_to_wrong_flips":flips,
-            "material":loss>=0.10 or bool(flips),
+            "ablated_mean_margin_all_cases":ab["mean_margin"],
+            "ablated_useful_mean_margin":useful_mean,
+            "baseline_useful_minus_ablated_useful_mean_margin":useful_loss,
+            "useful_baseline_correct_to_wrong_flips":flips,
+            "known_failure_margins":{cid:ab_by[cid]["margin"] for cid in known_failures},
+            "material":useful_loss>=0.10 or bool(flips),
             "per_case_margin_delta":{x["id"]:base_by[x["id"]]["margin"]-x["margin"] for x in ab["rows"]},
         })
 
-rows.sort(key=lambda x:(-x["baseline_minus_ablated_mean_margin"],x["layer"],x["group"]))
+rows.sort(key=lambda x:(-x["baseline_useful_minus_ablated_useful_mean_margin"],x["layer"],x["group"]))
 out={
     "schema":"PROJECT_BRAIN_M0A_OLMO_MLP_SUBSPACE_CAUSAL_LOCALIZATION_RESULT_V1",
     "donor_repo":REPO,
@@ -92,8 +99,12 @@ out={
     "layers":LAYERS,
     "groups_per_layer":GROUPS,
     "baseline":baseline,
+    "useful_signal_case_ids":useful_ids,
+    "known_baseline_failure_case_ids":known_failures,
+    "baseline_useful_mean_margin":baseline_useful_mean,
     "intervention":"ZERO_ONE_CONTIGUOUS_NEAR_EQUAL_GROUP_OF_MLP_DOWN_PROJECTION_INPUT",
-    "material_rule":"BASELINE_MEAN_MARGIN_MINUS_ABLATED_MEAN_MARGIN_GE_0_10_OR_ANY_BASELINE_CORRECT_CASE_FLIPS_WRONG",
+    "material_rule":"USEFUL_BASELINE_CORRECT_MEAN_MARGIN_MINUS_ABLATED_USEFUL_MEAN_MARGIN_GE_0_10_OR_ANY_USEFUL_BASELINE_CORRECT_CASE_FLIPS_WRONG",
+    "known_failure_rule":"KNOWN_BASELINE_FAILURES_ARE_DIAGNOSTIC_ONLY_AND_CANNOT_MAKE_A_GROUP_MATERIAL",
     "ranked_group_ablation":rows,
     "material_groups":[{"layer":x["layer"],"group":x["group"],"start":x["start"],"end":x["end"]} for x in rows if x["material"]],
     "classification":"MATERIAL_SUBSPACES_LOCALIZED" if any(x["material"] for x in rows) else "DISTRIBUTED_WITHIN_SELECTED_MLPS_AT_8_GROUP_GRANULARITY",
