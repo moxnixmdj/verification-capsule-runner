@@ -22,8 +22,8 @@ jobs:
           test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_terminal_proof_supercompiler.py)" = "e91e2c2dc3f7978d115fdd45efdfe4b66e9af33a"
           test "$(git hash-object capsules/terminal_closure_stack/canonical/runtime/prewave_anti_circularity_compiler.py)" = "e610b392fdb8bce337b748f2924b1134ccdfbbd9"
           test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_prewave_anti_circularity_compiler.py)" = "6c69bfb96d5c28916774b4d0e044d981b2e48f60"
-          test "$(git hash-object capsules/terminal_closure_stack/canonical/runtime/generated_terminal_state_compiler.py)" = "24acf38a28b97068986f957feba3d8edf6ed8073"
-          test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_generated_terminal_state_compiler.py)" = "a93b1c8ccf85d9b2850be49e7cee5cb3bb434a47"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/runtime/generated_terminal_state_compiler.py)" = "5c0177050e5691fd7d3a577f5f54fc9fc11a4707"
+          test "$(git hash-object capsules/terminal_closure_stack/canonical/tests/test_generated_terminal_state_compiler.py)" = "19de5232a53d779fe7e8f1cf1f1164878b8c2eda"
       - name: Run compiler tests
         working-directory: capsules/terminal_closure_stack
         run: |
