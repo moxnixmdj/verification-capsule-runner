@@ -4,9 +4,9 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 EXPECTED={
- "canonical/runtime/p1_v5_direct_surface_scope_superset_v1.py":"7eea82aa47585030db01f9df0d49006f499bd196",
- "canonical/tests/test_p1_v5_direct_surface_scope_superset_v1.py":"2a0901705d8f3e5427b19993177e7e92ce0a807a",
- "canonical/governance/P1_V5_DIRECT_SURFACE_SCOPE_SUPERSET_V1.json":"329d157a991a0da64fa815122ca139a391ee1b54",
+ "canonical/runtime/p1_v5_direct_surface_scope_superset_v1.py":"1ad1150127c699a817584ff80c95e090ee949694",
+ "canonical/tests/test_p1_v5_direct_surface_scope_superset_v1.py":"e1997cb581be5bab027a257aeb5c616d0445ac60",
+ "canonical/governance/P1_V5_DIRECT_SURFACE_SCOPE_SUPERSET_V1.json":"a25ab34f2bd2ee7f127ecdc572187d6f40fe7b13",
  "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py":"2a8613ddac7402c7e6d2f349f9d3c32d3fb95e1d",
  "canonical/runtime/trajectory_failure_typed_ir_proof_v5.py":"3fc600a8176dac250219e3d98b92cf93d8fceef5",
  "canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json":"8703c6aa08227467a619a7ae90d0d61f8e54da39",
@@ -37,6 +37,10 @@ assert out["mutation_audit"]["all_frozen_mutations_killed"] is True,out
 assert out["mutation_audit"]["mutation_count"]==9,out
 assert all(out["mutation_audit"]["results"].values()),out
 assert out["scope_relation"]=="SUPERSET_OF_FROZEN_P1_DIRECT_PROOF_CONTRACT_SEMANTICS_BOUND_TO_ALL_THREE_DECLARED_SURFACES",out
+assert len(out["claim_bound_relations"])==3,out
+assert len({x["claim_id"] for x in out["claim_bound_relations"]})==3,out
+assert {x["direct_surface"] for x in out["claim_bound_relations"]}==set(out["surfaces"]),out
+assert all(x["relation"]=="SUPERSET" for x in out["claim_bound_relations"]),out
 assert out["private_benchmark_population_scope_claimed"] is False,out
 assert out["quarantine_lift_eligible"] is False,out
 assert out["terminal_receipts_preserved"]["terminal_results_replayed"]==0,out
@@ -47,6 +51,7 @@ print(json.dumps({
  "exact_brain_blob_count":len(EXPECTED),
  "surface_count":out["surface_count"],
  "scope_relation":out["scope_relation"],
+ "claim_bound_relation_count":len(out["claim_bound_relations"]),
  "frozen_mutation_count":out["mutation_audit"]["mutation_count"],
  "all_frozen_mutations_killed":out["mutation_audit"]["all_frozen_mutations_killed"],
  "private_benchmark_population_scope_claimed":out["private_benchmark_population_scope_claimed"],
