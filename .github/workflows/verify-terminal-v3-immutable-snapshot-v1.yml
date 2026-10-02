@@ -1,0 +1,63 @@
+name: Verify terminal V3 immutable snapshot V1
+on:
+  push:
+    branches:
+      - verify-terminal-v3-immutable-snapshot-20261002-v1
+    paths:
+      - 'capsules/terminal-v3-snapshot/**'
+      - '.github/workflows/verify-terminal-v3-immutable-snapshot-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify V3 snapshot assertions and package commitment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path("capsules/terminal-v3-snapshot")
+          cap=json.loads((root/"TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3.json").read_text())
+          assert cap["schema"]=="PROJECT_BRAIN_TERMINAL_ATOMIC_CLOSURE_CAPSULE_V3"
+          assert cap["execution_snapshot"]["commit_sha"]=="821712c059b139f3494723dca6e8d0fc82ee59a4"
+          inv=cap["prebeacon_invariants"]
+          assert inv["post_freeze_beacon"] is None
+          assert inv["terminal_results_observed"]==0
+          assert inv["fresh_terminal_evidence_consumed"]==0
+          assert inv["execution_authority_at_snapshot"] is True
+          assert inv["route_specific_launch_authority_at_snapshot"] is True
+          assert inv["candidate_mutation_after_freeze_allowed"] is False
+          assert inv["tuning_replay"] is False and inv["case_replacement"] is False
+          assert cap["verified_for_beacon"] is False
+          def gitblob(data):
+              return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+          for rel,want in sorted(cap["snapshot_blob_assertions"].items()):
+              p=root/"snapshot"/rel
+              assert p.is_file(), ("missing",rel)
+              got=gitblob(p.read_bytes())
+              assert got==want, ("blob_drift",rel,want,got)
+          names=["candidate_blob_manifest","evaluator_oracle_manifest","population_manifest","dependency_manifest","acceptance_rule_manifest"]
+          chunks=[]
+          for name in names:
+              raw=json.dumps(cap[name],sort_keys=True,separators=(",",":")).encode()
+              got=hashlib.sha256(raw).hexdigest()
+              assert got==cap["component_sha256"][name], ("component_hash",name,cap["component_sha256"][name],got)
+              chunks.append(raw)
+          package=hashlib.sha256(b"".join(chunks)).hexdigest()
+          assert package==cap["package_commitment"], (cap["package_commitment"],package)
+          auth=json.loads((root/"snapshot/canonical/governance/TERMINAL_WAVE_EXECUTION_AUTHORITY_V1.json").read_text())
+          route=json.loads((root/"snapshot/canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json").read_text())
+          assert auth["execution_authority"] is True
+          assert auth["authorization"]=="T0_T1_T2_T3_ROUTE_SPECIFIC_PARALLEL_TERMINAL_WAVE"
+          assert auth["terminal_results_observed"]==0 and auth["fresh_terminal_evidence_consumed"]==0
+          assert route["launch_authority"] is True and route["route_count"]==12 and route["implemented_executor_count"]==12
+          print(json.dumps({"status":"INDEPENDENT_PASS","snapshot":"821712c059b139f3494723dca6e8d0fc82ee59a4","assertions":len(cap["snapshot_blob_assertions"]),"package_commitment":package,"terminal_results_observed":0,"fresh_terminal_evidence_consumed":0},sort_keys=True))
+          PY
