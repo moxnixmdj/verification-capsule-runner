@@ -1,0 +1,46 @@
+name: Verify tool-route information-safe preflight
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/tool_route_information_safe_candidate_v1.py'
+      - 'canonical/runtime/tool_route_information_safe_proof_v1.py'
+      - 'canonical/tests/test_tool_route_information_safe_v1.py'
+      - '.github/workflows/verify-tool-route-information-safe.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Run exact Brain preflight tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_tool_route_information_safe_v1
+      - name: Run fresh 1024-case discovery and catalog-drift grid
+        env:
+          PROJECT_BRAIN_PREFLIGHT_SEED: ${{ github.run_id }}
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import os, random
+          import canonical.runtime.tool_route_information_safe_candidate_v1 as candidate
+          from canonical.runtime.tool_route_information_safe_proof_v1 import generate_case, run_candidate
+          root=int(os.environ["PROJECT_BRAIN_PREFLIGHT_SEED"])
+          rng=random.Random(root)
+          failures=[]
+          changed=0
+          for i in range(1024):
+              seed=rng.randrange(1,2**31)
+              change=(i%3==0)
+              changed += int(change)
+              case=generate_case(seed,change_epoch=change)
+              out=run_candidate(case,candidate)
+              if out.get("pass") is not True:
+                  failures.append((i,seed,change,out))
+                  break
+          print({"root_seed":root,"cases":1024,"changed_epoch_cases":changed,"failure_count":len(failures)})
+          if failures:
+              raise SystemExit(repr(failures[0]))
+          PY
