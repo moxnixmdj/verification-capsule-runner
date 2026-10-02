@@ -1,0 +1,19 @@
+name: Verify semantic candidate miner v2
+on:
+  pull_request:
+    paths:
+      - "capsules/semantic_candidate_miner_v2/**"
+      - ".github/workflows/verify-semantic-candidate-miner-v2.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain semantic candidate miner V2 blobs
+        run: python capsules/semantic_candidate_miner_v2/verify.py
