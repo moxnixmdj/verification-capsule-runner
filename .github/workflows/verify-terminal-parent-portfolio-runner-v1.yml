@@ -25,8 +25,8 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_runner_v1.py')" = "431b62e503a6a179f19339ae5e0ab6948424a650"
-          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_runner_v1.py')" = "8b232fb21a78421a10561bf1bc44a7eeef908dd9"
-          test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_PORTFOLIO_RUNNER_BINDING_V1.json')" = "4e57748e1c9df08d3dd0312a4cc67a30bde53337"
+          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_runner_v1.py')" = "6ab2a7921a0bfa7f573cfd75a307c6fa4b2481d3"
+          test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_PORTFOLIO_RUNNER_BINDING_V1.json')" = "4e33f458b7e04e31f372f69cabc1cfbe5ee6507f"
           test "$(git hash-object 'canonical/runtime/m0a_raw_source_terminal_suite_v2.py')" = "63b5daacfa5623c38228d41f6a84e548890d252d"
           test "$(git hash-object 'canonical/runtime/m0a_raw_source_brain_candidate_v2.py')" = "0aac96d27068bdad379703c1b0b8a7a32cacb2e2"
           test "$(git hash-object 'canonical/runtime/bounded_predicate_argument_semantics.py')" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
