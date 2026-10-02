@@ -2,8 +2,9 @@
 
 The reducer never grants capability credit. It only decides whether the frozen
 terminal wave may begin, from explicit pre-wave facts already present in the
-canonical prequalification manifest. Unknown, missing, or contradictory state
-fails closed.
+canonical prequalification manifest. Route-level prewave readiness is deliberately
+separate from terminal-wave execution authority so the reducer cannot require its
+own output as an input. Unknown, missing, or contradictory state fails closed.
 """
 from __future__ import annotations
 
@@ -61,8 +62,9 @@ def evaluate(root: Path) -> dict[str, Any]:
     p = _load(root, PREQUAL)
     failures: list[str] = []
 
-    # Terminal execution authority comes from the active behavioral proof basis,
-    # never from benchmark/surface-dominance bookkeeping.
+    # Terminal execution authority is computed from the active behavioral proof
+    # basis plus explicit pre-wave gates. Existing authority flags are deliberately
+    # not consumed as prerequisites, because that would make authorization circular.
     try:
         registry = _load(root, REGISTRY)
         basis = _load(root, PROOF_BASIS)
@@ -133,11 +135,11 @@ def evaluate(root: Path) -> dict[str, Any]:
                 failures.append(
                     f"TERMINAL_ROUTE_COVERAGE_INCOMPLETE:{terminal_ready}/{len(set(active_ids))}"
                 )
-            # execution_authority is the OUTPUT of this reducer, never an input
-            # prerequisite. Requiring a prior self-asserted authority bit here
-            # creates a circular authorization deadlock and allows mutable
-            # bookkeeping to masquerade as evidence. Route completeness and
-            # the explicit prewave predicates below are the authority basis.
+            # execution_authority is the output of this prequalification decision,
+            # not a prerequisite. Requiring the basis/protocol to already authorize
+            # execution would be circular: they remain false until this reducer passes.
+            # Safety, scope, oracle, population, dependency, zero-cost, and portfolio
+            # gates below remain mandatory and fail closed.
     except (FileNotFoundError, ValueError, json.JSONDecodeError):
         failures.append("ACTIVE_TERMINAL_PROOF_BASIS_OR_PROTOCOL_MISSING_OR_INVALID")
 
@@ -216,8 +218,7 @@ def evaluate(root: Path) -> dict[str, Any]:
         "authorization": "T0_T1_T2_T3_PARALLEL_TERMINAL_WAVE" if passed else "NONE",
         "failed_predicates": failures,
         "portfolio_blockers": blocker_map,
-        "rule": "UNKNOWN_MISSING_OR_CONTRADICTORY_PREWAVE_STATE_FAILS_CLOSED__SELF_ASSERTED_AUTHORITY_FIELDS_ARE_NOT_INPUT_GATES__ZERO_CAPABILITY_CREDIT",
-        "authority_derivation": "PURE_FUNCTION_OF_ACTIVE_CONTRACT_COVERAGE_ROUTE_ADMISSIBILITY_PROTOCOL_SET_AND_EXPLICIT_PREWAVE_FACTS",
+        "rule": "UNKNOWN_MISSING_OR_CONTRADICTORY_PREWAVE_STATE_FAILS_CLOSED__ZERO_CAPABILITY_CREDIT",
         "capability_credit_delta": 0,
         "family_credit_delta": 0,
     }
