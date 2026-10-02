@@ -1,0 +1,20 @@
+name: Verify dual judgment control envelope v1
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact envelope tests
+        run: python -m unittest -v canonical.tests.test_judgment_control_envelope_v1
+      - name: Source gate V2 tests
+        run: python -m unittest -v canonical.tests.test_judgment_source_gate_v2
+      - name: Emit zero-case materiality result
+        run: python canonical/runtime/judgment_control_envelope_v1.py
