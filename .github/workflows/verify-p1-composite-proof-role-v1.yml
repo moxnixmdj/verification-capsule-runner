@@ -14,8 +14,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact mirrored composite proof
+      - name: Verify narrow terminal scope audit
         working-directory: capsules/p1_composite_proof_v1
-        run: |
-          python canonical/runtime/p1_composite_proof_role_reconciliation_v1.py
-          python -m unittest canonical.tests.test_p1_composite_proof_role_reconciliation_v1 -v
+        run: python canonical/runtime/p1_terminal_execution_scope_audit_v1.py
+      - name: Verify composite role reconciliation
+        working-directory: capsules/p1_composite_proof_v1
+        run: python canonical/runtime/p1_composite_proof_role_reconciliation_v1.py
+      - name: Run composite adversarial tests
+        working-directory: capsules/p1_composite_proof_v1
+        run: python -m unittest canonical.tests.test_p1_composite_proof_role_reconciliation_v1 -v
