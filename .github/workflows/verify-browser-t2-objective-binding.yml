@@ -19,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object capsules/browser_t2_objective/canonical/governance/BROWSER_T2_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "36e96b9dc90301fe89f7a8f963c24920f6c6595e"
-          test "$(git hash-object capsules/browser_t2_objective/canonical/runtime/browser_t2_objective_binding_validator.py)" = "5ddca7946679221f947b70e74e9c31d7c30766ee"
+          test "$(git hash-object capsules/browser_t2_objective/canonical/runtime/browser_t2_objective_binding_validator.py)" = "0d8fc6d67c840033bd0412630e7199161b291165"
           test "$(git hash-object capsules/browser_t2_objective/canonical/tests/test_browser_t2_objective_binding_validator.py)" = "d16727f95d48cd5a7288dc7416e88b9b1d5b1c46"
           test "$(git hash-object capsules/browser_t2_objective/canonical/runtime/browser_state_information_safe_candidate.py)" = "8acf61f21a15a0d3b3e0e5735ebb80e20393e405"
           test "$(git hash-object capsules/browser_t2_objective/canonical/runtime/browser_state_information_safe_proof.py)" = "3723d3233d6058f0a43491e4654a21490f992d1e"
@@ -28,6 +28,7 @@ jobs:
           test "$(git hash-object capsules/browser_t2_objective/canonical/governance/GLOBAL_TERMINAL_SELECTION_KERNEL_V1.json)" = "669afcde50302e76c1b0a1f6b186aaafa8730515"
           test "$(git hash-object capsules/browser_t2_objective/canonical/governance/OUTER_TERMINAL_MULTIPLEX_PORTFOLIOS_V1.json)" = "7c49e3a44dc9a827e84a12b572ea6b8e9b2fa1f5"
           test "$(git hash-object capsules/browser_t2_objective/canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "afa00109031d638fef32cc3fe10be18786605c39"
+          test "$(git hash-object capsules/browser_t2_objective/canonical/runtime/consensus_dom_grounding.py)" = "2849a9eea74c6c595709f77eba23fd40a3be8c9a"
       - name: Compile exact validator
         run: python -m py_compile capsules/browser_t2_objective/canonical/runtime/browser_t2_objective_binding_validator.py
       - name: Verify frozen browser objective route
