@@ -73,12 +73,13 @@ FORBIDDEN_RECEIPT_KEYS = {
 
 
 
-def _git_blob_sha(path: Path) -> str:
-    data = path.read_bytes()
-    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\\0" + data).hexdigest()
+defdef _git_object_sha(root: Path, relative_path: str) -> str:
+    data = (root / relative_path).read_bytes()
+    header = b"blob " + str(len(data)).encode() + bytes([0])
+    return hashlib.sha1(header + data).hexdigest()
 
 
-def static_binding_preflight(root: Path = Path(".")) -> dict[str, Any]:
+ static_binding_preflight(root: Path = Path(".")) -> dict[str, Any]:
     """Verify the seven exact frozen governance binding blobs before any parent wave."""
     errors: list[str] = []
     rows: dict[str, dict[str, Any]] = {}
@@ -88,7 +89,18 @@ def static_binding_preflight(root: Path = Path(".")) -> dict[str, Any]:
             errors.append("BINDING_MISSING:" + behavior_id)
             rows[behavior_id] = {"path": binding["binding"], "exists": False}
             continue
-        got = _git_blob_sha(path)
+        try:
+            got = _git_object_sha(root, binding["binding"])
+        except Exception as exc:
+            errors.append("BINDING_OBJECT_ID_UNAVAILABLE:" + behavior_id + ":" + type(exc).__name__)
+            rows[behavior_id] = {
+                "path": binding["binding"],
+                "exists": True,
+                "expected_blob": binding["binding_blob"],
+                "actual_blob": None,
+                "match": False,
+            }
+            continue
         expected = binding["binding_blob"]
         ok = got == expected
         if not ok:
