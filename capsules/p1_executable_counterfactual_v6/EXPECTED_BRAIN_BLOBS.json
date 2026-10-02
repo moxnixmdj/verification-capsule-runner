@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_P1_EXECUTABLE_COUNTERFACTUAL_V6_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_branch": "worker/p1-executable-counterfactual-v6-20261002",
+  "brain_head": "238ff4fdc314fa82a4e07791a89139a4666e4584",
+  "exact_brain_blobs": {
+    "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py": "2a8613ddac7402c7e6d2f349f9d3c32d3fb95e1d",
+    "canonical/runtime/trajectory_failure_executable_counterfactual_proof_v6.py": "e2919a56f853991b3b2c2630830ac48bfaa8af05",
+    "canonical/tests/test_trajectory_failure_executable_counterfactual_v6.py": "f16f432ba93684095624249051b58efab09fb1f5",
+    "canonical/governance/P1_EXECUTABLE_COUNTERFACTUAL_ENVELOPE_V6.json": "b1c7d3a796d9550270b08a09e6dcc1bdd8ced248"
+  },
+  "expected": {
+    "cross_product_case_count": 192,
+    "identified_or_interaction_rescue_count": 144,
+    "interaction_case_count": 48,
+    "ambiguous_case_count": 48,
+    "explicit_scope_root_case_count": 24
+  }
+}
