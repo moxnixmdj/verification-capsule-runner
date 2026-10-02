@@ -41,4 +41,18 @@ jobs:
       - name: Run launcher authority and concrete-runner wiring regressions
         run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_parent_portfolio_launcher_v1
       - name: Derive full live terminal launch authority
-        run: PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee terminal_launch_authority_verdict.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python canonical/runtime/terminal_wave_launch_authority_reducer_v1.py . | tee terminal_launch_authority_verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open('terminal_launch_authority_verdict.json'))
+          assert v.get('pass') is True, v
+          assert v.get('launch_authority') is True, v
+          assert v.get('execution_authority') is True, v
+          assert v.get('failed_predicates') == [], v
+          assert v.get('route_count') == 12, v
+          assert v.get('terminal_results_observed') == 0, v
+          assert v.get('fresh_terminal_evidence_consumed') == 0, v
+          PY
