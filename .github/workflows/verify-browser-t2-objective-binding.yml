@@ -1,4 +1,5 @@
 name: Verify browser T2 objective binding
+# retrigger-current-exact-browser-binding
 on:
   pull_request:
     branches: [main]
