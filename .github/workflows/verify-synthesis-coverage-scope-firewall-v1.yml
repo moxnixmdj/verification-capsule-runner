@@ -1,0 +1,34 @@
+name: Verify synthesis coverage scope firewall v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/synthesis_coverage_scope_firewall_v1/**"
+      - ".github/workflows/verify-synthesis-coverage-scope-firewall-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify synthesis ceiling stays blocked without same-or-broader scope proof
+        run: |
+          cd capsules/synthesis_coverage_scope_firewall_v1
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/synthesis_required_claim_coverage_ceiling_lift_verifier_v1.py
+          python -m unittest canonical.tests.test_synthesis_required_claim_coverage_ceiling_lift_v1 -v
+          python - <<'PY'
+          from canonical.runtime.synthesis_required_claim_coverage_ceiling_lift_verifier_v1 import CAND,SUITES,WAVE,POST,TARGETS,BIND,RESID,sha,load,evaluate
+          out=evaluate(load(CAND),load(SUITES),load(WAVE),load(POST),load(TARGETS),load(BIND),load(RESID),{"suites":sha(SUITES),"wave":sha(WAVE),"post":sha(POST),"targets":sha(TARGETS),"bind":sha(BIND),"resid":sha(RESID)})
+          assert out["pass"] is False, out
+          assert "SOURCE_SCOPE_NOT_PROVED_EXACT_OR_SUPERSET_OF_TARGET_SCOPE" in out["errors"], out
+          assert "SOURCE_TARGET_SCOPE_RELATION_NOT_INDEPENDENTLY_VERIFIED" in out["errors"], out
+          print(out)
+          PY
