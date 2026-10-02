@@ -1,8 +1,8 @@
 name: Verify P1 V2 and SA-CCR prewave routes
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: ['verify/p1v2-saccr-prewave-20261002']
     paths:
       - 'canonical/runtime/trajectory_failure_information_safe_proof_v2.py'
       - 'canonical/runtime/trajectory_failure_information_safe_candidate_v2.py'
