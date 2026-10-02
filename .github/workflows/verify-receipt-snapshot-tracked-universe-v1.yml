@@ -1,0 +1,42 @@
+name: Verify receipt snapshot tracked universe v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/receipt_snapshot_tracked_universe_v1/**"
+      - ".github/workflows/verify-receipt-snapshot-tracked-universe-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/receipt_snapshot_tracked_universe_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(src).read_bytes()
+              actual=hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+              assert actual==expected,(src,actual,expected)
+          print("exact Brain blob identities: PASS")
+          PY
+      - name: Compile exact Brain runtime bytes
+        run: |
+          cd capsules/receipt_snapshot_tracked_universe_v1
+          export PYTHONPATH=.
+          python -m py_compile \
+            canonical/runtime/canonical_proof_atom_basis_v2.py \
+            canonical/runtime/proof_atom_receipt_index_v2.py \
+            canonical/runtime/proof_atom_receipt_snapshot_v1.py
+      - name: Replay adversarial tracked-universe tests
+        run: |
+          cd capsules/receipt_snapshot_tracked_universe_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_proof_atom_receipt_snapshot_v1 -v
