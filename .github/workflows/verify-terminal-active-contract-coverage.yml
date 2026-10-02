@@ -1,0 +1,85 @@
+name: Verify terminal active-contract coverage guard
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/terminal_prequalification_reducer.py'
+      - 'canonical/tests/test_terminal_prequalification_reducer.py'
+      - '.github/workflows/verify-terminal-active-contract-coverage.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain candidate blobs
+        run: |
+          test "$(git hash-object canonical/runtime/terminal_prequalification_reducer.py)" = "e05a69031c17bdf4a5aaa344666c2824751a7907"
+          test "$(git hash-object canonical/tests/test_terminal_prequalification_reducer.py)" = "bba702852285d4691da70802ce054c489b06efd5"
+      - name: Run reducer regression suite
+        run: python -m unittest canonical.tests.test_terminal_prequalification_reducer -v
+      - name: Verify 12-vs-10 omission fails closed
+        run: |
+          python - <<'PY'
+          import json, tempfile
+          from pathlib import Path
+          from canonical.runtime.terminal_prequalification_reducer import evaluate
+
+          portfolios = {
+            "T0_CODING_SEMANTIC_GEOMETRY_PORTFOLIO": {"blockers":[]},
+            "T1_PROFESSIONAL_FINANCE_ARTIFACT_SYNTHESIS_VISION_PORTFOLIO": {"blockers":[]},
+            "T2_INTERACTIVE_AGENCY_RECOVERY_SCOPE_DELEGATION_COMPOSITION_PORTFOLIO": {"blockers":[]},
+            "T3_RESEARCH_UNKNOWN_DOMAIN_PORTFOLIO": {"blockers":[]},
+          }
+          preq = {
+            "schema":"PROJECT_BRAIN_EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1",
+            "core_deduction":{"preproof_implementation_residual_count":0,"consequence":"NO_NEW_GENERIC_MECHANISM_WORK_BEFORE_TERMINAL_WAVE"},
+            "prequalification_progress":{
+              "exact_cut_current_and_verified":True,
+              "zero_open_specification_holes":True,
+              "zero_preproof_implementation_residuals":True,
+              "shared_one_shot_contamination_oracle_mutation_protocol_frozen":True,
+              "public_evaluation_route_matrix_frozen":True,
+              "brain_route_and_dependency_manifest_frozen":"PASS__receipt",
+              "no_known_opaque_target_capability_provider_in_operative_brain_route":"PASS__receipt",
+              "no_known_unresolved_composition_defect_before_wave":"PASS__receipt",
+              "every_surface_zero_cost_route_frozen":True,
+              "every_surface_oracle_and_verifier_binding_frozen":True,
+              "every_portfolio_task_case_harness_metric_stop_rule_and_mutation_set_frozen":True,
+              "four_portfolios_pairwise_execution_independent":"PASS__FROZEN",
+            },
+            "portfolio_status":portfolios,
+            "remaining_irreducible_prequalification_blockers":[],
+          }
+          active=[
+            "SPECIFICATION_TO_INDEPENDENT_ACCEPTANCE_MODEL_001",
+            "STRUCTURED_METHOD_COMPLETE_CALCULATION_GRAPH_001",
+            "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001",
+            "PROFESSIONAL_ARTIFACT_PLAN_AND_QUALITY_JUDGMENT_001",
+            "NATIVE_ARTIFACT_STRUCTURED_EDIT_PRESERVATION_001",
+            "EVIDENCE_TO_AUDIENCE_SYNTHESIS_001",
+            "ITERATIVE_RESEARCH_EVIDENCE_CONTROL_001",
+            "TOOL_ROUTE_DISCOVERY_AND_SELECTION_001",
+            "BROWSER_VISUAL_STATE_TO_GROUNDED_ACTION_001",
+            "TASK_TO_DELEGATION_GRAPH_001",
+            "CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001",
+            "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001",
+          ]
+          basis=active[:10]
+          with tempfile.TemporaryDirectory() as td:
+            root=Path(td); g=root/"canonical/governance"; g.mkdir(parents=True)
+            (g/"EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json").write_text(json.dumps(preq))
+            (g/"BEHAVIORAL_CONTRACT_REGISTRY_V1.json").write_text(json.dumps({"active_contracted_residuals":[{"behavior_id":x} for x in active]}))
+            (g/"GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V3.json").write_text(json.dumps({"obligations":[{"id":x} for x in basis]}))
+            out=evaluate(root)
+            assert out["pass"] is False, out
+            joined="\n".join(out["failed_predicates"])
+            assert "CAD_DRAWING_TO_GLOBAL_SOLID_TOPOLOGY_AND_ENVELOPE_001" in joined, out
+            assert "SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001" in joined, out
+            print(json.dumps(out,indent=2,sort_keys=True))
+          PY
