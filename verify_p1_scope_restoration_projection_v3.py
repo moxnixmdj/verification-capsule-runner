@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 
 EXPECTED = {
-    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "2781b228c1277138eae5fab3d5aacb1a0ece351d",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "b0631614f89fe694ec80ebe52d0a3adb5a13591d",
     "canonical/governance/TERMINAL_PROJECTION_CONSISTENCY_V1.json": "0b1db563c7f1c1d0bc90fca025b8576f24d09378",
     "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json": "5d31f372528421ea022a28b8645fbd696cb87a42",
     "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json": "c62590c2d7bb6024dd73e56f709645989f79cdb8",
