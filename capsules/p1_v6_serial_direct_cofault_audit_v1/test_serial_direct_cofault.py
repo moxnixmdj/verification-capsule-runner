@@ -103,3 +103,10 @@ def test_candidate_parser_ignores_failure_semantics_load_bearing_distinction():
                 c["failure_semantics"]="DERIVED_UPSTREAM"
     out2=candidate.solve(mutated)
     assert out1==out2
+
+
+if __name__ == "__main__":
+    test_v6_candidate_drops_downstream_direct_cofault_and_its_repair_does_not_rescue()
+    test_counterexample_uses_only_v6_declared_public_mechanisms_and_semantics()
+    test_candidate_parser_ignores_failure_semantics_load_bearing_distinction()
+    print("P1 V6 serial direct co-fault counterexample: PASS")
