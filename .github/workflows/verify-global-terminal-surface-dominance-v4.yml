@@ -8,6 +8,13 @@ on:
       - 'verification/test_global_terminal_surface_dominance_v4.py'
       - 'canonical/runtime/proof_route_dominance.py'
       - '.github/workflows/verify-global-terminal-surface-dominance-v4.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/GLOBAL_TERMINAL_SURFACE_DOMINANCE_INPUT_V4.json'
+      - 'verification/test_global_terminal_surface_dominance_v4.py'
+      - 'canonical/runtime/proof_route_dominance.py'
+      - '.github/workflows/verify-global-terminal-surface-dominance-v4.yml'
   workflow_dispatch:
 
 permissions:
