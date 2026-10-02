@@ -1,3 +1,4 @@
+# sync-trigger: 2026-10-02 structured-method-gate-v2
 name: Verify structured-method scope Gate V2
 on:
   pull_request:
