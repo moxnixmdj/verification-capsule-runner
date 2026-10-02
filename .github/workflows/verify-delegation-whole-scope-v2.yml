@@ -6,6 +6,7 @@ on:
       - 'canonical/runtime/delegation_whole_scope_candidate_v2.py'
       - 'canonical/runtime/delegation_whole_scope_proof_v2.py'
       - 'canonical/tests/test_delegation_whole_scope_v2.py'
+      - 'canonical/tests/test_delegation_feasible_plan_regression_v1.py'
       - '.github/workflows/verify-delegation-whole-scope-v2.yml'
 permissions:
   contents: read
@@ -19,8 +20,10 @@ jobs:
           python-version: '3.12'
       - name: Bind exact Brain blobs
         run: |
-          test "$(git hash-object canonical/runtime/delegation_whole_scope_candidate_v2.py)" = "9f2c3aa42352cba66967afb1f8a3f45357833c41"
-          test "$(git hash-object canonical/runtime/delegation_whole_scope_proof_v2.py)" = "5785b07f482e38acdf7916e5414d90c2c0c305b7"
+          test "$(git hash-object canonical/runtime/delegation_whole_scope_candidate_v2.py)" = "f1a93ee66d90093de61dc17c6ebf2e24073df522"
+          test "$(git hash-object canonical/runtime/delegation_whole_scope_proof_v2.py)" = "928466401b36e4f3b09c517950cc050432a0616f"
           test "$(git hash-object canonical/tests/test_delegation_whole_scope_v2.py)" = "7052641c539cf179b48f344c6092ab24e6e931ff"
       - name: Run whole-dimension delegation preflight
-        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_delegation_whole_scope_v2
+        run: |
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_delegation_whole_scope_v2
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_delegation_feasible_plan_regression_v1
