@@ -1,15 +1,17 @@
 {
-  "schema": "PROJECT_BRAIN_PROOF_ATOM_RECEIPT_INDEX_PUBLIC_VERIFIER_INPUT_V2",
+  "schema": "PROJECT_BRAIN_PROOF_ATOM_RECEIPT_INDEX_PUBLIC_VERIFIER_INPUT_V3",
   "brain_repository": "moxnixmdj/brain",
   "brain_ref": "main",
   "exact_brain_blobs": {
-    "canonical/runtime/proof_atom_receipt_index_v2.py": "1b9e2983a46e8526190abbc2d041070f846bc825",
-    "canonical/tests/test_proof_atom_receipt_index_v2.py": "ea36553159149df2f2b5ddae4fa61c2758dfc623",
-    "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "1f335db2d2b684d9aaee78b8dd5e7e4ba0cb04ce",
+    "canonical/runtime/proof_atom_receipt_index_v2.py": "5f11b47dc27bfb019bef13cf64a0ef25d7ba1a1f",
+    "canonical/tests/test_proof_atom_receipt_index_v2.py": "14103ef7c96330a281367409a5b76a0a74e7129d",
+    "canonical/governance/PROOF_ATOM_RECEIPT_INDEX_V2.json": "27fa9deb9ef591adb9e33b24bd8e971a74ef5e89",
     "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1",
     "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
     "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json": "898e450c62c06cf6d1a4a3f826a255da9161a229"
   },
   "expected_canonical_atoms": 40,
-  "note": "Exact bytes fetched after Brain governance repin commit ef8b8db5fa4d22692bddc117b399280402f5adaa."
+  "atom_identity_namespace": "PA1",
+  "self_reflection_quarantine_required": true,
+  "note": "Exact current Brain bytes pinned after receipt-index self-reflection quarantine; verifier must reject receipt-index self-verification and declared-corpus restatements as candidate evidence."
 }
