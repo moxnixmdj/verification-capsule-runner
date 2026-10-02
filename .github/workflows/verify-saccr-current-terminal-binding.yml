@@ -1,0 +1,84 @@
+name: Verify current SA-CCR terminal population binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/saccr_credit_kernel.py'
+      - 'canonical/runtime/saccr_credit_information_safe_candidate.py'
+      - 'canonical/runtime/saccr_credit_information_safe_proof.py'
+      - 'canonical/runtime/saccr_terminal_population_binding_v1.py'
+      - 'canonical/tests/test_saccr_terminal_population_binding_v1.py'
+      - 'canonical/governance/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json'
+      - 'canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json'
+      - 'canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json'
+      - '.github/workflows/verify-saccr-current-terminal-binding.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact current Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/saccr_credit_kernel.py)" = "4a9536a391e21ec9895c1abdf45a673c0451ba3a"
+          test "$(git hash-object canonical/runtime/saccr_credit_information_safe_candidate.py)" = "ff2fa256738ffbe5b15bb813a11c82046692b5e8"
+          test "$(git hash-object canonical/runtime/saccr_credit_information_safe_proof.py)" = "8eb94b8e8b00e3ace662e7fac2e8b6a8f7bb2200"
+          test "$(git hash-object canonical/runtime/saccr_terminal_population_binding_v1.py)" = "ab3a32e65f8ec6de07b8eb294ed1c3e723b34bd9"
+          test "$(git hash-object canonical/tests/test_saccr_terminal_population_binding_v1.py)" = "6f62177ffa02848024c81ea9ef134bbabe6c8e4b"
+          test "$(git hash-object canonical/governance/SA_CCR_SCOPE_EQUIVALENT_PROOF_GATE_V2_INPUT.json)" = "e1334040617340b232d74c187116aedc09236398"
+          test "$(git hash-object canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "5af6db8b0e47c978043f07bc5005f8597e9128dd"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json)" = "baf43825cafd30cb1db63a4f60509f619885d5a5"
+          test "$(git hash-object canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json)" = "777cdf77f7fef02e8675d51d5bebaf16fb0e77b1"
+      - name: Validate current frozen manifest and exact bound blobs
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          p=json.loads(Path("canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json").read_text())
+          assert p["status"].startswith("FROZEN_PREWAVE_TERMINAL_POPULATION_BINDING")
+          assert p["behavior_id"]=="SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001"
+          assert p["terminal_population"]["sample_count"]==512
+          assert p["terminal_population"]["adaptive_case_selection"] is False
+          assert p["terminal_population"]["replay_for_tuning"] is False
+          assert p["terminal_population"]["case_replacement"] is False
+          assert p["acceptance_rule"]["required_case_pass_fraction"]==1
+          assert p["acceptance_rule"]["final_rule"]=="ALL_512_CASES_EXACT_PASS_AND_ALL_FROZEN_METHOD_BRANCH_COVERAGE_PRESENT"
+          assert p["terminal_results_observed"]==0
+          assert p["fresh_terminal_evidence_consumed"]==0
+          for path, expected in p["exact_bound_blobs"].items():
+              actual=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert actual==expected,(path,actual,expected)
+          scope=json.loads(Path(p["independent_scope_gate"]).read_text())
+          assert scope["public_verifier"]["conclusion"]=="success"
+          assert scope["terminal_results_observed"]==0
+          print("CURRENT_SA_CCR_MANIFEST_BINDING_PASS")
+          PY
+      - name: Run exact binding tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_saccr_terminal_population_binding_v1
+      - name: Run independent development-only beacon matrix
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime import saccr_terminal_population_binding_v1 as t
+          pairs=[
+            ("DEV_COMMIT_A","DEV_BEACON_A"),
+            ("DEV_COMMIT_B","DEV_BEACON_B"),
+            ("DEV_COMMIT_C","DEV_BEACON_C"),
+            ("DEV_COMMIT_D","DEV_BEACON_D"),
+          ]
+          for c,b in pairs:
+              out=t.run_population(c,b)
+              assert out["pass"],out
+              assert out["executed_count"]==512
+              assert out["failed_slots"]==[]
+              assert out["coverage_missing"]==[]
+              assert out["case_replacement"] is False
+              assert out["acceptance_rule"]=="ALL_512_CASES_EXACT_PASS_AND_ALL_FROZEN_METHOD_BRANCH_COVERAGE_PRESENT"
+          assert t.derive_seed("DEV_COMMIT_A","DEV_BEACON_A",0)!=t.derive_seed("DEV_COMMIT_A","DEV_BEACON_B",0)
+          print({"development_only_matrices":len(pairs),"cases_each":512,"terminal_results_observed":0})
+          PY
