@@ -9,6 +9,7 @@ on:
       - 'canonical/tests/test_trajectory_failure_information_safe_v2.py'
       - 'canonical/runtime/saccr_active_contract_proof_v1.py'
       - 'canonical/runtime/saccr_active_contract_candidate_v1.py'
+      - 'canonical/runtime/saccr_credit_kernel.py'
       - 'canonical/tests/test_saccr_active_contract_proof_v1.py'
       - '.github/workflows/verify-p1v2-saccr-prewave.yml'
 
@@ -39,5 +40,6 @@ jobs:
         run: |
           test "$(git hash-object canonical/runtime/saccr_active_contract_proof_v1.py)" = "21938f83d3841af51837a22b7568a7f9ee2600f4"
           test "$(git hash-object canonical/runtime/saccr_active_contract_candidate_v1.py)" = "904fa7b8a9d45719305db9dace395770841807bd"
+          test "$(git hash-object canonical/runtime/saccr_credit_kernel.py)" = "4a9536a391e21ec9895c1abdf45a673c0451ba3a"
           test "$(git hash-object canonical/tests/test_saccr_active_contract_proof_v1.py)" = "59607d07c57e747863086d00b51e142594c5112c"
       - run: PYTHONPATH=. python -m unittest -v canonical.tests.test_saccr_active_contract_proof_v1
