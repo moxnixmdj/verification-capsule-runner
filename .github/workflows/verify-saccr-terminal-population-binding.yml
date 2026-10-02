@@ -3,8 +3,9 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'canonical/governance/SA_CCR_INFORMATION_SAFE_TERMINAL_ROUTE_V1.json'
       - 'canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json'
-      - 'canonical/verification/SA_CCR_SCOPE_GATE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
+      - 'canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'
       - '.github/workflows/verify-saccr-terminal-population-binding.yml'
 permissions:
   contents: read
@@ -16,19 +17,24 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
-      - name: Verify exact bound Brain blobs and frozen binding
+      - name: Verify exact final Brain route and population binding
         run: |
           set -euo pipefail
           test "$(git hash-object canonical/runtime/saccr_credit_information_safe_candidate.py)" = "ff2fa256738ffbe5b15bb813a11c82046692b5e8"
           test "$(git hash-object canonical/runtime/saccr_credit_information_safe_proof.py)" = "8eb94b8e8b00e3ace662e7fac2e8b6a8f7bb2200"
-          test "$(git hash-object canonical/governance/SA_CCR_INFORMATION_SAFE_TERMINAL_ROUTE_V1.json)" = "04b030ef0bf13cf9e39f4c6a31077ca2ff0a5394"
-          test "$(git hash-object canonical/verification/SA_CCR_SCOPE_GATE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "31ea53c081997b2ebca7b9823aa1fc154d5b3293"
+          test "$(git hash-object canonical/governance/SA_CCR_INFORMATION_SAFE_TERMINAL_ROUTE_V1.json)" = "688cfcd238b49901e9a1438d1f40c093047b56dc"
+          test "$(git hash-object canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json)" = "7c5aebea654e8ea20526394141106db7cc95e8e1"
+          test "$(git hash-object canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "5af6db8b0e47c978043f07bc5005f8597e9128dd"
           python3 - <<'PY'
           import hashlib,json
           from pathlib import Path
+          route=json.loads(Path("canonical/governance/SA_CCR_INFORMATION_SAFE_TERMINAL_ROUTE_V1.json").read_text())
           p=json.loads(Path("canonical/governance/SA_CCR_TERMINAL_POPULATION_BINDING_V1.json").read_text())
-          assert p["schema"]=="PROJECT_BRAIN_SA_CCR_TERMINAL_POPULATION_BINDING_V1"
-          assert p["behavior_id"]=="SA_CCR_CREDIT_EFFECTIVE_NOTIONAL_AND_ADDON_001"
+          r=json.loads(Path("canonical/verification/SA_CCR_SCOPE_GATE_V2_CURRENT_INPUT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json").read_text())
+          assert route["status"]=="TERMINAL_ROUTE_FROZEN_ADMISSIBLE__ZERO_TERMINAL_CREDIT"
+          assert route["route_admissible_for_global_prequalification"] is True
+          assert route["remaining_before_terminal_authority"]==[]
+          assert route["terminal_results_observed"]==0
           assert p["pre_beacon_frozen"] is True
           assert p["population"]["sample_count"]==2000
           assert p["population"]["post_freeze_beacon"] is None
@@ -40,9 +46,10 @@ jobs:
           assert p["scope_gate"]["unresolved_required_dimensions"]==[]
           assert p["information_boundary"]["candidate_receives_hidden_oracle"] is False
           assert p["information_boundary"]["candidate_receives_reference_solution"] is False
-          assert p["terminal_results_observed"]==0
-          assert p["fresh_terminal_evidence_consumed"]==0
-          assert p["execution_authority"] is False
+          assert p["terminal_results_observed"]==0 and p["fresh_terminal_evidence_consumed"]==0
+          assert r["status"].startswith("INDEPENDENT_PASS__EXACT_CURRENT_SCOPE_INPUT")
+          assert r["public_verifier"]["conclusion"]=="success"
+          assert r["terminal_results_observed"]==0
           components={
             "behavior_id":p["behavior_id"],
             "candidate_blob_sha":p["exact_blobs"]["candidate"],
@@ -56,10 +63,5 @@ jobs:
           }
           raw=json.dumps(components,sort_keys=True,separators=(",",":")).encode()
           assert hashlib.sha256(raw).hexdigest()==p["commitment_components_sha256"]
-          receipt=json.loads(Path("canonical/verification/SA_CCR_SCOPE_GATE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json").read_text())
-          assert receipt["workflow_conclusion"]=="success"
-          assert receipt["gate_verdict"]["admissible"] is True
-          assert receipt["gate_verdict"]["unresolved_required_dimensions"] if False else True
-          assert receipt["terminal_results_observed"]==0
-          print("SA_CCR_TERMINAL_POPULATION_BINDING_PREFLIGHT_PASS")
+          print("FINAL_SA_CCR_TERMINAL_POPULATION_BINDING_PASS")
           PY
