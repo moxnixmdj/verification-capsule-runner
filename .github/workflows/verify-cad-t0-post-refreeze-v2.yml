@@ -1,0 +1,39 @@
+name: Verify CAD T0 post-refreeze V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/cad_t0_post_refreeze_v2/**'
+      - '.github/workflows/verify-cad-t0-post-refreeze-v2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact V2 Brain control blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/cad_t0_post_refreeze_v2
+          test "$(git hash-object canonical/governance/CAD_T0_CANDIDATE_FREEZE_V2.json)" = "039056ad65c1721d871d378ff0497fc461ab4df2"
+          test "$(git hash-object canonical/governance/CAD_T0_POST_REFREEZE_BINDING_V2.json)" = "7a6f04e08587ff5471ab406c04ab8acd76cc16eb"
+          test "$(git hash-object canonical/runtime/cad_t0_post_refreeze_guard_v2.py)" = "9dc59f0ed916546848b091d21a153f018cdcabda"
+          test "$(git hash-object canonical/tests/test_cad_t0_post_refreeze_guard_v2.py)" = "1f02e2aabf5fa0eea6dc34ca4dfbb0a2e46a2c2a"
+      - name: Compile V2 guard and CAD evaluator runtime
+        run: |
+          cd capsules/cad_t0_post_refreeze_v2
+          python -m py_compile canonical/runtime/cad_t0_post_refreeze_guard_v2.py canonical/runtime/cad_t0_geometry_population.py canonical/runtime/cad_t0_oracle_adapter.py canonical/runtime/cad_t0_multiplex_scorer.py canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py
+      - name: Run exact post-refreeze guard
+        run: |
+          cd capsules/cad_t0_post_refreeze_v2
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_post_refreeze_guard_v2
+          PYTHONPATH=. python canonical/runtime/cad_t0_post_refreeze_guard_v2.py .
+      - name: Re-run population and oracle regression under V2 cone
+        run: |
+          cd capsules/cad_t0_post_refreeze_v2
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_cad_t0_geometry_population_and_oracle
