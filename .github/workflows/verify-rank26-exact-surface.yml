@@ -5,6 +5,7 @@ on:
     paths:
       - 'verification/rank26_surface/Dockerfile'
       - '.github/workflows/verify-rank26-exact-surface.yml'
+      - 'verification/rank26_surface/trigger.txt'
 permissions:
   contents: read
 jobs:
