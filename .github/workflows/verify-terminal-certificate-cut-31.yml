@@ -1,0 +1,36 @@
+name: Verify terminal certificate cut 31 frontier
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/terminal_certificate_cut_31/**'
+      - '.github/workflows/verify-terminal-certificate-cut-31.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs and 31-predicate cut
+        env:
+          EXPECTED_JSON: '{"canonical/runtime/terminal_certificate_cut_v1.py":"7ad852e65e47a6ab3110b02dac402b126cac78b7","canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V1.json":"401e23484924d3d0a6f3f363b9d8606c2522564f","canonical/tests/test_terminal_certificate_cut_v1.py":"8f22a41f0913c0c706a2b90d865efff8e5c59ad4"}'
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path('capsules/terminal_certificate_cut_31')
+          expected=json.loads(os.environ['EXPECTED_JSON'])
+          for rel,want in sorted(expected.items()):
+              data=(root/rel).read_bytes()
+              got=hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+              assert got==want,(rel,got,want)
+          print('TERMINAL_CERTIFICATE_CUT_31_EXACT_BLOBS_PASS',len(expected))
+          PY
+          cd capsules/terminal_certificate_cut_31
+          PYTHONPATH=. python canonical/tests/test_terminal_certificate_cut_v1.py
