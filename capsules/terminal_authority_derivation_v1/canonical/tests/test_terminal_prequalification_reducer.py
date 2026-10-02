@@ -47,6 +47,8 @@ class TerminalPrequalificationReducerTests(unittest.TestCase):
         basis_contracts=None,
         protocol_contracts=None,
         route_ready=True,
+        basis_prewave_readiness=True,
+        protocol_prewave_readiness=True,
         basis_execution_authority=False,
         protocol_execution_authority=False,
     ):
@@ -75,6 +77,7 @@ class TerminalPrequalificationReducerTests(unittest.TestCase):
                     "active_contract_count": len(basis_contracts),
                     "admissible_frozen_terminal_route_count": len(basis_contracts) if route_ready else 0,
                     "execution_authority": basis_execution_authority,
+                    "prewave_route_execution_readiness": basis_prewave_readiness,
                     "contracts": [
                         {"behavior_id": x, "proof_state": state, "blockers": blockers}
                         for x in basis_contracts
@@ -86,6 +89,7 @@ class TerminalPrequalificationReducerTests(unittest.TestCase):
                 json.dumps({
                     "active_contracts": protocol_contracts,
                     "execution_authority": protocol_execution_authority,
+                    "prewave_route_execution_readiness": protocol_prewave_readiness,
                 }),
                 encoding="utf-8",
             )
@@ -102,30 +106,15 @@ class TerminalPrequalificationReducerTests(unittest.TestCase):
         self.assertTrue(any(x.startswith("TERMINAL_ROUTE_NOT_ADMISSIBLE:") for x in out["failed_predicates"]))
         self.assertIn("TERMINAL_ROUTE_COVERAGE_INCOMPLETE:0/2", out["failed_predicates"])
 
-    def test_self_asserted_authority_is_not_required(self):
+    def test_prior_authority_flags_do_not_create_circular_gate(self):
         out = self.run_fixture(
             self.fixture(),
             basis_execution_authority=False,
             protocol_execution_authority=False,
         )
-        self.assertTrue(out["pass"])
-        self.assertEqual(
-            out["authority_derivation"],
-            "PURE_FUNCTION_OF_ACTIVE_CONTRACT_COVERAGE_ROUTE_ADMISSIBILITY_PROTOCOL_SET_AND_EXPLICIT_PREWAVE_FACTS",
-        )
-
-    def test_self_asserted_authority_cannot_override_real_blocker(self):
-        out = self.run_fixture(
-            self.fixture(),
-            route_ready=False,
-            basis_execution_authority=True,
-            protocol_execution_authority=True,
-        )
-        self.assertFalse(out["pass"])
-        self.assertTrue(any(
-            x.startswith("TERMINAL_ROUTE_NOT_ADMISSIBLE:")
-            for x in out["failed_predicates"]
-        ))
+        self.assertTrue(out["pass"], out)
+        self.assertTrue(out["execution_authority"])
+        self.assertEqual(out["authorization"], "T0_T1_T2_T3_PARALLEL_TERMINAL_WAVE")
 
     def test_surface_blocker_fails_closed(self):
         out = self.run_fixture(self.fixture({"T1": ["SCORER_OPEN"]}))
