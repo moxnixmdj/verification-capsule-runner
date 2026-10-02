@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_CURRENT_AUTHORITY_SCHEDULER_GENERATION_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "worker/supersede-stale-flat-next-action-20261002",
+  "brain_head": "cadc90acddf45de54c3e4d1075918286a350a9f8",
+  "exact_brain_blobs": {
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "2c6f5c102fb77b1818d54365b5d536a700e99615",
+    "canonical/governance/TERMINAL_SCHEDULING_ACTIVATION_V6.json": "e56719b8c63078273a6974104d413aa1b643da3b",
+    "canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json": "ec0ca144939a19234f1c53378cc76af2014a6179",
+    "canonical/governance/CANONICAL_PROOF_ATOM_BASIS_ACTIVATION_V1.json": "cdd66b13cc0a67b38ef87ea341c4ef76384660d9"
+  },
+  "expected": {
+    "authority_terminal_achieved": false,
+    "opus55_acceptance": "2/19_PASS__17/19_OPEN",
+    "flat_v1_projection_status_prefix": "SUPERSEDED_FOR_EXECUTION",
+    "synthesis_action_state": "BLOCKED_PRECONDITIONS",
+    "current_frontier": "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json",
+    "current_hypergraph": "canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json",
+    "canonical_leaf_atoms": 40,
+    "capability_credit_delta": 0,
+    "family_credit_delta": 0,
+    "execution_authority": false,
+    "promotion_authority": false
+  }
+}
