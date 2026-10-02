@@ -1,27 +1,36 @@
 """Typed cross-domain trajectory causal-localization candidate V5.
 
-V5 preserves V4's information boundary and adds SCOPE as an explicit first-class
-contract-failure mechanism. Hidden causal labels and intervention outcomes are
-never candidate-visible.
+The candidate receives only normalized trajectory IR, declared contracts/check
+results, dependency/resource flow, terminal failed resources, and explicit
+composition semantics. Hidden cause labels and intervention outcomes are never
+visible.
+
+It localizes root violated steps by backward causal relevance, rejects downstream
+symptoms, classifies the violated contract mechanism, preserves ambiguity when
+multiple independent roots survive, and emits conjunctive cause sets only when
+the visible dependency graph explicitly requires the roots jointly.
 """
 from __future__ import annotations
 from typing import Any, Mapping
 
+
 ALLOWED_KINDS = {
     "AUTHORITY",
-    "SCOPE",
     "SCHEMA",
     "PROVENANCE",
     "INVARIANT",
     "STATE_TRANSITION",
     "TOOL_CONTRACT",
     "DEPENDENCY",
+    "SCOPE",
 }
+
 
 def _list_str(value: Any) -> list[str] | None:
     if not isinstance(value, list) or any(not isinstance(x, str) or not x for x in value):
         return None
     return list(value)
+
 
 def _failed_checks(row: Mapping[str, Any]) -> list[dict[str, Any]] | None:
     checks = row.get("checks")
@@ -39,9 +48,16 @@ def _failed_checks(row: Mapping[str, Any]) -> list[dict[str, Any]] | None:
             return None
         if type(passed) is not bool or evidence is None:
             return None
+        if not passed and not evidence:
+            return None
         if not passed:
-            out.append({"kind": kind, "id": cid, "evidence": evidence})
+            out.append({
+                "kind": kind,
+                "id": cid,
+                "evidence": evidence,
+            })
     return out
+
 
 def solve(public_case: Mapping[str, Any]) -> dict[str, Any]:
     task = public_case.get("task")
@@ -85,6 +101,7 @@ def solve(public_case: Mapping[str, Any]) -> dict[str, Any]:
         explicit_deps[aid] = set(deps)
         composition[aid] = comp
 
+    # Add dataflow edges from the latest prior producer of every read resource.
     deps: dict[str, set[str]] = {k: set(v) for k, v in explicit_deps.items()}
     last_writer: dict[str, str] = {}
     for row in rows:
@@ -96,10 +113,15 @@ def solve(public_case: Mapping[str, Any]) -> dict[str, Any]:
         for resource in writes[aid]:
             last_writer[resource] = aid
 
-    terminal_actions = {last_writer[r] for r in terminal_failed if r in last_writer}
+    # Actions directly responsible for the terminal failed resources.
+    terminal_actions = {
+        last_writer[r] for r in terminal_failed
+        if r in last_writer
+    }
     if not terminal_actions:
         return {"status": "ESCALATE", "reason": "NO_PRODUCER_FOR_TERMINAL_FAILED_RESOURCE"}
 
+    # Backward causal slice from terminal actions.
     relevant: set[str] = set()
     stack = list(terminal_actions)
     while stack:
@@ -113,6 +135,7 @@ def solve(public_case: Mapping[str, Any]) -> dict[str, Any]:
     if not relevant_failed:
         return {"status": "ESCALATE", "reason": "NO_CONTRACT_VIOLATION_ON_TERMINAL_CAUSAL_SLICE"}
 
+    # Ancestors restricted to relevant failed steps.
     ancestor_cache: dict[str, set[str]] = {}
     def ancestors(aid: str) -> set[str]:
         if aid in ancestor_cache:
@@ -129,7 +152,10 @@ def solve(public_case: Mapping[str, Any]) -> dict[str, Any]:
         return out
 
     roots = sorted(
-        [aid for aid in relevant_failed if not (ancestors(aid) & relevant_failed)],
+        [
+            aid for aid in relevant_failed
+            if not (ancestors(aid) & relevant_failed)
+        ],
         key=lambda x: order[x],
     )
     if not roots:
@@ -161,6 +187,8 @@ def solve(public_case: Mapping[str, Any]) -> dict[str, Any]:
             "reason": "UNIQUE_ROOT_CONTRACT_VIOLATION_ON_TERMINAL_CAUSAL_SLICE",
         }
 
+    # A visible conjunctive downstream dependency can establish that multiple
+    # independent root violations jointly form the causal repair set.
     root_set = set(roots)
     conjunctive_witnesses = []
     for aid in relevant:
