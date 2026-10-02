@@ -1,0 +1,46 @@
+name: Verify receipt-derived frontier controller
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/terminal_closure_reducer.py'
+      - 'canonical/tests/test_terminal_frontier_reducer.py'
+      - 'canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json'
+      - 'canonical/governance/GLOBAL_TERMINAL_UNIVERSE_V1.json'
+      - 'canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json'
+      - '.github/workflows/verify-frontier-controller.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: '3.12'}
+      - name: Bind exact merged Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/terminal_closure_reducer.py)" = "2732a577b441e8031ee128629410f792bfe36201"
+          test "$(git hash-object canonical/tests/test_terminal_frontier_reducer.py)" = "14a9a7e2b06d9ce30aba139246204fe12800c478"
+          test "$(git hash-object canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json)" = "d9bfe5998157f299d0d5da4cda60503b57147f34"
+          test "$(git hash-object canonical/governance/GLOBAL_TERMINAL_UNIVERSE_V1.json)" = "b0af6a013a4ab38550dd1e5b0fefab477faf8093"
+          test "$(git hash-object canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json)" = "b0ae68c5cdcc7a4ab02b719a96b141928700dfea"
+      - name: Compile controller
+        run: python -m py_compile canonical/runtime/terminal_closure_reducer.py canonical/tests/test_terminal_frontier_reducer.py
+      - name: Run frontier regression cases
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          from canonical.tests import test_terminal_frontier_reducer as t
+          t.test_live_frontier_reduces_to_prequalification_without_contradiction()
+          t.test_stale_survivor_projection_fails_closed()
+          t.test_prequalification_pass_automatically_authorizes_parallel_terminal_wave()
+          print("FRONTIER_CONTROLLER_REGRESSIONS_PASS")
+          PY
+      - name: Run live frontier CLI reduction
+        env: {PYTHONPATH: .}
+        run: |
+          python canonical/runtime/terminal_closure_reducer.py --frontier \
+            canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json \
+            canonical/governance/GLOBAL_TERMINAL_UNIVERSE_V1.json \
+            canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json
