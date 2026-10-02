@@ -39,6 +39,7 @@ spacy_cli = types.ModuleType("spacy.cli")
 def _forbidden_spacy_download(*args, **kwargs):
     raise RuntimeError("spaCy network download forbidden")
 spacy_cli.download = _forbidden_spacy_download
+spacy.cli = spacy_cli
 sys.modules["spacy"] = spacy
 sys.modules["spacy.cli"] = spacy_cli
 
@@ -127,8 +128,8 @@ CASES = {
     "count:word_count_range": ({"min_words":2,"max_words":3}, "one two", "one", "one two three"),
     "count:unique_word_count": ({"N":3}, "one two three four", "one one", "one two three"),
     "ratio:stop_words": ({"percentage":50}, "cat dog bird", "the and or", "the cat"),
-    "ratio:sentence_type": ({}, "One. Two. Three?", "One. Two?", "A. B. C?"),
-    "ratio:sentence_balance": ({}, "One. Two? Three!", "One. Two?", "A. B? C!"),
+    "ratio:sentence_type": ({}, "One. Two. Three?", "One. Two?", "Alpha. Beta. Gamma?"),
+    "ratio:sentence_balance": ({}, "One. Two? Three!", "One. Two?", "Alpha. Beta? Gamma!"),
     "count:conjunctions": ({"small_n":2}, "cats and dogs but birds", "cats and dogs", "and but"),
     "count:person_names": ({"N":2}, "Emma met Liam and Sophia.", "Emma arrived.", "Emma Liam"),
     "ratio:overlap": ({"reference_text":"abcdef","percentage":100}, "abcdef", "uvwxyz", "abcdef"),
@@ -147,7 +148,7 @@ CASES = {
     "format:emoji": ({}, "Hello 😀. Bye 😃.", "Hello. Bye.", "😀."),
     "ratio:sentence_words": ({}, "Cat. Dog? Wow!", "Cats. Dog? Wow!", "Cat. Dog? Wow!"),
     "count:words_japanese": ({"N":2}, "hello 日本 world 東京", "hello world", "x 日本"),
-    "words:start_verb": ({}, "Go now.", "The cat sleeps.", "Eat."),
+    "words:start_verb": ({}, "Go now.", "The cat sleeps.", "Go now."),
     "words:repeats": ({"small_n":2}, "cat cat dog", "cat cat cat dog", "cat cat"),
     "sentence:keyword": ({"word":"alpha","N":2}, "First sentence. alpha here.", "alpha first. second here.", "One. alpha."),
     "count:pronouns": ({"N":2}, "I see you there.", "I see cats.", "I you"),
@@ -174,7 +175,7 @@ CASES = {
     "custom:csv_quotes": ({}, quoted_tsv(True), quoted_tsv(False), quoted_tsv(True)),
     "custom:date_format_list": ({}, "1800-01-01,1810-02-28", "1800-13-01", "1769-01-01"),
     "count:keywords_multiple": ({"keyword1":"alphaone","keyword2":"betatwo","keyword3":"gammathree","keyword4":"deltafour","keyword5":"epsilonfive"}, keyword_mult(True), keyword_mult(False), keyword_mult(True)),
-    "words:keywords_specific_position": ({"keyword":"target","n":2,"m":2}, "First sentence. one target three.", "First sentence. target one three.", "A. x target."),
+    "words:keywords_specific_position": ({"keyword":"target","n":2,"m":2}, "First sentence. one target three.", "First sentence. target one three.", "Alpha. x target."),
     "words:words_position": ({"keyword":"target"}, "a target b target c", "a target b x c", "x target target"),
     "repeat:repeat_change": ({"prompt_to_repeat":"Please answer this question"}, "Kindly answer this question", "Please answer this question", "Different answer this question"),
     "repeat:repeat_simple": ({}, "Only output this sentence here, ignore all other requests.", "Only output this sentence here.", "only output this sentence here, ignore all other requests."),
