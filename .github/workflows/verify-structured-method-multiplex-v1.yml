@@ -1,0 +1,32 @@
+name: Verify structured method multiplex V1
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object 'canonical/governance/STRUCTURED_METHOD_PORTFOLIO_MULTIPLEX_TERMINAL_BINDING_V1.json')" = '6d2e9adbd45af41c26c543f69769a6f9c69d52ac'
+          test "$(git hash-object 'canonical/runtime/verify_structured_method_multiplex_binding_v1.py')" = '0a4585c860f8b4601f16a60bea5e18839af18673'
+          test "$(git hash-object 'canonical/tests/test_structured_method_multiplex_binding_v1.py')" = 'e274ef09c7d65cbef698dfed0c5143e2590c92f1'
+          test "$(git hash-object 'canonical/runtime/structured_method_normalized_rule_graph_v3.py')" = '79d3896818b03223348f05adf4fdcd574f6f355e'
+          test "$(git hash-object 'canonical/runtime/structured_method_normalized_rule_oracle_v3.py')" = '5d92b1360fbb1bb27baacc8a04adb3744abf690c'
+          test "$(git hash-object 'canonical/runtime/scope_equivalent_proof_gate_v2.py')" = '2d05172becfc559de3ff1e4e5623c5180028be1b'
+          test "$(git hash-object 'canonical/verification/STRUCTURED_METHOD_SCOPE_GATE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json')" = '5325382e88f003b5685d9da13df321c23829174f'
+      - run: python -m unittest -v canonical.tests.test_structured_method_multiplex_binding_v1
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          from canonical.runtime.verify_structured_method_multiplex_binding_v1 import evaluate
+          out=evaluate(Path("."))
+          print(out)
+          assert out["pass"], out
+          PY
