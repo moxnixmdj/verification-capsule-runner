@@ -1,0 +1,38 @@
+name: Verify dynamic tool discovery V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/tool_discovery_dynamic_candidate_v3.py'
+      - 'canonical/runtime/tool_discovery_dynamic_proof_v3.py'
+      - 'canonical/tests/test_tool_discovery_dynamic_v3.py'
+      - '.github/workflows/verify-tool-discovery-dynamic-v3.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain V3 blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_proof_v3.py)" = "f82d949f3890ffc0f2513f9b39cc3585a5d22ebb"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_v3.py)" = "ee1d8b3549555ec8280af88047b8d11823047ab6"
+      - name: Run canonical V3 regressions
+        run: python3 -m unittest canonical.tests.test_tool_discovery_dynamic_v3 -v
+      - name: Fresh independent 2400-case grid
+        run: |
+          python3 - <<'PY'
+          from canonical.runtime import tool_discovery_dynamic_candidate_v3 as c
+          from canonical.runtime import tool_discovery_dynamic_proof_v3 as p
+          out=p.run_batch(36962300000,2400,c.next_action)
+          assert out["pass"] is True, out["failures"][:5]
+          assert out["failed"]==0
+          assert set(out["classes"])==set(p.CLASSES)
+          print("TOOL_DISCOVERY_DYNAMIC_V3_2400_PASS")
+          PY
