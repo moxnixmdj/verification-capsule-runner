@@ -5,7 +5,7 @@ import unittest
 
 ROOT=Path(__file__).resolve().parent
 EXPECTED={
-  "capsules/proof_optimizer_primitives/canonical/runtime/proof_coverage_compiler.py": "754d34aaafd550cb67f46af17fba8f07a257f676",
+  "capsules/proof_optimizer_primitives/canonical/runtime/proof_coverage_compiler.py": "f9b7eb23ec749d542392f36d89ddf69d9f8d3c87",
   "capsules/proof_optimizer_primitives/canonical/runtime/build_current_proof_coverage_manifest.py": "2a040c01afdb5d80d8409ffe9542339e3df36ceb",
   "capsules/proof_optimizer_primitives/canonical/tests/test_proof_coverage_compiler.py": "0dd8538ecc1620b354eb4387090c997ba18aeffb",
   "capsules/proof_optimizer_primitives/canonical/tests/test_build_current_proof_coverage_manifest.py": "9816b3a67f48c6aca48a8ed1f331bc820420d5b1",
