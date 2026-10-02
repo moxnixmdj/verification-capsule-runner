@@ -1,0 +1,44 @@
+name: Verify current terminal prequalification V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/current_prequalification_v3/**
+      - .github/workflows/verify-current-terminal-prequalification-v3.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install exact Brain snapshot and verify Git blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname 'canonical/runtime/terminal_prequalification_reducer.py')"
+          cp "capsules/current_prequalification_v3/canonical/runtime/terminal_prequalification_reducer.py" "canonical/runtime/terminal_prequalification_reducer.py"
+          test "$(git hash-object 'canonical/runtime/terminal_prequalification_reducer.py')" = "da929015fafabed2b5a134a2e95b6bff2f47349c"
+          mkdir -p "$(dirname 'canonical/tests/test_terminal_prequalification_reducer.py')"
+          cp "capsules/current_prequalification_v3/canonical/tests/test_terminal_prequalification_reducer.py" "canonical/tests/test_terminal_prequalification_reducer.py"
+          test "$(git hash-object 'canonical/tests/test_terminal_prequalification_reducer.py')" = "9b09e96c9bf0340d174b4a752148c0807be9043e"
+          mkdir -p "$(dirname 'canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json')"
+          cp "capsules/current_prequalification_v3/canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json" "canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json"
+          test "$(git hash-object 'canonical/governance/EXACT_FOUR_PORTFOLIO_PREQUALIFICATION_V1.json')" = "5d20073180fdcfd6e36145f4c820271eb1ee275f"
+          mkdir -p "$(dirname 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json')"
+          cp "capsules/current_prequalification_v3/canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json" "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json"
+          test "$(git hash-object 'canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json')" = "afa00109031d638fef32cc3fe10be18786605c39"
+          mkdir -p "$(dirname 'canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json')"
+          cp "capsules/current_prequalification_v3/canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json" "canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json"
+          test "$(git hash-object 'canonical/governance/ACTIVE_TERMINAL_PROOF_BASIS_V1.json')" = "9c60356ab509a16df5104777f360b9fb18255842"
+          mkdir -p "$(dirname 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json')"
+          cp "capsules/current_prequalification_v3/canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json" "canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json"
+          test "$(git hash-object 'canonical/governance/GLOBAL_TERMINAL_REPLACEMENT_POPULATION_PROTOCOL_V2.json')" = "d1dc7f28738ba24a3ca5919755e03190fbf30939"
+      - name: Run reducer regressions
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_prequalification_reducer
+      - name: Evaluate exact current snapshot
+        run: PYTHONPATH=. python canonical/runtime/terminal_prequalification_reducer.py .
