@@ -49,7 +49,7 @@ jobs:
           echo "ff9598a8e20518ee0d557745890cc4435b9578489e2dcbc69c4f81fa060caf7c  /tmp/wheels/nltk-3.10.3-py3-none-any.whl" | sha256sum -c -
           echo "c4230d80640def9071599ff56b1b5950fe13a2a94c0da98c5deab12431b24330  /tmp/wheels/emoji-2.16.0-py3-none-any.whl" | sha256sum -c -
           echo "198a7413033c32d7b31e21962efb3f284bcea80d3346e954b938ca1ebe6bee20  /tmp/wheels/syllapy-0.7.2-py3-none-any.whl" | sha256sum -c -
-          sha256sum /tmp/wheels/setuptools-80.9.0-py3-none-any.whl
+          echo "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922  /tmp/wheels/setuptools-80.9.0-py3-none-any.whl" | sha256sum -c -
           python -m pip install /tmp/wheels/*.whl
 
       - name: Materialize frozen NLTK data
