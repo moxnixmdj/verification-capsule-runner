@@ -20,7 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/delegation_objective_dominance_reconciler.py)" = "aa2427fdc45010bfe21f7f83594b83c2ace63bf2"
+          test "$(git hash-object canonical/runtime/delegation_objective_dominance_reconciler.py)" = "fb025ef3f1e48aeaef1904bebb86dede5a838f44"
           test "$(git hash-object canonical/tests/test_delegation_objective_dominance_reconciler.py)" = "3d00730f21ab9930f5603bdd1c81d8ef88bb0455"
           test "$(git hash-object canonical/runtime/objective_oracle_dominance_compiler.py)" = "c00d59dd0ab7df6ffb0ba5c26a1cb2a5cd82203c"
           test "$(git hash-object canonical/governance/OBJECTIVE_ORACLE_DOMINANCE_LIVE_INPUT_V1.json)" = "9efaad8a74b7126938d60d0f2ede3820a71741fa"
