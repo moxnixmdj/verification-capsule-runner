@@ -1,6 +1,10 @@
 name: Verify LiveBench IF hermetic 58-checker smoke
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-livebench-if-hermetic-smoke.yml'
   push:
     branches: [main]
     paths:
