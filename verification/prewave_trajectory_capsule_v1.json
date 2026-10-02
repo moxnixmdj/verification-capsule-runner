@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_PREWAVE_TRAJECTORY_PUBLIC_CAPSULE_V1",
+  "date": "2026-10-02",
+  "source_repository": "moxnixmdj/brain",
+  "source_commit": "305f8a83105175b04972cfb6b8cc30e4f0680b95",
+  "exact_blobs": {
+    "canonical/runtime/trajectory_failure_information_safe_candidate.py": "9ede7fdeaf82d9a8c59fb9eca1aa99fff2a5cd87",
+    "canonical/runtime/trajectory_failure_information_safe_proof.py": "3bc29023ea04d2dfb4dd0474efff2e267e0f7e8d",
+    "canonical/tests/test_trajectory_failure_information_safe.py": "8fff062484df34afcb89f1ae0e5a046a0d7d641e"
+  },
+  "terminal_results_consumed": 0,
+  "fresh_terminal_evidence_consumed": 0,
+  "purpose": "INDEPENDENT_PREWAVE_INFORMATION_BOUNDARY_AND_FUNCTIONAL_PREFLIGHT_ONLY"
+}
