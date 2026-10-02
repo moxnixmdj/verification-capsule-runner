@@ -1,5 +1,10 @@
 name: Verify P1 V5 contract-native population embedding
 on:
+  push:
+    branches: [main]
+    paths:
+      - "capsules/p1_v5_contract_native_embedding_v1/**"
+      - ".github/workflows/verify-p1-v5-contract-native-embedding.yml"
   pull_request:
     paths:
       - "capsules/p1_v5_contract_native_embedding_v1/**"
