@@ -1,7 +1,8 @@
 name: Test private Brain checkout
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - "test/private-brain-checkout-20261002"
     paths:
       - ".github/workflows/test-private-brain-checkout.yml"
 permissions:
