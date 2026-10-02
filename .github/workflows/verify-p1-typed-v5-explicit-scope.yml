@@ -1,3 +1,4 @@
+# dependency-free verifier trigger
 name: Verify Brain P1 typed V5 explicit scope
 on:
   pull_request:
