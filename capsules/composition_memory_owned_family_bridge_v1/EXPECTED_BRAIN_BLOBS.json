@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "exact_brain_blobs": {
+    "canonical/governance/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V1.json": "d073b395c3ec335e5aebe45e100a8a9a345905f6",
+    "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json": "661a57f839101fbf54c7e4edc76166c65ce9327d",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "eb4bca0fe6a015d49d2854998fbe046c979c7ea9",
+    "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
+    "canonical/capabilities/opus55/OPUS55_LONG_HORIZON_MEMORY_AND_CONTINUITY_V1.json": "2d912cf8df64bd806fffb6a1070d95644d005470"
+  },
+  "zero_credit": true
+}
