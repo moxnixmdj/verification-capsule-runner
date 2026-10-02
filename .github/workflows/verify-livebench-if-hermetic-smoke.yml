@@ -1,4 +1,5 @@
 name: Verify LiveBench IF hermetic 58-checker smoke
+# receipt-retrigger: v2
 
 on:
   pull_request:
@@ -32,7 +33,7 @@ jobs:
           test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/instructions_util.py)" = "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342"
       - name: Install exact Python dependencies
         run: |
-          python -m pip install --disable-pip-version-check -q 'nltk==3.10.3' 'emoji==2.16.0' 'syllapy==0.7.2'
+          python -m pip install --disable-pip-version-check -q 'setuptools==80.9.0' 'nltk==3.10.3' 'emoji==2.16.0' 'syllapy==0.7.2'
       - name: Bind exact NLTK data revision
         run: |
           git clone -q https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
@@ -54,6 +55,10 @@ jobs:
           s=s.replace('if not spacy.util.is_package("en_core_web_sm"):\n\tdownload(\'en_core_web_sm\')\n','')
           p.write_text(s)
           assert 'spacy' not in s.lower()
+          u=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions_util.py')
+          t=u.read_text().replace("    nltk.download('stopwords')\\n", '    nltk.data.find("corpora/stopwords")\\n')
+          u.write_text(t)
+          assert "nltk.download('stopwords')" not in t
           PY
       - name: Run all 58 checker runtime smoke paths without terminal cases
         env:
@@ -61,7 +66,10 @@ jobs:
           NLTK_DATA: /tmp/nltk_data
         run: |
           python - <<'PY'
-          import random
+          import random, nltk
+          def _blocked_download(*args, **kwargs):
+              raise RuntimeError('NETWORK_DOWNLOAD_FORBIDDEN_DURING_HERMETIC_SMOKE')
+          nltk.download=_blocked_download
           from livebench.if_runner.ifbench import instructions_registry, evaluation_lib
           random.seed(0)
           registry=instructions_registry.INSTRUCTION_DICT
