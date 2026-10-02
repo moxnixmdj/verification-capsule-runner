@@ -1,0 +1,30 @@
+{
+  "schema": "PROJECT_BRAIN_HARBOR_COMMAND_V1",
+  "session_id": "SYNTHETIC-HARBOR-SESSION",
+  "step": 1,
+  "action": {
+    "type": "finish",
+    "args": {
+      "authorization": {
+        "schema": "BRAIN_SESSION_TERMINAL_AUTHORIZATION_V1",
+        "session_id": "SYNTHETIC-HARBOR-SESSION",
+        "submission_authorized": true,
+        "known_relevant_failures": [],
+        "acceptance_criteria": [
+          {
+            "criterion": "Synthetic Harbor environment command executes through the Brain transport.",
+            "status": "PASS",
+            "evidence": "Synthetic prequalification receipt only; no benchmark case content."
+          }
+        ],
+        "verification_commands": [
+          {
+            "command": "printf SYNTHETIC_HARBOR_OK",
+            "exit_code": 0,
+            "evidence": "Synthetic prequalification."
+          }
+        ]
+      }
+    }
+  }
+}
