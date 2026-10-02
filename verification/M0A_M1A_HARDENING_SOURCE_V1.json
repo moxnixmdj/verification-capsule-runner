@@ -1,0 +1,23 @@
+{
+  "schema": "PROJECT_BRAIN_INDEPENDENT_M0A_M1A_HARDENING_SOURCE_V1",
+  "date": "2026-10-02",
+  "sources": [
+    {
+      "path": "verification/drawing_perspective_rectification.py",
+      "brain_blob": "cceb48f7d971e13b9ac3a5d9c8c3cf94e0eb632c"
+    },
+    {
+      "path": "verification/drawing_robust_preprocess.py",
+      "brain_blob": "8e95ffffbf5b0c8a37ccd7505b447eedbdcc4c8c"
+    },
+    {
+      "path": "verification/gdt_feature_control_parser.py",
+      "brain_blob": "de02499836fb41883cb0feadcaa9554604a260e3"
+    },
+    {
+      "path": "verification/explicit_definition_reference_graph.py",
+      "brain_blob": "950f073b35b9d7f42c76c518711462f00e89b262"
+    }
+  ],
+  "claim_scope": "NARROW_ZERO_REALITY_COMPONENTS_ONLY__NO_FAMILY_CREDIT"
+}
