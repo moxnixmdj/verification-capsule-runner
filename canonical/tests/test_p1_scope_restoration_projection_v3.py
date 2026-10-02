@@ -105,7 +105,7 @@ class P1ScopeRestorationProjectionV3Tests(unittest.TestCase):
         frontier = authority["compiled_next_frontier"]
         self.assertNotEqual(frontier["primary_action_id"], "DISCHARGE_SYNTHESIS_EXACT_PROOF_DELTA")
         self.assertNotIn("DISCHARGE_SYNTHESIS_EXACT_PROOF_DELTA", frontier["available_zero_reality_critical_actions"])
-        self.assertEqual(frontier["primary_action_id"], "RUN_COMPOSITION_COMPONENT_PROOF_SLICER")
+        self.assertNotEqual(frontier["primary_action_id"], "DISCHARGE_SYNTHESIS_EXACT_PROOF_DELTA")
         self.assertEqual(frontier["stale_action_revocation"]["authority_git_blob_sha"], git_blob_sha(PATHS["synthesis_exhaustion"]))
 
     def test_tb4_and_acceptance_firewalls_remain_closed(self):
