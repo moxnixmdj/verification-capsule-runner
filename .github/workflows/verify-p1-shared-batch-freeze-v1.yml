@@ -1,0 +1,19 @@
+name: Verify Brain P1 shared-batch pre-case freeze
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_shared_batch_freeze_v1/**"
+      - ".github/workflows/verify-p1-shared-batch-freeze-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact P1 one-batch freeze and no-guess normalizer
+        run: python capsules/p1_shared_batch_freeze_v1/verify.py
