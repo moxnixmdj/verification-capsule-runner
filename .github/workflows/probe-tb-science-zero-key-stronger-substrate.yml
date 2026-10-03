@@ -1,0 +1,66 @@
+name: Probe TB-Science zero-key stronger substrate
+on:
+  push:
+    branches: ["probe/tb-science-zero-key-stronger-substrate-20261003"]
+    paths: [".github/workflows/probe-tb-science-zero-key-stronger-substrate.yml"]
+  pull_request:
+    branches: [main]
+    paths: [".github/workflows/probe-tb-science-zero-key-stronger-substrate.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ["gpt-5.6-sol","openai-large","openai","openai-fast"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe three unauthenticated synthetic contracts
+        env:
+          MODEL: ${{ matrix.model }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request, time, math
+          model=os.environ["MODEL"]
+          endpoint="https://text.pollinations.ai/"
+          prompt=(
+            'Return one JSON object only with keys material_requirements, candidate_actions, answers. '
+            'material_requirements must be ["R1"]. candidate_actions must contain exactly one object '
+            'with action_id "A1", covers ["R1"], command "printf ok", verify_command "test 1 -eq 1". '
+            'answers must be exactly [0.55,2.0,6.97]. Compute: '
+            '(1) posterior mean for Beta(3,7) after 8 successes and 2 failures; '
+            '(2) OLS slope for x=[1,2,4,7], y=[3,5,9,15]; '
+            '(3) time to 20% remaining for exponential decay k=0.231 per hour, rounded to 2 decimals.'
+          )
+          rows=[]
+          for i in range(3):
+              body=json.dumps({"messages":[{"role":"user","content":prompt}],"model":model,"jsonMode":True}).encode()
+              req=urllib.request.Request(endpoint,data=body,headers={"Content-Type":"application/json","User-Agent":"ProjectBrain/1.0"},method="POST")
+              t=time.monotonic()
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      raw=r.read(30000).decode("utf-8","replace")
+                      status=getattr(r,"status",200)
+                  a=raw.find("{"); b=raw.rfind("}")
+                  obj=json.loads(raw[a:b+1])
+                  ok=(obj.get("material_requirements")==["R1"] and isinstance(obj.get("candidate_actions"),list)
+                      and len(obj["candidate_actions"])==1 and obj["candidate_actions"][0].get("action_id")=="A1"
+                      and obj["candidate_actions"][0].get("covers")==["R1"]
+                      and obj["candidate_actions"][0].get("command")=="printf ok"
+                      and obj["candidate_actions"][0].get("verify_command")=="test 1 -eq 1"
+                      and len(obj.get("answers",[]))==3
+                      and abs(float(obj["answers"][0])-.55)<1e-9
+                      and abs(float(obj["answers"][1])-2.0)<1e-9
+                      and abs(float(obj["answers"][2])-6.97)<.011)
+                  rows.append({"attempt":i+1,"http_status":status,"ok":ok,"latency_s":round(time.monotonic()-t,3)})
+              except Exception as e:
+                  rows.append({"attempt":i+1,"ok":False,"error":type(e).__name__+":"+str(e),"latency_s":round(time.monotonic()-t,3)})
+          print(json.dumps({"model":model,"rows":rows,"passes":sum(bool(x.get("ok")) for x in rows),"attempts":3,"api_key_supplied":False,"terminal_task_content_read":0,"terminal_trials_executed":0},sort_keys=True))
+          assert sum(bool(x.get("ok")) for x in rows)>=1, rows
+          PY
