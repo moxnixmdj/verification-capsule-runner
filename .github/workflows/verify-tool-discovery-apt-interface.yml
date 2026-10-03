@@ -43,3 +43,5 @@ jobs:
           name: tool-discovery-apt-interface-instance-v1
           path: tool-discovery-apt-interface-instance.json
           if-no-files-found: error
+
+# trigger: live-interface-qualification-20261003
