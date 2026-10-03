@@ -1,0 +1,36 @@
+name: Verify Brain Composition slice V6
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/composition_slice_v6/**"
+      - ".github/workflows/verify-brain-composition-slice-v6.yml"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        env:
+          EXPECTED_JSON: '{"capsules/composition_slice_v6/canonical/runtime/composition_component_proof_slicer_v1.py":"0e5028d8547bc3e17e7128b6311f734ac30a16d8","capsules/composition_slice_v6/canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V6.json":"33f28d3400b7dab592f1e8289aaed5d4594bdb82","capsules/composition_slice_v6/canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_CANDIDATE_V6.json":"317b3f6d58e5294577eb645c9fe5c07235efdde1","capsules/composition_slice_v6/canonical/tests/test_composition_component_proof_slice_v6.py":"b36b41df9192e75c526e2958ad7cabbeb06d4049"}'
+        run: |
+          python - <<'PY'
+          import json,os,subprocess
+          expected=json.loads(os.environ["EXPECTED_JSON"])
+          bad=[]
+          for path,want in expected.items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              if got!=want: bad.append(f"{path}: {got} != {want}")
+          if bad: raise SystemExit("\n".join(bad))
+          print(f"EXACT_BLOB_IDENTITY_PASS {len(expected)}/{len(expected)}")
+          PY
+      - name: Recompute V6 slice
+        env:
+          PYTHONPATH: capsules/composition_slice_v6
+        run: |
+          python -m pytest -q capsules/composition_slice_v6/canonical/tests/test_composition_component_proof_slice_v6.py
