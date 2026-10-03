@@ -20,7 +20,7 @@ jobs:
       - name: Execute exact V2 controller
         working-directory: capsules/adaptive_v2
         run: |
-          python canonical/runtime/adaptive_terminal_closure_controller_v2.py > result.json
+          python -m canonical.runtime.adaptive_terminal_closure_controller_v2 > result.json
           python - <<'PY'
           import json
           x=json.load(open("result.json"))
