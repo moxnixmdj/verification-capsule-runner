@@ -61,7 +61,7 @@ jobs:
           assert sc["verified"] is True and sc["independent"] is True
           assert sc["all_admissible_target_inputs_proved"] is True and sc["formal_completeness"] is True
           prior=json.load(open("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json"))
-          row=next(x for x in prior["predicates"] if x["predicate_id"]=="DELEGATION_TERMINAL_SUCCESS_NONINFERIOR")
+          row=next(x for x in prior["claims"] if x["predicate_id"]=="DELEGATION_TERMINAL_SUCCESS_NONINFERIOR")
           assert row["state"]=="EXTERNAL_BLOCKED"
           assert row["blocker"]=="ABSOLUTE_SCOPE_COMPLETENESS_MISSING"
           print("delegation acceptance reduction 2/19 -> 3/19: PASS")
