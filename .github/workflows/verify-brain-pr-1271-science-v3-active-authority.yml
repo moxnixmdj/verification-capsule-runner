@@ -1,0 +1,106 @@
+name: Verify Brain PR 1271 Science V3 active authority
+
+on:
+  push:
+    branches: ["verify/brain-pr-1271-science-v3-active-authority-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-brain-pr-1271-science-v3-active-authority.yml"
+      - "capsules/brain_pr_1271/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-brain-pr-1271-science-v3-active-authority.yml"
+      - "capsules/brain_pr_1271/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify atomic active authority and canonical pointer
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee SCIENCE_V3_ACTIVE_AUTHORITY_VERDICT.json
+          import hashlib,json
+          from pathlib import Path
+          R=Path("capsules/brain_pr_1271")
+          def L(p): return json.loads((R/p).read_text())
+          def B(p):
+              b=(R/p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          ap="canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json"
+          tp="canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json"
+          hp="canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json"
+          pp="canonical/CANONICAL_POINTER.json"
+          sp="canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json"
+          op="canonical/capabilities/frontier/OPUS_5_5_USEFUL_CAPABILITY_OWNERSHIP_V1.json"
+          vp="canonical/verification/TB_SCIENCE_ONE_SLOT_CANARY_V3_CANDIDATE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+          cp="canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V3.json"
+          xp="canonical/governance/TB_SCIENCE_CURRENT_TARGET_EXECUTION_OVERLAY_V2.json"
+          expected={
+            ap:"ae5bc607b828e8f55092e80e0a806d5a496eb54b",
+            tp:"b4d601ff630e9bd62329b4c21504eb4f043ab523",
+            hp:"3ecd46c3f63ccc0508ba5ac6c2e137ea199bede0",
+            pp:"dcfaa27e4997a630ffc576f146eeb7421fdfc148",
+            sp:"80b89535d782f6d4f3b12685abe06fae8e008744",
+            op:"5c031b07c4eaa363eae801b0653ed61ac2595ee4",
+            vp:"fc237027b42c56313ea7cabc08050e56e6156b61",
+            cp:"f80e4b6a0b20cee28c60b844e34a54da01398052",
+            xp:"64c02d44b38066577c7e7866a931bc7aa8ee9fcc",
+          }
+          for p,h in expected.items(): assert B(p)==h,(p,B(p),h)
+          a,t,h,p,s,o,v,c,x=map(L,[ap,tp,hp,pp,sp,op,vp,cp,xp])
+          assert v["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),v
+          assert a["authority_basis"]["candidate_git_blob_sha"]==expected[cp]
+          assert a["authority_basis"]["candidate_verification_git_blob_sha"]==expected[vp]
+          assert a["authority_basis"]["current_target_overlay_git_blob_sha"]==expected[xp]
+          assert a["exact_route"]["planner_blob"]=="fe7c0ce885197217774638df382aeb6f68ff38dd"
+          assert a["exact_route"]["controller_blob"]=="5557efd21f1a433ad16766def3775a79c459784b"
+          assert a["authorized_slot"]["slot_id"]=="terminal-bench-science/virtual-baseline-localization::trial-0"
+          assert a["authorized_slot"]["schedule_order"]==4
+          assert len(a["permanently_consumed_slots"])==4
+          assert a["current_parity"]["required_successes"]==133
+          assert a["current_parity"]["remaining_failures_before_fail_lock"]==74
+          assert a["execution_semantics"]["slots_authorized"]==1
+          assert a["execution_semantics"]["retries_per_slot"]==0
+          assert a["execution_semantics"]["slot_replacement"] is False
+          assert a["execution_semantics"]["denominator_shrink"] is False
+          assert a["execution_authority"] is True and a["promotion_authority"] is False
+          nxt="EXECUTE_EXACTLY_TERMINAL_BENCH_SCIENCE_VIRTUAL_BASELINE_LOCALIZATION_TRIAL_0__CAPTURE_CONTENT_ADDRESSED_RESULT__AUTO_REVOKE__NO_RETRY_NO_REPLACEMENT"
+          at=t["authorities"]["tb_science_one_slot_canary_v3_active_candidate"]
+          assert at["authority_git_blob_sha"]==expected[ap] and at["execution_authority"] is True
+          assert at["authorized_slot"]==a["authorized_slot"]["slot_id"]
+          assert t["next"]==nxt and t["next_terminal_action"]==nxt
+          assert h["next_required_action_class"]==nxt
+          assert p["current_frontier"]["next_step"]==nxt
+          assert s["next_required_action"]==nxt and s["active_frontier_accounting"]["next_required_action"]==nxt
+          assert o["next_action"]==nxt and o["current_atomic_next_action"]==nxt
+          # Acceptance truth must not move merely because execution authority moved.
+          assert t["truth"]["opus55_acceptance"]=="3/19_PASS__16/19_OPEN"
+          assert t["atomic_acceptance_frontier"]["proved"]==8
+          assert t["atomic_acceptance_frontier"]["unresolved"]==30
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_ONE_SLOT_CANARY_V3_ACTIVE_AUTHORITY_INDEPENDENT_VERIFICATION_V1",
+            "status":"INDEPENDENT_PASS__EXACT_ACTIVE_AUTHORITY_AND_CANONICAL_POINTER__ONE_UNTOUCHED_SLOT_ONLY__ZERO_CREDIT",
+            "authority_blob":expected[ap],
+            "current_terminal_authority_blob":expected[tp],
+            "authorized_slot":a["authorized_slot"]["slot_id"],
+            "required_successes":133,
+            "remaining_failures_before_fail_lock":74,
+            "execution_authority_verified":True,
+            "promotion_authority":False,
+            "acceptance_counts_unchanged":True,
+            "terminal_results_observed":0,
+            "incremental_spend_usd":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brain-pr-1271-science-v3-active-authority
+          path: SCIENCE_V3_ACTIVE_AUTHORITY_VERDICT.json
+          if-no-files-found: error
