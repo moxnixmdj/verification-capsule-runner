@@ -1,0 +1,12 @@
+name: Verify current zero-reality cut V13 composition
+on:
+  push:
+    branches: [verify-v13-root2-compression-20261003-sol]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 verify_current_zero_reality_cut_v13.py
