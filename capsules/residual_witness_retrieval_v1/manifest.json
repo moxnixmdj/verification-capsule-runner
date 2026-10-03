@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_INDEPENDENT_RETRIEVAL_VERIFIER_INPUT_V1",
+  "date": "2026-10-03",
+  "source_repository": "moxnixmdj/brain",
+  "source_branch": "repair/residual-witness-retrieval-v1-20261003",
+  "source_files": {
+    "canonical/runtime/residual_witness_retrieval_compiler_v1.py": {
+      "blob_sha": "064844d1050d087cb5585e1bab7dbb9d5fa6cd0d",
+      "verifier_path": "capsules/residual_witness_retrieval_v1/residual_witness_retrieval_compiler_v1.py"
+    },
+    "canonical/runtime/bound_capabilities/research_query_focus.py": {
+      "blob_sha": "de4cc87be7f16b9a8b7f53661d4575feabfa98fb",
+      "verifier_path": "capsules/residual_witness_retrieval_v1/research_query_focus.py"
+    },
+    "canonical/runtime/bound_capabilities/objective_relevance_bm25.py": {
+      "blob_sha": "95953e090de431f29c9992558d0509aa76161440",
+      "verifier_path": "capsules/residual_witness_retrieval_v1/objective_relevance_bm25.py"
+    },
+    "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py": {
+      "blob_sha": "48fd058430d8d361fc75beced567c7b6d1166531",
+      "verifier_path": "capsules/residual_witness_retrieval_v1/objective_claim_operand_binding.py"
+    }
+  },
+  "claims_under_test": [
+    "UNICODE_QUERY_FOCUS_PRESERVES_NON_LATIN_SCRIPTS",
+    "UNICODE_BM25_CAN_RANK_NON_LATIN_CANDIDATES",
+    "NO_RESULT_DOES_NOT_AUTHORIZE_NONEXISTENCE",
+    "REPOSITORY_METADATA_AND_SOCIAL_SURFACES_CANNOT_SELF_VERIFY",
+    "FIRST_INDEPENDENTLY_VERIFIED_SUFFICIENT_WITNESS_STOPS_RETRIEVAL",
+    "DECLARED_SCOPE_CLOSURE_IS_SCOPE_LIMITED_AND_FAIL_CLOSED",
+    "SCHEDULER_DIVERSIFIES_ACROSS_ORTHOGONAL_SURFACES"
+  ],
+  "acceptance_credit_delta": 0,
+  "family_credit_delta": 0,
+  "capability_credit_delta": 0
+}
