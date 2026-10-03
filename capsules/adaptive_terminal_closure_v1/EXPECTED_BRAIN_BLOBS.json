@@ -1,0 +1,46 @@
+{
+  "candidate_runtime.py": {
+    "brain_path": "canonical/runtime/adaptive_terminal_closure_controller_v1.py",
+    "git_blob_sha": "2c15aeef745ac3b0e3a6eaa578f0d7893e935bd9"
+  },
+  "candidate_tests.py": {
+    "brain_path": "canonical/tests/test_adaptive_terminal_closure_controller_v1.py",
+    "git_blob_sha": "df33a45f233f749af501c22c0a8597ba6066ea22"
+  },
+  "fixture/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": {
+    "brain_path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json",
+    "git_blob_sha": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+  },
+  "fixture/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": {
+    "brain_path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json",
+    "git_blob_sha": "0ed075c1efa053fe6e4eb3519d9903cf63fcf163"
+  },
+  "fixture/canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": {
+    "brain_path": "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json",
+    "git_blob_sha": "4b5517dbd12978f8ffe481fb775e85592c7790c8"
+  },
+  "fixture/canonical/governance/CURRENT_27_INFORMATION_DOMINANCE_V1.json": {
+    "brain_path": "canonical/governance/CURRENT_27_INFORMATION_DOMINANCE_V1.json",
+    "git_blob_sha": "fae786d6051277865ed6ecde69be5da98e2bf509"
+  },
+  "fixture/canonical/verification/CURRENT_27_INFORMATION_DOMINANCE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": {
+    "brain_path": "canonical/verification/CURRENT_27_INFORMATION_DOMINANCE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+    "git_blob_sha": "1931ae5a7edb5dde2021a8a4f7e7a3ad0fd821f1"
+  },
+  "fixture/canonical/governance/MATCHED_SCOPE_ABDUCTIVE_RESIDUAL_INPUT_V2.json": {
+    "brain_path": "canonical/governance/MATCHED_SCOPE_ABDUCTIVE_RESIDUAL_INPUT_V2.json",
+    "git_blob_sha": "438e2775b64bee5ed6e792522ab35ebd0d6e1771"
+  },
+  "fixture/canonical/verification/MATCHED_SCOPE_ABDUCTIVE_RESIDUAL_EXECUTION_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json": {
+    "brain_path": "canonical/verification/MATCHED_SCOPE_ABDUCTIVE_RESIDUAL_EXECUTION_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+    "git_blob_sha": "9915c55fe6a9da6d47c0e58476722a116d7cb0ec"
+  },
+  "fixture/canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json": {
+    "brain_path": "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json",
+    "git_blob_sha": "3cbbcd1ddabde7dbf4c3f4d118bdb9d78d0c8605"
+  },
+  "fixture/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": {
+    "brain_path": "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json",
+    "git_blob_sha": "f47a69253e7eb75e139b445b736d3d18b33be622"
+  }
+}
