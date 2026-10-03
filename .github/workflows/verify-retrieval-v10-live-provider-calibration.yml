@@ -8,15 +8,27 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact blobs
+      - name: Verify exact subject blobs
         run: |
-          test "$(git hash-object canonical/governance/RETRIEVAL_LIVE_PROVIDER_EVENTS_20261003_V1.json)" = "a5d73e154f865865f1f2186c16e36921e834357a"
-          test "$(git hash-object canonical/runtime/retrieval_live_provider_calibration_v1.py)" = "e023c17d46dc6841b6a5df5506f9c21533407d1c"
-          test "$(git hash-object canonical/tests/test_retrieval_live_provider_calibration_v1.py)" = "3aa5d8e2dfaa541be0e15e684ad14055dec90984"
-      - run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_calibration_v1.py
-      - run: PYTHONPATH=. python canonical/runtime/retrieval_live_provider_calibration_v1.py
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v1.py)" = "ae22852836f61dd0f9691bbd89dbb4680aefa917"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v1.py)" = "da930564ced7f959249fac5e50092a625aa269ef"
+      - name: Deterministic unit tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v1.py
+      - name: Execute live provider arena
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v1.py | tee live_provider_output.json
+          python - <<'PY'
+          import json
+          d=json.load(open("live_provider_output.json"))
+          assert d["successful_task_count"] >= 10, d
+          assert len(d["source_metrics"]) >= 5, d
+          assert d["open_world_completeness_claim"] is False
+          print("LIVE_PROVIDER_SUMMARY", json.dumps(d,sort_keys=True))
+          PY
