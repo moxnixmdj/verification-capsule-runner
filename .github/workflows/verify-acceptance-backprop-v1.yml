@@ -22,8 +22,8 @@ jobs:
       - name: Bind exact Brain blobs
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/acceptance_backprop_compiler_v1.py)" = "b64092054a08bd528bc13b5dbbc9ee80229f19d4"
-          test "$(git hash-object canonical/tests/test_acceptance_backprop_compiler_v1.py)" = "1e025ed0f9a68a727d7c421b35dda52ff38d8f35"
+          test "$(git hash-object canonical/runtime/acceptance_backprop_compiler_v1.py)" = "b63c18a5a66eeb978780d2560f0f741ad255ad68"
+          test "$(git hash-object canonical/tests/test_acceptance_backprop_compiler_v1.py)" = "3f9b121aec301c549a4a872f73d51f0e919901bc"
       - name: Compile exact runtime and tests
         run: |
           python -m py_compile canonical/runtime/acceptance_backprop_compiler_v1.py
