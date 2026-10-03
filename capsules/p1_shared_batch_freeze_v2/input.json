@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_P1_SHARED_BATCH_FREEZE_PUBLIC_VERIFIER_INPUT_V2",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pull_request": 1135,
+  "brain_head_sha": "2a38d77d7ddf4f20f5480e5299032549254f7d23",
+  "exact_blobs": {
+    "freeze": "6a4b606a759d5479bb5ddbdf29426b1a1808b007",
+    "normalizer": "b6ba06fc6a35fa132eb19389ee256e74a63a4849",
+    "batch_harness": "695cfe3f283723a52bafb6299236a2d0378dc79e",
+    "source_generator": "0210790c7dd705ef328e1b55d529a30c5c6c3337",
+    "candidate_v7": "28940387bd6c11671035ad9201e37bba13fd9bc9",
+    "intervention_scorer_v6": "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+  }
+}
