@@ -69,5 +69,29 @@ class Tests(unittest.TestCase):
         self.assertEqual(out["capability_credit_delta"],0)
         self.assertEqual(out["family_credit_delta"],0)
 
+
+class RecoveryCurrentIntegrationTests(unittest.TestCase):
+    def test_current_recovery_universal_witness_closes_exactly_one_new_family(self):
+        from recovery_current_acceptance_proof_transmuter_v1 import evaluate as current_evaluate
+        p=json.loads((ROOT/"RECOVERY_CURRENT_OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json").read_text())
+        e=json.loads((ROOT/"RECOVERY_CURRENT_OPUS55_ACCEPTANCE_INPUT_V2.json").read_text())
+        out=current_evaluate(p,e)
+        self.assertEqual(out["status"],"PASS",out)
+        self.assertEqual((out["family_count"],out["closed_family_count"],out["open_family_count"]),(19,4,15),out)
+        closed={r["family"] for r in out["families"] if r["result_status"]=="PASS"}
+        self.assertEqual(closed,{
+            "LONG_HORIZON_MEMORY_AND_CONTINUITY",
+            "SUBAGENT_DELEGATION_AND_COORDINATION",
+            "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+            "EXACT_SYMBOLIC_COMPUTATION",
+        },out)
+        rr=next(r for r in out["families"] if r["family"]=="SELF_VERIFICATION_DEBUGGING_AND_RECOVERY")
+        self.assertEqual(rr["closure_mode"],"UNIVERSAL",rr)
+        self.assertEqual(rr["witness_id"],"RECOVERY_P1_UNIVERSAL_STRONGER_PROOF_V2",rr)
+        self.assertFalse(out["execution_authority"])
+        self.assertFalse(out["promotion_authority"])
+        self.assertEqual(out["capability_credit_delta"],0)
+        self.assertEqual(out["family_credit_delta"],0)
+
 if __name__=="__main__":
     unittest.main(verbosity=2)
