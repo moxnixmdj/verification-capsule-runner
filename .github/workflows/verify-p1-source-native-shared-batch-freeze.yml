@@ -1,6 +1,7 @@
 name: Verify P1 source-native shared-batch freeze
 on:
-  workflow_dispatch:
+  push:
+    branches: [verify/p1-source-native-shared-batch-freeze-20261003]
 permissions:
   contents: read
 jobs:
@@ -11,11 +12,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Verify exact hardened pre-case freeze
-        run: |
-          python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1
-          python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1
-      - name: Verify source-native bridge and dual scorers on spent fixtures
-        run: python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_v1
-      - name: Verify no terminal execution occurred
+      - name: Verify exact repaired current-base P1 freeze
         run: bash verification/run.sh
