@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_PR1217_INDEPENDENT_VERIFICATION_REQUEST_V1",
+  "brain_pull_request": 1217,
+  "brain_head_sha": "1432c62905ae7c645db2f0b7b9e18d38936e2b60",
+  "requested_scope": [
+    "EXACT_REPAIRED_CONTROLLER_AND_DEDICATED_PLANNER_BYTES",
+    "UNIT_AND_MATERIALITY_TESTS",
+    "LIVE_ZERO_CASE_PRODUCTION_PROPOSAL_BOUNDARY",
+    "FAIL_CLOSED_PRETERMINAL_ACTIVATION"
+  ],
+  "terminal_task_content_read": 0,
+  "terminal_trials_executed": 0,
+  "incremental_spend_usd": 0
+}
