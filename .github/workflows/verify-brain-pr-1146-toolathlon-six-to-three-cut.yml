@@ -21,15 +21,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact Brain blob identities
+      - name: Verify exact truth-repaired Brain blob identities
         shell: bash
         run: |
           set -euo pipefail
           cd capsules/brain_pr_1146_toolathlon_six_to_three_cut
-          test "$(git hash-object canonical/governance/TOOLATHLON_MATCHED_ROUTE_PRECONDITION_CUT_V1.json)" = "b55f596bc8dbaacfcc0b2486ff52bda1fecc6d02"
-          test "$(git hash-object canonical/runtime/toolathlon_matched_route_precondition_cut_v1.py)" = "42e9a1d9e96f889fed6dc13e2a7bf861cf7c888d"
-          test "$(git hash-object canonical/tests/test_toolathlon_matched_route_precondition_cut_v1.py)" = "b31774f5c0197b2ace8a8927663f6ac833c1388e"
-          test "$(git hash-object canonical/action_intents/2026-10-03_TOOLATHLON_MATCHED_ROUTE_PRECONDITION_CUT_V1.json)" = "c0beb7f4df2c92af1f73c9feddc545021f347475"
+          test "$(git hash-object canonical/governance/TOOLATHLON_MATCHED_ROUTE_PRECONDITION_CUT_V1.json)" = "16042b748740b5a8c3794fbb2e5d0bc5cc6fed07"
+          test "$(git hash-object canonical/runtime/toolathlon_matched_route_precondition_cut_v1.py)" = "cdc6f9cf1c9aff1d802a8d41b5d1dfc435464662"
+          test "$(git hash-object canonical/tests/test_toolathlon_matched_route_precondition_cut_v1.py)" = "2c54f33e950dea69af52278fa00507564cc02cd1"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOLATHLON_MATCHED_ROUTE_PRECONDITION_CUT_V1.json)" = "0a276217cd8f3e87bbddbb6905086f79441f0523"
           test "$(git hash-object canonical/governance/TOOLATHLON_VERIFIED_TOOL_DISCOVERY_ROUTE_FREEZE_V1.json)" = "f55ae78014e1dc6f92f2696d33b7249251047f1c"
           test "$(git hash-object canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json)" = "7885a827b1483bfb38315c1f492848f7e4680285"
       - name: Run fail-closed mutation tests
@@ -39,7 +39,7 @@ jobs:
           cd capsules/brain_pr_1146_toolathlon_six_to_three_cut
           export PYTHONPATH=.
           python -m unittest canonical.tests.test_toolathlon_matched_route_precondition_cut_v1 -v
-      - name: Execute precondition cut compiler
+      - name: Execute truth-repaired precondition cut compiler
         shell: bash
         run: |
           set -euo pipefail
@@ -54,7 +54,7 @@ jobs:
           python - <<'PY'
           import json
           v=json.load(open("verdict.json",encoding="utf-8"))
-          assert v["status"]=="PASS__SIX_TO_THREE_PRECONDITION_CUT__ZERO_REALITY__ZERO_CREDIT",v
+          assert v["status"]=="PASS__SIX_TO_THREE_PRECONDITION_CUT__REFERENCE_HARNESS_TRUTH_REPAIRED__ZERO_REALITY__ZERO_CREDIT",v
           assert v["original_open_preconditions"]==6,v
           assert v["closed_zero_reality_count"]==2,v
           assert v["absorbed_original_precondition_count"]==2,v
@@ -62,10 +62,11 @@ jobs:
           assert v["minimum_remaining_facts"]==[
             "TOOLATHLON_MATCHED_SCOPE_COMPOSITION_CERTIFICATE",
             "TOOLATHLON_ZERO_INCREMENTAL_SPEND_EXECUTION_CARRIER",
-            "OPUS55_TOOLATHLON_77_8_DURABLE_FIRST_PARTY_BYTE_BINDING",
+            "OPUS55_TOOLATHLON_MATCHED_REFERENCE_BAR",
           ],v
           assert v["checker_and_task_population_frozen"] is True,v
           assert v["proved_existing_atomic_inputs"] is True,v
+          assert v["legacy_77_8_candidate_is_not_a_matched_reference"] is True,v
           assert v["terminal_selector_frozen"] is True,v
           assert v["terminal_execution_authorized"] is False,v
           assert v["terminal_goal_achieved"] is False,v
@@ -74,5 +75,5 @@ jobs:
           assert v["incremental_spend_usd"]==0,v
           assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
           assert v["execution_authority"] is False and v["promotion_authority"] is False,v
-          print("Brain PR 1146 Toolathlon six-to-three cut: PASS")
+          print("Brain PR 1146 truth-repaired Toolathlon six-to-three cut: PASS")
           PY
