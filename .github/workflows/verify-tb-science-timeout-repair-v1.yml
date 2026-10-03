@@ -1,0 +1,133 @@
+name: Verify TB-Science planner timeout repair V1
+on:
+  push:
+    branches: ["verify-science-timeout-repair-v1-sol-20261003"]
+    paths:
+      - "capsules/tb_science_timeout_repair_v1/**"
+      - ".github/workflows/verify-tb-science-timeout-repair-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact repair and causal-result bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_timeout_repair_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "d29ea63e60af3b3403ddaeccbe6b3090db0234cf"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "2bb5532a522893919d2391b1e4d45bac70239818"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_PLANNER_TIMEOUT_REPAIR_V1.json")" = "6026ad5af7c6e3be059c0f86c17738c2feea2b9e"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_ONE_SLOT_CANARY_RESULT_V2.json")" = "b8a42816c8dadc8b21641e406778801f58d05fa9"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          grep -F 'science_planner.plan(prompt, timeout_s=300)' "$C/canonical/runtime/harbor_science_agent_v1.py"
+          ! grep -F 'science_planner.plan(prompt, timeout_s=180)' "$C/canonical/runtime/harbor_science_agent_v1.py"
+      - name: Run exact controller regression tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/tb_science_timeout_repair_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_agent_v1
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Prove real-sized synthetic proposal completes under 300 seconds
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_timeout_repair_v1
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee LONG_PROMPT_RESULT.json
+          import json,time
+          from canonical.runtime import harbor_science_planner_v1 as p
+          filler=("Calibration context only: alpha beta gamma delta epsilon zeta. " * 160)
+          prompt=(
+            "This is zero-terminal-content transport verification. "+filler+
+            " Use submit_science_proposal once. Provide 16 stable material requirements R01 through R16. "
+            "Provide 8 safe local candidate actions. Each candidate must cover two requirements and use only "
+            "printf to /tmp/synthetic_timeout_probe_N plus a test -s verification command. "
+            "Do not use network, packages, git, secrets, or host escape. Do not claim finish authority."
+          )
+          t=time.monotonic()
+          out=p.plan(prompt,timeout_s=300)
+          elapsed=time.monotonic()-t
+          raw=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+          assert isinstance(raw.get("material_requirements"),list) and raw["material_requirements"],raw
+          assert isinstance(raw.get("candidates"),list) and raw["candidates"],raw
+          assert elapsed < 300,(elapsed,raw)
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_300S_LONG_PROMPT_PREFLIGHT_V1",
+            "status":"PASS",
+            "elapsed_s":round(elapsed,3),
+            "transport":out["transport"],
+            "model":out["model"],
+            "proposal_chars":len(out["text"]),
+            "terminal_case_content_read":0,
+            "terminal_results_observed":0,
+            "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+          python - <<'PY' | tee LONG_PROMPT_TIMING.json
+          import json,re
+          s=open("LOCAL_QWEN_SERVER.log",errors="replace").read()
+          prompts=[int(x) for x in re.findall(r'prompt processing, n_tokens =\s*(\d+)',s)]
+          dec=[int(x) for x in re.findall(r'n_decoded =\s*(\d+)',s)]
+          assert prompts and max(prompts)>=1400,prompts
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_300S_LONG_PROMPT_TIMING_V1",
+            "status":"PASS",
+            "max_prompt_tokens_logged":max(prompts),
+            "max_decoded_tokens_logged":max(dec) if dec else None
+          },sort_keys=True))
+          PY
+      - name: Preserve independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-timeout-repair-v1
+          path: |
+            LONG_PROMPT_RESULT.json
+            LONG_PROMPT_TIMING.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
