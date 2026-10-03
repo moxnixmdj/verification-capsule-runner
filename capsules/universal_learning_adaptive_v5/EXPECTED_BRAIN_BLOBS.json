@@ -1,0 +1,21 @@
+{
+  "schema": "BRAIN_UNIVERSAL_LEARNING_ADAPTIVE_V5_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1425,
+  "brain_ref": "feature/universal-learning-v5-adaptive-experiment-20261004",
+  "brain_head_sha": "9abff67c13fb581650838da06d9fad6d6461c46b",
+  "exact_brain_blobs": {
+    "canonical/runtime/universal_learning_contract_v1.py": "51a6dde1898eb1b59f21e31d2fbd6e5931914756",
+    "canonical/runtime/universal_active_transfer_learner_v2.py": "6afa7cc538f151f222c18962b13a7941d6b12bed",
+    "canonical/runtime/structural_transfer_v3.py": "2c5d854ba88493edcd843ae4ac2994e727319fa7",
+    "canonical/runtime/goal_dependency_delta_v4.py": "383658603320862aeaf55ee35c991ef9c37c0aaf",
+    "canonical/runtime/open_world_hypothesis_guard_v4.py": "03424b87b8f96dcba70847541b48be58ffe520f8",
+    "canonical/runtime/universal_learning_open_world_router_v4.py": "3342dc811a2cb2e6f079f46b1dc544567acf3530",
+    "canonical/runtime/verified_probe_model_v5.py": "551e57a9ab5efe4cc29e2b3d87d802930d13ea28",
+    "canonical/runtime/adaptive_experiment_planner_v5.py": "0b209faf823686dcfc27850185d58e76f066fddf",
+    "canonical/runtime/universal_learning_adaptive_router_v5.py": "ea226fd2c226531cbc9d1685d475cacf1831022b",
+    "canonical/tests/test_universal_learning_adaptive_router_v5.py": "73d8c15e54bbdc3ca7194457fe7eb27e4437faab",
+    "canonical/governance/UNIVERSAL_LEARNING_ADAPTIVE_ROUTER_V5.json": "4acccc74f68da19061ca7cc4c82ce51eaa27656e",
+    "canonical/runtime/decision_discriminator_v3.py": "3ec9e43a7bbe40a264fa3560a93039461941dbee"
+  }
+}
