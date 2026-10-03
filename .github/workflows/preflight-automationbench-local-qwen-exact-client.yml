@@ -1,0 +1,97 @@
+name: Preflight AutomationBench exact client on pinned local Qwen
+on:
+  push:
+    branches: ["automationbench-client-preflight-20261003"]
+    paths:
+      - "capsules/automationbench_local_qwen_exact_client_preflight_v1/**"
+      - ".github/workflows/preflight-automationbench-local-qwen-exact-client.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/automationbench_local_qwen_exact_client_preflight_v1/**"
+      - ".github/workflows/preflight-automationbench-local-qwen-exact-client.yml"
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install exact frozen AutomationBench client
+        run: |
+          set -euo pipefail
+          git init automationbench-upstream
+          git -C automationbench-upstream remote add origin https://github.com/zapier/AutomationBench.git
+          git -C automationbench-upstream fetch --depth 1 origin 4a8e1061254004d9dac807054eed33fad7d1ff14
+          git -C automationbench-upstream checkout --detach FETCH_HEAD
+          test "$(git -C automationbench-upstream rev-parse HEAD)" = "4a8e1061254004d9dac807054eed33fad7d1ff14"
+          test "$(git -C automationbench-upstream hash-object automationbench/clients.py)" = "aaf0749860875c9c687cf3c7700ea245f851e8ab"
+          test "$(git -C automationbench-upstream hash-object automationbench/scripts/eval.py)" = "fed8beba54bf07123e2b0a2f7caee804b97548fc"
+          python -m pip install --disable-pip-version-check --quiet -e ./automationbench-upstream
+      - name: Prove no benchmark task source is touched by preflight script
+        run: |
+          set -euo pipefail
+          ! grep -Eq 'get_combined_dataset|automationbench\.domains|task_sources|datasets/' capsules/automationbench_local_qwen_exact_client_preflight_v1/test_exact_client.py
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 4096 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" > LLAMA_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Run synthetic exact-client preflight
+        run: |
+          set -euo pipefail
+          python capsules/automationbench_local_qwen_exact_client_preflight_v1/test_exact_client.py | tee EXACT_CLIENT_STDOUT.json
+      - name: Enforce zero-terminal boundary
+        run: |
+          python - <<'PY'
+          import json
+          j=json.load(open("AUTOMATIONBENCH_LOCAL_QWEN_EXACT_CLIENT_PREFLIGHT_V1.json"))
+          assert j["automationbench_dataset_loaded"] is False
+          assert j["benchmark_task_exposed"] is False
+          assert j["tool_calls_present"] is True
+          assert j["post_tool_transcript_serializes"] is True
+          assert j["terminal_results_observed"] == 0
+          assert j["family_credit_delta"] == 0
+          PY
+      - name: Preserve nonterminal preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: automationbench-local-qwen-exact-client-preflight-v1
+          path: |
+            AUTOMATIONBENCH_LOCAL_QWEN_EXACT_CLIENT_PREFLIGHT_V1.json
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
