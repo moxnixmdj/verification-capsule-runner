@@ -1,0 +1,71 @@
+name: Verify Tool Discovery acceptance reduction
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_acceptance_reduction_20261003/**'
+      - '.github/workflows/verify-tool-discovery-acceptance-reduction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/tool_discovery_acceptance_reduction_20261003
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+            "canonical/runtime/tool_discovery_acceptance_reduction_v1.py": "bf60fcf9d1fd6bb03bb22efb2b094176ed095d02",
+            "canonical/tests/test_tool_discovery_acceptance_reduction_v1.py": "4b1cc75f951f1c740077b2ac22031bed894a1c1b",
+            "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_CANDIDATE_V1.json": "7bb771f8ffc32c0a1fe47b1b10a9b82a4eb57864",
+            "canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_DISCHARGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "1dc22fb6a0816963b5349ed6a55763b2c42a1cb8",
+            "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json": "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",
+            "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+            "canonical/runtime/acceptance_proof_transmuter_v1.py": "39b5611e53485674b29e2a05da91b89801bc5aa6",
+          }
+          for path,want in expected.items():
+              data=Path(path).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+              assert got==want,(path,got,want)
+              print(path,got)
+          PY
+      - name: Run fail-closed acceptance reduction tests
+        working-directory: capsules/tool_discovery_acceptance_reduction_20261003
+        run: python -m unittest canonical.tests.test_tool_discovery_acceptance_reduction_v1 -v
+      - name: Execute exact acceptance reduction
+        working-directory: capsules/tool_discovery_acceptance_reduction_20261003
+        run: python -m canonical.runtime.tool_discovery_acceptance_reduction_v1 > verdict.json
+      - name: Enforce exact four-of-nineteen verdict
+        working-directory: capsules/tool_discovery_acceptance_reduction_20261003
+        run: |
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["status"].startswith("PASS__"),v
+          assert v["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING",v
+          assert v["result_family_status"]=="PASS",v
+          assert v["scope_basis"]=="EXACT_COMPLETE_TARGET_CASE_UNIVERSE",v
+          assert v["closure_mode"]=="ABSOLUTE_DOMINANCE",v
+          assert v["witness_reason"]=="THEORETICAL_CEILING_DOMINANCE",v
+          assert v["family_count"]==19,v
+          assert v["closed_family_count"]==4,v
+          assert v["open_family_count"]==15,v
+          assert v["newly_closed_families"]==["TOOL_DISCOVERY_SELECTION_AND_LEARNING"],v
+          assert v["terminal_goal_achieved"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["incremental_spend_usd"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Tool Discovery acceptance reduction: PASS 4/19")
+          PY
