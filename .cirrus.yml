@@ -1,0 +1,51 @@
+task:
+  name: TB4 zero-case Cirrus carrier envelope probe
+  compute_engine_instance:
+    image_project: cirrus-images
+    image: family/docker-builder
+    platform: linux
+    architecture: amd64
+    cpu: 8
+    memory: 24G
+    disk: 100
+
+  probe_script: |
+    set -euo pipefail
+    CPU="$(nproc)"
+    MEM_MB="$(awk '/MemAvailable:/ {print int($2/1024)}' /proc/meminfo)"
+    DISK_MB="$(df -Pk / | awk 'NR==2 {print int($4/1024)}')"
+
+    docker version >/dev/null
+    if docker compose version >/dev/null 2>&1; then
+      COMPOSE_KIND="docker-compose-plugin"
+    elif docker-compose version >/dev/null 2>&1; then
+      COMPOSE_KIND="docker-compose-standalone"
+    else
+      echo "Docker Compose unavailable" >&2
+      exit 41
+    fi
+
+    cat > carrier_probe.env <<EOF
+    schema=PROJECT_BRAIN_TB4_CIRRUS_ZERO_CASE_CARRIER_PROBE_V1
+    cpu_count=$CPU
+    mem_available_mb=$MEM_MB
+    root_free_mb=$DISK_MB
+    docker=true
+    docker_compose=true
+    docker_compose_kind=$COMPOSE_KIND
+    task_instruction_files_read=0
+    solution_files_read=0
+    acceptance_cases_executed=0
+    incremental_spend_usd=0
+    EOF
+
+    cat carrier_probe.env
+
+    test "$CPU" -ge 8
+    test "$MEM_MB" -ge 16384
+    test "$DISK_MB" -ge 51200
+
+  always:
+    carrier_probe_artifacts:
+      path: carrier_probe.env
+      type: text/plain
