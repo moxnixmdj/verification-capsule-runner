@@ -1,0 +1,46 @@
+name: Verify Tool Discovery universal frozen-generator proof
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_tool_discovery_universal_generator_v1/**"
+      - ".github/workflows/verify-tool-discovery-universal-generator-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run universal proof tests
+        run: |
+          cd capsules/brain_tool_discovery_universal_generator_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_frozen_generator_universal_proof_v1 -v
+      - name: Execute universal proof
+        run: |
+          cd capsules/brain_tool_discovery_universal_generator_v1
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_frozen_generator_universal_proof_v1 > verdict.json
+      - name: Enforce universal zero-reality verdict
+        run: |
+          cd capsules/brain_tool_discovery_universal_generator_v1
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["universal_formal_scope_proved"] is True,v
+          assert v["proof_basis"]=="UNIVERSAL_FORMAL_SCOPE_PROOF",v
+          assert v["result"]["all_admissible_inputs_proved"] is True,v
+          assert v["result"]["formal_completeness"] is True,v
+          assert v["generator_quotient"]["class_count"]==6,v
+          assert v["generator_quotient"]["seed_effect"]=="ALPHA_RENAMING_ONLY",v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["incremental_spend_usd"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Tool Discovery universal frozen-generator proof: PASS")
+          PY
