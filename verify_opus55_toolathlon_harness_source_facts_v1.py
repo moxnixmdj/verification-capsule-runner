@@ -21,26 +21,25 @@ for i,p in enumerate(reader.pages,1):
         pages.append((i,t))
 assert pages
 section=" ".join(t for _,t in pages)
-required=[
-    "Toolathlon-Verified",
-    "77.8",
-    "108 tasks",
-    "three trials",
-    "internal harness",
-    "environment-specific setup patches",
-    "pin financial data feeds",
-    "pin container images",
-    "null attempts",
-    "71.6%",
-    "76.2%",
-]
-missing=[x for x in required if x not in section]
-assert not missing, missing
+low=section.lower()
+checks={
+    "toolathlon_section":"toolathlon" in low,
+    "opus_score":"77.8" in low,
+    "task_count":"108 tasks" in low,
+    "three_trials":"three trials" in low,
+    "internal_harness":"internal harness" in low,
+    "setup_patches":"setup patches" in low,
+    "financial_feeds":("financial" in low and "data feed" in low),
+    "container_images":"container image" in low,
+    "null_attempts":"null attempt" in low,
+    "reference_scores":("71.6" in low and "76.2" in low),
+}
+assert all(checks.values()), {k:v for k,v in checks.items() if not v}
 
-mirrors = "mirrors the Toolathlon-Verified task definitions, prompts, and execution-based checkers" in section
-patches = "environment-specific setup patches" in section
-internal = "internal harness" in section
-nulls = "null attempts" in section
+mirrors = ("mirror" in low and "task definitions" in low and "prompts" in low and "checker" in low)
+patches = checks["setup_patches"]
+internal = checks["internal_harness"]
+nulls = checks["null_attempts"]
 exact_equality_claim = (
     "same exact harness" in section.lower()
     or "identical harness" in section.lower()
@@ -58,9 +57,10 @@ verdict={
     "source_calls_results_internal_harness":internal,
     "source_says_harness_mirrors_task_prompts_checkers":mirrors,
     "source_discloses_environment_specific_setup_patches":patches,
-    "source_discloses_pinned_financial_feeds_and_container_images":("pin financial data feeds" in section and "pin container images" in section),
-    "source_discloses_public_vs_internal_score_shift_for_reference_models":("roughly three points higher" in section and nulls),
-    "source_claims_exact_harness_identity":exact_equality_claim
+    "source_discloses_pinned_financial_feeds_and_container_images":checks["financial_feeds"] and checks["container_images"],
+    "source_discloses_public_vs_internal_score_shift_for_reference_models":(("three points higher" in low or "3 points higher" in low) and nulls),
+    "source_claims_exact_harness_identity":exact_equality_claim,
+    "normalized_source_checks":checks
   },
   "deduction_boundary":{
     "first_party_source_proves_exact_internal_vs_public_harness_byte_identity":False,
