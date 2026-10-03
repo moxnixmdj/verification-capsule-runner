@@ -1,0 +1,96 @@
+name: Verify Brain PR 1251 Science planner latency repair
+on:
+  push:
+    branches: ["verify/brain-pr-1251-science-planner-latency-v1"]
+    paths:
+      - "capsules/brain_pr_1251_science_planner_latency_v1/**"
+      - ".github/workflows/verify-brain-pr-1251-science-planner-latency-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1251_science_planner_latency_v1/**"
+      - ".github/workflows/verify-brain-pr-1251-science-planner-latency-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain PR 1251 bytes
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1251_science_planner_latency_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "f75a594e1b9d4169f9f7668253d4b740695663c0"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "03844404c3a591f41597da9e2a40ccc801aaa42f"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "c2c52803956afbbf7695a5f4a4489e346cc3b9bc"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "292f8c4447122569e6168deb22847e2570db155e"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          grep -F '"enable_thinking": False' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          grep -F 'DEFAULT_TIMEOUT_S = 240' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          grep -F 'MAX_GENERATION_TOKENS = 512' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          ! grep -R -E 'pollinations|https://text\.|api_key|Authorization: Bearer' "$C/canonical/runtime/harbor_science_planner_v1.py"
+
+      - name: Run exact unit tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/brain_pr_1251_science_planner_latency_v1"
+          PYTHONPATH="$C" python -m unittest -v             canonical.tests.test_harbor_science_planner_v1             canonical.tests.test_harbor_science_agent_v1
+
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+
+      - name: Start exact local endpoint without global reasoning override
+        run: |
+          set -euo pipefail
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1             --jinja --no-webui             > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Reproduce prior latency envelope nonterminally on repaired bytes
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/brain_pr_1251_science_planner_latency_v1"
+          PYTHONPATH="$C" python "$C/verify_latency_repair.py" | tee SCIENCE_PLANNER_LATENCY_REPAIR_RESULT.json
+
+      - name: Preserve independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brain-pr-1251-science-planner-latency-v1
+          path: |
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+            SCIENCE_PLANNER_LATENCY_REPAIR_RESULT.json
+          if-no-files-found: warn
