@@ -1,3 +1,4 @@
+# Isolated P1 verifier entrypoint; deterministic spent fixtures only.
 #!/usr/bin/env bash
 set -euo pipefail
 python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1
