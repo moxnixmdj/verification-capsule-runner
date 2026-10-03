@@ -1,0 +1,36 @@
+name: Verify TB-Science Opus55 snapshot identity V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_opus55_snapshot_identity_v1/**"
+      - ".github/workflows/verify-tb-science-opus55-snapshot-identity-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify live official source identity chain
+        run: python capsules/tb_science_opus55_snapshot_identity_v1/verify.py | tee TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY.json
+      - name: Verify threshold arithmetic
+        run: |
+          python - <<'PY'
+          import math
+          slots=210; score=63.3; consumed_failures=3
+          required=math.ceil(slots*score/100)
+          fail_lock=slots-required+1
+          assert required==133
+          assert fail_lock==78
+          assert fail_lock-consumed_failures==75
+          print("TB_SCIENCE_63_3_ARITHMETIC_PASS", required, fail_lock, 75)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-opus55-snapshot-identity-v1
+          path: TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY.json
