@@ -1,4 +1,5 @@
 name: Verify P1 source-native shared-batch freeze
+# Dedicated verification base prevents unrelated main-PR workflow fan-out.
 on:
   pull_request:
     branches: [verify-base/p1-source-native-20261003]
