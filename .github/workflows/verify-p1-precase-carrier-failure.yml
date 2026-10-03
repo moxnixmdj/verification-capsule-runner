@@ -1,0 +1,81 @@
+name: Verify P1 pre-case carrier failure
+
+on:
+  push:
+    branches: ["verify/p1-precase-carrier-failure-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-p1-precase-carrier-failure.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain candidate and authoritative GitHub metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          curl -fsSL "https://raw.githubusercontent.com/moxnixmdj/brain/c6b7c7198e37f5758913480d5639bc23c88d6c10/canonical/governance/P1_ONE_USE_PRECASE_CARRIER_FAILURE_RECONCILIATION_CANDIDATE_V1.json" -o evidence/candidate.json
+          test "$(git hash-object evidence/candidate.json)" = "fa1d179a2bf8f273c3adb8d6f80fee77f847bfbd"
+          curl -fsSL "https://api.github.com/repos/moxnixmdj/brain/actions/runs/37106776756" -o evidence/run.json
+          curl -fsSL "https://api.github.com/repos/moxnixmdj/brain/actions/runs/37106776756/jobs" -o evidence/jobs.json
+          curl -fsSL "https://api.github.com/repos/moxnixmdj/brain/actions/runs/37106776756/artifacts" -o evidence/artifacts.json
+          python - <<'PY'
+          import datetime as dt, json
+          from pathlib import Path
+          c=json.loads(Path("evidence/candidate.json").read_text())
+          r=json.loads(Path("evidence/run.json").read_text())
+          js=json.loads(Path("evidence/jobs.json").read_text())
+          ar=json.loads(Path("evidence/artifacts.json").read_text())
+          assert c["activation_commit"]=="b12723d5a3116d00edd438d389c8282b47b52016"
+          assert c["failed_execution"]["workflow_run_id"]==37106776756
+          assert c["failed_execution"]["workflow_job_id"]==111156743001
+          assert r["head_sha"]=="b12723d5a3116d00edd438d389c8282b47b52016", r
+          assert r["run_attempt"]==1 and r["event"]=="push", r
+          assert r["status"]=="completed" and r["conclusion"]=="failure", r
+          assert js["total_count"]==1, js
+          j=js["jobs"][0]
+          assert j["id"]==111156743001, j
+          assert j["name"]=="execute", j
+          assert j["status"]=="completed" and j["conclusion"]=="failure", j
+          assert j["runner_id"]==0, j
+          assert j.get("steps")==[], j
+          assert ar["total_count"]==0 and ar.get("artifacts")==[], ar
+          started=dt.datetime.fromisoformat(j["started_at"].replace("Z","+00:00"))
+          ended=dt.datetime.fromisoformat(j["completed_at"].replace("Z","+00:00"))
+          assert (ended-started).total_seconds() <= 10, (started,ended)
+          receipt={
+            "schema":"PROJECT_BRAIN_P1_PRECASE_CARRIER_FAILURE_INDEPENDENT_VERIFICATION_20261003_V1",
+            "status":"INDEPENDENT_PUBLIC_METADATA_PASS__RUNNER_ZERO__ZERO_STEPS__ZERO_ARTIFACTS__PRECASE_INFRASTRUCTURE_FAILURE",
+            "brain_candidate_commit":"c6b7c7198e37f5758913480d5639bc23c88d6c10",
+            "brain_candidate_blob":"fa1d179a2bf8f273c3adb8d6f80fee77f847bfbd",
+            "failed_run_id":37106776756,
+            "failed_job_id":111156743001,
+            "activation_head_sha":r["head_sha"],
+            "run_attempt":r["run_attempt"],
+            "runner_id":j["runner_id"],
+            "observed_steps":len(j.get("steps") or []),
+            "artifact_count":ar["total_count"],
+            "case_generation_established":False,
+            "fresh_reality_consumption_established":False,
+            "p1_quarantine_lifted":False,
+            "retry_of_failed_workflow_authorized":False,
+            "reissue_new_one_use_authority_eligible":True,
+            "incremental_spend_usd":0,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False
+          }
+          Path("evidence/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-precase-carrier-failure-verification
+          path: evidence/
+          if-no-files-found: error
