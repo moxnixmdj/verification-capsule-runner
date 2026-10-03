@@ -72,6 +72,14 @@ jobs:
           assert raw["incremental_spend_usd"]==0
           assert raw["beacon_sha256"]==wrap["beacon_sha256"]
           assert set(raw["by_surface"])==set(surfaces)
+          beacon=(
+            "P1_PUBLIC_RECOVERY_CARRIER_V1;"
+            "REPO="+wrap["github_repository"]+";"
+            "RUN_ID="+str(wrap["github_run_id"])+";"
+            "ATTEMPT="+str(wrap["github_run_attempt"])+";"
+            "HEAD="+wrap["github_head_sha"]
+          )
+          assert hashlib.sha256(beacon.encode()).hexdigest()==wrap["beacon_sha256"]
           receipts=raw["case_receipts"]
           assert len(receipts)==192
           seen=set()
@@ -83,7 +91,7 @@ jobs:
             seen.add((sid,idx))
             assert c["difficulty"] == [1,2,3,4,5][idx%5]
             seed=int.from_bytes(hashlib.sha256(
-              (raw["beacon_namespace"]+"\n"+wrap["beacon_sha256"]+"\n"+sid+"\n"+str(idx)).encode()
+              (raw["beacon_namespace"]+"\n"+beacon+"\n"+sid+"\n"+str(idx)).encode()
             ).digest()[:8],"big")
             assert c["seed"]==seed
             assert c["pass"] is True
