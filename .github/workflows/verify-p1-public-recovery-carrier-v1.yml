@@ -31,8 +31,8 @@ jobs:
       - name: Bind exact recovery proposal and distinct carrier
         run: |
           set -euo pipefail
-          test "$(git hash-object .github/workflows/execute-p1-public-recovery-carrier-v1.yml)" = "29e879f6aca5c76ee83d36c7fd2a0295b02a675b"
-          test "$(git hash-object capsules/p1_public_recovery_carrier_v1/brain_proposal.json)" = "395c4c15139eecb37f7910599e62bec908d578fa"
+          test "$(git hash-object .github/workflows/execute-p1-public-recovery-carrier-v1.yml)" = "547f57f43a71f289b006602c1067a962171f38d4"
+          test "$(git hash-object capsules/p1_public_recovery_carrier_v1/brain_proposal.json)" = "4a0146ea409dfad45638b15b279d5a5cc8bf4143"
           test "$(git hash-object capsules/p1_public_recovery_carrier_v1/precase_failure_observation.json)" = "c839eb5f8aa4add61ba7e3b4764cfa4631d4908b"
           C=capsules/p1_one_use_authority_v1
           test "$(git hash-object "$C/canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json")" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
@@ -51,7 +51,7 @@ jobs:
           assert p["promotion_authority"] is False
           assert p["fresh_reality_units_consumed"]==0
           assert p["recovery_carrier"]["repository"]=="moxnixmdj/verification-capsule-runner"
-          assert p["recovery_carrier"]["workflow_git_blob_sha"]=="29e879f6aca5c76ee83d36c7fd2a0295b02a675b"
+          assert p["recovery_carrier"]["workflow_git_blob_sha"]=="547f57f43a71f289b006602c1067a962171f38d4"
           assert p["recovery_carrier"]["distinct_from_failed_carrier"] is True
           iv=p["prior_pre_case_failure"]["independent_verification"]
           assert iv["workflow_run_id"]==37107461285 and iv["conclusion"]=="success"
@@ -77,8 +77,8 @@ jobs:
           receipt={
             "schema":"PROJECT_BRAIN_P1_PUBLIC_RECOVERY_CARRIER_INDEPENDENT_VERIFICATION_V1",
             "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__DISTINCT_CARRIER_EXACT_BYTES__ZERO_REALITY",
-            "proposal_blob":"395c4c15139eecb37f7910599e62bec908d578fa",
-            "execution_workflow_blob":"29e879f6aca5c76ee83d36c7fd2a0295b02a675b",
+            "proposal_blob":"4a0146ea409dfad45638b15b279d5a5cc8bf4143",
+            "execution_workflow_blob":"547f57f43a71f289b006602c1067a962171f38d4",
             "prior_failure_observation_blob":"c839eb5f8aa4add61ba7e3b4764cfa4631d4908b",
             "prior_failure_independent_run_id":37107461285,
             "fresh_reality_units_consumed":0,
