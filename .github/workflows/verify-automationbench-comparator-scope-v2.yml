@@ -1,0 +1,103 @@
+name: Verify AutomationBench comparator scope V2
+
+on:
+  push:
+    branches: ["verify/automationbench-comparator-scope-v2-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-automationbench-comparator-scope-v2.yml"
+      - "capsules/automationbench_comparator_scope_v2/brain/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-automationbench-comparator-scope-v2.yml"
+      - "capsules/automationbench_comparator_scope_v2/brain/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact Brain source bytes
+        run: |
+          set -euo pipefail
+          B=capsules/automationbench_comparator_scope_v2/brain
+          test "$(git hash-object "$B/CANDIDATE.json")" = "a034fdd8bcf59a727572708fbec265e93a681651"
+          test "$(git hash-object "$B/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json")" = "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+          test "$(git hash-object "$B/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json")" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object "$B/OPUS55_PUBLIC_BAR_SCORE_READINESS_MATRIX_V1.json")" = "4e59e30461c9ff1bee1a9474627d5fb4074844b2"
+
+      - name: Verify frozen same-scope contract
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          B="capsules/automationbench_comparator_scope_v2/brain"
+          reg=json.load(open(f"{B}/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json"))
+          protocols=json.load(open(f"{B}/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json"))
+          readiness=json.load(open(f"{B}/OPUS55_PUBLIC_BAR_SCORE_READINESS_MATRIX_V1.json"))
+
+          p=next(x for x in reg["predicates"] if x["id"]=="AUTOMATIONBENCH_GE_40")
+          assert p["surface"]=="AutomationBench public 600"
+          assert p["acceptance"]=="AutomationBench >= 40.0%"
+
+          same=protocols["universal_rules"]["same_scope"]
+          assert "same frozen task population/harness/tool authority" in same
+          bp=next(x for x in protocols["protocols"] if x["family"]=="BUSINESS_WORKFLOW_AUTOMATION")
+          assert "AutomationBench >= 40.0%" in bp["acceptance"]
+
+          r=next(x for x in readiness["surfaces"] if x["surface"]=="AutomationBench public 600")
+          assert r["dataset"]=="PUBLIC_600_TASK_SET_FROZEN"
+          assert r["scorer"]=="STRICT_BINARY_ASSERTION_METRIC_BOUND"
+          assert r["score_producing_route_ready"] is False
+          print("FROZEN_CONTRACT_PASS")
+          PY
+
+      - name: Fetch exact benchmark-owner public repository
+        run: |
+          set -euo pipefail
+          git init /tmp/AutomationBench
+          git -C /tmp/AutomationBench remote add origin https://github.com/zapier/AutomationBench.git
+          git -C /tmp/AutomationBench fetch --depth 1 origin 4a8e1061254004d9dac807054eed33fad7d1ff14
+          git -C /tmp/AutomationBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/AutomationBench rev-parse HEAD)" = "4a8e1061254004d9dac807054eed33fad7d1ff14"
+          test "$(git -C /tmp/AutomationBench hash-object README.md)" = "680d7006e1a05e94c6ce208e91b13dd821d1554f"
+
+      - name: Verify public-private population non-equivalence
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("/tmp/AutomationBench/README.md").read_text()
+          assert "This repository ships the **public** task set." in s
+          assert "separate, held-out private task set per domain" in s
+          assert "scores you measure locally may not match the official leaderboard 1:1" in s
+          assert "Expect directional agreement" in s
+          assert 'Pass rates on the 600-task **public** benchmark' in s
+          assert "| Claude Opus 5    | max              | 50.3%" in s
+          public_table=s.split('Pass rates on the 600-task **public** benchmark',1)[1].split('## Principles',1)[0]
+          assert "Opus 5.5" not in public_table
+          assert "task_completed_correctly" in s
+          print("PUBLIC_PRIVATE_NON_EQUIVALENCE_PASS")
+          PY
+
+      - name: Verify fail-closed reconciliation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          p="capsules/automationbench_comparator_scope_v2/brain/CANDIDATE.json"
+          c=json.load(open(p))
+          assert c["target_predicate"]=="AUTOMATIONBENCH_GE_40"
+          assert c["contradiction"]["stale_route_to_delete"]=="RUN_PUBLIC_600_AND_COMPARE_DIRECTLY_TO_40_PERCENT_AS_IF_SAME_POPULATION"
+          assert c["current_conclusion"]["predicate_state"]=="OPEN"
+          assert c["current_conclusion"]["fresh_terminal_execution_authorized"] is False
+          assert c["acceptance_credit_delta"]==0
+          assert c["fresh_reality_authority"] is False
+          assert "DO_NOT_COMPARE_A_PUBLIC600_BRAIN_SCORE_TO_A_PRIVATE_HELDOUT_OPUS_SCORE" in c["hard_rules"]
+          print("AUTOMATIONBENCH_COMPARATOR_SCOPE_V2_VERIFIED")
+          PY
