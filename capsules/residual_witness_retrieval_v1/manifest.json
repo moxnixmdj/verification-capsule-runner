@@ -5,7 +5,7 @@
   "source_branch": "repair/residual-witness-retrieval-v1-20261003",
   "source_files": {
     "canonical/runtime/residual_witness_retrieval_compiler_v1.py": {
-      "blob_sha": "064844d1050d087cb5585e1bab7dbb9d5fa6cd0d",
+      "blob_sha": "9daa8d590f3356b3fc51eccf75c56cbf515239e4",
       "verifier_path": "capsules/residual_witness_retrieval_v1/residual_witness_retrieval_compiler_v1.py"
     },
     "canonical/runtime/bound_capabilities/research_query_focus.py": {
