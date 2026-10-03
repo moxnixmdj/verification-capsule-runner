@@ -1,0 +1,95 @@
+name: Verify Brain PR 1216 TB-Science Source Gate V2
+on:
+  push:
+    branches: ["verify-brain-pr-1216-tb-science-source-gate-v2"]
+    paths:
+      - "capsules/brain_pr_1216_tb_science_source_gate_v2/**"
+      - ".github/workflows/verify-brain-pr-1216-tb-science-source-gate-v2.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1216_tb_science_source_gate_v2/**"
+      - ".github/workflows/verify-brain-pr-1216-tb-science-source-gate-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1216_tb_science_source_gate_v2
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_SOURCE_GATE_V2_ADMISSION_V1.json")" = "819f2b9fb866149f654f59b3622fd5cc1624122e"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+      - name: Independently evaluate exact science route through Source Gate V2
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1216_tb_science_source_gate_v2
+          export PYTHONPATH="$PWD/$C"
+          python - <<'PY'
+          import copy, json
+          from canonical.runtime.acceptance_capability_source_gate_v2 import evaluate
+          p="capsules/brain_pr_1216_tb_science_source_gate_v2/canonical/governance/TB_SCIENCE_SOURCE_GATE_V2_ADMISSION_V1.json"
+          g=json.load(open(p))
+          result=evaluate(g["route"])
+          assert result["pass"] is True, result
+          assert result["status"]=="ADMISSIBLE_FOR_CLEAN_ACCEPTANCE_EXECUTION", result
+          assert result["clean_case_execution_authority"] is True, result
+          assert result["errors"]==[], result
+          assert result["capability_credit_delta"]==0
+          assert result["family_credit_delta"]==0
+          expected=g["expected_gate_result"]
+          for k in ("pass","status","clean_case_execution_authority","errors"):
+              assert result[k]==expected[k], (k,result[k],expected[k])
+
+          # Fail-closed mutation checks: every load-bearing positive must matter.
+          true_fields=[
+              "benchmark_harness_zero_cost","scorer_frozen","brain_candidate_bound",
+              "brain_owned_operative_configuration","configuration_materially_constrains_execution",
+              "capability_package_contains_configuration","promotion_evaluates_brain_configured_system",
+              "model_dependencies_declared","general_substrate_test_pass"
+          ]
+          for key in true_fields:
+              r=copy.deepcopy(g["route"]); r[key]=False
+              out=evaluate(r)
+              assert out["pass"] is False and out["clean_case_execution_authority"] is False, (key,out)
+
+          false_fields=[
+              "external_hidden_target_capability_provider",
+              "ownership_claim_relies_on_model_standalone_superiority",
+              "future_use_requires_capability_rediscovery"
+          ]
+          for key in false_fields:
+              r=copy.deepcopy(g["route"]); r[key]=True
+              out=evaluate(r)
+              assert out["pass"] is False and out["clean_case_execution_authority"] is False, (key,out)
+
+          r=copy.deepcopy(g["route"]); r["incremental_spend_usd"]=0.01
+          assert evaluate(r)["pass"] is False
+          r=copy.deepcopy(g["route"]); r["model_dependency_count"]=0
+          assert evaluate(r)["pass"] is False
+          r=copy.deepcopy(g["route"]); r["model_role"]="UNDECLARED"
+          assert evaluate(r)["pass"] is False
+
+          assert g["terminal_results_observed"]==0
+          assert g["new_reality_units_consumed"]==0
+          assert g["incremental_spend_usd"]==0
+          assert g["capability_credit_delta"]==0
+          assert g["family_credit_delta"]==0
+          assert g["execution_authority"] is False
+          assert g["promotion_authority"] is False
+          print(json.dumps({
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_SOURCE_GATE_V2_INDEPENDENT_VERIFICATION_V1",
+              "status":"PASS",
+              "gate_result":result,
+              "terminal_cases_exposed":0,
+              "acceptance_credit_delta":0,
+              "family_credit_delta":0,
+              "capability_credit_delta":0
+          },sort_keys=True))
+          PY
