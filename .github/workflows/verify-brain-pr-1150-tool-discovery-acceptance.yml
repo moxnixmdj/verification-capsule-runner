@@ -1,0 +1,79 @@
+name: Verify Brain PR 1150 Tool Discovery acceptance reduction
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1150_tool_discovery_acceptance/**"
+      - ".github/workflows/verify-brain-pr-1150-tool-discovery-acceptance.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1150_tool_discovery_acceptance
+          test "$(git hash-object canonical/runtime/acceptance_proof_transmuter_v1.py)" = "39b5611e53485674b29e2a05da91b89801bc5aa6"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json)" = "4c7d170418bb95828a23538709aa304a00db6746"
+          test "$(git hash-object canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "c9adf25c2e63f9e8b111f1d022acda264d6571f5"
+      - name: Validate independent exact-scope receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1150_tool_discovery_acceptance
+          python - <<'PY'
+          import json
+          r=json.load(open("canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",encoding="utf-8"))
+          assert r["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),r
+          assert r["scope_semantics_discharged"] is True,r
+          assert r["basis_kind"]=="EXACT_COMPLETE_TARGET_CASE_UNIVERSE",r
+          assert r["complete_target_case_set"] is True,r
+          assert r["public_runner"]["pull_request"]==1126,r
+          assert r["public_runner"]["workflow_run_id"]==37086692264,r
+          assert r["public_runner"]["workflow_job_id"]==111098372766,r
+          assert r["public_runner"]["merge_commit"]=="bc67c03671469a289f022722b6579c0a0608e985",r
+          assert r["new_reality_units_consumed"]==0 and r["terminal_cases_replayed"]==0,r
+          print("independent exact-scope receipt: PASS")
+          PY
+      - name: Run fail-closed acceptance transmuter
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1150_tool_discovery_acceptance
+          export PYTHONPATH=.
+          python -m canonical.runtime.acceptance_proof_transmuter_v1 \
+            canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json \
+            --evidence canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json \
+            > verdict.json
+      - name: Enforce Tool Discovery only closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1150_tool_discovery_acceptance
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["status"]=="PASS",v
+          assert v["family_count"]==19,v
+          assert v["closed_family_count"]==4,v
+          assert v["open_family_count"]==15,v
+          rows={x["family"]:x for x in v["families"]}
+          expected={"EXACT_SYMBOLIC_COMPUTATION","LONG_HORIZON_MEMORY_AND_CONTINUITY","SUBAGENT_DELEGATION_AND_COORDINATION","TOOL_DISCOVERY_SELECTION_AND_LEARNING"}
+          got={k for k,x in rows.items() if x["result_status"]=="PASS"}
+          assert got==expected,(got,expected)
+          td=rows["TOOL_DISCOVERY_SELECTION_AND_LEARNING"]
+          assert td["closure_mode"]=="ABSOLUTE_DOMINANCE",td
+          assert td["witness_reason"]=="THEORETICAL_CEILING_DOMINANCE",td
+          assert td["witness_id"]=="TOOL_DISCOVERY_TERMINAL_CEILING_ABSOLUTE_DOMINANCE_20261002_V1",td
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Tool Discovery acceptance reduction: PASS 4/19, only Tool Discovery newly closed")
+          PY
