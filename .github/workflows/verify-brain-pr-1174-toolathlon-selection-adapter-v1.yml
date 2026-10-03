@@ -1,0 +1,56 @@
+name: Verify Brain PR 1174 Toolathlon selection adapter V1
+on:
+  push:
+    branches: ["verify-brain-pr-1174-toolathlon-selection-adapter-v1"]
+    paths:
+      - "capsules/brain_pr_1174_toolathlon_selection_adapter_v1/**"
+      - ".github/workflows/verify-brain-pr-1174-toolathlon-selection-adapter-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1174_toolathlon_selection_adapter_v1/**"
+      - ".github/workflows/verify-brain-pr-1174-toolathlon-selection-adapter-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1174_toolathlon_selection_adapter_v1
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOLATHLON_BRAIN_OWNED_SELECTION_ADAPTER_V1.json)" = "e2405165437267938d48e4708410a5d71494e857"
+          test "$(git hash-object canonical/governance/TOOLATHLON_BRAIN_OWNED_SELECTION_ADAPTER_V1.json)" = "e3f1b6cb6bccd7bf8bc14e2042826389f90f9bb2"
+          test "$(git hash-object canonical/runtime/toolathlon_brain_owned_selection_adapter_v1.py)" = "64c66a56a681b2919fbfcaf09c325c5db55f5f81"
+          test "$(git hash-object canonical/tests/test_toolathlon_brain_owned_selection_adapter_v1.py)" = "4f0dccb8eee341ee338ec20b83c45979cce2e8b6"
+      - name: Run adapter unit and boundary tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1174_toolathlon_selection_adapter_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_toolathlon_brain_owned_selection_adapter_v1 -v
+      - name: Enforce governance fail-closed boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1174_toolathlon_selection_adapter_v1
+          python - <<'PY'
+          import json
+          g=json.load(open("canonical/governance/TOOLATHLON_BRAIN_OWNED_SELECTION_ADAPTER_V1.json",encoding="utf-8"))
+          assert g["target_predicate"]=="TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR"
+          assert g["source_gate_v2_target_projection"]["brain_owned_operative_configuration"] is True
+          assert g["source_gate_v2_target_projection"]["configuration_materially_constrains_execution"] is True
+          assert str(g["source_gate_v2_target_projection"]["general_substrate_test_pass"]).startswith("PENDING_")
+          assert "GENERAL_SUBSTRATE_MATERIALITY_COUNTERFACTUAL_INDEPENDENT_PASS" in g["required_before_any_toolathlon_terminal_case"]
+          assert "REAL_TOOLATHLON_DECOUPLED_HOST_INTEGRATION_BINDS_GATEWAY_TO_THIS_ADAPTER" in g["required_before_any_toolathlon_terminal_case"]
+          assert g["execution_authority"] is False
+          assert g["capability_credit_delta"]==0 and g["family_credit_delta"]==0
+          print("Brain PR 1174 Toolathlon Brain-owned selection adapter: PASS")
+          PY
