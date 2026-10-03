@@ -1,0 +1,89 @@
+name: Verify Science local Qwen planner repair V1
+on:
+  push:
+    branches: ["verify-science-local-qwen-planner-v1-20261003"]
+    paths:
+      - "capsules/tb_science_local_qwen_planner_repair_v1/**"
+      - ".github/workflows/verify-science-local-qwen-planner-repair-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_local_qwen_planner_repair_v1/**"
+      - ".github/workflows/verify-science-local-qwen-planner-repair-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain candidate blobs
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_local_qwen_planner_repair_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "2254bcdb390fce9f459923106ca2929f7e16ff04"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "39c20fa4b289fb7c5ec6ba81aaff32b784099be5"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "4470c6fa47fe887c4a32152f426d0ae6fe9e278d"
+          grep -F 'science_planner.plan(prompt, timeout_s=180)' "$C/canonical/runtime/harbor_science_agent_v1.py"
+          ! grep -F 'text.pollinations.ai' "$C/canonical/runtime/harbor_science_planner_v1.py"
+      - name: Run exact planner unit tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_local_qwen_planner_repair_v1"
+          export PYTHONPATH="$C"
+          python -m unittest canonical.tests.test_harbor_science_planner_v1 -v
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Live zero-case JSON proposal
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_local_qwen_planner_repair_v1"
+          export PYTHONPATH="$C"
+          python "$C/live_zero_case.py" | tee LIVE_ZERO_CASE.json
+      - name: Preserve verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: science-local-qwen-planner-repair-v1
+          path: |
+            LIVE_ZERO_CASE.json
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
