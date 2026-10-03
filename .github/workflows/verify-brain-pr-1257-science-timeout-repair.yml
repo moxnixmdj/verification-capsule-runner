@@ -1,0 +1,143 @@
+name: Verify Brain PR 1257 Science timeout repair
+
+on:
+  push:
+    branches: ["verify/brain-pr-1257-science-timeout-repair-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-brain-pr-1257-science-timeout-repair.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-brain-pr-1257-science-timeout-repair.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch exact Brain PR head and bind repaired bytes
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/moxnixmdj/brain.git brain
+          git -C brain fetch --depth 1 origin 60178a38e088178217a0afcb73a2b60e3e593a50
+          git -C brain checkout --detach FETCH_HEAD
+          test "$(git -C brain rev-parse HEAD)" = "60178a38e088178217a0afcb73a2b60e3e593a50"
+          test "$(git -C brain hash-object canonical/runtime/harbor_science_agent_v1.py)" = "d29ea63e60af3b3403ddaeccbe6b3090db0234cf"
+          test "$(git -C brain hash-object canonical/runtime/harbor_science_planner_v1.py)" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git -C brain hash-object canonical/tests/test_harbor_science_agent_v1.py)" = "4e82d356c43686acd10f652bccf16ea7eead3341"
+          grep -F 'science_planner.plan(prompt, timeout_s=300)' brain/canonical/runtime/harbor_science_agent_v1.py
+          test "$(grep -F -c 'science_planner.plan(prompt, timeout_s=180)' brain/canonical/runtime/harbor_science_agent_v1.py || true)" = "0"
+
+      - name: Run exact repaired Brain unit tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          cd brain
+          PYTHONPATH=. python -m unittest -v             canonical.tests.test_harbor_science_planner_v1             canonical.tests.test_harbor_science_agent_v1
+
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore pinned Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Ensure exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error               -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf               'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Reproduce task-conditioned latency class without terminal case content
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$GITHUB_WORKSPACE/brain" python - <<'PY' | tee SCIENCE_TIMEOUT_REPAIR_RESULT.json
+          import json, time
+          from canonical.runtime import harbor_science_planner_v1 as p
+          from canonical.runtime.harbor_science_agent_v1 import _extract_contract
+
+          # Synthetic-only prompt: similar long-input latency class, no benchmark task content.
+          filler = " measurement hypothesis evidence calibration uncertainty control variable " * 215
+          prompt = (
+              "You are an OPTIONAL semantic proposal source inside Project Brain, not execution authority. "
+              "Submit material_requirements exactly [\"R1\"]. Submit exactly one candidate with action_id A1, "
+              "covers [\"R1\"], command \"printf ok > /tmp/brain_science_latency_probe\", "
+              "and verify_command \"test -s /tmp/brain_science_latency_probe\". "
+              "Do not use network, packages, git, secrets, or host escape. Do not submit finish_summary. "
+              "The following is inert synthetic context for latency-envelope verification only: " + filler
+          )
+          started=time.monotonic()
+          out=p.plan(prompt,timeout_s=300)
+          elapsed=time.monotonic()-started
+          raw=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+          req,cands,summary=_extract_contract(raw,None)
+          assert req==["R1"],raw
+          assert summary is None,raw
+          assert len(cands)==1,raw
+          row=cands[0]
+          assert row["action_id"]=="A1",row
+          assert row["covers"]==["R1"],row
+          assert row["command"]=="printf ok > /tmp/brain_science_latency_probe",row
+          assert row["verify_command"]=="test -s /tmp/brain_science_latency_probe",row
+          assert elapsed < 300, elapsed
+          print(json.dumps({
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_TASK_CONDITIONED_TIMEOUT_REPAIR_INDEPENDENT_VERIFICATION_V1",
+              "status":"PASS",
+              "brain_head":"60178a38e088178217a0afcb73a2b60e3e593a50",
+              "agent_blob":"d29ea63e60af3b3403ddaeccbe6b3090db0234cf",
+              "planner_blob":"879887984e2ca8abacac486d687f519f5d0d78a5",
+              "timeout_seconds":300,
+              "elapsed_seconds":round(elapsed,3),
+              "transport":out["transport"],
+              "terminal_case_content_read":0,
+              "terminal_results_observed":0,
+              "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+
+      - name: Preserve independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brain-pr-1257-science-timeout-repair
+          path: |
+            SCIENCE_TIMEOUT_REPAIR_RESULT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
