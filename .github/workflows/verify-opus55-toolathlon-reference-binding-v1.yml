@@ -1,0 +1,46 @@
+name: Verify Opus55 Toolathlon reference binding V1
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/opus55_toolathlon_reference_binding_v1/**'
+      - '.github/workflows/verify-opus55-toolathlon-reference-binding-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain candidate blob
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:capsules/opus55_toolathlon_reference_binding_v1/candidate.json)" = "488deca2717593f312fa98a2356b1aa31ac06e5f"
+      - name: Fetch and hash original Anthropic system card
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --connect-timeout 20 'https://www-cdn.anthropic.com/fc1b44717c85dc068bc6ba5024219938094694bd/Claude%20Opus%205.5%20System%20Card.pdf' -o /tmp/opus55.pdf
+          echo '7311c9c6bbb16d012f1c12c7418b05949fcf7ae3e30d2c40f22050074b2a7378  /tmp/opus55.pdf' | sha256sum -c -
+      - name: Fetch exact content-addressed independent projection
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none --no-checkout https://github.com/malob/ai-system-cards.git /tmp/ai-system-cards
+          git -C /tmp/ai-system-cards sparse-checkout init --no-cone
+          cat >/tmp/ai-system-cards/.git/info/sparse-checkout <<'EOF'
+          /cards/anthropic/claude-opus-5-5/meta.yaml
+          /cards/anthropic/claude-opus-5-5/l2-links.json
+          /cards/anthropic/claude-opus-5-5/source-inventory.json
+          /cards/anthropic/claude-opus-5-5/sections/08b-capabilities-2.md
+          EOF
+          git -C /tmp/ai-system-cards checkout 282a67c3c79617b23a1a23ed0869239b6e28d139
+          test "$(git -C /tmp/ai-system-cards rev-parse HEAD:cards/anthropic/claude-opus-5-5/meta.yaml)" = "2d4ae4c2f790af72e8ca299e92a80f267996a00e"
+          test "$(git -C /tmp/ai-system-cards rev-parse HEAD:cards/anthropic/claude-opus-5-5/l2-links.json)" = "bbe68f4da175b1b10c91adb89d70b1d3493954df"
+          test "$(git -C /tmp/ai-system-cards rev-parse HEAD:cards/anthropic/claude-opus-5-5/source-inventory.json)" = "ab7269f3a83c6bc578e3d68c3ad789386e7501e3"
+          test "$(git -C /tmp/ai-system-cards rev-parse HEAD:cards/anthropic/claude-opus-5-5/sections/08b-capabilities-2.md)" = "de110235f19d017f7b9a7a76392a7cc4a7ddc854"
+      - name: Extract first-party PDF text and verify reference facts
+        run: |
+          python -m pip install 'PyMuPDF==1.28.2'
+          OPUS55_PDF=/tmp/opus55.pdf PROJECTION_DIR=/tmp/ai-system-cards python capsules/opus55_toolathlon_reference_binding_v1/verify.py
