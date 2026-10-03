@@ -18,6 +18,24 @@ jobs:
           git clone -q https://github.com/zapier/AutomationBench.git /tmp/automationbench
           git -C /tmp/automationbench checkout -q 4a8e1061254004d9dac807054eed33fad7d1ff14
           test "$(git -C /tmp/automationbench rev-parse HEAD)" = "4a8e1061254004d9dac807054eed33fad7d1ff14"
+      - name: Fail closed on public-vs-official population mismatch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          readme=Path("/tmp/automationbench/README.md").read_text(encoding="utf-8")
+          low=" ".join(readme.lower().split())
+          required=[
+            "this repository ships the **public** task set",
+            "separate, held-out private task set",
+            "purposely harder",
+            "may not match the official leaderboard 1:1",
+            "600-task **public** benchmark",
+          ]
+          missing=[x for x in required if x not in low]
+          assert not missing, missing
+          print("AUTOMATIONBENCH_PUBLIC_PRIVATE_SCOPE_MISMATCH_VERIFIED")
+          print("PUBLIC_600_DIRECTLY_DISCHARGES_OFFICIAL_PRIVATE_BAR=false")
+          PY
       - name: Install public benchmark and dev tests
         run: |
           python -m pip install --disable-pip-version-check --no-cache-dir -e '/tmp/automationbench'
