@@ -57,7 +57,7 @@ def main():
     if dst:
         req("browser/computer action+memory+recovery" in dst.get("task_dimensions",[]),"COMPOSITION_RECOVERY_INTERFACE_MISSING",errors)
 
-    env_rows=env if isinstance(env,list) else []
+    env_rows=env.get("families",[]) if isinstance(env,dict) else (env if isinstance(env,list) else [])
     em={x.get("id"):x.get("useful_behavior") for x in env_rows if isinstance(x,dict)}
     req("recover" in str(em.get("SELF_VERIFICATION_DEBUGGING_AND_RECOVERY","")).lower(),"RECOVERY_ENVELOPE_SEMANTICS",errors)
     req("Compose reasoning, research, tools, code, memory, actions and verification into one causal execution system."==em.get("MULTI_CAPABILITY_COMPOSITION"),"COMPOSITION_ENVELOPE_DRIFT",errors)
