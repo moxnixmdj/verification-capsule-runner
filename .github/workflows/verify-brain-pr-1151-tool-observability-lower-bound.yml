@@ -1,0 +1,47 @@
+name: Verify Brain PR 1151 Tool Discovery observability lower bound
+
+on:
+  pull_request:
+    paths:
+      - "capsules/brain_pr_1151_tool_observability_lower_bound/**"
+      - ".github/workflows/verify-brain-pr-1151-tool-observability-lower-bound.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain PR1151 blob identities
+        working-directory: capsules/brain_pr_1151_tool_observability_lower_bound
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+              "canonical/runtime/tool_discovery_observability_lower_bound_v1.py": "45ae01ff1e6cae3d881cc3a99fa8455ff625e48d",
+              "canonical/tests/test_tool_discovery_observability_lower_bound_v1.py": "00371717aaee5909ab61c636af1cc6f0dcaff56c",
+              "canonical/governance/TOOL_DISCOVERY_OBSERVABILITY_LOWER_BOUND_V1.json": "67cab6e9d234496bc6b90ecb3e44f82e5d2b4614",
+              "canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OBSERVABILITY_LOWER_BOUND_V1.json": "332ba69db52128195659ac9d1106de99ec9eb54a",
+          }
+          for path, want in expected.items():
+              data = Path(path).read_bytes()
+              got = hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+              assert got == want, (path, got, want)
+              print(path, got)
+          PY
+      - name: Run lower-bound adversarial tests
+        working-directory: capsules/brain_pr_1151_tool_observability_lower_bound
+        run: |
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_observability_lower_bound_v1 -v
+      - name: Execute lower-bound theorem
+        working-directory: capsules/brain_pr_1151_tool_observability_lower_bound
+        run: |
+          export PYTHONPATH=.
+          python canonical/runtime/tool_discovery_observability_lower_bound_v1.py
