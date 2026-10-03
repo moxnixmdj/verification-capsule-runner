@@ -1,0 +1,80 @@
+name: Verify dormant TB-Science V4 authority
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-science-v4-dormant-authority.yml"
+      - "capsules/science_v4_dormant_authority/**"
+  push:
+    branches: ["verify/science-v4-dormant-authority-20261003"]
+    paths:
+      - ".github/workflows/verify-science-v4-dormant-authority.yml"
+      - "capsules/science_v4_dormant_authority/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact authority and prerequisites
+        run: |
+          set -euo pipefail
+          C=capsules/science_v4_dormant_authority
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V4.json")" = "5eecc5e168de4c54f9fb586380829a67fa884d2d"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_V4_CANDIDATE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "bc628e5aa6378905a93c3c74c4cf6a768cac8560"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json")" = "487cd17ef51cc49c8bdf36733c7c594e9bbf410b"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "7497bc7249431a832a0e938fcf6d575bfbfaf5f3"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_30_INFORMATION_DOMINANCE_ACTIVATION_V1.json")" = "685546c11301bd113efac0f2c1f0baa4c179e70f"
+
+      - name: Verify dormant one-slot authority semantics
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          C=Path("capsules/science_v4_dormant_authority")
+          L=lambda p: json.loads((C/p).read_text())
+          a=L("canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V4.json")
+          v=L("canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json")
+          vr=L("canonical/verification/TB_SCIENCE_V4_CANDIDATE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          cpu=L("canonical/verification/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          sched=L("canonical/governance/CURRENT_30_INFORMATION_DOMINANCE_ACTIVATION_V1.json")
+          slot="terminal-bench-science/koopman-mfg-id::trial-0"
+
+          assert vr["independent_runner"]["workflow_run_id"]==37112819723
+          assert vr["independent_runner"]["workflow_job_id"]==111173885679
+          assert vr["independent_runner"]["conclusion"]=="success"
+          assert cpu["status"]=="INDEPENDENT_PASS__CLEAN_CURRENT_RUNNER_BUILD__HEALTH_AND_SYNTHETIC_COMPLETION_PASS__ZERO_TERMINAL"
+          assert v["execution_authority"] is False
+
+          assert a["candidate_basis"]["candidate_git_blob_sha"]=="487cd17ef51cc49c8bdf36733c7c594e9bbf410b"
+          assert a["candidate_basis"]["candidate_verification_git_blob_sha"]=="bc628e5aa6378905a93c3c74c4cf6a768cac8560"
+          assert a["candidate_basis"]["cpu_verification_git_blob_sha"]=="7497bc7249431a832a0e938fcf6d575bfbfaf5f3"
+          assert a["authorized_slot"]["slot_id"]==slot
+          assert a["authorized_slot"]["schedule_order"]==5
+          assert len(a["permanently_consumed_slots"])==5 and slot not in a["permanently_consumed_slots"]
+          assert a["current_parity"]["required_successes"]==133
+          assert a["current_parity"]["finalized_failures_before_slot"]==5
+          assert a["current_parity"]["remaining_failures_before_fail_lock"]==73
+          assert a["exact_route"]["compiled_llama_cpp_cache_forbidden"] is True
+          assert a["execution_semantics"]["slots_authorized"]==1
+          assert a["execution_semantics"]["retries_per_slot"]==0
+          assert a["execution_semantics"]["slot_replacement"] is False
+          assert a["execution_semantics"]["denominator_shrink"] is False
+
+          assert sched["fresh_reality_authority"] is False
+          assert a["current_scheduler_gate"]["git_blob_sha"]=="685546c11301bd113efac0f2c1f0baa4c179e70f"
+          assert a["current_scheduler_gate"]["fresh_reality_authority"] is False
+          assert a["execution_authority"] is True
+          assert a["effective_execution_authority"] is False
+          assert "FILE_EXISTENCE_IS_NOT_ACTIVATION" in a["hard_rules"]
+          assert "NO_EXECUTION_WHILE_CURRENT_SCHEDULER_FRESH_REALITY_AUTHORITY_IS_FALSE" in a["hard_rules"]
+          assert a["promotion_authority"] is False
+          print("SCIENCE_V4_DORMANT_AUTHORITY_PASS")
+          PY
