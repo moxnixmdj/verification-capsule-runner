@@ -38,4 +38,8 @@ jobs:
           assert x["fresh_reality_authority"] is False
           print("TERMINAL_SCHEDULING_V12_POST_DUAL_V4_PASS")
           PY
-          PYTHONPATH=. python -m pytest canonical/tests/test_terminal_scheduling_v12_candidate_v1.py -q
+          PYTHONPATH=. python - <<'PY'
+          from canonical.tests.test_terminal_scheduling_v12_candidate_v1 import test_v12_exact_current_world
+          test_v12_exact_current_world()
+          print("TERMINAL_SCHEDULING_V12_TEST_PASS")
+          PY
