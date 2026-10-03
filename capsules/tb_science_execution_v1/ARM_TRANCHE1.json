@@ -1,0 +1,24 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_TRANCHE1_ARM_V1",
+  "date": "2026-10-03",
+  "status": "ARMED",
+  "brain_authority_commit": "501466bca32e88dd7795bb0f69061050784e2ae0",
+  "brain_authority_path": "canonical/governance/TB_SCIENCE_TRANCHE1_EXECUTION_AUTHORITY_V1.json",
+  "brain_authority_blob": "89406ed4c8d214dfa81eddbb1f8caeebc33e82b2",
+  "execution_authority": true,
+  "promotion_authority": false,
+  "authorized_slot_ids": [
+    "terminal-bench-science/genomic-model-ranking::trial-0",
+    "terminal-bench-science/mri-harmonization::trial-0",
+    "terminal-bench-science/navigation-sensor-calibration::trial-0"
+  ],
+  "manifest_blob": "6dfa880b1f68881531afbba6ca211681801fd19b",
+  "controller_blob": "8ab8287fdb6a9b63b9fe2d2addde731486c89d1e",
+  "planner_blob": "17472fd2b01b164fbb180aecfc04385b55b11499",
+  "execution_workflow_blob": "bf79ac405b0d88d6926383db2e67e513a95f77d3",
+  "execution_capsule_merge_sha": "32248ceb1e6965abb3ec56b61210590ef6da0a8d",
+  "no_retries": true,
+  "fixed_denominator": 210,
+  "every_non_success_counts_zero": true,
+  "incremental_spend_usd": 0
+}
