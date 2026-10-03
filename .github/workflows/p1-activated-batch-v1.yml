@@ -1,0 +1,20 @@
+name: P1 activated batch V1
+on:
+  push:
+    branches: [critical/p1-terminal-batch-v1-20261003]
+    paths:
+      - ".github/workflows/p1-activated-batch-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run activated batch
+        env:
+          PYTHONPATH: .
+        run: python verification/execute_p1_terminal_batch_v1.py
