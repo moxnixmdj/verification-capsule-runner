@@ -1,0 +1,103 @@
+name: Verify P1 public recovery carrier V1
+
+on:
+  push:
+    branches: ["verify/p1-public-recovery-carrier-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-p1-public-recovery-carrier-v1.yml"
+      - ".github/workflows/execute-p1-public-recovery-carrier-v1.yml"
+      - "capsules/p1_public_recovery_carrier_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-p1-public-recovery-carrier-v1.yml"
+      - ".github/workflows/execute-p1-public-recovery-carrier-v1.yml"
+      - "capsules/p1_public_recovery_carrier_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact recovery proposal and distinct carrier
+        run: |
+          set -euo pipefail
+          test "$(git hash-object .github/workflows/execute-p1-public-recovery-carrier-v1.yml)" = "29e879f6aca5c76ee83d36c7fd2a0295b02a675b"
+          test "$(git hash-object capsules/p1_public_recovery_carrier_v1/brain_proposal.json)" = "395c4c15139eecb37f7910599e62bec908d578fa"
+          test "$(git hash-object capsules/p1_public_recovery_carrier_v1/precase_failure_observation.json)" = "c839eb5f8aa4add61ba7e3b4764cfa4631d4908b"
+          C=capsules/p1_one_use_authority_v1
+          test "$(git hash-object "$C/canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json")" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_batch_preflight_v1.py")" = "13c33adda55f58d1eac913e63daa7f6ae1eb6a63"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_batch_v1.py")" = "695cfe3f283723a52bafb6299236a2d0378dc79e"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py")" = "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+          test "$(git hash-object "$C/canonical/runtime/contract_native_proof_suites.py")" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py")" = "28940387bd6c11671035ad9201e37bba13fd9bc9"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_proof_v6.py")" = "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+          python - <<'PY'
+          import json
+          p=json.load(open("capsules/p1_public_recovery_carrier_v1/brain_proposal.json"))
+          o=json.load(open("capsules/p1_public_recovery_carrier_v1/precase_failure_observation.json"))
+          assert p["status"].startswith("CANDIDATE_DISTINCT_PUBLIC_RECOVERY_CARRIER")
+          assert p["execution_authority"] is False
+          assert p["promotion_authority"] is False
+          assert p["fresh_reality_units_consumed"]==0
+          assert p["recovery_carrier"]["repository"]=="moxnixmdj/verification-capsule-runner"
+          assert p["recovery_carrier"]["workflow_git_blob_sha"]=="29e879f6aca5c76ee83d36c7fd2a0295b02a675b"
+          assert p["recovery_carrier"]["distinct_from_failed_carrier"] is True
+          iv=p["prior_pre_case_failure"]["independent_verification"]
+          assert iv["workflow_run_id"]==37107461285 and iv["conclusion"]=="success"
+          assert iv["reissue_new_one_use_authority_eligible"] is True
+          assert o["source"]["runner_id"]==0 and o["source"]["steps"]==[]
+          assert o["interpretation"]["case_generation_began"] is False
+          assert o["interpretation"]["fresh_reality_units_consumed"]==0
+          PY
+
+      - name: Re-run zero-reality tests and preflight only
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/p1_one_use_authority_v1"
+          PYTHONPATH="$C" python -m unittest -v             canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1             canonical.tests.test_p1_shared_failure_semantics_batch_v1
+          PYTHONPATH="$C" python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1 > P1_PUBLIC_RECOVERY_PREFLIGHT.json
+          python - <<'PY'
+          import json, os
+          x=json.load(open("P1_PUBLIC_RECOVERY_PREFLIGHT.json"))
+          assert x["pass"] is True, x
+          assert x["fresh_reality_units_consumed"]==0, x
+          assert x["execution_authority"] is False, x
+          assert x["promotion_authority"] is False, x
+          receipt={
+            "schema":"PROJECT_BRAIN_P1_PUBLIC_RECOVERY_CARRIER_INDEPENDENT_VERIFICATION_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__DISTINCT_CARRIER_EXACT_BYTES__ZERO_REALITY",
+            "proposal_blob":"395c4c15139eecb37f7910599e62bec908d578fa",
+            "execution_workflow_blob":"29e879f6aca5c76ee83d36c7fd2a0295b02a675b",
+            "prior_failure_observation_blob":"c839eb5f8aa4add61ba7e3b4764cfa4631d4908b",
+            "prior_failure_independent_run_id":37107461285,
+            "fresh_reality_units_consumed":0,
+            "execution_workflow_executed":False,
+            "activation_eligible":True,
+            "incremental_spend_usd":0,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False
+          }
+          open("P1_PUBLIC_RECOVERY_CARRIER_VERIFICATION.json","w").write(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - name: Preserve verification receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: p1-public-recovery-carrier-verification-v1
+          path: |
+            P1_PUBLIC_RECOVERY_PREFLIGHT.json
+            P1_PUBLIC_RECOVERY_CARRIER_VERIFICATION.json
+          if-no-files-found: error
