@@ -22,7 +22,9 @@ jobs:
               req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"})
               return " ".join(urllib.request.urlopen(req,timeout=30).read().decode("utf-8","ignore").split())
           t=get("https://artificialanalysis.ai/methodology/intelligence-benchmarking")
+          e=get("https://artificialanalysis.ai/evaluations/gdpval-aa")
           low=t.lower()
+          elow=e.lower()
           required=[
             "gdpval-aa v2.1",
             "220 tasks",
@@ -31,10 +33,10 @@ jobs:
             "deepseek v4.1 flash",
             "1600",
             "stirrup",
-            "all evaluations are conducted independently by artificial analysis",
           ]
           missing=[x for x in required if x not in low]
           assert not missing, missing
+          assert "all evaluations are conducted independently by artificial analysis" in elow
           assert "judge sampled from a panel of three" in low
           assert "fitted on past gdpval-aa judgements" in low or "fitted on past gdpval-aa judgments" in low
           print("GDPVAL_AA_V21_PRIMARY_BOUNDARY_PASS")
