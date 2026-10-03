@@ -1,0 +1,100 @@
+name: Adjudicate historical P1 public run
+
+on:
+  push:
+    branches: ["verify/p1-historical-public-run-adjudication-20261003-sol"]
+    paths:
+      - ".github/workflows/adjudicate-p1-historical-public-run.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify historical execution and frozen carrier mismatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p old evidence
+          git -C old init
+          git -C old remote add origin https://github.com/moxnixmdj/verification-capsule-runner.git
+          git -C old fetch --depth 1 origin 4f02a24b3a71cf39d92cb7a696f7885125224e15
+          git -C old checkout --detach FETCH_HEAD
+          test "$(git -C old hash-object .github/workflows/p1-activated-batch-v1.yml)" = "4af4070ac6a4a512ffcdd2d548b853800d3d813f"
+          test "$(git -C old hash-object verification/execute_p1_terminal_batch_v1.py)" = "db475dfa9ec9bc5f9dc51116f4f0229d3768c7c6"
+          test "$(git -C old hash-object canonical/governance/P1_SHARED_FAILURE_SEMANTICS_ONE_USE_EXECUTION_ACTIVATION_V1.json)" = "adde681aef00e7c65be60555b93add6dfcd963f0"
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37091093865" -o evidence/run.json
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37091093865/jobs" -o evidence/jobs.json
+          curl -fsSL -L -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/jobs/111111419472/logs" -o evidence/job.log
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          a=json.loads(Path("old/canonical/governance/P1_SHARED_FAILURE_SEMANTICS_ONE_USE_EXECUTION_ACTIVATION_V1.json").read_text())
+          r=json.loads(Path("evidence/run.json").read_text())
+          js=json.loads(Path("evidence/jobs.json").read_text())
+          log=Path("evidence/job.log").read_text(errors="replace")
+          assert r["id"]==37091093865
+          assert r["head_sha"]=="4f02a24b3a71cf39d92cb7a696f7885125224e15"
+          assert r["run_attempt"]==1 and r["event"]=="push"
+          assert r["status"]=="completed" and r["conclusion"]=="success"
+          assert r["path"]==".github/workflows/p1-activated-batch-v1.yml"
+          assert js["total_count"]==1
+          j=js["jobs"][0]
+          assert j["id"]==111111419472 and j["conclusion"]=="success"
+          assert any(s["name"]=="Run activated batch" and s["conclusion"]=="success" for s in j["steps"])
+          m=re.search(r'P1_TERMINAL_RESULT_SUMMARY=(\{.*\})',log)
+          assert m, "SUMMARY_NOT_FOUND"
+          s=json.loads(m.group(1))
+          assert s["activation_git_blob_sha"]=="adde681aef00e7c65be60555b93add6dfcd963f0"
+          assert s["github_run_id"]==37091093865 and s["github_run_attempt"]==1
+          assert s["cases"]==192 and s["passes"]==192 and s["failures"]==0 and s["pass"] is True
+          assert s["terminal_v3_replayed"]==0 and s["incremental_spend_usd"]==0
+          assert s["authorized_reality_unit_candidate"]==1
+          assert "P1_TERMINAL_BATCH_FIRST_ATTEMPT_PASS" in log
+          declared=a["carrier"]["workflow_path"]
+          actual=r["path"]
+          assert declared==".github/workflows/execute-p1-terminal-shared-batch-v1.yml"
+          assert actual!=declared
+          receipt={
+            "schema":"PROJECT_BRAIN_P1_HISTORICAL_PUBLIC_RUN_ADJUDICATION_20261003_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__ACTIVATION_CONSUMED__FROZEN_CARRIER_PATH_MISMATCH__ZERO_P1_CREDIT",
+            "source_run_id":37091093865,
+            "source_job_id":111111419472,
+            "source_head_sha":r["head_sha"],
+            "activation_blob":"adde681aef00e7c65be60555b93add6dfcd963f0",
+            "actual_workflow_path":actual,
+            "declared_workflow_path":declared,
+            "workflow_path_match":False,
+            "case_generation_began":True,
+            "cases":192,
+            "passes":192,
+            "failures":0,
+            "activation_reality_unit_consumed":True,
+            "terminal_p1_credit":False,
+            "reason":"POST_RESULT_CARRIER_PATH_SUBSTITUTION_FORBIDDEN__NO_PREEXISTING_EQUIVALENCE_RULE",
+            "result_sha256":s["result_sha256"],
+            "case_receipts_sha256":s["case_receipts_sha256"],
+            "terminal_replay_performed_by_adjudicator":False,
+            "incremental_spend_usd":0,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False
+          }
+          Path("evidence/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-historical-public-run-adjudication
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
