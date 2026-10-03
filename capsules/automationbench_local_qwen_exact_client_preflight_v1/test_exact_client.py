@@ -22,6 +22,7 @@ async def main():
             "required":["value"],
             "additionalProperties":False,
         },
+        strict=None,
     )
     messages=[
         SystemMessage(content="When a requested action has a provided tool, use the tool."),
