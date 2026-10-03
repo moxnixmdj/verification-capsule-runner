@@ -77,7 +77,7 @@ RECOVERY_PROMOTION_BLOBS={
 MIRROR_ROOT=Path(__file__).resolve().parent/"recovery_promotion_v3"
 
 def _git_blob_sha(data:bytes)->str:
-    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
+    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
 
 def _local(path:str)->Path:
     return MIRROR_ROOT/path.replace("/","__")
