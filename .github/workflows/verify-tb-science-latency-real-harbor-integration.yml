@@ -1,0 +1,120 @@
+name: Verify patched TB-Science real Harbor integration
+
+on:
+  push:
+    branches: ["verify/tb-science-latency-real-harbor-integration-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-latency-real-harbor-integration.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-tb-science-latency-real-harbor-integration.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact mirrored patched Science bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_latency_real_harbor_integration
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "b550fc2921eb740ea75579357fd94ed6a4e90862"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "292f8c4447122569e6168deb22847e2570db155e"
+          grep -F '"maxItems": 1' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          grep -F '"max_tokens": 384' "$C/canonical/runtime/harbor_science_planner_v1.py"
+
+      - name: Install exact Harbor and run current Science tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/tb_science_latency_real_harbor_integration"
+          cd "$C"
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_harbor_science_planner_v1 canonical.tests.test_harbor_science_agent_v1
+
+      - name: Verify exact patched controller through real Harbor API without terminal content
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$GITHUB_WORKSPACE/capsules/tb_science_latency_real_harbor_integration" python - <<'PY' | tee PATCHED_REAL_HARBOR_INTEGRATION.json
+          import asyncio, importlib.metadata, json
+          from pathlib import Path
+          from canonical.runtime import harbor_science_agent_v1 as s
+          from canonical.runtime import harbor_science_planner_v1 as p
+
+          assert importlib.metadata.version("harbor") == "0.23.0"
+          assert getattr(s.BaseAgent,"__module__","").startswith("harbor."), s.BaseAgent
+          assert getattr(s.AgentCapabilities,"__module__","").startswith("harbor."), s.AgentCapabilities
+          assert issubclass(s.HarborScienceAgent,s.BaseAgent)
+          agent=s.HarborScienceAgent(Path("/tmp/brain-science-patched-integration"))
+          assert agent.version()=="1.2.0"
+          assert s.HarborScienceAgent.name()=="project-brain-science"
+          assert p.ENDPOINT=="http://127.0.0.1:8080/v1/chat/completions"
+          assert p.MODEL=="brain-qwen3.5-9b"
+          assert p.TOOL_NAME=="submit_science_proposal"
+          assert p.TOOL["function"]["parameters"]["properties"]["candidates"]["maxItems"]==1
+          asyncio.run(agent.setup(None))
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_PATCHED_REAL_HARBOR_INTEGRATION_VERIFICATION_V1",
+            "status":"PASS",
+            "brain_head":"0a90772212ecb5e20b61e88077b4e731df5225a8",
+            "harbor_version":"0.23.0",
+            "planner_blob":"fe7c0ce885197217774638df382aeb6f68ff38dd",
+            "agent_blob":"5557efd21f1a433ad16766def3775a79c459784b",
+            "planner_candidate_max_items":1,
+            "planner_max_tokens":384,
+            "terminal_task_content_read":0,
+            "terminal_results_observed":0,
+            "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+
+      - name: Resolve frozen dataset metadata only
+        run: |
+          set -euo pipefail
+          if harbor version show terminal-bench-science/terminal-bench-science@0.1.0 --json > TB_SCIENCE_METADATA.json 2>TB_SCIENCE_METADATA.err; then :
+          elif harbor version show terminal-bench-science/terminal-bench-science@v0.1.0 --json > TB_SCIENCE_METADATA.json 2>TB_SCIENCE_METADATA.err; then :
+          else cat TB_SCIENCE_METADATA.err; exit 1
+          fi
+          python - <<'PY'
+          import json
+          p=json.load(open("TB_SCIENCE_METADATA.json"))
+          assert p["package"]=="terminal-bench-science/terminal-bench-science", p
+          assert p["type"]=="dataset", p
+          assert p["visibility"]=="public", p
+          assert p["content_hash"]=="sha256:91531bf50016a7c64f6cc60794a17c64c6b2c14858a8ae0de39ca16f2abd611a", p
+          assert "files" not in p and "tasks" not in p, p
+          PY
+
+      - name: Verify carrier surfaces without case generation
+        run: |
+          set -euo pipefail
+          docker version >/dev/null
+          docker info >/dev/null
+          harbor run --help > HARBOR_RUN_HELP.txt
+          grep -qi agent HARBOR_RUN_HELP.txt
+          grep -qi dataset HARBOR_RUN_HELP.txt
+
+      - name: Preserve integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-patched-real-harbor-integration
+          path: |
+            PATCHED_REAL_HARBOR_INTEGRATION.json
+            TB_SCIENCE_METADATA.json
+            TB_SCIENCE_METADATA.err
+            HARBOR_RUN_HELP.txt
+          if-no-files-found: warn
