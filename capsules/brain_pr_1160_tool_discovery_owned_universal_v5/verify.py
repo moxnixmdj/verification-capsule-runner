@@ -10,6 +10,9 @@ from canonical.runtime.tool_discovery_owned_universal_v5 import (
     next_action,
     theorem_invariants,
 )
+from canonical.runtime.tool_discovery_v5_common_authority_scope_certificate_v1 import (
+    verify as verify_common_authority_scope,
+)
 
 ROOT = Path(__file__).resolve().parent
 CAP = "CAP_A"
@@ -223,6 +226,11 @@ def main():
     structural_information_safety_checks()
     checked = independent_exhaustive_oracle()
     permission_fail_closed_check()
+    scope = verify_common_authority_scope()
+    assert scope["universal_scope_proved"] is True, scope
+    assert scope["matched_acceptance_proved"] is False, scope
+    assert scope["capability_credit_delta"] == 0 and scope["family_credit_delta"] == 0
+    assert scope["promotion_authority"] is False
     print(json.dumps({
         "status": "INDEPENDENT_PASS__TOOL_DISCOVERY_OWNED_UNIVERSAL_V5_CANDIDATE",
         "brain_pr": 1160,
@@ -233,6 +241,9 @@ def main():
         "active_constraint_admissibility_load_bearing": True,
         "hidden_state_digest_noninterference": True,
         "missing_probe_permission_fails_closed": True,
+        "universal_common_authority_scope_proved": True,
+        "matched_acceptance_proved": False,
+        "scope_basis_kind": scope["basis_kind"],
         "new_reality_units_consumed": 0,
         "terminal_results_replayed": 0,
         "incremental_spend_usd": 0,
