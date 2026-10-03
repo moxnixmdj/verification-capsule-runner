@@ -1,0 +1,43 @@
+name: Verify Brain PR 1188 Tool Discovery V7 cost frontier
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/brain_pr_1188_tool_discovery_v7/**'
+      - '.github/workflows/verify-brain-pr-1188-tool-discovery-v7.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs
+        working-directory: capsules/brain_pr_1188_tool_discovery_v7
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/tool_discovery_dynamic_candidate_v5.py":"42d096ef93e8ad06c4d1d5dfe730881bf45a2a72",
+            "canonical/runtime/tool_discovery_dynamic_candidate_v6.py":"2020b7c2dc750009a9cc363d0703184b9115cfa6",
+            "canonical/runtime/tool_discovery_dynamic_candidate_v7.py":"3709d049137da708f46bedc0dca59b55661120c3",
+            "canonical/tests/test_tool_discovery_dynamic_candidate_v7.py":"afc960194b438f4506f77757cf27ab96e7bd8b3c",
+            "canonical/governance/TOOL_DISCOVERY_DYNAMIC_V7_COST_FRONTIER_REPAIR_V1.json":"5617c9c5eacb8396862f54700167b0cb5e602828",
+            "canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V7_COST_FRONTIER_REPAIR_V1.json":"945b2ebfe173853ee66312c2c0b6812334bb122d",
+          }
+          for path,want in expected.items():
+              data=Path(path).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==want,(path,got,want)
+              print(path,got)
+          PY
+      - name: Run exact Brain V7 adversarial suite
+        working-directory: capsules/brain_pr_1188_tool_discovery_v7
+        run: python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v7 -v
+      - name: Run independent exhaustive frontier oracle
+        working-directory: capsules/brain_pr_1188_tool_discovery_v7
+        run: python independent_verifier.py
