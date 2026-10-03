@@ -1,0 +1,62 @@
+name: Verify Brain terminal scheduling V14 post Tool Discovery
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/terminal_scheduling_v14_post_tool_discovery/**"
+      - ".github/workflows/verify-brain-terminal-scheduling-v14-post-tool-discovery.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Verify exact Brain bytes
+        run: |
+          cd capsules/terminal_scheduling_v14_post_tool_discovery
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,want in m["exact_brain_blobs"].items():
+              raw=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+              assert got==want,(rel,got,want)
+          print("exact Brain V14 blobs: PASS")
+          PY
+      - name: Run V14 fail-closed tests
+        run: |
+          cd capsules/terminal_scheduling_v14_post_tool_discovery
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_terminal_scheduling_v14_post_tool_discovery_v1 -v
+      - name: Execute V14 reconciliation
+        run: |
+          cd capsules/terminal_scheduling_v14_post_tool_discovery
+          export PYTHONPATH=.
+          python canonical/runtime/terminal_scheduling_v14_post_tool_discovery_v1.py
+      - name: Verify repaired acceptance and ownership counters
+        run: |
+          cd capsules/terminal_scheduling_v14_post_tool_discovery
+          python - <<'PY'
+          import hashlib,json,pathlib
+          L=lambda p:json.load(open(p,encoding="utf-8"))
+          a=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          m=L("canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json")
+          assert a["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN"
+          assert (a["atomic_acceptance_frontier"]["proved"],a["atomic_acceptance_frontier"]["unresolved"],a["atomic_acceptance_frontier"]["total"])==(12,26,38)
+          assert "5_ACCEPTANCE_CLOSED__2_VERIFIED_OWNED__14_ACCEPTANCE_OPEN" in m["status"]
+          s=m["postwave_acceptance_summary"]
+          assert (s["calibrated_family_count"],s["verified_owned_family_count"],s["pending_acceptance_family_count"])==(5,2,14)
+          raw=pathlib.Path("canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json").read_bytes()
+          sha=hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+          assert a["sources"]["ownership_matrix"]["git_blob_sha"]==sha
+          r=m["postwave_terminal_reconciliation"]
+          assert r["current_unaffected_behavioral_pass_family_count"]==19
+          assert r["current_p1_dependent_quarantined_family_count"]==0
+          assert r["whole_scope_contracts_passed"]==12 and r["whole_scope_contracts_quarantined"]==0
+          assert r["acceptance_protocol_result_open_count"]==14
+          print("ownership and acceptance counters: PASS")
+          PY
