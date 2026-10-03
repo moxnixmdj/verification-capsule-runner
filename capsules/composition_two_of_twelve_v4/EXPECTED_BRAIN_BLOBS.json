@@ -1,0 +1,11 @@
+{
+  "schema": "BRAIN_COMPOSITION_TWO_OF_TWELVE_V4_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "breakthrough/composition-two-of-twelve-v4-20261003-0341",
+  "exact_brain_blobs": {
+    "canonical/runtime/composition_component_proof_slicer_v1.py": "0e5028d8547bc3e17e7128b6311f734ac30a16d8",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4.json": "54275591b8777a9955b97bca0f8a2aff6b310c15",
+    "canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "6b46497d5f3cb4dc874fd23280d09f0d62a4472d",
+    "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "88783df170065d3ff23e4ff3c2d2ab30ec7bc314"
+  }
+}
