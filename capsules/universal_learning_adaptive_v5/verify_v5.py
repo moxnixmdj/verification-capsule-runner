@@ -38,7 +38,7 @@ def cov():
 def safe(aid,epoch=EPOCH):
     return {"receipt_id":"safe-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","safe_under_all_admissible_worlds":True,"environment_id":ENV,"goal_id":GOAL,"action_id":aid,"experiment_epoch":epoch}
 def probe(aid,outcomes,cost):
-    return {"id":aid,"outcome_by_hypothesis":outcomes,"time":cost,"safety_receipt":safe(aid),"outcome_model_receipt":{"receipt_id":"model-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","decision_relevant_outcome_partition_complete":True,"observation_only_or_state_restored":True,"future_probe_model_invariance_verified":True,"experiment_epoch":EPOCH,"state_fingerprint":STATE,"environment_id":ENV,"goal_id":GOAL,"action_id":aid,"hypothesis_space_sha256":v4.hypothesis_digest(HS),"outcome_map_sha256":model.outcome_digest(action_id=aid,outcomes=outcomes)}}
+    return {"id":aid,"outcome_by_hypothesis":outcomes,"time":cost,"safety_receipt":safe(aid),"outcome_model_receipt":{"receipt_id":"model-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","decision_relevant_outcome_partition_complete":True,"deterministic_outcome_given_hypothesis_and_epoch":True,"observation_only_or_state_restored":True,"future_probe_model_invariance_verified":True,"experiment_epoch":EPOCH,"state_fingerprint":STATE,"environment_id":ENV,"goal_id":GOAL,"action_id":aid,"hypothesis_space_sha256":v4.hypothesis_digest(HS),"outcome_map_sha256":model.outcome_digest(action_id=aid,outcomes=outcomes)}}
 PROBES=[
  probe("direct",{"h1":"a","h2":"a","h3":"b","h4":"b"},5),
  probe("x",{"h1":"x","h2":"y","h3":"x","h4":"y"},1),
@@ -51,6 +51,13 @@ tampered["outcome_by_hypothesis"]["h4"]="tampered"
 try: model.admit(environment_id=ENV,goal_id=GOAL,hypotheses=HS,probe=tampered)
 except model.VerifiedProbeModelError: pass
 else: raise AssertionError("TAMPERED_OUTCOME_MODEL_ACCEPTED")
+
+# A stochastic probe cannot be represented by the deterministic V5 outcome map.
+stochastic=probe("stochastic",{"h1":"a","h2":"a","h3":"b","h4":"b"},1)
+stochastic["outcome_model_receipt"]["deterministic_outcome_given_hypothesis_and_epoch"]=False
+try: model.admit(environment_id=ENV,goal_id=GOAL,hypotheses=HS,probe=stochastic)
+except model.VerifiedProbeModelError: pass
+else: raise AssertionError("STOCHASTIC_PROBE_ACCEPTED_BY_DETERMINISTIC_PLANNER")
 
 # A state-mutating probe cannot enter an exact adaptive tree without restoration/invariance proof.
 stateful=probe("stateful",{"h1":"a","h2":"a","h3":"b","h4":"b"},1)
