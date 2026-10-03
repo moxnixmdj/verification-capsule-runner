@@ -1,0 +1,20 @@
+name: Verify P1 causal cutset V6
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/p1_causal_cutset_v6/**'
+      - '.github/workflows/verify-p1-causal-cutset-v6.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain V6 blobs and executable causal semantics
+        run: python capsules/p1_causal_cutset_v6/verify.py
