@@ -1,0 +1,25 @@
+name: Verify Retrieval V10 current pointer final
+on:
+  push:
+    branches:
+      - verify/retrieval-v10-current-pointer-final-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact current V10 runtime
+        run: |
+          test "$(git hash-object canonical/runtime/global_retrieval_controller_v3.py)" = "44cb29b284f7ff069a68bf21e221f15d17ee94fa"
+          test "$(git hash-object canonical/runtime/global_retrieval_entrypoint_v3.py)" = "f4af9c9c11b84371fd9fde751e7f0ddd56a9148d"
+          test "$(git hash-object canonical/runtime/retrieval_route_strategy_calibration_v2.py)" = "018f859959d4a15540e8ee1428f6d3e60fe32d11"
+      - run: python verify_retrieval_v10_current_pointer_final.py
+      - run: PYTHONPATH=. python canonical/runtime/global_retrieval_authority_guard_v1.py
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_route_strategy_calibration_v2.py
+      - run: PYTHONPATH=. python canonical/tests/test_global_retrieval_controller_v3.py
+      - run: PYTHONPATH=. python canonical/runtime/global_retrieval_entrypoint_v3.py
