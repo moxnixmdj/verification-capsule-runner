@@ -1,0 +1,132 @@
+name: Verify TB-Science live Qwen Harbor integration V1
+on:
+  push:
+    branches: ["verify/tb-science-live-harbor-integration-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-live-harbor-integration-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact repaired Brain bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_latency_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+      - name: Install Harbor
+        run: python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+      - uses: actions/cache@v4
+        with:
+          path: llama.cpp
+          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
+      - name: Ensure exact llama.cpp
+        run: |
+          set -euo pipefail
+          if [ ! -d llama.cpp/.git ]; then
+            rm -rf llama.cpp
+            git init llama.cpp
+            git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+            git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+            git -C llama.cpp checkout --detach FETCH_HEAD
+          fi
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      - name: Ensure exact Qwen
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Execute actual local-Qwen to Harbor control chain on synthetic environment
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_planner_latency_v1"
+          PYTHONPATH="$C" python - <<'PY' | tee LIVE_HARBOR_INTEGRATION_RESULT.json
+          import asyncio,json,time
+          from canonical.runtime import harbor_science_agent_v1 as science
+
+          ACTION="printf ok > /tmp/project_brain_live_harbor_probe"
+          VERIFY="test -s /tmp/project_brain_live_harbor_probe"
+
+          class Receipt:
+              def __init__(self,returncode=0,stdout="",stderr=""):
+                  self.returncode=returncode
+                  self.stdout=stdout
+                  self.stderr=stderr
+
+          class SyntheticHarborEnv:
+              def __init__(self): self.commands=[]
+              async def exec(self,command,timeout_sec=None,**kwargs):
+                  self.commands.append({"command":command,"timeout_sec":timeout_sec})
+                  if command==ACTION: return Receipt(0,"acted","")
+                  if command==VERIFY and any(x["command"]==ACTION for x in self.commands): return Receipt(0,"verified","")
+                  return Receipt(1,"","unexpected command")
+
+          goal=(
+              'Synthetic non-benchmark control-contract check. Use material_requirements exactly ["R1"]. '
+              'Return exactly one candidate with action_id "A1", covers ["R1"], '
+              f'command "{ACTION}", verify_command "{VERIFY}". '
+              'Do not submit finish_summary. No network, packages, git, secrets, or host escape.'
+          )
+          env=SyntheticHarborEnv()
+          started=time.monotonic()
+          result=asyncio.run(science.run_science_goal(goal,env,max_cycles=1))
+          elapsed=time.monotonic()-started
+          assert result["status"]=="FINISHED",result
+          assert result["finish_authority"]=="BRAIN_VERIFIED_STATE",result
+          assert result["model_has_terminal_authority"] is False,result
+          assert result["material_requirements"]==["R1"],result
+          assert result["resolved_requirements"]==["R1"],result
+          assert [x["command"] for x in env.commands]==[ACTION,VERIFY],env.commands
+          assert elapsed < 180,elapsed
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_LIVE_QWEN_HARBOR_INTEGRATION_V1",
+            "status":"PASS",
+            "elapsed_s":round(elapsed,3),
+            "planner_model_last":result.get("planner_model_last"),
+            "finish_authority":result["finish_authority"],
+            "model_terminal_authority":result["model_has_terminal_authority"],
+            "commands":env.commands,
+            "terminal_task_exposure":0,
+            "terminal_trials_executed":0,
+            "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-live-qwen-harbor-integration-v1
+          path: |
+            LIVE_HARBOR_INTEGRATION_RESULT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
