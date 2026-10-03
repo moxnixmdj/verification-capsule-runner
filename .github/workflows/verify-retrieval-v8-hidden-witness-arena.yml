@@ -15,10 +15,10 @@ jobs:
           python-version: "3.12"
       - name: Verify exact subject blobs
         run: |
-          test "$(git hash-object canonical/governance/RETRIEVAL_REAL_HIDDEN_WITNESS_CATALOG_V1.json)" = "dd7bea1661257a38abcfcb8300795757103b6a63"
-          test "$(git hash-object canonical/runtime/retrieval_real_hidden_witness_arena_v1.py)" = "68875fb4690a1c56a0c2da5c132cfc28fb510cca"
+          test "$(git hash-object canonical/governance/RETRIEVAL_REAL_HIDDEN_WITNESS_CATALOG_V1.json)" = "dd7bea1661257a38abcfcb8300795757103b6a63"\n          test "$(git hash-object canonical/governance/RETRIEVAL_REAL_TREE_FINGERPRINTS_V1.json)" = "9244a59ad820e25076f09f3e394a60cba1376ac1"
+          test "$(git hash-object canonical/runtime/retrieval_real_hidden_witness_arena_v1.py)" = "d5c88ffd75f6cad6050e9fa3d82f8c42eda155ad"
           test "$(git hash-object canonical/runtime/retrieval_empirical_calibration_v1.py)" = "1e013e2fb01b7eb79a9909f92bed7e25abfef1c3"
-          test "$(git hash-object canonical/tests/test_retrieval_real_hidden_witness_arena_v1.py)" = "1eefd63f2b92150b79691c87619176a3c3ec64bc"
+          test "$(git hash-object canonical/tests/test_retrieval_real_hidden_witness_arena_v1.py)" = "96d0d215b1443304553a360012e48989d1319397"
       - name: Run arena tests
         run: PYTHONPATH=. python canonical/tests/test_retrieval_real_hidden_witness_arena_v1.py
       - name: Measure real target arena
