@@ -1,0 +1,23 @@
+name: Verify OSWorld v2.1 GitLab protocol reconciliation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/osworld_v21_gitlab_protocol_reconcile/**"
+      - ".github/workflows/verify-osworld-v21-gitlab-protocol-reconcile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify upstream OSWorld v2.1 GitLab contract
+        run: python capsules/osworld_v21_gitlab_protocol_reconcile/verify.py
