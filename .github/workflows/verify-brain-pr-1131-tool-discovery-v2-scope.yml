@@ -1,0 +1,68 @@
+name: Verify Brain PR 1131 Tool Discovery V2 universal scope
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1131_tool_discovery_v2_scope/**"
+      - ".github/workflows/verify-brain-pr-1131-tool-discovery-v2-scope.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind repaired Brain exact bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1131_tool_discovery_v2_scope
+          test "$(git hash-object canonical/runtime/tool_discovery_complete_interface_candidate_v4.py)" = "d8e7c43e3f5f4252441622805f161e3a6f9a8402"
+          test "$(git hash-object canonical/runtime/tool_discovery_universal_scope_certificate_v2.py)" = "a245d2007acb1eef79deddc4a3fea19ebc440a27"
+          test "$(git hash-object canonical/tests/test_tool_discovery_universal_scope_certificate_v2.py)" = "b8fe57cce61b24ac4dcd8bfc7e54e66f4595f13c"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_SCOPE_RELATION_V1.json)" = "b27cf5a5f6a1b163b54abdd76ae618bfc85a08ea"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+      - name: Run hardened V4 policy tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1131_tool_discovery_v2_scope
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_complete_interface_candidate_v4 -v
+      - name: Run V2 universal-scope tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1131_tool_discovery_v2_scope
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_universal_scope_certificate_v2 -v
+      - name: Execute V2 certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1131_tool_discovery_v2_scope
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_universal_scope_certificate_v2 > verdict.json
+      - name: Enforce universal zero-credit verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1131_tool_discovery_v2_scope
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["source_blob_drift"]==[],v
+          assert v["universal_scope_proved"] is True,v
+          assert v["scope_atom_satisfied_candidate"] is True,v
+          assert v["basis_kind"]=="UNIVERSAL_FORMAL_SCOPE_PROOF",v
+          assert v["target_predicate"]=="TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",v
+          assert v["uses_empirical_generalization"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Brain PR 1131 repaired Tool Discovery V2 scope: PASS")
+          PY
