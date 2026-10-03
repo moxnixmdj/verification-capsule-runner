@@ -1,0 +1,183 @@
+name: Preflight TB-Science promotion-safe execution
+on:
+  push:
+    branches: [main, "tb-science-promotion-preflight-20261003-v1"]
+    paths:
+      - ".github/workflows/preflight-tb-science-promotion-safe-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/preflight-tb-science-promotion-safe-v1.yml"
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Freeze exact TB-Science v0.1.0 metadata-only population
+        run: |
+          set -euo pipefail
+          git clone -q https://github.com/harbor-framework/terminal-bench-science.git /tmp/tbs
+          cd /tmp/tbs
+          git checkout -q f81afac4f11048e77a15dfc8fb1dbfb897fea0ce
+          test "$(git hash-object tasks/dataset.toml)" = "b506a7777d2dd5ae3e70c590366ceac4ee59ae28"
+          test "$(git hash-object CONTRIBUTING.md)" = "18db4573bdb1d21dd512dfeaaec9ac43cb00a8fe"
+          test "$(git hash-object TASK_REVIEW_AUTOMATION.md)" = "591cb5733df434f8c27759ac960d83624b316d15"
+          python - <<'PY'
+          import json, pathlib, tomllib
+          root=pathlib.Path("/tmp/tbs")
+          dataset=tomllib.loads((root/"tasks/dataset.toml").read_text())
+          listed=dataset.get("tasks",[])
+          assert len(listed)==70, len(listed)
+          manifests=list(root.glob("tasks/*/*/*/task.toml"))
+          assert len(manifests)==70, len(manifests)
+          by_name={}
+          rows=[]
+          for p in manifests:
+              d=tomllib.loads(p.read_text())
+              name=d["task"]["name"]
+              env=d.get("environment",{})
+              row={
+                  "name":name,
+                  "path":str(p.relative_to(root)),
+                  "cpus":float(env.get("cpus",1)),
+                  "memory_mb":int(env.get("memory_mb",2048)),
+                  "storage_mb":int(env.get("storage_mb",10240)),
+                  "gpus":int(env.get("gpus",0)),
+                  "gpu_types":env.get("gpu_types",[]),
+                  "validate_env":str(env.get("validate_env","docker")),
+                  "agent_timeout_sec":float(d.get("agent",{}).get("timeout_sec",1800)),
+                  "build_timeout_sec":float(env.get("build_timeout_sec",600)),
+              }
+              by_name[name]=row
+              rows.append(row)
+          listed_names={x["name"] for x in listed}
+          assert listed_names==set(by_name), (sorted(listed_names-set(by_name))[:5],sorted(set(by_name)-listed_names)[:5])
+          explicit_incompat=[
+              r for r in rows
+              if r["gpus"]>0 or r["cpus"]>4 or r["memory_mb"]>16384 or r["validate_env"].lower()!="docker"
+          ]
+          out={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_METADATA_CARRIER_CUT_V1",
+              "source_commit":"f81afac4f11048e77a15dfc8fb1dbfb897fea0ce",
+              "dataset_manifest_blob":"b506a7777d2dd5ae3e70c590366ceac4ee59ae28",
+              "task_count":len(rows),
+              "all_dataset_entries_have_task_manifest":True,
+              "explicit_standard_runner_incompatibility_count":len(explicit_incompat),
+              "explicit_standard_runner_incompatibilities":explicit_incompat,
+              "max_cpus":max(r["cpus"] for r in rows),
+              "max_memory_mb":max(r["memory_mb"] for r in rows),
+              "max_storage_mb":max(r["storage_mb"] for r in rows),
+              "max_agent_timeout_sec":max(r["agent_timeout_sec"] for r in rows),
+              "max_build_timeout_sec":max(r["build_timeout_sec"] for r in rows),
+              "task_instruction_files_read":0,
+              "solution_files_read":0,
+              "terminal_trials_executed":0,
+          }
+          pathlib.Path("/tmp/tb-science-metadata-cut.json").write_text(json.dumps(out,sort_keys=True,indent=2)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - name: Verify frozen binary reward semantics without task instructions
+        run: |
+          set -euo pipefail
+          cd /tmp/tbs
+          grep -Fq 'Your verifier must write a binary reward' CONTRIBUTING.md
+          grep -Fq 'Harbor scores a trial as passed at `reward >= 1.0`' CONTRIBUTING.md
+          grep -Fq 'check-binary-reward' TASK_REVIEW_AUTOMATION.md
+          python - <<'PY'
+          import json
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_SCORER_SEMANTICS_CUT_V1",
+            "binary_reward":"EXACT_0_OR_1",
+            "trial_pass_condition":"reward >= 1.0",
+            "source_commit":"f81afac4f11048e77a15dfc8fb1dbfb897fea0ce",
+            "task_instruction_files_read":0,
+            "terminal_trials_executed":0
+          },sort_keys=True))
+          PY
+      - name: Preflight the exact built-in zero-spend planner transport on synthetic contracts only
+        env:
+          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: ""
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, time, urllib.request
+          endpoint="https://text.pollinations.ai/"
+          models=("openai-fast","openai","mistral")
+          prompt=(
+            'Return one JSON object only with material_requirements ["R1"] and exactly one '
+            'candidate action {"action_id":"A1","covers":["R1"],"command":"printf ok",'
+            '"verify_command":"test 1 -eq 1"}. No prose.'
+          )
+          results=[]
+          for i in range(6):
+              ok=False; errs=[]
+              for model in models:
+                  body=json.dumps({"messages":[{"role":"user","content":prompt}],"model":model,"jsonMode":True}).encode()
+                  req=urllib.request.Request(endpoint,data=body,headers={"Content-Type":"application/json","User-Agent":"ProjectBrain-TBScience-Preflight/1"},method="POST")
+                  t=time.monotonic()
+                  try:
+                      with urllib.request.urlopen(req,timeout=20) as resp:
+                          raw=resp.read(30000).decode("utf-8","replace")
+                      a=raw.find("{"); b=raw.rfind("}")
+                      obj=json.loads(raw[a:b+1])
+                      reqs=obj.get("material_requirements")
+                      cands=obj.get("candidates")
+                      assert reqs==["R1"]
+                      assert isinstance(cands,list) and cands and cands[0].get("action_id")=="A1"
+                      assert cands[0].get("covers")==["R1"]
+                      results.append({"attempt":i+1,"ok":True,"model_alias":model,"latency_s":round(time.monotonic()-t,3)})
+                      ok=True
+                      break
+                  except Exception as e:
+                      errs.append({"model_alias":model,"error":type(e).__name__+":"+str(e)[:180]})
+              if not ok:
+                  results.append({"attempt":i+1,"ok":False,"errors":errs})
+          passed=sum(1 for r in results if r["ok"])
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_TRANSPORT_PREFLIGHT_V1",
+            "endpoint":endpoint,
+            "model_alias_order":list(models),
+            "synthetic_attempts":len(results),
+            "synthetic_contract_passes":passed,
+            "all_pass":passed==len(results),
+            "terminal_task_content_read":0,
+            "terminal_trials_executed":0,
+            "incremental_spend_usd":0,
+            "results":results
+          }
+          print(json.dumps(out,sort_keys=True))
+          if not out["all_pass"]:
+              raise SystemExit("PLANNER_PREFLIGHT_NOT_RELIABLE")
+          PY
+      - name: Freeze conservative 70x3 acceptance arithmetic
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, math
+          tasks=70; trials_per_task=3; n=tasks*trials_per_task; bar=0.587
+          required=math.ceil(bar*n)
+          fail_lock=n-required+1
+          assert required==124 and fail_lock==87
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_THRESHOLD_ARITHMETIC_V1",
+            "tasks":tasks,
+            "trials_per_task":trials_per_task,
+            "trial_slots":n,
+            "frozen_bar_percent":58.7,
+            "required_successes":required,
+            "irreversible_fail_failures":fail_lock,
+            "raw_rate_at_required_successes":required/n,
+            "raw_rate_one_success_below":(required-1)/n,
+            "early_stop_pass":"successes>=124",
+            "early_stop_fail":"failures>=87",
+            "terminal_trials_executed":0
+          },sort_keys=True))
+          PY
+
+# trigger-v1: no semantic change
