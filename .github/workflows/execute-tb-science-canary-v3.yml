@@ -193,3 +193,5 @@ jobs:
             LOCAL_QWEN_HEALTH.json
             LOCAL_QWEN_SERVER.log
           if-no-files-found: warn
+
+# ARM_TRIGGER_V1_AFTER_CANONICAL_AUTHORITY
