@@ -1,0 +1,75 @@
+name: Verify Brain Root3 universal scope closure V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root3_universal_scope_closure_v1/**"
+      - ".github/workflows/verify-brain-root3-universal-scope-closure-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          cd capsules/root3_universal_scope_closure_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for p,h in m["exact_brain_blobs"].items():
+              b=(pathlib.Path("brain")/p).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+              assert got==h,(p,got,h)
+          print("exact Brain blobs PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Execute live Root3 compiler
+        run: |
+          cd capsules/root3_universal_scope_closure_v1/brain
+          export PYTHONPATH=.
+          python canonical/runtime/root3_universal_scope_closure_compiler_v1.py | tee /tmp/root3-verdict.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/root3-verdict.json"))
+          assert x["status"].startswith("PASS"),x
+          assert x["live_root3_predicate_count"]==11,x
+          assert x["work_class_count"]==4,x
+          assert x["formal_shared_target_count"]==7,x
+          assert x["composition_open_component_count"]==8,x
+          assert x["frozen_direct_oracle_leaf_count"]==4,x
+          assert x["primary_zero_reality_action_id"]=="ROOT3_FORMAL_SCOPE_SHARED_V1",x
+          assert x["generic_current_witness_pairs_checked"]==96,x
+          assert x["generic_current_witness_direct_closures"]==0,x
+          assert x["new_reality_units_consumed"]==0,x
+          assert x["fresh_reality_authority"] is False,x
+          print("live Root3 compression PASS")
+          PY
+      - name: Run independent falsification assertions
+        run: |
+          cd capsules/root3_universal_scope_closure_v1/brain
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.tests.test_root3_universal_scope_closure_compiler_v1 import (
+            test_exact_compression,
+            test_unknown_target_fails_closed,
+            test_changed_saturation_fails_closed,
+            test_oracle_reinternalization_is_rejected,
+            test_composition_is_event_driven,
+            test_four_oracle_leaves_not_authorized,
+          )
+          tests=[
+            test_exact_compression,
+            test_unknown_target_fails_closed,
+            test_changed_saturation_fails_closed,
+            test_oracle_reinternalization_is_rejected,
+            test_composition_is_event_driven,
+            test_four_oracle_leaves_not_authorized,
+          ]
+          for t in tests:
+              t()
+              print(t.__name__,"PASS")
+          PY
