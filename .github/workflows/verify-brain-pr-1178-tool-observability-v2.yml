@@ -1,11 +1,11 @@
 name: Verify Brain PR 1178 Tool Discovery observability V2
 
 on:
-  pull_request:
+  push:
+    branches: [critical/tool-observability-v2-isolated-20261003]
     paths:
       - 'capsules/brain_pr_1178_tool_observability_v2/**'
       - '.github/workflows/verify-brain-pr-1178-tool-observability-v2.yml'
-  workflow_dispatch:
 
 jobs:
   verify:
