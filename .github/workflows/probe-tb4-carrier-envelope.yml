@@ -1,0 +1,31 @@
+name: Probe TB4 carrier envelope
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/probe-tb4-carrier-envelope.yml"
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resource-only carrier probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "CPU_LOGICAL=$(nproc)"
+          echo "MEM_TOTAL_KB=$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
+          echo "MEM_AVAILABLE_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
+          echo "DISK_FREE_KB=$(df -Pk . | awk 'NR==2 {print $4}')"
+          if command -v docker >/dev/null 2>&1; then
+            echo "DOCKER_PRESENT=1"
+            docker --version
+          else
+            echo "DOCKER_PRESENT=0"
+          fi
+          if docker compose version >/dev/null 2>&1; then
+            echo "DOCKER_COMPOSE_PRESENT=1"
+            docker compose version
+          else
+            echo "DOCKER_COMPOSE_PRESENT=0"
+          fi
+          echo "NO_BENCHMARK_INSTRUCTIONS_READ=1"
+          echo "NO_ACCEPTANCE_CASES_EXECUTED=1"
