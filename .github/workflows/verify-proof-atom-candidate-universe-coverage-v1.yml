@@ -1,0 +1,19 @@
+name: Verify proof atom candidate universe coverage v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/proof_atom_candidate_universe_coverage_v1/**"
+      - ".github/workflows/verify-proof-atom-candidate-universe-coverage-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain coverage-guard blobs and behavior
+        run: python capsules/proof_atom_candidate_universe_coverage_v1/verify.py
