@@ -33,12 +33,13 @@ with urllib.request.urlopen(req,timeout=120) as resp:
 assert raw.startswith(b"%PDF")
 reader=PdfReader(io.BytesIO(raw))
 pages=[p.extract_text() or "" for p in reader.pages]
-start_page=None
+matches=[]
 for i,t in enumerate(pages):
     flat=re.sub(r"\s+"," ",t).lower()
     if "blocklist used for humanity" in flat and "last exam" in flat:
-        start_page=i
-        break
+        matches.append(i)
+assert matches,"BLOCKLIST_SECTION_NOT_FOUND"
+start_page=max(matches)
 assert start_page is not None,"BLOCKLIST_SECTION_NOT_FOUND"
 section="\n".join(pages[start_page:])
 m=re.search(r"9\.2\s+Blocklist\s+used\s+for\s+Humanity.?s\s+Last\s+Exam",section,re.I)
