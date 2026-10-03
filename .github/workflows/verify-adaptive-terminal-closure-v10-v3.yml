@@ -1,0 +1,19 @@
+name: Verify adaptive terminal closure V10 V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/adaptive_terminal_closure_v10_v3/**"
+      - ".github/workflows/verify-adaptive-terminal-closure-v10-v3.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python capsules/adaptive_terminal_closure_v10_v3/verify.py
