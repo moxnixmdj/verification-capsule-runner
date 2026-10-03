@@ -1,0 +1,43 @@
+{
+  "schema": "PROJECT_BRAIN_RECOVERY_ACCEPTANCE_INTEGRATOR_VERIFIER_INPUT_V1",
+  "date": "2026-10-03",
+  "brain_pr": 1302,
+  "brain_head": "09076641586a0bf26b7db7d6332945deecb99e8b",
+  "source_files": {
+    "canonical/runtime/recovery_acceptance_integrator_v1.py": "209b9d290431b73d0ddcec62829b291469d43d2b",
+    "canonical/tests/test_recovery_acceptance_integrator_v1.py": "e068cb103bb39dc482f531052ed0c5e42007996c",
+    "canonical/governance/RECOVERY_ACCEPTANCE_INTEGRATION_CANDIDATE_V1.json": "78cca6af4a48d6ef887898d396c28ec61c7401f8",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "7885a827b1483bfb38315c1f492848f7e4680285",
+    "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json": "85398c768825cd4701e9e574e37a0502079bcbb9",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "17fdb700650d0548765fdb1dee579407777eb4cf",
+    "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json": "981c8ac9b66ee7fccf5b531525849e29df9be483"
+  },
+  "expected": {
+    "before": {
+      "proved_atomic": 8,
+      "unresolved_atomic": 30,
+      "accepted_families": 3,
+      "open_families": 16
+    },
+    "after": {
+      "proved_atomic": 11,
+      "unresolved_atomic": 27,
+      "accepted_families": 4,
+      "open_families": 15
+    },
+    "newly_closed_family": "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+    "newly_proved_predicates": [
+      "RECOVERY_CAUSAL_LOCALIZATION_NONINFERIOR",
+      "RECOVERY_TERMINAL_NONINFERIOR",
+      "RECOVERY_ZERO_CRITICAL_FAIL_CLOSED_MISSES"
+    ]
+  },
+  "hard_requirements": [
+    "EXACT_BLOB_MATCH",
+    "RECOVERY_ONLY_DELTA",
+    "ZERO_NEW_REALITY",
+    "NO_TERMINAL_REPLAY",
+    "NO_SELF_PROMOTION"
+  ]
+}
