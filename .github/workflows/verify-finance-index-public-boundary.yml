@@ -1,0 +1,35 @@
+name: Verify Finance Index public reproducibility boundary
+
+on:
+  push:
+    paths:
+      - ".github/workflows/verify-finance-index-public-boundary.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify official Artificial Analysis public boundary
+        run: |
+          python - <<'PY'
+          import urllib.request
+          def get(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"})
+              return " ".join(urllib.request.urlopen(req,timeout=30).read().decode("utf-8","ignore").split()).lower()
+          omni=get("https://artificialanalysis.ai/evaluations/omniscience")
+          meth=get("https://artificialanalysis.ai/methodology/intelligence-benchmarking")
+          api=get("https://artificialanalysis.ai/data-api/docs")
+          assert "private dataset" in omni
+          assert "6,000 questions" in omni or "6000 questions" in omni
+          assert "aa-lcr v1.1" in meth
+          assert "gpt-5.6 luna" in meth
+          assert "100" in meth
+          assert "free api" in api or "free" in api
+          assert "aa-omniscience" in api and "aa-lcr v1.1" in api
+          print("FINANCE_INDEX_PUBLIC_REPRODUCIBILITY_BOUNDARY_PASS")
+          PY
