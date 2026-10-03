@@ -1,0 +1,135 @@
+name: Verify TB-Science canary V3 final zero
+
+on:
+  push:
+    branches: ["verify/tb-science-canary-v3-final-zero-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v3-final-zero.yml"
+      - "capsules/tb_science_canary_v3_final_zero/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v3-final-zero.yml"
+      - "capsules/tb_science_canary_v3_final_zero/**"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact Brain candidate and authority
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_canary_v3_final_zero
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_CANARY_V3_FINAL_ZERO_RECONCILIATION_V1.json")" = "e532210e793e0bb2036d72d7eafc24bfc7a93e5f"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json")" = "ae5bc607b828e8f55092e80e0a806d5a496eb54b"
+
+      - name: Fetch authenticated execution metadata, logs and artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/artifact
+          gh api /repos/moxnixmdj/verification-capsule-runner/actions/runs/37110691405 > evidence/run.json
+          gh api /repos/moxnixmdj/verification-capsule-runner/actions/runs/37110691405/jobs > evidence/jobs.json
+          gh api /repos/moxnixmdj/verification-capsule-runner/actions/runs/37110691405/artifacts > evidence/artifacts.json
+          gh run view 37110691405 --repo moxnixmdj/verification-capsule-runner --log > evidence/run.log
+          gh api /repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11269073658/zip > evidence/result.zip
+          echo '06c17101b2a3a762548c3d372cc7f055eaa8eaf27199433c6b1f742e37f8f1f0  evidence/result.zip' | sha256sum -c -
+          unzip -q evidence/result.zip -d evidence/artifact
+          echo 'f68aa169cddc5a603cd0feb6386ab723cc19360784718a0b1d9099f8f0e46268  evidence/artifact/virtual-baseline-localization-trial-0__SLOT_RECEIPT.json' | sha256sum -c -
+
+      - name: Independently adjudicate frozen zero and accounting
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee TB_SCIENCE_V3_FINAL_ZERO_VERDICT.json
+          import json,pathlib,re
+          root=pathlib.Path("evidence")
+          run=json.loads((root/"run.json").read_text())
+          jobs=json.loads((root/"jobs.json").read_text())
+          arts=json.loads((root/"artifacts.json").read_text())
+          log=(root/"run.log").read_text(errors="replace")
+          receipt=json.loads((root/"artifact/virtual-baseline-localization-trial-0__SLOT_RECEIPT.json").read_text())
+          cand=json.loads(pathlib.Path("capsules/tb_science_canary_v3_final_zero/canonical/governance/TB_SCIENCE_CANARY_V3_FINAL_ZERO_RECONCILIATION_V1.json").read_text())
+          auth=json.loads(pathlib.Path("capsules/tb_science_canary_v3_final_zero/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json").read_text())
+
+          assert run["id"]==37110691405
+          assert run["event"]=="push" and run["run_attempt"]==1
+          assert run["head_sha"]=="2526faede780cd30438df2010ff5c4741a4a8b30"
+          assert run["status"]=="completed" and run["conclusion"]=="failure"
+          assert jobs["total_count"]==1
+          job=jobs["jobs"][0]
+          assert job["id"]==111167854392 and job["conclusion"]=="failure"
+          assert int(job["runner_id"])>0 and job["runner_name"]
+          steps={s["name"]:s for s in job["steps"]}
+          assert steps["Enforce first attempt and exact armed authority"]["conclusion"]=="success"
+          assert steps["Install exact Harbor and verify Docker"]["conclusion"]=="success"
+          assert steps["Ensure exact pinned llama.cpp server"]["conclusion"]=="success"
+          assert steps["Acquire exact Qwen if cache misses"]["conclusion"]=="success"
+          assert steps["Start exact local cognition endpoint"]["conclusion"]=="failure"
+          assert steps["Execute exactly one untouched frozen slot"]["conclusion"]=="skipped"
+          assert steps["Finalize irreversible conservative receipt"]["conclusion"]=="success"
+          assert steps["Run actions/upload-artifact@v4"]["conclusion"]=="success"
+          assert "Illegal instruction" in log
+          assert "llama-server" in log
+          assert arts["total_count"]==1
+          art=arts["artifacts"][0]
+          assert art["id"]==11269073658
+          assert art["digest"]=="sha256:06c17101b2a3a762548c3d372cc7f055eaa8eaf27199433c6b1f742e37f8f1f0"
+
+          slot="terminal-bench-science/virtual-baseline-localization::trial-0"
+          assert auth["authorized_slot"]["slot_id"]==slot
+          assert "ANY_INFRA_TIMEOUT_RESOURCE_INVALID_OR_MISSING_VERIFIER_RESULT_FINALIZES_THIS_SLOT_AS_ZERO" in auth["hard_rules"]
+          assert receipt["slot_id"]==slot
+          assert receipt["status"]=="FINAL_ZERO"
+          assert receipt["reward"]==0.0
+          assert receipt["harbor_step_outcome"]=="skipped"
+          assert receipt["errors"]==["NO_TRIAL_RESULT_WITH_VERIFIER_REWARD"]
+          assert receipt["execution_authority_consumed"] is True
+          assert receipt["rerun_credit"] is False
+          assert receipt["promotion_authority"] is False
+
+          assert cand["accounting"]["finalized_failures_before_v3"]==4
+          assert cand["accounting"]["v3_failure_delta"]==1
+          assert cand["accounting"]["finalized_failures_after_v3"]==5
+          assert cand["accounting"]["remaining_failures_before_fail_lock"]==73
+          assert cand["disposition"]["authorized_slot_consumed"] is True
+          assert cand["disposition"]["rerun_allowed"] is False
+          assert cand["disposition"]["replacement_allowed"] is False
+
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_CANARY_V3_FINAL_ZERO_PUBLIC_RUNNER_VERIFICATION",
+            "status":"INDEPENDENT_PASS__AUTHORIZED_SLOT_FINAL_ZERO__PRE_TASK_LOCAL_SUBSTRATE_ILLEGAL_INSTRUCTION__NO_RETRY_NO_REPLACEMENT",
+            "execution_run_id":37110691405,
+            "execution_job_id":111167854392,
+            "artifact_id":11269073658,
+            "artifact_digest":art["digest"],
+            "slot_id":slot,
+            "terminal_task_step_started":False,
+            "local_cognition_endpoint_failure":"ILLEGAL_INSTRUCTION",
+            "finalized_failures_after_v3":5,
+            "remaining_failures_before_fail_lock":73,
+            "slot_consumed":True,
+            "rerun_credit":False,
+            "new_reality_units_consumed":0,
+            "incremental_spend_usd":0,
+            "promotion_authority":False
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-canary-v3-final-zero-verification
+          path: |
+            TB_SCIENCE_V3_FINAL_ZERO_VERDICT.json
+            evidence/run.json
+            evidence/jobs.json
+            evidence/artifacts.json
+          if-no-files-found: error
