@@ -1,0 +1,39 @@
+name: Verify Retrieval V12 registry miss recovery
+on:
+  push:
+    branches:
+      - verify/retrieval-v12-registry-recovery-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_registry_miss_recovery_v12.py)" = "708ad88333b56dbe58de6cd72bc0205be5bd193b"
+          test "$(git hash-object canonical/tests/test_retrieval_registry_miss_recovery_v12.py)" = "38b564ea2b54769fd48752fbb43e569ff1bdc544"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_registry_miss_recovery_v12.py
+      - name: Run live registry recovery
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_registry_miss_recovery_v12.py > v12_registry.json
+          cat v12_registry.json
+      - name: Validate semantics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("v12_registry.json"))
+          assert x["baseline_case_count"]==12
+          assert x["usable_case_count"]>0
+          assert x["open_world_completeness_claim"] is False
+          assert x["execution_authority"] is False
+          print("SUMMARY",json.dumps({
+            "usable":x["usable_case_count"],"recovered":x["recovered_case_count"],
+            "rate":x["recovery_rate"],"recovered_ids":x["recovered_episode_ids"],
+            "residual_ids":x["residual_miss_episode_ids"],"failed_ids":x["failed_episode_ids"]
+          },sort_keys=True))
+          PY
