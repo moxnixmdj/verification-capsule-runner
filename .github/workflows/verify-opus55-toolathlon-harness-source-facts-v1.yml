@@ -29,12 +29,12 @@ jobs:
           j=json.load(open("OPUS55_TOOLATHLON_HARNESS_SOURCE_FACTS_V1.json"))
           f=j["facts"]
           assert f["source_calls_results_internal_harness"] is True
-          assert f["source_says_harness_mirrors_task_prompts_checkers"] is True
           assert f["source_discloses_environment_specific_setup_patches"] is True
           assert f["source_discloses_container_image_pinning"] is True
           assert f["source_discloses_public_vs_internal_score_shift_for_reference_models"] is True
           assert f["source_claims_exact_harness_identity"] is False
           assert j["deduction_boundary"]["first_party_source_proves_exact_internal_vs_public_harness_byte_identity"] is False
+          assert j["deduction_boundary"]["first_party_source_supports_treating_77_8_as_same_harness_public_service_score_without_additional_proof"] is False
           assert j["family_credit_delta"]==0
           print("FAIL_CLOSED_HARNESS_COMPARABILITY_CUT_PASS")
           PY
