@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT3_SUPERPORTFOLIO_MINCUT_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1435,
+  "brain_head": "dd75cc4649ae0f31feea90dfb6c1594041a9aef9",
+  "exact_brain_blobs": {
+    "canonical/governance/ROOT3_MATCHED_SUPERPORTFOLIO_MINIMUM_REALITY_BINDING_V1.json": "62be0973d0a8dc824f8db263b382fc61ce7038af",
+    "canonical/runtime/root3_matched_superportfolio_minimum_reality_verifier_v1.py": "c679981fc7c7f520fd153a7793c32deec487bcd9",
+    "canonical/tests/test_root3_matched_superportfolio_minimum_reality_verifier_v1.py": "03681ffe65b35f9e9183fd51fd005933c9da9061",
+    "canonical/governance/OPUS55_MATCHED_COMPARATOR_SUPERPORTFOLIO_V1.json": "d9ac894594ebcd2883520f7b7977a3548420541c",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json": "f6e264a0f7a63e1076be4bc4af7986f9aed07544"
+  }
+}
