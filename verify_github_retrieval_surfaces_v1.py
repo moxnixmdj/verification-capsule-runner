@@ -52,7 +52,7 @@ def action(surface,q="中文 UBJSON 编解码器"):
 o=Opener()
 out=m.search(action("CODE_CONTENT"),opener=o)
 assert out["candidate_count"]==1,out
-assert "中文 UBJSON 编解码器" in urllib.parse.unquote(o.urls[0]),o.urls
+assert "中文 UBJSON 编解码器" in urllib.parse.unquote_plus(o.urls[0]),o.urls
 assert out["complete"] is False and out["independently_complete"] is False,out
 c=out["candidates"][0]
 assert c["repository"]=="e/r" and c["path"]=="src/codec.py",c
@@ -69,7 +69,7 @@ for surface,needle in (("MANIFESTS","filename:"),("TESTS_EXAMPLES","path:")):
     o=Opener()
     got=m.search(action(surface,"ubjson"),limit=2,opener=o)
     assert got["candidate_count"]>=1,got
-    decoded="\n".join(urllib.parse.unquote(x) for x in o.urls)
+    decoded="\n".join(urllib.parse.unquote_plus(x) for x in o.urls)
     assert needle in decoded,(surface,decoded)
 
 # Issues/history are candidate discovery; history explicitly remains partial.
@@ -110,3 +110,5 @@ print(json.dumps({
     "candidate_only_authority":True,
     "history_scope_partial_and_explicit":True,
 },sort_keys=True))
+
+# trigger exact-byte verification run
