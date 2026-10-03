@@ -44,6 +44,7 @@ jobs:
         run: |
           cd capsules/universal_learning_adaptive_v5
           python -m py_compile \
+            canonical/runtime/decision_discriminator_v3.py \
             canonical/runtime/universal_learning_contract_v1.py \
             canonical/runtime/universal_active_transfer_learner_v2.py \
             canonical/runtime/structural_transfer_v3.py \
