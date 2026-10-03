@@ -1,0 +1,12 @@
+{
+  "schema": "BRAIN_HLE_OPUS55_TOOL_ADAPTER_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1466,
+  "brain_head_sha": "abc288341fd25dcc9e1a7922b765b2ae5dbaa58e",
+  "exact_brain_blobs": {
+    "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py": "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f",
+    "canonical/tests/test_root2_hle_opus55_tool_adapter_v1.py": "42f7b723842a24c9fc5528262acefcd035f67b0b",
+    "canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json": "d2a2427b483fe1c06c6b1e6bc98d72bf07e7a730",
+    "canonical/governance/HLE_OPUS55_TOOL_ADAPTER_V1.json": "79860f8a8d2365b873d88cd78be49a4ea7b5028b"
+  }
+}
