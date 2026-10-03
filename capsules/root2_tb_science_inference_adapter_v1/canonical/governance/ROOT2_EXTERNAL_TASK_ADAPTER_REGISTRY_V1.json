@@ -1,0 +1,49 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT2_EXTERNAL_TASK_ADAPTER_REGISTRY_V1",
+  "date": "2026-10-04",
+  "status": "CANDIDATE__FIRST_INFERENCE_ADAPTER_BOUND__TB_SCIENCE_ZERO_CASE__INDEPENDENT_VERIFICATION_REQUIRED__ZERO_CREDIT",
+  "adapters": [
+    {
+      "benchmark_id": "LIVEBENCH_IF_2026_06_25",
+      "adapter_path": "canonical/runtime/livebench_if_response_adapter.py",
+      "adapter_blob_sha": "eb497ae5585f4f22b06b8088609b6d17714ebc53",
+      "callable": "adapt_responses",
+      "mode": "POSTPROCESS_ONLY",
+      "inference_capable": false,
+      "note": "Formats already-produced Brain responses; does not generate them."
+    },
+    {
+      "benchmark_id": "TERMINAL_BENCH_SCIENCE_0_1",
+      "adapter_path": "canonical/runtime/root2_tb_science_inference_adapter_v1.py",
+      "adapter_blob_sha": "a079797d85582eb354400af3a4c235f9ddd62d5b",
+      "callable": "infer",
+      "mode": "INFERENCE",
+      "inference_capable": true,
+      "controller_path": "canonical/runtime/harbor_science_agent_v1.py",
+      "controller_blob_sha": "5557efd21f1a433ad16766def3775a79c459784b",
+      "route_candidate_path": "canonical/governance/TERMINAL_BENCH_SCIENCE_BRAIN_ROUTE_CANDIDATE_V1.json",
+      "route_candidate_blob_sha": "379bf08cc270b3780a7df5a8b94cf0d2f44a2db2",
+      "zero_case_integration_verification_path": "canonical/verification/TB_SCIENCE_PATCHED_REAL_HARBOR_INTEGRATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+      "zero_case_integration_verification_blob_sha": "4512996a6698463be367052b13a891bd0f647f73",
+      "model_dependency_count": 1,
+      "model_role": "GENERAL_COGNITION_SUBSTRATE",
+      "model_has_terminal_authority": false,
+      "note": "Bridges a live Harbor environment into the already independently zero-case-qualified Brain-owned science controller. Binding itself consumes no benchmark cases and grants no score credit."
+    }
+  ],
+  "hard_rules": [
+    "INFERENCE_REQUEST_REQUIRES_INFERENCE_CAPABLE_TRUE",
+    "ADAPTER_PATH_MUST_BE_CANONICAL_AND_CONTENT_ADDRESSED",
+    "POSTPROCESS_ONLY_ADAPTER_MUST_NEVER_BE_MISREPRESENTED_AS_BRAIN_INFERENCE",
+    "NO_DYNAMIC_UNBOUNDED_IMPORT",
+    "NO_ACCEPTANCE_OR_EXECUTION_AUTHORITY_FROM_REGISTRY_EXISTENCE"
+  ],
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "family_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "ownership_credit_delta": 0,
+  "execution_authority": false,
+  "promotion_authority": false,
+  "fresh_reality_authority": false
+}
