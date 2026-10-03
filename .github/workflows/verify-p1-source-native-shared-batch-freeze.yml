@@ -1,8 +1,8 @@
 name: Verify P1 source-native shared-batch freeze
-# Dedicated verification base prevents unrelated main-PR workflow fan-out.\n# Sync trigger after installing the base-branch verifier.
+# Dedicated verification base prevents unrelated main-PR workflow fan-out.\n# Dedicated push carrier yields an independent public run without PR workflow fan-out.
 on:
-  pull_request:
-    branches: [verify-base/p1-source-native-20261003]
+  push:
+    branches: [verify/p1-source-native-shared-batch-freeze-20261003]
 permissions:
   contents: read
 jobs:
