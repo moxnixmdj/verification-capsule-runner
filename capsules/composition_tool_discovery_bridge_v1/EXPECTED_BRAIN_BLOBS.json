@@ -1,0 +1,16 @@
+{
+  "schema": "BRAIN_COMPOSITION_TOOL_DISCOVERY_BRIDGE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1367,
+  "brain_ref": "sol/composition-tool-discovery-current-bridge-20261003",
+  "exact_brain_blobs": {
+    "canonical/governance/COMPOSITION_TOOL_DISCOVERY_SCOPE_COMPLETE_BRIDGE_V1.json": "89d2ec6b677c211ecaf5372d8c68dae6881b1bc5",
+    "canonical/tests/test_composition_tool_discovery_scope_complete_bridge_v1.py": "5f5b5c2d309ac56a40bffab0103d7a0159d8f73e",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
+    "canonical/verification/TOOL_DISCOVERY_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "f44e2378cf00f86a59159cb9d8edb35f0a7c27f4",
+    "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "913d171b3c855000d322e183b142b3200eeaf0a9",
+    "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_INTEGRATOR_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "bed23f2e69d4bc8937d792b07b5812364cf26a85",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "4000854d577f7ab5f0146d21d16e91d017458431"
+  }
+}
