@@ -1,0 +1,16 @@
+name: Verify scheduling V13 active authority
+on:
+  push:
+    branches:
+      - verify/scheduling-v13-active-authority-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_scheduling_v13_active_authority.py
