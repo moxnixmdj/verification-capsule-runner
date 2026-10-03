@@ -1,0 +1,94 @@
+name: Verify OSWorld V2.1 public runner VM boot
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/verify-osworld-v21-public-runner-vm-boot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify carrier and download pinned OSWorld V2.1 VM image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -c /dev/kvm
+          docker info >/dev/null
+          docker compose version >/dev/null
+
+          mkdir -p "$RUNNER_TEMP/osworld-v21"
+          cd "$RUNNER_TEMP/osworld-v21"
+
+          URL="https://huggingface.co/datasets/xlangai/v2-image/resolve/6e16459a2feb5a8f1ed65babcfe7a2a6205d049d/osworld-v2-ubuntu-x86.qcow2.zip"
+          EXPECTED_SHA256="14b08aa7ba6c023ecb91d46de8df5de32af4d1d6bd75ea925519caf9677fc8b3"
+
+          curl -fL --retry 8 --retry-all-errors --connect-timeout 30 \
+            -o osworld-v2-ubuntu-x86.qcow2.zip "$URL"
+
+          echo "$EXPECTED_SHA256  osworld-v2-ubuntu-x86.qcow2.zip" | sha256sum -c -
+          unzip -q osworld-v2-ubuntu-x86.qcow2.zip
+          test -f osworld-v2-ubuntu-x86.qcow2
+
+          echo "ARCHIVE_BYTES=$(stat -c %s osworld-v2-ubuntu-x86.qcow2.zip)"
+          echo "QCOW2_BYTES=$(stat -c %s osworld-v2-ubuntu-x86.qcow2)"
+          df -B1 /
+
+      - name: Boot exact pinned OSWorld V2.1 Docker VM without benchmark cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="happysixd/osworld-docker@sha256:0e6497a9295647cf05bf2b2af522fdd79bdeba2737595259cab310a3bcf6baa9"
+          VM="$RUNNER_TEMP/osworld-v21/osworld-v2-ubuntu-x86.qcow2"
+
+          cleanup() {
+            docker rm -f osworld-v21-smoke >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker pull "$IMAGE"
+
+          docker run -d --name osworld-v21-smoke \
+            --cap-add NET_ADMIN \
+            --device /dev/kvm:/dev/kvm \
+            -e DISK_SIZE=32G \
+            -e RAM_SIZE=4G \
+            -e CPU_CORES=4 \
+            -v "$VM:/System.qcow2:ro" \
+            -p 8006:8006 \
+            -p 5000:5000 \
+            -p 9222:9222 \
+            -p 8080:8080 \
+            "$IMAGE"
+
+          ok=0
+          for i in $(seq 1 360); do
+            if curl -fsS --max-time 5 -o "$RUNNER_TEMP/osworld-v21/screenshot.bin" \
+              http://127.0.0.1:5000/screenshot; then
+              if test -s "$RUNNER_TEMP/osworld-v21/screenshot.bin"; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 2
+          done
+
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::OSWorld V2.1 VM did not expose a non-empty screenshot endpoint"
+            docker logs --tail 300 osworld-v21-smoke || true
+            exit 1
+          fi
+
+          docker inspect osworld-v21-smoke --format '{{json .HostConfig.Devices}}'
+          docker inspect osworld-v21-smoke --format '{{.Image}}'
+          stat -c 'SCREENSHOT_BYTES=%s' "$RUNNER_TEMP/osworld-v21/screenshot.bin"
+
+          echo "OSWORLD_V21_PUBLIC_RUNNER_VM_BOOT_PASS"
+          echo "NO_BENCHMARK_TASK_CASES_READ_OR_EXECUTED"
