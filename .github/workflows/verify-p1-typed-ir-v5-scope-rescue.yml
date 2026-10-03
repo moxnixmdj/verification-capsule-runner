@@ -1,0 +1,20 @@
+name: Verify Brain P1 typed trajectory V5 scope and rescue
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_typed_ir_v5/**"
+      - ".github/workflows/verify-p1-typed-ir-v5-scope-rescue.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain V5 bytes and adversarial rescue properties
+        run: python capsules/p1_typed_ir_v5/verify.py
