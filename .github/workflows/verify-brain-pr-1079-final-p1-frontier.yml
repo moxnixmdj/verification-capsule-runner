@@ -21,7 +21,7 @@ jobs:
           python - <<'PY'
           import hashlib,pathlib
           expected={
-            "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"b4cb6efce47b1703904f2d3dac4c2994009f0538",
+            "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"a47c251da8f7658f1dbe5174a149742dfaf45fc2",
             "canonical/verification/P1_V7_DIRECT_SURFACE_TRANSPORT_AND_IDENTIFIABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json":"e9d0632bd85e2deb43247d6bc78e641cb6440db4",
             "canonical/governance/P1_V7_FAILURE_SEMANTICS_ZERO_REALITY_SOURCE_AUDIT_V1.json":"1bfe22efbb4ca6cca7ec43e092497cf94afab15e",
             "canonical/verification/P1_V7_FAILURE_SEMANTICS_ZERO_REALITY_SOURCE_AUDIT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json":"44962dc709cdcf7f3a05ca9ac864abf9fe2aaa67",
