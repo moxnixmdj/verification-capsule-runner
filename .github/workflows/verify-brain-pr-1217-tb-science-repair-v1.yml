@@ -34,17 +34,30 @@ jobs:
           set -euo pipefail
           C=capsules/brain_pr_1217_tb_science_repair
           test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "17472fd2b01b164fbb180aecfc04385b55b11499"
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "08862621cfe6ff6915a98120db36686ae5a08dab"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "8967f84a8f8537dad17b677329ed17e7b4ff0fad"
           test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
           test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
           test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
           test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "b6c5ea794398ace7a08b43f434a56da51e5323fd"
           test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "6f32250bce81ee66fdddbd29b72061089674c5b3"
           test "$(git hash-object "$C/canonical/tests/test_tb_science_general_substrate_materiality_v1.py")" = "bda78c83d5783c385b4c88fecd33c81305274c5e"
-          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_GENERAL_SUBSTRATE_MATERIALITY_V1.json")" = "9b6d5d04893add83ee1df9fb2e58a7f72db0a8ee"
-          test "$(git hash-object "$C/canonical/governance/TERMINAL_BENCH_SCIENCE_BRAIN_ROUTE_CANDIDATE_V1.json")" = "014f54ec422354fce985d18de65c0451a01d2f9e"
-          test "$(git hash-object "$C/canonical/governance/TERMINAL_BENCH_SCIENCE_ROUTE_ACTIVATION_V1.json")" = "9c23fbee6ad45a4508d05818f0db1aecaa5dda08"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_GENERAL_SUBSTRATE_MATERIALITY_V1.json")" = "526244f3ef2d9cda2468a7b8cdbd6564af1c2d65"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_BENCH_SCIENCE_BRAIN_ROUTE_CANDIDATE_V1.json")" = "5dfbf335a2c5d875f830b4efc782b682457dc7ad"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_BENCH_SCIENCE_ROUTE_ACTIVATION_V1.json")" = "73fc1caf602ed50de3df5f7ecdd6e8f1d5fc9793"
           test "$(git hash-object "$C/verify_live_proposal_boundary.py")" = "15a6a6310947f418508ec5d987197c8afd1b1d56"
+      - name: Compile exact mirrored Python before tests
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1217_tb_science_repair
+          python -m py_compile \
+            "$C/canonical/runtime/harbor_science_planner_v1.py" \
+            "$C/canonical/runtime/harbor_science_agent_v1.py" \
+            "$C/canonical/runtime/harbor_command_policy.py" \
+            "$C/canonical/runtime/harbor_environment_transport.py" \
+            "$C/canonical/runtime/acceptance_capability_source_gate_v2.py" \
+            "$C/canonical/tests/test_harbor_science_planner_v1.py" \
+            "$C/canonical/tests/test_harbor_science_agent_v1.py" \
+            "$C/canonical/tests/test_tb_science_general_substrate_materiality_v1.py"
       - name: Run repaired controller planner and materiality tests
         run: |
           set -euo pipefail
