@@ -46,7 +46,7 @@ jobs:
           assert route["deduplication"]["root2_only_predicate_count"]==15
           assert route["deduplication"]["unique_benchmark_surface_count"]==14
           assert total["verified"]["closed_target_count"]==0 and total["verified"]["residual_target_count"]==8
-          assert synth["result"]["proved_atom_count"]==7
+          assert synth["verified"]["transported_proved_atom_count"]==7
           assert sat["status"].startswith("SATURATED_CURRENT_BOUND_ROOT3_STRONGER_PROOF_INPUTS")
           assert sat["other_live_root3_target_result"]["current_full_protocol_transmutation_witness_count"]==0
           assert sat["other_live_root3_target_result"]["current_normalized_direct_reuse_closure_count"]==0
