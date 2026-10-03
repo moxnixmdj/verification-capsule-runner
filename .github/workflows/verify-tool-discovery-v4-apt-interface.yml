@@ -1,0 +1,75 @@
+name: Verify Tool Discovery V4 APT interface
+on:
+  push:
+    branches: ["verify/tool-discovery-v4-apt-interface-20261003-sol"]
+    paths:
+      - "capsules/tool_discovery_v4_apt_interface_v1/**"
+      - ".github/workflows/verify-tool-discovery-v4-apt-interface.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_v4_apt_interface_v1/**"
+      - ".github/workflows/verify-tool-discovery-v4-apt-interface.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tool_discovery_v4_apt_interface_v1
+          test "$(git hash-object "$C/canonical/runtime/tool_discovery_apt_complete_interface_instance_v1.py")" = "00c5c3463d7e70a5c3ee71c98539acce9bc72a75"
+          test "$(git hash-object "$C/canonical/tests/test_tool_discovery_apt_complete_interface_instance_v1.py")" = "9283e0e897658542defd8980c7c59cfba61f2422"
+          test "$(git hash-object "$C/canonical/runtime/tool_discovery_apt_v4_transferable_interface_instance_v1.py")" = "dc2b982651a3f98c0cbd3782973377815060e93f"
+          test "$(git hash-object "$C/canonical/tests/test_tool_discovery_apt_v4_transferable_interface_instance_v1.py")" = "b9b29743e4541169f105e30f844447008823d603"
+          test "$(git hash-object "$C/canonical/governance/TOOL_DISCOVERY_APT_V4_TRANSFERABLE_INTERFACE_INSTANCE_CANDIDATE_V1.json")" = "bc3c84b3a8bc5d21b7336e73ff9fb3e57e61f2d0"
+          test "$(git hash-object "$C/canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V4_TRANSFERABLE_CATALOG.json")" = "0a9a788c2637610f4b4cfc5e0f770ba972409137"
+          test "$(git hash-object "$C/canonical/runtime/tool_discovery_dynamic_candidate_v5.py")" = "42d096ef93e8ad06c4d1d5dfe730881bf45a2a72"
+          test "$(git hash-object "$C/canonical/runtime/tool_discovery_dynamic_candidate_v8.py")" = "b43443ef8b0387ed88bb5a852de01323276ad2aa"
+      - name: Refresh current public APT authority epoch
+        run: sudo apt-get update -qq
+      - name: Run V1 and V4 static tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tool_discovery_v4_apt_interface_v1"
+          PYTHONPATH="$C" python -m unittest -v             canonical.tests.test_tool_discovery_apt_complete_interface_instance_v1             canonical.tests.test_tool_discovery_apt_v4_transferable_interface_instance_v1
+      - name: Qualify live V4 transferable interface
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tool_discovery_v4_apt_interface_v1"
+          PYTHONPATH="$C" python -m canonical.runtime.tool_discovery_apt_v4_transferable_interface_instance_v1             | tee TOOL_DISCOVERY_V4_APT_INTERFACE_RESULT.json
+          python - <<'PY'
+          import json
+          p=json.load(open("TOOL_DISCOVERY_V4_APT_INTERFACE_RESULT.json"))
+          assert p["pass"] is True,p
+          assert p["status"]=="PASS__LIVE_APT_V4_TRANSFERABLE_INTERFACE_INSTANCE__REALIZABILITY_ONLY__ZERO_ACCEPTANCE_CREDIT",p
+          assert len(p["property_results"])==12,p
+          assert all(p["property_results"].values()),p
+          assert p["source_count"]>0,p
+          assert p["tool_identity_count"]>1000,p
+          assert p["epoch_stable"] is True,p
+          assert p["safe_probe_receipt"]["pass"] is True,p
+          assert p["policy_checks"]["same_catalog_reused_across_decision_epoch"] is True,p
+          assert p["policy_checks"]["cheaper_unprobeable_blocks_expensive_selection"] is True,p
+          assert p["policy_checks"]["tool_version_change_restarts"] is True,p
+          assert p["policy_checks"]["authority_change_restarts"] is True,p
+          assert p["new_reality_units_consumed"]==1,p
+          assert p["incremental_spend_usd"]==0,p
+          assert p["capability_credit_delta"]==0 and p["family_credit_delta"]==0,p
+          assert p["execution_authority"] is False and p["promotion_authority"] is False,p
+          assert "ONE_APT_INSTANCE_DOES_NOT_PROVE_ALL_REAL_WORLD_TOOL_ECOSYSTEMS" in p["hard_nonclaims"],p
+          PY
+      - name: Preserve live interface receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool-discovery-v4-apt-interface-v1
+          path: TOOL_DISCOVERY_V4_APT_INTERFACE_RESULT.json
+          if-no-files-found: error
