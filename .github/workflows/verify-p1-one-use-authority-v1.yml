@@ -1,0 +1,84 @@
+name: Verify P1 one-use failure-semantics authority
+on:
+  push:
+    branches: ["verify-p1-one-use-authority-20261003-sol"]
+    paths:
+      - "capsules/p1_one_use_authority_v1/**"
+      - ".github/workflows/verify-p1-one-use-authority-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact authority, workflow, and frozen dependency bytes
+        run: |
+          set -euo pipefail
+          C=capsules/p1_one_use_authority_v1
+          test "$(git hash-object "$C/canonical/governance/P1_ONE_USE_FAILURE_SEMANTICS_EXECUTION_AUTHORITY_V1.json")" = "ec8bc10097aac030966bf0a7d03f5bb5ff06c2da"
+          test "$(git hash-object "$C/.github/workflows/execute-p1-shared-failure-semantics-once.yml")" = "8e0c1b3adc1da56da8ed83bfc4459d5fea30caa6"
+          test "$(git hash-object "$C/canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json")" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_batch_preflight_v1.py")" = "13c33adda55f58d1eac913e63daa7f6ae1eb6a63"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_batch_v1.py")" = "695cfe3f283723a52bafb6299236a2d0378dc79e"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py")" = "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+          test "$(git hash-object "$C/canonical/runtime/contract_native_proof_suites.py")" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py")" = "28940387bd6c11671035ad9201e37bba13fd9bc9"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_proof_v6.py")" = "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+          test "$(git hash-object "$C/canonical/tests/test_p1_shared_failure_semantics_batch_v1.py")" = "7512a920c72d7bdeb2b072788e4c4bc8d2ff2d08"
+          test "$(git hash-object "$C/canonical/tests/test_p1_shared_failure_semantics_batch_preflight_v1.py")" = "2b0b7a8b3fe7017e1be0fa85bed0f10b72802337"
+      - name: Verify authority semantics and one-use workflow safety
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          C=pathlib.Path("capsules/p1_one_use_authority_v1")
+          a=json.loads((C/"canonical/governance/P1_ONE_USE_FAILURE_SEMANTICS_EXECUTION_AUTHORITY_V1.json").read_text())
+          w=(C/".github/workflows/execute-p1-shared-failure-semantics-once.yml").read_text()
+          assert a["status"]=="ACTIVE_ONE_USE__INDEPENDENT_PREFLIGHT_PASS__EXECUTION_AUTHORITY_TRUE__PROMOTION_FALSE"
+          assert a["authorized_observation"]=="P1_SHARED_SOURCE_BOUND_FAILURE_SEMANTICS_BATCH"
+          assert a["fresh_reality_units_authorized"]==1
+          assert a["selection"]["surface_count"]==3
+          assert a["selection"]["cases_per_surface"]==64
+          assert a["selection"]["total_cases"]==192
+          assert a["first_attempt_only"] is True and a["rerun_credit"] is False
+          assert a["terminal_v3_replay"] is False
+          assert a["execution_authority"] is True and a["promotion_authority"] is False
+          assert a["incremental_spend_usd"]==0
+          assert a["exact_inputs"]["execution_workflow_blob"]=="8e0c1b3adc1da56da8ed83bfc4459d5fea30caa6"
+          assert 'branches: [main]' in w
+          assert 'test "$GITHUB_RUN_ATTEMPT" = "1"' in w
+          assert 'cancel-in-progress: false' in w
+          assert '--beacon "$BEACON"' in w
+          assert 'fresh_reality_units_consumed":1' in w
+          assert 'rerun_credit":False' in w
+          assert 'promotion_authority":False' in w
+          assert 'workflow_dispatch' not in w
+          print("P1_ONE_USE_AUTHORITY_SEMANTICS_PASS")
+          PY
+      - name: Re-run zero-reality preflight and unit tests only
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/p1_one_use_authority_v1
+        run: |
+          set -euo pipefail
+          python -m unittest -v             canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1             canonical.tests.test_p1_shared_failure_semantics_batch_v1
+          python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1 > P1_PREFLIGHT.json
+          python - <<'PY'
+          import json
+          x=json.load(open("P1_PREFLIGHT.json"))
+          assert x["pass"] is True, x
+          assert x["new_reality_units_consumed"]==0, x
+          assert x["execution_authority"] is False, x
+          assert x["promotion_authority"] is False, x
+          print("P1_ZERO_REALITY_PREFLIGHT_PASS")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p1-one-use-authority-v1-verification
+          path: P1_PREFLIGHT.json
+          if-no-files-found: warn
