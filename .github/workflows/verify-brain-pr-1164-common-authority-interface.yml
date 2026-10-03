@@ -1,5 +1,7 @@
 name: Verify Brain PR 1164 common-authority Tool Discovery interface
 on:
+  push:
+    branches: [verify-brain-pr-1164-common-authority-interface]
   pull_request:
     branches: [main]
     paths:
