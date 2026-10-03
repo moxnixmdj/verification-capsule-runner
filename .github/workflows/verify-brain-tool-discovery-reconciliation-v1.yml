@@ -1,0 +1,131 @@
+name: Verify Brain tool-discovery closure reconciliation v1
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/brain_tool_discovery_reconciliation_v1/**'
+      - '.github/workflows/verify-brain-tool-discovery-reconciliation-v1.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify exact mirrored Brain blob identities
+        env:
+          EXPECTED_JSON: '{"capsules/brain_tool_discovery_reconciliation_v1/canonical/runtime/opus55_acceptance_residual_compiler_v2.py":"cae5bc3bfda9c77d7d7e5151127f55aafddb9522","capsules/brain_tool_discovery_reconciliation_v1/canonical/runtime/action_hypergraph_evidence_guard_v1.py":"2ddc7479b8e6cfc9320713983799f31354b3e855","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json":"562536d9ba3f245a6bd24490a1eb3b30f27e0c3a","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json":"f26d250f86e7f2ce18d790e451fe09bbacecb694","capsules/brain_tool_discovery_reconciliation_v1/canonical/reasoning/2026-10-02_EXACT_OPUS55_ZERO_COST_COMPARATOR_ROUTE_RECONCILIATION_V1.json":"f67e22cee5e6fce1ebfae92ebf0946f78fafcee1","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/OPUS55_PUBLIC_BAR_SCORE_READINESS_MATRIX_V1.json":"4e59e30461c9ff1bee1a9474627d5fb4074844b2","capsules/brain_tool_discovery_reconciliation_v1/canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V9.json":"c19c1ce7921fe260917afec265115297d81de20e","capsules/brain_tool_discovery_reconciliation_v1/canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json":"d04a65e42fbdc88a2bc473762369f08cc64d18ef","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"53e632b331d6958c34c5ac1f20cd888de666073d","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V1.json":"d762b0bf8e97717fb2294b90c7a9803cedd5b7dc","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/OPUS55_MATCHED_STRONGER_PROOF_SEARCH_SATURATION_20261002_V3.json":"461051ff25d2b55c03bf85488bb99d92130dac29","capsules/brain_tool_discovery_reconciliation_v1/canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json":"60a7c1139cad315d977bf5ed97e708cc5ec3fcc7","capsules/brain_tool_discovery_reconciliation_v1/canonical/verification/TOOL_DISCOVERY_CEILING_TRANSMUTATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"521d4c665fcb5bf1147ce0fe65ea62c0a1429bdf","capsules/brain_tool_discovery_reconciliation_v1/canonical/verification/TOOL_LEARNING_ATOMIC_CEILING_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"04cb0aa4b202b57062bc2057f7adf8791980e385","capsules/brain_tool_discovery_reconciliation_v1/canonical/verification/TB4_ATTAINABILITY_CUT_VERDICT_20261002_V1.json":"a7b0c692251b92819007c581b9fe84b75960cab7"}'
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          expected=json.loads(os.environ["EXPECTED_JSON"])
+          failures=[]
+          for path,want in expected.items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              if got!=want:
+                  failures.append(f"{path}: {got} != {want}")
+          if failures:
+              raise SystemExit("\n".join(failures))
+          print(f"EXACT_BLOB_IDENTITY_PASS {len(expected)}/{len(expected)}")
+          PY
+
+      - name: Replay residual compiler and assert exact atomic frontier
+        env:
+          PYTHONPATH: capsules/brain_tool_discovery_reconciliation_v1
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime.opus55_acceptance_residual_compiler_v2 import evaluate
+          root=Path("capsules/brain_tool_discovery_reconciliation_v1")
+          def load(p): return json.loads((root/p).read_text())
+          out=evaluate(
+            load("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json"),
+            load("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json"),
+            load("canonical/reasoning/2026-10-02_EXACT_OPUS55_ZERO_COST_COMPARATOR_ROUTE_RECONCILIATION_V1.json"),
+            load("canonical/governance/OPUS55_PUBLIC_BAR_SCORE_READINESS_MATRIX_V1.json"),
+          )
+          assert out["errors"]==[], out
+          proved=sum(r["proved"] for r in out["families"])
+          opened=sum(r["open"] for r in out["families"])
+          blocked=sum(r["blocked"] for r in out["families"])
+          assert (proved,opened,blocked)==(8,0,30), (proved,opened,blocked,out)
+          tool=next(r for r in out["families"] if r["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert (tool["predicate_count"],tool["proved"],tool["open"],tool["blocked"],tool["state"])==(3,3,0,0,"PROVED"), tool
+          assert out["terminal_promotion_allowed"] is False
+          print(json.dumps({"proved":proved,"open":opened,"blocked":blocked,"tool":tool},indent=2))
+          PY
+
+      - name: Verify ownership and terminal authority derived state
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("capsules/brain_tool_discovery_reconciliation_v1")
+          def load(p): return json.loads((root/p).read_text())
+          m=load("canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json")
+          verified=sorted(r["family"] for r in m["rows"] if r["status"]=="VERIFIED_OWNED_EQUAL_OR_BETTER")
+          expected=sorted(["EXACT_SYMBOLIC_COMPUTATION","LONG_HORIZON_MEMORY_AND_CONTINUITY","TOOL_DISCOVERY_SELECTION_AND_LEARNING"])
+          assert verified==expected, (verified,expected)
+          assert m["postwave_terminal_reconciliation"]["verified_owned_equal_or_better_count"]==3
+          assert m["postwave_terminal_reconciliation"]["acceptance_protocol_result_open_count"]==16
+          tool=next(r for r in m["rows"] if r["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert tool["postwave_opus55_acceptance_status"]=="PASS"
+          assert tool["postwave_ownership_credit"]=="VERIFIED_OWNED_EQUAL_OR_BETTER"
+
+          a=load("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          assert a["truth"]["opus55_acceptance"]=="3/19_PASS__16/19_OPEN"
+          assert a["truth"]["achieved"] is False
+          f=a["atomic_acceptance_frontier"]
+          assert (f["proved"],f["open_direct"],f["blocked"],f["total"])==(8,0,30,38)
+          assert f["authorized_acceptance_case_actions"]==[]
+          assert a["tb4_threshold_execution"]["execution_authorized"] is False
+          assert a["tb4_threshold_execution"]["maximum_attainable_successes"]==180
+          print("OWNERSHIP_AUTHORITY_RECONCILIATION_PASS")
+          PY
+
+      - name: Verify V9 receipt and TB4 revocation
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("capsules/brain_tool_discovery_reconciliation_v1")
+          def load(p): return json.loads((root/p).read_text())
+          v=load("canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V9.json")
+          assert (v["predicate_count"],v["proved_predicate_count"],v["open_predicate_count"],v["blocked_predicate_count"])==(38,8,0,30)
+          assert v["newly_proved_predicate"]["predicate_id"]=="TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR"
+          assert v["terminal_promotion_allowed"] is False
+          t=load("canonical/verification/TB4_ATTAINABILITY_CUT_VERDICT_20261002_V1.json")
+          assert t["result"]["attainability_state"]=="IMPOSSIBLE"
+          assert t["result"]["upper_bound_successes"]==180
+          assert t["result"]["required_successes"]==220
+          assert t["result"]["reality_execution_authorized"] is False
+          print("V9_AND_TB4_REVOCATION_PASS")
+          PY
+
+      - name: Verify matched-proof resaturation and live evidence guard
+        env:
+          PYTHONPATH: capsules/brain_tool_discovery_reconciliation_v1
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime.action_hypergraph_evidence_guard_v1 import evaluate
+          root=Path("capsules/brain_tool_discovery_reconciliation_v1")
+          def load(p): return json.loads((root/p).read_text())
+          s=load("canonical/governance/OPUS55_MATCHED_STRONGER_PROOF_SEARCH_SATURATION_20261002_V3.json")
+          assert s["reopen_required"] is False
+          assert s["remaining_matched_predicate_count"]==12
+          h=load("canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V1.json")
+          act=next(a for a in h["actions"] if a["id"]=="SEARCH_SCOPE_COMPLETE_STRONGER_PROOFS_FOR_MATCHED_RESIDUAL")
+          assert "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR" not in act["target_predicates"]
+          pre=next(p for p in act["preconditions"] if p["id"]=="TYPED_WITNESS_INDEX_OR_DIRECT_OBJECTIVE_GATE_INPUT_CHANGED_SINCE_LAST_SATURATION")
+          assert pre["satisfied"] is False
+          guard=evaluate(root,h)
+          assert guard["pass"], guard
+          assert guard["checked"]>=1
+          print(json.dumps(guard,indent=2))
+          PY
