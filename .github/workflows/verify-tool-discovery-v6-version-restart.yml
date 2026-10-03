@@ -1,0 +1,43 @@
+name: Verify Tool Discovery V6 version restart
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_v6_version_restart_20261003/**'
+      - '.github/workflows/verify-tool-discovery-v6-version-restart.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'capsules/tool_discovery_v6_version_restart_20261003/**'
+      - '.github/workflows/verify-tool-discovery-v6-version-restart.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/tool_discovery_v6_version_restart_20261003
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+            "canonical/runtime/tool_discovery_dynamic_candidate_v5.py": "42d096ef93e8ad06c4d1d5dfe730881bf45a2a72",
+            "canonical/runtime/tool_discovery_dynamic_candidate_v6.py": "2020b7c2dc750009a9cc363d0703184b9115cfa6",
+            "canonical/tests/test_tool_discovery_dynamic_candidate_v6.py": "c68a084c5a985c5b54a4f94f488a781b13feac97",
+            "canonical/governance/TOOL_DISCOVERY_DYNAMIC_V6_VERSION_RESTART_V1.json": "f276f7d5f9192af5857ebd3d211eb0dbfe2d35cd",
+          }
+          for path, want in expected.items():
+              data=Path(path).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==want,(path,got,want)
+              print(path,got)
+          PY
+      - name: Reproduce V5 counterexample and verify V6 repair
+        working-directory: capsules/tool_discovery_v6_version_restart_20261003
+        run: python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v6 -v
