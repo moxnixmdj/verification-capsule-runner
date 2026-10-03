@@ -1,11 +1,11 @@
 {
   "candidate_projection.json": {
     "brain_path": "canonical/governance/POST_DUAL_JUDGMENT_ZERO_REALITY_FRONTIER_V1.json",
-    "git_blob_sha": "c51e94ad168384206c14cf6df2fbd1c42fae3155"
+    "git_blob_sha": "3b62096fdba09a41096f9aba12f9ec04d810cac8"
   },
   "candidate_runtime.py": {
     "brain_path": "canonical/runtime/post_dual_judgment_zero_reality_frontier_v1.py",
-    "git_blob_sha": "35f0e7f56765e9a461e828adbcf58531b944f495"
+    "git_blob_sha": "410e4e1b7b29fa4b488f224c89f613896f35dd7a"
   },
   "candidate_tests.py": {
     "brain_path": "canonical/tests/test_post_dual_judgment_zero_reality_frontier_v1.py",
@@ -34,5 +34,13 @@
   "fixture/canonical/governance/TERMINAL_SCHEDULING_CURRENT_AUTHORITY_V1.json": {
     "brain_path": "canonical/governance/TERMINAL_SCHEDULING_CURRENT_AUTHORITY_V1.json",
     "git_blob_sha": "54be838a5a0a9698398893ad113641496d5051b8"
+  },
+  "fixture/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": {
+    "brain_path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json",
+    "git_blob_sha": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+  },
+  "fixture/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": {
+    "brain_path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json",
+    "git_blob_sha": "0ed075c1efa053fe6e4eb3519d9903cf63fcf163"
   }
 }
