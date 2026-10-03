@@ -1,0 +1,44 @@
+name: Verify TB4 carrier-independent bound V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tb4-carrier-independent-bound-v1.yml'
+      - 'candidate/tb4_carrier_independent_v1/**'
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d583807e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify carrier-independent fail lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,pathlib
+          root=pathlib.Path('candidate/tb4_carrier_independent_v1')
+          spec=importlib.util.spec_from_file_location('bound',root/'runtime.py')
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          inp=json.loads((root/'input.json').read_text())
+          out=mod.evaluate(inp)
+          assert out['pass'] is True,out
+          assert out['decision']=='FAIL_LOCKED',out
+          assert out['total_slots']==330,out
+          assert out['executable_slots']==215,out
+          assert out['required_successes']==220,out
+          assert out['remaining_executable_slots']==215,out
+          assert out['proof_route_ready'] is False,out
+          assert out['execution_authority'] is False,out
+          summary={'schema':'PROJECT_BRAIN_TB4_CARRIER_INDEPENDENT_BOUND_PUBLIC_VERIFICATION_V1','decision':out['decision'],'maximum_successes':215,'required_successes':220,'optimistic_upper_bound_percent':out['optimistic_upper_bound_percent'],'execution_authority':False,'fresh_acceptance_cases_consumed':0,'incremental_spend_usd':0}
+          pathlib.Path('/tmp/comment.md').write_text('TB4_CARRIER_INDEPENDENT_BOUND_V1\n\n```json\n'+json.dumps(summary,sort_keys=True)+'\n```\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+          gh pr comment "$PR_NUMBER" --repo moxnixmdj/verification-capsule-runner --body-file /tmp/comment.md

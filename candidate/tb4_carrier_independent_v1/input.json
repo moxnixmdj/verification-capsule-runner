@@ -1,0 +1,11 @@
+{
+  "metric_semantics_frozen": true,
+  "population_frozen": true,
+  "worst_case_assignment_admissible": true,
+  "metric_type": "BINARY_RATE",
+  "total_slots": 330,
+  "executable_slots": 215,
+  "observed_successes": 0,
+  "observed_failures": 0,
+  "threshold_percent": 66.4
+}
