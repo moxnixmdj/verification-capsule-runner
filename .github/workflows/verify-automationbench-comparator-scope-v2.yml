@@ -50,7 +50,7 @@ jobs:
           bp=next(x for x in protocols["protocols"] if x["family"]=="BUSINESS_WORKFLOW_AUTOMATION")
           assert "AutomationBench >= 40.0%" in bp["acceptance"]
 
-          r=next(x for x in readiness["surfaces"] if x["surface"]=="AutomationBench public 600")
+          r=next(x for x in readiness["rows"] if x["surface"]=="AutomationBench public 600")
           assert r["dataset"]=="PUBLIC_600_TASK_SET_FROZEN"
           assert r["scorer"]=="STRICT_BINARY_ASSERTION_METRIC_BOUND"
           assert r["score_producing_route_ready"] is False
