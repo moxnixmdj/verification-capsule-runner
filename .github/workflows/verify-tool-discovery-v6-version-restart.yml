@@ -1,16 +1,11 @@
 name: Verify Tool Discovery V6 version restart
 
 on:
-  pull_request:
-    paths:
-      - 'capsules/tool_discovery_v6_version_restart_20261003/**'
-      - '.github/workflows/verify-tool-discovery-v6-version-restart.yml'
   push:
-    branches: [main]
-    paths:
-      - 'capsules/tool_discovery_v6_version_restart_20261003/**'
-      - '.github/workflows/verify-tool-discovery-v6-version-restart.yml'
-  workflow_dispatch:
+    branches: [verify/tool-discovery-v6-isolated-20261003-sol]
+
+permissions:
+  contents: read
 
 jobs:
   verify:
