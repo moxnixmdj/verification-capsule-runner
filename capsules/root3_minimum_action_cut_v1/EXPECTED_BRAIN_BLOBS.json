@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT3_MINIMUM_ACTION_CUT_PUBLIC_CAPSULE_V1",
+  "brain_pr": 1446,
+  "brain_head": "2e45de3b5aea5e23d54329a3d2629b1e97c9316e",
+  "exact_brain_blobs": {
+    "canonical/runtime/root3_minimum_action_cut_v1.py": "15df315e46ab54fa72d898c50037d561289388bb",
+    "canonical/tests/test_root3_minimum_action_cut_v1.py": "a2625018471ba1e7abdc23965ae9a7efd4522bcf",
+    "canonical/governance/ROOT3_MINIMUM_ACTION_CUT_V1.json": "83bd276528b01a089e7e0f46f73a9bf271368cd5",
+    "canonical/governance/ROOT3_UNIVERSAL_SCOPE_CLOSURE_ACTIVATION_V1.json": "4cb0d963aa11205063d0119d9ae8fdb625f80e3c",
+    "canonical/governance/ROOT3_TARGET_POPULATION_COALESCENCE_V1.json": "5a908133af0beed0791ae573051917dba5454acd",
+    "canonical/governance/ROOT3_MATCHED_SUPERPORTFOLIO_MINIMUM_REALITY_BINDING_V1.json": "0fa75e451bba19754a4296283c0095e4182ca97d",
+    "canonical/governance/CURRENT_ROOT3_ZERO_REALITY_STRONGER_PROOF_SATURATION_V1.json": "bdc78fdc147a014e5d77d5daafb5434b1a4e878f",
+    "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json": "f6e264a0f7a63e1076be4bc4af7986f9aed07544",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V6.json": "5bb089582a5bc2ee4a44143c8d3a11e919fecdff"
+  }
+}
