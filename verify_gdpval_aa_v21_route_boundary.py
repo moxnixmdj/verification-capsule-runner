@@ -33,7 +33,7 @@ facts={
   "aa_one_repeat":bool(re.search(r"GDPval-AA v2\.1.{0,800}?220\s+tasks.{0,300}?\b1\b",aa,re.I)),
   "aa_pairwise_elo":"Pairwise comparison (Elo)" in aa,
   "aa_public_gold_openai_dataset":bool(re.search(r"public\s+gold\s+OpenAI\s+GDPval\s+dataset",aa,re.I)),
-  "hf_gdpval_identity":"Dataset for GDPval" in hf,
+  "hf_gdpval_identity":bool(re.search(r"GDPval:\s*Evaluating\s+AI\s+Model\s+Performance",hf,re.I)),
   "hf_220_tasks":bool(re.search(r"220\s+real-world\s+knowledge\s+tasks",hf,re.I)),
   "hf_44_occupations":bool(re.search(r"44\s+occupations",hf,re.I)),
   "hf_num_examples_220":bool(re.search(r"num_examples:\s*220",hf,re.I)),
