@@ -9,11 +9,11 @@
       "verifier_path": "capsules/residual_witness_retrieval_v1/residual_witness_retrieval_compiler_v1.py"
     },
     "canonical/runtime/bound_capabilities/research_query_focus.py": {
-      "blob_sha": "de4cc87be7f16b9a8b7f53661d4575feabfa98fb",
+      "blob_sha": "c55513f4bf78fc31c3bbb1229fefbd14c17ff56e",
       "verifier_path": "capsules/residual_witness_retrieval_v1/research_query_focus.py"
     },
     "canonical/runtime/bound_capabilities/objective_relevance_bm25.py": {
-      "blob_sha": "95953e090de431f29c9992558d0509aa76161440",
+      "blob_sha": "380e08142841fbc1e641f017b91f4c0fe5fb5680",
       "verifier_path": "capsules/residual_witness_retrieval_v1/objective_relevance_bm25.py"
     },
     "canonical/runtime/bound_capabilities/objective_claim_operand_binding.py": {
