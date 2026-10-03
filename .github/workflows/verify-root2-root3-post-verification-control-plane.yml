@@ -1,0 +1,108 @@
+name: Verify reconciled Root2 Root3 control plane
+on:
+  push:
+    branches:
+      - verify/root2-root3-post-verification-control-plane-20261003-sol
+    paths:
+      - ".github/workflows/verify-root2-root3-post-verification-control-plane.yml"
+      - "capsules/root2_root3_post_verification_control_plane/brain/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact reconciled Brain bytes
+        run: |
+          set -euo pipefail
+          ROOT=capsules/root2_root3_post_verification_control_plane/brain
+          test "$(git hash-object "$ROOT/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "f00fc74e08937d664c58fc7a0d388624f34c4fd5"
+          test "$(git hash-object "$ROOT/canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json")" = "c9e587eecc53bc3a3ebe254b36722c4c05d77afc"
+          test "$(git hash-object "$ROOT/canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json")" = "cb5d2dc1323c9302e77332b9e91320266571b224"
+          test "$(git hash-object "$ROOT/canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json")" = "47b4eb5df320ba90f10807e4a15e8d571e118580"
+          test "$(git hash-object "$ROOT/canonical/verification/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "48c2318aaffffec67855199523235e6943289fc6"
+          test "$(git hash-object "$ROOT/canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "1a67bc568944212c4d235a463c8bd7bea21b3993"
+          test "$(git hash-object "$ROOT/canonical/governance/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_CANDIDATE.json")" = "953161b63ae0fa220cea19ed2b884ab9dd98cc84"
+          test "$(git hash-object "$ROOT/canonical/governance/SYNTHESIS_OVERLAY_V3_REBIND_CANDIDATE_V1.json")" = "65c68de4a95ebdfd2ba3649c642748b0f9d8f2c7"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify pointer chain and fail-closed state
+        run: |
+          set -euo pipefail
+          cd capsules/root2_root3_post_verification_control_plane/brain
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          def L(p): return json.loads(Path(p).read_text())
+
+          t=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          f=L("canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json")
+          r3=L("canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json")
+          r2=L("canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json")
+          tv=L("canonical/verification/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          sv=L("canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          tc=L("canonical/governance/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_CANDIDATE.json")
+          sc=L("canonical/governance/SYNTHESIS_OVERLAY_V3_REBIND_CANDIDATE_V1.json")
+
+          assert t["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN", t["truth"]
+          assert t["truth"]["achieved"] is False
+          a=t["atomic_acceptance_frontier"]
+          assert (int(a["proved"]),int(a["unresolved"]),int(a["total"]))==(12,26,38), a
+
+          src=t["sources"]
+          assert src["root2_root3_minimum_execution_frontier_v1"]["git_blob_sha"]=="c9e587eecc53bc3a3ebe254b36722c4c05d77afc"
+          assert src["root3_residual_compression_v1"]["git_blob_sha"]=="cb5d2dc1323c9302e77332b9e91320266571b224"
+          assert src["root2_fixed_bar_route_inventory_v1"]["git_blob_sha"]=="47b4eb5df320ba90f10807e4a15e8d571e118580"
+          assert src["current_witness_target_totalization_v2_candidate"]["git_blob_sha"]=="953161b63ae0fa220cea19ed2b884ab9dd98cc84"
+          assert src["current_witness_target_totalization_v2_candidate"]["verification_git_blob_sha"]=="48c2318aaffffec67855199523235e6943289fc6"
+          syn=src["synthesis_overlay_v3_transport_candidate"]
+          assert syn["candidate_git_blob_sha"]=="65c68de4a95ebdfd2ba3649c642748b0f9d8f2c7"
+          assert syn["verification_git_blob_sha"]=="1a67bc568944212c4d235a463c8bd7bea21b3993"
+
+          assert f["exact_state"]["acceptance"]=="5/19_PASS__14/19_OPEN"
+          assert f["exact_state"]["proved_predicates"]==12
+          assert f["exact_state"]["unresolved_predicates"]==26
+          assert f["authority"]["root2_fixed_bar_route_inventory"]["git_blob_sha"]=="47b4eb5df320ba90f10807e4a15e8d571e118580"
+          assert f["authority"]["root3_residual_compression"]["git_blob_sha"]=="cb5d2dc1323c9302e77332b9e91320266571b224"
+          assert f["authority"]["current_witness_target_totalization_v2_verification"]["git_blob_sha"]=="48c2318aaffffec67855199523235e6943289fc6"
+          assert f["authority"]["synthesis_v3_rebind_verification"]["git_blob_sha"]=="1a67bc568944212c4d235a463c8bd7bea21b3993"
+          steps={x["step"]:x for x in f["minimum_execution_sequence"]}
+          assert steps[1]["status"]=="DISCHARGED__INDEPENDENT_PUBLIC_RUNNER_PASS"
+          assert steps[2]["status"]=="ACTIVE_CRITICAL_PATH"
+          assert steps[3]["status"]=="ACTIVE_PARALLEL_ZERO_REALITY_LANE"
+          assert "REBIND_EXISTING_SYNTHESIS" not in steps[2]["action"]
+
+          s=next(x for x in r3["compressed_residuals"] if x["predicate_id"]=="SYNTHESIS_MATCHED_QUALITY_COVERAGE_NONINFERIOR")
+          assert s["current_rebind_required"] is False
+          assert s["current_rebind_status"]=="INDEPENDENT_PUBLIC_RUNNER_PASS"
+          assert s["current_rebind_verification_git_blob_sha"]=="1a67bc568944212c4d235a463c8bd7bea21b3993"
+          assert s["current_residual"]=={
+              "missing_scope_relation": True,
+              "missing_atoms": ["metric:matched_quality"],
+              "missing_metric_bounds": ["matched_quality_noninferiority","required_claim_coverage_noninferiority"],
+          }
+
+          assert tv["independent_runner"]["conclusion"]=="success"
+          assert tv["verified"]["closed_target_count"]==0
+          assert tv["verified"]["residual_target_count"]==8
+          assert sv["verified"]["transported_proved_atom_count"]==7
+          assert sv["verified"]["missing_scope_relation"] is True
+          assert sv["verified"]["missing_atoms"]==["metric:matched_quality"]
+          assert sv["verified"]["missing_metric_bounds"]==["matched_quality_noninferiority","required_claim_coverage_noninferiority"]
+          assert sv["verified"]["implies_target"] is False
+          assert tc["fresh_reality_authority"] is False
+          assert sc["fresh_reality_authority"] is False
+
+          for doc in (t,f,r3,r2,tv,sv,tc,sc):
+              if "fresh_reality_authority" in doc: assert doc["fresh_reality_authority"] is False
+              if "promotion_authority" in doc: assert doc["promotion_authority"] is False
+              if "acceptance_credit_delta" in doc: assert doc["acceptance_credit_delta"]==0
+              if "family_credit_delta" in doc: assert doc["family_credit_delta"]==0
+
+          assert "VERIFY_CURRENT_8X12" not in t["next_terminal_action"]
+          assert "REBIND_EXISTING_SYNTHESIS" not in t["next_terminal_action"]
+          print("ROOT2_ROOT3_POST_VERIFICATION_CONTROL_PLANE_PASS")
+          PY
