@@ -1,0 +1,43 @@
+name: Verify Brain Universal Scope Closure Compiler V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_scope_closure_compiler_v1/**"
+      - ".github/workflows/verify-brain-universal-scope-closure-compiler-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/universal_scope_closure_compiler_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              raw=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact Brain blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Compile compiler
+        run: |
+          cd capsules/universal_scope_closure_compiler_v1
+          python -m py_compile canonical/runtime/universal_scope_closure_compiler_v1.py
+      - name: Run copied Brain regression suite
+        run: |
+          cd capsules/universal_scope_closure_compiler_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_universal_scope_closure_compiler_v1 -v
+      - name: Run independent adversarial verifier
+        run: |
+          cd capsules/universal_scope_closure_compiler_v1
+          export PYTHONPATH=.
+          python verify_independent.py
