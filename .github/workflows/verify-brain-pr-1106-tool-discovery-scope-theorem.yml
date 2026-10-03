@@ -25,6 +25,19 @@ jobs:
           cd capsules/brain_pr_1106_tool_discovery_scope_theorem
           export PYTHONPATH=.
           python -m canonical.runtime.tool_discovery_frozen_scope_universal_theorem_v1 > verdict.json
+      - name: Independently falsify frozen scope and policy
+        run: |
+          cd capsules/brain_pr_1106_tool_discovery_scope_theorem
+          python verify_independent_scope.py > independent-verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("independent-verdict.json"))
+          assert v["status"].startswith("PASS__INDEPENDENT"),v
+          assert v["exhaustive_small_state_cases"]==5050,v
+          assert v["target_preserved"] is True,v
+          assert v["open_domain_identity_exhaustion_claimed"] is False,v
+          print("INDEPENDENT PASS")
+          PY
       - name: Enforce theorem verdict
         run: |
           cd capsules/brain_pr_1106_tool_discovery_scope_theorem
