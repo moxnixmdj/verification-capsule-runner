@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_PR1217_VERIFICATION_TRIGGER_V3",
+  "brain_pr": 1217,
+  "brain_head": "4995dda44a0181b7cedf75aaf0adb76f62b09a81",
+  "verifier_capsule_commit": "8dc9d65222bf721f06bc5e96b69c21be3f418255",
+  "purpose": "TRIGGER_SYNTAX_CORRECT_ALIAS_REPAIRED_TB_SCIENCE_PATH_VERIFIER",
+  "prior_falsifications": [
+    {
+      "verifier_pr": 1215,
+      "run_id": 37099612645,
+      "reason": "SAFE_CANDIDATES_SCHEMA_ALIAS"
+    },
+    {
+      "verifier_pr": 1217,
+      "run_id": 37099811135,
+      "reason": "LITERAL_BACKSLASH_N_SYNTAX_DEFECT"
+    }
+  ],
+  "terminal_task_content_read": 0,
+  "terminal_trials_executed": 0,
+  "incremental_spend_usd": 0
+}
