@@ -1,0 +1,95 @@
+name: Verify Brain PR 1107 owned Tool Discovery interface V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1107_tool_discovery_owned_interface_v2/**"
+      - ".github/workflows/verify-brain-pr-1107-owned-interface-v2.yml"
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1107_tool_discovery_owned_interface_v2
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/runtime/tool_discovery_owned_interface_v2.py)" = "66c33bde3d8f8e0cbb5a14bde8993dc37a0c221e"
+          test "$(git hash-object canonical/tests/test_tool_discovery_owned_interface_v2.py)" = "0f959e4d601b2e0ac07af26c0f949138636489ca"
+          test "$(git hash-object canonical/tests/test_tool_discovery_v3_cheaper_unseen_counterexample_v1.py)" = "a1ab743f1df2c7935c2f0687ba7962065d58dd54"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_OWNED_COMPLETE_INTERFACE_INSTANCE_V2.json)" = "616609417d588ac8c7d6df1b0e595914b2a566bb"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json)" = "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7"
+
+      - name: Run owned-interface and V3 counterexample tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1107_tool_discovery_owned_interface_v2
+          export PYTHONPATH=.
+          python -m unittest             canonical.tests.test_tool_discovery_owned_interface_v2             canonical.tests.test_tool_discovery_v3_cheaper_unseen_counterexample_v1 -v
+
+      - name: Enforce exact frozen scope and seven interface properties
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1107_tool_discovery_owned_interface_v2
+          export PYTHONPATH=.
+          python - <<'PY'
+          import json
+          from canonical.runtime.tool_discovery_owned_interface_v2 import (
+              OwnedToolDiscoveryInterfaceV2, prove_instance,
+          )
+
+          protocol=json.load(open("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json",encoding="utf-8"))
+          row=next(x for x in protocol["protocols"] if x["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert row["proof_mode"]=="MATCHED_HIDDEN_TOOL_ECOSYSTEM_TRANSFER",row
+          assert "unknown tool discovery" in row["task_dimensions"],row
+          assert "frozen tool ecosystems with hidden capability variants" in row["acceptance"],row
+          assert "same frozen task population/harness/tool authority" in protocol["universal_rules"]["same_scope"],protocol["universal_rules"]
+
+          contract=json.load(open("canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json",encoding="utf-8"))
+          assert contract["instance_verified"] is False,contract
+          required=set(contract["required_properties"])
+
+          g=OwnedToolDiscoveryInterfaceV2([
+            {"tool_id":"cheap","cost":1.0,"available":True,"authorized":True,"capabilities":["CAP_A"]},
+            {"tool_id":"expensive","cost":10.0,"available":True,"authorized":True,"capabilities":["CAP_A"]},
+          ],epoch=9)
+          out=prove_instance(g)
+          assert out["status"].startswith("PASS__"),out
+          mapping={
+            "FINITE_DISCOVERY_SOURCE_SET_PER_DECISION_EPOCH":"finite_discovery_source_set_per_decision_epoch",
+            "DISCOVERY_RECEIPT_IDENTIFIES_QUERIED_SOURCE":"discovery_receipt_identifies_queried_source",
+            "DISCOVERY_RESULTS_MONOTONICALLY_ADD_VISIBLE_TOOL_IDENTITIES_WITHIN_EPOCH":"discovery_results_monotonically_add_visible_tool_identities_within_epoch",
+            "UNION_OF_AUTHORITATIVE_DISCOVERY_RESULTS_IS_COMPLETE_FOR_DECLARED_TARGET_SCOPE":"union_of_authoritative_discovery_results_is_complete_for_declared_target_scope",
+            "DISCOVERED_TOOL_METADATA_CORRECT_FOR_AVAILABILITY_AUTHORIZATION_COST_AND_CONSTRAINT_FIELDS":"discovered_tool_metadata_correct_for_availability_authorization_cost_and_constraint_fields",
+            "SAFE_CAPABILITY_PROBE_RECEIPTS_ARE_TRUTHFUL_AND_EPOCH_BOUND":"safe_capability_probe_receipts_are_truthful_and_epoch_bound",
+            "VERSION_EPOCH_STABLE_DURING_ONE_SELECTION_EPISODE_OR_RESTARTS_EPISODE":"version_epoch_stable_during_one_selection_episode_or_restarts_episode",
+          }
+          assert set(mapping)==required,(set(mapping),required)
+          assert all(out[v] is True for v in mapping.values()),out
+
+          # Regression: complete authority is materialized before V3 selection.
+          prior=[g.safe_probe("expensive","CAP_A",episode_epoch=9)]
+          action=g.next_action(required_capabilities=["CAP_A"],prior_probe_receipts=prior,episode_epoch=9)
+          assert action=={"action":"PROBE","tool_id":"cheap","capability":"CAP_A"},action
+          prior.append(g.safe_probe("cheap","CAP_A",episode_epoch=9))
+          action=g.next_action(required_capabilities=["CAP_A"],prior_probe_receipts=prior,episode_epoch=9)
+          assert action=={"action":"SELECT","tool_id":"cheap"},action
+
+          gov=json.load(open("canonical/governance/TOOL_DISCOVERY_OWNED_COMPLETE_INTERFACE_INSTANCE_V2.json",encoding="utf-8"))
+          assert gov["terminal_goal_achieved"] is False,gov
+          assert gov["capability_credit_delta"]==0 and gov["family_credit_delta"]==0,gov
+          assert gov["execution_authority"] is False and gov["promotion_authority"] is False,gov
+          print("owned Tool Discovery interface V2: PASS")
+          PY
