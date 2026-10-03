@@ -1,4 +1,4 @@
-name: Verify P1 V7 provenance mutation closure
+name: Verify P1 V7 provenance closure and minimum reality cut
 on:
   pull_request:
     branches: [main]
@@ -12,7 +12,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Run tests
-        run: python -m unittest -v canonical.tests.test_p1_v7_provenance_mutation_closure_v1
-      - name: Run audit
-        run: python canonical/runtime/p1_v7_provenance_mutation_closure_v1.py
+      - name: Verify V7 provenance mutation closure
+        run: |
+          python -m unittest -v canonical.tests.test_p1_v7_provenance_mutation_closure_v1
+          python canonical/runtime/p1_v7_provenance_mutation_closure_v1.py
+      - name: Verify exact minimum reality cut
+        run: |
+          python -m unittest -v canonical.tests.test_p1_minimum_reality_cut_verifier_v1
+          python canonical/runtime/p1_minimum_reality_cut_verifier_v1.py
