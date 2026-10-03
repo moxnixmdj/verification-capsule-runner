@@ -1,0 +1,75 @@
+name: Verify Brain PR 1158 terminal Tool Discovery interface
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1158_terminal_tool_discovery_interface/**"
+      - ".github/workflows/verify-brain-pr-1158-terminal-tool-discovery-interface.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1158_terminal_tool_discovery_interface
+          test "$(git hash-object canonical/runtime/tool_discovery_terminal_complete_interface_adapter_v1.py)" = "22a2344c2cb26050ce6bcf9e5bc114682c1c2f0f"
+          test "$(git hash-object canonical/tests/test_tool_discovery_terminal_complete_interface_adapter_v1.py)" = "13fab813810650eee17a534abb7bab7161e7142d"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_TERMINAL_COMPLETE_INTERFACE_ADAPTER_V1.json)" = "8919a633fb176ea3313c94a47286f8e0a4fc6bc9"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_TERMINAL_COMPLETE_INTERFACE_ADAPTER_V1.json)" = "36433e2c1805791192458627fab29015ef898627"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_proof.py)" = "2450a9644119c9fdf9c43307a1d115098d6ba592"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_proof_v2.py)" = "5e8a953864e13ec76768c3e8920644107c65a644"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_candidate.py)" = "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json)" = "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7"
+          test "$(git hash-object canonical/verification/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "5fcdc5ae35f51c40f312edbe5727284c9f6ca3dd"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json)" = "6bcabc0a7d0525532ce7b80e132278f7c99caa43"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json)" = "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7"
+          test "$(git hash-object canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json)" = "ec2d931860e7cd7d9f73a658706f8c33fca3a10d"
+      - name: Run focused interface tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1158_terminal_tool_discovery_interface
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_terminal_complete_interface_adapter_v1 -v
+      - name: Exhaust 314934 frozen decision states
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1158_terminal_tool_discovery_interface
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_terminal_complete_interface_adapter_v1 > verdict.json
+      - name: Enforce narrow zero-replay verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1158_terminal_tool_discovery_interface
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["status"].startswith("PASS__TERMINAL_BOUND_COMPLETE_INTERFACE_AND_POLICY_EQUIVALENCE_CANDIDATE"),v
+          assert v["complete_interface_instance_candidate"] is True,v
+          assert v["interface_is_external_to_policy"] is True,v
+          assert v["candidate_visible_initial_tool_identities"]==0,v
+          assert v["authoritative_source_count"]==1,v
+          assert all(v["interface_contract_properties"].values()),v
+          assert v["policy_equivalence_pass"] is True,v
+          assert v["policy_equivalence_states_checked"]==314934,v
+          assert v["terminal_population_binding"]["immutable_cases"]==180,v
+          assert v["terminal_population_binding"]["immutable_passes"]==180,v
+          assert v["terminal_population_binding"]["terminal_replay_consumed"]==0,v
+          assert v["terminal_result_transfer_candidate"] is True,v
+          assert v["whole_protocol_scope_proved"] is False,v
+          assert v["terminal_results_replayed"]==0 and v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Brain PR 1158 terminal-bound complete-interface candidate: PASS")
+          PY
