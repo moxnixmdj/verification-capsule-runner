@@ -1,0 +1,32 @@
+name: Verify Brain Root2 LiveBench Astra adapter v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_livebench_astra_adapter_v1/**"
+      - ".github/workflows/verify-brain-root2-livebench-astra-adapter-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile copied exact Brain runtime
+        run: |
+          cd capsules/root2_livebench_astra_adapter_v1
+          python -m py_compile canonical/runtime/astra_runtime.py canonical/runtime/root2_livebench_if_astra_inference_adapter_v1.py canonical/runtime/root2_external_task_entrypoint_v1.py
+      - name: Run exact copied Brain unit tests
+        run: |
+          cd capsules/root2_livebench_astra_adapter_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_root2_livebench_if_astra_inference_adapter_v1 canonical.tests.test_root2_external_task_entrypoint_v1 -v
+      - name: Run independent provenance-boundary verifier
+        run: |
+          cd capsules/root2_livebench_astra_adapter_v1
+          export PYTHONPATH=.
+          python verify_adapter.py
