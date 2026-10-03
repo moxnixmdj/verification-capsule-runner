@@ -1,0 +1,163 @@
+name: Verify Brain PR 1159 live-bound Tool Discovery V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1159_tool_discovery_live_bound_v3/**"
+      - ".github/workflows/verify-brain-pr-1159-live-bound-v3.yml"
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1159_tool_discovery_live_bound_v3
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OWNED_GATEWAY_SCOPE_CLOSURE_V1.json)" = "effb7f8949596cd66921210b9e71c89287441d29"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_LIVE_BOUND_AUTHORITY_INSTANCE_V3.json)" = "c3fe4890466fad3d6b2bf2061920cc9884019992"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json)" = "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7"
+          test "$(git hash-object canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json)" = "7badee4878700f2cd4176beb8319d2a6a0bdf782"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "7f5d16b1db69cb620954bc778e0ba6e15e687b75"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/runtime/tool_discovery_live_bound_authority_v3.py)" = "f7a8445ff70d7e971774a876da82177492fcb28c"
+          test "$(git hash-object canonical/tests/test_tool_discovery_live_bound_authority_v3.py)" = "c9b15cfa827f6acbbbc37fd77ed12700e0a29885"
+          test "$(git hash-object canonical/tests/test_tool_discovery_v3_cheaper_unseen_counterexample_v1.py)" = "a1ab743f1df2c7935c2f0687ba7962065d58dd54"
+
+      - name: Run candidate and preserved falsification tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1159_tool_discovery_live_bound_v3
+          export PYTHONPATH=.
+          python -m unittest             canonical.tests.test_tool_discovery_live_bound_authority_v3             canonical.tests.test_tool_discovery_v3_cheaper_unseen_counterexample_v1 -v
+
+      - name: Independently bind frozen protocol and exact interface properties
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1159_tool_discovery_live_bound_v3
+          export PYTHONPATH=.
+          python - <<'PY'
+          import json
+          from canonical.runtime import tool_discovery_live_bound_authority_v3 as live
+
+          p=json.load(open("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json",encoding="utf-8"))
+          row=next(x for x in p["protocols"] if x["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert row["proof_mode"]=="MATCHED_HIDDEN_TOOL_ECOSYSTEM_TRANSFER", row
+          assert "unknown tool discovery" in row["task_dimensions"], row
+          assert "frozen tool ecosystems with hidden capability variants" in row["acceptance"], row
+          assert "same frozen task population/harness/tool authority" in p["universal_rules"]["same_scope"]
+
+          contract=json.load(open("canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json",encoding="utf-8"))
+          assert contract["instance_verified"] is False, contract
+          verdict=live.prove_live_instance()
+          assert verdict["status"]=="PASS__LIVE_BOUND_TOOL_AUTHORITY_INSTANCE", verdict
+          assert verdict["tool_count"]==42, verdict
+          mapping={
+            "FINITE_DISCOVERY_SOURCE_SET_PER_DECISION_EPOCH":"FINITE_DISCOVERY_SOURCE_SET_PER_DECISION_EPOCH",
+            "DISCOVERY_RECEIPT_IDENTIFIES_QUERIED_SOURCE":"DISCOVERY_RECEIPT_IDENTIFIES_QUERIED_SOURCE",
+            "DISCOVERY_RESULTS_MONOTONICALLY_ADD_VISIBLE_TOOL_IDENTITIES_WITHIN_EPOCH":"DISCOVERY_RESULTS_MONOTONICALLY_ADD_VISIBLE_TOOL_IDENTITIES_WITHIN_EPOCH",
+            "UNION_OF_AUTHORITATIVE_DISCOVERY_RESULTS_IS_COMPLETE_FOR_DECLARED_TARGET_SCOPE":"UNION_OF_AUTHORITATIVE_DISCOVERY_RESULTS_IS_COMPLETE_FOR_DECLARED_TARGET_SCOPE",
+            "DISCOVERED_TOOL_METADATA_CORRECT_FOR_AVAILABILITY_AUTHORIZATION_COST_AND_CONSTRAINT_FIELDS":"DISCOVERED_TOOL_METADATA_CORRECT_FOR_AVAILABILITY_AUTHORIZATION_COST_AND_CONSTRAINT_FIELDS",
+            "SAFE_CAPABILITY_PROBE_RECEIPTS_ARE_TRUTHFUL_AND_EPOCH_BOUND":"SAFE_CAPABILITY_PROBE_RECEIPTS_ARE_TRUTHFUL_AND_EPOCH_BOUND",
+            "VERSION_EPOCH_STABLE_DURING_ONE_SELECTION_EPISODE_OR_RESTARTS_EPISODE":"VERSION_EPOCH_STABLE_DURING_ONE_SELECTION_EPISODE_OR_RESTARTS_EPISODE",
+          }
+          assert set(contract["required_properties"])==set(mapping), contract
+          assert all(verdict["contract_properties"][k] is True for k in mapping), verdict
+
+          # Independent registry invariants, not delegated to candidate verdict.
+          registry=json.load(open("canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",encoding="utf-8"))["capabilities"]
+          assert len(registry)==42
+          for cid,rec in registry.items():
+              assert rec["status"]=="VERIFIED_BOUND_CAPABILITY", cid
+              assert float(rec.get("incremental_spend_usd",0))==0, cid
+              assert isinstance(rec.get("verification"),dict) and rec["verification"], cid
+              assert isinstance(rec.get("provides"),list) and rec["provides"], cid
+          receipt=live.discover()
+          assert [x["tool_id"] for x in receipt["tools"]]==sorted(registry)
+          assert all("provides" not in x and "verification" not in x for x in receipt["tools"])
+          print("protocol + interface binding: PASS")
+          PY
+
+      - name: Exhaustively replay every live capability contract to least-cost selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1159_tool_discovery_live_bound_v3
+          export PYTHONPATH=.
+          python - <<'PY'
+          import json
+          from canonical.runtime import tool_discovery_live_bound_authority_v3 as live
+
+          registry=json.load(open("canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",encoding="utf-8"))["capabilities"]
+          all_caps=sorted({str(c) for r in registry.values() for c in r["provides"]})
+          receipt=live.discover()
+          epoch=live.authority_epoch()
+
+          def expected(required):
+              candidates=[]
+              req=set(required)
+              for tid,r in registry.items():
+                  if req.issubset(set(map(str,r["provides"]))):
+                      candidates.append((float(r.get("cost",1)),tid))
+              return min(candidates)[1] if candidates else None
+
+          def solve(required):
+              probes=[]
+              for _ in range(len(registry)*max(1,len(required))+3):
+                  action=live.next_action({
+                      "required_capabilities":required,
+                      "authority_discovery_receipt":receipt,
+                      "prior_probe_receipts":probes,
+                  })
+                  if action["action"]=="PROBE":
+                      probes.append(live.safe_probe(action["tool_id"],action["capability"],epoch=epoch))
+                      continue
+                  if action["action"]=="SELECT":
+                      return action["tool_id"],len(probes)
+                  if action["action"]=="ESCALATE":
+                      return None,len(probes)
+                  raise AssertionError(action)
+              raise AssertionError(("NONTERMINATING",required))
+
+          cases=[(c,) for c in all_caps]
+          # Pairwise required-capability cases stress multi-capability elimination.
+          for i,a in enumerate(all_caps):
+              for b in all_caps[i:]:
+                  if expected((a,b)) is not None:
+                      cases.append((a,b))
+
+          for required in cases:
+              got,n=solve(list(required))
+              exp=expected(required)
+              assert got==exp,(required,exp,got,n)
+          # An impossible capability must exhaust safely, never select.
+          got,n=solve(["__CAPABILITY_NOT_IN_LIVE_AUTHORITY__"])
+          assert got is None,(got,n)
+          print(json.dumps({"status":"PASS","cases":len(cases),"authority_tools":len(registry),"unique_capabilities":len(all_caps)},sort_keys=True))
+          PY
+
+      - name: Enforce zero credit before separate acceptance reduction
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1159_tool_discovery_live_bound_v3
+          python - <<'PY'
+          import json
+          g=json.load(open("canonical/governance/TOOL_DISCOVERY_LIVE_BOUND_AUTHORITY_INSTANCE_V3.json",encoding="utf-8"))
+          assert g["terminal_goal_achieved"] is False,g
+          assert g["current_acceptance_preserved"]=="3_OF_19_FAMILIES__8_OF_38_ATOMIC_PREDICATES",g
+          assert g["capability_credit_delta"]==0 and g["family_credit_delta"]==0,g
+          assert g["execution_authority"] is False and g["promotion_authority"] is False,g
+          print("zero-credit firewall: PASS")
+          PY
