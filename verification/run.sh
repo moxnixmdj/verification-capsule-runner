@@ -38,3 +38,5 @@ assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0 and v["te
 assert v["execution_authority"] is False and v["promotion_authority"] is False,v
 print("ACCEPTANCE_BACKPROP_V1_EXACT_ZERO_CREDIT_PASS")
 PY
+
+# isolated-dispatch-trigger-1
