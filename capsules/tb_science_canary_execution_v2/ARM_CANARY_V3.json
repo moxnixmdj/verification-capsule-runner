@@ -1,0 +1,38 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CANARY_ARM_V3",
+  "date": "2026-10-03",
+  "status": "ARMED",
+  "execution_authority": true,
+  "authority_blob": "ae5bc607b828e8f55092e80e0a806d5a496eb54b",
+  "current_terminal_authority_blob": "b4d601ff630e9bd62329b4c21504eb4f043ab523",
+  "brain_authority_merge_sha": "14ea3036c722787006891df093e6a74a70ec7996",
+  "authority_independent_verification": {
+    "workflow_run_id": 37109224014,
+    "artifact_id": 11268654272,
+    "artifact_digest": "sha256:53b725cc794caaa5867454184f1f874d11045f39e36a1791d68d9fe23dc9956c",
+    "conclusion": "success"
+  },
+  "execution_workflow_blob": "23219335778b310cfd9fcf88b6f7bf02129d6626",
+  "carrier_preflight": {
+    "workflow_run_id": 37109419959,
+    "conclusion": "success",
+    "exact_branch": "execute-tb-science-canary-v3b-20261003"
+  },
+  "authorized_slot_id": "terminal-bench-science/virtual-baseline-localization::trial-0",
+  "task_name": "terminal-bench-science/virtual-baseline-localization",
+  "task_digest": "sha256:18e64cb62b351e3861e1995bdc3ba08bba37f0ae3e645ee4b250714b6f0c00ee",
+  "retries": 0,
+  "replacement": false,
+  "denominator": 210,
+  "required_successes": 133,
+  "finalized_failures_before_execution": 4,
+  "remaining_failures_before_fail_lock": 74,
+  "incremental_spend_usd": 0,
+  "hard_rules": [
+    "THIS_COMMIT_IS_THE_SINGLE_EXECUTION_TRIGGER",
+    "NO_MANUAL_RERUN_CREDIT",
+    "NO_RETRY_NO_REPLACEMENT_NO_DENOMINATOR_SHRINK",
+    "ANY_INFRA_TIMEOUT_RESOURCE_INVALID_OR_MISSING_VERIFIER_RESULT_FINALIZES_THIS_SLOT_AS_ZERO",
+    "AUTO_REVOKE_AFTER_FINALIZATION"
+  ]
+}
