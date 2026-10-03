@@ -1,0 +1,25 @@
+name: Verify current acceptance fixed point v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/current_acceptance_fixed_point_v2/**"
+      - ".github/workflows/verify-current-acceptance-fixed-point-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify current fixed-point scheduler
+        run: |
+          cd capsules/current_acceptance_fixed_point_v2
+          export PYTHONPATH=.
+          python canonical/tests/test_current_acceptance_fixed_point_v2.py

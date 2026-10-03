@@ -1,0 +1,251 @@
+{
+  "schema": "PROJECT_BRAIN_OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2",
+  "date": "2026-10-02",
+  "status": "RECEIPT_SATURATION_COMPLETE__9_PROVED__3_BOUND_BLOCKERS__26_OTHER_UNRESOLVED__ZERO_DIRECT_ACCEPTANCE_CASE_ACTIONS_READY",
+  "objective": "Bind only content-addressed atomic acceptance evidence. Until saturation is complete, benchmark and matched-case execution remains forbidden.",
+  "saturation": {
+    "status": "COMPLETE",
+    "source_snapshot_sha": "5023cc222a44f99b57785f5954cc95a29b739193",
+    "receipt": "canonical/verification/DELEGATION_TEMPORAL_CEILING_TRANSMUTATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+    "receipt_sha": "5023cc222a44f99b57785f5954cc95a29b739193",
+    "proved_predicate_count": 9,
+    "bound_blocker_count": 3,
+    "unresolved_predicate_count": 29,
+    "new_reality_units_consumed": 0,
+    "rule": "COMPLETE_FOR_CURRENT_LEDGER__DELEGATION_TEMPORAL_CEILING_INDEPENDENTLY_VERIFIED__INVALIDATE_ON_AUTHORITY_CHANGE"
+  },
+  "claims": [
+    {
+      "predicate_id": "DELEGATION_ZERO_CRITICAL_COORDINATION_VIOLATIONS",
+      "state": "PROVED",
+      "proof_kind": "RECEIPT",
+      "source_path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+      "source_sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "132_OF_132_FROZEN_DELEGATION_DIRECT_CASES_PASS__SCORERS_REJECT_DUPLICATE_WORK_DEPENDENCY_VIOLATION_RESOURCE_CONFLICT_INVALID_CAPABILITY_ASSIGNMENT_WORKER_DOUBLE_BOOKING_EVIDENCE_OWNERSHIP_MISMATCH_AND_FANIN_LOSS",
+      "supporting_sources": [
+        {
+          "path": "canonical/runtime/delegation_whole_scope_proof_v2.py",
+          "sha": "928466401b36e4f3b09c517950cc050432a0616f"
+        },
+        {
+          "path": "canonical/runtime/delegation_structural_variety_proof_v3.py",
+          "sha": "f5e1f45519278ed2cafa27d23b8602b0a362a492"
+        }
+      ]
+    },
+    {
+      "predicate_id": "DELEGATION_SPEEDUP_NO_CORRECTNESS_TRADE",
+      "state": "PROVED",
+      "proof_kind": "RECEIPT",
+      "source_path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+      "source_sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "132_OF_132_FROZEN_DELEGATION_DIRECT_CASES_PASS__V2_SCORER_REQUIRES_EXACT_VALID_PLAN_AND_STRICT_ADVANTAGE_OVER_SERIAL_WALL_CLOCK_OR_NAIVE_FANOUT_COST",
+      "supporting_sources": [
+        {
+          "path": "canonical/runtime/delegation_whole_scope_proof_v2.py",
+          "sha": "928466401b36e4f3b09c517950cc050432a0616f"
+        },
+        {
+          "path": "canonical/runtime/delegation_structural_variety_proof_v3.py",
+          "sha": "f5e1f45519278ed2cafa27d23b8602b0a362a492"
+        }
+      ]
+    },
+    {
+      "predicate_id": "TOOL_LEARNING_SECOND_TASK_TRANSFER",
+      "state": "PROVED",
+      "proof_kind": "RECEIPT",
+      "source_path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+      "source_sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "180_OF_180_FROZEN_TOOL_DISCOVERY_DIRECT_CASES_PASS__SCORER_EXPLICITLY_REQUIRES_REUSE_OF_UNCHANGED_STAGE1_EVIDENCE_IN_STAGE2_AND_REJECTS_REDUNDANT_REPROBING_EXCEPT_AFTER_PUBLIC_VERSION_CHANGE",
+      "supporting_sources": [
+        {
+          "path": "canonical/runtime/tool_discovery_information_safe_proof_v2.py",
+          "sha": "5e8a953864e13ec76768c3e8920644107c65a644"
+        },
+        {
+          "path": "canonical/runtime/tool_discovery_information_safe_proof.py",
+          "sha": "2450a9644119c9fdf9c43307a1d115098d6ba592"
+        }
+      ]
+    },
+    {
+      "predicate_id": "SYNTHESIS_ZERO_UNSUPPORTED_MATERIAL_CLAIMS",
+      "state": "PROVED",
+      "proof_kind": "RECEIPT",
+      "source_path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+      "source_sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "T1_AND_T3_LOAD_BEARING_SYNTHESIS_RECEIPTS_PASS__FROZEN_P3_BINDING_REQUIRED_CHECK_INCLUDES_ZERO_UNSUPPORTED_MATERIAL_CLAIMS_AND_ANY_LOAD_BEARING_P3_FAILURE_BLOCKS_BEHAVIOR_PROOF",
+      "supporting_sources": [
+        {
+          "path": "canonical/governance/P3_SYNTHESIS_T1_T3_MULTIPLEX_TERMINAL_BINDING_V1.json",
+          "sha": "ad790afa864bd8f770c3d8a6e3ac901ed2843d26"
+        }
+      ]
+    },
+    {
+      "predicate_id": "ARTIFACT_MECHANICAL_GATES_CEILING",
+      "state": "PROVED",
+      "proof_kind": "ABSOLUTE_CEILING",
+      "source_path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+      "source_sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "objective_ceiling": true,
+      "brain_value": 1,
+      "objective_ceiling_value": 1,
+      "basis": "FROZEN_T1_NATIVE_ARTIFACT_AGGREGATE_8_DIRECT_INSTRUMENTATION_PASS__EXPLICIT_CLAIMED_SCOPE_DOCX_XLSX_PPTX_PDF_LOW_LEVEL_EDITS__BINDING_REQUIRES_FORMAT_REOPEN_STRUCTURE_AND_RENDER_PRESERVATION__STRUCTURAL_ORACLE_VERIFIES_DECLARED_EDIT_AND_NO_UNRELATED_MUTATION",
+      "supporting_sources": [
+        {
+          "path": "canonical/governance/NATIVE_ARTIFACT_T1_MULTIPLEX_TERMINAL_BINDING_V1.json",
+          "sha": "977e18ce2c19f7bb8a429a8f1c99407ff3000e92"
+        },
+        {
+          "path": "canonical/runtime/native_artifact_cross_format_proof_v1.py",
+          "sha": "904eb61171f5ee775ff7824c1be7778d7acc4a23"
+        },
+        {
+          "path": "canonical/runtime/native_artifact_render_preservation_proof_v1.py",
+          "sha": "39374e775d54cdc58315d7a1f877d834282a64f7"
+        }
+      ],
+      "scope_limit": "EXPLICIT_LOW_LEVEL_NATIVE_EDIT_PRESERVATION_FOR_DOCX_XLSX_PPTX_PDF_ONLY__NO_PROFESSIONAL_QUALITY_OR_SEMANTIC_TARGET_SELECTION_CREDIT"
+    },
+    {
+      "predicate_id": "TOOL_LEARNING_NO_UNSUPPORTED_PROMOTION",
+      "state": "PROVED",
+      "proof_kind": "RECEIPT",
+      "source_path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+      "source_sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "180_OF_180_FROZEN_TOOL_DISCOVERY_DIRECT_CASES_PASS__FROZEN_OBJECTIVE_BINDING_REQUIRES_EVIDENCE_BACKED_CAPABILITY_UPDATE_AND_NO_SELECTION_WITHOUT_CURRENT_POSITIVE_EVIDENCE",
+      "supporting_sources": [
+        {
+          "path": "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json",
+          "sha": "6bcabc0a7d0525532ce7b80e132278f7c99caa43"
+        },
+        {
+          "path": "canonical/runtime/tool_discovery_information_safe_proof_v2.py",
+          "sha": "5e8a953864e13ec76768c3e8920644107c65a644"
+        },
+        {
+          "path": "canonical/runtime/tool_discovery_information_safe_candidate.py",
+          "sha": "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
+        }
+      ]
+    },
+    {
+      "predicate_id": "COMPOSITION_COMPONENT_SCOPED_PROOFS",
+      "state": "EXTERNAL_BLOCKED",
+      "blocker": "INTERNAL_DEPENDENCY_GRAPH_INCOMPLETE",
+      "blocker_class": "INTERNAL_DEPENDENCY",
+      "discharge_condition": "ALL_ISOLATED_COMPONENTS_USED_BY_THE_FROZEN_MULTI_CAPABILITY_COMPOSITION_CLAIM_HAVE_SCOPE_COMPLETE_ACCEPTANCE_PROOF",
+      "basis": "ZERO_REALITY_DEPENDENCY_REDUCTION_EXECUTED__CURRENT_COMPONENT_ACCEPTANCE_GRAPH_CONTAINS_OPEN_OR_BLOCKED_COMPONENTS",
+      "source_path": "canonical/governance/OPUS55_DIRECT_SCOPE_AUDIT_RESIDUAL_DECOMPOSITION_V1.json",
+      "source_sha": "3ad720497287591fda2ebe9af17ee9d55ecd184e"
+    },
+    {
+      "predicate_id": "ARTIFACT_UNCOVERED_FORMAT_SCOPE_AUDIT",
+      "state": "PROVED",
+      "proof_kind": "RECEIPT",
+      "source_path": "canonical/verification/ARTIFACT_UNCOVERED_SCOPE_PARTITION_PROOF_20261002_V1.json",
+      "source_sha": "11aaa9915906511acf9f8a48e02b993b670fe44d",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "FROZEN_ARTIFACT_CONTRACT_SCOPE_PARTITIONS_INTO_NATIVE_MECHANICAL_PRESERVATION_ALREADY_PROVED_PLUS_PROFESSIONAL_DELIVERABLE_JUDGMENT_COVERED_BY_THE_SEPARATE_AA_BRIEFCASE_PUBLIC_BAR_SCOPE__NO_EXTRA_DIRECT_QUALITY_LEAF",
+      "performance_credit": "ZERO__AA_BRIEFCASE_GE_1822_REMAINS_REQUIRED"
+    },
+    {
+      "predicate_id": "FINANCE_UNCOVERED_SCOPE_AUDIT",
+      "state": "EXTERNAL_BLOCKED",
+      "blocker": "NO_VERIFIED_BRAIN_OWNED_OR_CONFIGURED_OPERATIVE_FINANCE_JUDGMENT_ROUTE_FOR_SUPERVISORY_COMPLIANCE_AND_DOCUMENT_INTERPRETATION_LEAVES",
+      "blocker_class": "INTERNAL_OPERATIVE_SOURCE_MISSING",
+      "discharge_condition": "ADMIT_A_BRAIN_OWNED_OR_PERMISSIVELY_INTERNALIZED_LOAD_BEARING_CONFIGURATION_THROUGH_SOURCE_GATE_V2__THEN_RUN_ONLY_THE_TWO_FROZEN_DIRECT_ORACLE_LEAVES",
+      "source_path": "canonical/governance/OPUS55_DIRECT_JUDGMENT_SOURCE_BLOCKERS_V1.json",
+      "source_sha": "a76ee612853c01a8605d2029387d407fb75571c5",
+      "family": "FINANCIAL_ANALYSIS"
+    },
+    {
+      "predicate_id": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+      "state": "EXTERNAL_BLOCKED",
+      "blocker": "NO_VERIFIED_BRAIN_OWNED_OR_CONFIGURED_OPERATIVE_UNKNOWN_DOMAIN_JUDGMENT_ROUTE_FOR_CROSS_DOMAIN_TRANSFER_AND_CALIBRATED_ABSTENTION",
+      "blocker_class": "INTERNAL_OPERATIVE_SOURCE_MISSING",
+      "discharge_condition": "INTERNALIZE_OR_BIND_A_LOAD_BEARING_BRAIN_CONFIGURATION__PASS_SOURCE_GATE_V2__THEN_RUN_ONLY_THE_TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES",
+      "source_path": "canonical/governance/OPUS55_DIRECT_JUDGMENT_SOURCE_BLOCKERS_V1.json",
+      "source_sha": "a76ee612853c01a8605d2029387d407fb75571c5",
+      "family": "UNKNOWN_DOMAIN_ADAPTATION"
+    },
+    {
+      "predicate_id": "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",
+      "state": "PROVED",
+      "proof_kind": "ABSOLUTE_CEILING",
+      "source_path": "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json",
+      "source_sha": "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "objective_ceiling": true,
+      "brain_value": 1,
+      "objective_ceiling_value": 1,
+      "basis": "FULL_FROZEN_PREWAVE_TOOL_DISCOVERY_COMPARATOR_DELETION_ROUTE_PASSED_180_OF_180__FAMILY_MAPS_EXACTLY_TO_THIS_SINGLE_RESIDUAL_CONTRACT__100_PERCENT_IS_OBJECTIVE_UPPER_CEILING_SO_MATCHED_OPUS_SUCCESS_AND_VALID_ROUTE_BOUNDS_CANNOT_EXCEED_BRAIN",
+      "supporting_sources": [
+        {
+          "path": "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json",
+          "sha": "6bcabc0a7d0525532ce7b80e132278f7c99caa43"
+        },
+        {
+          "path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+          "sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc"
+        },
+        {
+          "path": "canonical/verification/TERMINAL_CEILING_WITNESS_LIFTER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+          "sha": "a1c702c79d2b29bfc9c4d5a238f9c260bc204770"
+        }
+      ]
+    },
+    {
+      "predicate_id": "DELEGATION_TERMINAL_SUCCESS_NONINFERIOR",
+      "state": "PROVED",
+      "proof_kind": "ABSOLUTE_CEILING",
+      "source_path": "canonical/governance/DELEGATION_ACCEPTANCE_CEILING_WITNESS_V1.json",
+      "source_sha": "cb3b7c4b6c4e1f2a0471c6b6be72c4ca9ebddc80",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "objective_ceiling": true,
+      "brain_value": 1,
+      "objective_ceiling_value": 1,
+      "basis": "TEMPORALLY_TRANSPORTED_FULL_FROZEN_DELEGATION_OBJECTIVE_ROUTE_PASSED_132_OF_132__LOAD_BEARING_BINDING_SCOPE_PROTOCOL_CONTRACT_AND_EXECUTOR_IDENTITIES_PRESERVED__INDEPENDENT_TRANSPORT_AND_4_OF_19_TRANSMUTATION_VERIFICATIONS_PASS__100_PERCENT_BINARY_OBJECTIVE_CEILING_DOMINATES_MATCHED_OPUS_TERMINAL_SUCCESS_BOUND",
+      "supporting_sources": [
+        {
+          "path": "canonical/verification/DELEGATION_TEMPORAL_PROOF_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+          "sha": "5278abb7fcaa6b97189b67598c75e4df395e1788"
+        },
+        {
+          "path": "canonical/verification/DELEGATION_TEMPORAL_CEILING_TRANSMUTATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
+          "sha": "5023cc222a44f99b57785f5954cc95a29b739193"
+        },
+        {
+          "path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
+          "sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    "NO_CLAIM_WITHOUT_CONTENT_ADDRESSED_SOURCE_PATH_AND_SHA",
+    "NO_PROVED_CLAIM_WITHOUT_INDEPENDENT_OR_OBJECTIVE_EVIDENCE",
+    "NO_PROVED_CLAIM_WITHOUT_SCOPE_COMPLETE_TRUE",
+    "BEHAVIORAL_19_OF_19_PASS_DOES_NOT_AUTOPOPULATE_ATOMIC_ACCEPTANCE_CLAIMS",
+    "NO_NEW_REALITY_BEFORE_RECEIPT_SATURATION_COMPLETE"
+  ],
+  "capability_credit_delta": 0,
+  "family_credit_delta": 0
+}
