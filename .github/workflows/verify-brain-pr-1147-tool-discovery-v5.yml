@@ -1,0 +1,27 @@
+name: Verify Brain PR 1147 Tool Discovery V5
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1147_tool_discovery_v5/**"
+      - ".github/workflows/verify-brain-pr-1147-tool-discovery-v5.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact candidate regression suite
+        working-directory: capsules/brain_pr_1147_tool_discovery_v5
+        env:
+          PYTHONPATH: .
+        run: python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v5 -v
+      - name: Run independent V4 counterexample and V5 finite-world verifier
+        working-directory: capsules/brain_pr_1147_tool_discovery_v5
+        env:
+          PYTHONPATH: .
+        run: python verify.py
