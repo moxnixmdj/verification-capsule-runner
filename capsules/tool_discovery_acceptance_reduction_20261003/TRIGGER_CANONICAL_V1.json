@@ -1,0 +1,10 @@
+{
+  "schema": "PROJECT_BRAIN_PUBLIC_VERIFIER_TRIGGER_V1",
+  "date": "2026-10-03",
+  "purpose": "EXECUTE_EXACT_CANONICAL_TOOL_DISCOVERY_ACCEPTANCE_INPUT_THROUGH_VERIFIED_TRANSMUTER",
+  "canonical_input_blob_sha": "4c7d170418bb95828a23538709aa304a00db6746",
+  "transmuter_blob_sha": "39b5611e53485674b29e2a05da91b89801bc5aa6",
+  "expected_acceptance": "4_OF_19_CLOSED__15_OPEN",
+  "expected_newly_closed_family": "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+  "new_reality_units_consumed": 0
+}
