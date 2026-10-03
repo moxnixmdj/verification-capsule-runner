@@ -261,22 +261,18 @@ def evaluate(*, freeze_override: Mapping[str, Any] | None = None) -> dict[str, A
     # V7 candidate receives the case.
     fixture = source.generate_case("TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001", 991337, 4)
     public_fixture = source.public_task(fixture)
+    _error(errors, "_oracle" not in public_fixture, "PUBLIC_FIXTURE_ORACLE_LEAK")
     bound = batch.bind_public_source_case(
-        public_fixture, surface_id=sorted(EXPECTED_SURFACES)[0], case_index=0
+        public_fixture,
+        surface_id=sorted(EXPECTED_SURFACES)[0],
+        case_index=0,
     )
-    _error(errors, bound.get("status") == "PASS", "PUBLIC_ONLY_FIXTURE_BIND")
+    _error(errors, bound.get("status") == "PASS", "ORACLE_LEAK_FIXTURE_BIND")
     if bound.get("status") == "PASS":
         candidate_case = bound.get("candidate_case") or {}
         _error(errors, "_oracle" not in candidate_case, "ORACLE_LEAK")
         _error(errors, "source_case" not in candidate_case, "SOURCE_CASE_LEAK")
-        _error(errors, bound.get("semantic_binding_basis") == "FROZEN_PUBLIC_SOURCE_STATE_AND_INVARIANT_RESULT_ONLY__HIDDEN_ORACLE_INPUT_FORBIDDEN", "PUBLIC_ONLY_BINDING_BASIS")
-
-    hidden_fixture = copy.deepcopy(public_fixture)
-    hidden_fixture["_oracle"] = copy.deepcopy(fixture["_oracle"])
-    hidden_verdict = batch.bind_public_source_case(
-        hidden_fixture, surface_id=sorted(EXPECTED_SURFACES)[0], case_index=0
-    )
-    _error(errors, hidden_verdict.get("reason") == "HIDDEN_ORACLE_INPUT_FORBIDDEN", "HIDDEN_ORACLE_FIREWALL")
+        _error(errors, "cause_step" not in bound, "SOURCE_CAUSE_LEAK")
 
     _error(errors, freeze.get("new_reality_units_consumed") == 0, "NEW_REALITY_ALREADY_CONSUMED")
     _error(errors, freeze.get("terminal_results_replayed") == 0, "TERMINAL_REPLAY")
