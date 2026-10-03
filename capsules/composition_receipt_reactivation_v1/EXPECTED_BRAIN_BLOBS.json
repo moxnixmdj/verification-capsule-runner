@@ -3,7 +3,7 @@
   "brain_repository": "moxnixmdj/brain",
   "brain_ref": "worker/composition-receipt-reactivation-v1-20261003-0326",
   "exact_brain_blobs": {
-    "canonical/runtime/composition_receipt_reactivation_v1.py": "e0f9cde1abec557412240585a6a025c3b38d8b4f",
+    "canonical/runtime/composition_receipt_reactivation_v1.py": "d2068c8db64ed998988794ab44b0ad5b099b6686",
     "canonical/tests/test_composition_receipt_reactivation_v1.py": "02bef0007e2594f3196bd3f9c5aa8669ad00cbd7",
     "canonical/governance/COMPOSITION_RECEIPT_REACTIVATION_V1.json": "260c7f15c124eef429573b4048c99aa54e267859",
     "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
