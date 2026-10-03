@@ -11,8 +11,8 @@ import types
 ROOT=pathlib.Path(__file__).resolve().parent
 FILES={
  "input":("subjects/tool_discovery_multilingual_retrieval_input_v1.json","a244205a759144bbe01f25c2c9101ef6045efd79"),
- "benchmark":("subjects/tool_discovery_retrieval_false_negative_benchmark_v1.py","52e9765feadcbf772f5a9d2a4b734355e2f898f7"),
- "tests":("subjects/test_tool_discovery_retrieval_false_negative_benchmark_v1.py","0388e57d0aeadc9c0db8fcff73222a8aa30c8d2a"),
+ "benchmark":("subjects/tool_discovery_retrieval_false_negative_benchmark_v1.py","0e8779e7acdf7a5a64c55403e7db795165027f6d"),
+ "tests":("subjects/test_tool_discovery_retrieval_false_negative_benchmark_v1.py","ecd53d3e3d7cad22ee247a35b574330d4d791139"),
  "compiler":("subjects/residual_witness_retrieval_compiler_v1.py","9daa8d590f3356b3fc51eccf75c56cbf515239e4")
 }
 
@@ -57,8 +57,8 @@ assert out["supported_fixture_found_count"]==24,out
 assert out["supported_fixture_missed_count"]==0,out
 assert out["unsupported_boundary_count"]==5,out
 assert all(x["nonexistence_claim_authorized"] is False for x in out["unsupported_boundaries"]),out
-for hint in ("CJK","ARABIC","CYRILLIC","LATIN"):
-    assert hint in out["language_hints"],(hint,out["language_hints"])
+for key in ("zh","ar","ru","ja","ko","es","fr","de","pt","hi","tr","id","vi"):
+    assert key in out["explicit_language_variant_keys"],(key,out["explicit_language_variant_keys"])
 assert out["capability_credit_delta"]==0 and out["family_credit_delta"]==0,out
 assert out["execution_authority"] is False and out["promotion_authority"] is False,out
 
