@@ -30,9 +30,9 @@ jobs:
             "canonical/governance/TOOLATHLON_VERIFIED_TOOL_DISCOVERY_ROUTE_FREEZE_V1.json": "f55ae78014e1dc6f92f2696d33b7249251047f1c",
             "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
             "canonical/verification/TOOL_DISCOVERY_INFORMATION_SAFE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "d4ce5641e564f330bff32f6ffb7f184e87d8495d",
-            "canonical/governance/TOOL_DISCOVERY_MATCHED_ROUTE_PRECONDITION_REDUCTION_V1.json": "2ffd349b2558de1b43279872b7fe6bde7ea7a315",
-            "canonical/runtime/tool_discovery_matched_route_precondition_reducer_v1.py": "fffaaf959212e086c18db51270803c96866e9a64",
-            "canonical/tests/test_tool_discovery_matched_route_precondition_reducer_v1.py": "0d9e7be84743060050ebb12c0860c684c47e990c",
+            "canonical/governance/TOOL_DISCOVERY_MATCHED_ROUTE_PRECONDITION_REDUCTION_V1.json": "b4c1b7b81e162af2d4d9db692a7251e12e526e3f",
+            "canonical/runtime/tool_discovery_matched_route_precondition_reducer_v1.py": "b2e5807ecb905e74c1de4c5a6c1fb443a0a0f071",
+            "canonical/tests/test_tool_discovery_matched_route_precondition_reducer_v1.py": "e7ba98e37e3493163f96b73e994117f11f521b12",
           }
           for path, want in expected.items():
               data=Path(path).read_bytes()
