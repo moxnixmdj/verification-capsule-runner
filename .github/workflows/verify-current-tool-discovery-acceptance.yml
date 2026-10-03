@@ -1,0 +1,23 @@
+name: Verify current canonical Tool Discovery acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_current_acceptance_20261003/**'
+      - '.github/workflows/verify-current-tool-discovery-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact canonical 4-of-19 reduction
+        working-directory: capsules/tool_discovery_current_acceptance_20261003
+        run: python verify_current_acceptance.py
