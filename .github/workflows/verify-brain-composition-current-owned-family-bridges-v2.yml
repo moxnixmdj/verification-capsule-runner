@@ -23,7 +23,7 @@ jobs:
           m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
           for src,expected in m["exact_brain_blobs"].items():
               data=pathlib.Path(src).read_bytes()
-              got=hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+              got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
               assert got==expected,(src,got,expected)
           print("exact Brain blobs: PASS")
           PY
@@ -36,7 +36,7 @@ jobs:
           for name,row in g["source_authorities"].items():
               p=row["path"]; expected=row["git_blob_sha"]
               data=pathlib.Path(p).read_bytes()
-              got=hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+              got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
               assert got==expected,(name,p,got,expected)
           assert g["canonical_base_commit"]=="0fa257b9a4940edc01d3503902a06d6a0027e2d1"
           print("governance source bindings: PASS")
