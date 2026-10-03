@@ -1,0 +1,17 @@
+name: Verify terminal scheduling V13 current pointer
+on:
+  push:
+    branches:
+      - verify/scheduling-v13-current-pointer-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_v13_current_pointer.py
