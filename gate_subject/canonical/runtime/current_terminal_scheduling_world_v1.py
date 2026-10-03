@@ -201,15 +201,15 @@ def evaluate(
         errors.append("AUTHORITY_CONTRACT_WORLD_NOT_CURRENT")
     if truth.get("behavioral_families") != "19/19_PROVISIONAL_BEHAVIORAL_PASS__P1_SCOPE_QUARANTINE_CLEARED__STRICT_OPUS55_ACCEPTANCE_SEPARATE":
         errors.append("AUTHORITY_BEHAVIORAL_WORLD_NOT_CURRENT")
-    if truth.get("opus55_acceptance") != "3/19_PASS__16/19_OPEN":
-        errors.append("AUTHORITY_ACCEPTANCE_WORLD_NOT_3_OF_19")
+    if truth.get("opus55_acceptance") != "4/19_PASS__15/19_OPEN":
+        errors.append("AUTHORITY_ACCEPTANCE_WORLD_NOT_4_OF_19")
 
     if len(registry_ids) != 38:
         errors.append(f"REGISTRY_COUNT_NOT_38:{len(registry_ids)}")
-    if len(proved) != 8:
-        errors.append(f"PROVED_COUNT_NOT_8:{len(proved)}")
-    if len(unresolved) != 30:
-        errors.append(f"UNRESOLVED_COUNT_NOT_30:{len(unresolved)}")
+    if len(proved) != 11:
+        errors.append(f"PROVED_COUNT_NOT_11:{len(proved)}")
+    if len(unresolved) != 27:
+        errors.append(f"UNRESOLVED_COUNT_NOT_27:{len(unresolved)}")
 
     scheduled_frontier = scheduling.get("frontier")
     scheduled_hypergraph = scheduling.get("action_hypergraph")
