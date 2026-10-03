@@ -1,0 +1,143 @@
+name: Execute P1 terminal shared batch V1
+
+on:
+  push:
+    branches: ["critical/p1-terminal-batch-v1-20261003"]
+    paths:
+      - ".github/workflows/execute-p1-terminal-shared-batch-v1.yml"
+      - "ARM_P1_TERMINAL_SHARED_BATCH_V1.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p1-terminal-shared-batch-v1
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify exact canonical activation and execution bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/P1_SHARED_FAILURE_SEMANTICS_ONE_USE_EXECUTION_ACTIVATION_V1.json)" = "adde681aef00e7c65be60555b93add6dfcd963f0"
+          test "$(git hash-object canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json)" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
+          test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_batch_preflight_v1.py)" = "13c33adda55f58d1eac913e63daa7f6ae1eb6a63"
+          test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_batch_v1.py)" = "695cfe3f283723a52bafb6299236a2d0378dc79e"
+          test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py)" = "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+          test "$(git hash-object canonical/runtime/contract_native_proof_suites.py)" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          test "$(git hash-object canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py)" = "28940387bd6c11671035ad9201e37bba13fd9bc9"
+          test "$(git hash-object canonical/runtime/trajectory_failure_typed_ir_proof_v6.py)" = "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+          test "$(git hash-object canonical/tests/test_p1_shared_failure_semantics_batch_v1.py)" = "7512a920c72d7bdeb2b072788e4c4bc8d2ff2d08"
+          test "$(git hash-object canonical/tests/test_p1_shared_failure_semantics_batch_preflight_v1.py)" = "2b0b7a8b3fe7017e1be0fa85bed0f10b72802337"
+          python - <<'PY'
+          import json
+          a=json.load(open("canonical/governance/P1_SHARED_FAILURE_SEMANTICS_ONE_USE_EXECUTION_ACTIVATION_V1.json"))
+          assert a["status"]=="ACTIVE__ONE_FIRST_ATTEMPT_SHARED_BATCH_AUTHORIZED__ZERO_ACCEPTANCE_CREDIT"
+          assert a["carrier"]["repository"]=="moxnixmdj/verification-capsule-runner"
+          assert a["carrier"]["branch"]=="critical/p1-terminal-batch-v1-20261003"
+          assert a["carrier"]["workflow_path"]==".github/workflows/execute-p1-terminal-shared-batch-v1.yml"
+          assert a["one_use_contract"]["execution_count_allowed"]==1
+          assert a["one_use_contract"]["execution_count_used"]==0
+          assert a["one_use_contract"]["fresh_reality_units_consumed"]==0
+          assert a["one_use_contract"]["total_cases"]==192
+          assert a["execution_authority"] is True and a["promotion_authority"] is False
+          PY
+
+      - name: Re-run zero-reality preflight
+        run: |
+          set -euo pipefail
+          python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1 canonical.tests.test_p1_shared_failure_semantics_batch_v1
+          python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1 > P1_PUBLIC_CARRIER_PREFLIGHT.json
+          python - <<'PY'
+          import json
+          x=json.load(open("P1_PUBLIC_CARRIER_PREFLIGHT.json"))
+          assert x["pass"] is True,x
+          assert x["fresh_reality_units_consumed"]==0,x
+          assert x["execution_authority"] is False,x
+          assert x["promotion_authority"] is False,x
+          PY
+
+      - name: Gate case generation on separate arm file
+        id: arm
+        run: |
+          set -euo pipefail
+          if [ ! -f ARM_P1_TERMINAL_SHARED_BATCH_V1.json ]; then
+            echo "armed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python - <<'PY'
+          import json
+          a=json.load(open("ARM_P1_TERMINAL_SHARED_BATCH_V1.json"))
+          assert a["schema"]=="PROJECT_BRAIN_P1_PUBLIC_CARRIER_ARM_V1"
+          assert a["status"]=="ARMED"
+          assert a["activation_blob"]=="adde681aef00e7c65be60555b93add6dfcd963f0"
+          assert a["authorized_observation"]=="P1_SHARED_SOURCE_BOUND_FAILURE_SEMANTICS_BATCH"
+          assert a["total_cases"]==192
+          assert a["fresh_reality_units_authorized"]==1
+          assert a["retries"]==0
+          assert a["replacement"] is False
+          PY
+          echo "armed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Consume exactly one fresh P1 reality unit
+        if: steps.arm.outputs.armed == 'true'
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          BEACON="GITHUB_ACTIONS_RUN_ID=${GITHUB_RUN_ID};ATTEMPT=${GITHUB_RUN_ATTEMPT}"
+          python -m canonical.runtime.p1_shared_failure_semantics_batch_v1 --beacon "$BEACON" > P1_RAW_BATCH_RESULT.json
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          raw=json.load(open("P1_RAW_BATCH_RESULT.json"))
+          assert raw["cases"]==192,raw
+          assert raw["passes"]+raw["failures"]==192,raw
+          assert raw["terminal_v3_replayed"]==0,raw
+          assert raw["incremental_spend_usd"]==0,raw
+          assert raw["fresh_reality_units_consumed"]==0,raw
+          out={
+            "schema":"PROJECT_BRAIN_P1_PUBLIC_CARRIER_ONE_USE_EXECUTION_RESULT_V1",
+            "status":"FINALIZED_EVIDENCE_ONLY__INDEPENDENT_TRANSPORT_ADJUDICATION_REQUIRED",
+            "authorized_observation":"P1_SHARED_SOURCE_BOUND_FAILURE_SEMANTICS_BATCH",
+            "activation_blob":"adde681aef00e7c65be60555b93add6dfcd963f0",
+            "github_run_id":int(os.environ["GITHUB_RUN_ID"]),
+            "github_run_attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
+            "github_head_sha":os.environ["GITHUB_SHA"],
+            "beacon_sha256":raw["beacon_sha256"],
+            "cases":raw["cases"],
+            "passes":raw["passes"],
+            "failures":raw["failures"],
+            "wilson_95_lower_all":raw["wilson_95_lower_all"],
+            "by_surface":raw["by_surface"],
+            "fresh_reality_units_consumed":1,
+            "terminal_v3_replayed":0,
+            "incremental_spend_usd":0,
+            "execution_authority_consumed":True,
+            "rerun_credit":False,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False,
+            "raw_result_path":"P1_RAW_BATCH_RESULT.json"
+          }
+          Path("P1_AUTHORIZED_BATCH_RESULT.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p1-terminal-shared-batch-v1
+          path: |
+            P1_PUBLIC_CARRIER_PREFLIGHT.json
+            P1_RAW_BATCH_RESULT.json
+            P1_AUTHORIZED_BATCH_RESULT.json
+          if-no-files-found: warn
+          retention-days: 90
