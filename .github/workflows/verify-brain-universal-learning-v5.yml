@@ -1,0 +1,23 @@
+name: Verify Brain Universal Learning V5
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v5/**"
+      - ".github/workflows/verify-brain-universal-learning-v5.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run V5 test contract
+        run: |
+          cd capsules/universal_learning_v5
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_universal_learning_recursive_abstraction_v5 -v
