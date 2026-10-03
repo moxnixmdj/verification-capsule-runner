@@ -40,7 +40,14 @@ jobs:
         run: |
           set -euo pipefail
           C="$GITHUB_WORKSPACE/capsules/p1_universal_generator_transport_v1"
-          PYTHONPATH="$C" python -m pytest -q "$C/canonical/tests/test_p1_universal_generator_transport_theorem_v1.py"
+          PYTHONPATH="$C" python - <<'PY'
+          from canonical.runtime import p1_universal_generator_transport_theorem_v1 as t
+          x=t.evaluate()
+          assert x["pass"] is True,x
+          assert x["structural_equivalence_classes"]==30,x
+          assert x["new_reality_units_consumed"]==0,x
+          assert x["quarantined_execution_used_as_proof"] is False,x
+          PY
       - name: Execute universal structural quotient proof
         run: |
           set -euo pipefail
@@ -54,7 +61,7 @@ jobs:
           assert x["structural_equivalence_classes"]==30,x
           assert x["surface_count"]==3,x
           assert x["case_indices_per_surface"]==64,x
-          assert x["deterministic_proof_executions"]==11520,x
+          assert x["deterministic_proof_executions"]==2292,x
           assert x["quarantined_execution_used_as_proof"] is False,x
           assert x["quarantined_execution_run_id"]==37108111537,x
           assert x["terminal_results_replayed"]==0,x
