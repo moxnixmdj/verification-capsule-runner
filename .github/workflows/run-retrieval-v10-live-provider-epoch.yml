@@ -1,0 +1,49 @@
+name: Run Retrieval V10 live provider epoch
+on:
+  push:
+    branches:
+      - verify/retrieval-v10-live-provider-epoch-20261003
+permissions:
+  contents: read
+jobs:
+  live-epoch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact live epoch runner
+        run: test "$(git hash-object subjects/v10/retrieval_live_provider_epoch_v1.py)" = "36d271a7483b7b86ece42d74216611a2e2da43b9"
+      - name: Execute live public provider epoch
+        run: python subjects/v10/retrieval_live_provider_epoch_v1.py > retrieval_v10_live_epoch.json
+      - name: Validate live epoch structure
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open("retrieval_v10_live_epoch.json",encoding="utf-8"))
+          assert p["schema"]=="PROJECT_BRAIN_RETRIEVAL_LIVE_PROVIDER_EPOCH_V1"
+          assert p["episode_count"]==12, p["episode_count"]
+          assert p["event_count"]==30, p["event_count"]
+          assert p["source_count"]==9, p["source_count"]
+          assert p["task_class_count"]==6, p["task_class_count"]
+          events=p["events"]
+          successes=[x for x in events if x["status"]=="SUCCESS"]
+          sufficient=[x for x in events if x["verified_sufficient_candidate_ids"]]
+          sources={x["source_id"] for x in successes}
+          assert len(successes)>=18, len(successes)
+          assert len(sources)>=6, sources
+          assert len(sufficient)>=5, len(sufficient)
+          assert all(x["latency_seconds"]>=0 for x in events)
+          assert all(x["request_count"]==1 for x in events)
+          assert p["incremental_spend_usd"]==0
+          print("successful_events",len(successes))
+          print("successful_sources",sorted(sources))
+          print("sufficient_events",len(sufficient))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-v10-live-epoch
+          path: retrieval_v10_live_epoch.json
+          if-no-files-found: error
+          retention-days: 30
