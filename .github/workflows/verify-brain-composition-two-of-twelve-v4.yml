@@ -1,0 +1,27 @@
+name: Verify Brain composition two-of-twelve V4
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/composition_two_of_twelve_v4/**"
+      - ".github/workflows/verify-brain-composition-two-of-twelve-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Revalidate current-source memory component proof
+        run: python capsules/composition_memory_bridge_v2/verify.py
+      - name: Revalidate current-source delegation component proof
+        run: python capsules/composition_delegation_bridge_v1/verify.py
+      - name: Verify exact V4 two-of-twelve composition slice
+        run: python capsules/composition_two_of_twelve_v4/verify.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: composition-component-proof-slice-v4
+          path: capsules/composition_two_of_twelve_v4/composition-component-proof-slice-v4.json
