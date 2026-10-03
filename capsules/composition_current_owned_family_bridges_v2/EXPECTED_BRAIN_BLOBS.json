@@ -2,9 +2,9 @@
   "schema": "BRAIN_COMPOSITION_CURRENT_OWNED_FAMILY_BRIDGES_V2_PUBLIC_VERIFIER_INPUT_V1",
   "brain_repository": "moxnixmdj/brain",
   "brain_pr": 1098,
-  "brain_ref": "4e2458c7270f5306825f59549b74c0e2e7d56d08",
+  "brain_ref": "656e916d6d8918cc45929346fe6e99edd87f9c37",
   "exact_brain_blobs": {
-    "canonical/runtime/composition_current_owned_family_bridges_v2.py": "63a33068054c89ad0698e5eb73fbba240552f71e",
+    "canonical/runtime/composition_current_owned_family_bridges_v2.py": "e8ea9d838e921fd7888abafe955f62b4413cbb27",
     "canonical/tests/test_composition_current_owned_family_bridges_v2.py": "849b943b09c4e50677c13da275d1b5d71feee1ac",
     "canonical/governance/COMPOSITION_CURRENT_OWNED_FAMILY_BRIDGES_V2.json": "e6b1ea661c8654c75173af4e37791ec7cc661bec",
     "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json": "661a57f839101fbf54c7e4edc76166c65ce9327d",
