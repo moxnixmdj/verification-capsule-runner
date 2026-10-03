@@ -14,7 +14,7 @@ and verify_command "test -s /tmp/brain_science_synthetic".
 Do not provide finish_summary yet."""
 
 planned = planner.plan(PROMPT, timeout_s=30)
-raw = planner.extract_json_object(planned["text"])
+raw = planner.normalize_proposal_object(planner.extract_json_object(planned["text"]))
 requirements, candidates, finish_summary = science._extract_contract(raw, None)
 
 assert requirements == ["R1"], requirements
