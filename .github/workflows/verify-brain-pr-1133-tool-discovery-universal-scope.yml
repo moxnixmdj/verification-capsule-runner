@@ -1,0 +1,75 @@
+name: Verify Brain PR 1133 Tool Discovery universal scope
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1133_tool_discovery_universal_scope/**"
+      - ".github/workflows/verify-brain-pr-1133-tool-discovery-universal-scope.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1133_tool_discovery_universal_scope
+          test "$(git hash-object canonical/runtime/tool_universe_gateway_v2.py)" = "bb76780c78ae1a43cb102222fa60f2d19b0ce852"
+          test "$(git hash-object canonical/tests/test_tool_universe_gateway_v2.py)" = "e9051452592227d5e1f46314e812fadc9ba8c1fa"
+          test "$(git hash-object canonical/runtime/tool_discovery_legacy_v3_transport_v1.py)" = "fb1510b9dfec8e96c49de2ca228630686195e14b"
+          test "$(git hash-object canonical/tests/test_tool_discovery_legacy_v3_transport_v1.py)" = "45e272fe3c322a5687b3bb7a2d15406e0e1337c3"
+          test "$(git hash-object canonical/runtime/tool_discovery_v3_owned_gateway_bridge_v1.py)" = "05c94c839981485bfdd542699db5dd0bb8065fcb"
+          test "$(git hash-object canonical/tests/test_tool_discovery_v3_owned_gateway_bridge_v1.py)" = "af74201e956c3c89093d1376b132546c35bb966d"
+          test "$(git hash-object canonical/runtime/tool_discovery_universal_scope_certificate_v1.py)" = "e8806284397876734a9a51c07fe83c7da8b30601"
+          test "$(git hash-object canonical/tests/test_tool_discovery_universal_scope_certificate_v1.py)" = "eb790708222f84959207e6309c0ffc3cb6b2217f"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_UNIVERSAL_SCOPE_CERTIFICATE_V1.json)" = "f6e3ed4f08f193576db2ce9dc62a0c68b3f00894"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OWNED_DYNAMIC_V3_UNIVERSAL_SCOPE_V1.json)" = "9f2ffc993e44ec9137dd799d620cfaa5a6d08c79"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_candidate.py)" = "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_proof.py)" = "2450a9644119c9fdf9c43307a1d115098d6ba592"
+          test "$(git hash-object canonical/runtime/tool_discovery_information_safe_proof_v2.py)" = "5e8a953864e13ec76768c3e8920644107c65a644"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json)" = "7885a827b1483bfb38315c1f492848f7e4680285"
+          test "$(git hash-object canonical/verification/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "5fcdc5ae35f51c40f312edbe5727284c9f6ca3dd"
+      - name: Run adversarial and transport tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1133_tool_discovery_universal_scope
+          export PYTHONPATH=.
+          python -m unittest \
+            canonical.tests.test_tool_universe_gateway_v2 \
+            canonical.tests.test_tool_discovery_legacy_v3_transport_v1 \
+            canonical.tests.test_tool_discovery_v3_owned_gateway_bridge_v1 \
+            canonical.tests.test_tool_discovery_universal_scope_certificate_v1 -v
+      - name: Execute universal scope certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1133_tool_discovery_universal_scope
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_universal_scope_certificate_v1 > verdict.json
+      - name: Enforce universal zero-credit verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1133_tool_discovery_universal_scope
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["universal_scope_proved"] is True,v
+          assert v["scope_atom_satisfied_candidate"] is True,v
+          assert v["basis_kind"]=="UNIVERSAL_FORMAL_SCOPE_PROOF",v
+          assert v["uses_empirical_generalization"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Brain PR 1133 Tool Discovery universal scope: PASS")
+          PY
