@@ -1,11 +1,11 @@
 {
   "candidate_runtime.py": {
     "brain_path": "canonical/runtime/adaptive_terminal_closure_controller_v1.py",
-    "git_blob_sha": "5ab26b7c0520f0588d9045821b7dff3fe37cb256"
+    "git_blob_sha": "2c15aeef745ac3b0e3a6eaa578f0d7893e935bd9"
   },
   "candidate_tests.py": {
     "brain_path": "canonical/tests/test_adaptive_terminal_closure_controller_v1.py",
-    "git_blob_sha": "ca7db7158646b7c4415fd2800095ca7b9452694a"
+    "git_blob_sha": "df33a45f233f749af501c22c0a8597ba6066ea22"
   },
   "fixture/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": {
     "brain_path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json",
