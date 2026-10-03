@@ -113,9 +113,10 @@ def main():
  o=obligations(); bad=[k for k,v in o.items() if not v]
  m1=C.read_text().replace("if sources:","if False and sources:",1)
  m2=I.read_text().replace("missing=sorted(all_ids-available_coverage)","missing=[]",1)
+ m1c=re.sub(r"\\s+","",m1); m2c=re.sub(r"\\s+","",m2)
  mutation_ok=(
-  re.sub(r"\s+","",m1).find("ifFalseandsources:")>=0
-  and "missing=sorted(all_ids-available_coverage)" not in re.sub(r"\s+","",m2)
+  "ifsources:" not in m1c
+  and "missing=sorted(all_ids-available_coverage)" not in m2c
  )
  try:t=transitions(); terr=None
  except Exception as e:t={};terr=type(e).__name__+":"+str(e)[:1000]
