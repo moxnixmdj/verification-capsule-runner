@@ -1,0 +1,13 @@
+{
+  "schema": "BRAIN_UNIVERSAL_ACTIVE_TRANSFER_LEARNER_V2_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1401,
+  "brain_ref": "feature/universal-learning-v2-active-transfer-20261003",
+  "brain_head_sha": "e439e8b9b49cb93f4e194b89b69afeda864f3922",
+  "exact_brain_blobs": {
+    "canonical/runtime/universal_active_transfer_learner_v2.py": "5203884803bf75e3e5486e556509a09143f7e551",
+    "canonical/tests/test_universal_active_transfer_learner_v2.py": "a4ffb78ccbdd68966c50490f4fa7faa6ce6de58f",
+    "canonical/governance/UNIVERSAL_ACTIVE_TRANSFER_LEARNER_V2.json": "745efa82236170513e5f46998c790b0b31991fe2",
+    "canonical/verification/UNIVERSAL_LEARNING_CONTRACT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "2bff1082b81755ff5f8e8f0e97587090cc873283"
+  }
+}
