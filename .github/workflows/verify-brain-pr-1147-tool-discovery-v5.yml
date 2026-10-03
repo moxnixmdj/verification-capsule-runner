@@ -1,0 +1,39 @@
+name: Verify Brain PR 1147 Tool Discovery V5
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1147_tool_discovery_v5/**"
+      - ".github/workflows/verify-brain-pr-1147-tool-discovery-v5.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain candidate identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1147_tool_discovery_v5
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v5.py)" = "f4e076626b2aca63059a271bed71759ba6e1b741"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v5.py)" = "08888a94998ccba49aa31a4928d66e6bd987fa85"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V3.json)" = "d00afbdf2f0ff09bba32b5b29aa5bd2c8938732f"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_V5_CONVERGED_SOUNDNESS_REPAIR_V1.json)" = "1712bae87ec22648e782050c059f748b4860f121"
+      - name: Compile exact V5
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1147_tool_discovery_v5
+          python -m py_compile canonical/runtime/tool_discovery_dynamic_candidate_v5.py canonical/tests/test_tool_discovery_dynamic_candidate_v5.py
+      - name: Run adversarial soundness suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1147_tool_discovery_v5
+          python -m unittest -v canonical.tests.test_tool_discovery_dynamic_candidate_v5
