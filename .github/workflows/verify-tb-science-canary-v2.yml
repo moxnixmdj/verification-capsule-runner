@@ -1,0 +1,21 @@
+name: Verify TB-Science one-slot canary V2
+on:
+  push:
+    branches: ["science-canary-v2-check"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact canary selection and current target
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python capsules/science_canary_v2/verify.py | tee TB_SCIENCE_CANARY_V2_CHECK.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-canary-v2-check
+          path: TB_SCIENCE_CANARY_V2_CHECK.json
