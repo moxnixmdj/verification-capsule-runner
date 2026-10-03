@@ -29,8 +29,8 @@ jobs:
             "canonical/tests/test_tool_universe_gateway_v2.py": "e9051452592227d5e1f46314e812fadc9ba8c1fa",
             "canonical/runtime/tool_discovery_legacy_v3_transport_v1.py": "fb1510b9dfec8e96c49de2ca228630686195e14b",
             "canonical/tests/test_tool_discovery_legacy_v3_transport_v1.py": "45e272fe3c322a5687b3bb7a2d15406e0e1337c3",
-            "canonical/runtime/tool_discovery_v3_owned_gateway_bridge_v1.py": "708519ca6bfe6772fd54145f4a2002154bfc5f77",
-            "canonical/tests/test_tool_discovery_v3_owned_gateway_bridge_v1.py": "29cddd2f4a1e682d435f0aff3741925d25bdbffd",
+            "canonical/runtime/tool_discovery_v3_owned_gateway_bridge_v1.py": "2ee4bc46f43c2d7cc12f12109648835376126484",
+            "canonical/tests/test_tool_discovery_v3_owned_gateway_bridge_v1.py": "9b9e2aaf8eca189715b6377e1d4a47a48c5ad124",
             "canonical/runtime/tool_discovery_dynamic_candidate_v3.py": "bbbee4d6baf8df937543644397abba38a67dce62",
             "canonical/runtime/tool_discovery_information_safe_candidate.py": "64c02edd568d95ec5ed54b7b8122183ce5b82e17",
             "canonical/runtime/tool_discovery_information_safe_proof.py": "2450a9644119c9fdf9c43307a1d115098d6ba592",
@@ -38,9 +38,9 @@ jobs:
             "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
             "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "7885a827b1483bfb38315c1f492848f7e4680285",
             "canonical/verification/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "5fcdc5ae35f51c40f312edbe5727284c9f6ca3dd",
-            "canonical/runtime/tool_discovery_universal_scope_certificate_v1.py": "3006acc1d0f5182f8c7c0a92a101b5f4b3277764",
+            "canonical/runtime/tool_discovery_universal_scope_certificate_v1.py": "784fd8d70976b14366cbf561df3fd9808f2bf5fd",
             "canonical/tests/test_tool_discovery_universal_scope_certificate_v1.py": "eb790708222f84959207e6309c0ffc3cb6b2217f",
-            "canonical/governance/TOOL_DISCOVERY_UNIVERSAL_SCOPE_CERTIFICATE_V1.json": "f4824ce8938f6e50e50e1487bd607c2de0337064",
+            "canonical/governance/TOOL_DISCOVERY_UNIVERSAL_SCOPE_CERTIFICATE_V1.json": "a28db020eed1a278a6f9f3ad36f4440f423b4c93",
           }
           for path, want in expected.items():
               data = Path(path).read_bytes()
