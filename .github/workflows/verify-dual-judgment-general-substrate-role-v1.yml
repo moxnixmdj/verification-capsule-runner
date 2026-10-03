@@ -1,0 +1,44 @@
+name: Verify dual judgment general substrate role V1
+
+on:
+  push:
+    branches: ["verify/dual-judgment-general-substrate-role-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-dual-judgment-general-substrate-role-v1.yml"
+      - "capsules/dual_judgment_general_substrate_role_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-dual-judgment-general-substrate-role-v1.yml"
+      - "capsules/dual_judgment_general_substrate_role_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run exact zero-reality role qualification
+        working-directory: capsules/dual_judgment_general_substrate_role_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/DUAL_JUDGMENT_GENERAL_SUBSTRATE_ROLE_QUALIFICATION_V1.json)" = "189b2e85692268962037bad7f5e7a22f59fe5920"
+          test "$(git hash-object canonical/runtime/dual_judgment_general_substrate_role_v1.py)" = "13ffcb3903858594ede096182610f819d8b38fe8"
+          test "$(git hash-object canonical/tests/test_dual_judgment_general_substrate_role_v1.py)" = "dba4f434f9e741e4468ea412c4d79824edbdd291"
+          PYTHONPATH=. python -m canonical.runtime.dual_judgment_general_substrate_role_v1 > /tmp/verdict.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/verdict.json"))
+          assert x["pass"] is True, x
+          assert x["general_substrate_test_pass"] is True
+          assert x["source_gate_v2_pass"] is True
+          assert x["direct_oracle_execution_authority"] is True
+          assert len(x["requirements_eligible_to_close"]) == 2
+          assert x["new_reality_units_consumed"] == 0
+          assert x["acceptance_predicate_delta"] == 0
+          assert x["ownership_delta"] == 0
+          print("DUAL_JUDGMENT_GENERAL_SUBSTRATE_ROLE_V1_PASS")
+          PY
