@@ -1,0 +1,54 @@
+name: Verify Retrieval V11 stratified live arena
+on:
+  push:
+    branches:
+      - verify/retrieval-v11-stratified-live-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v1.py)" = "ae22852836f61dd0f9691bbd89dbb4680aefa917"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v2.py)" = "8fb64595ba6c8872f6086d2c226758afb4b7e493"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v11.py)" = "ba798ede7a6d32eeda7984cc1e524cfcf9532a0b"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v11.py)" = "cb6704b4a2f2a824a79a98342753c8a6c050236b"
+      - name: Run deterministic V11 tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v11.py
+      - name: Run live V11 arena
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v11.py > retrieval_v11_live_output.json
+          cat retrieval_v11_live_output.json
+      - name: Validate live output semantics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("retrieval_v11_live_output.json"))
+          assert x["schema"]=="PROJECT_BRAIN_RETRIEVAL_LIVE_PROVIDER_ARENA_V11"
+          assert x["task_count"]==30
+          assert x["successful_task_count"]>0
+          assert x["answer_key_identity_used_for_query_generation"] is False
+          assert x["open_world_completeness_claim"] is False
+          assert x["execution_authority"] is False
+          assert x["promotion_authority"] is False
+          print("V11_LIVE_SEMANTICS_PASS")
+          print("SUMMARY",json.dumps({
+            "successful":x["successful_task_count"],
+            "failed_retryable":x["failed_retryable_task_count"],
+            "hits":x["target_hit_count"],
+            "misses":x["target_miss_count"],
+            "recall_on_success":x["target_recall_on_successful_tasks"],
+            "miss_episode_ids":x["miss_episode_ids"],
+            "failed_episode_ids":x["failed_episode_ids"],
+            "difficulty_metrics":x["difficulty_metrics"],
+            "provider_metrics":x["provider_metrics"],
+          },sort_keys=True))
+          PY
