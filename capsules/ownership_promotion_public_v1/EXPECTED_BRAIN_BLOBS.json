@@ -1,0 +1,34 @@
+{
+  "schema": "PROJECT_BRAIN_OWNERSHIP_PROMOTION_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "f02cc4c81b6de97c2bc7d0adb57cb22653001b22",
+  "exact_brain_blobs": {
+    "canonical/runtime/ownership_promotion_compiler_v1.py": "3bc0be3ecb84896001df1aa87985613ea07a9dc5",
+    "canonical/runtime/ownership_promotion_independent_verifier_v1.py": "d042bc4d2f663214fe268ec8304dd4ccf05f0dca",
+    "canonical/tests/test_ownership_promotion_compiler_v1.py": "1f8c9f7cbec0f33533acdab5a050207f5df7d646",
+    "canonical/governance/OWNERSHIP_PROMOTION_BATCH_V1.json": "c2c055a0b17e0f878880c4bb3e8f78eaed2386be",
+    "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json": "58eb5032206fdfc4fc918dc44ede370f255cdb27",
+    "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json": "c02a4214a49332889fa84b0e8b7c8565f07e55ba",
+    "canonical/runtime/delegation_whole_scope_candidate_v2.py": "f1a93ee66d90093de61dc17c6ebf2e24073df522",
+    "canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py": "28940387bd6c11671035ad9201e37bba13fd9bc9",
+    "canonical/runtime/tool_discovery_information_safe_candidate.py": "64c02edd568d95ec5ed54b7b8122183ce5b82e17",
+    "canonical/verification/DELEGATION_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "d04f2a8c5594d261158835db1cae3822411b6b23",
+    "canonical/verification/DELEGATION_V4_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "955ac8f4bd0db2527bfbb465fc8252df6d916156",
+    "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json": "981c8ac9b66ee7fccf5b531525849e29df9be483",
+    "canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "95422fdb13ada158930486442c9441c9c5cd9852",
+    "canonical/verification/P1_UNIVERSAL_SCOPE_RESTORATION_V9_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "2c6bb594d353e4c6a169821da5f84a91be212ca7",
+    "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "913d171b3c855000d322e183b142b3200eeaf0a9",
+    "canonical/verification/TOOL_DISCOVERY_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "f44e2378cf00f86a59159cb9d8edb35f0a7c27f4"
+  },
+  "expected": {
+    "promotion_eligible_families": [
+      "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+      "SUBAGENT_DELEGATION_AND_COORDINATION",
+      "TOOL_DISCOVERY_SELECTION_AND_LEARNING"
+    ],
+    "verified_owned_before": 2,
+    "verified_owned_after": 5,
+    "new_reality_units_consumed": 0,
+    "incremental_spend_usd": 0
+  }
+}
