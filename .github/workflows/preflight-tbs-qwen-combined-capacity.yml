@@ -1,0 +1,151 @@
+name: Preflight TB-Science + local Qwen combined capacity
+on:
+  push:
+    branches: ["preflight-tbs-qwen-combined-capacity-20261003-v1"]
+    paths:
+      - ".github/workflows/preflight-tbs-qwen-combined-capacity.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record and reclaim nonessential runner storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== initial ===" | tee CAPACITY.log
+          df -h / | tee -a CAPACITY.log
+          free -h | tee -a CAPACITY.log
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/share/boost || true
+          sudo docker system prune -af || true
+          sudo apt-get clean || true
+          echo "=== after_cleanup ===" | tee -a CAPACITY.log
+          df -h / | tee -a CAPACITY.log
+          free -h | tee -a CAPACITY.log
+      - name: Install exact Harbor release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor") == "0.23.0"
+          PY
+          docker version >/dev/null
+          docker info >/dev/null
+      - name: Build exact pinned llama.cpp server
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          cp llama.cpp/build/bin/llama-server /tmp/llama-server
+          rm -rf llama.cpp
+      - name: Download and verify exact pinned Qwen bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local endpoint and force one tool-call inference
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if /tmp/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup /tmp/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 4096 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          python - <<'PY'
+          import json, urllib.request
+          p={
+            "model":"brain-qwen3.5-9b",
+            "messages":[
+              {"role":"system","content":"When a requested action has a provided tool, use the tool."},
+              {"role":"user","content":"Call echo_tool with value exactly capacity_probe_20261003. Do not answer normally."}
+            ],
+            "tools":[{"type":"function","function":{
+              "name":"echo_tool","description":"Echo one string.",
+              "parameters":{"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":False}
+            }}],
+            "tool_choice":"required","parallel_tool_calls":False,"temperature":0,"max_tokens":128,"stream":False
+          }
+          req=urllib.request.Request("http://127.0.0.1:8080/v1/chat/completions",data=json.dumps(p).encode(),headers={"Content-Type":"application/json"})
+          with urllib.request.urlopen(req,timeout=180) as r:
+            d=json.loads(r.read())
+          calls=(d["choices"][0]["message"].get("tool_calls") or [])
+          assert calls and calls[0]["function"]["name"]=="echo_tool", d
+          print(json.dumps({"toolcall_pass":True,"finish_reason":d["choices"][0].get("finish_reason")},sort_keys=True))
+          PY
+      - name: Measure combined carrier headroom
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee CAPACITY.json
+          import json, os, pathlib, shutil
+          pid=int(pathlib.Path("LLAMA_SERVER.pid").read_text().strip())
+          mem={}
+          for line in pathlib.Path("/proc/meminfo").read_text().splitlines():
+              if ":" in line:
+                  k,v=line.split(":",1); mem[k]=v.strip()
+          status={}
+          for line in pathlib.Path(f"/proc/{pid}/status").read_text().splitlines():
+              if ":" in line:
+                  k,v=line.split(":",1); status[k]=v.strip()
+          du=shutil.disk_usage("/")
+          def kb(s):
+              x=s.split(); return int(x[0]) if x else 0
+          out={
+            "schema":"PROJECT_BRAIN_TBS_QWEN_COMBINED_CAPACITY_PREFLIGHT_V1",
+            "status":"PASS",
+            "runner":"ubuntu-24.04",
+            "cpu_count":os.cpu_count(),
+            "mem_total_bytes":kb(mem["MemTotal"])*1024,
+            "mem_available_bytes":kb(mem["MemAvailable"])*1024,
+            "llama_rss_bytes":kb(status.get("VmRSS","0 kB"))*1024,
+            "disk_total_bytes":du.total,
+            "disk_free_bytes":du.free,
+            "harbor_version":"0.23.0",
+            "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+            "model_bytes":5060174144,
+            "terminal_case_content_read":0,
+            "terminal_results_observed":0,
+            "incremental_spend_usd":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+          echo "=== final ===" | tee -a CAPACITY.log
+          df -h / | tee -a CAPACITY.log
+          free -h | tee -a CAPACITY.log
+          cat CAPACITY.json
+      - name: Preserve nonterminal capacity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbs-qwen-combined-capacity-preflight-v1
+          path: |
+            CAPACITY.json
+            CAPACITY.log
+            LLAMA_SERVER.log
