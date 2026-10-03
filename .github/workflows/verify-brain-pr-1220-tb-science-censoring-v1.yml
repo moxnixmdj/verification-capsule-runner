@@ -1,0 +1,67 @@
+name: Verify Brain PR1220 TB-Science conservative censoring
+on:
+  push:
+    branches: ["verify-brain-pr-1220-tb-science-censoring-v1"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs and reducer theorem
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1220_tb_science_censoring
+          test "$(git hash-object "$C/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
+          test "$(git hash-object "$C/canonical/tests/test_tb_science_conservative_censoring_reducer_v1.py")" = "95bd6ac5be0b8d8543ac009135b8bf7ec0fc4a72"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_CONSERVATIVE_CENSORING_LOWER_BOUND_V1.json")" = "eb5142c2b55f649912f9b60ee42daa9faf0b60e4"
+          export PYTHONPATH="$PWD/$C"
+          python - <<'PY'
+          import json, math
+          from canonical.runtime.tb_science_conservative_censoring_reducer_v1 import adjudicate
+          slots=[f"task-{i:02d}::trial-{j}" for i in range(70) for j in range(3)]
+          assert len(slots)==210 and len(set(slots))==210
+          required=math.ceil(0.587*210)
+          assert required==124
+          assert 124/210 >= .587
+          assert 123/210 < .587
+          # Exhaustively verify final decision boundary for every possible success count.
+          for s in range(211):
+              rows=[{"slot_id":slots[i],"state":"SUCCESS"} for i in range(s)]
+              out=adjudicate(slots,rows,final=True)
+              assert out["pass_locked"] is (s>=124)
+              assert out["status"]==("PASS_LOCK" if s>=124 else "FAIL_LOCK")
+              assert abs(out["lower_bound_rate"]-(s/210))<1e-15
+          # Incremental fail lock at 87 finalized failures.
+          fails=[{"slot_id":slots[i],"state":"TIMEOUT"} for i in range(87)]
+          assert adjudicate(slots,fails,final=False)["status"]=="FAIL_LOCK"
+          # 86 failures must still be open because 124 successes remain possible.
+          fails=[{"slot_id":slots[i],"state":"RESOURCE_FAILURE"} for i in range(86)]
+          assert adjudicate(slots,fails,final=False)["status"]=="OPEN"
+          # No carrier failure can create positive credit.
+          mixed=[{"slot_id":slots[i],"state":"INFRA_FAILURE"} for i in range(150)]
+          out=adjudicate(slots,mixed,final=False)
+          assert out["successes"]==0 and out["lower_bound_rate"]==0
+          g=json.load(open("capsules/brain_pr_1220_tb_science_censoring/canonical/governance/TB_SCIENCE_CONSERVATIVE_CENSORING_LOWER_BOUND_V1.json"))
+          assert g["frozen_reference"]["trial_slots"]==210
+          assert g["frozen_reference"]["required_successes"]==124
+          assert g["theorem"]["no_retry_credit"] is True
+          assert g["theorem"]["denominator_never_shrinks"] is True
+          assert g["terminal_results_observed"]==0
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_CONSERVATIVE_CENSORING_INDEPENDENT_VERIFICATION_V1",
+            "status":"PASS",
+            "exact_slots":210,
+            "required_successes":124,
+            "failure_lock":87,
+            "exhaustive_success_counts_checked":211,
+            "terminal_cases_exposed":0,
+            "acceptance_credit_delta":0
+          },sort_keys=True))
+          PY
