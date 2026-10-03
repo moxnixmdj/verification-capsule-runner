@@ -1,0 +1,195 @@
+name: Verify Brain PR 1175 Tool Discovery V7 transfer
+
+on:
+  pull_request:
+    paths:
+      - "capsules/brain_pr_1175_tool_discovery_v7_transfer/**"
+      - ".github/workflows/verify-brain-pr-1175-tool-discovery-v7-transfer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/brain_pr_1175_tool_discovery_v7_transfer
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+  "canonical/runtime/tool_discovery_dynamic_candidate_v5.py": "42d096ef93e8ad06c4d1d5dfe730881bf45a2a72",
+  "canonical/runtime/tool_discovery_dynamic_candidate_v6.py": "2020b7c2dc750009a9cc363d0703184b9115cfa6",
+  "canonical/runtime/tool_discovery_dynamic_candidate_v7.py": "e29328dfe5aff5650c1b938472ccf5ecf826831a",
+  "canonical/tests/test_tool_discovery_dynamic_candidate_v7.py": "3f46a9c4be819492b8fcd45006858f19fd5b9bc0",
+  "canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V4_TRANSFERABLE_CATALOG.json": "0a9a788c2637610f4b4cfc5e0f770ba972409137",
+  "canonical/governance/TOOL_DISCOVERY_V7_TRANSFERABLE_CATALOG_REPAIR_V1.json": "0fbb1d653ff63b1ecabca8c71416970ac5f826e6",
+  "canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V7_TRANSFERABLE_CATALOG_V1.json": "f7eb0a7bc62f1d2548cc01fd46f33831723cd491",
+  "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+  "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json": "6bcabc0a7d0525532ce7b80e132278f7c99caa43"
+}
+          for path,want in expected.items():
+              data=Path(path).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+              assert got==want,(path,got,want)
+              print(path,got)
+          PY
+
+      - name: Run V7 adversarial suite
+        working-directory: capsules/brain_pr_1175_tool_discovery_v7_transfer
+        run: python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v7 -v
+
+      - name: Independently reconstruct the V6 transfer failures and V7 repair
+        working-directory: capsules/brain_pr_1175_tool_discovery_v7_transfer
+        run: |
+          python - <<'PY'
+          import copy, hashlib, json
+          from canonical.runtime import tool_discovery_dynamic_candidate_v6 as v6
+          from canonical.runtime import tool_discovery_dynamic_candidate_v7 as v7
+
+          def tool_digest(tools):
+              rows=[dict(x) for x in tools]
+              rows.sort(key=lambda x:str(x.get("tool_id") or ""))
+              raw=json.dumps(rows,sort_keys=True,separators=(",",":"),ensure_ascii=False)
+              return "sha256:"+hashlib.sha256(raw.encode()).hexdigest()
+
+          tool={
+              "tool_id":"T0","epoch":0,"cost":1.0,
+              "available":True,"authorized":True,
+              "safe_probe_capabilities":["CAP_A","CAP_B"],
+          }
+          v6_source={
+              "source_id":"S0","cost":0.0,"available":True,
+              "authorized":True,"authoritative":True,
+              "source_epoch":0,"source_digest":tool_digest([tool]),
+          }
+
+          # Reconstruct V5/V6 source-set digest independently.
+          payload=[{
+              "source_id":"S0","cost":0.0,"available":True,
+              "authorized":True,"authoritative":True,
+              "source_epoch":0,"source_digest":v6_source["source_digest"],
+          }]
+          raw=json.dumps(payload,sort_keys=True,separators=(",",":"),ensure_ascii=False)
+          v6_source_set_digest="sha256:"+hashlib.sha256(raw.encode()).hexdigest()
+
+          base={
+              "required_capabilities":["CAP_A"],
+              "decision_epoch":0,
+              "constraint":None,
+              "visible_tools":[],
+              "discovery_sources":[v6_source],
+              "discovery_receipts":[{
+                  "kind":"DISCOVERY_RESULT","source_id":"S0","complete":True,
+                  "decision_epoch":0,"source_epoch":0,
+                  "source_digest":v6_source["source_digest"],
+                  "source_set_digest":v6_source_set_digest,
+                  "query":"CAP_A","tools":[tool],
+              }],
+              "prior_probe_receipts":[
+                  {"kind":"SAFE_CAPABILITY_PROBE","tool_id":"T0","capability":"CAP_A","epoch":0,"supported":True},
+                  {"kind":"SAFE_CAPABILITY_PROBE","tool_id":"T0","capability":"CAP_B","epoch":0,"supported":True},
+              ],
+              "version_events":[],
+          }
+          assert v6.next_action(base)=={"action":"SELECT","tool_id":"T0"}
+
+          query_only=copy.deepcopy(base)
+          query_only["required_capabilities"]=["CAP_B"]
+          q=v6.next_action(query_only)
+          assert q["action"]=="DISCOVER" and q["query"]=="CAP_B",q
+
+          epoch_only=copy.deepcopy(base)
+          epoch_only["decision_epoch"]=1
+          e=v6.next_action(epoch_only)
+          assert e["action"]=="DISCOVER" and e["query"]=="CAP_A",e
+
+          # Construct a task-independent catalog receipt for V7.
+          v7_source={
+              **v6_source,
+              "catalog_query":"__FULL_AUTHORITY_CATALOG__",
+          }
+          authority_epoch=0
+          source_payload=[{
+              "source_id":"S0","cost":0.0,"available":True,
+              "authorized":True,"authoritative":True,
+              "source_epoch":0,"source_digest":v7_source["source_digest"],
+              "catalog_query":"__FULL_AUTHORITY_CATALOG__",
+          }]
+          raw=json.dumps(
+              {"authority_epoch":authority_epoch,"sources":source_payload},
+              sort_keys=True,separators=(",",":"),ensure_ascii=False,
+          )
+          v7_set_digest="sha256:"+hashlib.sha256(raw.encode()).hexdigest()
+
+          catalog={
+              "required_capabilities":["CAP_A"],
+              "decision_epoch":0,
+              "authority_epoch":0,
+              "constraint":None,
+              "visible_tools":[],
+              "discovery_sources":[v7_source],
+              "discovery_receipts":[{
+                  "kind":"DISCOVERY_RESULT","source_id":"S0","complete":True,
+                  "authority_epoch":0,"source_epoch":0,
+                  "source_digest":v7_source["source_digest"],
+                  "source_set_digest":v7_set_digest,
+                  "query":"__FULL_AUTHORITY_CATALOG__","tools":[tool],
+              }],
+              "prior_probe_receipts":copy.deepcopy(base["prior_probe_receipts"]),
+              "version_events":[],
+          }
+          assert v7.next_action(catalog)=={"action":"SELECT","tool_id":"T0"}
+
+          second=copy.deepcopy(catalog)
+          second["required_capabilities"]=["CAP_B"]
+          second["decision_epoch"]=91
+          assert v7.next_action(second)=={"action":"SELECT","tool_id":"T0"}
+
+          authority_changed=copy.deepcopy(second)
+          authority_changed["authority_epoch"]=1
+          a=v7.next_action(authority_changed)
+          assert a["action"]=="DISCOVER" and a["query"]=="__FULL_AUTHORITY_CATALOG__",a
+
+          tool_changed=copy.deepcopy(second)
+          tool_changed["version_events"]=[{
+              "kind":"TOOL_VERSION_CHANGED","tool_id":"T0","new_epoch":1
+          }]
+          t=v7.next_action(tool_changed)
+          assert t["reason"]=="TOOL_VERSION_CHANGED_RESTART_EPISODE",t
+
+          print("INDEPENDENT_V6_QUERY_ONLY_REDISCOVERY_COUNTEREXAMPLE=PASS")
+          print("INDEPENDENT_V6_DECISION_EPOCH_ONLY_REDISCOVERY_COUNTEREXAMPLE=PASS")
+          print("INDEPENDENT_V7_CROSS_TASK_CATALOG_REUSE=PASS")
+          print("INDEPENDENT_V7_CAUSAL_INVALIDATION=PASS")
+          PY
+
+      - name: Bind the repair to the frozen family obligation and zero-credit boundary
+        working-directory: capsules/brain_pr_1175_tool_discovery_v7_transfer
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json"))
+          row=next(x for x in p["protocols"] if x["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert "later-task transfer without rediscovery" in row["task_dimensions"],row
+          assert row["status"]=="DEFINED_RESULT_OPEN",row
+
+          g=json.load(open("canonical/governance/TOOL_DISCOVERY_V7_TRANSFERABLE_CATALOG_REPAIR_V1.json"))
+          assert g["target_predicate"]=="TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",g
+          assert "LATER_TASK_TRANSFER_WITHOUT_REDISCOVERY"==g["frozen_family_obligation"],g
+          assert g["new_reality_units_consumed"]==0,g
+          assert g["terminal_results_replayed"]==0,g
+          assert g["capability_credit_delta"]==0 and g["family_credit_delta"]==0,g
+          assert g["execution_authority"] is False and g["promotion_authority"] is False,g
+          print("FROZEN_TRANSFER_OBLIGATION_BINDING=PASS")
+          print("ZERO_CREDIT_BOUNDARY=PASS")
+          PY
