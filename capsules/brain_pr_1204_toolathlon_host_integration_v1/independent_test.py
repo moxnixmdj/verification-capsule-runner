@@ -2,7 +2,7 @@ from __future__ import annotations
 import asyncio, pathlib, re, unittest
 from canonical.runtime import toolathlon_brain_host_integration_v1 as h
 
-ROOT=pathlib.Path(__file__).resolve().parents[1]
+ROOT=pathlib.Path(__file__).resolve().parent
 GATE=(ROOT/"frozen_toolathlon/container_tool_gateway.py").read_text(encoding="utf-8")
 
 class ExactWireGateway:
