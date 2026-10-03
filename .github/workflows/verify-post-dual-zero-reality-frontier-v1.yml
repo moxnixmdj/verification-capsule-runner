@@ -1,0 +1,19 @@
+name: Verify post-dual zero-reality frontier V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/post_dual_zero_reality_frontier_v1/**"
+      - ".github/workflows/verify-post-dual-zero-reality-frontier-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python capsules/post_dual_zero_reality_frontier_v1/verify.py
