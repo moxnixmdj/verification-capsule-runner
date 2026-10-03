@@ -8,7 +8,7 @@ python -m unittest -v canonical.tests.test_current_terminal_scheduling_world_v1
 python canonical/runtime/current_terminal_scheduling_world_v1.py > /tmp/world.json
 
 python -m unittest -v canonical.tests.test_terminal_next_action_compiler_v1
-python canonical/runtime/terminal_next_action_compiler_v1.py > /tmp/next.json
+PYTHONPATH=. python canonical/runtime/terminal_next_action_compiler_v1.py > /tmp/next.json
 
 python - <<'PY'
 import hashlib,json
