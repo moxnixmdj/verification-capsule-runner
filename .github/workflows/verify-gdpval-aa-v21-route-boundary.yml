@@ -1,0 +1,20 @@
+name: Verify GDPval-AA v2.1 public route boundary
+on:
+  pull_request:
+    paths:
+      - "verify_gdpval_aa_v21_route_boundary.py"
+      - ".github/workflows/verify-gdpval-aa-v21-route-boundary.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact public route boundary without reading benchmark cases
+        run: python verify_gdpval_aa_v21_route_boundary.py
