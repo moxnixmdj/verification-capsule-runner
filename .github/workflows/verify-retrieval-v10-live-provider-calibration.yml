@@ -15,19 +15,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact V4 deep-window blobs
+      - name: Verify exact V5 cross-ecosystem blobs
         run: |
-          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v4.py)" = "ac8141f798b18e318f22261ecb3096de4ac8d5d4"
-          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v4.py)" = "fdd6f10f15d7c6fe1ac70bed3c178c5ddeb2a475"
-      - name: Deterministic V4 tests
-        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v4.py
-      - name: Execute residual deep-window live arena
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v5.py)" = "5249087b0234e28c28cad51f5ce369cf86efcbd0"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v5.py)" = "b481a07f68bbaa5c671706fa3463e506823dca86"
+      - name: Deterministic V5 tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v5.py
+      - name: Execute live cross-ecosystem bridge arena
         run: |
-          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v4.py | tee live_provider_v4_output.json
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v5.py | tee live_provider_v5_output.json
           python - <<'PY'
           import json
-          d=json.load(open("live_provider_v4_output.json"))
+          d=json.load(open("live_provider_v5_output.json"))
           assert d["successful_case_count"] >= 4, d
           assert d["open_world_completeness_claim"] is False
-          print("LIVE_PROVIDER_V4_SUMMARY", json.dumps(d,sort_keys=True))
+          print("LIVE_PROVIDER_V5_SUMMARY", json.dumps(d,sort_keys=True))
           PY
