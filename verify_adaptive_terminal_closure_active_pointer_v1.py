@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import copy, hashlib, json
+import copy, json, subprocess
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
@@ -17,8 +17,8 @@ EXPECTED_RUN=37121349377
 EXPECTED_JOB=111197924322
 
 def blob(path:Path)->str:
-    b=path.read_bytes()
-    return hashlib.sha1(f"blob {len(b)}\\0".encode()+b).hexdigest()
+    rel=path.relative_to(ROOT).as_posix()
+    return subprocess.check_output(["git","rev-parse",f"HEAD:{rel}"],text=True).strip()
 
 def load(path:Path):
     return json.loads(path.read_text(encoding="utf-8"))
