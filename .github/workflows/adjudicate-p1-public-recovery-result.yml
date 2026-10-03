@@ -1,0 +1,110 @@
+name: Adjudicate P1 public recovery result
+
+on:
+  push:
+    branches: ["verify/p1-public-recovery-result-adjudication-20261003-sol"]
+    paths:
+      - ".github/workflows/adjudicate-p1-public-recovery-result.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/adjudicate-p1-public-recovery-result.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download exact one-use execution artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          curl -L --fail --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             -o evidence/p1-result.zip             "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11268841992/zip"
+          echo 'e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038  evidence/p1-result.zip' | sha256sum -c -
+          unzip -q evidence/p1-result.zip -d evidence/unpacked
+          echo '24eec602e4f8bc2762b7c48f1652b97149ba0c995ee8448d3a59b41ed9fcee4f  evidence/unpacked/P1_PUBLIC_RECOVERY_AUTHORIZED_RESULT.json' | sha256sum -c -
+          echo '768fa639b7e4c5e611945362a3ceddc43dc272f1d882629cba7b688709850a1f  evidence/unpacked/P1_RAW_BATCH_RESULT.json' | sha256sum -c -
+
+      - name: Independently adjudicate frozen P1 result
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee P1_INDEPENDENT_ADJUDICATION.json
+          import json, hashlib
+          from pathlib import Path
+
+          auth=json.loads(Path("evidence/unpacked/P1_PUBLIC_RECOVERY_AUTHORIZED_RESULT.json").read_text())
+          raw=json.loads(Path("evidence/unpacked/P1_RAW_BATCH_RESULT.json").read_text())
+
+          expected_surfaces={
+            "T0/FRONTIERCODE_V1_1::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T0/CURSORBENCH_4_0::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T2/RECOVERY_SCOPE_COMPOSITION::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+          }
+
+          assert auth["schema"]=="PROJECT_BRAIN_P1_PUBLIC_RECOVERY_CARRIER_EXECUTION_RESULT_V1", auth
+          assert auth["status"]=="FINALIZED_EVIDENCE_ONLY__INDEPENDENT_POST_EXECUTION_ADJUDICATION_REQUIRED", auth
+          assert auth["github_run_id"]==37108111537, auth
+          assert auth["github_run_attempt"]==1, auth
+          assert auth["github_head_sha"]=="e489b191363c52c838b720cd759c99f638170c67", auth
+          assert auth["execution_workflow_blob"]=="547f57f43a71f289b006602c1067a962171f38d4", auth
+          assert auth["cases"]==192 and auth["passes"]==192 and auth["failures"]==0, auth
+          assert auth["fresh_reality_units_consumed"]==1, auth
+          assert auth["terminal_v3_replayed"]==0, auth
+          assert auth["incremental_spend_usd"]==0, auth
+          assert auth["execution_authority_consumed"] is True, auth
+          assert auth["rerun_credit"] is False, auth
+          assert auth["promotion_authority"] is False, auth
+          assert set(auth["by_surface"])==expected_surfaces, auth
+          for sid,row in auth["by_surface"].items():
+              assert row["cases"]==64 and row["passes"]==64 and row["all_pass"] is True, (sid,row)
+              assert row["both_semantics_classes_present_every_case"] is True, (sid,row)
+
+          assert raw["schema"]=="PROJECT_BRAIN_P1_SHARED_FAILURE_SEMANTICS_BATCH_HARNESS_V2", raw
+          assert raw["pass"] is True and raw["cases"]==192 and raw["passes"]==192 and raw["failures"]==0, raw
+          assert raw["terminal_v3_replayed"]==0 and raw["incremental_spend_usd"]==0, raw
+          assert set(raw["by_surface"])==expected_surfaces, raw
+
+          # The runtime deliberately cannot self-promote. Independent adjudication
+          # may only certify that the previously missing direct-vs-derived failure
+          # semantics discriminator transported correctly on the exact frozen batch.
+          result={
+            "schema":"PROJECT_BRAIN_P1_PUBLIC_RECOVERY_RESULT_INDEPENDENT_ADJUDICATION_V1",
+            "status":"INDEPENDENT_PASS__192_OF_192__ALL_THREE_SURFACES__FAILURE_SEMANTICS_TRANSPORT_OBSERVED__ONE_REALITY_UNIT_CONSUMED",
+            "source_run_id":37108111537,
+            "source_artifact_id":11268841992,
+            "source_artifact_digest":"sha256:e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038",
+            "authorized_result_sha256":"24eec602e4f8bc2762b7c48f1652b97149ba0c995ee8448d3a59b41ed9fcee4f",
+            "raw_result_sha256":"768fa639b7e4c5e611945362a3ceddc43dc272f1d882629cba7b688709850a1f",
+            "cases":192,
+            "passes":192,
+            "failures":0,
+            "surfaces":3,
+            "cases_per_surface":64,
+            "both_semantics_classes_present_every_case":True,
+            "fresh_reality_units_consumed":1,
+            "terminal_v3_replayed":0,
+            "incremental_spend_usd":0,
+            "transport_fact_adjudicated":True,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False,
+            "next":"BIND_THIS_INDEPENDENT_RECEIPT_IN_BRAIN__RERUN_P1_WHOLE_SCOPE_REDUCER_AND_SCOPE_QUARANTINE_PROPAGATION__PROMOTE_ONLY_IF_EXISTING_FROZEN_RULES_DEDUCTIVELY_PASS"
+          }
+          print(json.dumps(result,sort_keys=True))
+          PY
+
+      - name: Preserve independent adjudication
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p1-public-recovery-independent-adjudication
+          path: P1_INDEPENDENT_ADJUDICATION.json
+          if-no-files-found: error
