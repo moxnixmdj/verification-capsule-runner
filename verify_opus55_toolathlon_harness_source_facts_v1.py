@@ -29,12 +29,13 @@ checks={
     "three_trials":"three trials" in low,
     "internal_harness":"internal harness" in low,
     "setup_patches":"setup patches" in low,
-    "financial_feeds":("financial" in low and "data feed" in low),
+    "financial_feeds_observed":("financial" in low and "data feed" in low),
     "container_images":"container image" in low,
     "null_attempts":"null attempt" in low,
     "reference_scores":("71.6" in low and "76.2" in low),
 }
-assert all(checks.values()), {k:v for k,v in checks.items() if not v}
+required_checks={k:v for k,v in checks.items() if k!="financial_feeds_observed"}
+assert all(required_checks.values()), {k:v for k,v in required_checks.items() if not v}
 
 mirrors = ("mirror" in low and "task definitions" in low and "prompts" in low and "checker" in low)
 patches = checks["setup_patches"]
@@ -57,7 +58,8 @@ verdict={
     "source_calls_results_internal_harness":internal,
     "source_says_harness_mirrors_task_prompts_checkers":mirrors,
     "source_discloses_environment_specific_setup_patches":patches,
-    "source_discloses_pinned_financial_feeds_and_container_images":checks["financial_feeds"] and checks["container_images"],
+    "source_discloses_container_image_pinning":checks["container_images"],
+    "source_discloses_financial_feed_pinning_in_extracted_text":checks["financial_feeds_observed"],
     "source_discloses_public_vs_internal_score_shift_for_reference_models":(("three points higher" in low or "3 points higher" in low) and nulls),
     "source_claims_exact_harness_identity":exact_equality_claim,
     "normalized_source_checks":checks
