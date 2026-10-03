@@ -1,0 +1,70 @@
+name: Verify P1 universal generator transport theorem V1
+
+on:
+  push:
+    branches: ["verify/p1-universal-generator-transport-v1-20261003"]
+    paths:
+      - "capsules/p1_universal_generator_transport_v1/**"
+      - ".github/workflows/verify-p1-universal-generator-transport-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_universal_generator_transport_v1/**"
+      - ".github/workflows/verify-p1-universal-generator-transport-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain proof bytes
+        run: |
+          set -euo pipefail
+          C=capsules/p1_universal_generator_transport_v1
+          test "$(git hash-object "$C/canonical/runtime/contract_native_proof_suites.py")" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_batch_v1.py")" = "695cfe3f283723a52bafb6299236a2d0378dc79e"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py")" = "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py")" = "28940387bd6c11671035ad9201e37bba13fd9bc9"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_proof_v6.py")" = "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+          test "$(git hash-object "$C/canonical/runtime/p1_universal_generator_transport_theorem_v1.py")" = "cbd638b2e7eb649a45f5fa1fe0124a11f8410594"
+          test "$(git hash-object "$C/canonical/tests/test_p1_universal_generator_transport_theorem_v1.py")" = "05f63b7d0169395ce8b470426531553de4cd69c3"
+          test "$(git hash-object "$C/canonical/governance/P1_UNIVERSAL_GENERATOR_TRANSPORT_THEOREM_CANDIDATE_V1.json")" = "a69af85b013b14dff02fedb035a07d51f76e595e"
+      - name: Run exact theorem regression
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/p1_universal_generator_transport_v1"
+          PYTHONPATH="$C" python -m pytest -q "$C/canonical/tests/test_p1_universal_generator_transport_theorem_v1.py"
+      - name: Execute universal structural quotient proof
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/p1_universal_generator_transport_v1"
+          PYTHONPATH="$C" python -m canonical.runtime.p1_universal_generator_transport_theorem_v1 | tee P1_UNIVERSAL_GENERATOR_TRANSPORT_RESULT.json
+          python - <<'PY'
+          import json
+          x=json.load(open("P1_UNIVERSAL_GENERATOR_TRANSPORT_RESULT.json"))
+          assert x["pass"] is True,x
+          assert x["status"]=="PASS__UNIVERSAL_OVER_ALL_FROZEN_GENERATOR_STRUCTURAL_EQUIVALENCE_CLASSES__ZERO_REALITY",x
+          assert x["structural_equivalence_classes"]==30,x
+          assert x["surface_count"]==3,x
+          assert x["case_indices_per_surface"]==64,x
+          assert x["deterministic_proof_executions"]==11520,x
+          assert x["quarantined_execution_used_as_proof"] is False,x
+          assert x["quarantined_execution_run_id"]==37108111537,x
+          assert x["terminal_results_replayed"]==0,x
+          assert x["new_reality_units_consumed"]==0,x
+          assert x["incremental_spend_usd"]==0,x
+          assert x["execution_authority"] is False and x["promotion_authority"] is False,x
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p1-universal-generator-transport-v1
+          path: P1_UNIVERSAL_GENERATOR_TRANSPORT_RESULT.json
+          if-no-files-found: error
