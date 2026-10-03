@@ -19,8 +19,8 @@ pdf=get(PDF,120)
 assert pdf.startswith(b"%PDF"),"PRIMARY_SOURCE_NOT_PDF"
 reader=PdfReader(io.BytesIO(pdf))
 assert len(reader.pages)>=220,len(reader.pages)
-text="\n".join((p.extract_text() or "") for p in reader.pages)
-text=re.sub(r"\s+"," ",text).lower()
+raw_text="\n".join((p.extract_text() or "") for p in reader.pages)
+flat=re.sub(r"\s+"," ",raw_text).lower()
 
 needles=[
   "claude opus 4.6 served as the model grader",
@@ -31,12 +31,22 @@ needles=[
   "capped at 1m",
   "context compaction was not used"
 ]
-missing=[x for x in needles if x not in text]
+missing=[x for x in needles if x not in flat]
 assert not missing,("missing_primary_pdf_facts",missing)
+
+low=raw_text.lower()
+anchor="huggingface.co"
+start=low.rfind(anchor)
+assert start>=0,"HLE_BLOCKLIST_ANCHOR_MISSING"
+excerpt_start=max(0,start-2500)
+excerpt=raw_text[excerpt_start:start+12000]
+print("HLE_BLOCKLIST_EXCERPT_BEGIN")
+print(excerpt)
+print("HLE_BLOCKLIST_EXCERPT_END")
 
 print(json.dumps({
   "schema":"PROJECT_BRAIN_HLE_OPUS55_ROUTE_TRUTH_PUBLIC_RUNNER_RESULT_V1",
-  "status":"PASS__PRIMARY_ANTHROPIC_PDF__HF_AUTO_GATE_CONFIRMED__OPUS55_GRADER_CLAUDE_OPUS_4_6__TOOLS_AND_1M_CAP_BOUND__ZERO_CASES",
+  "status":"PASS__PRIMARY_ANTHROPIC_PDF__HF_AUTO_GATE_CONFIRMED__OPUS55_BLOCKLIST_EXTRACTED__ZERO_CASES",
   "anthropic_pdf_pages":len(reader.pages),
   "huggingface_gated":meta.get("gated"),
   "grader":"Claude Opus 4.6",
