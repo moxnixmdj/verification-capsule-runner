@@ -1,0 +1,48 @@
+name: Verify Brain PR 1164 common-authority Tool Discovery interface
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1164_common_authority_interface/**"
+      - ".github/workflows/verify-brain-pr-1164-common-authority-interface.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run interface and certificate adversarial tests
+        run: |
+          cd capsules/brain_pr_1164_common_authority_interface
+          export PYTHONPATH=.
+          python -m unittest             canonical.tests.test_tool_discovery_common_authority_interface_v1             canonical.tests.test_tool_discovery_common_authority_interface_certificate_v1 -v
+      - name: Execute complete-interface certificate
+        run: |
+          cd capsules/brain_pr_1164_common_authority_interface
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_common_authority_interface_certificate_v1 > verdict.json
+      - name: Enforce fail-closed zero-credit verdict
+        run: |
+          cd capsules/brain_pr_1164_common_authority_interface
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["source_blob_drift"]==[],v
+          assert v["interface_instance_verified_candidate"] is True,v
+          assert v["interface_contract_satisfied_candidate"] is True,v
+          assert v["universal_scope_atom_satisfied_candidate"] is True,v
+          assert v["scope_relation"]=="PROVEN_STRONGER",v
+          assert v["basis"]=="PARAMETRIC_COMPLETE_INTERFACE_OVER_ANY_FINITE_COMMON_FROZEN_AUTHORITY",v
+          assert v["uses_empirical_generalization"] is False,v
+          assert v["uses_brain_only_registry"] is False,v
+          assert v["preenumerates_tool_identities"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("common-authority Tool Discovery interface: PASS")
+          PY
