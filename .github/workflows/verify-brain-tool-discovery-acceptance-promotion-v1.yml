@@ -1,0 +1,84 @@
+name: Verify Brain Tool Discovery acceptance promotion V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_acceptance_promotion_v1/**"
+      - ".github/workflows/verify-brain-tool-discovery-acceptance-promotion-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/tool_discovery_acceptance_promotion_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,want in m["exact_brain_blobs"].items():
+              raw=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+              assert got==want,(src,got,want)
+          print("exact Brain promotion blobs: PASS")
+          PY
+      - name: Compile promotion verifier
+        run: |
+          cd capsules/tool_discovery_acceptance_promotion_v1
+          python -m py_compile canonical/runtime/tool_discovery_acceptance_promotion_v1.py
+      - name: Run fail-closed promotion tests
+        run: |
+          cd capsules/tool_discovery_acceptance_promotion_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_acceptance_promotion_v1 -v
+      - name: Execute exact promotion verification
+        run: |
+          cd capsules/tool_discovery_acceptance_promotion_v1
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.tool_discovery_acceptance_promotion_v1 import evaluate
+          out=evaluate()
+          assert out["pass"] is True,out
+          assert out["after"]=={
+            "proved_atomic":12,
+            "unresolved_atomic":26,
+            "accepted_families":5,
+            "open_families":14,
+            "verified_owned_families":2,
+          },out
+          assert out["newly_proved_predicates"]==["TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR"],out
+          assert out["newly_closed_families"]==["TOOL_DISCOVERY_SELECTION_AND_LEARNING"],out
+          assert out["ownership_promotions"]==[],out
+          assert out["new_reality_units_consumed"]==0,out
+          print("Tool Discovery 5/19 promotion: PASS")
+          PY
+
+      - name: Verify canonical projection mirrors
+        run: |
+          cd capsules/tool_discovery_acceptance_promotion_v1
+          python - <<'PY'
+          import json
+          L=lambda p: json.load(open(p,encoding="utf-8"))
+          a=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          h=L("canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json")
+          p=L("canonical/CANONICAL_POINTER.json")
+          s=L("canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json")
+          o=L("canonical/capabilities/frontier/OPUS_5_5_USEFUL_CAPABILITY_OWNERSHIP_V1.json")
+          assert a["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN"
+          assert (a["atomic_acceptance_frontier"]["proved"],a["atomic_acceptance_frontier"]["unresolved"],a["atomic_acceptance_frontier"]["total"])==(12,26,38)
+          blocker="TERMINAL_FALSE__14_OF_19_FAMILIES_OPEN__26_OF_38_ATOMIC_PREDICATES_UNRESOLVED__SEE_CURRENT_TERMINAL_AUTHORITY_NEXT_FOR_EXACT_ACTIVE_ROUTE"
+          nxt=a["next"]
+          assert h["current_parent_blocker"]==blocker and h["next_required_action_class"]==nxt
+          assert p["current_frontier"]["critical_blocker"]==blocker and p["current_frontier"]["highest_leverage_capability_gap"]==blocker and p["current_frontier"]["next_step"]==nxt
+          assert s["active_frontier_accounting"]["residual_gap"]==blocker and s["active_frontier_accounting"]["next_required_action"]==nxt
+          assert (s["canonical_acceptance_truth"]["accepted_families"],s["canonical_acceptance_truth"]["open_families"],s["canonical_acceptance_truth"]["proved_atomic_predicates"],s["canonical_acceptance_truth"]["unresolved_atomic_predicates"])==(5,14,12,26)
+          assert o["residual_gap"]==blocker and o["current_atomic_blocker"]==blocker and o["next_action"]==nxt and o["current_atomic_next_action"]==nxt
+          assert (o["acceptance_truth"]["accepted_families"],o["acceptance_truth"]["proved_atomic_predicates"],o["acceptance_truth"]["unresolved_atomic_predicates"])==(5,12,26)
+          print("canonical projection mirrors: PASS")
+          PY
