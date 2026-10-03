@@ -1,0 +1,69 @@
+name: Verify TB-Science canary V3 result
+
+on:
+  push:
+    branches: ["verify/tb-science-canary-v3-result-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v3-result.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v3-result.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and independently verify exact V3 result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             -H "X-GitHub-Api-Version: 2022-11-28"             -o result.zip             "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11268634533/zip"
+          echo 'c3a786984e98c2e24ec98cc51331ba872e195666aad8b31815b21ba600ac74f9  result.zip' | sha256sum -c -
+          unzip -q result.zip -d out
+          echo 'f75d59cc1d75fe769a14c4adf1a1e0022859c91cc02bce584144b8866a7c256f  out/TB_SCIENCE_CANARY_V3_SLOT_RECEIPT.json' | sha256sum -c -
+          python - <<'PY' | tee VERDICT.json
+          import json
+          r=json.load(open("out/TB_SCIENCE_CANARY_V3_SLOT_RECEIPT.json"))
+          assert r["schema"]=="PROJECT_BRAIN_TB_SCIENCE_CANARY_TERMINAL_SLOT_RECEIPT_V3",r
+          assert r["slot_id"]=="terminal-bench-science/virtual-baseline-localization::trial-0",r
+          assert r["status"]=="FINAL_ZERO" and r["reward"]==0.0,r
+          assert r["harbor_step_outcome"]=="skipped",r
+          assert r["errors"]==["NO_TRIAL_RESULT_WITH_VERIFIER_REWARD"],r
+          assert r["github_run_id"]=="37109467429",r
+          assert r["github_run_attempt"]=="1",r
+          assert r["authority_blob"]=="ae5bc607b828e8f55092e80e0a806d5a496eb54b",r
+          assert r["planner_blob"]=="fe7c0ce885197217774638df382aeb6f68ff38dd",r
+          assert r["retries"]==0 and r["replacement"] is False,r
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_CANARY_V3_RESULT_INDEPENDENT_VERIFICATION_V1",
+            "status":"INDEPENDENT_PASS__AUTHORIZED_V3_TRIGGER_FINAL_ZERO__HARBOR_SKIPPED_AFTER_ARM_SCHEMA_GATE_FAILURE",
+            "source_run_id":37109467429,
+            "artifact_id":11268634533,
+            "artifact_digest":"sha256:c3a786984e98c2e24ec98cc51331ba872e195666aad8b31815b21ba600ac74f9",
+            "receipt_sha256":"f75d59cc1d75fe769a14c4adf1a1e0022859c91cc02bce584144b8866a7c256f",
+            "slot_id":r["slot_id"],
+            "final_zero":True,
+            "harbor_step_outcome":"skipped",
+            "task_execution_began":False,
+            "cause":"ARM_SCHEMA_MISSING_PREFLIGHT_CONCLUSION_BEFORE_HARBOR_STEP",
+            "counts_as_final_zero_under_v3_authority":True,
+            "replay_allowed":False,
+            "incremental_spend_usd":0,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-canary-v3-result-verdict
+          path: VERDICT.json
+          if-no-files-found: error
