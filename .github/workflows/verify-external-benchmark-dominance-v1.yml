@@ -63,7 +63,7 @@ jobs:
           git ls-remote https://github.com/surge-ai/complex-constraints.git HEAD | grep -Eq '^[0-9a-f]{40}'
           git clone --depth 1 https://github.com/surge-ai/gdp-pdf.git /tmp/gdp-pdf
           git clone --depth 1 https://github.com/surge-ai/complex-constraints.git /tmp/complex-constraints
-          grep -Fq "full dataset is published on Hugging Face" /tmp/gdp-pdf/README.md
+          grep -Fq "The full dataset is published" /tmp/gdp-pdf/README.md
           grep -Fq "75 expert-crafted prompts" /tmp/complex-constraints/README.md
           grep -Fq "1,559 total" /tmp/complex-constraints/README.md
 
