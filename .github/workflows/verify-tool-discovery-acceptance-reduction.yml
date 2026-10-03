@@ -32,12 +32,33 @@ jobs:
             "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json": "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",
             "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
             "canonical/runtime/acceptance_proof_transmuter_v1.py": "39b5611e53485674b29e2a05da91b89801bc5aa6",
+            "canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json": "4c7d170418bb95828a23538709aa304a00db6746",
           }
           for path,want in expected.items():
               data=Path(path).read_bytes()
               got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
               assert got==want,(path,got,want)
               print(path,got)
+          PY
+      - name: Execute exact canonical acceptance input through verified transmuter
+        working-directory: capsules/tool_discovery_acceptance_reduction_20261003
+        run: |
+          python canonical/runtime/acceptance_proof_transmuter_v1.py \
+            canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json \
+            --evidence canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json \
+            > canonical_verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("canonical_verdict.json"))
+          assert v["status"]=="PASS",v
+          assert (v["family_count"],v["closed_family_count"],v["open_family_count"])==(19,4,15),v
+          row=next(x for x in v["families"] if x["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert row["result_status"]=="PASS",row
+          assert row["closure_mode"]=="ABSOLUTE_DOMINANCE",row
+          assert row["witness_reason"]=="THEORETICAL_CEILING_DOMINANCE",row
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Canonical Tool Discovery input compiles exactly to 4/19")
           PY
       - name: Run fail-closed acceptance reduction tests
         working-directory: capsules/tool_discovery_acceptance_reduction_20261003
