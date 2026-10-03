@@ -1,0 +1,54 @@
+name: Verify dual judgment general substrate V1
+
+on:
+  push:
+    branches: ["verify/dual-judgment-general-substrate-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-dual-judgment-general-substrate-v1.yml"
+      - "capsules/dual_judgment_general_substrate_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-dual-judgment-general-substrate-v1.yml"
+      - "capsules/dual_judgment_general_substrate_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain evidence bytes
+        run: |
+          set -euo pipefail
+          C=capsules/dual_judgment_general_substrate_v1
+          test "$(git hash-object "$C/envelope.json")" = "6ea46314887a59de742e56f32893de9efce1103a"
+          test "$(git hash-object "$C/materiality.json")" = "041b73f3c212d86d870554d2dc7b8ad0b691d921"
+          test "$(git hash-object "$C/source_gate.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/law.md")" = "7532aa0a5700fc061c9cf6b003fa8a9ac27d3972"
+          test "$(git hash-object "$C/judgment_runtime.py")" = "5ebfd1e7fa871da89ecca40ffeb8dd6575c21582"
+      - name: Independently qualify substrate role and source gate
+        run: |
+          set -euo pipefail
+          python capsules/dual_judgment_general_substrate_v1/verify.py | tee /tmp/qualification.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/qualification.json"))
+          assert x["pass"] is True, x
+          assert x["general_substrate_test_pass"] is True
+          assert x["provider_replacement_same_target_capability"] is False
+          assert x["source_gate_v2"]["pass"] is True
+          assert set(x["families"])=={"FINANCIAL_ANALYSIS","UNKNOWN_DOMAIN_ADAPTATION"}
+          assert x["new_reality_units_consumed"]==0
+          assert x["terminal_case_content_consumed"]==0
+          assert x["execution_authority"] is False
+          assert x["promotion_authority"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dual-judgment-general-substrate-v1
+          path: /tmp/qualification.json
+          if-no-files-found: error
