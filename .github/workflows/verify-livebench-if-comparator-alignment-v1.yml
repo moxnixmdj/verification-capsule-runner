@@ -1,0 +1,70 @@
+name: Verify LiveBench IF comparator alignment V1
+
+on:
+  push:
+    branches: ["verify/livebench-if-comparator-alignment-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-livebench-if-comparator-alignment-v1.yml"
+      - "capsules/livebench_if_comparator_alignment_v1/brain/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-if-comparator-alignment-v1.yml"
+      - "capsules/livebench_if_comparator_alignment_v1/brain/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain correction inputs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/livebench_if_comparator_alignment_v1/brain/CANDIDATE.json)" = "8b04cb13d81bc746a30cfd5c5421d65c84e5dfec"
+          test "$(git hash-object capsules/livebench_if_comparator_alignment_v1/brain/LIVEBENCH_IF_VERIFIER_BINDING_V1.json)" = "477c82d98a15fe9e3b1d47f56cd50afe357202bf"
+          test "$(git hash-object capsules/livebench_if_comparator_alignment_v1/brain/LIVEBENCH_IF_HERMETIC_INPUT_BINDING_V1.json)" = "5d0b876e07901b61f92c89b2257bd07790f53e60"
+          python - <<'PY'
+          import json
+          C=json.load(open("capsules/livebench_if_comparator_alignment_v1/brain/CANDIDATE.json"))
+          B=json.load(open("capsules/livebench_if_comparator_alignment_v1/brain/LIVEBENCH_IF_VERIFIER_BINDING_V1.json"))
+          I=json.load(open("capsules/livebench_if_comparator_alignment_v1/brain/LIVEBENCH_IF_HERMETIC_INPUT_BINDING_V1.json"))
+          assert "PROMPT_LEVEL_LOOSE_ACCURACY_IS_PUBLICLY_DECLARED_REPORTED_METRIC" in B["verified_static_properties"]
+          assert I["dataset"]["revision"]=="0868379c4b5cf62aeacaf8be4f08fced815c81bb"
+          assert C["target_predicate"]=="LIVEBENCH_IF_GE_65_7"
+          assert C["release_identity_candidate"]["exact_65_7_bar_to_dataset_revision_relation"]=="UNPROVED"
+          assert C["execution_authority"] is False
+          assert C["promotion_authority"] is False
+          PY
+
+      - name: Checkout exact pinned LiveBench source
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/process_results/instruction_following/utils.py)" = "8ce01747887ec0792c8f024e1972e34ece781676"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/ifbench/evaluation_lib.py)" = "2c7bd1290031dbe4ae0f016c53255f4af0ec645b"
+          test "$(git -C /tmp/LiveBench hash-object changelog.md)" = "97a0b6ffd845aec29f48f96ca24b96ac100e4162"
+
+      - name: Verify scorer and release semantics
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          u=Path("/tmp/LiveBench/livebench/process_results/instruction_following/utils.py").read_text()
+          c=Path("/tmp/LiveBench/changelog.md").read_text()
+          assert "evaluation_lib.test_instruction_following_strict(inp, response)" in u
+          assert "avg_score = (score_1 + score_2) / 2" in u
+          assert 'results = results["strict"]' in u
+          assert "2026-06-25" not in c
+          assert "### 2026-01-08" in c
+          assert "### 2025-11-25" in c
+          assert "Updated the instruction following tasks" in c
+          print("LIVEBENCH_IF_COMPARATOR_ALIGNMENT_CONTRADICTION_VERIFIED")
+          PY
