@@ -17,7 +17,7 @@ jobs:
         run: |
           set -euo pipefail
           cd capsules/brain_pr_1100_activation
-          test "$(git hash-object canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json)" = "69771b26860fa700ce03fcbed5e8e484e61a1433"
+          test "$(git hash-object canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json)" = "ecebef192b0bab9342f16dbf9ba488c6820faf2d"
           test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_ACTIVATION_V1.json)" = "44faeb24bdc2d9189b7c0de1b1e2be9b1210aeeb"
           test "$(git hash-object canonical/verification/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "5fcdc5ae35f51c40f312edbe5727284c9f6ca3dd"
       - name: Verify truth-preserving authority integration
