@@ -1,0 +1,13 @@
+{
+  "schema": "PROJECT_BRAIN_COMPOSITION_MEMORY_TERMINAL_RECONCILE_PUBLIC_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "before_ref": "223886b741992cfd9b85e95ad9e6a3ac54feebcd",
+  "after_ref": "reconcile/composition-memory-v4-terminal-authority-20261003",
+  "exact_brain_blobs": {
+    "before/CURRENT_TERMINAL_AUTHORITY_V1.json": "5fdb64b9ac480173d3ee2c31dfbba1f297c27a42",
+    "after/CURRENT_TERMINAL_AUTHORITY_V1.json": "bc9c550277d71607536b7ebd4e598a6c9b2156f4",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V4.json": "d212c22c490beaa6b9ed09c349b1ff3afc78c2c3",
+    "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "88783df170065d3ff23e4ff3c2d2ab30ec7bc314",
+    "canonical/verification/COMPOSITION_COMPONENT_PROOF_SLICE_PUBLIC_RUNNER_VERIFICATION_20261003_V3.json": "acbd30e8ce09dbf78b7a23a6ffeae788feafedc1"
+  }
+}
