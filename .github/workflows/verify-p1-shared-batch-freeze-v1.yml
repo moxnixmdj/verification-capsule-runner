@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "capsules/p1_shared_batch_freeze_v1/**"
+      - "capsules/p1_shared_batch_freeze_v2/**"
       - ".github/workflows/verify-p1-shared-batch-freeze-v1.yml"
 permissions:
   contents: read
@@ -15,5 +15,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact P1 one-batch freeze and no-guess normalizer
-        run: python capsules/p1_shared_batch_freeze_v1/verify.py
+      - name: Verify exact hardened P1 V2 freeze and public-only binder
+        run: python capsules/p1_shared_batch_freeze_v2/verify.py
