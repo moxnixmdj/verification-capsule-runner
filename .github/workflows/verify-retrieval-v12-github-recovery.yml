@@ -1,0 +1,41 @@
+name: Verify Retrieval V12 GitHub miss recovery
+on:
+  push:
+    branches:
+      - verify/retrieval-v12-github-recovery-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_github_miss_recovery_v12.py)" = "089fecd51e143751f96c5ac2d3342427f3c61ecc"
+          test "$(git hash-object canonical/tests/test_retrieval_github_miss_recovery_v12.py)" = "ec80d025e68ad6d3d450949ed5b8f59a0e299fb6"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_github_miss_recovery_v12.py
+      - name: Run live GitHub recovery
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_github_miss_recovery_v12.py > v12_github.json
+          cat v12_github.json
+      - name: Validate semantics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("v12_github.json"))
+          assert x["baseline_case_count"]==6
+          assert x["usable_case_count"]>0
+          assert x["open_world_completeness_claim"] is False
+          assert x["execution_authority"] is False
+          print("SUMMARY",json.dumps({
+            "usable":x["usable_case_count"],"recovered":x["recovered_case_count"],
+            "rate":x["recovery_rate"],"recovered_ids":x["recovered_episode_ids"],
+            "residual_ids":x["residual_miss_episode_ids"]
+          },sort_keys=True))
+          PY
