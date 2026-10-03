@@ -1,0 +1,125 @@
+name: Verify TB-Science Opus 5.5 target freshness
+on:
+  push:
+    branches: ["verify/tb-science-opus55-target-freshness-20261003-sol"]
+    paths:
+      - "capsules/tb_science_opus55_target_freshness_v1/**"
+      - ".github/workflows/verify-tb-science-opus55-target-freshness.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_opus55_target_freshness_v1/**"
+      - ".github/workflows/verify-tb-science-opus55-target-freshness.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain candidate bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_opus55_target_freshness_v1
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_OPUS55_TARGET_FRESHNESS_V1.json")" = "8d3464dea4baedc7540f63f4e6f21df6f14b2d57"
+          test "$(git hash-object "$C/canonical/runtime/tb_science_opus55_target_freshness_guard_v1.py")" = "3f6c9ddd25550f75df333fdee5881c086d6dbe3f"
+          test "$(git hash-object "$C/canonical/tests/test_tb_science_opus55_target_freshness_guard_v1.py")" = "b04a9ba343cc51a31138840b07298afe19e4b95a"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_BENCH_SCIENCE_ROUTE_ACTIVATION_V1.json")" = "283eb7618675f8bb82f026259dff71a9ce86650a"
+
+      - name: Run deterministic freshness guard tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_opus55_target_freshness_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_tb_science_opus55_target_freshness_guard_v1
+          PYTHONPATH="$C" python "$C/canonical/runtime/tb_science_opus55_target_freshness_guard_v1.py" | tee TARGET_FRESHNESS_GUARD_RESULT.json
+          python - <<'PY'
+          import json
+          x=json.load(open("TARGET_FRESHNESS_GUARD_RESULT.json"))
+          assert x["pass"] is True, x
+          assert x["status"]=="PASS__TARGET_FRESHNESS_HOLD_REQUIRED__SNAPSHOT_IDENTITY_UNPROVED", x
+          assert x["effective_execution_authority"] is False, x
+          assert x["same_snapshot_required_successes_if_proved"]==133, x
+          assert x["same_snapshot_fail_lock_if_proved"]==78, x
+          assert x["snapshot_identity_proved"] is False, x
+          assert x["promotion_authority"] is False, x
+          PY
+
+      - name: Independently verify current public Opus 5.5 leaderboard observation
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --retry-delay 2 --silent --show-error             -A 'Mozilla/5.0 ProjectBrainIndependentVerifier/1.0'             'https://snorkel.ai/leaderboard/terminal-bench-science/'             -o CURRENT_TB_SCIENCE_LEADERBOARD.html
+          python - <<'PY'
+          from pathlib import Path
+          h=Path("CURRENT_TB_SCIENCE_LEADERBOARD.html").read_text("utf-8","replace")
+          required=[
+            "Terminal-Bench-Science",
+            "Opus 5.5",
+            "Claude Code",
+            "63.3",
+            "GPT-6 Astra",
+            "68.1",
+          ]
+          missing=[x for x in required if x not in h]
+          assert not missing, ("CURRENT_PUBLIC_LEADERBOARD_FACTS_MISSING", missing)
+          print("CURRENT_PUBLIC_OPUS55_OBSERVATION_PASS")
+          PY
+
+      - name: Independently verify continuous/versioned benchmark caveat
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --retry-delay 2 --silent --show-error             -A 'Mozilla/5.0 ProjectBrainIndependentVerifier/1.0'             'https://www.terminal-bench-science.ai/announcement'             -o TB_SCIENCE_ANNOUNCEMENT.html
+          python - <<'PY'
+          from pathlib import Path
+          h=Path("TB_SCIENCE_ANNOUNCEMENT.html").read_text("utf-8","replace")
+          required=[
+            "continuous benchmark",
+            "70 tasks",
+            "three independent trials",
+            "Tasks are versioned",
+            "every release is tagged",
+          ]
+          missing=[x for x in required if x not in h]
+          assert not missing, ("BENCHMARK_VERSIONING_FACTS_MISSING", missing)
+          print("CONTINUOUS_VERSIONED_BENCHMARK_CAVEAT_PASS")
+          PY
+
+      - name: Verify route remains fail closed
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_opus55_target_freshness_v1
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          C=Path("capsules/tb_science_opus55_target_freshness_v1")
+          r=json.loads((C/"canonical/governance/TERMINAL_BENCH_SCIENCE_ROUTE_ACTIVATION_V1.json").read_text())
+          g=json.loads((C/"canonical/governance/TB_SCIENCE_OPUS55_TARGET_FRESHNESS_V1.json").read_text())
+          assert r["execution_authority"] is False
+          assert r["promotion_authority"] is False
+          assert r["target_freshness_hold"]["exact_snapshot_identity_proved"] is False
+          assert r["exact_route"]["brain_controller_git_blob_sha"]=="5557efd21f1a433ad16766def3775a79c459784b"
+          assert r["exact_route"]["brain_planner_git_blob_sha"]=="879887984e2ca8abacac486d687f519f5d0d78a5"
+          assert g["execution_authority"] is False
+          assert g["promotion_authority"] is False
+          assert g["capability_credit_delta"]==0
+          assert g["family_credit_delta"]==0
+          print("FAIL_CLOSED_ROUTE_PASS")
+          PY
+
+      - name: Preserve verifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-opus55-target-freshness-v1
+          path: |
+            TARGET_FRESHNESS_GUARD_RESULT.json
+            CURRENT_TB_SCIENCE_LEADERBOARD.html
+            TB_SCIENCE_ANNOUNCEMENT.html
+          if-no-files-found: warn
