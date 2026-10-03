@@ -82,13 +82,13 @@ EXPECTED_AUTHORITY = {
         "canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py",
         "b6ba06fc6a35fa132eb19389ee256e74a63a4849",
     ),
-    "shared_batch_executor_v1": (
+    "batch_harness_v2": (
         "canonical/runtime/p1_shared_failure_semantics_batch_v1.py",
-        "fa92b6021e9a7aed9347fb80f5ad55b8652b7a0c",
+        "695cfe3f283723a52bafb6299236a2d0378dc79e",
     ),
-    "shared_batch_tests_v1": (
+    "batch_harness_tests_v2": (
         "canonical/tests/test_p1_shared_failure_semantics_batch_v1.py",
-        "9433835e6996705c11e4de4e1a58beaf45886319",
+        "7512a920c72d7bdeb2b072788e4c4bc8d2ff2d08",
     ),
 }
 
@@ -182,7 +182,7 @@ def evaluate(*, freeze_override: Mapping[str, Any] | None = None) -> dict[str, A
     _error(errors, source_contract.get("generator") == "canonical/runtime/contract_native_proof_suites.py::generate_case", "SOURCE_GENERATOR_BINDING")
     _error(errors, source_contract.get("contract") == "TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001", "SOURCE_CONTRACT_BINDING")
     _error(errors, source_contract.get("candidate_oracle_exposure") is False, "ORACLE_EXPOSURE_GUARD")
-    _error(errors, set(source_contract.get("hidden_source_truth_used_only_for_instrumentation") or []) == {"_oracle.cause_step", "_oracle.repair_id"}, "HIDDEN_SOURCE_TRUTH_SET")
+    _error(errors, set(source_contract.get("hidden_source_truth_used_only_for_post_candidate_scoring") or []) == {"_oracle.cause_step", "_oracle.repair_id"}, "HIDDEN_SOURCE_TRUTH_SET")
 
     pipe = freeze.get("frozen_pipeline") or {}
     expected_pipe = {
