@@ -1,0 +1,145 @@
+name: Preflight TB-Science canary execution V2
+on:
+  push:
+    branches: ["execute-tb-science-canary-v2-20261003"]
+    paths:
+      - "capsules/tb_science_canary_execution_v2/canonical/**"
+      - ".github/workflows/preflight-tb-science-canary-v2.yml"
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact authority and repaired route bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_canary_execution_v2
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V2.json")" = "741d6ca0cc4880e6cd9c76e3046272b1feb756f1"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          python - <<'PY'
+          import json
+          p="capsules/tb_science_canary_execution_v2/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V2.json"
+          d=json.load(open(p))
+          assert d["execution_authority"] is True
+          assert d["promotion_authority"] is False
+          assert d["authorized_slot"]["slot_id"]=="terminal-bench-science/baseline-free-localization::trial-0"
+          assert d["execution_semantics"]["slots_authorized"]==1
+          assert d["execution_semantics"]["retries_per_slot"]==0
+          assert d["execution_semantics"]["slot_replacement"] is False
+          assert d["execution_semantics"]["denominator_shrink"] is False
+          assert d["current_parity"]["required_successes"]==133
+          assert d["current_parity"]["fail_lock_failures"]==78
+          assert len(d["permanently_consumed_slots"])==3
+          assert d["authorized_slot"]["slot_id"] not in set(d["permanently_consumed_slots"])
+          PY
+      - name: Install exact Harbor
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+          docker version >/dev/null
+          docker info >/dev/null
+      - name: Restore pinned llama.cpp build cache
+        uses: actions/cache@v4
+        with:
+          path: llama.cpp
+          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          if [ ! -d llama.cpp/.git ]; then
+            rm -rf llama.cpp
+            git init llama.cpp
+            git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+            git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+            git -C llama.cpp checkout --detach FETCH_HEAD
+          fi
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Restore pinned Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      - name: Acquire and verify exact Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error               -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf               'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local proposal endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Prove repaired planner through one synthetic proposal only
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_canary_execution_v2"
+          PYTHONPATH="$C" python - <<'PY' | tee CANARY_EXECUTION_PREFLIGHT.json
+          import json
+          from canonical.runtime import harbor_science_planner_v1 as p
+          from canonical.runtime.harbor_science_agent_v1 import _extract_contract
+          prompt=(
+            'You are an OPTIONAL semantic proposal source inside Project Brain, not execution authority. '
+            'Submit material_requirements exactly ["R1"]. Submit exactly one candidate with action_id A1, '
+            'covers ["R1"], command "printf ok > /tmp/brain_canary_preflight", and '
+            'verify_command "test -s /tmp/brain_canary_preflight". '
+            'Do not use network, packages, git, secrets, or host escape. Do not submit finish_summary.'
+          )
+          out=p.plan(prompt,timeout_s=180)
+          raw=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+          req,cands,summary=_extract_contract(raw,None)
+          assert req==["R1"] and summary is None and len(cands)==1
+          row=cands[0]
+          assert row["action_id"]=="A1" and row["covers"]==["R1"]
+          assert row["command"]=="printf ok > /tmp/brain_canary_preflight"
+          assert row["verify_command"]=="test -s /tmp/brain_canary_preflight"
+          assert out["transport"]=="PINNED_LOCAL_QWEN_LLAMA_CPP_TOOL_CALL"
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_CANARY_EXECUTION_PREFLIGHT_V2",
+            "status":"PASS",
+            "authority_blob":"741d6ca0cc4880e6cd9c76e3046272b1feb756f1",
+            "planner_blob":"879887984e2ca8abacac486d687f519f5d0d78a5",
+            "controller_blob":"5557efd21f1a433ad16766def3775a79c459784b",
+            "terminal_task_exposure":0,
+            "terminal_trials_executed":0,
+            "incremental_spend_usd":0,
+            "duration_s":out["duration_s"]
+          },sort_keys=True))
+          PY
+      - name: Preserve preflight evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-canary-execution-preflight-v2
+          path: |
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+            CANARY_EXECUTION_PREFLIGHT.json
+          if-no-files-found: warn
