@@ -1,0 +1,84 @@
+name: Verify Brain composition current owned-family bridges V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/composition_current_owned_family_bridges_v2/**"
+      - ".github/workflows/verify-brain-composition-current-owned-family-bridges-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/composition_current_owned_family_bridges_v2
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact Brain blobs: PASS")
+          PY
+      - name: Verify governance source bindings
+        run: |
+          cd capsules/composition_current_owned_family_bridges_v2
+          python - <<'PY'
+          import hashlib,json,pathlib
+          g=json.load(open("canonical/governance/COMPOSITION_CURRENT_OWNED_FAMILY_BRIDGES_V2.json",encoding="utf-8"))
+          for name,row in g["source_authorities"].items():
+              p=row["path"]; expected=row["git_blob_sha"]
+              data=pathlib.Path(p).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+              assert got==expected,(name,p,got,expected)
+          assert g["canonical_base_commit"]=="0fa257b9a4940edc01d3503902a06d6a0027e2d1"
+          print("governance source bindings: PASS")
+          PY
+      - name: Compile
+        run: |
+          cd capsules/composition_current_owned_family_bridges_v2
+          python -m py_compile canonical/runtime/composition_current_owned_family_bridges_v2.py canonical/tests/test_composition_current_owned_family_bridges_v2.py
+      - name: Run adversarial tests
+        run: |
+          cd capsules/composition_current_owned_family_bridges_v2
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_composition_current_owned_family_bridges_v2 -v
+      - name: Enforce exact two-receipt zero-credit reduction
+        run: |
+          cd capsules/composition_current_owned_family_bridges_v2
+          export PYTHONPATH=.
+          python - <<'PY'
+          import json
+          from canonical.runtime.composition_current_owned_family_bridges_v2 import derive
+          def load(p):
+              with open(p,encoding="utf-8") as f: return json.load(f)
+          out=derive(
+              load("canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json"),
+              load("canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json"),
+              load("canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json"),
+              load("canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V1.json"),
+              load("canonical/capabilities/opus55/OPUS55_LONG_HORIZON_MEMORY_AND_CONTINUITY_V1.json"),
+              load("canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json"),
+              load("canonical/verification/COMPOSITION_BEHAVIORAL_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json"),
+              load("canonical/verification/DELEGATION_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"),
+              load("canonical/verification/DELEGATION_V4_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"),
+          )
+          assert out["status"].startswith("PASS"),out
+          assert [r["component_id"] for r in out["candidate_receipts"]]==["memory","delegation"],out
+          assert all(r["verified"] is False and r["independent"] is False for r in out["candidate_receipts"]),out
+          assert out["forbidden_component_receipts"]==["tool discovery"],out
+          e=out["expected_after_independent_verification"]
+          assert e["scoped_proved_interface_count"]==2 and e["open_interface_count"]==10,out
+          assert e["parent_composition_predicate_closed"] is False,out
+          assert out["new_reality_units_consumed"]==0 and out["incremental_spend_usd"]==0,out
+          assert out["capability_credit_delta"]==0 and out["family_credit_delta"]==0,out
+          assert out["execution_authority"] is False and out["promotion_authority"] is False,out
+          print("composition exact two-receipt reduction: PASS")
+          PY
