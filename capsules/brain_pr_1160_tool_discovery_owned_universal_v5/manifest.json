@@ -1,0 +1,22 @@
+{
+  "schema": "BRAIN_PR_1160_TOOL_DISCOVERY_OWNED_UNIVERSAL_V5_VERIFIER_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1160,
+  "brain_ref": "tool-discovery-owned-universal-v5-20261003",
+  "exact_brain_blobs": {
+    "canonical/runtime/tool_discovery_owned_universal_v5.py": "04a4a32197cd820f8a529421e8e28bc14f2c2332",
+    "canonical/tests/test_tool_discovery_owned_universal_v5.py": "d4aba846af38e1c2f74f6d0391073b0e4faa40b0",
+    "canonical/governance/TOOL_DISCOVERY_OWNED_UNIVERSAL_V5_THEOREM_V1.json": "2c422acb30242f0ca77b2aff11f858fcd27f1272",
+    "canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OWNED_UNIVERSAL_V5_V1.json": "549f06196fc0988fc54c069271b4f2990d4e7e95",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "ee187f611a0e82b2de495ee377682f39bc31dd31",
+    "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json": "6bcabc0a7d0525532ce7b80e132278f7c99caa43",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "7885a827b1483bfb38315c1f492848f7e4680285"
+  },
+  "claims": {
+    "target_preservation": true,
+    "independent_exhaustive_worlds": 65536,
+    "no_acceptance_credit": true,
+    "zero_reality": true
+  }
+}
