@@ -1,10 +1,10 @@
 name: Verify Tool Discovery proof router V2
 on:
-  pull_request:
+  push:
+    branches: [critical/tool-proof-router-v2-isolated-20261003]
     paths:
       - 'capsules/tool_discovery_proof_router_v2/**'
       - '.github/workflows/verify-tool-discovery-proof-router-v2.yml'
-  workflow_dispatch:
 permissions:
   contents: read
 jobs:
