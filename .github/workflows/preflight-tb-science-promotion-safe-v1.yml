@@ -122,10 +122,10 @@ jobs:
       - name: Preflight repaired Brain controller against live zero-spend planner on synthetic contracts only
         run: |
           set -euo pipefail
-          C=capsules/tb_science_candidate_actions_alias_v1/harbor_science_agent_v1.py
-          test "$(git hash-object "$C")" = "3cffde35fee70e8bd687310e817a92bdfce7df0c"
+          C=capsules/tb_science_deterministic_terminalization_v1/harbor_science_agent_v1.py
+          test "$(git hash-object "$C")" = "8627b0a0a886ed4df60d5839370b4bb2b4e76f1a"
           python - <<'PY'
-          import importlib.util, json, pathlib, sys, time, types, urllib.request
+          import asyncio, importlib.util, json, pathlib, sys, time, types, urllib.request
 
           # Load the exact repaired Brain controller while stubbing only its transport dependencies.
           canonical=types.ModuleType("canonical")
@@ -138,7 +138,12 @@ jobs:
                   raise ValueError("BAD_COMMAND")
               return v.strip()
           policy.validate_environment_command=safe_command
-          transport.HarborEnvironmentTransport=object
+          class FakeTransport:
+              def __init__(self, env):
+                  self.env=env
+              async def exec(self, command, timeout_sec=None, **kwargs):
+                  return await self.env.exec(command, timeout_sec=timeout_sec, **kwargs)
+          transport.HarborEnvironmentTransport=FakeTransport
           runtime.astra_runtime=astra
           sys.modules["canonical"]=canonical
           sys.modules["canonical.runtime"]=runtime
@@ -147,7 +152,7 @@ jobs:
           sys.modules["canonical.runtime.harbor_environment_transport"]=transport
           spec=importlib.util.spec_from_file_location(
               "tb_science_repaired",
-              "capsules/tb_science_candidate_actions_alias_v1/harbor_science_agent_v1.py",
+              "capsules/tb_science_deterministic_terminalization_v1/harbor_science_agent_v1.py",
           )
           mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 
@@ -194,15 +199,57 @@ jobs:
               assert len(cands)==1 and cands[0]["action_id"]=="A1", obj
               assert cands[0]["covers"]==["R1"], obj
               results.append({"attempt":i+1,"ok":True,"model_alias":model,"latency_s":round(time.monotonic()-t,3),"observed_candidate_key":"candidates" if "candidates" in obj else "candidate_actions" if "candidate_actions" in obj else "none"})
+          # Verify deterministic Brain-owned terminalization independently of the
+          # live planner transport. A premature substrate finish request must not
+          # suppress an admissible action, and no second planner turn is allowed.
+          class Receipt:
+              def __init__(self, returncode=0, stdout="", stderr=""):
+                  self.returncode=returncode; self.stdout=stdout; self.stderr=stderr
+          class Env:
+              def __init__(self): self.commands=[]
+              async def exec(self, command, timeout_sec=None, **kwargs):
+                  self.commands.append(command)
+                  return Receipt(0,"ok","")
+          astra._extract_json_object=lambda text: json.loads(text)
+          calls={"n":0}
+          def deterministic_planner(prompt, timeout_s=20):
+              calls["n"]+=1
+              if calls["n"]>1:
+                  raise AssertionError("SECOND_PLANNER_TURN_FORBIDDEN_AFTER_VERIFIED_COVERAGE")
+              return {
+                  "text":json.dumps({
+                      "material_requirements":["R1"],
+                      "candidate_actions":[
+                          {"action_id":"A1","covers":["R1"],"command":"printf ok","verify_command":"test 1 -eq 1"}
+                      ],
+                      "finish_summary":"premature-substrate-finish"
+                  }),
+                  "model":"synthetic-fixed-substrate"
+              }
+          astra._planner_post=deterministic_planner
+          env=Env()
+          terminal=asyncio.run(mod.run_science_goal("synthetic goal",env,max_cycles=2))
+          assert terminal["status"]=="FINISHED", terminal
+          assert terminal["finish_authority"]=="BRAIN_VERIFIED_STATE", terminal
+          assert terminal["model_has_terminal_authority"] is False, terminal
+          assert terminal["cycles"]==1, terminal
+          assert terminal["resolved_requirements"]==["R1"], terminal
+          assert terminal["summary"]!="premature-substrate-finish", terminal
+          assert calls["n"]==1, calls
+          assert env.commands==["printf ok","test 1 -eq 1"], env.commands
+          assert terminal["trace"][0]["kind"]=="FINISH_REJECTED", terminal["trace"]
+
           out={
-            "schema":"PROJECT_BRAIN_TB_SCIENCE_REPAIRED_PLANNER_PREFLIGHT_V1",
-            "controller_blob":"3cffde35fee70e8bd687310e817a92bdfce7df0c",
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_DETERMINISTIC_TERMINALIZATION_PREFLIGHT_V1",
+            "controller_blob":"8627b0a0a886ed4df60d5839370b4bb2b4e76f1a",
             "endpoint":endpoint,
             "model_alias":"openai-fast",
             "synthetic_attempts":len(results),
             "synthetic_contract_passes":len(results),
             "all_pass":len(results)==6,
             "alias_conflict_fail_closed":True,
+            "brain_deterministic_terminalization_pass":True,
+            "planner_turns_after_verified_coverage":0,
             "terminal_task_content_read":0,
             "terminal_trials_executed":0,
             "incremental_spend_usd":0,
@@ -240,3 +287,5 @@ jobs:
 # main-trigger-v1: no semantic change
 
 # observable-pr-trigger-v2: no semantic change
+
+# deterministic-terminalization-verifier-v1: exact Brain blob 8627b0a0a886ed4df60d5839370b4bb2b4e76f1a
