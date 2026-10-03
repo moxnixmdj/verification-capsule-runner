@@ -1,0 +1,63 @@
+name: Verify Brain PR 1125 Tool Discovery interface instance
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1125_tool_discovery_interface_instance/**"
+      - ".github/workflows/verify-brain-pr-1125-tool-discovery-interface-instance.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain candidate identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1125_tool_discovery_interface_instance
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_v3_interface_instance_v1.py)" = "541c4cce9fd7a13954244965e2edd2b74e6360b1"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_v3_interface_instance_v1.py)" = "96127c045bbe8664d5b3903054c26d89d61880a1"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V3_INTERFACE_INSTANCE_V1.json)" = "2127ff4a737c072d9af3cbfd9966d1e39184e056"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V3_COMPLETE_INTERFACE_INSTANCE_V1.json)" = "d35f301a5ace5ed90cdcb359ff042c2f5030c4d5"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_proof_v3.py)" = "f82d949f3890ffc0f2513f9b39cc3585a5d22ebb"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json)" = "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7"
+          test "$(git hash-object canonical/verification/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "5fcdc5ae35f51c40f312edbe5727284c9f6ca3dd"
+      - name: Run adversarial instance tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1125_tool_discovery_interface_instance
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_v3_interface_instance_v1 -v
+      - name: Execute interface instance compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1125_tool_discovery_interface_instance
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_dynamic_v3_interface_instance_v1 > verdict.json
+      - name: Enforce narrow non-circular verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1125_tool_discovery_interface_instance
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["status"].startswith("PASS__CONTENT_ADDRESSED_FROZEN_INTERFACE_INSTANCE_SATISFIES_CONTRACT"),v
+          assert v["instance_verified_candidate"] is True,v
+          assert v["semantic_variant_count"]==6,v
+          assert all(v["required_properties"].values()),v
+          assert v["whole_protocol_scope_proved"] is False,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["terminal_results_replayed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Brain PR 1125 complete-interface instance: PASS")
+          PY
