@@ -1,0 +1,8 @@
+{
+  "schema": "VERIFICATION_TRIGGER_V1",
+  "date": "2026-10-03",
+  "purpose": "TRIGGER_EXISTING_TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_WORKFLOW_ONLY",
+  "workflow": ".github/workflows/verify-tool-discovery-acceptance-reduction.yml",
+  "source_capsule": "capsules/tool_discovery_acceptance_reduction_20261003",
+  "evidence_mutated": false
+}
