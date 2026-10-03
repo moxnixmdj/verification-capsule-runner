@@ -48,7 +48,7 @@ jobs:
           mixed=[{"slot_id":slots[i],"state":"INFRA_FAILURE"} for i in range(150)]
           out=adjudicate(slots,mixed,final=False)
           assert out["successes"]==0 and out["lower_bound_rate"]==0
-          g=json.load(open("$C/canonical/governance/TB_SCIENCE_CONSERVATIVE_CENSORING_LOWER_BOUND_V1.json"))
+          g=json.load(open("capsules/brain_pr_1220_tb_science_censoring/canonical/governance/TB_SCIENCE_CONSERVATIVE_CENSORING_LOWER_BOUND_V1.json"))
           assert g["frozen_reference"]["trial_slots"]==210
           assert g["frozen_reference"]["required_successes"]==124
           assert g["theorem"]["no_retry_credit"] is True
