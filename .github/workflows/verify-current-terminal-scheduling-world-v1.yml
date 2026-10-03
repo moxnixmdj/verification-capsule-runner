@@ -1,0 +1,102 @@
+name: Verify current terminal scheduling world v1
+
+on:
+  push:
+    branches: ["verify/current-terminal-scheduling-world-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-current-terminal-scheduling-world-v1.yml"
+      - "capsules/current_terminal_scheduling_world_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-current-terminal-scheduling-world-v1.yml"
+      - "capsules/current_terminal_scheduling_world_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain candidate and load-bearing inputs
+        run: |
+          set -euo pipefail
+          C=capsules/current_terminal_scheduling_world_v1
+          test "$(git hash-object "$C/canonical/runtime/current_terminal_scheduling_world_v1.py")" = "d07f6777a7b6a0fa932f2003df2de86960a5134e"
+          test "$(git hash-object "$C/canonical/tests/test_current_terminal_scheduling_world_v1.py")" = "73b39a5188ae16debae319ab04423f3455e5c2ff"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_SCHEDULING_WORLD_V1.json")" = "c2cfb36ea9096e43c05bf3e64fc238b203e48595"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "d3367c9cc372adbd61e410ba5d5f475e8398bbf8"
+          test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json")" = "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+          test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json")" = "7885a827b1483bfb38315c1f492848f7e4680285"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json")" = "4b5517dbd12978f8ffe481fb775e85592c7790c8"
+          test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json")" = "ec0ca144939a19234f1c53378cc76af2014a6179"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_SCHEDULING_ACTIVATION_V6.json")" = "e56719b8c63078273a6974104d413aa1b643da3b"
+
+      - name: Run fail-closed unit and mutation tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/current_terminal_scheduling_world_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_current_terminal_scheduling_world_v1
+
+      - name: Compile exact live scheduling world
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/current_terminal_scheduling_world_v1"
+          PYTHONPATH="$C" python -m canonical.runtime.current_terminal_scheduling_world_v1 > CURRENT_TERMINAL_SCHEDULING_WORLD_RESULT.json
+
+      - name: Independently adjudicate current world
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee CURRENT_TERMINAL_SCHEDULING_WORLD_INDEPENDENT_VERDICT.json
+          import json
+          x=json.load(open("CURRENT_TERMINAL_SCHEDULING_WORLD_RESULT.json"))
+          assert x["pass"] is True,x
+          assert x["status"]=="PASS__LIVE_30_PREDICATE_WORLD_COMPILED__STALE_31_WORLD_REJECTED",x
+          assert x["registry_predicate_count"]==38,x
+          assert x["proved_predicate_count"]==8,x
+          assert x["refuted_predicate_count"]==0,x
+          assert x["unresolved_predicate_count"]==30,x
+          assert x["live_action_coverage_count"]==30,x
+          assert x["uncovered_predicates"]==[],x
+          assert x["source_scheduling_world_stale"] is True,x
+          assert "DELEGATION_TERMINAL_SUCCESS_NONINFERIOR" in x["proved_predicates"],x
+          assert "DELEGATION_TERMINAL_SUCCESS_NONINFERIOR" not in x["unresolved_predicates"],x
+          assert "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR" in x["unresolved_predicates"],x
+          assert any("31" in r and "30" in r for r in x["source_scheduling_world_stale_reasons"]),x
+          assert x["new_reality_units_consumed"]==0,x
+          assert x["incremental_spend_usd"]==0,x
+          assert x["execution_authority"] is False,x
+          assert x["promotion_authority"] is False,x
+          assert x["fresh_reality_authority"] is False,x
+          out={
+            "schema":"PROJECT_BRAIN_CURRENT_TERMINAL_SCHEDULING_WORLD_V1_PUBLIC_RUNNER_VERIFICATION",
+            "status":"INDEPENDENT_PASS__RECEIPT_DERIVED_30_PREDICATE_WORLD__STALE_31_WORLD_REJECTED__ZERO_REALITY__ZERO_CREDIT",
+            "registry_predicates":38,
+            "proved_predicates":8,
+            "unresolved_predicates":30,
+            "live_action_coverage":30,
+            "delegation_removed_as_terminal":True,
+            "tool_discovery_reopened_preserved":True,
+            "stale_v6_rejected":True,
+            "new_reality_units_consumed":0,
+            "incremental_spend_usd":0,
+            "execution_authority":False,
+            "promotion_authority":False
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-terminal-scheduling-world-v1
+          path: |
+            CURRENT_TERMINAL_SCHEDULING_WORLD_RESULT.json
+            CURRENT_TERMINAL_SCHEDULING_WORLD_INDEPENDENT_VERDICT.json
+          if-no-files-found: error
