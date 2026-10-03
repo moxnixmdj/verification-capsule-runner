@@ -1,0 +1,44 @@
+name: Preflight TB-Science production planner
+on:
+  push:
+    branches: ["preflight-tb-science-production-planner-v1-20261003"]
+    paths:
+      - "preflight_tb_science_production_planner_v1.py"
+      - ".github/workflows/preflight-tb-science-production-planner-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "preflight_tb_science_production_planner_v1.py"
+      - ".github/workflows/preflight-tb-science-production-planner-v1.yml"
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Exercise exact production planner endpoint shape on synthetic content
+        run: python preflight_tb_science_production_planner_v1.py
+      - name: Enforce zero-terminal boundary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path("TB_SCIENCE_PRODUCTION_PLANNER_PREFLIGHT_V1.json")
+          assert p.is_file()
+          j=json.load(open(p))
+          assert j["synthetic_prompt_only"] is True
+          assert j["terminal_task_content_read"]==0
+          assert j["terminal_trials_executed"]==0
+          assert j["terminal_results_observed"]==0
+          assert j["incremental_spend_usd"]==0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-production-planner-preflight-v1
+          path: TB_SCIENCE_PRODUCTION_PLANNER_PREFLIGHT_V1.json
