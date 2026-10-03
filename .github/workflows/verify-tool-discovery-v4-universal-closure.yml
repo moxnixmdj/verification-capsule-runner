@@ -1,6 +1,11 @@
 name: Verify tool-discovery V4 universal-closure candidate
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'capsules/tool_discovery_v4_20261003/**'
+      - '.github/workflows/verify-tool-discovery-v4-universal-closure.yml'
   pull_request:
     paths:
       - 'capsules/tool_discovery_v4_20261003/**'
