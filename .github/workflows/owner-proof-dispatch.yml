@@ -124,3 +124,67 @@ jobs:
           assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
           print("INTERFACE_V2_HARDENING_PASS")
           PY
+
+
+  tool-discovery-v6:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/verify-tool-discovery-v6-version-restart-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6f14fd56b1b518058ea13fa3c2b9735b8b542c64
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact V6 capsule and repair
+        working-directory: capsules/tool_discovery_v6_version_restart_20261003
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v5.py)" = "42d096ef93e8ad06c4d1d5dfe730881bf45a2a72"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v6.py)" = "2020b7c2dc750009a9cc363d0703184b9115cfa6"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v6.py)" = "c68a084c5a985c5b54a4f94f488a781b13feac97"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V6_VERSION_RESTART_V1.json)" = "f276f7d5f9192af5857ebd3d211eb0dbfe2d35cd"
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v6 -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          g=json.loads(Path("canonical/governance/TOOL_DISCOVERY_DYNAMIC_V6_VERSION_RESTART_V1.json").read_text())
+          assert g["capability_credit_delta"]==0 and g["family_credit_delta"]==0,g
+          assert g["execution_authority"] is False and g["promotion_authority"] is False,g
+          assert g["new_reality_units_consumed"]==0 and g["terminal_results_replayed"]==0,g
+          print("TOOL_DISCOVERY_V6_PASS")
+          PY
+
+  observability-v2:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/verify-tool-discovery-observability-v2'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9aa1d4797ea48fa883fadcec3e98a5662a502769
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact V2 partition capsule
+        working-directory: capsules/brain_pr_1178_tool_observability_v2
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/tool_discovery_observability_partition_v2.py)" = "69a732c069ad2528fd1fcf3ddc46ba0e820d9760"
+          test "$(git hash-object canonical/tests/test_tool_discovery_observability_partition_v2.py)" = "26cfad1271c806331a08b10128779fbe27bea9b7"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V2.json)" = "628d2018a3b5f7d7d8b48708ff7fb5689ad88d08"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V2.json)" = "1f0fd5d4b111e6574d021aa651258d3cd0873918"
+          test "$(git hash-object independent_verifier.py)" = "18875446c43e0d9581ee36c81f3104054ec94cc9"
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_observability_partition_v2 -v
+          python independent_verifier.py
