@@ -1,0 +1,84 @@
+name: Verify P1 V9 canonical activation
+
+on:
+  push:
+    branches: ["verify/p1-v9-canonical-activation-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-p1-v9-canonical-activation.yml"
+      - "capsules/p1_v9_canonical_activation/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-p1-v9-canonical-activation.yml"
+      - "capsules/p1_v9_canonical_activation/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact candidate bytes
+        run: |
+          set -euo pipefail
+          C=capsules/p1_v9_canonical_activation
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "d3367c9cc372adbd61e410ba5d5f475e8398bbf8"
+          test "$(git hash-object "$C/canonical/verification/P1_UNIVERSAL_SCOPE_RESTORATION_V9_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "2c6bb594d353e4c6a169821da5f84a91be212ca7"
+      - name: Recompute activation invariants
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee P1_V9_ACTIVATION_VERDICT.json
+          import json
+          C="capsules/p1_v9_canonical_activation"
+          a=json.load(open(C+"/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json"))
+          r=json.load(open(C+"/canonical/verification/P1_UNIVERSAL_SCOPE_RESTORATION_V9_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"))
+          assert str(r["status"]).startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),r
+          assert r["verified"]["whole_p1_contract_restored"] is True
+          assert r["verified"]["whole_scope_contract_pass_count"]==12
+          assert r["verified"]["provisional_behavioral_family_pass_count"]==19
+          assert r["verified"]["source_fresh_reality_units_consumed"]==0
+          assert r["verified"]["restoration_new_reality_units_consumed"]==0
+          assert r["opus55_acceptance_credit_delta"]==0
+          t=a["truth"]
+          assert t["contracts"]=="12/12_WHOLE_SCOPE_PASS__P1_SCOPE_RESTORED_BY_INDEPENDENT_ZERO_REALITY_UNIVERSAL_PROOF"
+          assert t["behavioral_families"]=="19/19_PROVISIONAL_BEHAVIORAL_PASS__P1_SCOPE_QUARANTINE_CLEARED__STRICT_OPUS55_ACCEPTANCE_SEPARATE"
+          assert t["opus55_acceptance"]=="3/19_PASS__16/19_OPEN"
+          assert t["achieved"] is False
+          at=a["atomic_acceptance_frontier"]
+          assert at["proved"]==8 and at["unresolved"]==30 and at["total"]==38
+          src=a["sources"]["p1_universal_scope_restoration_v9"]
+          assert src["public_runner_pr"]==1261
+          assert src["workflow_run_id"]==37110511439
+          assert src["reducer_blob"]=="cfb2336291112eff247ae74b7a5e381fc9009317"
+          assert src["universal_scope_receipt_blob"]=="f327bfdb5d52bb9551b52f67da14a4cd425533a3"
+          bad=("P1_WHOLE_FROZEN_SCOPE_INDEPENDENTLY_QUARANTINED",
+               "P1_SCOPE_QUARANTINE_PROPAGATES_TO_8_FAMILY_ROWS",
+               "P1_ZERO_REALITY_EXHAUSTION_INDEPENDENT_PASS",
+               "P1_V7_FAILURE_SEMANTICS_IDENTIFIABILITY_INDEPENDENT_PASS",
+               "P1_V7_FAILURE_SEMANTICS_ZERO_REALITY_SOURCE_EXHAUSTION_INDEPENDENT_PASS",
+               "P1_EXACT_MINIMUM_REALITY_CUT_INDEPENDENT_PASS")
+          assert not any(any(x.startswith(p) for p in bad) for x in a.get("residual",[]))
+          assert any(x.startswith("P1_UNIVERSAL_SCOPE_RESTORATION_V9_INDEPENDENT_PASS") for x in a.get("residual",[]))
+          assert a["next"]=="EXECUTE_EXACTLY_TERMINAL_BENCH_SCIENCE_VIRTUAL_BASELINE_LOCALIZATION_TRIAL_0__CAPTURE_CONTENT_ADDRESSED_RESULT__AUTO_REVOKE__NO_RETRY_NO_REPLACEMENT"
+          out={
+            "schema":"PROJECT_BRAIN_P1_V9_CANONICAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION",
+            "status":"INDEPENDENT_PASS__CANONICAL_BEHAVIORAL_SCOPE_RESTORED__STRICT_OPUS55_ACCEPTANCE_UNCHANGED",
+            "authority_blob":"d3367c9cc372adbd61e410ba5d5f475e8398bbf8",
+            "restoration_receipt_blob":"2c6bb594d353e4c6a169821da5f84a91be212ca7",
+            "whole_scope_contract_pass_count":12,
+            "provisional_behavioral_family_pass_count":19,
+            "strict_opus55_families_closed":3,
+            "atomic_predicates_proved":8,
+            "terminal_goal_achieved":False,
+            "new_reality_units_consumed":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-v9-canonical-activation
+          path: P1_V9_ACTIVATION_VERDICT.json
+          if-no-files-found: error
