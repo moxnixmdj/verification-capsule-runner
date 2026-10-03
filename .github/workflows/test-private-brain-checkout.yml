@@ -1,0 +1,22 @@
+name: Test private Brain checkout
+on:
+  push:
+    branches:
+      - "test/private-brain-checkout-20261002"
+    paths:
+      - ".github/workflows/test-private-brain-checkout.yml"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: moxnixmdj/brain
+          ref: main
+          token: ${{ github.token }}
+          fetch-depth: 1
+      - run: |
+          git rev-parse HEAD
+          test -f canonical/runtime/proof_atom_receipt_snapshot_v1.py
