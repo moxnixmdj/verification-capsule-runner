@@ -1,0 +1,12 @@
+name: Verify universal scope compiler V1
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scope_candidate/check_scope_compiler.py
