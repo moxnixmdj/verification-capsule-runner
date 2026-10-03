@@ -1,0 +1,32 @@
+name: Verify acceptance backprop v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/acceptance_backprop_compiler_v1.py'
+      - 'canonical/tests/test_acceptance_backprop_compiler_v1.py'
+      - '.github/workflows/verify-acceptance-backprop-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/acceptance_backprop_compiler_v1.py)" = "b64092054a08bd528bc13b5dbbc9ee80229f19d4"
+          test "$(git hash-object canonical/tests/test_acceptance_backprop_compiler_v1.py)" = "1e025ed0f9a68a727d7c421b35dda52ff38d8f35"
+      - name: Compile exact runtime and tests
+        run: |
+          python -m py_compile canonical/runtime/acceptance_backprop_compiler_v1.py
+          python -m py_compile canonical/tests/test_acceptance_backprop_compiler_v1.py
+      - name: Run adversarial unit tests
+        run: PYTHONPATH=. python -m unittest -v canonical.tests.test_acceptance_backprop_compiler_v1
