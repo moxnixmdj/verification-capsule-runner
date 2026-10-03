@@ -1,0 +1,31 @@
+{
+  "schema": "BRAIN_TERMINAL_SCHEDULING_V14_POST_TOOL_DISCOVERY_PUBLIC_VERIFIER_INPUT",
+  "date": "2026-10-03",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_branch": "reconcile/post-tool-discovery-5of19-scheduler-v14-20261003-sol",
+  "exact_brain_blobs": {
+    "canonical/governance/TERMINAL_SCHEDULING_V14_POST_TOOL_DISCOVERY_CANDIDATE_V1.json": "2236cea803e95619d21950cd08b88a38886da5f1",
+    "canonical/runtime/terminal_scheduling_v14_post_tool_discovery_v1.py": "7c31e6d23d3653f1574dddfcf7ca5863bc844e6e",
+    "canonical/tests/test_terminal_scheduling_v14_post_tool_discovery_v1.py": "5e9342f283249ecb11ec372d02c416253efed911",
+    "canonical/runtime/current_terminal_scheduling_world_v2.py": "1b09388b91ba52e1f13e3e26af9f97f8dd2eca65",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "6fdd6529ec914879ab2ba6a3dc865d85751e2d80",
+    "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json": "fad438ab38cd74515e926e4a20da2caa5e66bf81",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "e5888b0f03ddd3a7fbfdfd74d11b4680abc9f0dd",
+    "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
+    "canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json": "38b53147597b5457859e3b0d031168842560e3e2",
+    "canonical/governance/TERMINAL_SCHEDULING_ACTIVATION_V6.json": "e56719b8c63078273a6974104d413aa1b643da3b",
+    "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_ACTIVATION_V1.json": "0b14d28e356e3d730cfb6615dcde4c9f00bafdd4",
+    "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_INTEGRATOR_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "bed23f2e69d4bc8937d792b07b5812364cf26a85"
+  },
+  "expected": {
+    "accepted_families": 5,
+    "open_families": 14,
+    "proved_predicates": 12,
+    "unresolved_predicates": 26,
+    "live_actions": 20,
+    "live_certificates": 15,
+    "live_action_coverage": 26,
+    "verified_owned_families": 2
+  }
+}
