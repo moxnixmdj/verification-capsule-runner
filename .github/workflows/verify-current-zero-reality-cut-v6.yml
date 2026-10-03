@@ -1,0 +1,69 @@
+name: Verify current zero reality cut V6
+on:
+  push:
+    branches: ["verify/current-zero-reality-cut-v6-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-current-zero-reality-cut-v6.yml"
+      - "capsules/current_zero_reality_cut_v6/brain/**"
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact V6 cut and fail-closed stop rules
+        run: |
+          set -euo pipefail
+          ROOT=capsules/current_zero_reality_cut_v6/brain
+          test "$(git hash-object "$ROOT/canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json")" = "e94469ffdeb7535f9a921a244e62cde6b84fda5c"
+          test "$(git hash-object "$ROOT/canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V6.json")" = "787ef016eca5bb6727aee898f549281e933d9be2"
+          test "$(git hash-object "$ROOT/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "90db4810e0975cedf710743a8214a261303a761a"
+          test "$(git hash-object "$ROOT/canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json")" = "55198d9fd6f08a6e6b2efd96fe3be4eb58b06ac2"
+          test "$(git hash-object "$ROOT/canonical/governance/ROOT2_PUBLIC_ACCESS_REFRESH_20261003_V1.json")" = "905d4ac3e186b7f69c4dc6eaf83a82b7a7044a75"
+          test "$(git hash-object "$ROOT/canonical/governance/TB4_ZERO_COST_CARRIER_CENSUS_20261003_V1.json")" = "8bbd1ad5c2b614b8b800155d1142df216ac32765"
+          test "$(git hash-object "$ROOT/canonical/governance/CURRENT_ROOT3_ZERO_REALITY_STRONGER_PROOF_SATURATION_V1.json")" = "bdc78fdc147a014e5d77d5daafb5434b1a4e878f"
+          test "$(git hash-object "$ROOT/canonical/verification/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "48c2318aaffffec67855199523235e6943289fc6"
+          test "$(git hash-object "$ROOT/canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "1a67bc568944212c4d235a463c8bd7bea21b3993"
+          test "$(git hash-object "$ROOT/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json")" = "bc420c6d1a6caaab7a6d5c257640d3f5797170f5"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=Path("capsules/current_zero_reality_cut_v6/brain")
+          def L(p): return json.loads((r/p).read_text())
+          root=L("canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json")
+          cut=L("canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V6.json")
+          auth=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          route=L("canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json")
+          access=L("canonical/governance/ROOT2_PUBLIC_ACCESS_REFRESH_20261003_V1.json")
+          tb4=L("canonical/governance/TB4_ZERO_COST_CARRIER_CENSUS_20261003_V1.json")
+          sat=L("canonical/governance/CURRENT_ROOT3_ZERO_REALITY_STRONGER_PROOF_SATURATION_V1.json")
+          total=L("canonical/verification/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          synth=L("canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          assert root["current_residual_root_partition"]["evidence"]["git_blob_sha"]=="bc420c6d1a6caaab7a6d5c257640d3f5797170f5"
+          assert cut["exact_state"]["accepted_families"]==5 and cut["exact_state"]["proved_atomic"]==12 and cut["exact_state"]["unresolved_atomic"]==26
+          assert cut["exact_state"]["root1_positive_gap_count"]==0
+          assert cut["exact_state"]["root2_unique_benchmark_surfaces"]==14
+          assert route["deduplication"]["root2_only_predicate_count"]==15 and route["deduplication"]["unique_benchmark_surface_count"]==14
+          assert access["status"].startswith("CURRENT_PUBLIC_ROUTE_ACCESS_REFRESH")
+          assert tb4["current_consequence"].endswith("CURRENT_180_LT_220_ROUTE_REMAINS_BLOCKED")
+          assert total["verified"]["closed_target_count"]==0 and total["verified"]["residual_target_count"]==8
+          assert synth["verified"]["transported_proved_atom_count"]==7 and synth["verified"]["implies_target"] is False
+          assert sat["status"].startswith("SATURATED_CURRENT_BOUND_ROOT3_STRONGER_PROOF_INPUTS")
+          waits={x["class"]:x["state"] for x in cut["exhausted_or_waiting"]}
+          assert waits["CURRENT_NORMALIZED_WITNESS_DIRECT_REUSE"]=="EXHAUSTED"
+          assert waits["GENERIC_ROOT3_STRONGER_PROOF_SEARCH"]=="SATURATED_CURRENT_BOUND_INPUTS"
+          assert waits["PRIVATE_HELDOUT_PUBLIC_ACCESS_SEARCH"]=="SATURATED"
+          assert waits["TB4_CURRENT_CARRIER_SEARCH"]=="SATURATED_CURRENT_CONNECTED_RESOURCES"
+          assert cut["fresh_reality_authority"] is False and cut["execution_authority"] is False
+          assert auth["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN" and auth["truth"]["achieved"] is False
+          assert auth["sources"]["current_zero_reality_minimum_cut_v6"]["git_blob_sha"]=="787ef016eca5bb6727aee898f549281e933d9be2"
+          assert "NO_GENERIC_ROOT3_SEARCH" in auth["next_terminal_action"]
+          assert "NO_REPEATED_PRIVATE_ACCESS_SEARCH" in auth["next_terminal_action"]
+          assert "NO_TB4_CARRIER_SEARCH_UNTIL_REOPEN" in auth["next_terminal_action"]
+          assert "NO_FRESH_REALITY" in auth["next_terminal_action"]
+          print("CURRENT_ZERO_REALITY_CUT_V6_PASS")
+          PY
