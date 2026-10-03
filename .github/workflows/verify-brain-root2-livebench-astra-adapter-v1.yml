@@ -1,5 +1,11 @@
 name: Verify Brain Root2 LiveBench Astra adapter v1
 on:
+  push:
+    branches:
+      - "verify/root2-livebench-astra-adapter-v1-20261004"
+    paths:
+      - "capsules/root2_livebench_astra_adapter_v1/**"
+      - ".github/workflows/verify-brain-root2-livebench-astra-adapter-v1.yml"
   pull_request:
     branches: [main]
     paths:
