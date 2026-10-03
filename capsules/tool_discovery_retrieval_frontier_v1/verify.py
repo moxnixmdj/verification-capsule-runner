@@ -55,8 +55,10 @@ assert epoch["semantic_state"]["frozen_generator_semantic_classes"]==6,epoch
 assert epoch["semantic_state"]["all_six_classes_pass"] is True,epoch
 assert epoch["semantic_state"]["open_domain_scope_relation_closed"] is False,epoch
 
-assert 'declared_target_scope = "PUBLIC_APT_PACKAGES_FROM_ALL_ENABLED_APT_SOURCES"' in apt
-assert "NO_CLAIM_ABOUT_NON_APT_TOOLS_OR_ECOSYSTEMS" in apt
+assert '"declared_target_scope": (' in apt
+assert "ALL_BINARY_PACKAGE_TOOL_IDENTITIES_EXPOSED_BY_EVERY_ENABLED_PUBLIC_APT_PACKAGES_INDEX_" in apt
+assert "ON_THE_VERIFIED_RUNNER_EPOCH__WITH_CAPABILITY_CONFIRMATION_BY_EPOCH_BOUND_SAFE_EXECUTABLE_PROBES" in apt
+assert "THIS_INSTANCE_IS_NOT_THE_SET_OF_ALL_TOOLS_IN_EXISTENCE" in apt
 apt_row=next(x for x in frontier["evaluated_witness_classes"] if x["witness_class"]=="APT_COMPLETE_INTERFACE_INSTANCE_CANDIDATE")
 assert "SCOPE_MISMATCH" in apt_row["disposition"],apt_row
 assert "UNVERIFIED_INSTANCE_CANDIDATE" in apt_row["disposition"],apt_row
