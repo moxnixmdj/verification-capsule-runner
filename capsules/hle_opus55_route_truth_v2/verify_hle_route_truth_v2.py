@@ -10,7 +10,8 @@ with urllib.request.urlopen(req,timeout=90) as resp:
     raw=resp.read()
 
 sha=hashlib.sha256(raw).hexdigest()
-assert len(raw)>10_000_000, len(raw)
+assert sha=="7311c9c6bbb16d012f1c12c7418b05949fcf7ae3e30d2c40f22050074b2a7378",sha
+assert len(raw)==17795106,len(raw)
 reader=PdfReader(io.BytesIO(raw))
 texts=[]
 for page in reader.pages:
@@ -36,8 +37,16 @@ facts=[
 missing=[x for x in facts if x.lower() not in low]
 assert not missing,("missing_primary_source_facts",missing)
 
-# The capability table must contain the vendor-reported with-tools target.
+# Bind population identity and vendor-reported with-tools target.
+# Anthropic's frozen HLE description is the full 2,500-question benchmark, not
+# the separate 1,000-question HLE-Diamond subset.
+assert re.search(r"2[, ]500\s+questions",full,re.I), "HLE 2500-question population absent"
 assert "67.7" in full, "HLE 67.7 target absent from system-card PDF"
+
+pop_hits=[m.start() for m in re.finditer(r"2[, ]500\s+questions",full,re.I)]
+hle_hits=[m.start() for m in re.finditer(r"humanity.s last exam",full,re.I)]
+assert pop_hits and hle_hits
+assert min(abs(a-b) for a in pop_hits for b in hle_hits) < 12000, "2500 population not locally bound to HLE"
 
 # Bind the local HLE evaluation paragraph around its distinctive grader sentence.
 # The PDF contains earlier HLE mentions (e.g. table/overview), so anchoring to the
@@ -63,6 +72,8 @@ print(json.dumps({
   "thinking":"auto",
   "total_context_token_cap":1000000,
   "context_compaction":False,
+  "population_question_count":2500,
+  "population_identity":"FULL_HLE_NOT_HLE_DIAMOND",
   "vendor_target_percent":67.7,
   "terminal_cases_consumed":0,
   "new_reality_units_consumed":0,
