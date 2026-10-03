@@ -3,9 +3,9 @@
   "date": "2026-10-03",
   "brain_pr": 1296,
   "source_files": {
-    "canonical/runtime/recovery_opus55_zero_reality_acceptance_reduction_v1.py": "8532ef737fd0a00862c1fbba8bcecaddc5fe9e9d",
-    "canonical/tests/test_recovery_opus55_zero_reality_acceptance_reduction_v1.py": "89b66f4112f5075d08db488f4957f934b365b636",
-    "canonical/governance/RECOVERY_OPUS55_ZERO_REALITY_ACCEPTANCE_CANDIDATE_V1.json": "f8b54f3f9635ab24489b28e8583d710ba2e66b5b",
+    "canonical/runtime/recovery_opus55_zero_reality_acceptance_reduction_v1.py": "6c5633d399fdc5caeeac35b5b175572b69165323",
+    "canonical/tests/test_recovery_opus55_zero_reality_acceptance_reduction_v1.py": "133306b674fbb430cab491ee744be382f36a741a",
+    "canonical/governance/RECOVERY_OPUS55_ZERO_REALITY_ACCEPTANCE_CANDIDATE_V1.json": "89929d767f94052a9d28a958b0eb1b89dd1d6782",
     "canonical/governance/RECOVERY_T0_T2_ACCEPTANCE_SCOPE_RELATION_V1.json": "5159f145fad8b07fe2164716aedf653a0b34a6e0",
     "canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "95422fdb13ada158930486442c9441c9c5cd9852",
     "canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_SCOPE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "f327bfdb5d52bb9551b52f67da14a4cd425533a3",
@@ -20,6 +20,8 @@
     "NO_RUN_37108111537",
     "THREE_RECOVERY_PREDICATES_ONLY",
     "SCOPE_COMPLETE_STRONGER_PROOF_AT_OBJECTIVE_CEILING_OR_FLOOR",
-    "NO_SELF_PROMOTION"
-  ]
+    "NO_SELF_PROMOTION",
+    "HISTORICAL_RELATION_OBSERVED_BOUND_FIELDS_NON_LOAD_BEARING"
+  ],
+  "verification_revision": "V2_HISTORICAL_OBSERVED_BOUND_NON_LOAD_BEARING"
 }
