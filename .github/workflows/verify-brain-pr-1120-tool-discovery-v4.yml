@@ -25,11 +25,11 @@ jobs:
           test "$(git hash-object canonical/runtime/tool_discovery_v4_soundness_repair_v1.py)" = "739b0a349bf91099d6fa6ea91450ed900211dc87"
           test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v4.py)" = "9c0693b131058f18e061c25e2dc3cbe5fee36d28"
           test "$(git hash-object canonical/tests/test_tool_discovery_v4_soundness_repair_v1.py)" = "67420c1f576e18d89ab9ad5538a080fff47681a8"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "c63faf97a598b811588e86e6a5f7568293302b4c"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "066ae03f40769abf3ce29cbd4e8bbfcb3fdbba92"
           test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V3_REFINEMENT_FALSIFICATION_AND_V4_REPAIR_V1.json)" = "66a39a5521930b7f901f01e57eb5be0e74e70a78"
-          test "$(git hash-object canonical/runtime/tool_discovery_v4_conditional_program_proof_v1.py)" = "8b79492896b6b7f3e5fa84c9b707b864dab05d44"
-          test "$(git hash-object canonical/tests/test_tool_discovery_v4_conditional_program_proof_v1.py)" = "f403ff26d5ce2875112ee4e329439acbf1a3e2c3"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_V4_CONDITIONAL_PROGRAM_PROOF_V1.json)" = "41ebed1b0283e5a50d268588744ba529c38d12f0"
+          test "$(git hash-object canonical/runtime/tool_discovery_v4_conditional_program_proof_v1.py)" = "59a0ff6e6c06580b8361d017ec26382e1f111e85"
+          test "$(git hash-object canonical/tests/test_tool_discovery_v4_conditional_program_proof_v1.py)" = "3c3301933dd3509e0ea1f110839d414330173c6a"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_V4_CONDITIONAL_PROGRAM_PROOF_V1.json)" = "d97f549ad205bbf464a08bee22d3b669f1e2adfd"
           test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V4_SOUNDNESS_REPAIR_V1.json)" = "ebea7c0473823d090aebd235e21093d838e43c5c"
       - name: Run adversarial V3 counterexample and V4 tests
         shell: bash
@@ -78,6 +78,9 @@ jobs:
           assert p["exhaustive_dynamic_abstraction"]["pass"] is True,p
           assert p["exhaustive_dynamic_abstraction"]["checked"]>1000,p
           assert all(p["epoch_and_authority_checks"].values()),p
+          assert p["predicate_language_semantics"]["pass"] is True,p
+          assert p["predicate_language_semantics"]["checked"]>20,p
+          assert all(p["route_filter_checks"].values()),p
           assert p["conditional_program_sound_under_v2_contract"] is True,p
           assert p["global_oracle_is_over_complete_tool_set_not_current_visible_subset"] is True,p
           assert p["universal_target_proved"] is False,p
