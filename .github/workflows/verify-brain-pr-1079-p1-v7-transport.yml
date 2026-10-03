@@ -23,7 +23,7 @@ jobs:
           m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
           for src,expected in m["exact_brain_blobs"].items():
               data=pathlib.Path(src).read_bytes()
-              got=hashlib.sha1(f"blob {len(data)}\\0".encode()+data).hexdigest()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
               assert got==expected,(src,got,expected)
           print("exact Brain PR 1079 blobs: PASS")
           PY
