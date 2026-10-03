@@ -1,0 +1,23 @@
+name: Verify Brain Root1 acquisition closure V2 activation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root1_acquisition_closure_v2_activation/**"
+      - ".github/workflows/verify-brain-root1-acquisition-closure-v2-activation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify activation projection
+        run: python capsules/root1_acquisition_closure_v2_activation/verify_activation.py
