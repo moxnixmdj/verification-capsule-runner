@@ -1,0 +1,107 @@
+name: Verify TB-Science latency stress repair
+on:
+  pull_request:
+    branches:
+      - "verify-base/tb-science-latency-stress-v1-20261003"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact candidate blobs
+        run: |
+          set -euo pipefail
+          N=capsules/tb_science_latency_stress_v1/canonical/runtime
+          test "$(git hash-object "$N/harbor_science_planner_v1.py")" = "5f6182d70d3246f1a19321806cb9938b0fb6a8c1"
+          test "$(git hash-object "$N/harbor_science_agent_v1.py")" = "d29ea63e60af3b3403ddaeccbe6b3090db0234cf"
+          grep -F '"max_tokens": 384' "$N/harbor_science_planner_v1.py"
+          grep -F 'science_planner.plan(prompt, timeout_s=300)' "$N/harbor_science_agent_v1.py"
+      - name: Assemble verified substrate overlay
+        run: |
+          set -euo pipefail
+          cp -a capsules/tb_science_local_qwen_planner_repair_v1 /tmp/cap
+          cp capsules/tb_science_latency_stress_v1/canonical/runtime/harbor_science_planner_v1.py /tmp/cap/canonical/runtime/
+          cp capsules/tb_science_latency_stress_v1/canonical/runtime/harbor_science_agent_v1.py /tmp/cap/canonical/runtime/
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          PYTHONPATH=/tmp/cap python -m unittest -v canonical.tests.test_harbor_science_planner_v1
+      - uses: actions/cache@v4
+        id: llama-cache
+        with:
+          path: llama.cpp/build
+          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c
+      - name: Ensure pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          if [ ! -x llama.cpp/build/bin/llama-server ]; then
+            git init llama.cpp
+            git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+            git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+            git -C llama.cpp checkout --detach FETCH_HEAD
+            cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+            cmake --build llama.cpp/build -j 2 --target llama-server
+          fi
+      - uses: actions/cache@v4
+        id: qwen-cache
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      - name: Ensure exact Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+      - name: Start local proposal endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Max-shape nonterminal stress gate
+        run: |
+          set -euo pipefail
+          PYTHONPATH=/tmp/cap python - <<'PY' | tee SCIENCE_LATENCY_STRESS.json
+          import json
+          from canonical.runtime import harbor_science_planner_v1 as p
+          from canonical.runtime.harbor_science_agent_v1 import _extract_contract
+          req=[f"R{i:02d}" for i in range(1,17)]
+          prompt=(
+              "Use submit_science_proposal exactly once. "
+              "material_requirements must be exactly "+json.dumps(req)+". "
+              "Return exactly 8 candidates A1 through A8. Candidate Ai covers exactly "
+              "R(2i-1) and R(2i), command must be 'true', verify_command must be 'true'. "
+              "No finish_summary. This is synthetic and contains no benchmark task content."
+          )
+          out=p.plan(prompt,timeout_s=300)
+          raw=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+          requirements,candidates,summary=_extract_contract(raw,None)
+          assert requirements==req,(requirements,req)
+          assert len(candidates)==8,candidates
+          assert summary is None,summary
+          assert out["duration_s"] < 300,out
+          assert out["transport"]=="PINNED_LOCAL_QWEN_LLAMA_CPP_TOOL_CALL",out
+          print(json.dumps({"status":"PASS","duration_s":out["duration_s"],"requirements":len(requirements),"candidates":len(candidates),"terminal_task_exposure":0,"incremental_spend_usd":0},sort_keys=True))
+          PY
+      - name: Preserve stress evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-latency-stress-v1
+          path: |
+            SCIENCE_LATENCY_STRESS.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
