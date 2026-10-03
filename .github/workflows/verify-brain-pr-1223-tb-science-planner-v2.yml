@@ -38,7 +38,7 @@ jobs:
           test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
           test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
           test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
-          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "1f1a162a0a046b4f13c0474d91f8defb1472f468"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "292f8c4447122569e6168deb22847e2570db155e"
           test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "6f32250bce81ee66fdddbd29b72061089674c5b3"
           test "$(git hash-object "$C/canonical/tests/test_tb_science_general_substrate_materiality_v1.py")" = "bda78c83d5783c385b4c88fecd33c81305274c5e"
           ! grep -q 'from canonical.runtime import astra_runtime' "$C/canonical/runtime/harbor_science_agent_v1.py"
