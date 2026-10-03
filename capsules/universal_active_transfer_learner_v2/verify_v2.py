@@ -97,7 +97,12 @@ skill=v2.compile_verified_skill(
     applicability={"unfamiliar-api"},
     dependencies={"schema-visible"},
     invalidators={"schema-changed"},
-    verification_receipts={"receipt-1"},
+    verification_receipts=[{
+        "receipt_id":"receipt-1",
+        "independent_verified":True,
+        "exact_byte_bound":True,
+        "conclusion":"success",
+    }],
 )
 assert skill["trusted"] is True
 assert skill["promotion_authorized"] is False
