@@ -4,6 +4,9 @@
   "brain_ref": "breakthrough/composition-two-current-v1-20261003",
   "exact_brain_blobs": {
     "canonical/runtime/composition_component_proof_slicer_v1.py": "0e5028d8547bc3e17e7128b6311f734ac30a16d8",
-    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4.json": "b7ce0e9feb23404c5f1ffbc4972d71b58e70f4bc"
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4.json": "b7ce0e9feb23404c5f1ffbc4972d71b58e70f4bc",
+    "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
+    "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "88783df170065d3ff23e4ff3c2d2ab30ec7bc314",
+    "canonical/verification/COMPOSITION_DELEGATION_BRIDGE_V1_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "97bd385a20f78f86d03d78939d2552411c9c1cca"
   }
 }
