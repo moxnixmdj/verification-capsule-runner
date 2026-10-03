@@ -39,14 +39,17 @@ assert not missing,("missing_primary_source_facts",missing)
 # The capability table must contain the vendor-reported with-tools target.
 assert "67.7" in full, "HLE 67.7 target absent from system-card PDF"
 
-# Bind the local HLE section rather than relying only on global string presence.
-idx=low.find("humanity’s last exam")
-assert idx>=0
-window=low[idx:idx+12000]
-for x in ["web search","web fetch","programmatic tool calling","code execution",
-          "thinking was set to auto","capped at 1m","context compaction was not used",
-          "claude opus 4.6 served as the model grader"]:
-    assert x in window,("missing_in_hle_section",x)
+# Bind the local HLE evaluation paragraph around its distinctive grader sentence.
+# The PDF contains earlier HLE mentions (e.g. table/overview), so anchoring to the
+# first HLE occurrence is not a valid locality test.
+anchor="claude opus 4.6 served as the model grader"
+aidx=low.find(anchor)
+assert aidx>=0
+window=low[max(0,aidx-20000):aidx+12000]
+for x in ["humanity’s last exam","web search","web fetch","programmatic tool calling",
+          "code execution","thinking was set to auto","capped at 1m",
+          "context compaction was not used",anchor]:
+    assert x in window,("missing_near_hle_grader_paragraph",x)
 
 print(json.dumps({
   "schema":"PROJECT_BRAIN_HLE_OPUS55_ROUTE_TRUTH_PUBLIC_RUNNER_RESULT_V2",
