@@ -100,15 +100,61 @@ jobs:
             "terminal_trials_executed":0
           },sort_keys=True))
           PY
-      - name: Preflight the exact built-in zero-spend planner transport on synthetic contracts only
-        env:
-          PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR: ""
+      - name: Preflight repaired Brain controller against live zero-spend planner on synthetic contracts only
         run: |
           set -euo pipefail
+          C=capsules/tb_science_candidate_actions_alias_v1/harbor_science_agent_v1.py
+          test "$(git hash-object "$C")" = "3cffde35fee70e8bd687310e817a92bdfce7df0c"
           python - <<'PY'
-          import json, time, urllib.request
+          import importlib.util, json, pathlib, sys, time, types, urllib.request
+
+          # Load the exact repaired Brain controller while stubbing only its transport dependencies.
+          canonical=types.ModuleType("canonical")
+          runtime=types.ModuleType("canonical.runtime")
+          astra=types.ModuleType("canonical.runtime.astra_runtime")
+          policy=types.ModuleType("canonical.runtime.harbor_command_policy")
+          transport=types.ModuleType("canonical.runtime.harbor_environment_transport")
+          def safe_command(v):
+              if not isinstance(v,str) or not v.strip():
+                  raise ValueError("BAD_COMMAND")
+              return v.strip()
+          policy.validate_environment_command=safe_command
+          transport.HarborEnvironmentTransport=object
+          runtime.astra_runtime=astra
+          sys.modules["canonical"]=canonical
+          sys.modules["canonical.runtime"]=runtime
+          sys.modules["canonical.runtime.astra_runtime"]=astra
+          sys.modules["canonical.runtime.harbor_command_policy"]=policy
+          sys.modules["canonical.runtime.harbor_environment_transport"]=transport
+          spec=importlib.util.spec_from_file_location(
+              "tb_science_repaired",
+              "capsules/tb_science_candidate_actions_alias_v1/harbor_science_agent_v1.py",
+          )
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+
+          # Pure fail-closed alias checks.
+          alias_obj={
+              "material_requirements":["R1"],
+              "candidate_actions":[{"action_id":"A1","covers":["R1"],"command":"printf ok","verify_command":"test 1 -eq 1"}],
+          }
+          req,cands,summary=mod._extract_contract(alias_obj,None)
+          assert req==["R1"] and cands[0]["action_id"]=="A1" and summary is None
+
+          both_same=dict(alias_obj)
+          both_same["candidates"]=alias_obj["candidate_actions"]
+          req,cands,_=mod._extract_contract(both_same,None)
+          assert cands[0]["action_id"]=="A1"
+
+          conflict=dict(alias_obj)
+          conflict["candidates"]=[{"action_id":"B1","covers":["R1"],"command":"printf no","verify_command":"test 1 -eq 1"}]
+          try:
+              mod._extract_contract(conflict,None)
+          except RuntimeError as e:
+              assert "SCIENCE_CANDIDATE_ALIAS_CONFLICT" in str(e)
+          else:
+              raise AssertionError("CONFLICT_DID_NOT_FAIL_CLOSED")
+
           endpoint="https://text.pollinations.ai/"
-          models=("openai-fast","openai","mistral")
           prompt=(
             'Return one JSON object only with material_requirements ["R1"] and exactly one '
             'candidate action {"action_id":"A1","covers":["R1"],"command":"printf ok",'
@@ -116,45 +162,34 @@ jobs:
           )
           results=[]
           for i in range(6):
-              ok=False; errs=[]
-              for model in models:
-                  raw=""
-                  body=json.dumps({"messages":[{"role":"user","content":prompt}],"model":model,"jsonMode":True}).encode()
-                  req=urllib.request.Request(endpoint,data=body,headers={"Content-Type":"application/json","User-Agent":"ProjectBrain-TBScience-Preflight/1"},method="POST")
-                  t=time.monotonic()
-                  try:
-                      with urllib.request.urlopen(req,timeout=20) as resp:
-                          raw=resp.read(30000).decode("utf-8","replace")
-                      a=raw.find("{"); b=raw.rfind("}")
-                      obj=json.loads(raw[a:b+1])
-                      reqs=obj.get("material_requirements")
-                      cands=obj.get("candidates")
-                      assert reqs==["R1"]
-                      assert isinstance(cands,list) and cands and cands[0].get("action_id")=="A1"
-                      assert cands[0].get("covers")==["R1"]
-                      results.append({"attempt":i+1,"ok":True,"model_alias":model,"latency_s":round(time.monotonic()-t,3)})
-                      ok=True
-                      break
-                  except Exception as e:
-                      errs.append({"model_alias":model,"error":type(e).__name__+":"+str(e)[:180],"raw_excerpt":raw[:800]})
-              if not ok:
-                  results.append({"attempt":i+1,"ok":False,"errors":errs})
-          passed=sum(1 for r in results if r["ok"])
+              model="openai-fast"
+              body=json.dumps({"messages":[{"role":"user","content":prompt}],"model":model,"jsonMode":True}).encode()
+              req=urllib.request.Request(endpoint,data=body,headers={"Content-Type":"application/json","User-Agent":"ProjectBrain-TBScience-Preflight/2"},method="POST")
+              t=time.monotonic()
+              with urllib.request.urlopen(req,timeout=20) as resp:
+                  raw=resp.read(30000).decode("utf-8","replace")
+              a=raw.find("{"); b=raw.rfind("}")
+              obj=json.loads(raw[a:b+1])
+              frozen,cands,finish=mod._extract_contract(obj,None)
+              assert frozen==["R1"], obj
+              assert len(cands)==1 and cands[0]["action_id"]=="A1", obj
+              assert cands[0]["covers"]==["R1"], obj
+              results.append({"attempt":i+1,"ok":True,"model_alias":model,"latency_s":round(time.monotonic()-t,3),"observed_candidate_key":"candidates" if "candidates" in obj else "candidate_actions" if "candidate_actions" in obj else "none"})
           out={
-            "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_TRANSPORT_PREFLIGHT_V1",
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_REPAIRED_PLANNER_PREFLIGHT_V1",
+            "controller_blob":"3cffde35fee70e8bd687310e817a92bdfce7df0c",
             "endpoint":endpoint,
-            "model_alias_order":list(models),
+            "model_alias":"openai-fast",
             "synthetic_attempts":len(results),
-            "synthetic_contract_passes":passed,
-            "all_pass":passed==len(results),
+            "synthetic_contract_passes":len(results),
+            "all_pass":len(results)==6,
+            "alias_conflict_fail_closed":True,
             "terminal_task_content_read":0,
             "terminal_trials_executed":0,
             "incremental_spend_usd":0,
-            "results":results
+            "results":results,
           }
           print(json.dumps(out,sort_keys=True))
-          if not out["all_pass"]:
-              raise SystemExit("PLANNER_PREFLIGHT_NOT_RELIABLE")
           PY
       - name: Freeze conservative 70x3 acceptance arithmetic
         run: |
