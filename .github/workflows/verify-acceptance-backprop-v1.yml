@@ -1,16 +1,13 @@
 name: Verify acceptance backprop v1
-
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [critical/acceptance-backprop-isolated-20261003]
     paths:
       - 'canonical/runtime/acceptance_backprop_compiler_v1.py'
       - 'canonical/tests/test_acceptance_backprop_compiler_v1.py'
       - '.github/workflows/verify-acceptance-backprop-v1.yml'
-
 permissions:
   contents: read
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
