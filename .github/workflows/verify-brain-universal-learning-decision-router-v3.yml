@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "capsules/universal_learning_decision_router_v3/**"
+      - "capsules/universal_learning_adaptive_v5/**"
       - ".github/workflows/verify-brain-universal-learning-decision-router-v3.yml"
 
 permissions:
@@ -34,8 +35,31 @@ jobs:
           cd capsules/universal_learning_decision_router_v3
           export PYTHONPATH=.
           python -m unittest canonical.tests.test_universal_learning_decision_router_v3 -v
-      - name: Run independent adversarial verifier
+      - name: Run independent adversarial V3 verifier
         run: |
           cd capsules/universal_learning_decision_router_v3
           export PYTHONPATH=.
           python verify_v3.py
+      - name: Compile copied Brain V5 learning stack
+        run: |
+          cd capsules/universal_learning_adaptive_v5
+          python -m py_compile \
+            canonical/runtime/universal_learning_contract_v1.py \
+            canonical/runtime/universal_active_transfer_learner_v2.py \
+            canonical/runtime/structural_transfer_v3.py \
+            canonical/runtime/goal_dependency_delta_v4.py \
+            canonical/runtime/open_world_hypothesis_guard_v4.py \
+            canonical/runtime/universal_learning_open_world_router_v4.py \
+            canonical/runtime/verified_probe_model_v5.py \
+            canonical/runtime/adaptive_experiment_planner_v5.py \
+            canonical/runtime/universal_learning_adaptive_router_v5.py
+      - name: Run copied Brain V5 falsification tests
+        run: |
+          cd capsules/universal_learning_adaptive_v5
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_universal_learning_adaptive_router_v5 -v
+      - name: Run independent adversarial V5 verifier
+        run: |
+          cd capsules/universal_learning_adaptive_v5
+          export PYTHONPATH=.
+          python verify_v5.py
