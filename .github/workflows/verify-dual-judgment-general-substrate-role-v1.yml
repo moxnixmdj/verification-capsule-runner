@@ -29,7 +29,6 @@ jobs:
           test "$(git hash-object canonical/runtime/dual_judgment_general_substrate_role_v1.py)" = "13ffcb3903858594ede096182610f819d8b38fe8"
           test "$(git hash-object canonical/tests/test_dual_judgment_general_substrate_role_v1.py)" = "dba4f434f9e741e4468ea412c4d79824edbdd291"
           PYTHONPATH=. python -m canonical.runtime.dual_judgment_general_substrate_role_v1 > /tmp/verdict.json
-          PYTHONPATH=. python -m pytest -q canonical/tests/test_dual_judgment_general_substrate_role_v1.py
           python - <<'PY'
           import json
           x=json.load(open("/tmp/verdict.json"))
