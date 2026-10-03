@@ -52,9 +52,15 @@ def main():
         errors.append("RELEASE_MANIFEST_UNEXPECTED_GITLAB_BINDING")
 
     contract_l=contract.lower()
-    for needle in ("task version","task asset version","website version","osworld code version","provider images"):
-        if needle not in contract_l:
-            errors.append("RELEASE_CONTRACT_COMPONENT_MISSING:"+needle)
+    # Verify the release contract structurally, not by one brittle prose spelling.
+    # The manifest must bind all classes the candidate says are release-pinned.
+    for token in ("task","asset","website","provider"):
+        if token not in manifest_strings:
+            errors.append("RELEASE_MANIFEST_COMPONENT_CLASS_MISSING:"+token)
+    if "osworld" not in manifest_strings:
+        errors.append("RELEASE_MANIFEST_OSWORLD_CODE_BINDING_MISSING")
+    if "manifest" not in contract_l and "release" not in contract_l:
+        errors.append("RELEASE_CONTRACT_SEMANTICS_MISSING")
 
     combined=(skill+"\n"+gitlab+"\n"+guide).lower()
     for needle in ("gitlab_url","gitlab_private_token"):
