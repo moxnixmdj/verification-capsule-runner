@@ -1,0 +1,104 @@
+name: Verify Brain PR 1272 Science canary V3 active authority
+
+on:
+  push:
+    branches: ["verify/brain-pr-1272-science-v3-active-20261003"]
+    paths:
+      - ".github/workflows/verify-brain-pr-1272-science-v3-active.yml"
+      - "capsules/brain_pr_1272/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-brain-pr-1272-science-v3-active.yml"
+      - "capsules/brain_pr_1272/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact V3 active authority and sequence guard
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee SCIENCE_CANARY_V3_ACTIVE_AUTHORITY_VERDICT.json
+          import hashlib,json
+          from pathlib import Path
+          R=Path("capsules/brain_pr_1272")
+          def L(p): return json.loads((R/p).read_text())
+          def B(p):
+              b=(R/p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          ap="canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json"
+          cp="canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V3.json"
+          vp="canonical/verification/TB_SCIENCE_ONE_SLOT_CANARY_V3_CANDIDATE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+          op="canonical/governance/TB_SCIENCE_CURRENT_TARGET_EXECUTION_OVERLAY_V2.json"
+          ip="canonical/verification/TB_SCIENCE_PATCHED_REAL_HARBOR_INTEGRATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+          mp="canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json"
+          assert B(ap)=="baa66b2e760e133953d1ce9cb583f183eacee37c"
+          assert B(cp)=="f80e4b6a0b20cee28c60b844e34a54da01398052"
+          assert B(vp)=="5bd17b07e0340cabab14c5a4abf3d92a29263bc7"
+          assert B(op)=="64c02d44b38066577c7e7866a931bc7aa8ee9fcc"
+          assert B(ip)=="4512996a6698463be367052b13a891bd0f647f73"
+          assert B(mp)=="6dfa880b1f68881531afbba6ca211681801fd19b"
+          a,c,v,o,i,m=map(L,[ap,cp,vp,op,ip,mp])
+          assert v["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),v
+          assert v["verified"]["candidate_blob"]=="f80e4b6a0b20cee28c60b844e34a54da01398052"
+          assert i["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),i
+          assert i["verified"]["terminal_task_content_read"]==0 and i["verified"]["terminal_results_observed"]==0
+          assert o["reduction"]["finalized_failures"]==4
+          assert o["reduction"]["successes_remaining_for_pass_lock"]==133
+          assert o["reduction"]["failures_remaining_before_fail_lock"]==74
+          consumed=set(o["consumed_slots"])
+          assert consumed==set(a["permanently_consumed_slots"])==set(c["permanently_consumed_slots"])
+          slots=sorted(m["slots"],key=lambda z:z["schedule_order"])
+          first=next(z for z in slots if z["slot_id"] not in consumed)
+          assert first["slot_id"]=="terminal-bench-science/virtual-baseline-localization::trial-0",first
+          assert first["schedule_order"]==4 and first["attempt_index"]==0 and first["task_rank"]==4
+          assert a["authorized_slot"]=={k:first[k] for k in ("slot_id","schedule_order","attempt_index","task_rank","task_name","task_digest")}
+          cc=c["authorized_slot_candidate"]
+          for k in ("slot_id","schedule_order","attempt_index","task_rank","task_name","task_digest"):
+              assert cc[k]==first[k],(k,cc[k],first[k])
+          assert a["authority_basis"]["candidate_git_blob_sha"]=="f80e4b6a0b20cee28c60b844e34a54da01398052"
+          assert a["authority_basis"]["candidate_verification_git_blob_sha"]=="5bd17b07e0340cabab14c5a4abf3d92a29263bc7"
+          assert a["current_parity"]["required_successes"]==133
+          assert a["current_parity"]["finalized_failures_before_canary"]==4
+          assert a["current_parity"]["remaining_failures_before_fail_lock"]==74
+          assert a["exact_route"]["planner_blob"]=="fe7c0ce885197217774638df382aeb6f68ff38dd"
+          assert a["exact_route"]["controller_blob"]=="5557efd21f1a433ad16766def3775a79c459784b"
+          assert a["exact_route"]["manifest_blob"]=="6dfa880b1f68881531afbba6ca211681801fd19b"
+          assert a["execution_semantics"]["slots_authorized"]==1
+          assert a["execution_semantics"]["retries_per_slot"]==0
+          assert a["execution_semantics"]["slot_replacement"] is False
+          assert a["execution_semantics"]["denominator_shrink"] is False
+          assert a["execution_semantics"]["auto_revoke_after_slot_finalization"] is True
+          sg=a["sequence_guard"]
+          assert sg["execution_workflow_may_not_trigger_until_authority_blob_on_brain_main"] is True
+          assert sg["current_terminal_authority_must_reference_this_exact_authority_blob_before_execution"] is True
+          assert sg["authority_verification_must_precede_canonical_activation"] is True
+          assert sg["retroactive_authorization"] is False
+          assert a["execution_authority"] is True and a["promotion_authority"] is False
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_ONE_SLOT_CANARY_V3_ACTIVE_AUTHORITY_INDEPENDENT_VERIFICATION_V1",
+            "status":"INDEPENDENT_PASS__EXACT_AUTHORITY_BAA66B2E__ONE_UNTOUCHED_SLOT__SEQUENCE_GUARD_BOUND__ZERO_CREDIT",
+            "authority_blob":"baa66b2e760e133953d1ce9cb583f183eacee37c",
+            "authorized_slot":first["slot_id"],
+            "candidate_blob":"f80e4b6a0b20cee28c60b844e34a54da01398052",
+            "required_successes":133,
+            "finalized_failures":4,
+            "remaining_failures_before_fail_lock":74,
+            "execution_authority_verified":True,
+            "canonical_activation_still_required":True,
+            "terminal_cases_executed_by_verification":0,
+            "incremental_spend_usd":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brain-pr-1272-science-canary-v3-active-authority
+          path: SCIENCE_CANARY_V3_ACTIVE_AUTHORITY_VERDICT.json
+          if-no-files-found: error
