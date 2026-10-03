@@ -1,0 +1,43 @@
+name: Verify Brain Root3 population sharing V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root3_population_sharing_v1/**"
+      - ".github/workflows/verify-brain-root3-population-sharing-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          cd capsules/root3_population_sharing_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json"))
+          for p,h in m["exact_brain_blobs"].items():
+              b=(pathlib.Path("brain")/p).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+              assert got==h,(p,got,h)
+          print("exact Brain blobs PASS")
+          PY
+      - name: Run Brain verifier and test
+        run: |
+          cd capsules/root3_population_sharing_v1/brain
+          export PYTHONPATH=.
+          python canonical/runtime/root3_target_population_coalescence_verifier_v1.py
+          python - <<'PY'
+          from canonical.tests.test_root3_target_population_coalescence_verifier_v1 import test_current_passes
+          test_current_passes()
+          print("Brain test PASS")
+          PY
+      - name: Run independent assertions
+        run: |
+          cd capsules/root3_population_sharing_v1
+          python verify_independent.py
