@@ -1,0 +1,23 @@
+{
+  "schema": "PROJECT_BRAIN_P1_V6_SERIAL_DIRECT_COFAULT_PUBLIC_AUDIT_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "breakthrough/p1-v6-causal-rescue-20261002-1917",
+  "exact_brain_blobs": {
+    "canonical/runtime/trajectory_failure_typed_ir_candidate_v6.py": "18d4de68ee8352410e986c318868642333ec085a",
+    "canonical/runtime/trajectory_failure_typed_ir_proof_v6.py": "0f41a36e6ad16722ce05b180e036fb921a2ef886",
+    "canonical/governance/P1_TYPED_CAUSAL_INTERVENTION_ENVELOPE_V6.json": "03df530cd77cd834de94b4e3c4588008bf4a8070"
+  },
+  "claim": "V6 is not scope-complete for its own declared normalized public semantics: a downstream DIRECT_CONTRACT failure with a failed ancestor is discarded as a root, so the nominated repair set does not rescue the terminal outcome.",
+  "expected": {
+    "solver_status": "IDENTIFIED",
+    "nominated_repairs": [
+      "restore:A1:SCOPE"
+    ],
+    "unrepaired_direct_failure": "A2:TOOL_CONTRACT",
+    "terminal_rescued_after_solver_repairs": false,
+    "terminal_rescued_after_complete_direct_repairs": true
+  },
+  "terminal_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "family_credit_delta": 0
+}

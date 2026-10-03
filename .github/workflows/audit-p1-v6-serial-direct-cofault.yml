@@ -1,0 +1,32 @@
+name: Audit P1 V6 serial direct cofault
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_v6_serial_direct_cofault_audit_v1/**"
+      - ".github/workflows/audit-p1-v6-serial-direct-cofault.yml"
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored Brain blobs
+        run: |
+          cd capsules/p1_v6_serial_direct_cofault_audit_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("AUDIT_INPUT.json",encoding="utf-8"))
+          for rel,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(rel).read_bytes()
+              actual=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert actual==expected,(rel,actual,expected)
+          print("exact Brain V6 blobs: PASS")
+          PY
+      - name: Replay serial direct cofault counterexample
+        run: |
+          python capsules/p1_v6_serial_direct_cofault_audit_v1/test_serial_direct_cofault.py
