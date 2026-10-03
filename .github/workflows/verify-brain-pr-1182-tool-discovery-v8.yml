@@ -1,12 +1,7 @@
 name: Verify Brain PR 1182 Tool Discovery V8
 on:
   push:
-    branches: [verify-brain-pr-1182-tool-discovery-v8]
-    paths:
-      - "capsules/brain_pr_1182_tool_discovery_v8/**"
-      - ".github/workflows/verify-brain-pr-1182-tool-discovery-v8.yml"
-  pull_request:
-    branches: [main]
+    branches: [critical/td8-isolated-20261003]
     paths:
       - "capsules/brain_pr_1182_tool_discovery_v8/**"
       - ".github/workflows/verify-brain-pr-1182-tool-discovery-v8.yml"
