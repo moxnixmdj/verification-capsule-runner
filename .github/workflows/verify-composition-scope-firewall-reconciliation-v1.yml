@@ -1,0 +1,25 @@
+name: Verify composition scope-firewall reconciliation v1
+
+on:
+  push:
+    branches:
+      - "verify-composition-scope-firewall-reconciliation-sol-20261002"
+    paths:
+      - "capsules/composition_scope_firewall_reconciliation_v1/**"
+      - ".github/workflows/verify-composition-scope-firewall-reconciliation-v1.yml"
+  pull_request:
+    paths:
+      - "capsules/composition_scope_firewall_reconciliation_v1/**"
+      - ".github/workflows/verify-composition-scope-firewall-reconciliation-v1.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain bytes and fail closed
+        run: python capsules/composition_scope_firewall_reconciliation_v1/verify.py
