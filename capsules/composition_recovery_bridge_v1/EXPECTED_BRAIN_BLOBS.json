@@ -1,0 +1,34 @@
+{
+  "bridge.json": {
+    "brain_path": "canonical/governance/COMPOSITION_RECOVERY_SCOPE_COMPLETE_BRIDGE_V1.json",
+    "git_blob_sha": "05f68ee39ebef0a9a1fe1cb0ac2df0cede0725f9"
+  },
+  "bridge_test.py": {
+    "brain_path": "canonical/tests/test_composition_recovery_scope_complete_bridge_v1.py",
+    "git_blob_sha": "2841252a18d54479e2e1e06009ddb2d76a1840ff"
+  },
+  "envelope.json": {
+    "brain_path": "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json",
+    "git_blob_sha": "661a57f839101fbf54c7e4edc76166c65ce9327d"
+  },
+  "protocols.json": {
+    "brain_path": "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json",
+    "git_blob_sha": "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+  },
+  "manifest.json": {
+    "brain_path": "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json",
+    "git_blob_sha": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d"
+  },
+  "recovery_scope.json": {
+    "brain_path": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+    "git_blob_sha": "981c8ac9b66ee7fccf5b531525849e29df9be483"
+  },
+  "recovery_acceptance.json": {
+    "brain_path": "canonical/verification/RECOVERY_ACCEPTANCE_INTEGRATOR_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+    "git_blob_sha": "48a865f38f65be212df1cf0ba52d296b71cd003a"
+  },
+  "evidence_bindings.json": {
+    "brain_path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json",
+    "git_blob_sha": "0ed075c1efa053fe6e4eb3519d9903cf63fcf163"
+  }
+}
