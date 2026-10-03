@@ -1,0 +1,81 @@
+name: Verify Brain universal learning optimizer V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_optimizer_v2/**"
+      - ".github/workflows/verify-brain-universal-learning-optimizer-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/universal_learning_optimizer_v2
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact Brain blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Compile V1 and V2 learning kernels
+        run: |
+          cd capsules/universal_learning_optimizer_v2
+          python -m py_compile canonical/runtime/universal_learning_contract_v1.py canonical/runtime/universal_learning_optimizer_v2.py
+      - name: Run V2 optimizer tests
+        run: |
+          cd capsules/universal_learning_optimizer_v2
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_universal_learning_optimizer_v2 -v
+          python -m unittest canonical.tests.test_universal_learning_optimizer_binding_v2 -v
+      - name: Execute V2 optimizer theorem
+        run: |
+          cd capsules/universal_learning_optimizer_v2
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.universal_learning_optimizer_v2 import prove_optimizer_invariants
+          out=prove_optimizer_invariants()
+          assert out["pass"] is True,out
+          assert out["v1_required_as_safety_gate"] is True,out
+          assert out["minimum_novelty_delta_exact"] is True,out
+          assert out["verified_transfer_only"] is True,out
+          assert out["safe_zero_spend_action_selection"] is True,out
+          assert out["decision_sufficient_stopping"] is True,out
+          assert out["dependency_cone_invalidation"] is True,out
+          assert out["meta_learning_self_promotion_forbidden"] is True,out
+          assert out["semantic_success_rate_proved"] is False,out
+          assert out["unknown_domain_acceptance_proved"] is False,out
+          assert out["acceptance_credit_delta"]==0,out
+          assert out["ownership_credit_delta"]==0,out
+          print("universal learning optimizer V2 theorem: PASS")
+          PY
+      - name: Adversarial boundary checks
+        run: |
+          cd capsules/universal_learning_optimizer_v2
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime import universal_learning_optimizer_v2 as o
+          # Analogy cannot become proof.
+          x=o.admit_transfer(source_id="s",source_verified=True,scope_relation="ANALOGOUS",target_atom="t",falsifier="counterexample")
+          assert x["admitted"] is False,x
+          # Positive incremental spend is rejected by the optimizer.
+          x=o.choose_learning_action([{"id":"paid","channel":"DERIVE_AND_REASON","safe":True,"decision_gain_lcb":1,"future_transfer_lcb":1,"proof_value_lcb":1,"wall_clock_ub":1,"cost_ub":0.01,"risk_ub":0}])
+          assert x["selected_action_id"] is None,x
+          # Surviving-model disagreement forbids stopping.
+          x=o.decision_sufficiency(hypotheses=[{"id":"a","alive":True,"recommended_action":"x","safety_ok":True},{"id":"b","alive":True,"recommended_action":"y","safety_ok":True}])
+          assert x["decision_sufficient"] is False,x
+          # Meta-learning never self-promotes.
+          x=o.meta_strategy_candidate([{"strategy":"s","verified":True,"success":True,"wall_clock":1}])
+          assert x["promotion_authorized"] is False,x
+          print("adversarial optimizer boundaries: PASS")
+          PY

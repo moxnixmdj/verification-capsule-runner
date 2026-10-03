@@ -1,0 +1,16 @@
+{
+  "schema": "BRAIN_UNIVERSAL_LEARNING_OPTIMIZER_V2_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1441,
+  "brain_ref": "feature/universal-learning-optimizer-v2-rebased-20261004",
+  "exact_brain_blobs": {
+    "canonical/runtime/universal_learning_optimizer_v2.py": "f42b2b1156ab8e368bc7ea75b6b1a8f92d388936",
+    "canonical/tests/test_universal_learning_optimizer_v2.py": "ed77b0d8eec75f1655f875d58d8dc9d3b434f4c3",
+    "canonical/tests/test_universal_learning_optimizer_binding_v2.py": "987c196d03054560be8cb8a819289be777e7b523",
+    "canonical/governance/UNIVERSAL_LEARNING_OPTIMIZER_V2.json": "df7dc58d01077790d2f4f74a2f2c03694899212a",
+    "canonical/runtime/universal_learning_contract_v1.py": "51a6dde1898eb1b59f21e31d2fbd6e5931914756",
+    "canonical/verification/UNIVERSAL_LEARNING_CONTRACT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "2bff1082b81755ff5f8e8f0e97587090cc873283",
+    "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_ACTIVATION_V1.json": "0b14d28e356e3d730cfb6615dcde4c9f00bafdd4",
+    ".github/workflows/verify-universal-learning-optimizer-v2.yml": "75436954dbcc66bd756a2201260bb24105e9e629"
+  }
+}
