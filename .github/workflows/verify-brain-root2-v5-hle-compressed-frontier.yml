@@ -1,0 +1,23 @@
+name: Verify Brain V5-era Root2 compressed frontier
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_v5_hle_compressed_frontier/**"
+      - ".github/workflows/verify-brain-root2-v5-hle-compressed-frontier.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify V5-era Root2 compressed frontier
+        run: python capsules/root2_v5_hle_compressed_frontier/verify.py
