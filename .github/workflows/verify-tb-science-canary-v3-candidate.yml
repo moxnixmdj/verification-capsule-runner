@@ -1,0 +1,105 @@
+name: Verify TB-Science canary V3 candidate
+
+on:
+  push:
+    branches: ["verify/tb-science-canary-v3-candidate-20261003-sol"]
+    paths:
+      - "capsules/tb_science_canary_v3_candidate/**"
+      - ".github/workflows/verify-tb-science-canary-v3-candidate.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_canary_v3_candidate/**"
+      - ".github/workflows/verify-tb-science-canary-v3-candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recompute candidate admissibility without terminal exposure
+        run: |
+          set -euo pipefail
+          B=capsules/tb_science_canary_v3_candidate
+          M=capsules/tb_science_execution_v1/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json
+          R=capsules/tb_science_latency_real_harbor_integration
+          test "$(git hash-object "$B/candidate.json")" = "616f393f2622bb09da7ee096bc067893a4b1ed76"
+          test "$(git hash-object "$B/tranche1.json")" = "283cc7049949238047f545c4faa6beac62086e3f"
+          test "$(git hash-object "$B/canary_v2.json")" = "0c8661698af57557b2205c43e29610f88f194ed4"
+          test "$(git hash-object "$B/comparator.json")" = "3bff4c8ec68bba45d0538812101fbbfed7b9b2ec"
+          test "$(git hash-object "$M")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          git fetch --depth 1 origin stage/tb-science-canary-v3-carrier-20261003-sol
+          git show FETCH_HEAD:.github/workflows/execute-tb-science-canary-v3.yml > /tmp/execute-v3.yml
+          test "$(git hash-object /tmp/execute-v3.yml)" = "72951c4efe42563b88a1b974afd707dd025d23d1"
+          python - <<'PY'
+          import json, pathlib
+          B=pathlib.Path("capsules/tb_science_canary_v3_candidate")
+          c=json.loads((B/"candidate.json").read_text())
+          m=json.loads(pathlib.Path("capsules/tb_science_execution_v1/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json").read_text())
+          t=json.loads((B/"tranche1.json").read_text())
+          v=json.loads((B/"canary_v2.json").read_text())
+          cmp=json.loads((B/"comparator.json").read_text())
+          assert c["execution_authority"] is False and c["promotion_authority"] is False
+          assert c["staged_carrier"]["inert_without_arm"] is True
+          assert c["staged_carrier"]["arm_present_on_verifier_main"] is False
+          assert c["staged_carrier"]["workflow_blob"]=="72951c4efe42563b88a1b974afd707dd025d23d1"
+          assert cmp["effective_current_comparator"]["score_percent"]==63.33333333333333
+          assert cmp["arithmetic"]["required_successes"]==133
+          assert cmp["arithmetic"]["fail_lock_failures"]==78
+          consumed={x["slot_id"] for x in t["slots"]}
+          consumed.add(v["slot"]["slot_id"])
+          assert len(consumed)==4
+          slots=sorted(m["slots"],key=lambda x:x["schedule_order"])
+          next_slot=next(x for x in slots if x["slot_id"] not in consumed)
+          expected={
+            "slot_id":"terminal-bench-science/virtual-baseline-localization::trial-0",
+            "schedule_order":4,
+            "attempt_index":0,
+            "task_rank":4,
+            "task_name":"terminal-bench-science/virtual-baseline-localization",
+            "task_digest":"sha256:18e64cb62b351e3861e1995bdc3ba08bba37f0ae3e645ee4b250714b6f0c00ee",
+          }
+          for k,val in expected.items(): assert next_slot[k]==val,(k,next_slot)
+          cc=c["authorized_slot_candidate"]
+          for k,val in expected.items(): assert cc[k]==val,(k,cc)
+          assert c["reduction_before_canary"]["finalized_slots"]==4
+          assert c["reduction_before_canary"]["successes"]==0
+          assert c["reduction_before_canary"]["finalized_failures"]==4
+          assert c["reduction_before_canary"]["failures_remaining_before_fail_lock"]==74
+          assert c["nonterminal_verification"]["real_harbor_integration"]["workflow_run_id"]==37108542418
+          assert c["nonterminal_verification"]["real_harbor_integration"]["artifact_id"]==11268927411
+          assert c["nonterminal_verification"]["real_harbor_integration"]["terminal_results_observed"]==0
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_ONE_SLOT_CANARY_V3_CANDIDATE_VERIFICATION_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__FIRST_UNCONSUMED_SLOT_RECOMPUTED__PATCHED_ROUTE_EXACT__INERT_CARRIER_BOUND__ZERO_TERMINAL_EXPOSURE__ZERO_CREDIT",
+            "candidate_blob":"616f393f2622bb09da7ee096bc067893a4b1ed76",
+            "execution_workflow_blob":"72951c4efe42563b88a1b974afd707dd025d23d1",
+            "manifest_blob":"6dfa880b1f68881531afbba6ca211681801fd19b",
+            "planner_blob":"fe7c0ce885197217774638df382aeb6f68ff38dd",
+            "controller_blob":"5557efd21f1a433ad16766def3775a79c459784b",
+            "consumed_slot_count":4,
+            "authorized_slot_candidate":next_slot["slot_id"],
+            "required_successes":133,
+            "fail_lock_failures":78,
+            "terminal_task_content_read":0,
+            "terminal_results_observed":0,
+            "execution_authority":False,
+            "promotion_authority":False,
+            "incremental_spend_usd":0,
+            "capability_credit_delta":0,
+            "family_credit_delta":0
+          }
+          pathlib.Path("TB_SCIENCE_CANARY_V3_CANDIDATE_VERIFICATION.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-canary-v3-candidate-verification
+          path: TB_SCIENCE_CANARY_V3_CANDIDATE_VERIFICATION.json
+          if-no-files-found: error
