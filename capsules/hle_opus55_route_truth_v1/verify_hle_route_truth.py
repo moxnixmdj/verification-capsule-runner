@@ -35,9 +35,11 @@ missing=[x for x in needles if x not in flat]
 assert not missing,("missing_primary_pdf_facts",missing)
 
 low=raw_text.lower()
-start=low.find("blocklist used for humanity")
-assert start>=0,"HLE_BLOCKLIST_SECTION_MISSING"
-excerpt=raw_text[start:start+10000]
+anchor="huggingface.co"
+start=low.rfind(anchor)
+assert start>=0,"HLE_BLOCKLIST_ANCHOR_MISSING"
+excerpt_start=max(0,start-2500)
+excerpt=raw_text[excerpt_start:start+12000]
 print("HLE_BLOCKLIST_EXCERPT_BEGIN")
 print(excerpt)
 print("HLE_BLOCKLIST_EXCERPT_END")
