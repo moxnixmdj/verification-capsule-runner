@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_P1_SHARED_BATCH_FREEZE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pull_request": 1135,
+  "brain_head_sha": "9e52d22d1a72ae688e51bd6dbf1bbb383850bd09",
+  "exact_load_bearing_brain_blobs": {
+    "canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json": "3a436e096257362b01314b4b734ee8fc03907fbe",
+    "canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py": "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+  },
+  "expected_bound_authority_blobs": {
+    "minimum_reality_cut": "cbcb2faff8404623846e77e19fcc5b0ad00e81d9",
+    "minimum_reality_independent_verification": "01ca625add4db7035224f0d4cb9efb406d17362d",
+    "multiplex_binding": "8703c6aa08227467a619a7ae90d0d61f8e54da39",
+    "portfolio_manifest": "8b439403a05b4a912f06a8866db25f6e53b52473",
+    "candidate_v7": "28940387bd6c11671035ad9201e37bba13fd9bc9",
+    "intervention_scorer_v6": "0f41a36e6ad16722ce05b180e036fb921a2ef886",
+    "normalizer_v1": "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+  }
+}
