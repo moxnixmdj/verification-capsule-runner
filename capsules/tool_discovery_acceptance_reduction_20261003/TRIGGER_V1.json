@@ -1,0 +1,9 @@
+{
+  "schema": "PROJECT_BRAIN_PUBLIC_VERIFIER_TRIGGER_V1",
+  "date": "2026-10-03",
+  "purpose": "INDEPENDENTLY_VERIFY_TOOL_DISCOVERY_EXACT_SCOPE_ACCEPTANCE_REDUCTION_TO_4_OF_19",
+  "expected_newly_closed_family": "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+  "expected_closed_family_count": 4,
+  "terminal_cases_replayed": 0,
+  "new_reality_units_consumed": 0
+}
