@@ -1,0 +1,23 @@
+name: Verify synthesis lossless scope v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "fixtures/synthesis_lossless_scope_decomposition_v1.json"
+      - "fixtures/opus55_terminal_proof_protocols_v1.json"
+      - "fixtures/behavioral_contract_registry_v1.json"
+      - "fixtures/opus55_synthesis_implication_residual_input_v2.json"
+      - "fixtures/synthesis_overlay_v3_rebind_verification.json"
+      - "verify_synthesis_lossless_scope_v1.py"
+      - ".github/workflows/verify-synthesis-lossless-scope-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_synthesis_lossless_scope_v1.py
