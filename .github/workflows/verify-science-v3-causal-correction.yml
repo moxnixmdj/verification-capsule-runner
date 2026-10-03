@@ -1,0 +1,85 @@
+name: Verify Science V3 causal correction
+on:
+  push:
+    branches: ["verify/science-v3-causal-correction-20261003"]
+    paths:
+      - "capsules/science_v3_causal_correction/**"
+      - ".github/workflows/verify-science-v3-causal-correction.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/science_v3_causal_correction/**"
+      - ".github/workflows/verify-science-v3-causal-correction.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact mirrored Brain blobs
+        run: |
+          set -euo pipefail
+          C=capsules/science_v3_causal_correction
+          test "$(git hash-object "$C/TB_SCIENCE_CANARY_V3_FINAL_ZERO_RECONCILIATION_V1.json")" = "e446ee0ee72c4ad590c9e51ecd88fa273f02f331"
+          test "$(git hash-object "$C/TB_SCIENCE_CANARY_V3_FINAL_ZERO_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "9d09ce0f46d48077a27dbb33082ad6200d95a44f"
+      - name: Download immutable first-trigger artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -o result.zip \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11268634533/zip"
+          echo 'c3a786984e98c2e24ec98cc51331ba872e195666aad8b31815b21ba600ac74f9  result.zip' | sha256sum -c -
+          unzip -q result.zip -d out
+          echo 'f75d59cc1d75fe769a14c4adf1a1e0022859c91cc02bce584144b8866a7c256f  out/TB_SCIENCE_CANARY_V3_SLOT_RECEIPT.json' | sha256sum -c -
+      - name: Verify causal accounting
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          C=Path("capsules/science_v3_causal_correction")
+          g=json.loads((C/"TB_SCIENCE_CANARY_V3_FINAL_ZERO_RECONCILIATION_V1.json").read_text())
+          v=json.loads((C/"TB_SCIENCE_CANARY_V3_FINAL_ZERO_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text())
+          r=json.load(open("out/TB_SCIENCE_CANARY_V3_SLOT_RECEIPT.json"))
+          assert r["github_run_id"]=="37109467429",r
+          assert r["slot_id"]=="terminal-bench-science/virtual-baseline-localization::trial-0",r
+          assert r["status"]=="FINAL_ZERO" and r["reward"]==0.0,r
+          assert g["execution"]["workflow_run_id"]==37109467429,g
+          assert g["later_duplicate"]["workflow_run_id"]==37110691405,g
+          assert g["later_duplicate"]["additional_failure_delta"]==0,g
+          assert g["accounting"]["finalized_failures_after_v3"]==5,g
+          assert g["accounting"]["remaining_failures_before_fail_lock"]==73,g
+          assert g["disposition"]["rerun_allowed"] is False,g
+          assert v["candidate"]["source_runner_git_blob_sha"]=="e446ee0ee72c4ad590c9e51ecd88fa273f02f331",v
+          assert v["verified"]["source_execution_run_id"]==37109467429,v
+          assert v["duplicate_exclusion"]["later_run_id"]==37110691405,v
+          assert v["duplicate_exclusion"]["additional_failure_delta"]==0,v
+          assert v["verified"]["rerun_allowed"] is False,v
+          out={
+            "schema":"PROJECT_BRAIN_SCIENCE_V3_CAUSAL_CORRECTION_INDEPENDENT_VERIFICATION_V1",
+            "status":"PASS__FIRST_TRIGGER_BINDS_FINAL_ZERO__LATER_DUPLICATE_ZERO_ACCOUNTING",
+            "first_trigger_run":37109467429,
+            "duplicate_run":37110691405,
+            "finalized_failures":5,
+            "remaining_failures_before_fail_lock":73,
+            "acceptance_credit_delta":0,
+            "execution_authority":False,
+            "promotion_authority":False,
+          }
+          print(json.dumps(out,sort_keys=True))
+          Path("SCIENCE_V3_CAUSAL_CORRECTION_VERDICT.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: science-v3-causal-correction-verdict
+          path: SCIENCE_V3_CAUSAL_CORRECTION_VERDICT.json
+          if-no-files-found: error
