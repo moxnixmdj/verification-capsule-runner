@@ -1,0 +1,70 @@
+name: Verify Brain tool discovery V4 universal scope
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_v4_universal_scope/**"
+      - ".github/workflows/verify-brain-tool-discovery-v4-universal-scope.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/tool_discovery_v4_universal_scope
+          python - <<'PY'
+          import hashlib, json, pathlib
+          manifest=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in manifest["exact_brain_blobs"].items():
+              data=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          print("exact Brain tool-discovery blobs: PASS")
+          PY
+
+      - name: Compile candidate and theorem
+        run: |
+          cd capsules/tool_discovery_v4_universal_scope
+          python -m py_compile             canonical/runtime/tool_discovery_complete_interface_candidate_v4.py             canonical/runtime/tool_discovery_universal_scope_certificate_v2.py
+
+      - name: Run complete-interface adversarial tests
+        run: |
+          cd capsules/tool_discovery_v4_universal_scope
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_complete_interface_candidate_v4 -v
+
+      - name: Run universal-scope theorem tests
+        run: |
+          cd capsules/tool_discovery_v4_universal_scope
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_universal_scope_certificate_v2 -v
+
+      - name: Execute and enforce universal theorem
+        run: |
+          cd capsules/tool_discovery_v4_universal_scope
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.tool_discovery_universal_scope_certificate_v2 import verify
+          out=verify()
+          assert out["source_blob_drift"]==[],out
+          assert out["universal_scope_proved"] is True,out
+          assert out["scope_atom_satisfied_candidate"] is True,out
+          assert out["basis_kind"]=="UNIVERSAL_FORMAL_SCOPE_PROOF",out
+          assert out["target_predicate"]=="TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",out
+          assert out["uses_empirical_generalization"] is False,out
+          assert out["terminal_cases_replayed"]==0,out
+          assert out["new_reality_units_consumed"]==0,out
+          assert out["capability_credit_delta"]==0 and out["family_credit_delta"]==0,out
+          assert out["promotion_authority"] is False,out
+          print("tool-discovery V4 universal scope: PASS")
+          PY
