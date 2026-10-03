@@ -1,0 +1,26 @@
+name: Verify Brain Root3 ownership promotion 3-of-3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root3_ownership_promotion_v1/**"
+      - ".github/workflows/verify-brain-root3-ownership-promotion-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independent ownership proof
+        run: |
+          cd capsules/root3_ownership_promotion_v1
+          python independent_verify.py | tee verdict.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brain-root3-ownership-promotion-v1-verdict
+          path: capsules/root3_ownership_promotion_v1/verdict.json
+          if-no-files-found: error
