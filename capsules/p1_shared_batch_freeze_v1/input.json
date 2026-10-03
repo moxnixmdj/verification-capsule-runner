@@ -2,7 +2,7 @@
   "schema": "PROJECT_BRAIN_P1_SHARED_BATCH_FREEZE_PUBLIC_VERIFIER_INPUT_V1",
   "brain_repository": "moxnixmdj/brain",
   "brain_pull_request": 1135,
-  "brain_head_sha": "9e52d22d1a72ae688e51bd6dbf1bbb383850bd09",
+  "brain_head_sha": "df7ea238409d86f83e96c5df3d96cbd921f0533c",
   "exact_load_bearing_brain_blobs": {
     "canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json": "3a436e096257362b01314b4b734ee8fc03907fbe",
     "canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py": "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
