@@ -1,0 +1,136 @@
+name: Verify TB-Science planner latency bound V1
+on:
+  push:
+    branches: ["verify/tb-science-planner-latency-v1-20261003-sol"]
+    paths:
+      - "capsules/tb_science_planner_latency_v1/**"
+      - ".github/workflows/verify-tb-science-planner-latency-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact patched bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_latency_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "b550fc2921eb740ea75579357fd94ed6a4e90862"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "292f8c4447122569e6168deb22847e2570db155e"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          ! grep -E '"max_tokens":[[:space:]]*1024|maxItems":[[:space:]]*8' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          grep -F '"max_tokens": 384' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          grep -F '"maxItems": 1' "$C/canonical/runtime/harbor_science_planner_v1.py"
+      - name: Run exact unit tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/tb_science_planner_latency_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_planner_v1 canonical.tests.test_harbor_science_agent_v1
+      - name: Restore pinned llama.cpp cache
+        uses: actions/cache@v4
+        with:
+          path: llama.cpp
+          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
+      - name: Ensure exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          if [ ! -d llama.cpp/.git ]; then
+            rm -rf llama.cpp
+            git init llama.cpp
+            git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+            git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+            git -C llama.cpp checkout --detach FETCH_HEAD
+          fi
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Restore pinned Qwen cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      - name: Acquire exact Qwen if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Stress exact patched planner without terminal task exposure
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_planner_latency_v1"
+          PYTHONPATH="$C" python - <<'PY' | tee PLANNER_LATENCY_RESULT.json
+          import json,time
+          from canonical.runtime import harbor_science_planner_v1 as p
+          from canonical.runtime.harbor_science_agent_v1 import _extract_contract
+          cases=[
+            ("short","Synthetic research context. "),
+            ("task_length_equivalent","Synthetic neutral technical context. "*130),
+            ("long_complex","Independent synthetic engineering observations and constraints. "*150),
+          ]
+          results=[]
+          for i,(name,pad) in enumerate(cases):
+              path=f"/tmp/brain_latency_probe_{i}"
+              prompt=(
+                  pad+
+                  "\nThis is synthetic non-benchmark content. Return material_requirements exactly [\"R1\"]. "
+                  "Return exactly one candidate with action_id A1, covers [\"R1\"], "
+                  f"command \"printf ok > {path}\", verify_command \"test -s {path}\". "
+                  "No finish_summary. No network, package installation, git, secrets, or host escape."
+              )
+              started=time.monotonic()
+              out=p.plan(prompt,timeout_s=180)
+              elapsed=time.monotonic()-started
+              raw=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+              req,cands,summary=_extract_contract(raw,None)
+              assert req==["R1"],(name,raw)
+              assert summary is None,(name,raw)
+              assert len(cands)==1,(name,raw)
+              row=cands[0]
+              assert row["action_id"]=="A1",(name,row)
+              assert row["covers"]==["R1"],(name,row)
+              assert row["command"]==f"printf ok > {path}",(name,row)
+              assert row["verify_command"]==f"test -s {path}",(name,row)
+              assert elapsed < 180,(name,elapsed)
+              results.append({"name":name,"prompt_chars":len(prompt),"elapsed_s":round(elapsed,3),"planner_duration_s":out["duration_s"]})
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_LATENCY_INDEPENDENT_RESULT_V1",
+            "status":"PASS",
+            "results":results,
+            "terminal_task_exposure":0,
+            "terminal_trials_executed":0,
+            "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-planner-latency-v1
+          path: |
+            PLANNER_LATENCY_RESULT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
