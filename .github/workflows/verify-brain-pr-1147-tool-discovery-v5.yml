@@ -20,12 +20,12 @@ jobs:
         run: |
           set -euo pipefail
           cd capsules/brain_pr_1147_tool_discovery_v5
-          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v5.py)" = "f4e076626b2aca63059a271bed71759ba6e1b741"
-          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v5.py)" = "7129d045cf8418182c6418f0104f73820d1e7087"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v5.py)" = "42d096ef93e8ad06c4d1d5dfe730881bf45a2a72"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v5.py)" = "2c9d6e46e7473df501ba49665485e948c0ab2017"
           test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
           test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "e614d0bed8e291e31f57189cd6f0f75aa39b0f74"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V3.json)" = "d00afbdf2f0ff09bba32b5b29aa5bd2c8938732f"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_V5_CONVERGED_SOUNDNESS_REPAIR_V1.json)" = "652ee462bd8cb87b1f082b7d36ec114e4d5c78ed"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V3.json)" = "e39912efd13b6aeb70a9e22b9e6dac55823c0324"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_V5_CONVERGED_SOUNDNESS_REPAIR_V1.json)" = "35e17810df630e70ec61ecbd7132f474b5710fdb"
           test "$(git hash-object canonical/governance/TOOL_DISCOVERY_CURRENT_V4_FALSIFICATION_V2.json)" = "3ea16227fcc7c5dca5ac5c9e66bade1272699b94"
       - name: Compile exact V4/V5 and adversarial tests
         shell: bash
