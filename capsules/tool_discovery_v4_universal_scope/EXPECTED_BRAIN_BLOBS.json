@@ -1,0 +1,22 @@
+{
+  "schema": "BRAIN_TOOL_DISCOVERY_V4_UNIVERSAL_SCOPE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pull_request": 1131,
+  "brain_ref": "breakthrough/tdscope-a17-20261003-0139",
+  "exact_brain_blobs": {
+    "canonical/runtime/tool_discovery_complete_interface_candidate_v4.py": "d8e7c43e3f5f4252441622805f161e3a6f9a8402",
+    "canonical/tests/test_tool_discovery_complete_interface_candidate_v4.py": "8f8970ac9cf15735f661ebc8f8e11b2a662c6976",
+    "canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_SCOPE_RELATION_V1.json": "b27cf5a5f6a1b163b54abdd76ae618bfc85a08ea",
+    "canonical/runtime/tool_discovery_universal_scope_certificate_v2.py": "a245d2007acb1eef79deddc4a3fea19ebc440a27",
+    "canonical/tests/test_tool_discovery_universal_scope_certificate_v2.py": "b8fe57cce61b24ac4dcd8bfc7e54e66f4595f13c",
+    "canonical/runtime/tool_discovery_information_safe_candidate.py": "64c02edd568d95ec5ed54b7b8122183ce5b82e17",
+    "canonical/runtime/tool_discovery_dynamic_candidate_v3.py": "bbbee4d6baf8df937543644397abba38a67dce62",
+    "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "ee187f611a0e82b2de495ee377682f39bc31dd31",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json": "6bcabc0a7d0525532ce7b80e132278f7c99caa43",
+    "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json": "ec2d931860e7cd7d9f73a658706f8c33fca3a10d",
+    "canonical/governance/TOOL_DISCOVERY_SCOPE_FORMALISM_CUT_ACTIVATION_V1.json": "48ba33998e73b8eec2731be51a7ec78077ed0d4a",
+    "canonical/verification/TOOL_DISCOVERY_UNIVERSAL_SCOPE_FORMALISM_CUT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "e628d8d5b63c2020400129fcc9e0bc6fde6101b2",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "7885a827b1483bfb38315c1f492848f7e4680285"
+  }
+}
