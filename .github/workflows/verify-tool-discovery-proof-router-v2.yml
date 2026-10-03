@@ -1,0 +1,40 @@
+name: Verify Tool Discovery proof router V2
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_proof_router_v2/**'
+      - '.github/workflows/verify-tool-discovery-proof-router-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/tool_discovery_proof_router_v2
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/governance/TOOL_DISCOVERY_PROOF_ROUTER_V2.json":"f8e931dced6ddeb60e110d28626372049388e23e",
+            "canonical/runtime/tool_discovery_proof_router_v2.py":"b9e5f84f1cd604fb5d6319114fa9174989e63c54",
+            "canonical/tests/test_tool_discovery_proof_router_v2.py":"351f46d8d94771ffbf4e5d1211e03bcef6fd1e8f",
+          }
+          for path,want in expected.items():
+              data=Path(path).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==want,(path,got,want)
+              print(path,got)
+          PY
+      - name: Run Brain candidate tests
+        working-directory: capsules/tool_discovery_proof_router_v2
+        run: PYTHONPATH=. python -m unittest canonical.tests.test_tool_discovery_proof_router_v2 -v
+      - name: Run independent adversarial verifier
+        working-directory: capsules/tool_discovery_proof_router_v2
+        run: PYTHONPATH=. python independent_verifier.py
