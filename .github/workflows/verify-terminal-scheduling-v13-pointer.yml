@@ -1,0 +1,20 @@
+name: Verify terminal scheduling V13 current pointer
+on:
+  push:
+    branches: ["verify/terminal-scheduling-v13-pointer-20261003-sol"]
+  pull_request:
+    branches: ["main"]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: capsules/terminal_scheduling_v13_pointer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_pointer.py
