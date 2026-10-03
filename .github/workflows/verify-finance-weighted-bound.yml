@@ -12,4 +12,5 @@ jobs:
         working-directory: finance_weighted_bound
     steps:
       - uses: actions/checkout@v4
-      - run: python3 -m pytest -q test_finance_index_weighted_lower_bound_reducer_v1.py
+      - name: Run dependency-free assertions
+        run: python3 -c "import test_finance_index_weighted_lower_bound_reducer_v1 as t; [getattr(t,n)() for n in sorted(dir(t)) if n.startswith('test_')]; print('FINANCE_WEIGHTED_BOUND_REDUCER_VERIFIED')"
