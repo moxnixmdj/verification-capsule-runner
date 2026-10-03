@@ -1,0 +1,52 @@
+name: Verify TB-Science canary V3 execution carrier
+
+on:
+  push:
+    branches: ["execute-tb-science-canary-v3b-20261003"]
+    paths:
+      - ".github/workflows/execute-tb-science-canary-v3.yml"
+      - ".github/workflows/verify-tb-science-canary-v3-execution-carrier.yml"
+      - "capsules/tb_science_canary_execution_v2/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact carrier bytes and no premature arm
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_canary_execution_v2
+          test ! -e "$C/ARM_CANARY_V3.json"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json")" = "ae5bc607b828e8f55092e80e0a806d5a496eb54b"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object .github/workflows/execute-tb-science-canary-v3.yml)" = "23219335778b310cfd9fcf88b6f7bf02129d6626"
+          python - <<'PY'
+          import json
+          a=json.load(open("capsules/tb_science_canary_execution_v2/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json"))
+          assert a["status"].startswith("CANDIDATE_ACTIVE_ONE_USE_AUTHORITY__PATCHED_ROUTE")
+          assert a["execution_authority"] is True
+          assert a["promotion_authority"] is False
+          assert a["authorized_slot"]["slot_id"]=="terminal-bench-science/virtual-baseline-localization::trial-0"
+          assert a["authorized_slot"]["schedule_order"]==4
+          assert len(a["permanently_consumed_slots"])==4
+          assert a["authorized_slot"]["slot_id"] not in set(a["permanently_consumed_slots"])
+          assert a["current_parity"]["required_successes"]==133
+          assert a["current_parity"]["remaining_failures_before_fail_lock"]==74
+          assert a["execution_semantics"]["slots_authorized"]==1
+          assert a["execution_semantics"]["retries_per_slot"]==0
+          assert a["execution_semantics"]["slot_replacement"] is False
+          assert a["execution_semantics"]["denominator_shrink"] is False
+          assert a["exact_route"]["planner_blob"]=="fe7c0ce885197217774638df382aeb6f68ff38dd"
+          print("TB_SCIENCE_CANARY_V3_EXECUTION_CARRIER_PREFLIGHT_PASS")
+          PY
