@@ -1,0 +1,52 @@
+name: Verify Brain Tool Discovery 5-of-19 promotion integrator
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_5of19_integrator_v1/**"
+      - ".github/workflows/verify-brain-tool-discovery-5of19-integrator-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/tool_discovery_5of19_integrator_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              raw=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact Brain blobs PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Run integrator and tests
+        run: |
+          cd capsules/tool_discovery_5of19_integrator_v1
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/tool_discovery_acceptance_promotion_integrator_v1.py
+          python canonical/runtime/tool_discovery_acceptance_promotion_integrator_v1.py
+          python -m pytest -q canonical/tests/test_tool_discovery_acceptance_promotion_integrator_v1.py
+      - name: Independent delta assertions
+        run: |
+          cd capsules/tool_discovery_5of19_integrator_v1
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.tool_discovery_acceptance_promotion_integrator_v1 import evaluate
+          out=evaluate()
+          assert out["pass"] is True,out
+          assert out["before"]=={"proved_atomic":11,"unresolved_atomic":27,"accepted_families":4,"open_families":15},out
+          assert out["after"]=={"proved_atomic":12,"unresolved_atomic":26,"accepted_families":5,"open_families":14},out
+          assert out["newly_proved_predicates"]==["TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR"],out
+          assert out["newly_closed_families"]==["TOOL_DISCOVERY_SELECTION_AND_LEARNING"],out
+          assert out["ownership_credit_delta"]==0,out
+          assert out["promotion_authority"] is False,out
+          print("Tool Discovery 5-of-19 promotion integrator PASS")
+          PY

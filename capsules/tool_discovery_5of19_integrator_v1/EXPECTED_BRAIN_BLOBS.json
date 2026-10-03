@@ -1,0 +1,18 @@
+{
+  "schema": "BRAIN_TOOL_DISCOVERY_5OF19_PROMOTION_INTEGRATOR_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1359,
+  "brain_ref": "promotion/tool-discovery-5of19-integrator-v1-20261003-sol",
+  "exact_brain_blobs": {
+    "canonical/runtime/tool_discovery_acceptance_promotion_integrator_v1.py": "e44934f62f9941cb00c251e521b65361a4cdce1b",
+    "canonical/tests/test_tool_discovery_acceptance_promotion_integrator_v1.py": "e3ce3be32f4a151fa3c615ab2aaf30806c7a8a45",
+    "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_INTEGRATION_CANDIDATE_V1.json": "a042b86d6e9205a819c6b34c1146f8b750e1ae09",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "0ed075c1efa053fe6e4eb3519d9903cf63fcf163",
+    "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json": "dc629d69b1bbf1ebf25e99c474588ad0aa76fb92",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "f47a69253e7eb75e139b445b736d3d18b33be622",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json": "3cbbcd1ddabde7dbf4c3f4d118bdb9d78d0c8605",
+    "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "913d171b3c855000d322e183b142b3200eeaf0a9"
+  }
+}
