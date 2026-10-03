@@ -1,0 +1,19 @@
+name: Verify Tool Discovery exact-scope acceptance reduction
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_exact_scope_acceptance_reduction_v1/**"
+      - ".github/workflows/verify-tool-discovery-exact-scope-acceptance-reduction-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact acceptance reduction and reject collateral promotion
+        run: python capsules/tool_discovery_exact_scope_acceptance_reduction_v1/verify.py
