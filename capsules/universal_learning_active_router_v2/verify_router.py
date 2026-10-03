@@ -19,7 +19,7 @@ for rel,expected in m["exact_brain_blobs"].items():
 
 gov=json.loads((ROOT/"canonical/governance/UNIVERSAL_LEARNING_ACTIVE_ROUTER_V2.json").read_text())
 v1=json.loads((ROOT/"canonical/verification/UNIVERSAL_LEARNING_CONTRACT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text())
-v2=json.loads((ROOT/"canonical/verification/UNIVERSAL_ACTIVE_TRANSFER_LEARNER_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text())
+v2=json.loads((ROOT/"canonical/verification/UNIVERSAL_ACTIVE_TRANSFER_LEARNER_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json").read_text())
 assert v1["independent_runner"]["conclusion"]=="success"
 assert v2["independent_runner"]["conclusion"]=="success"
 
