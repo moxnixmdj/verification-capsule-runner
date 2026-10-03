@@ -21,12 +21,12 @@ jobs:
           set -euo pipefail
           cd capsules/brain_pr_1120_tool_discovery_v4_soundness
           test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
-          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "56d9553a2ddb37fd513123a369bffa0ff8a87837"
-          test "$(git hash-object canonical/runtime/tool_discovery_v4_soundness_repair_v1.py)" = "6b135d2e249f220fa8afcc6052b1530ae039b978"
-          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v4.py)" = "2785466b09f3f0f587fe6170d4322fe4281b7289"
-          test "$(git hash-object canonical/tests/test_tool_discovery_v4_soundness_repair_v1.py)" = "bdffaa9ff7acd19822b4eb5b3550ae6b25d5113d"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "f5ade295e5f9e82d6be5cfec99ea6b798c753185"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V3_REFINEMENT_FALSIFICATION_AND_V4_REPAIR_V1.json)" = "c65914fac88eb8b91ddb60c04e9ecb2aa365ec2b"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "9572b25f7bdaee0f35e00cf3a1f25bc0dbd69096"
+          test "$(git hash-object canonical/runtime/tool_discovery_v4_soundness_repair_v1.py)" = "739b0a349bf91099d6fa6ea91450ed900211dc87"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v4.py)" = "9c0693b131058f18e061c25e2dc3cbe5fee36d28"
+          test "$(git hash-object canonical/tests/test_tool_discovery_v4_soundness_repair_v1.py)" = "67420c1f576e18d89ab9ad5538a080fff47681a8"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "ca1a8c5d1e49feac9077a834bb20773cca982215"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V3_REFINEMENT_FALSIFICATION_AND_V4_REPAIR_V1.json)" = "66a39a5521930b7f901f01e57eb5be0e74e70a78"
           test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V4_SOUNDNESS_REPAIR_V1.json)" = "ebea7c0473823d090aebd235e21093d838e43c5c"
       - name: Run adversarial V3 counterexample and V4 tests
         shell: bash
@@ -58,6 +58,8 @@ jobs:
           assert v["counterexample"]["v4_action_before_discovery"]=={"action":"DISCOVER","source_id":"S0","query":"CAP_A"},v
           assert v["counterexample"]["v4_action_after_complete_discovery"]=={"action":"SELECT","tool_id":"CHEAP"},v
           assert v["v4_safe_probe_gate_check"]=={"action":"SELECT","tool_id":"SAFE"},v
+          assert v["v4_stale_discovery_receipt_check"]=={"action":"DISCOVER","source_id":"S0","query":"CAP_A"},v
+          assert v["v4_unauthorized_source_check"]=={"action":"SELECT","tool_id":"SAFE"},v
           assert v["v4_repair_checks_pass"] is True,v
           assert v["universal_target_proved"] is False,v
           assert v["new_reality_units_consumed"]==0 and v["terminal_results_replayed"]==0,v
