@@ -1,0 +1,27 @@
+name: Verify Tool Discovery abstract-state universal scope v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_abstract_state_scope_v1/**"
+      - ".github/workflows/verify-tool-discovery-abstract-state-scope-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run abstract-state scope tests
+        run: |
+          cd capsules/tool_discovery_abstract_state_scope_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_abstract_state_universal_scope_certificate_v1 -v
+      - name: Execute universal scope certificate
+        run: |
+          cd capsules/tool_discovery_abstract_state_scope_v1
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_abstract_state_universal_scope_certificate_v1
