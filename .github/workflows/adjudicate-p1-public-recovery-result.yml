@@ -1,0 +1,177 @@
+name: Adjudicate P1 public recovery result
+
+on:
+  push:
+    branches: ["verify/p1-public-recovery-result-20261003-sol"]
+    paths:
+      - ".github/workflows/adjudicate-p1-public-recovery-result.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch exact execution metadata and artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence artifact
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37108111537" \
+            -o evidence/run.json
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37108111537/jobs" \
+            -o evidence/jobs.json
+          curl -fL -H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11268841992/zip" \
+            -o evidence/result.zip
+          echo "e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038  evidence/result.zip" | sha256sum -c -
+          unzip -q evidence/result.zip -d artifact
+          find artifact -maxdepth 2 -type f -print | sort
+
+      - name: Independently adjudicate one-use result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+
+          run=json.loads(Path("evidence/run.json").read_text())
+          jobs=json.loads(Path("evidence/jobs.json").read_text())
+
+          assert run["id"]==37108111537, run
+          assert run["head_sha"]=="e489b191363c52c838b720cd759c99f638170c67", run
+          assert run["head_branch"]=="main", run
+          assert run["event"]=="push", run
+          assert run["run_attempt"]==1, run
+          assert run["status"]=="completed" and run["conclusion"]=="success", run
+          assert run["path"]==".github/workflows/execute-p1-public-recovery-carrier-v1.yml", run
+
+          assert jobs["total_count"]==1, jobs
+          job=jobs["jobs"][0]
+          assert job["id"]==111160509570, job
+          assert job["name"]=="execute", job
+          assert job["status"]=="completed" and job["conclusion"]=="success", job
+          names={s["name"]:s["conclusion"] for s in job.get("steps") or []}
+          for step in (
+              "Enforce distinct first-attempt recovery carrier",
+              "Re-run spent preflight only",
+              "Consume exactly one authorized fresh P1 reality unit",
+              "Preserve one-use public recovery evidence",
+          ):
+              assert names.get(step)=="success",(step,names)
+
+          auth_path=Path("artifact/P1_PUBLIC_RECOVERY_AUTHORIZED_RESULT.json")
+          raw_path=Path("artifact/P1_RAW_BATCH_RESULT.json")
+          preflight_path=Path("artifact/P1_SPENT_PREFLIGHT.json")
+          assert auth_path.is_file(), list(Path("artifact").rglob("*"))
+          assert raw_path.is_file()
+          assert preflight_path.is_file()
+
+          auth=json.loads(auth_path.read_text())
+          raw=json.loads(raw_path.read_text())
+          pre=json.loads(preflight_path.read_text())
+
+          assert pre["pass"] is True, pre
+          assert pre["new_reality_units_consumed"]==0, pre
+          assert pre["execution_authority"] is False and pre["promotion_authority"] is False, pre
+
+          assert auth["schema"]=="PROJECT_BRAIN_P1_PUBLIC_RECOVERY_CARRIER_EXECUTION_RESULT_V1",auth
+          assert auth["github_repository"]=="moxnixmdj/verification-capsule-runner",auth
+          assert auth["github_run_id"]==37108111537,auth
+          assert auth["github_run_attempt"]==1,auth
+          assert auth["github_head_sha"]=="e489b191363c52c838b720cd759c99f638170c67",auth
+          assert auth["execution_workflow_blob"]=="547f57f43a71f289b006602c1067a962171f38d4",auth
+          assert auth["prior_private_pre_case_failure_run_id"]==37106776756,auth
+          assert auth["fresh_reality_units_consumed"]==1,auth
+          assert auth["execution_authority_consumed"] is True,auth
+          assert auth["rerun_credit"] is False,auth
+          assert auth["terminal_v3_replayed"]==0,auth
+          assert auth["incremental_spend_usd"]==0,auth
+          assert auth["promotion_authority"] is False,auth
+
+          assert raw["cases"]==192,raw
+          assert raw["passes"]+raw["failures"]==192,raw
+          assert raw["terminal_v3_replayed"]==0,raw
+          assert raw["incremental_spend_usd"]==0,raw
+          assert raw["fresh_reality_units_consumed"]==0,raw
+          assert raw["reality_unit_candidate_if_separately_authorized_and_independently_adjudicated"]==1,raw
+          assert auth["cases"]==raw["cases"],(auth,raw)
+          assert auth["passes"]==raw["passes"],(auth,raw)
+          assert auth["failures"]==raw["failures"],(auth,raw)
+          assert auth["beacon_sha256"]==raw["beacon_sha256"],(auth,raw)
+          assert auth["by_surface"]==raw["by_surface"],(auth,raw)
+
+          expected_surfaces={
+            "T0/CURSORBENCH_4_0::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T0/FRONTIERCODE_V1_1::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T2/RECOVERY_SCOPE_COMPOSITION::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+          }
+          assert set(raw["by_surface"])==expected_surfaces,raw["by_surface"]
+          for name,row in raw["by_surface"].items():
+              assert row["cases"]==64,(name,row)
+              assert row["passes"]+row.get("failures",64-row["passes"])==64,(name,row)
+              assert row["both_semantics_classes_present_every_case"] is True,(name,row)
+
+          all_pass=(
+            raw["passes"]==192 and raw["failures"]==0 and raw.get("pass") is True
+            and all(row["passes"]==64 and row.get("all_pass") is True for row in raw["by_surface"].values())
+          )
+
+          raw_bytes=raw_path.read_bytes()
+          auth_bytes=auth_path.read_bytes()
+          receipt={
+            "schema":"PROJECT_BRAIN_P1_PUBLIC_RECOVERY_RESULT_INDEPENDENT_ADJUDICATION_20261003_V1",
+            "status":(
+              "INDEPENDENT_PUBLIC_RUNNER_PASS__192_OF_192__TRANSPORT_EVIDENCE_ADMISSIBLE__P1_REDUCTION_REQUIRED"
+              if all_pass else
+              "INDEPENDENT_PUBLIC_RUNNER_PASS__RESULT_FINALIZED_WITH_FAILURES__P1_REMAINS_QUARANTINED"
+            ),
+            "source_run_id":37108111537,
+            "source_job_id":111160509570,
+            "source_artifact_id":11268841992,
+            "source_artifact_digest":"sha256:e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038",
+            "source_head_sha":"e489b191363c52c838b720cd759c99f638170c67",
+            "execution_workflow_blob":"547f57f43a71f289b006602c1067a962171f38d4",
+            "active_authority_blob":"365c098d4763ddfacf660f77457cbac08f5ac72e",
+            "cases":raw["cases"],
+            "passes":raw["passes"],
+            "failures":raw["failures"],
+            "all_pass":all_pass,
+            "by_surface":raw["by_surface"],
+            "beacon_sha256":raw["beacon_sha256"],
+            "raw_result_sha256":hashlib.sha256(raw_bytes).hexdigest(),
+            "authorized_result_sha256":hashlib.sha256(auth_bytes).hexdigest(),
+            "fresh_reality_units_consumed":1,
+            "terminal_v3_replayed":0,
+            "incremental_spend_usd":0,
+            "p1_quarantine_lifted":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False,
+            "next":(
+              "BIND_THIS_RECEIPT_IN_BRAIN__REVOKE_ONE_USE_AUTHORITY__RUN_INDEPENDENT_P1_TRANSPORT_AND_SCOPE_REDUCER"
+              if all_pass else
+              "BIND_THIS_RECEIPT_IN_BRAIN__REVOKE_ONE_USE_AUTHORITY__COMPILE_FIRST_FAILURE_COUNTEREXAMPLE__NO_RERUN"
+            )
+          }
+          out=Path("evidence/P1_PUBLIC_RECOVERY_RESULT_ADJUDICATION.json")
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-public-recovery-result-adjudication-v1
+          path: evidence/P1_PUBLIC_RECOVERY_RESULT_ADJUDICATION.json
+          if-no-files-found: error
+          retention-days: 90
