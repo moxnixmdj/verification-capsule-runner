@@ -1,0 +1,122 @@
+name: Verify live 27-predicate V9 information dominance
+
+on:
+  push:
+    branches: ["verify-live-27-dominance-v9"]
+    paths:
+      - ".github/workflows/verify-current-27-info-v1.yml"
+      - "capsules/current_27_info_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-current-27-info-v1.yml"
+      - "capsules/current_27_info_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain bytes
+        run: |
+          set -euo pipefail
+          C=capsules/current_27_info_v1
+          test "$(git hash-object "$C/canonical/runtime/current_terminal_information_dominance_v1.py")" = "cd99a05f72b37c0204764a5432b75cf1225cb8ea"
+          test "$(git hash-object "$C/canonical/tests/test_current_terminal_information_dominance_v1.py")" = "046bd85403a5bde87cdde07c0202637b4d5d68d6"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_INFORMATION_DOMINANCE_V1.json")" = "ce1d7ecb097f668d8528999c026b054629a68f3a"
+          test "$(git hash-object "$C/canonical/runtime/current_terminal_scheduling_world_v1.py")" = "9ae2b990578b042dd24074fd5013378b72e64b6b"
+          test "$(git hash-object "$C/canonical/runtime/tool_discovery_retrieval_authority_gate_v1.py")" = "9af1bd62048277cc8c4fabab8efe5d217c367bac"
+          test "$(git hash-object "$C/canonical/runtime/terminal_information_dominance_v1.py")" = "f10986bd09a7cc64a1fae3c6ea8e69b5655f2199"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "2560dbf990a4f39f006884a2c0d1fa7950e15795"
+          test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json")" = "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+          test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json")" = "0ed075c1efa053fe6e4eb3519d9903cf63fcf163"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json")" = "4b5517dbd12978f8ffe481fb775e85592c7790c8"
+          test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json")" = "e29ce3a7c782c7b9ab1097dd3124a917d3fea9d2"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_SCHEDULING_ACTIVATION_V6.json")" = "e56719b8c63078273a6974104d413aa1b643da3b"
+          test "$(git hash-object "$C/canonical/governance/TERMINAL_SCHEDULING_CURRENT_AUTHORITY_V1.json")" = "04f0ee3cd64c3f77b29ece159ac9a35eae47a9dc"
+          test "$(git hash-object "$C/canonical/governance/TOOL_DISCOVERY_RESIDUAL_WITNESS_RETRIEVAL_FRONTIER_V2_ACTIVATION_V1.json")" = "c916c095cfb52b4b3d8dd863dfb0be0f05529f2e"
+          test "$(git hash-object "$C/canonical/verification/TOOL_DISCOVERY_RETRIEVAL_FRONTIER_V2_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "bbbd34e192aa65ba94c4bda19a1a1eb9c2b5b406"
+          test "$(git hash-object "$C/canonical/runtime/residual_witness_retrieval_compiler_v1.py")" = "9daa8d590f3356b3fc51eccf75c56cbf515239e4"
+          test "$(git hash-object "$C/canonical/verification/RESIDUAL_WITNESS_RETRIEVAL_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "f0a68c8219d704875535543060f63b9ecaca6dd5"
+          test "$(git hash-object "$C/canonical/runtime/residual_witness_backend_router_v1.py")" = "578c5f87901a458b12d7df984e0a6a525d367456"
+          test "$(git hash-object "$C/canonical/runtime/github_public_retrieval_provider_v1.py")" = "29b808935559382ab7ddc81aaa08fe0611a05df8"
+          test "$(git hash-object "$C/canonical/verification/GITHUB_PUBLIC_RETRIEVAL_SURFACES_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "ca5acd7afbf14b7cce568ec482c160c3795e57ba"
+
+      - name: Run V9-bound current-world tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/current_27_info_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_current_terminal_information_dominance_v1
+
+      - name: Compute exact live dominance
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/current_27_info_v1"
+          PYTHONPATH="$C" python -m canonical.runtime.current_terminal_information_dominance_v1 > CURRENT_27_INFO_RESULT.json
+
+      - name: Independently adjudicate
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee CURRENT_27_INFO_VERDICT.json
+          import json
+          x=json.load(open("CURRENT_27_INFO_RESULT.json"))
+          assert x["pass"] is True,x
+          s=x["live_world_summary"]; d=x["dominance"]
+          assert s["frozen_predicates"]==38,x
+          assert s["proved_predicates"]==11,x
+          assert s["unresolved_predicates"]==27,x
+          assert s["live_action_coverage_count"]==27,x
+          assert s["tool_discovery_retrieval_authority_gate_required"] is True,x
+          assert s["tool_discovery_retrieval_authority_gate_pass"] is True,x
+          assert d["status"]=="EXACT_INFORMATION_DOMINANCE_COMPUTED",x
+          assert d["unresolved_predicate_count"]==27,x
+          assert d["best_full_frontier_bundle"]["covered_predicate_count"]==27,x
+          all_ids=set(d["nondominated_certificate_ids"])|set(d["dominated_certificate_ids"])
+          assert "DELEGATION_PROTOCOL_SCOPE_COMPLETENESS_CERTIFICATE" not in all_ids,x
+          covered={p for row in d["single_certificate_structural_front"] for p in row["covered_predicates"]}
+          for p in (
+              "DELEGATION_TERMINAL_SUCCESS_NONINFERIOR",
+              "RECOVERY_CAUSAL_LOCALIZATION_NONINFERIOR",
+              "RECOVERY_TERMINAL_NONINFERIOR",
+              "RECOVERY_ZERO_CRITICAL_FAIL_CLOSED_MISSES",
+          ):
+              assert p not in covered,(p,x)
+          assert "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR" in covered,x
+          assert x["new_reality_units_consumed"]==0,x
+          assert x["execution_authority"] is False,x
+          assert x["promotion_authority"] is False,x
+          assert x["fresh_reality_authority"] is False,x
+          out={
+            "schema":"PROJECT_BRAIN_CURRENT_27_INFORMATION_DOMINANCE_PUBLIC_RUNNER_VERIFICATION",
+            "status":"INDEPENDENT_PASS__EXACT_LIVE_27_INFORMATION_DOMINANCE__V9_BOUND__TOOL_DISCOVERY_V2_GATE_BOUND__ZERO_REALITY__ZERO_CREDIT",
+            "unresolved_predicates":27,
+            "certificate_count":d["certificate_count"],
+            "nondominated_certificate_ids":d["nondominated_certificate_ids"],
+            "dominated_certificate_ids":d["dominated_certificate_ids"],
+            "highest_direct_coverage_count":d["highest_direct_coverage_count"],
+            "highest_direct_coverage_certificate_ids":d["highest_direct_coverage_certificate_ids"],
+            "best_full_frontier_bundle":d["best_full_frontier_bundle"],
+            "top_synergy_bundles":d["synergy_bundles"][:10],
+            "tool_discovery_retrieval_gate_pass":True,
+            "new_reality_units_consumed":0,
+            "execution_authority":False,
+            "promotion_authority":False
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-27-information-dominance-v1
+          path: |
+            CURRENT_27_INFO_RESULT.json
+            CURRENT_27_INFO_VERDICT.json
+          if-no-files-found: error
