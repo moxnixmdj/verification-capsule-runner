@@ -1,0 +1,21 @@
+name: Verify Retrieval V10 live instrumentation
+on:
+  push:
+    branches:
+      - verify/retrieval-v10-live-instrumentation-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V10 blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_instrumented_executor_v1.py)" = "a63a4991daa3dca147f373b7890151f07afd3f4e"
+          test "$(git hash-object canonical/tests/test_retrieval_live_instrumented_executor_v1.py)" = "6f28c317ec231f1e912e4ad74f5326b9a39b9c0e"
+          test "$(git hash-object canonical/governance/GLOBAL_RETRIEVAL_CURRENT_AUTHORITY_V1.json)" = "cb58ff10b7c3ac99da8cbee7b8aa0b76006f8dfe"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_live_instrumented_executor_v1.py
