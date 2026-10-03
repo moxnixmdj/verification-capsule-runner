@@ -1,8 +1,6 @@
 name: Verify P1 source-native shared-batch freeze
-# Dedicated verification base prevents unrelated main-PR workflow fan-out.\n# Dedicated push carrier yields an independent public run without PR workflow fan-out.
 on:
-  push:
-    branches: [verify/p1-source-native-shared-batch-freeze-20261003]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -18,19 +16,6 @@ jobs:
           python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1
           python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1
       - name: Verify source-native bridge and dual scorers on spent fixtures
-        run: |
-          python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_v1
+        run: python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_v1
       - name: Verify no terminal execution occurred
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path("canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json")
-          d=json.loads(p.read_text())
-          assert d["new_reality_units_consumed"] == 0
-          assert d["execution_authority"] is False
-          assert d["promotion_authority"] is False
-          assert d["terminal_results_replayed"] == 0
-          assert d["incremental_spend_usd"] == 0
-          print("ZERO_FRESH_REALITY_PREFLIGHT_CONFIRMED")
-          PY
+        run: bash verification/run.sh
