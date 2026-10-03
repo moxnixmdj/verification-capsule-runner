@@ -1,5 +1,10 @@
 name: Verify Root2 proof hypergraph v1
 on:
+  push:
+    branches: [main]
+    paths:
+      - "capsules/root2_proof_hypergraph_v1/**"
+      - ".github/workflows/verify-root2-proof-hypergraph-v1.yml"
   pull_request:
     branches: [main]
     paths:
