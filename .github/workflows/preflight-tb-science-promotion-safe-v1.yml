@@ -118,6 +118,7 @@ jobs:
           for i in range(6):
               ok=False; errs=[]
               for model in models:
+                  raw=""
                   body=json.dumps({"messages":[{"role":"user","content":prompt}],"model":model,"jsonMode":True}).encode()
                   req=urllib.request.Request(endpoint,data=body,headers={"Content-Type":"application/json","User-Agent":"ProjectBrain-TBScience-Preflight/1"},method="POST")
                   t=time.monotonic()
@@ -135,7 +136,7 @@ jobs:
                       ok=True
                       break
                   except Exception as e:
-                      errs.append({"model_alias":model,"error":type(e).__name__+":"+str(e)[:180]})
+                      errs.append({"model_alias":model,"error":type(e).__name__+":"+str(e)[:180],"raw_excerpt":raw[:800]})
               if not ok:
                   results.append({"attempt":i+1,"ok":False,"errors":errs})
           passed=sum(1 for r in results if r["ok"])
