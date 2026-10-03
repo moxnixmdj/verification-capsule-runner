@@ -1,0 +1,46 @@
+name: Verify Brain Tool Discovery V9 current-main route
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_v9_current_main/**"
+      - ".github/workflows/verify-brain-tool-discovery-v9-current-main.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        working-directory: capsules/tool_discovery_v9_current_main
+        run: |
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v5.py)" = "42d096ef93e8ad06c4d1d5dfe730881bf45a2a72"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v8.py)" = "b43443ef8b0387ed88bb5a852de01323276ad2aa"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v9.py)" = "d53b6b68b0e404591b9ee6fc93bc475cbdbb42fd"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v9.py)" = "245c5e9bca14e724b65e4706c7d89ac1513c4940"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_CURRENT_ROUTE_SELECTION_V3_CANDIDATE.json)" = "06a3fe38a51f9dd51f371c520a423829bffaec78"
+      - name: Run V9 regression suite
+        working-directory: capsules/tool_discovery_v9_current_main
+        run: |
+          export PYTHONPATH=.
+          python -m py_compile canonical/runtime/tool_discovery_dynamic_candidate_v5.py canonical/runtime/tool_discovery_dynamic_candidate_v8.py canonical/runtime/tool_discovery_dynamic_candidate_v9.py
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v9 -v
+      - name: Verify no authority or credit leak
+        working-directory: capsules/tool_discovery_v9_current_main
+        run: |
+          python - <<'PY'
+          import json
+          c=json.load(open("canonical/governance/TOOL_DISCOVERY_CURRENT_ROUTE_SELECTION_V3_CANDIDATE.json"))
+          assert c["acceptance_credit_delta"] == 0
+          assert c["family_credit_delta"] == 0
+          assert c["ownership_credit_delta"] == 0
+          assert c["execution_authority"] is False
+          assert c["promotion_authority"] is False
+          assert c["fresh_reality_authority"] is False
+          print("V9 route candidate: independent PASS")
+          PY
