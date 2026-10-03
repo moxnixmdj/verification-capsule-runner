@@ -1,0 +1,18 @@
+name: Verify terminal latency collapse stack V1
+on:
+  push:
+    branches: [critical/terminal-latency-stack-v1-20261003]
+    paths:
+      - "capsules/terminal_latency_collapse_v1/**"
+      - ".github/workflows/verify-terminal-latency-collapse-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/terminal_latency_collapse_v1/verification/run.py
