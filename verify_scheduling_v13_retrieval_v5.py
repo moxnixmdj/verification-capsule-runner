@@ -67,7 +67,7 @@ assert action["new_reality_units"]==0
 for needle in (
  "V5_EXPECTED",
  "V5_DOES_NOT_PRESERVE_EXACT_V4_BASE",
- "V5_SUCCESS_ONLY_EPOCH_CONSUMPTION_MANDATORY",
+ "v5_success_only_epoch_consumption_mandatory",
  "PASS__LIVE_TOOL_DISCOVERY_EDGE_MECHANICALLY_BOUND_TO_VERIFIED_V2_V3_V4_V5_RETRIEVAL_AUTHORITY",
 ):
  assert needle in gate,needle
