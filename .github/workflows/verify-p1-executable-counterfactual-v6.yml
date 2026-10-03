@@ -1,0 +1,20 @@
+name: Verify P1 executable counterfactual V6
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_executable_counterfactual_v6/**"
+      - ".github/workflows/verify-p1-executable-counterfactual-v6.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain P1 V6 blobs and executable counterfactual envelope
+        run: python capsules/p1_executable_counterfactual_v6/verify.py
