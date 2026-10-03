@@ -1,0 +1,11 @@
+{
+  "schema": "TOOL_DISCOVERY_V4_PUBLIC_VERIFIER_RERUN_MARKER_V1",
+  "date": "2026-10-03",
+  "reason": "RETRIGGER_AFTER_CAPSULE_V3_BASELINE_BYTES_CORRECTED_TO_EXACT_CANONICAL_BLOB",
+  "prior_failed_run_id": 37086515801,
+  "prior_failure_class": "VERIFIER_PACKAGING_HASH_MISMATCH_BEFORE_TEST_EXECUTION",
+  "canonical_v3_git_blob_sha": "bbbee4d6baf8df937543644397abba38a67dce62",
+  "v4_git_blob_sha": "e614d0bed8e291e31f57189cd6f0f75aa39b0f74",
+  "test_git_blob_sha": "23f0add178ca0c731d15e0645ee9b8841317efee",
+  "credit": 0
+}
