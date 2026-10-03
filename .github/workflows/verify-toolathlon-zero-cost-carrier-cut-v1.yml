@@ -1,0 +1,30 @@
+name: Verify Brain PR 1173 Toolathlon zero-cost carrier cut
+
+on:
+  pull_request:
+    paths:
+      - 'verify_toolathlon_zero_cost_carrier_cut_v1.py'
+      - 'capsules/toolathlon_carrier_cut_v1/**'
+      - '.github/workflows/verify-toolathlon-zero-cost-carrier-cut-v1.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'verify_toolathlon_zero_cost_carrier_cut_v1.py'
+      - 'capsules/toolathlon_carrier_cut_v1/**'
+      - '.github/workflows/verify-toolathlon-zero-cost-carrier-cut-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact carrier-cut bytes and frozen Toolathlon private-mode source
+        run: python verify_toolathlon_zero_cost_carrier_cut_v1.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: toolathlon-zero-cost-carrier-cut-verdict
+          path: TOOLATHLON_ZERO_COST_CARRIER_CUT_PUBLIC_VERDICT_V1.json
