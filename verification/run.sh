@@ -3,7 +3,7 @@
 set -euo pipefail
 # PIN_EXACT_P1_REPAIR
 test "$(git hash-object canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json)" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
-test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_batch_preflight_v1.py)" = "34212f1fc0a83094494a2201ab0cdef37fc867f7"
+test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_batch_preflight_v1.py)" = "13c33adda55f58d1eac913e63daa7f6ae1eb6a63"
 test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_batch_v1.py)" = "695cfe3f283723a52bafb6299236a2d0378dc79e"
 test "$(git hash-object canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py)" = "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
 test "$(git hash-object canonical/tests/test_p1_shared_failure_semantics_batch_v1.py)" = "7512a920c72d7bdeb2b072788e4c4bc8d2ff2d08"
