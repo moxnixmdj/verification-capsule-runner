@@ -1,0 +1,10 @@
+{
+  "schema": "PROJECT_BRAIN_PR1217_VERIFICATION_TRIGGER_V1",
+  "brain_pr": 1217,
+  "brain_head": "1432c62905ae7c645db2f0b7b9e18d38936e2b60",
+  "verifier_capsule_commit": "ef702c860bfccf244c4e94114f9b5a49be256070",
+  "purpose": "TRIGGER_INSTALLED_EXACT_BYTE_TB_SCIENCE_REPAIR_VERIFIER",
+  "terminal_task_content_read": 0,
+  "terminal_trials_executed": 0,
+  "incremental_spend_usd": 0
+}
