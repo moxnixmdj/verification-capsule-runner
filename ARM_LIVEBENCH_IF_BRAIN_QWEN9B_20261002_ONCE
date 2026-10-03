@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_IF_ONE_SHOT_ARM_V1",
+  "date": "2026-10-02",
+  "protocol_blob_sha": "5c2a8d2caaef67160507f70ea1c7c001345c2810",
+  "zero_case_preflight_run_id": 36982417866,
+  "zero_case_preflight_conclusion": "success",
+  "configured_case_count": 400,
+  "diagnostic_ablation_case_count": 40,
+  "reroll_allowed": false,
+  "tuning_replay": false,
+  "terminal_v3_replay": false,
+  "incremental_spend_usd": 0,
+  "rule": "CONSUME_THIS_FROZEN_PUBLIC_ACCEPTANCE_POPULATION_ONCE__PRESERVE_POSITIVE_OR_NEGATIVE_RESULT_IMMUTABLY"
+}

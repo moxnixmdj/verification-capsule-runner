@@ -1,0 +1,203 @@
+name: Run Brain LiveBench IF public bar once
+on:
+  push:
+    branches: [run-livebench-if-brain-qwen9b-20261002-sol]
+    paths:
+      - 'ARM_LIVEBENCH_IF_BRAIN_QWEN9B_20261002_ONCE'
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      LIVEBENCH_ROOT: /tmp/livebench
+      NLTK_DATA: /tmp/nltk_data
+      LIVEBENCH_IF_DATASET: /tmp/livebench_if.parquet
+      LLAMA_SERVER: http://127.0.0.1:8080
+      CONFIGURED_OUT: configured_responses.jsonl
+      ABLATION_OUT: ablation_responses.jsonl
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+
+      - name: Verify exact frozen acceptance bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/instruction_following_brain_configuration_v1.py)" = "471221fd29d56c741a4c6db64db6da5f6cf858cc"
+          test "$(git hash-object canonical/tests/test_instruction_following_brain_configuration_v1.py)" = "4f712136cfad35f24253a6bce7a07efbbecc8c30"
+          test "$(git hash-object canonical/runtime/explicit_compound_requirement_decomposer.py)" = "06da82ccd7cf5ba37b78d1d664b5638caa4e1956"
+          test "$(git hash-object canonical/runtime/bounded_predicate_argument_semantics.py)" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
+          test "$(git hash-object acceptance/livebench_if/LIVEBENCH_IF_PUBLIC_BAR_EXECUTION_PROTOCOL_V1.json)" = "5c2a8d2caaef67160507f70ea1c7c001345c2810"
+          test "$(git hash-object acceptance/livebench_if/generate.py)" = "7bdc2f5466e3e772797d4c3a0a90a957e1869111"
+          test "$(git hash-object acceptance/livebench_if/score.py)" = "71a9ff81c95bd451742ca9e5ca779e82441ec400"
+
+      - name: Install exact frozen scorer runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/wheels
+          python -m pip download --no-deps --only-binary=:all: -d /tmp/wheels             nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 setuptools==80.9.0             click==8.5.0 cloudpickle==3.1.2 defusedxml==0.7.1 joblib==1.6.0             regex==2026.9.29 tqdm==4.70.1
+          python -m pip download --no-deps --only-binary=:all: --platform manylinux_2_28_x86_64             --python-version 312 --implementation cp --abi cp312 -d /tmp/wheels pyarrow==21.0.0
+          echo "ff9598a8e20518ee0d557745890cc4435b9578489e2dcbc69c4f81fa060caf7c  /tmp/wheels/nltk-3.10.3-py3-none-any.whl" | sha256sum -c -
+          echo "c4230d80640def9071599ff56b1b5950fe13a2a94c0da98c5deab12431b24330  /tmp/wheels/emoji-2.16.0-py3-none-any.whl" | sha256sum -c -
+          echo "198a7413033c32d7b31e21962efb3f284bcea80d3346e954b938ca1ebe6bee20  /tmp/wheels/syllapy-0.7.2-py3-none-any.whl" | sha256sum -c -
+          echo "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922  /tmp/wheels/setuptools-80.9.0-py3-none-any.whl" | sha256sum -c -
+          echo "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360  /tmp/wheels/click-8.5.0-py3-none-any.whl" | sha256sum -c -
+          echo "9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a  /tmp/wheels/cloudpickle-3.1.2-py3-none-any.whl" | sha256sum -c -
+          echo "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61  /tmp/wheels/defusedxml-0.7.1-py2.py3-none-any.whl" | sha256sum -c -
+          echo "3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba  /tmp/wheels/joblib-1.6.0-py3-none-any.whl" | sha256sum -c -
+          echo "39ab5894d971f9ac68baa6eca5c50387db579cfcacf36ae8df3feceb1815e6d0  /tmp/wheels/regex-2026.9.29-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl" | sha256sum -c -
+          echo "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73  /tmp/wheels/tqdm-4.70.1-py3-none-any.whl" | sha256sum -c -
+          echo "b7ae0bbdc8c6674259b25bef5d2a1d6af5d39d7200c819cf99e07f7dfef1c51e  /tmp/wheels/pyarrow-21.0.0-cp312-cp312-manylinux_2_28_x86_64.whl" | sha256sum -c -
+          python -m pip install --no-index --find-links=/tmp/wheels             setuptools==80.9.0 nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 pyarrow==21.0.0
+          python -m pip freeze | sort > ACCEPTANCE_PIP_FREEZE.txt
+
+      - name: Materialize exact LiveBench scorer and NLTK runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$LIVEBENCH_ROOT"
+          git -C "$LIVEBENCH_ROOT" remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C "$LIVEBENCH_ROOT" fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C "$LIVEBENCH_ROOT" checkout --detach FETCH_HEAD
+          test "$(git -C "$LIVEBENCH_ROOT" hash-object livebench/if_runner/ifbench/evaluation_lib.py)" = "2c7bd1290031dbe4ae0f016c53255f4af0ec645b"
+          test "$(git -C "$LIVEBENCH_ROOT" hash-object livebench/if_runner/ifbench/instructions.py)" = "02b2dfeb50f036b89bec3df34522c73f756d8f44"
+          test "$(git -C "$LIVEBENCH_ROOT" hash-object livebench/if_runner/ifbench/instructions_registry.py)" = "adfed4832877566e62970257b50c6fa32c302fb2"
+          test "$(git -C "$LIVEBENCH_ROOT" hash-object livebench/if_runner/ifbench/instructions_util.py)" = "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342"
+
+          git init /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo remote add origin https://github.com/nltk/nltk_data.git
+          git -C /tmp/nltk_data_repo fetch --depth 1 origin 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          git -C /tmp/nltk_data_repo checkout --detach FETCH_HEAD
+          mkdir -p "$NLTK_DATA/tokenizers" "$NLTK_DATA/corpora" "$NLTK_DATA/taggers"
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d "$NLTK_DATA/tokenizers"
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d "$NLTK_DATA/tokenizers"
+          unzip -q /tmp/nltk_data_repo/packages/corpora/stopwords.zip -d "$NLTK_DATA/corpora"
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger.zip -d "$NLTK_DATA/taggers"
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger_eng.zip -d "$NLTK_DATA/taggers"
+
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions.py')
+          s=p.read_text()
+          s=s.replace('from spacy.cli import download\n','').replace('import spacy\n','')
+          s=s.replace('if not spacy.util.is_package("en_core_web_sm"):\n\tdownload(\'en_core_web_sm\')\n','')
+          p.write_text(s)
+          u=Path('/tmp/livebench/livebench/if_runner/ifbench/instructions_util.py')
+          t=u.read_text()
+          t=t.replace('nltk.download("punkt")','raise RuntimeError("PINNED_PUNKT_MISSING")')
+          t=t.replace("    nltk.download('stopwords')\n","")
+          u.write_text(t)
+          assert 'nltk.download' not in t
+          PY
+
+      - name: Download exact frozen public dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o "$LIVEBENCH_IF_DATASET"             'https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet?download=true'
+          echo 'a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/livebench_if.parquet' | sha256sum -c -
+          test "$(stat -c '%s' "$LIVEBENCH_IF_DATASET")" = "537024"
+
+      - name: Build exact local inference runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          git -C llama.cpp rev-parse HEAD > LLAMA_CPP_COMMIT.txt
+
+      - name: Download exact approved general cognition substrate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+          sha256sum models/Qwen3.5-9B-M-TS-Q4_K_M.gguf > MODEL_SHA256.txt
+
+      - name: Start exact local model server
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 2 --no-webui "${EXTRA[@]}"             > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute configured 400-case generation plus frozen 40-case ablation once
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python acceptance/livebench_if/generate.py | tee GENERATION_STDOUT.txt
+
+      - name: Score only after all responses are committed
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          PYTHONPATH=. python acceptance/livebench_if/score.py | tee SCORE_STDOUT.txt
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "$code" > SCORE_EXIT_CODE.txt
+          test -s livebench_if_result.json
+          python - <<'PY'
+          import json
+          r=json.load(open('livebench_if_result.json'))
+          assert r['configured']['prompt_total']==400
+          assert r['ablation_40']['prompt_total']==40
+          assert r['candidate_hidden_evaluator_information_consumed'] is False
+          assert r['incremental_spend_usd']==0
+          print('VALID_MEASUREMENT',json.dumps(r,sort_keys=True))
+          PY
+
+      - name: Classify valid measurement
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          r=json.load(open('livebench_if_result.json'))
+          if r['pass']:
+              print('VALID_POSITIVE__LIVEBENCH_IF_PUBLIC_BAR_PASS')
+          else:
+              print('VALID_NEGATIVE__LIVEBENCH_IF_PUBLIC_BAR_BELOW_65_7')
+          PY
+
+      - name: Upload immutable acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: brain-livebench-if-public-bar-result
+          if-no-files-found: error
+          path: |
+            acceptance/livebench_if/LIVEBENCH_IF_PUBLIC_BAR_EXECUTION_PROTOCOL_V1.json
+            configured_responses.jsonl
+            ablation_responses.jsonl
+            generation_manifest.json
+            livebench_if_result.json
+            livebench_if_per_question.json
+            SCORE_EXIT_CODE.txt
+            GENERATION_STDOUT.txt
+            SCORE_STDOUT.txt
+            ACCEPTANCE_PIP_FREEZE.txt
+            LLAMA_CPP_COMMIT.txt
+            MODEL_SHA256.txt
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log

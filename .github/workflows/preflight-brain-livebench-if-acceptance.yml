@@ -1,0 +1,79 @@
+name: Preflight Brain LiveBench IF acceptance carrier
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'acceptance/livebench_if/**'
+      - 'canonical/runtime/instruction_following_brain_configuration_v1.py'
+      - 'canonical/runtime/explicit_compound_requirement_decomposer.py'
+      - 'canonical/runtime/bounded_predicate_argument_semantics.py'
+      - 'canonical/tests/test_instruction_following_brain_configuration_v1.py'
+      - '.github/workflows/preflight-brain-livebench-if-acceptance.yml'
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+      - name: Verify exact frozen Brain bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/instruction_following_brain_configuration_v1.py)" = "471221fd29d56c741a4c6db64db6da5f6cf858cc"
+          test "$(git hash-object canonical/tests/test_instruction_following_brain_configuration_v1.py)" = "4f712136cfad35f24253a6bce7a07efbbecc8c30"
+          test "$(git hash-object canonical/runtime/explicit_compound_requirement_decomposer.py)" = "06da82ccd7cf5ba37b78d1d664b5638caa4e1956"
+          test "$(git hash-object canonical/runtime/bounded_predicate_argument_semantics.py)" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
+          test "$(git hash-object acceptance/livebench_if/LIVEBENCH_IF_PUBLIC_BAR_EXECUTION_PROTOCOL_V1.json)" = "5c2a8d2caaef67160507f70ea1c7c001345c2810"
+          test "$(git hash-object acceptance/livebench_if/generate.py)" = "7bdc2f5466e3e772797d4c3a0a90a957e1869111"
+          test "$(git hash-object acceptance/livebench_if/score.py)" = "71a9ff81c95bd451742ca9e5ca779e82441ec400"
+      - name: Run Brain configuration tests and compile carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python - <<'PY'
+          import runpy
+          ns=runpy.run_path('canonical/tests/test_instruction_following_brain_configuration_v1.py')
+          tests=[(n,f) for n,f in ns.items() if n.startswith('test_') and callable(f)]
+          assert len(tests)==4, len(tests)
+          for name,fn in sorted(tests):
+              fn()
+              print('PASS',name)
+          PY
+          python -m py_compile acceptance/livebench_if/generate.py acceptance/livebench_if/score.py
+      - name: Freeze Parquet reader wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/pyarrow-wheel
+          python -m pip download --no-deps --only-binary=:all: --platform manylinux_2_28_x86_64 --python-version 312 --implementation cp --abi cp312 -d /tmp/pyarrow-wheel pyarrow==21.0.0
+          ls -l /tmp/pyarrow-wheel
+          echo 'b7ae0bbdc8c6674259b25bef5d2a1d6af5d39d7200c819cf99e07f7dfef1c51e  /tmp/pyarrow-wheel/pyarrow-21.0.0-cp312-cp312-manylinux_2_28_x86_64.whl' | sha256sum -c -
+          test "$(stat -c '%s' /tmp/pyarrow-wheel/pyarrow-21.0.0-cp312-cp312-manylinux_2_28_x86_64.whl)" = "42829529"
+
+      - name: Verify frozen dataset artifact without opening cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --silent --show-error             -o /tmp/livebench_if.parquet             'https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet?download=true'
+          echo 'a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/livebench_if.parquet' | sha256sum -c -
+          test "$(stat -c '%s' /tmp/livebench_if.parquet)" = "537024"
+      - name: Verify frozen scorer source identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/livebench
+          git -C /tmp/livebench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/livebench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/livebench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/evaluation_lib.py)" = "2c7bd1290031dbe4ae0f016c53255f4af0ec645b"
+          test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/instructions.py)" = "02b2dfeb50f036b89bec3df34522c73f756d8f44"
+          test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/instructions_registry.py)" = "adfed4832877566e62970257b50c6fa32c302fb2"
+          test "$(git -C /tmp/livebench hash-object livebench/if_runner/ifbench/instructions_util.py)" = "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342"
+      - name: Emit zero-case preflight receipt
+        run: |
+          printf '%s\n' '{"status":"PASS","terminal_case_content_read":0,"terminal_results_observed":0,"incremental_spend_usd":0}' | tee livebench_if_preflight.json
