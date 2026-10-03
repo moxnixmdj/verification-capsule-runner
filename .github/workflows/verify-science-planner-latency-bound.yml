@@ -22,18 +22,14 @@ jobs:
       - name: Fetch and bind exact Brain PR1247 bytes
         run: |
           set -euo pipefail
-          mkdir -p brain/canonical/runtime brain/canonical/tests brain/canonical/governance
-          BASE="https://raw.githubusercontent.com/moxnixmdj/brain/04b11ecefad876a9bbdac1089ffa7677b52e1f89"
-          curl -fsSL "$BASE/canonical/runtime/harbor_science_planner_v1.py" -o brain/canonical/runtime/harbor_science_planner_v1.py
-          curl -fsSL "$BASE/canonical/tests/test_harbor_science_planner_v1.py" -o brain/canonical/tests/test_harbor_science_planner_v1.py
-          curl -fsSL "$BASE/canonical/governance/TB_SCIENCE_PLANNER_LATENCY_REPAIR_V1.json" -o brain/canonical/governance/TB_SCIENCE_PLANNER_LATENCY_REPAIR_V1.json
-          test "$(git hash-object brain/canonical/runtime/harbor_science_planner_v1.py)" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
-          test "$(git hash-object brain/canonical/tests/test_harbor_science_planner_v1.py)" = "b550fc2921eb740ea75579357fd94ed6a4e90862"
-          test "$(git hash-object brain/canonical/governance/TB_SCIENCE_PLANNER_LATENCY_REPAIR_V1.json)" = "fda7fa4c3b611fd0b3e51cf391c8dba2f50e5f47"
-          touch brain/canonical/__init__.py brain/canonical/runtime/__init__.py brain/canonical/tests/__init__.py
+          C=capsules/science_planner_latency_20261003
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "b550fc2921eb740ea75579357fd94ed6a4e90862"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_PLANNER_LATENCY_REPAIR_V1.json")" = "fda7fa4c3b611fd0b3e51cf391c8dba2f50e5f47"
+          touch "$C/canonical/__init__.py" "$C/canonical/runtime/__init__.py" "$C/canonical/tests/__init__.py"
           python - <<'PY'
           import json
-          x=json.load(open("brain/canonical/governance/TB_SCIENCE_PLANNER_LATENCY_REPAIR_V1.json"))
+          x=json.load(open("capsules/science_planner_latency_20261003/canonical/governance/TB_SCIENCE_PLANNER_LATENCY_REPAIR_V1.json"))
           assert x["causal_evidence"]["workflow_run_id"]==37106127198
           assert x["causal_evidence"]["exception_message"]=="SCIENCE_PLANNER_LOCAL_ROUTE_FAILED:TimeoutError:timed out"
           assert x["causal_evidence"]["timeout_s"]==180
@@ -45,7 +41,7 @@ jobs:
 
       - name: Run exact planner regression tests
         env:
-          PYTHONPATH: ${{ github.workspace }}/brain
+          PYTHONPATH: ${{ github.workspace }}/capsules/science_planner_latency_20261003
         run: python -m unittest -v canonical.tests.test_harbor_science_planner_v1
 
       - name: Restore exact pinned llama.cpp build
@@ -104,7 +100,7 @@ jobs:
 
       - name: Prove bounded planner completes two conservative synthetic envelopes under unchanged 180s budget
         env:
-          PYTHONPATH: ${{ github.workspace }}/brain
+          PYTHONPATH: ${{ github.workspace }}/capsules/science_planner_latency_20261003
           PROJECT_BRAIN_LOCAL_QWEN_URL: http://127.0.0.1:8080/v1/chat/completions
           PROJECT_BRAIN_LOCAL_QWEN_MODEL: brain-qwen3.5-9b
         run: |
