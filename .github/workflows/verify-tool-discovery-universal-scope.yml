@@ -1,0 +1,73 @@
+name: Verify Tool Discovery universal scope
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_universal_scope_20261003/**"
+      - ".github/workflows/verify-tool-discovery-universal-scope.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/tool_discovery_universal_scope_20261003
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+
+          expected = {
+            "canonical/runtime/tool_discovery_dynamic_candidate_v4.py": "e614d0bed8e291e31f57189cd6f0f75aa39b0f74",
+            "canonical/tests/test_tool_discovery_dynamic_v4.py": "23f0add178ca0c731d15e0645ee9b8841317efee",
+            "canonical/verification/TOOL_DISCOVERY_DYNAMIC_V4_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "10cb18355d247a05177230d0dd345e161e84111d",
+            "canonical/runtime/tool_discovery_complete_authority_manifest_v1.py": "a7060e25461000a1aa313a0c363e22807db70bc8",
+            "canonical/tests/test_tool_discovery_complete_authority_manifest_v1.py": "2cab93f3213ea0a025a84041418db5f5fd180405",
+            "canonical/governance/TOOL_DISCOVERY_COMPLETE_AUTHORITY_SCOPE_RELATION_V1.json": "03083ade14dc0c241b3b9eb46eaa4c2627b54628",
+            "canonical/runtime/tool_discovery_universal_scope_certificate_v1.py": "f75a1f4858f8e70f4c65b847186f73132259d1e5",
+            "canonical/tests/test_tool_discovery_universal_scope_certificate_v1.py": "9c3248c1e533c45f8983f2f4d8faf13963d3e3a2",
+            "canonical/governance/TOOL_DISCOVERY_UNIVERSAL_SCOPE_CERTIFICATE_V1.json": "8a43f38e2bbf5d1a75689daa28dfec32592add98",
+            "canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json": "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7",
+            "canonical/governance/TOOL_DISCOVERY_SCOPE_FORMALISM_CUT_ACTIVATION_V1.json": "48ba33998e73b8eec2731be51a7ec78077ed0d4a",
+            "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json": "6bcabc0a7d0525532ce7b80e132278f7c99caa43",
+            "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+            "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "ee187f611a0e82b2de495ee377682f39bc31dd31",
+            "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "7885a827b1483bfb38315c1f492848f7e4680285",
+            "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json": "ec2d931860e7cd7d9f73a658706f8c33fca3a10d",
+          }
+
+          for rel, want in expected.items():
+            data = Path(rel).read_bytes()
+            got = hashlib.sha1(
+              b"blob " + str(len(data)).encode() + b"\0" + data
+            ).hexdigest()
+            print(rel, got)
+            if got != want:
+              raise SystemExit(f"BLOB_MISMATCH {rel}: {got} != {want}")
+          PY
+
+      - name: Run independently verified V4 regression suite
+        working-directory: capsules/tool_discovery_universal_scope_20261003
+        run: python -m unittest canonical.tests.test_tool_discovery_dynamic_v4 -v
+
+      - name: Run exact authority manifest falsification suite
+        working-directory: capsules/tool_discovery_universal_scope_20261003
+        run: python -m unittest canonical.tests.test_tool_discovery_complete_authority_manifest_v1 -v
+
+      - name: Run universal scope certificate and mutation suite
+        working-directory: capsules/tool_discovery_universal_scope_20261003
+        run: |
+          python canonical/runtime/tool_discovery_universal_scope_certificate_v1.py
+          python -m unittest canonical.tests.test_tool_discovery_universal_scope_certificate_v1 -v
