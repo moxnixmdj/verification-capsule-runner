@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - verify/scheduling-v13-v5-20261003-sol
+  pull_request:
+    branches:
+      - main
 permissions:
   contents: read
 jobs:
