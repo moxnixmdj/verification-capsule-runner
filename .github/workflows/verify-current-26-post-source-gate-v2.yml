@@ -1,0 +1,16 @@
+name: Verify current 26 post-source-gate frontier v2
+on:
+  push:
+    branches:
+      - verify/current-26-post-source-gate-v2-20261003-sol
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_current_26_post_source_gate_frontier_v2.py
