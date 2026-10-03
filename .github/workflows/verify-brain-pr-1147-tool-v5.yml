@@ -1,0 +1,67 @@
+name: Verify Brain PR 1147 Tool Discovery V5 converged soundness
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1147_tool_v5/**"
+      - ".github/workflows/verify-brain-pr-1147-tool-v5.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/brain_pr_1147_tool_v5
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+            "canonical/runtime/tool_discovery_dynamic_candidate_v3.py": "bbbee4d6baf8df937543644397abba38a67dce62",
+            "canonical/runtime/tool_discovery_dynamic_candidate_v5.py": "f4e076626b2aca63059a271bed71759ba6e1b741",
+            "canonical/tests/test_tool_discovery_dynamic_candidate_v5.py": "08888a94998ccba49aa31a4928d66e6bd987fa85",
+            "canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V3.json": "d00afbdf2f0ff09bba32b5b29aa5bd2c8938732f",
+            "canonical/governance/TOOL_DISCOVERY_V5_CONVERGED_SOUNDNESS_REPAIR_V1.json": "1712bae87ec22648e782050c059f748b4860f121",
+          }
+          for path,want in expected.items():
+            data=Path(path).read_bytes()
+            got=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+            assert got==want,(path,got,want)
+            print(path,got)
+          PY
+      - name: Run exact adversarial V5 suite
+        working-directory: capsules/brain_pr_1147_tool_v5
+        run: |
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v5 -v
+      - name: Independent observability regression
+        working-directory: capsules/brain_pr_1147_tool_v5
+        run: |
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime import tool_discovery_dynamic_candidate_v5 as v5
+          p={
+            "required_capabilities":["CAP_A"],"constraint":None,
+            "visible_tools":[
+              {"tool_id":"CHEAP","cost":1.0,"available":True,"authorized":True,"epoch":0,"safe_probe_capabilities":[]},
+              {"tool_id":"EXPENSIVE","cost":2.0,"available":True,"authorized":True,"epoch":0,"safe_probe_capabilities":["CAP_A"]},
+            ],
+            "prior_probe_receipts":[{"kind":"SAFE_CAPABILITY_PROBE","tool_id":"EXPENSIVE","capability":"CAP_A","epoch":0,"supported":True}],
+            "discovery_sources":[],"discovery_receipts":[],"version_events":[],
+            "decision_epoch":0,"source_set_digest":"",
+          }
+          assert v5.next_action(p)=={
+            "action":"ESCALATE",
+            "reason":"CHEAPER_ADMISSIBLE_ROUTE_UNRESOLVED_NO_SAFE_PROBE",
+            "tool_id":"CHEAP",
+          }
+          print("OBSERVABILITY_FAIL_CLOSED_PASS")
+          PY
