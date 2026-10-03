@@ -1,0 +1,59 @@
+name: Verify Brain PR 1149 P1 shared-batch freeze
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/p1_shared_batch_freeze_20261003/**'
+      - '.github/workflows/verify-brain-pr-1149-p1-shared-batch-freeze.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'capsules/p1_shared_batch_freeze_20261003/**'
+      - '.github/workflows/verify-brain-pr-1149-p1-shared-batch-freeze.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/p1_shared_batch_freeze_20261003
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py":"202bfb9276a5fe179472e6963b82cc77c3bf75a6",
+            "canonical/tests/test_p1_shared_failure_semantics_normalizer_v1.py":"7987433f1311f0e2724ef443181395e448934a82",
+            "canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json":"bf76b1b743b21df4f426d2c2f3605b34a3de34ea",
+            "canonical/runtime/p1_shared_failure_semantics_batch_freeze_v1.py":"039753b0c37878f4e6bcf9aa2d465176477509c9",
+            "canonical/tests/test_p1_shared_failure_semantics_batch_freeze_v1.py":"fac5c7515178d308269dc3d3353aa6c74845fbe9",
+            "canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py":"28940387bd6c11671035ad9201e37bba13fd9bc9",
+            "canonical/runtime/trajectory_failure_typed_ir_proof_v6.py":"0f41a36e6ad16722ce05b180e036fb921a2ef886",
+            "canonical/governance/P1_V7_DIRECT_SURFACE_SCOPE_TRANSPORT_GATE_V1.json":"4c1076c29345e55d20a84e95d6dd6e6481549c77",
+            "canonical/governance/TERMINAL_PORTFOLIO_BINDING_MANIFESTS_V1.json":"8b439403a05b4a912f06a8866db25f6e53b52473",
+            "canonical/governance/GLOBAL_TERMINAL_SELECTION_KERNEL_V1.json":"669afcde50302e76c1b0a1f6b186aaafa8730515",
+            "canonical/verification/P1_V7_CURRENT_MAIN_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"4e8cf594503a216302a1d61c2009945131d86041",
+            "canonical/verification/P1_V6_DERIVED_ONLY_SCOPE_FALSIFICATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"dbd0bbb5da26de58a731fd8284b7a365f23bec1e",
+            "canonical/governance/P1_MINIMUM_REALITY_CUT_INPUT_V1.json":"cbcb2faff8404623846e77e19fcc5b0ad00e81d9",
+            "canonical/verification/P1_V7_PROVENANCE_AND_MINIMUM_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json":"01ca625add4db7035224f0d4cb9efb406d17362d",
+          }
+          for p,want in expected.items():
+              data=Path(p).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==want,(p,got,want)
+              print(p,got)
+          PY
+      - name: Run fail-closed normalizer mutations
+        working-directory: capsules/p1_shared_batch_freeze_20261003
+        run: python -m unittest canonical.tests.test_p1_shared_failure_semantics_normalizer_v1 -v
+      - name: Run P1 shared-batch freeze adversarial tests
+        working-directory: capsules/p1_shared_batch_freeze_20261003
+        run: python -m unittest canonical.tests.test_p1_shared_failure_semantics_batch_freeze_v1 -v
+      - name: Verify frozen package
+        working-directory: capsules/p1_shared_batch_freeze_20261003
+        run: python -m canonical.runtime.p1_shared_failure_semantics_batch_freeze_v1
