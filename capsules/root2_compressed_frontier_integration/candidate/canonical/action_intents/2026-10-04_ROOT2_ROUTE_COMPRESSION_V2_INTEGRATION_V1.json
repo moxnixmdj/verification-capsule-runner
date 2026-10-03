@@ -1,0 +1,41 @@
+{
+  "schema": "PROJECT_BRAIN_ACTION_INTENT_V1",
+  "action_id": "ROOT2-ROUTE-COMPRESSION-V2-INTEGRATION-20261004",
+  "status": "CURRENT_BASE_AUTHORITY_RECONCILIATION__ZERO_CREDIT",
+  "base_commit_sha": "60c6862de6283981e043a9c118aa213c9a66f464",
+  "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
+  "blocker_id": "ROOT2_SCORER_CARRIER_ACCESS_SCOPE_GAPS",
+  "verified_input": {
+    "path": "canonical/verification/ROOT2_ROUTE_COMPRESSION_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+    "git_blob_sha": "288f0924157b0c0af0ff6bf302a56944f69f2fba"
+  },
+  "selected_route": "RECONCILE_CURRENT_ROOT2_INVENTORY_ZERO_REALITY_CUT_COMBINED_FRONTIER_AND_TERMINAL_AUTHORITY_TO_INDEPENDENTLY_VERIFIED_SEARCH_DELETIONS_WHILE_PRESERVING_HLE_AND_OSWORLD_CONCURRENT_DELTAS",
+  "expected_terminal_delta": "NO_ACCEPTANCE_OR_OWNERSHIP_DELTA__DELETE_DOMINATED_ZERO_REALITY_SEARCH__REDUCE_LIVE_ROOT2_ACTION_FRONTIER",
+  "invariants": {
+    "accepted_families": 5,
+    "open_families": 14,
+    "proved_atomic": 12,
+    "unresolved_atomic": 26,
+    "root1_positive_gap_count": 0,
+    "root3_currently_runnable_events": 0,
+    "terminal_goal_achieved": false
+  },
+  "incremental_spend_usd": 0,
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "acceptance_credit_delta": 0,
+  "family_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "ownership_credit_delta": 0,
+  "execution_authority": false,
+  "promotion_authority": false,
+  "fresh_reality_authority": false,
+  "concurrent_base_reconciliation": {
+    "previous_base_commit_sha": "45b7893cd0f481e08390c7a519e6742dd1401953",
+    "current_base_commit_sha": "60c6862de6283981e043a9c118aa213c9a66f464",
+    "intervening_commit": "BIND_RETRIEVAL_V11_STRATIFIED_LIVE_CALIBRATION",
+    "changed_authority_paths_overlap": false,
+    "mergeability": "TRUE",
+    "rule": "PRESERVE_RETRIEVAL_V11_UNCHANGED__ROOT2_AUTHORITY_PROJECTION_ONLY"
+  }
+}
