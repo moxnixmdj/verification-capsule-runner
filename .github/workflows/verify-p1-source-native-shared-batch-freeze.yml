@@ -1,0 +1,16 @@
+name: Verify P1 source-native shared-batch freeze
+on:
+  push:
+    branches: [verify/p1-source-native-shared-batch-freeze-20261003]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact repaired current-base P1 freeze
+        run: bash verification/run.sh
