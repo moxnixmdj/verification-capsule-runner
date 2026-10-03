@@ -60,7 +60,6 @@ class AcceptanceCalibrationTests(unittest.TestCase):
 
 
 import hashlib
-import urllib.request
 
 RECOVERY_PROMOTION_HEAD="6f42aa5df3980dd0831b272ec10cb2c4024186af"
 RECOVERY_PROMOTION_BLOBS={
@@ -79,11 +78,11 @@ RECOVERY_PROMOTION_BLOBS={
 def _git_blob_sha(data:bytes)->str:
     return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
 
+MIRROR_ROOT=Path(__file__).resolve().parent/"recovery_promotion_v2"
+
 def _fetch_brain(path:str):
-    url=f"https://raw.githubusercontent.com/moxnixmdj/brain/{RECOVERY_PROMOTION_HEAD}/{path}"
-    req=urllib.request.Request(url,headers={"User-Agent":"ProjectBrain-RecoveryPromotionVerifier/1.0"})
-    with urllib.request.urlopen(req,timeout=30) as r:
-        data=r.read()
+    mirror=MIRROR_ROOT/path.replace("/","__")
+    data=mirror.read_bytes()
     expected=RECOVERY_PROMOTION_BLOBS[path]
     actual=_git_blob_sha(data)
     if actual!=expected:
