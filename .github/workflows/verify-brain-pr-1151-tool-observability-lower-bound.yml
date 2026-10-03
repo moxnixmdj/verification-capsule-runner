@@ -1,6 +1,11 @@
 name: Verify Brain PR 1151 Tool Discovery observability lower bound
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1151_tool_observability_lower_bound/**"
+      - ".github/workflows/verify-brain-pr-1151-tool-observability-lower-bound.yml"
   pull_request:
     paths:
       - "capsules/brain_pr_1151_tool_observability_lower_bound/**"
