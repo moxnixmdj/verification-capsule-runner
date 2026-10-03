@@ -1,7 +1,7 @@
 name: Verify current zero-reality cut V12 public boundaries
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [verify-v12-public-boundaries-20261003-sol]
 permissions:
   contents: read
 jobs:
