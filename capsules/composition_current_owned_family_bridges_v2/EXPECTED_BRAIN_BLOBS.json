@@ -1,0 +1,20 @@
+{
+  "schema": "BRAIN_COMPOSITION_CURRENT_OWNED_FAMILY_BRIDGES_V2_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1098,
+  "brain_ref": "4e2458c7270f5306825f59549b74c0e2e7d56d08",
+  "exact_brain_blobs": {
+    "canonical/runtime/composition_current_owned_family_bridges_v2.py": "63a33068054c89ad0698e5eb73fbba240552f71e",
+    "canonical/tests/test_composition_current_owned_family_bridges_v2.py": "849b943b09c4e50677c13da275d1b5d71feee1ac",
+    "canonical/governance/COMPOSITION_CURRENT_OWNED_FAMILY_BRIDGES_V2.json": "e6b1ea661c8654c75173af4e37791ec7cc661bec",
+    "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json": "661a57f839101fbf54c7e4edc76166c65ce9327d",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V1.json": "adc7db65b20361be54fa26935e36aa88babf373d",
+    "canonical/capabilities/opus55/OPUS55_LONG_HORIZON_MEMORY_AND_CONTINUITY_V1.json": "2d912cf8df64bd806fffb6a1070d95644d005470",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "7885a827b1483bfb38315c1f492848f7e4680285",
+    "canonical/verification/COMPOSITION_BEHAVIORAL_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "bb9ecf9b34e3a41d8cd9a387fe70d9376accbccc",
+    "canonical/verification/DELEGATION_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "d04f2a8c5594d261158835db1cae3822411b6b23",
+    "canonical/verification/DELEGATION_V4_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "955ac8f4bd0db2527bfbb465fc8252df6d916156"
+  }
+}
