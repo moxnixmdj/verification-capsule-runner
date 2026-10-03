@@ -72,7 +72,9 @@ assert "osworld-v2.1" in osw
 assert "your request will automatically be approved" in osw
 assert "xlangai/osworld_v2_assets_gated@osworld-v2.1" in osw
 assert "Task-Web/OSWorld-web@osworld-v2.1" in osw
-ol=osw.lower()\nassert "complete asset snapshots are distributed only through the gated" in ol\nassert "xlangai/osworld_v2_assets@osworld-v2.1" in osw
+ol=osw.lower()
+assert "complete asset snapshots are distributed only through the gated" in ol
+assert "xlangai/osworld_v2_assets@osworld-v2.1" in osw
 
 weights=delta["finance_index"]["public_methodology_reconfirmed"]["component_weights"]
 assert abs(sum(weights.values())-1.0)<1e-12
