@@ -1,0 +1,57 @@
+name: Verify frozen V3 static donor independence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ownership_verification/terminal_candidate_donor_independence_audit_v1.py'
+      - '.github/workflows/verify-v3-static-donor-independence.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run exact Brain donor-dependency audit over frozen V3 carrier
+        run: |
+          set -euo pipefail
+          mkdir -p ownership_verification/out
+          python - <<'PY'
+          import hashlib,importlib.util,json
+          from pathlib import Path
+          src=Path('ownership_verification/terminal_candidate_donor_independence_audit_v1.py')
+          b=src.read_bytes()
+          got=hashlib.sha1(b'blob '+str(len(b)).encode()+bytes([0])+b).hexdigest()
+          expected='0ed69641693538f15b7e1658f5ac5e80031afb26'
+          assert got==expected,('AUDIT_BLOB_DRIFT',expected,got)
+          spec=importlib.util.spec_from_file_location('donor_audit',src)
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          out=mod.evaluate(Path('.').resolve())
+          assert out['pass'] is True,out
+          assert out['target_capability_donor_runtime_dependencies']==[],out
+          assert out['network_provider_dependencies']==[],out
+          assert out['undeclared_dependency_count']==0,out
+          receipt={
+            'schema':'PROJECT_BRAIN_TERMINAL_V3_STATIC_DONOR_INDEPENDENCE_PUBLIC_RUNNER_VERIFICATION_V1',
+            'date':'2026-10-02',
+            'status':'INDEPENDENT_PUBLIC_RUNNER_PASS__EXHAUSTIVE_FROZEN_V3_CANDIDATE_DEPENDENCY_CLASSIFICATION__ZERO_TARGET_DONOR_DEPENDENCIES',
+            'brain_audit_blob_sha':expected,
+            'audit_result':out,
+            'capability_credit_delta':0,
+            'family_credit_delta':0,
+            'incremental_spend_usd':0,
+          }
+          Path('ownership_verification/out/static_donor_receipt.json').write_text(json.dumps(receipt,sort_keys=True,indent=2)+'\n')
+          print('V3_STATIC_DONOR_INDEPENDENCE_PASS files='+str(out['repository_owned_dependency_file_count']))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terminal-v3-static-donor-independence
+          path: ownership_verification/out/
+          if-no-files-found: error
+          retention-days: 90
