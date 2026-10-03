@@ -13,8 +13,8 @@ paths={
   "receipt":"canonical/verification/UNIVERSAL_LEARNING_DECISION_ROUTER_V3_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
 }
 expected={
-  "root3":"f4f9e15c037c79b5924b6430216b292188451a69",
-  "activation":"e6ab0547f692e55c1918c300a09242f01db81204",
+  "root3":"6082b3302927a8b1a287df6977041b2820eee07c",
+  "activation":"b212fe38f3211e99f1a2c7a2ab04f09ee246149d",
   "receipt":"6810cce4dfeee587fde449951f17da8d37c1eb6e",
 }
 for k,p in paths.items():
@@ -35,6 +35,9 @@ assert target["operative_learning_overlay"]=="UNIVERSAL_LEARNING_DECISION_ROUTER
 assert target["operative_learning_overlay_verified"] is True
 assert target["current_residual"]=="TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES__OPERATIVE_V3_LEARNING_OVERLAY_VERIFIED"
 assert "USE_THE_VERIFIED_V3_OPERATIVE_LEARNING_OVERLAY" in target["next"]
+
+assert activation["status"]=="ACTIVE_MAIN__INDEPENDENT_PUBLIC_RUNNER_PASS__ZERO_CREDIT__UNKNOWN_DOMAIN_LEAVES_PRESERVED"
+assert activation["activation_scope"]=="CANONICAL_MAIN"
 
 pres=activation["preserved_residual"]
 assert pres["predicate_id"]=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT"
@@ -57,7 +60,7 @@ assert root3["ownership_credit_delta"]==0
 assert root3["fresh_reality_authority"] is False
 
 print(json.dumps({
-  "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V3_PROJECTION_PUBLIC_RUNNER_RESULT_V1",
+  "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V3_MAIN_STATUS_PROJECTION_PUBLIC_RUNNER_RESULT_V1",
   "status":"PASS__EXACT_POINTER_CHAIN__TWO_OPEN_ZERO_CLOSED__ZERO_CREDIT",
   "pass":True,
   "exact_blob_identities":True,
