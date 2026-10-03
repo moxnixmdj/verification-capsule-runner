@@ -31,8 +31,8 @@ jobs:
           C=capsules/current_terminal_scheduling_world_v1
           test "$(git hash-object "$C/canonical/runtime/current_terminal_scheduling_world_v1.py")" = "d07f6777a7b6a0fa932f2003df2de86960a5134e"
           test "$(git hash-object "$C/canonical/tests/test_current_terminal_scheduling_world_v1.py")" = "73b39a5188ae16debae319ab04423f3455e5c2ff"
-          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_SCHEDULING_WORLD_V1.json")" = "c2cfb36ea9096e43c05bf3e64fc238b203e48595"
-          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "d3367c9cc372adbd61e410ba5d5f475e8398bbf8"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_SCHEDULING_WORLD_V1.json")" = "69e1fda3ac8b5763759736081886458659e137ec"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "ad482ff264d5cdd6286aaf2ffd32db47acd447f0"
           test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json")" = "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
           test "$(git hash-object "$C/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json")" = "7885a827b1483bfb38315c1f492848f7e4680285"
           test "$(git hash-object "$C/canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json")" = "4b5517dbd12978f8ffe481fb775e85592c7790c8"
