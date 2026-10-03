@@ -1,0 +1,21 @@
+name: Verify Brain local zero-reality fixed point V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/local_zero_reality_fixed_point_v1/**"
+      - ".github/workflows/verify-brain-local-zero-reality-fixed-point-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify local fixed-point theorem instance
+        run: |
+          cd capsules/local_zero_reality_fixed_point_v1
+          python verify_local_fixed_point.py
