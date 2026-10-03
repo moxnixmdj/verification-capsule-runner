@@ -52,16 +52,31 @@ jobs:
                   "gpu_types":env.get("gpu_types",[]),
                   "validate_env":str(env.get("validate_env","docker")),
                   "agent_timeout_sec":float(d.get("agent",{}).get("timeout_sec",1800)),
+                  "verifier_timeout_sec":float(d.get("verifier",{}).get("timeout_sec",120)),
                   "build_timeout_sec":float(env.get("build_timeout_sec",600)),
               }
               by_name[name]=row
               rows.append(row)
           listed_names={x["name"] for x in listed}
           assert listed_names==set(by_name), (sorted(listed_names-set(by_name))[:5],sorted(set(by_name)-listed_names)[:5])
-          explicit_incompat=[
-              r for r in rows
-              if r["gpus"]>0 or r["cpus"]>4 or r["memory_mb"]>16384 or r["validate_env"].lower()!="docker"
-          ]
+          # GitHub standard public ubuntu-24.04: 4 CPU, 16 GB RAM, 14 GB SSD.
+          # GitHub-hosted job execution ceiling: 6 hours. We fail closed on any
+          # task whose declared envelope cannot fit those published limits.
+          GH_CPU=4
+          GH_MEMORY_MB=16384
+          GH_STORAGE_MB=14000
+          GH_JOB_SECONDS=21600
+          for r in rows:
+              r["declared_max_job_seconds"]=r["build_timeout_sec"]+r["agent_timeout_sec"]+r["verifier_timeout_sec"]
+              reasons=[]
+              if r["gpus"]>0: reasons.append("GPU_REQUIRED")
+              if r["cpus"]>GH_CPU: reasons.append("CPU_GT_4")
+              if r["memory_mb"]>GH_MEMORY_MB: reasons.append("MEMORY_GT_16GB")
+              if r["storage_mb"]>GH_STORAGE_MB: reasons.append("STORAGE_GT_14GB")
+              if r["validate_env"].lower()!="docker": reasons.append("NON_DOCKER_VALIDATE_ENV")
+              if r["declared_max_job_seconds"]>GH_JOB_SECONDS: reasons.append("DECLARED_JOB_ENVELOPE_GT_6H")
+              r["standard_public_runner_incompatibility_reasons"]=reasons
+          explicit_incompat=[r for r in rows if r["standard_public_runner_incompatibility_reasons"]]
           out={
               "schema":"PROJECT_BRAIN_TB_SCIENCE_METADATA_CARRIER_CUT_V1",
               "source_commit":"f81afac4f11048e77a15dfc8fb1dbfb897fea0ce",
@@ -73,8 +88,12 @@ jobs:
               "max_cpus":max(r["cpus"] for r in rows),
               "max_memory_mb":max(r["memory_mb"] for r in rows),
               "max_storage_mb":max(r["storage_mb"] for r in rows),
+              "runner_limit_source":"GITHUB_DOCS_STANDARD_PUBLIC_UBUNTU_24_04_AND_JOB_LIMITS__4CPU_16GB_14GB_SSD_6H",
+              "runner_limits":{"cpus":GH_CPU,"memory_mb":GH_MEMORY_MB,"storage_mb":GH_STORAGE_MB,"job_seconds":GH_JOB_SECONDS},
               "max_agent_timeout_sec":max(r["agent_timeout_sec"] for r in rows),
+              "max_verifier_timeout_sec":max(r["verifier_timeout_sec"] for r in rows),
               "max_build_timeout_sec":max(r["build_timeout_sec"] for r in rows),
+              "max_declared_job_seconds":max(r["declared_max_job_seconds"] for r in rows),
               "task_instruction_files_read":0,
               "solution_files_read":0,
               "terminal_trials_executed":0,
