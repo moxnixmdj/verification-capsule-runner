@@ -1,0 +1,126 @@
+name: Owner proof dispatch
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  lower-bound:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/verify-tool-discovery-lower-bound-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: e7d80f67fa1263add07c1c4c875a429555b7f42c
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact lower-bound capsule
+        working-directory: capsules/brain_pr_1151_tool_observability_lower_bound
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/tool_discovery_observability_lower_bound_v1.py)" = "45ae01ff1e6cae3d881cc3a99fa8455ff625e48d"
+          test "$(git hash-object canonical/tests/test_tool_discovery_observability_lower_bound_v1.py)" = "00371717aaee5909ab61c636af1cc6f0dcaff56c"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_OBSERVABILITY_LOWER_BOUND_V1.json)" = "67cab6e9d234496bc6b90ecb3e44f82e5d2b4614"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OBSERVABILITY_LOWER_BOUND_V1.json)" = "332ba69db52128195659ac9d1106de99ec9eb54a"
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_observability_lower_bound_v1 -v
+          python -m canonical.runtime.tool_discovery_observability_lower_bound_v1 > verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["lower_bound_proved"] is True,v
+          assert v["identity_completeness_alone_sufficient"] is False,v
+          assert v["randomization_restores_probability_1_guarantee"] is False,v
+          assert v["new_reality_units_consumed"]==0 and v["terminal_results_replayed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("LOWER_BOUND_PASS")
+          PY
+
+  observability-partition:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/verify-tool-discovery-observability-partition-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: f7d966a982caaf00df151d2e640fd2b83f704447
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact observability-partition capsule
+        working-directory: capsules/brain_pr_1169_tool_observability_partition
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/tool_discovery_observability_partition_v1.py)" = "4c2e6ef72abbd6777cf4a2e3c9dcd616190ae1ac"
+          test "$(git hash-object canonical/tests/test_tool_discovery_observability_partition_v1.py)" = "f6866731b1c2119f8cb84e6df4ad53db02faa559"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V1.json)" = "b93aeba7e7804f013e8acaba3b111b22aab2d9b2"
+          test "$(git hash-object canonical/action_intents/TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V1.json)" = "6aec834de339205c44ee241ead2d3b2b3fd98ea6"
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_observability_partition_v1 -v
+          python -m canonical.runtime.tool_discovery_observability_partition_v1 > verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["matched_comparator_required"] is True,v
+          assert v["universal_proof_eligible"] is False,v
+          assert v["new_reality_units_consumed"]==0 and v["terminal_results_replayed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          print("OBSERVABILITY_PARTITION_PASS")
+          PY
+
+  interface-v2-hardening:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == github.repository_owner &&
+      github.event.comment.body == '/verify-tool-discovery-interface-v2-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: bd53c44260026799891772d50f9e668299871ba6
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact V2 hardening capsule
+        working-directory: capsules/tool_discovery_interface_v2_hardening
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "e614d0bed8e291e31f57189cd6f0f75aa39b0f74"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json)" = "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "f03f01a531d0a023173629a7a7f4bc0bb65a3b39"
+          test "$(git hash-object canonical/runtime/tool_discovery_interface_contract_v2_hardening_proof.py)" = "f235b283f87048e62cbb5d22b938f99be5189e39"
+          test "$(git hash-object canonical/tests/test_tool_discovery_interface_contract_v2_hardening.py)" = "6872cff1c14623c497a9971eaf0e10335bc7136f"
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_interface_contract_v2_hardening -v
+          python -m canonical.runtime.tool_discovery_interface_contract_v2_hardening_proof > verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["status"].startswith("PASS__V2_EXPLICIT_PRECONDITION_HARDENING_LOAD_BEARING"),v
+          assert v["scope_preserved_without_brain_only_narrowing"] is True,v
+          assert v["v1_machine_complete_for_all_v4_preconditions"] is False,v
+          assert v["v2_required_property_set_exact"] is True,v
+          assert v["countermodels_expose_missing_explicit_preconditions"] is True,v
+          assert v["universal_target_proved"] is False,v
+          assert v["complete_interface_instance_verified"] is False,v
+          assert len(v["remaining_irreducible_facts"])==3,v
+          assert v["new_reality_units_consumed"]==0 and v["terminal_results_replayed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          print("INTERFACE_V2_HARDENING_PASS")
+          PY
