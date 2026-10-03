@@ -1,0 +1,96 @@
+name: Verify P1 scope restoration V8
+
+on:
+  push:
+    branches: ["verify/p1-scope-restoration-v8-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-p1-scope-restoration-v8.yml"
+      - "capsules/p1_scope_restoration_v8/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-p1-scope-restoration-v8.yml"
+      - "capsules/p1_scope_restoration_v8/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain restoration bytes
+        run: |
+          set -euo pipefail
+          C=capsules/p1_scope_restoration_v8
+          test "$(git hash-object "$C/canonical/runtime/p1_scope_restoration_v8.py")" = "30b6eddc52a25682b669ac3161aa8e4b357dc6c5"
+          test "$(git hash-object "$C/canonical/tests/test_p1_scope_restoration_v8.py")" = "cce54cbc3ed8d13517bae642667949f7162eb47a"
+          test "$(git hash-object "$C/canonical/verification/P1_PUBLIC_RECOVERY_RESULT_INDEPENDENT_ADJUDICATION_20261003_V1.json")" = "d61f16f09f2ef7f20be6a18cdf5c49d3c9c6479d"
+          test "$(git hash-object "$C/canonical/governance/P1_SCOPE_RESTORATION_V8_ACTIVATION_V1.json")" = "79e68863a8d749ca9706e5db0d19c5e6b9b908c4"
+          test "$(git hash-object "$C/canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "8703c6aa08227467a619a7ae90d0d61f8e54da39"
+          test "$(git hash-object "$C/canonical/verification/P1_V7_CURRENT_MAIN_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json")" = "4e8cf594503a216302a1d61c2009945131d86041"
+          test "$(git hash-object "$C/canonical/verification/P1_V7_PROVENANCE_AND_MINIMUM_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "01ca625add4db7035224f0d4cb9efb406d17362d"
+          test "$(git hash-object "$C/canonical/verification/P1_TYPED_CAUSAL_INTERVENTION_V6_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json")" = "1e722621db8f0f1cb3b9689e48d4bfe356dcb36e"
+          test "$(git hash-object "$C/canonical/verification/P1_TERMINAL_EXECUTION_SCOPE_AUDIT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json")" = "89836565c384ac95ac426fe88ffb6200f818496f"
+          test "$(git hash-object "$C/canonical/verification/TERMINAL_V3_POSTWAVE_CONTRACT_AND_FAMILY_REDUCTION_20261002_V1.json")" = "51e3e7578e9adbeee2168d2223b84481fea16a09"
+          test "$(git hash-object "$C/canonical/verification/TERMINAL_SCOPE_QUARANTINE_PROPAGATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json")" = "8c1a4db776e419ebb263da9f781245dd6491ea2f"
+          test "$(git hash-object "$C/canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json")" = "ee187f611a0e82b2de495ee377682f39bc31dd31"
+      - name: Run fail-closed restoration tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/p1_scope_restoration_v8"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_p1_scope_restoration_v8
+          PYTHONPATH="$C" python -m canonical.runtime.p1_scope_restoration_v8 > P1_SCOPE_RESTORATION_V8_VERDICT.json
+          python - <<'PY'
+          import json
+          v=json.load(open("P1_SCOPE_RESTORATION_V8_VERDICT.json"))
+          assert v["pass"] is True, v
+          assert v["whole_p1_contract_restored"] is True, v
+          assert v["p1_scope_quarantine_clearable"] is True, v
+          assert v["contract_accounting"]["whole_scope_pass_count"]==12, v
+          assert v["contract_accounting"]["whole_scope_quarantined_count"]==0, v
+          assert v["behavioral_family_accounting"]["provisional_behavioral_pass_count"]==19, v
+          assert v["behavioral_family_accounting"]["quarantined_family_count"]==0, v
+          assert len(v["behavioral_family_accounting"]["reactivated_families"])==8, v
+          assert v["source_fresh_reality_units_consumed"]==1, v
+          assert v["restoration_new_reality_units_consumed"]==0, v
+          assert v["terminal_results_replayed"]==0, v
+          assert v["opus55_acceptance_credit_delta"]==0, v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0, v
+          assert v["promotion_authority"] is False, v
+          receipt={
+            "schema":"PROJECT_BRAIN_P1_SCOPE_RESTORATION_V8_PUBLIC_RUNNER_VERIFICATION_20261003_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__P1_WHOLE_SCOPE_RESTORED__12_OF_12_CONTRACTS__19_OF_19_PROVISIONAL_BEHAVIORAL_ROWS__ZERO_OPUS55_ACCEPTANCE_CREDIT",
+            "brain_pull_request":1266,
+            "brain_head_sha":"d330c69c06e74da79241efdef29967bfe5c5506c",
+            "exact_brain_blobs":{"canonical/runtime/p1_scope_restoration_v8.py":"30b6eddc52a25682b669ac3161aa8e4b357dc6c5","canonical/tests/test_p1_scope_restoration_v8.py":"cce54cbc3ed8d13517bae642667949f7162eb47a","canonical/verification/P1_PUBLIC_RECOVERY_RESULT_INDEPENDENT_ADJUDICATION_20261003_V1.json":"d61f16f09f2ef7f20be6a18cdf5c49d3c9c6479d","canonical/governance/P1_SCOPE_RESTORATION_V8_ACTIVATION_V1.json":"79e68863a8d749ca9706e5db0d19c5e6b9b908c4","canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json":"8703c6aa08227467a619a7ae90d0d61f8e54da39","canonical/verification/P1_V7_CURRENT_MAIN_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"4e8cf594503a216302a1d61c2009945131d86041","canonical/verification/P1_V7_PROVENANCE_AND_MINIMUM_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json":"01ca625add4db7035224f0d4cb9efb406d17362d","canonical/verification/P1_TYPED_CAUSAL_INTERVENTION_V6_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"1e722621db8f0f1cb3b9689e48d4bfe356dcb36e","canonical/verification/P1_TERMINAL_EXECUTION_SCOPE_AUDIT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"89836565c384ac95ac426fe88ffb6200f818496f","canonical/verification/TERMINAL_V3_POSTWAVE_CONTRACT_AND_FAMILY_REDUCTION_20261002_V1.json":"51e3e7578e9adbeee2168d2223b84481fea16a09","canonical/verification/TERMINAL_SCOPE_QUARANTINE_PROPAGATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"8c1a4db776e419ebb263da9f781245dd6491ea2f","canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json":"ee187f611a0e82b2de495ee377682f39bc31dd31"},
+            "whole_p1_contract_restored":True,
+            "p1_scope_quarantine_clearable":True,
+            "whole_scope_contract_pass_count":12,
+            "provisional_behavioral_family_pass_count":19,
+            "reactivated_family_count":8,
+            "source_fresh_reality_units_consumed":1,
+            "restoration_new_reality_units_consumed":0,
+            "terminal_results_replayed":0,
+            "incremental_spend_usd":0,
+            "opus55_acceptance_credit_delta":0,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "promotion_authority":False
+          }
+          open("P1_SCOPE_RESTORATION_V8_PUBLIC_RUNNER_VERIFICATION.json","w").write(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - name: Preserve verification receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: p1-scope-restoration-v8-verification
+          path: |
+            P1_SCOPE_RESTORATION_V8_VERDICT.json
+            P1_SCOPE_RESTORATION_V8_PUBLIC_RUNNER_VERIFICATION.json
+          if-no-files-found: error
