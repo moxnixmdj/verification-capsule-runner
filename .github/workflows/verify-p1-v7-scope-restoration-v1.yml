@@ -1,0 +1,72 @@
+name: Verify P1 V7 scope restoration V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p1_v7_scope_restoration_v1/**"
+      - ".github/workflows/verify-p1-v7-scope-restoration-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain restoration inputs
+        run: |
+          set -euo pipefail
+          C=capsules/p1_v7_scope_restoration_v1
+          test "$(git hash-object "$C/canonical/runtime/p1_v7_scope_restoration_reducer_v1.py")" = "e5499d8a986356930c618ae0ae91c9b7bf6ec324"
+          test "$(git hash-object "$C/canonical/tests/test_p1_v7_scope_restoration_reducer_v1.py")" = "393a5252a2f952d1e8a61d47ef74b85bb5d63de7"
+          test "$(git hash-object "$C/canonical/verification/P1_PUBLIC_RECOVERY_RESULT_INDEPENDENT_ADJUDICATION_20261003_V1.json")" = "7ef47e19e1ee9db3c95c91eb22e33c5e8a7be21c"
+          test "$(git hash-object "$C/canonical/governance/P1_V7_SCOPE_RESTORATION_CANDIDATE_V1.json")" = "96401f671a03dbcf852a9a9b0efe4f797043bfe3"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py")" = "28940387bd6c11671035ad9201e37bba13fd9bc9"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_proof_v6.py")" = "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+          test "$(git hash-object "$C/canonical/runtime/p1_v7_provenance_mutation_closure_v1.py")" = "63be0669c8f2c5a20bb688fd1e2c37020bf74df2"
+          test "$(git hash-object "$C/canonical/verification/P1_V7_CURRENT_MAIN_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json")" = "4e8cf594503a216302a1d61c2009945131d86041"
+          test "$(git hash-object "$C/canonical/verification/P1_V7_PROVENANCE_AND_MINIMUM_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "01ca625add4db7035224f0d4cb9efb406d17362d"
+          test "$(git hash-object "$C/canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json")" = "8703c6aa08227467a619a7ae90d0d61f8e54da39"
+          test "$(git hash-object "$C/canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json")" = "bd86b4c53992b47a4a60b64a60ba03db9a442cfc"
+          test "$(git hash-object "$C/canonical/governance/P1_TERMINAL_EXECUTION_SCOPE_MISMATCH_QUARANTINE_V1.json")" = "f4fe68c78ccdf5392b5e24519ae9a57e620221a7"
+      - name: Compile and run adversarial restoration suite
+        run: |
+          set -euo pipefail
+          C=capsules/p1_v7_scope_restoration_v1
+          python -m py_compile "$C/canonical/runtime/p1_v7_scope_restoration_reducer_v1.py"
+          python -m py_compile "$C/canonical/tests/test_p1_v7_scope_restoration_reducer_v1.py"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_p1_v7_scope_restoration_reducer_v1
+      - name: Independently adjudicate restoration candidate
+        run: |
+          set -euo pipefail
+          C=capsules/p1_v7_scope_restoration_v1
+          PYTHONPATH="$C" python -m canonical.runtime.p1_v7_scope_restoration_reducer_v1 > verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["pass"] is True,v
+          assert v["quarantine_lift_eligible"] is True,v
+          assert v["quarantine_lifted"] is False,v
+          assert v["recovery_transport_requirements_closed"] is True,v
+          assert v["required_check_partition_complete"] is True,v
+          assert v["required_mutation_partition_complete"] is True,v
+          assert v["historical_terminal_intervention_receipts_preserved"] is True,v
+          assert v["historical_terminal_p1_case_count"]==60,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["terminal_results_replayed"]==0,v
+          assert v["incremental_spend_usd"]==0,v
+          assert v["acceptance_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("P1_V7_SCOPE_RESTORATION_CANDIDATE_PASS")
+          PY
+      - name: Preserve verdict
+        uses: actions/upload-artifact@v4
+        with:
+          name: p1-v7-scope-restoration-v1
+          path: verdict.json
+          if-no-files-found: error
