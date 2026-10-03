@@ -1,0 +1,26 @@
+{
+  "schema": "PROJECT_BRAIN_TERMINAL_CERTIFICATE_FALSIFICATION_PRUNER_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "200886d761613aff9e8cc03d68b6ca8c6ddc8295",
+  "exact_brain_blobs": {
+    "canonical/runtime/terminal_certificate_falsification_pruner_v1.py": "19f8e0355c7f53ddbf3c8776529cc666afec3372",
+    "canonical/tests/test_terminal_certificate_falsification_pruner_v1.py": "ca8de38dd23924acdd92192f68074f138eaa8a9d",
+    "canonical/governance/TERMINAL_CERTIFICATE_FALSIFICATION_OVERLAY_V1.json": "e57f6e7a37cbc33ca7aea7080e8bc581d1d351b2",
+    "canonical/governance/TERMINAL_CERTIFICATE_FALSIFICATION_PRUNER_V1.json": "e0733948e2247c507fe2ef5ca354431e0d2942ce",
+    "canonical/runtime/terminal_certificate_cut_v1.py": "7ad852e65e47a6ab3110b02dac402b126cac78b7",
+    "canonical/runtime/canonical_proof_atom_basis_v2.py": "5b5957f353edab6c86a34f947ef253099822b0d1",
+    "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
+    "canonical/governance/PROOF_ATOM_REFINEMENT_OVERLAY_V1.json": "898e450c62c06cf6d1a4a3f826a255da9161a229",
+    "canonical/governance/TB4_PROOF_ATOM_FALSIFICATION_ADJUDICATION_V1.json": "9f2831b5daf0bf811a11c322d85906869fdef433"
+  },
+  "expected": {
+    "unresolved_predicates": 31,
+    "input_certificates": 17,
+    "active_certificates": 16,
+    "covered_predicates": 30,
+    "uncovered_predicates": [
+      "CODING_TB4_GE_66_4"
+    ],
+    "executable_leaf_atoms": 39
+  }
+}
