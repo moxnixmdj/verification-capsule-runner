@@ -1,0 +1,29 @@
+name: Verify Root3 minimum action cut v1
+on:
+  push:
+    branches:
+      - verify-root3-minimum-action-cut-v1
+    paths:
+      - "fixtures/root3_minimum_action_cut_v1.json"
+      - "fixtures/root3_universal_scope_closure_activation_v1.json"
+      - "fixtures/root3_target_population_coalescence_v1.json"
+      - "fixtures/root3_matched_superportfolio_minimum_reality_binding_v1.json"
+      - "fixtures/current_root3_zero_reality_stronger_proof_saturation_v1.json"
+      - "fixtures/root3_residual_compression_v1.json"
+      - "fixtures/composition_component_proof_current_authority_v6.json"
+      - "verify_root3_minimum_action_cut_v1.py"
+      - ".github/workflows/verify-root3-minimum-action-cut-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run independent derivation and falsification
+        run: python verify_root3_minimum_action_cut_v1.py
