@@ -1,0 +1,32 @@
+name: Verify Retrieval V10 entity-resolved contextual core
+on:
+  push:
+    branches:
+      - verify/retrieval-v10-entity-core-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact subject blobs
+        run: |
+          test "$(git hash-object subjects/v10e/retrieval_live_event_ledger_v3.py)" = "5008c5d804a511014a803522b713259b6bb16f7d"
+          test "$(git hash-object subjects/v10e/global_retrieval_controller_v3.py)" = "266122c4e893fbcb34784bc01eb859b390dc2cf4"
+          test "$(git hash-object subjects/v10e/global_retrieval_entrypoint_v4.py)" = "b1fd8b92f1aa931b283f242bde7612a3d29b5501"
+          test "$(git hash-object subjects/v10e/retrieval_live_provider_epoch_v3.py)" = "d99605e7e623c485f5ca658c717476a00497b43f"
+          test "$(git hash-object subjects/v10e/test_retrieval_entity_resolved_contextual_v10.py)" = "af7188d9e27304c82ea6c8fec266ea937f064c56"
+      - name: Install exact subjects
+        run: |
+          cp subjects/v10e/retrieval_live_event_ledger_v3.py canonical/runtime/retrieval_live_event_ledger_v3.py
+          cp subjects/v10e/global_retrieval_controller_v3.py canonical/runtime/global_retrieval_controller_v3.py
+          cp subjects/v10e/global_retrieval_entrypoint_v4.py canonical/runtime/global_retrieval_entrypoint_v4.py
+          cp subjects/v10e/retrieval_live_provider_epoch_v3.py canonical/runtime/retrieval_live_provider_epoch_v3.py
+          cp subjects/v10e/test_retrieval_entity_resolved_contextual_v10.py canonical/tests/test_retrieval_entity_resolved_contextual_v10.py
+          cp subjects/v10/retrieval_live_provider_epoch_v1.py canonical/runtime/retrieval_live_provider_epoch_v1.py
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_entity_resolved_contextual_v10.py
+      - run: python -m py_compile canonical/runtime/retrieval_live_event_ledger_v3.py canonical/runtime/global_retrieval_controller_v3.py canonical/runtime/global_retrieval_entrypoint_v4.py canonical/runtime/retrieval_live_provider_epoch_v3.py
