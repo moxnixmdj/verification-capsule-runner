@@ -1,0 +1,42 @@
+name: Verify Retrieval V13 cross-ecosystem package bridge
+on:
+  push:
+    branches:
+      - verify/retrieval-v13-package-bridge-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_cross_ecosystem_package_bridge_v13.py)" = "e4226afa25672dcf45e405654fa1d0e971516314"
+          test "$(git hash-object canonical/tests/test_retrieval_cross_ecosystem_package_bridge_v13.py)" = "a6ba92c94485e814acdb0c5bb34585f8f3868d66"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_cross_ecosystem_package_bridge_v13.py
+      - name: Run live package bridge
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_cross_ecosystem_package_bridge_v13.py > v13_bridge.json
+          cat v13_bridge.json
+      - name: Validate semantics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("v13_bridge.json"))
+          assert x["case_count"]==8
+          assert x["open_world_completeness_claim"] is False
+          assert x["execution_authority"] is False
+          print("SUMMARY",json.dumps({
+            "repo_hits":x["repository_hit_count"],
+            "verified_package_recoveries":x["verified_package_recovery_count"],
+            "rate":x["verified_package_recovery_rate"],
+            "recovered_ids":x["recovered_episode_ids"],
+            "residual_ids":x["residual_episode_ids"]
+          },sort_keys=True))
+          PY
