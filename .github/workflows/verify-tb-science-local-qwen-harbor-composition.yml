@@ -1,0 +1,44 @@
+name: Verify TB-Science local Qwen Harbor composition
+on:
+  push:
+    branches: ["verify/tb-science-local-qwen-harbor-composition-20261003"]
+    paths:
+      - "capsules/tb_science_local_qwen_harbor_composition/**"
+      - ".github/workflows/verify-tb-science-local-qwen-harbor-composition.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_local_qwen_harbor_composition
+          test "$(git hash-object "$C/current/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/current/canonical/runtime/harbor_science_planner_v1.py")" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git hash-object "$C/current/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/current/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/prior/harbor_science_agent_v1.py")" = "8ab8287fdb6a9b63b9fe2d2addde731486c89d1e"
+          test "$(git hash-object "$C/evidence/TB_SCIENCE_DEDICATED_PLANNER_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "50f319b6af8fd75f84f24035a45ad02db55e6518"
+          test "$(git hash-object "$C/evidence/TB_SCIENCE_LOCAL_QWEN_PLANNER_REPAIR_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "15d63a7dd61396eac97ea6203ff2978d4e316419"
+      - name: Install exact Harbor API version
+        run: python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+      - name: Prove differential composition and fresh Harbor control path
+        env:
+          PYTHONPATH: capsules/tb_science_local_qwen_harbor_composition/current
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_local_qwen_harbor_composition/verify_composition.py | tee HARBOR_COMPOSITION_RECEIPT.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-local-qwen-harbor-composition-v1
+          path: HARBOR_COMPOSITION_RECEIPT.json
+          if-no-files-found: warn
