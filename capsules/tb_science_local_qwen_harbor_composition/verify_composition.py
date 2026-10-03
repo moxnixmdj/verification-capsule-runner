@@ -49,7 +49,7 @@ from canonical.runtime import harbor_science_agent_v1 as science
 
 assert issubclass(science.HarborScienceAgent,BaseAgent)
 assert science.HarborScienceAgent.name()=="project-brain-science"
-assert science.HarborScienceAgent().version()=="1.2.0"
+assert science.HarborScienceAgent.version(None)=="1.2.0"
 
 class Receipt:
     def __init__(self,returncode=0,stdout="",stderr=""):
