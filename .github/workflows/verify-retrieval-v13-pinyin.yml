@@ -1,0 +1,36 @@
+name: Verify Retrieval V13 pinyin residual
+on:
+  push:
+    branches:
+      - verify/retrieval-v13-pinyin-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_pinyin_residual_recovery_v13.py)" = "f8b6afcc65eafe6b211888ba705f54f9e8bde890"
+          test "$(git hash-object canonical/tests/test_retrieval_pinyin_residual_recovery_v13.py)" = "6a61dfdefbe543112e292b55fbd0fd07a587fb8c"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_pinyin_residual_recovery_v13.py
+      - name: Run live residual probe
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_pinyin_residual_recovery_v13.py > v13_pinyin.json
+          cat v13_pinyin.json
+      - name: Validate semantics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("v13_pinyin.json"))
+          assert x["schema"]=="PROJECT_BRAIN_RETRIEVAL_PINYIN_RESIDUAL_RECOVERY_V13"
+          assert x["open_world_completeness_claim"] is False
+          assert x["execution_authority"] is False
+          print("SUMMARY",json.dumps({"hit":x["target_hit"],"rank":x["target_rank"],"pool":x["candidate_pool_size"]},sort_keys=True))
+          PY
