@@ -36,7 +36,7 @@ def obligations():
  proto=load(P); beh=find(load(B),"TOOL_ROUTE_DISCOVERY_AND_SELECTION_001")
  row=next(x for x in proto["protocols"] if x.get("family")=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
  s=re.sub(r"\s+","",C.read_text()); q=re.sub(r"\s+","",I.read_text())
- d=s.find("sources=_unqueried_sources(public)"); e=s.find("evidence=_evidence(public)")
+ d=s.find("queried=_queried_sources(public)"); e=s.find("evidence=_evidence(public)")
  return {
   "same_common_authority":"same frozen task population/harness/tool authority" in proto["universal_rules"]["same_scope"],
   "unknown_discovery":"unknown tool discovery" in row["task_dimensions"],
