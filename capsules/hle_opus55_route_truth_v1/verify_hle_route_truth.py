@@ -34,7 +34,7 @@ needles=[
 missing=[x for x in needles if x not in text]
 assert not missing,("missing_primary_pdf_facts",missing)
 
-print(json.dumps({
+low_raw=raw_text.lower()\nstart=low_raw.find("blocklist used for humanity")\nassert start>=0,"HLE_BLOCKLIST_SECTION_MISSING"\nblocklist_excerpt=raw_text[start:start+9000]\nprint("HLE_BLOCKLIST_EXCERPT_BEGIN")\nprint(blocklist_excerpt)\nprint("HLE_BLOCKLIST_EXCERPT_END")\n\nprint(json.dumps({
   "schema":"PROJECT_BRAIN_HLE_OPUS55_ROUTE_TRUTH_PUBLIC_RUNNER_RESULT_V1",
   "status":"PASS__PRIMARY_ANTHROPIC_PDF__HF_AUTO_GATE_CONFIRMED__OPUS55_GRADER_CLAUDE_OPUS_4_6__TOOLS_AND_1M_CAP_BOUND__ZERO_CASES",
   "anthropic_pdf_pages":len(reader.pages),
