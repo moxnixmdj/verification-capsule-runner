@@ -45,7 +45,7 @@ for model in MODELS:
           "family_credit_delta":0,
           "errors_before_success":errors,
         }
-        Path("TB_SCIENCE_PRODUCTION_PLANNER_PREFLIGHT_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\\n")
+        Path("TB_SCIENCE_PRODUCTION_PLANNER_PREFLIGHT_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
         print(json.dumps(out,sort_keys=True))
         raise SystemExit(0)
     except SystemExit:
@@ -63,6 +63,6 @@ out={
  "incremental_spend_usd":0,
  "errors":errors,
 }
-Path("TB_SCIENCE_PRODUCTION_PLANNER_PREFLIGHT_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\\n")
+Path("TB_SCIENCE_PRODUCTION_PLANNER_PREFLIGHT_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
 print(json.dumps(out,sort_keys=True))
 raise SystemExit(1)
