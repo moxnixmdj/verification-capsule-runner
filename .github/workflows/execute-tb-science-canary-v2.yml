@@ -1,0 +1,190 @@
+name: Execute TB-Science one-slot canary V2
+on:
+  push:
+    branches: ["execute-science-canary-v2-sol-20261003"]
+    paths:
+      - "capsules/tb_science_canary_execute_v2/ARM.json"
+      - ".github/workflows/execute-tb-science-canary-v2.yml"
+permissions:
+  contents: read
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact one-use authority and route bytes
+        run: |
+          set -euo pipefail
+          R=capsules/tb_science_local_qwen_planner_repair_v1
+          E=capsules/tb_science_execution_v1
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$R/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$R/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$E/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$E/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          python - <<'PY'
+          import json
+          a=json.load(open("capsules/tb_science_canary_execute_v2/ARM.json"))
+          assert a["status"]=="ARMED"
+          assert a["execution_authority"] is True
+          assert a["authority_blob"]=="741d6ca0cc4880e6cd9c76e3046272b1feb756f1"
+          assert a["brain_activation_commit"]=="6a9e18be244b8999b1676d16e3c285e122f25bbe"
+          assert a["authorized_slot_id"]=="terminal-bench-science/baseline-free-localization::trial-0"
+          assert a["task_name"]=="terminal-bench-science/baseline-free-localization"
+          assert a["required_successes"]==133 and a["fail_lock_failures"]==78
+          assert a["prior_final_zeros"]==3
+          assert a["retries"]==0 and a["replacement"] is False and a["stop_after_canary"] is True
+          assert a["incremental_spend_usd"]==0
+          PY
+      - name: Install exact Harbor and verify zero-cost carrier surface
+        run: |
+          set -euo pipefail
+          test -z "${ANTHROPIC_API_KEY:-}"
+          test -z "${OPENAI_API_KEY:-}"
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+          docker version >/dev/null
+          docker info >/dev/null
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local proposal endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Execute exactly the authorized untouched slot
+        id: execute
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_local_qwen_planner_repair_v1
+        run: |
+          set -uo pipefail
+          rm -rf "$GITHUB_WORKSPACE/jobs/baseline-free-localization-trial-0"
+          harbor run \
+            -d terminal-bench-science/terminal-bench-science@0.1.0 \
+            -i terminal-bench-science/baseline-free-localization \
+            -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent \
+            -k 1 -n 1 -r 0 \
+            --agent-timeout-multiplier 0.60 \
+            --environment-build-timeout-multiplier 1.0 \
+            --verifier-timeout-multiplier 1.0 \
+            --job-name baseline-free-localization-trial-0 \
+            --jobs-dir "$GITHUB_WORKSPACE/jobs/baseline-free-localization-trial-0"
+          code=$?
+          echo "harbor_exit=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+      - name: Finalize immutable one-slot receipt
+        if: always()
+        env:
+          HARBOR_OUTCOME: ${{ steps.execute.outcome }}
+          HARBOR_EXIT: ${{ steps.execute.outputs.harbor_exit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee TB_SCIENCE_CANARY_RESULT_V2.json
+          import hashlib,json,os,pathlib
+          root=pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          base=root/"jobs"/"baseline-free-localization-trial-0"
+          candidates=[]
+          if base.exists():
+              for p in base.rglob("result.json"):
+                  try: obj=json.loads(p.read_text())
+                  except Exception: continue
+                  vr=obj.get("verifier_result")
+                  if isinstance(vr,dict) and isinstance(vr.get("rewards"),dict):
+                      candidates.append((p,obj))
+          reward=None; selected=None; errors=[]; exception_info=None
+          if len(candidates)==1:
+              selected,obj=candidates[0]
+              exception_info=obj.get("exception_info")
+              raw=obj["verifier_result"]["rewards"].get("reward")
+              if isinstance(raw,(int,float)) and not isinstance(raw,bool): reward=float(raw)
+              else: errors.append("REWARD_MISSING_OR_NONNUMERIC")
+          elif not candidates: errors.append("NO_TRIAL_RESULT_WITH_VERIFIER_REWARD")
+          else: errors.append("MULTIPLE_TRIAL_RESULTS_FOR_ONE_SLOT")
+          success=(reward is not None and reward>=1.0 and not errors)
+          hashes={}
+          if selected is not None:
+              hashes[str(selected.relative_to(root))]=hashlib.sha256(selected.read_bytes()).hexdigest()
+          traces=[]
+          if base.exists():
+              for p in base.rglob("project_brain_science_trace.json"):
+                  try: hashes[str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()
+                  except Exception: pass
+                  traces.append(str(p.relative_to(root)))
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_ONE_SLOT_CANARY_RESULT_V2",
+            "slot_id":"terminal-bench-science/baseline-free-localization::trial-0",
+            "task_name":"terminal-bench-science/baseline-free-localization",
+            "status":"SUCCESS" if success else "FINAL_ZERO",
+            "reward":reward if reward is not None else 0.0,
+            "errors":errors,
+            "exception_info":exception_info,
+            "harbor_step_outcome":os.environ.get("HARBOR_OUTCOME"),
+            "harbor_exit":os.environ.get("HARBOR_EXIT"),
+            "authority_blob":"741d6ca0cc4880e6cd9c76e3046272b1feb756f1",
+            "manifest_blob":"6dfa880b1f68881531afbba6ca211681801fd19b",
+            "controller_blob":"5557efd21f1a433ad16766def3775a79c459784b",
+            "planner_blob":"879887984e2ca8abacac486d687f519f5d0d78a5",
+            "current_required_successes":133,
+            "current_fail_lock_failures":78,
+            "prior_final_zeros":3,
+            "auto_revoked":True,
+            "retry_authority":False,
+            "replacement_authority":False,
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "result_hashes":hashes,
+            "trace_paths":traces,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("TB_SCIENCE_CANARY_RESULT_V2.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-one-slot-canary-v2
+          path: |
+            TB_SCIENCE_CANARY_RESULT_V2.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+            jobs/baseline-free-localization-trial-0/
+          if-no-files-found: warn
