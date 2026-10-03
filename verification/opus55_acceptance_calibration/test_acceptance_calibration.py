@@ -81,7 +81,7 @@ def _recovery_current_bytes(path):
     return (RECOVERY_CURRENT_ROOT/path.replace("/","__")).read_bytes()
 
 def _recovery_current_blob_sha(data):
-    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
+    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
 
 def _recovery_current_json(path):
     data=_recovery_current_bytes(path)
