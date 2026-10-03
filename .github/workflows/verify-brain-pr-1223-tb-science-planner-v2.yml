@@ -1,0 +1,110 @@
+name: Verify Brain PR1223 TB-Science planner V2
+on:
+  push:
+    branches: ["verify/tb-science-dedicated-planner-v2-20261003"]
+    paths:
+      - "capsules/brain_pr_1223_tb_science_planner_v2/**"
+      - ".github/workflows/verify-brain-pr-1223-tb-science-planner-v2.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1223_tb_science_planner_v2/**"
+      - ".github/workflows/verify-brain-pr-1223-tb-science-planner-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact Harbor
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+      - name: Verify exact Brain candidate bytes
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1223_tb_science_planner_v2
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "17472fd2b01b164fbb180aecfc04385b55b11499"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "8ab8287fdb6a9b63b9fe2d2addde731486c89d1e"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "292f8c4447122569e6168deb22847e2570db155e"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "6f32250bce81ee66fdddbd29b72061089674c5b3"
+          test "$(git hash-object "$C/canonical/tests/test_tb_science_general_substrate_materiality_v1.py")" = "bda78c83d5783c385b4c88fecd33c81305274c5e"
+          ! grep -q 'from canonical.runtime import astra_runtime' "$C/canonical/runtime/harbor_science_agent_v1.py"
+          grep -q 'harbor_science_planner_v1 as science_planner' "$C/canonical/runtime/harbor_science_agent_v1.py"
+      - name: Compile and run exact controller tests
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1223_tb_science_planner_v2
+          python -m py_compile             "$C/canonical/runtime/harbor_science_planner_v1.py"             "$C/canonical/runtime/harbor_science_agent_v1.py"             "$C/canonical/runtime/harbor_command_policy.py"             "$C/canonical/runtime/harbor_environment_transport.py"             "$C/canonical/runtime/acceptance_capability_source_gate_v2.py"
+          cd "$C"
+          export PYTHONPATH=.
+          python -m unittest             canonical.tests.test_harbor_science_planner_v1             canonical.tests.test_harbor_science_agent_v1             canonical.tests.test_tb_science_general_substrate_materiality_v1 -v
+      - name: Verify real Harbor custom-agent binding
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1223_tb_science_planner_v2
+          cd "$C"
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime import harbor_science_agent_v1 as s
+          assert getattr(s.BaseAgent,"__module__","").startswith("harbor.")
+          assert issubclass(s.HarborScienceAgent,s.BaseAgent)
+          assert s.HarborScienceAgent.name()=="project-brain-science"
+          assert s.HarborScienceAgent.version
+          print("REAL_HARBOR_CUSTOM_AGENT_BINDING_PASS")
+          PY
+      - name: Exercise live dedicated planner boundary six times
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1223_tb_science_planner_v2
+          cd "$C"
+          export PYTHONPATH=.
+          python - <<'PY'
+          import json
+          from canonical.runtime import harbor_science_agent_v1 as a
+          from canonical.runtime import harbor_science_planner_v1 as p
+          prompt=(
+            'Return one JSON object only with material_requirements ["R1"] and exactly one '
+            'candidate action {"action_id":"A1","covers":["R1"],"command":"printf ok",'
+            '"verify_command":"test 1 -eq 1"}. No prose.'
+          )
+          rows=[]
+          for i in range(6):
+              out=p.plan(prompt,timeout_s=20)
+              obj=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+              req,cands,summary=a._extract_contract(obj,None)
+              assert req==["R1"],obj
+              assert len(cands)==1 and cands[0]["action_id"]=="A1",obj
+              assert cands[0]["covers"]==["R1"],obj
+              rows.append({"attempt":i+1,"model":out["model"],"candidate_key":"candidates" if "candidates" in obj else "candidate_actions" if "candidate_actions" in obj else "other"})
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_DEDICATED_PLANNER_V2_LIVE_BOUNDARY",
+            "status":"PASS","attempts":rows,
+            "continuous_obs_context_required":False,
+            "terminal_task_content_read":0,"terminal_trials_executed":0,"incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+      - name: Enforce preterminal fail-closed status
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1223_tb_science_planner_v2
+          python - <<'PY'
+          import json
+          j=json.load(open("capsules/brain_pr_1223_tb_science_planner_v2/canonical/governance/TB_SCIENCE_DEDICATED_PLANNER_V2_CANDIDATE.json"))
+          assert j["execution_authority"] is False
+          assert j["promotion_authority"] is False
+          assert j["terminal_results_observed"]==0
+          assert j["incremental_spend_usd"]==0
+          PY
