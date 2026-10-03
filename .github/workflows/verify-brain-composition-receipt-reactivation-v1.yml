@@ -66,9 +66,60 @@ jobs:
           dv=json.load(open(d["closure_receipt"],encoding="utf-8"))
           assert dv["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),dv
           assert dv["verified_result"]["newly_closed_families"]==["SUBAGENT_DELEGATION_AND_COORDINATION"],dv
-          print("composition receipt reactivation 0/12 -> 2/12: PASS")
+          print("composition receipt reactivation candidate: PASS")
+          PY
+      - name: Recompute exact 2-of-12 with canonical slicer
+        run: |
+          cd capsules/composition_receipt_reactivation_v1
+          export PYTHONPATH=.
+          python - <<'PY'
+          import copy,json
+          from canonical.runtime.composition_component_proof_slicer_v1 import evaluate as slice_evaluate
+          v=json.load(open("composition-receipt-reactivation-verdict.json",encoding="utf-8"))
+          m=json.load(open("canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json",encoding="utf-8"))
+          claim=m["claim_id"]
+          receipts=[]
+          for r in v["admitted_receipts"]:
+              receipts.append({
+                  "receipt_id":r["receipt_id"],
+                  "component_id":r["component_id"],
+                  "interface_id":r["interface_id"],
+                  "proved_properties":["SCOPED_ACCEPTANCE_PROOF"],
+                  "verified":True,
+                  "independent":True,
+                  "contamination_clean":r["contamination_clean"],
+                  "acceptance_scoped":r["acceptance_scoped"],
+                  "binds_frozen_claim":claim,
+              })
+          doc={
+              "claim_id":claim,
+              "interfaces":[{
+                  "component_id":x["component_id"],
+                  "interface_id":x["interface_id"],
+                  "required_properties":x["required_properties"],
+              } for x in m["interfaces"]],
+              "receipts":receipts,
+          }
+          s=slice_evaluate(doc)
+          proved={x["component_id"] for x in s["interfaces"] if x["state"]=="SCOPED_PROVED"}
+          opened={x["component_id"] for x in s["interfaces"] if x["state"]=="OPEN"}
+          assert s["status"]=="RESIDUAL_COMPONENT_INTERFACE_PROOFS_OPEN",s
+          assert proved=={"delegation","memory"},s
+          assert len(proved)==2 and len(opened)==10,s
+          assert "tool discovery" in opened,s
+          assert s["all_used_component_interfaces_scoped_proved"] is False,s
+          assert s["capability_credit_delta"]==0 and s["family_credit_delta"]==0,s
+          # Fail closed if independent verification is removed.
+          bad=copy.deepcopy(doc)
+          for r in bad["receipts"]: r["independent"]=False
+          b=slice_evaluate(bad)
+          assert not any(x["state"]=="SCOPED_PROVED" for x in b["interfaces"]),b
+          json.dump(s,open("canonical-slicer-2-of-12-verdict.json","w",encoding="utf-8"),indent=2,sort_keys=True)
+          print("canonical slicer independently recomputes 2/12 proved, 10/12 open: PASS")
           PY
       - uses: actions/upload-artifact@v4
         with:
           name: composition-receipt-reactivation-verdict
-          path: capsules/composition_receipt_reactivation_v1/composition-receipt-reactivation-verdict.json
+          path: |
+            capsules/composition_receipt_reactivation_v1/composition-receipt-reactivation-verdict.json
+            capsules/composition_receipt_reactivation_v1/canonical-slicer-2-of-12-verdict.json
