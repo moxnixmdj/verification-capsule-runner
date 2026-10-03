@@ -4,7 +4,7 @@ import copy, hashlib, json, pathlib, shutil, sys, tempfile
 
 HERE=pathlib.Path(__file__).resolve().parent
 EXPECTED={
-  "canonical/runtime/current_terminal_information_dominance_v2.py":"0fc5bc26e55c3756d3c5d9213f3aa6d0a7b4bb1e",
+  "canonical/runtime/current_terminal_information_dominance_v2.py":"c98466c0dc66016a898f8d2044cdbb849e7b0f3b",
   "canonical/runtime/current_terminal_scheduling_world_v1.py":"9ae2b990578b042dd24074fd5013378b72e64b6b",
   "canonical/runtime/terminal_information_dominance_v1.py":"f10986bd09a7cc64a1fae3c6ea8e69b5655f2199",
   "canonical/runtime/tool_discovery_retrieval_authority_gate_v1.py":"9af1bd62048277cc8c4fabab8efe5d217c367bac",
