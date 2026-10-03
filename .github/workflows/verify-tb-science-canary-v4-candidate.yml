@@ -1,0 +1,48 @@
+name: Verify TB-Science canary V4 candidate
+
+on:
+  push:
+    branches: ["verify/science-canary-v4-candidate-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v4-candidate.yml"
+      - "capsules/tb_science_canary_v4_candidate/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v4-candidate.yml"
+      - "capsules/tb_science_canary_v4_candidate/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain V4 candidate and fail-closed semantics
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_canary_v4_candidate/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json
+          test "$(git hash-object "$C")" = "dba3ff2c53765f8423d4161e079b663c76959fc1"
+          python - <<'PY'
+          import json
+          p="capsules/tb_science_canary_v4_candidate/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json"
+          x=json.load(open(p))
+          assert x["status"].startswith("CANDIDATE_ZERO_CREDIT")
+          assert x["target_predicate"]=="TB_SCIENCE_GE_58_7"
+          assert x["candidate_slot"]["slot_id"]=="terminal-bench-science/koopman-mfg-id::trial-0"
+          assert x["candidate_slot"]["schedule_order"]==5
+          assert len(x["permanently_consumed_slots"])==5
+          assert x["current_parity"]["required_successes"]==133
+          assert x["current_parity"]["finalized_failures_before_canary"]==5
+          assert x["current_parity"]["remaining_failures_before_fail_lock"]==73
+          assert x["authority_basis"]["cpu_portability_verification_path"]=="canonical/verification/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+          assert x["exact_route"]["compiled_llama_cpp_cache_allowed"] is False
+          assert x["execution_authority"] is False
+          assert x["promotion_authority"] is False
+          assert x["capability_credit_delta"]==0
+          assert x["family_credit_delta"]==0
+          print("TB_SCIENCE_V4_CANDIDATE_EXACT_BYTE_AND_SEMANTIC_PASS")
+          PY
