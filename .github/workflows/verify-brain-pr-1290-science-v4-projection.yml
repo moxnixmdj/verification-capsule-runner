@@ -1,0 +1,119 @@
+name: Verify Brain PR1290 Science V4 projection
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-brain-pr-1290-science-v4-projection.yml"
+      - "capsules/brain_pr_1290/**"
+  push:
+    branches: ["verify/brain-pr-1290-science-v4-projection-20261003"]
+    paths:
+      - ".github/workflows/verify-brain-pr-1290-science-v4-projection.yml"
+      - "capsules/brain_pr_1290/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact Brain PR1290 bytes
+        run: |
+          set -euo pipefail
+          C=capsules/brain_pr_1290
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json")" = "487cd17ef51cc49c8bdf36733c7c594e9bbf410b"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "7497bc7249431a832a0e938fcf6d575bfbfaf5f3"
+          test "$(git hash-object "$C/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")" = "41affd9e854f1aa4cc2343086b944e594ca6ac3d"
+          test "$(git hash-object "$C/canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json")" = "ad4527cfc54ee0f76dfe0b4df915d13161bdd31e"
+          test "$(git hash-object "$C/canonical/CANONICAL_POINTER.json")" = "3e4f573e273aa17927499619425b79d9e08264b7"
+          test "$(git hash-object "$C/canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json")" = "48e5b488795fd0c5a144a180aad0c7322a6469a0"
+          test "$(git hash-object "$C/canonical/capabilities/frontier/OPUS_5_5_USEFUL_CAPABILITY_OWNERSHIP_V1.json")" = "44eb494121f5e1969b755d703cf59b35592c1470"
+
+      - name: Verify candidate and CPU prerequisite
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          C=Path("capsules/brain_pr_1290")
+          L=lambda p: json.loads((C/p).read_text())
+          v=L("canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json")
+          cpu=L("canonical/verification/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          t=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          slot="terminal-bench-science/koopman-mfg-id::trial-0"
+
+          assert cpu["status"]=="INDEPENDENT_PASS__CLEAN_CURRENT_RUNNER_BUILD__HEALTH_AND_SYNTHETIC_COMPLETION_PASS__ZERO_TERMINAL"
+          assert cpu["verification_pull_request"]==1267
+          assert cpu["workflow_run_id"]==37111616149
+          assert cpu["workflow_job_id"]==111170472199
+          assert cpu["compiled_build_cache_reused"] is False
+          assert cpu["health_pass"] is True and cpu["synthetic_completion_contains_READY"] is True
+          assert cpu["terminal_task_content_read"]==0 and cpu["terminal_results_observed"]==0
+
+          assert v["repair_prerequisite"]["git_blob_sha"]=="7497bc7249431a832a0e938fcf6d575bfbfaf5f3"
+          assert v["current_parity"]["required_successes"]==133
+          assert v["current_parity"]["fail_lock_failures"]==78
+          assert v["current_parity"]["finalized_failures_before_canary"]==5
+          assert v["current_parity"]["remaining_failures_before_fail_lock"]==73
+          assert v["exact_route"]["manifest_blob"]=="6dfa880b1f68881531afbba6ca211681801fd19b"
+          assert v["authorized_slot"]["slot_id"]==slot
+          assert v["authorized_slot"]["schedule_order"]==5
+          assert len(v["permanently_consumed_slots"])==5
+          assert slot not in v["permanently_consumed_slots"]
+          assert v["execution_semantics"]["slots_authorized"]==1
+          assert v["execution_semantics"]["retries_per_slot"]==0
+          assert v["execution_semantics"]["slot_replacement"] is False
+          assert v["execution_semantics"]["denominator_shrink"] is False
+          assert v["execution_semantics"]["compiled_llama_cpp_cache_forbidden"] is True
+          assert v["execution_authority"] is False and v["promotion_authority"] is False
+
+          a=t["authorities"]["tb_science_local_substrate_cpu_portability_repair"]
+          assert a["verification_git_blob_sha"]=="7497bc7249431a832a0e938fcf6d575bfbfaf5f3"
+          assert a["status"].startswith("INDEPENDENT_PASS__CLEAN_CURRENT_RUNNER_BUILD")
+          assert a["execution_authority"] is False
+          c=t["authorities"]["tb_science_one_slot_canary_v4_candidate"]
+          assert c["git_blob_sha"]=="487cd17ef51cc49c8bdf36733c7c594e9bbf410b"
+          assert c["authorized_slot"]==slot
+          assert c["execution_authority"] is False and c["promotion_authority"] is False
+          PY
+
+      - name: Verify authority and all mirrors agree
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          C=Path("capsules/brain_pr_1290")
+          L=lambda p: json.loads((C/p).read_text())
+          t=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          h=L("canonical/governance/ACTIVE_GOAL_HIERARCHY_V1.json")
+          p=L("canonical/CANONICAL_POINTER.json")
+          s=L("canonical/governance/REAL_OUTPUT_SCOREBOARD_V1.json")
+          o=L("canonical/capabilities/frontier/OPUS_5_5_USEFUL_CAPABILITY_OWNERSHIP_V1.json")
+          assert t["truth"]["achieved"] is False
+          m=re.fullmatch(r"(\d+)/(\d+)_PASS__(\d+)/(\d+)_OPEN",t["truth"]["opus55_acceptance"])
+          assert m
+          accepted,total,open_count=map(int,(m.group(1),m.group(2),m.group(3)))
+          proved=int(t["atomic_acceptance_frontier"]["proved"])
+          unresolved=int(t["atomic_acceptance_frontier"]["unresolved"])
+          atom_total=int(t["atomic_acceptance_frontier"]["total"])
+          assert (accepted,total,open_count)==(3,19,16)
+          assert (proved,unresolved,atom_total)==(8,30,38)
+          n="INDEPENDENTLY_VERIFY_TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4__NO_TERMINAL_EXECUTION_UNTIL_EXACT_AUTHORITY_PASS"
+          b=f"TERMINAL_FALSE__{open_count}_OF_{total}_FAMILIES_OPEN__{unresolved}_OF_{atom_total}_ATOMIC_PREDICATES_UNRESOLVED__SEE_CURRENT_TERMINAL_AUTHORITY_NEXT_FOR_EXACT_ACTIVE_ROUTE"
+          e="CURRENT_TERMINAL_AUTHORITY_NEXT_PASS_OR_FALSIFICATION__OR_ANOTHER_CAUSALLY_BOUND_ZERO_REALITY_DELTA__NO_TERMINAL_PROMOTION_WITHOUT_SEPARATE_INDEPENDENT_REDUCTION"
+          assert t["next"]==n and t["next_terminal_action"]==n
+          assert h["current_parent_blocker"]==b and h["next_required_action_class"]==n and h["next_progress_event_target"]==e
+          assert p["current_frontier"]["critical_blocker"]==b and p["current_frontier"]["highest_leverage_capability_gap"]==b and p["current_frontier"]["next_step"]==n
+          af=s["active_frontier_accounting"]
+          assert af["residual_gap"]==b and af["current_parent_blocker"]==b and af["next_required_action"]==n
+          assert s["next_required_action"]==n and s["next_progress_event_target"]==e
+          assert o["residual_gap"]==b and o["current_atomic_blocker"]==b
+          assert o["next_action"]==n and o["current_atomic_next_action"]==n and o["next_progress_event_target"]==e
+          print("BRAIN_PR1290_SCIENCE_V4_PROJECTION_PASS")
+          PY
