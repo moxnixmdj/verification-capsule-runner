@@ -36,7 +36,10 @@ assert target["operative_learning_overlay_verified"] is True
 assert target["current_residual"]=="TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES__OPERATIVE_V3_LEARNING_OVERLAY_VERIFIED"
 assert "USE_THE_VERIFIED_V3_OPERATIVE_LEARNING_OVERLAY" in target["next"]
 
-assert activation["status"]=="ACTIVE_MAIN__INDEPENDENT_PUBLIC_RUNNER_PASS__ZERO_CREDIT__UNKNOWN_DOMAIN_LEAVES_PRESERVED"\nassert activation["activation_scope"]=="CANONICAL_MAIN"\n\npres=activation["preserved_residual"]
+assert activation["status"]=="ACTIVE_MAIN__INDEPENDENT_PUBLIC_RUNNER_PASS__ZERO_CREDIT__UNKNOWN_DOMAIN_LEAVES_PRESERVED"
+assert activation["activation_scope"]=="CANONICAL_MAIN"
+
+pres=activation["preserved_residual"]
 assert pres["predicate_id"]=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT"
 assert pres["acceptance_proved"] is False
 assert pres["leaves_closed"]==0
