@@ -1,0 +1,58 @@
+name: Verify Brain PR 1214 TB-Science materiality V1
+on:
+  push:
+    branches: ["verify-brain-pr-1214-tb-science-materiality-v1"]
+    paths:
+      - "capsules/brain_pr_1214_tb_science_materiality/**"
+      - ".github/workflows/verify-brain-pr-1214-tb-science-materiality-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1214_tb_science_materiality/**"
+      - ".github/workflows/verify-brain-pr-1214-tb-science-materiality-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1214_tb_science_materiality
+          test "$(git hash-object canonical/governance/TB_SCIENCE_GENERAL_SUBSTRATE_MATERIALITY_V1.json)" = "78866ed6bfa6417145e01a29d0face816bb20d12"
+          test "$(git hash-object canonical/tests/test_tb_science_general_substrate_materiality_v1.py)" = "64c79cb7c6985a1014093c09ce197d33f51ba115"
+          test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "5d6685d66ca04cec5e332993329e997f6e9fe272"
+          test "$(git hash-object canonical/runtime/acceptance_capability_source_gate_v2.py)" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object canonical/runtime/harbor_command_policy.py)" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object canonical/runtime/harbor_environment_transport.py)" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+      - name: Run fixed-substrate materiality counterfactual
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1214_tb_science_materiality
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tb_science_general_substrate_materiality_v1 -v
+      - name: Enforce zero-case zero-credit scope
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1214_tb_science_materiality
+          python - <<'PY'
+          import json
+          g=json.load(open("canonical/governance/TB_SCIENCE_GENERAL_SUBSTRATE_MATERIALITY_V1.json"))
+          p=g["source_gate_projection_if_independently_verified"]
+          assert p["configuration_materially_constrains_execution"] is True
+          assert p["external_hidden_target_capability_provider"] is False
+          assert p["general_substrate_test_pass"] is True
+          assert g["terminal_results_observed"]==0
+          assert g["new_reality_units_consumed"]==0
+          assert g["incremental_spend_usd"]==0
+          assert g["capability_credit_delta"]==0
+          assert g["family_credit_delta"]==0
+          assert g["execution_authority"] is False
+          assert g["promotion_authority"] is False
+          print("Brain PR1214 TB-Science materiality: PASS")
+          PY
