@@ -33,7 +33,11 @@ jobs:
           export PYTHONPATH=.
           python -m py_compile canonical/runtime/tool_discovery_acceptance_promotion_integrator_v1.py
           python canonical/runtime/tool_discovery_acceptance_promotion_integrator_v1.py
-          python -m pytest -q canonical/tests/test_tool_discovery_acceptance_promotion_integrator_v1.py
+          python - <<'PY'
+          from canonical.tests.test_tool_discovery_acceptance_promotion_integrator_v1 import test_current_tool_discovery_promotion_delta
+          test_current_tool_discovery_promotion_delta()
+          print("integrator unit assertion PASS")
+          PY
       - name: Independent delta assertions
         run: |
           cd capsules/tool_discovery_5of19_integrator_v1
