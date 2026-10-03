@@ -1,0 +1,19 @@
+name: Verify Brain composition memory+delegation slice V4
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/comp_slice_v4/**"
+      - ".github/workflows/verify-comp-slice-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact Brain slicer and enforce two-of-twelve reduction
+        run: python capsules/comp_slice_v4/verify.py

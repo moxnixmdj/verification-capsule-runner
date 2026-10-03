@@ -1,0 +1,9 @@
+{
+  "schema": "PROJECT_BRAIN_COMPOSITION_MEMORY_DELEGATION_SLICE_V4_PUBLIC_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "composition-memory-delegation-v4-20261003",
+  "exact_brain_blobs": {
+    "canonical/runtime/composition_component_proof_slicer_v1.py": "0e5028d8547bc3e17e7128b6311f734ac30a16d8",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4.json": "5940e5790b70b25a83e83bf8861af46b9c955bf6"
+  }
+}
