@@ -1,6 +1,12 @@
 name: Verify Brain PR 1110 Tool Discovery V4 least-cost repair
 
 on:
+  push:
+    branches:
+      - "verify-brain-pr1110-tool-discovery-v4-least-cost"
+    paths:
+      - "capsules/brain_pr_1110_tool_discovery_v4/**"
+      - ".github/workflows/verify-brain-pr-1110-tool-discovery-v4.yml"
   pull_request:
     branches: [main]
     paths:
