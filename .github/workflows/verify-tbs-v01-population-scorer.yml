@@ -1,0 +1,77 @@
+name: Verify TBS v0.1 population and strict scorer lower bound
+on:
+  push:
+    branches: ["verify-tbs-v01-population-scorer-20261003-v1"]
+    paths:
+      - ".github/workflows/verify-tbs-v01-population-scorer.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact frozen population and scorer bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee TBS_POPULATION_SCORER_RECEIPT.json
+          import hashlib, json, math, urllib.request
+          owner="harbor-framework"; repo="terminal-bench-science"
+          commit="f81afac4f11048e77a15dfc8fb1dbfb897fea0ce"
+          def get(url):
+              req=urllib.request.Request(url,headers={"User-Agent":"project-brain-verifier"})
+              with urllib.request.urlopen(req,timeout=60) as r: return r.read()
+          tree=json.loads(get(f"https://api.github.com/repos/{owner}/{repo}/git/trees/{commit}?recursive=1"))
+          assert tree.get("truncated") is False
+          task_paths=sorted(x["path"] for x in tree["tree"]
+                            if x.get("type")=="blob" and x["path"].startswith("tasks/")
+                            and x["path"].endswith("/task.toml"))
+          assert len(task_paths)==70, len(task_paths)
+          population_digest=hashlib.sha256(("\n".join(task_paths)+"\n").encode()).hexdigest()
+          workflow_path=".github/workflows/run-trials.yml"
+          raw=get(f"https://raw.githubusercontent.com/{owner}/{repo}/{commit}/{workflow_path}")
+          # Recompute Git blob identity, not ordinary sha256.
+          blob_header=f"blob {len(raw)}\0".encode()
+          git_blob_sha=hashlib.sha1(blob_header+raw).hexdigest()
+          assert git_blob_sha=="84d3c4ec560c0d87f3687819d1d07e9c92c982ed", git_blob_sha
+          text=raw.decode()
+          assert 'REWARD >= 1.0' in text
+          assert 'round(100.0 * passes / total, 1)' in text
+          task_count=70
+          trials_per_task=3
+          slots=task_count*trials_per_task
+          bar=58.7
+          minimum=math.ceil((bar/100.0)*slots)
+          assert slots==210
+          assert minimum==124
+          assert 100*123/210 < bar <= 100*124/210
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_V01_POPULATION_SCORER_VERIFICATION_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__ZERO_TASK_INSTRUCTION_READ__ZERO_CREDIT",
+            "source_commit":commit,
+            "task_toml_population_count":task_count,
+            "task_path_population_sha256":population_digest,
+            "frozen_run_trials_git_blob_sha":git_blob_sha,
+            "binary_pass_condition":"REWARD_GE_1_0",
+            "frozen_rollup_formula":"round(100.0 * passes / total, 1)",
+            "reference_trials_per_task":trials_per_task,
+            "strict_full_denominator_slots":slots,
+            "frozen_bar_percent":bar,
+            "strict_minimum_passed_slots":minimum,
+            "123_of_210_percent":100*123/210,
+            "124_of_210_percent":100*124/210,
+            "strict_lower_bound_rule":"COUNT_EVERY_NONPASS_UNEXECUTED_TIMEOUT_ERROR_OR_RESOURCE_INCOMPATIBLE_SLOT_AS_ZERO_AND_KEEP_ALL_210_SLOTS_IN_DENOMINATOR",
+            "terminal_task_instruction_files_read":0,
+            "terminal_results_observed":0,
+            "incremental_spend_usd":0,
+            "family_credit_delta":0
+          }
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - name: Preserve receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbs-v01-population-scorer-verification-v1
+          path: TBS_POPULATION_SCORER_RECEIPT.json
