@@ -1,0 +1,14 @@
+{
+  "candidate_intent.json": {
+    "source_path": "canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V3_FEDERATED_SOURCE_WAKE_V1.json",
+    "git_blob_sha": "e35f1340c54e90a998fa6ddae602f521d0d29fdd"
+  },
+  "candidate_wake.json": {
+    "source_path": "canonical/reasoning/2026-10-03_TOOL_DISCOVERY_V3_FEDERATED_RETRIEVAL_WAKE_V1.json",
+    "git_blob_sha": "ad3d89b5bf1801b765061ab90adc9f6a696820b7"
+  },
+  "fixture/toolathlon_readme.md": {
+    "source_path": "README.md",
+    "git_blob_sha": "f31aebd1cf48a460a79cf86b6d8af69250595611"
+  }
+}

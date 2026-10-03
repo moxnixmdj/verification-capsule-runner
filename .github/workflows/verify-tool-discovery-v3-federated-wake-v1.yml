@@ -1,0 +1,19 @@
+name: Verify Tool Discovery V3 federated wake V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_v3_federated_wake_v1/**"
+      - ".github/workflows/verify-tool-discovery-v3-federated-wake-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python capsules/tool_discovery_v3_federated_wake_v1/verify.py
