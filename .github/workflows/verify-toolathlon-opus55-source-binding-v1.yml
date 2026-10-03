@@ -1,0 +1,49 @@
+name: Verify Opus 5.5 Toolathlon first-party source binding
+
+on:
+  pull_request:
+    paths:
+      - 'verify_toolathlon_opus55_source_binding_v1.py'
+      - '.github/workflows/verify-toolathlon-opus55-source-binding-v1.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'verify_toolathlon_opus55_source_binding_v1.py'
+      - '.github/workflows/verify-toolathlon-opus55-source-binding-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PDF reader
+        run: python -m pip install --disable-pip-version-check --quiet pypdf==6.1.1
+      - name: Independently fetch and verify Anthropic system card
+        run: python verify_toolathlon_opus55_source_binding_v1.py
+      - name: Enforce source-claim boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("OPUS55_TOOLATHLON_SOURCE_BINDING_PUBLIC_VERDICT_V1.json")
+          j=json.loads(p.read_text())
+          assert j["source_owner"] == "Anthropic"
+          assert j["source_kind"] == "FIRST_PARTY_SYSTEM_CARD_PDF"
+          assert j["facts"]["task_count"] == 108
+          assert j["facts"]["opus55_pass_at_1_percent"] == 77.8
+          assert j["facts"]["trial_count"] == 3
+          assert j["valid_route_top1_separately_published_by_this_source"] is False
+          assert j["tool_discovery_acceptance_granted"] is False
+          assert j["capability_credit_delta"] == 0
+          assert j["family_credit_delta"] == 0
+          assert j["incremental_spend_usd"] == 0
+          print(json.dumps(j, indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opus55-toolathlon-first-party-source-binding
+          path: OPUS55_TOOLATHLON_SOURCE_BINDING_PUBLIC_VERDICT_V1.json
