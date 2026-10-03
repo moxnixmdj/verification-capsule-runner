@@ -1,0 +1,19 @@
+name: Verify full HLE population access V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/hle_full_population_access_v3/**"
+      - ".github/workflows/verify-hle-full-population-access-v3.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify full HLE metadata gate without reading cases
+        run: python capsules/hle_full_population_access_v3/verify_full_hle_access.py
