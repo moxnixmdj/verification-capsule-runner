@@ -1,0 +1,51 @@
+name: Verify Brain Opus55 atomic ownership 2-to-4 v1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/opus55_atomic_ownership_2_to_4_v1/**'
+      - '.github/workflows/verify-opus55-atomic-ownership-2-to-4-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact 16 Brain blob identities
+        env:
+          EXPECTED_JSON: >-
+            {"canonical/governance/OPUS55_ATOMIC_FAMILY_OWNERSHIP_PROMOTION_V1.json":"f92ce9c26cc2b70933249ee0341e7be9b227de11","canonical/capabilities/opus55/OPUS55_TOOL_DISCOVERY_SELECTION_AND_LEARNING_V1.json":"8f864d913a5a0d652881b5e966d37717344afcdf","canonical/capabilities/opus55/OPUS55_SUBAGENT_DELEGATION_AND_COORDINATION_V1.json":"4f6c81d504fd2b7a83890e8e063d1fa688b8463d","canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json":"8d17890ddfa433fba6e88d67013f33ebe5fce981","canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json":"d4e254f6bb3a0efa8fc56ad57c782bc28edf917d","canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"d174d46ab1735793d21fcfdbbf4c245402bc36d6","canonical/governance/TERMINAL_PROJECTION_CONSISTENCY_V1.json":"3e8357e8ccdb44e52877a207783f2e50a44c0e25","canonical/runtime/terminal_projection_consistency_v1.py":"53a5d76f6845f745f753c59ab1e4c387b0469293","canonical/tests/test_terminal_projection_consistency_v1.py":"e1d2b0d77e51f37f7d89e794e9b69c2277bd53a8","canonical/runtime/opus55_atomic_family_ownership_promotion_v1.py":"48ac61ecd45091744d28f871fd3fa41df41dde53","canonical/tests/test_opus55_atomic_family_ownership_promotion_v1.py":"650649dd9f6972e7d982d36b10c749301155521f","canonical/verification/OPUS55_FAMILY_OWNERSHIP_PROMOTION_ELIGIBILITY_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json":"23d3d92ebeb8fd34320923ccce1d017b2031ec6e","canonical/verification/OPUS55_ACCEPTANCE_CALIBRATION_AUDIT_20261002_V3.json":"c50034c670f797d91fa443d244853071f09bd37a","canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json":"52f3a973d277b1a4d58e37da268f3515b97765ca","canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_MINIMUM_PROOF_PLAN_V1.json":"72d71fcb12441ad39257eca8fadefbbea4d7f3ed","canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_PROOF_KERNEL_V2.json":"7aeb3ba02f734c92c43092a851f84d5b1c95421b"}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          root="capsules/opus55_atomic_ownership_2_to_4_v1"
+          expected=json.loads(os.environ["EXPECTED_JSON"])
+          bad=[]
+          for rel,want in expected.items():
+              got=subprocess.check_output(["git","hash-object",f"{root}/{rel}"],text=True).strip()
+              if got!=want:
+                  bad.append(f"{rel}: {got} != {want}")
+          if bad:
+              raise SystemExit("\n".join(bad))
+          print(f"EXACT_BLOB_IDENTITY_PASS {len(expected)}/{len(expected)}")
+          PY
+      - name: Run projection firewall counterfactuals
+        env:
+          PYTHONPATH: capsules/opus55_atomic_ownership_2_to_4_v1
+        run: python -m unittest -v canonical.tests.test_terminal_projection_consistency_v1
+      - name: Run atomic ownership counterfactuals
+        env:
+          PYTHONPATH: capsules/opus55_atomic_ownership_2_to_4_v1
+        run: python -m unittest -v canonical.tests.test_opus55_atomic_family_ownership_promotion_v1
+      - name: Compile exact atomic ownership verdict
+        env:
+          PYTHONPATH: capsules/opus55_atomic_ownership_2_to_4_v1
+        run: python capsules/opus55_atomic_ownership_2_to_4_v1/canonical/runtime/opus55_atomic_family_ownership_promotion_v1.py
