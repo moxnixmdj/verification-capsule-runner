@@ -1,0 +1,78 @@
+name: Verify Brain PR 1154 common Tool Discovery authority scope
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1154_tool_discovery_common_authority_scope/**"
+      - ".github/workflows/verify-brain-pr-1154-common-tool-authority-scope.yml"
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1154_tool_discovery_common_authority_scope
+          test "$(git hash-object canonical/runtime/common_frozen_tool_authority_v1.py)" = "f4083e4331ae2e484812c4702655eed87772a666"
+          test "$(git hash-object canonical/tests/test_common_frozen_tool_authority_v1.py)" = "a89da798406a8f4c8aeab2c0fdea3a369f066398"
+          test "$(git hash-object canonical/runtime/tool_discovery_common_authority_scope_certificate_v1.py)" = "9cd93580aa0312875dad4189d40429837b3f974b"
+          test "$(git hash-object canonical/tests/test_tool_discovery_common_authority_scope_certificate_v1.py)" = "75cb32e16ad11557da29227455acbc970bcd6f05"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMMON_FROZEN_AUTHORITY_SCOPE_THEOREM_V1.json)" = "96a80d17c3d09d23f32a0ec44c929ce22de086be"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "e614d0bed8e291e31f57189cd6f0f75aa39b0f74"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V4_REPAIR_ACTIVATION_V1.json)" = "36a7a97f3d68066337bb2cf45778d4100c22c185"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V1.json)" = "49cc878eccc0fbc8fdd83d35e5fbd614c973ffa7"
+
+      - name: Run mirrored Brain fail-closed tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1154_tool_discovery_common_authority_scope
+          export PYTHONPATH=.
+          python -m unittest             canonical.tests.test_common_frozen_tool_authority_v1             canonical.tests.test_tool_discovery_common_authority_scope_certificate_v1 -v
+
+      - name: Run independent route-neutral authority adversary
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1154_tool_discovery_common_authority_scope
+          export PYTHONPATH=.
+          python independent_verifier.py
+
+      - name: Execute exact scope certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1154_tool_discovery_common_authority_scope
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_common_authority_scope_certificate_v1 > verdict.json
+
+      - name: Enforce zero-credit candidate verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1154_tool_discovery_common_authority_scope
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["source_blob_drift"]==[],v
+          assert v["universal_scope_relation_proved_candidate"] is True,v
+          assert v["scope_atom_satisfied_candidate"] is True,v
+          assert v["forbidden_shortcut_respected"] is True,v
+          assert v["basis_kind"]=="UNIVERSAL_FORMAL_SCOPE_PROOF",v
+          assert v["uses_empirical_generalization"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Brain PR 1154 common-authority scope certificate: PASS")
+          PY
