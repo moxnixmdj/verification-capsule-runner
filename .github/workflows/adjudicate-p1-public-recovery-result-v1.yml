@@ -1,0 +1,133 @@
+name: Adjudicate P1 public recovery result V1
+on:
+  push:
+    branches:
+      - "verify/p1-public-recovery-postrun-v1-20261003"
+    paths:
+      - ".github/workflows/adjudicate-p1-public-recovery-result-v1.yml"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  adjudicate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind frozen carrier and authority mirrors
+        run: |
+          set -euo pipefail
+          test "$(git hash-object .github/workflows/execute-p1-public-recovery-carrier-v1.yml)" = "547f57f43a71f289b006602c1067a962171f38d4"
+          test "$(git hash-object capsules/p1_public_recovery_carrier_v1/brain_proposal.json)" = "4a0146ea409dfad45638b15b279d5a5cc8bf4143"
+          test "$(git hash-object capsules/p1_public_recovery_carrier_v1/brain_active_authority.json)" = "365c098d4763ddfacf660f77457cbac08f5ac72e"
+          C=capsules/p1_one_use_authority_v1
+          test "$(git hash-object "$C/canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json")" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_batch_v1.py")" = "695cfe3f283723a52bafb6299236a2d0378dc79e"
+          test "$(git hash-object "$C/canonical/runtime/p1_shared_failure_semantics_normalizer_v1.py")" = "b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+          test "$(git hash-object "$C/canonical/runtime/contract_native_proof_suites.py")" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py")" = "28940387bd6c11671035ad9201e37bba13fd9bc9"
+          test "$(git hash-object "$C/canonical/runtime/trajectory_failure_typed_ir_proof_v6.py")" = "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+      - name: Download immutable first-attempt artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/artifacts/11268841992/zip" \
+            -o result.zip
+          echo "e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038  result.zip" | sha256sum -c -
+          mkdir result
+          unzip -q result.zip -d result
+          test -f result/P1_RAW_BATCH_RESULT.json
+          test -f result/P1_PUBLIC_RECOVERY_AUTHORIZED_RESULT.json
+      - name: Independently adjudicate transport and scope
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          raw=json.load(open("result/P1_RAW_BATCH_RESULT.json"))
+          wrap=json.load(open("result/P1_PUBLIC_RECOVERY_AUTHORIZED_RESULT.json"))
+          surfaces=[
+            "T0/FRONTIERCODE_V1_1::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T0/CURSORBENCH_4_0::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T2/RECOVERY_SCOPE_COMPOSITION::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+          ]
+          assert wrap["github_repository"]=="moxnixmdj/verification-capsule-runner"
+          assert wrap["github_run_id"]==37108111537
+          assert wrap["github_run_attempt"]==1
+          assert wrap["github_head_sha"]=="e489b191363c52c838b720cd759c99f638170c67"
+          assert wrap["execution_workflow_blob"]=="547f57f43a71f289b006602c1067a962171f38d4"
+          assert wrap["cases"]==192 and wrap["passes"]==192 and wrap["failures"]==0
+          assert wrap["fresh_reality_units_consumed"]==1
+          assert wrap["terminal_v3_replayed"]==0
+          assert wrap["rerun_credit"] is False
+          assert wrap["incremental_spend_usd"]==0
+          assert raw["schema"]=="PROJECT_BRAIN_P1_SHARED_FAILURE_SEMANTICS_BATCH_HARNESS_V2"
+          assert raw["pass"] is True
+          assert raw["cases"]==192 and raw["passes"]==192 and raw["failures"]==0
+          assert raw["terminal_v3_replayed"]==0
+          assert raw["incremental_spend_usd"]==0
+          assert raw["beacon_sha256"]==wrap["beacon_sha256"]
+          assert set(raw["by_surface"])==set(surfaces)
+          receipts=raw["case_receipts"]
+          assert len(receipts)==192
+          seen=set()
+          for c in receipts:
+            sid=c["surface_id"]; idx=c["case_index"]
+            assert sid in surfaces
+            assert 0 <= idx < 64
+            assert (sid,idx) not in seen
+            seen.add((sid,idx))
+            assert c["difficulty"] == [1,2,3,4,5][idx%5]
+            seed=int.from_bytes(hashlib.sha256(
+              (raw["beacon_namespace"]+"\n"+wrap["beacon_sha256"]+"\n"+sid+"\n"+str(idx)).encode()
+            ).digest()[:8],"big")
+            assert c["seed"]==seed
+            assert c["pass"] is True
+            assert c["candidate_status"]=="IDENTIFIED"
+            assert c["failure_reason"] is None
+            assert c["semantic_binding_basis"]=="FROZEN_PUBLIC_SOURCE_STATE_AND_INVARIANT_RESULT_ONLY__HIDDEN_ORACLE_INPUT_FORBIDDEN"
+            assert c["semantics_counts"].get("DIRECT_CONTRACT",0)>0
+            assert c["semantics_counts"].get("DERIVED_UPSTREAM",0)>0
+            assert c["source_observation_receipt"]=="sha256:"+c["source_case_public_sha256"]
+            assert c["source_native_rescue_pass"] is True
+            assert c["source_native_rescue_scorer_pass"] is True
+            assert c["v7_intervention_scorer_pass"] is True
+          assert len(seen)==192
+          for sid in surfaces:
+            assert {(sid,i) for i in range(64)} <= seen
+            s=raw["by_surface"][sid]
+            assert s["cases"]==64 and s["passes"]==64 and s["all_pass"] is True
+            assert s["both_semantics_classes_present_every_case"] is True
+          out={
+            "schema":"PROJECT_BRAIN_P1_PUBLIC_RECOVERY_POSTRUN_TRANSPORT_ADJUDICATION_V1",
+            "status":"INDEPENDENT_PASS__ALL_THREE_FROZEN_TRANSPORT_REQUIREMENTS_SATISFIED__SEPARATE_ACCEPTANCE_REDUCTION_REQUIRED",
+            "execution_run_id":37108111537,
+            "artifact_id":11268841992,
+            "artifact_sha256":"e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038",
+            "cases":192,"passes":192,"failures":0,
+            "surfaces":3,"cases_per_surface":64,
+            "all_three_surface_identities_present":True,
+            "both_failure_semantics_classes_every_case":True,
+            "dual_scorer_pass_every_case":True,
+            "hidden_oracle_input_forbidden_observed":True,
+            "post_freeze_selection_recomputed":True,
+            "terminal_v3_replayed":0,
+            "fresh_reality_units_consumed":1,
+            "incremental_spend_usd":0,
+            "transport_requirements_satisfied":True,
+            "quarantine_lifted":False,
+            "acceptance_credit_granted":False,
+            "next":"SEPARATE_BRAIN_ACCEPTANCE_REDUCTION_AGAINST_FROZEN_P1_QUARANTINE_AND_DEPENDENT_ROWS"
+          }
+          open("P1_POSTRUN_TRANSPORT_ADJUDICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-postrun-transport-adjudication-v1
+          path: P1_POSTRUN_TRANSPORT_ADJUDICATION.json
+          if-no-files-found: error
