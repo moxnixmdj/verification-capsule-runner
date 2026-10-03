@@ -1,0 +1,19 @@
+{
+  "schema": "BRAIN_COMPOSITION_V6_TERMINAL_MIRROR_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1376,
+  "exact_brain_blobs": {
+    "terminal.json": {
+      "brain_path": "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json",
+      "git_blob_sha": "f867462c2676fae86563f908adbe4a32efc12087"
+    },
+    "authority_v6.json": {
+      "brain_path": "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V6.json",
+      "git_blob_sha": "5bb089582a5bc2ee4a44143c8d3a11e919fecdff"
+    },
+    "authority_v6_verification.json": {
+      "brain_path": "canonical/verification/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V6_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+      "git_blob_sha": "28c5fe9e456cc6bd5171bb74ab291b043d7e85e4"
+    }
+  }
+}
