@@ -1,0 +1,15 @@
+{
+  "schema": "PROJECT_BRAIN_PR1217_VERIFICATION_TRIGGER_V2",
+  "brain_pr": 1217,
+  "brain_head": "4973512354ab81fdb6d782fff7606373b3f5ffe3",
+  "verifier_capsule_commit": "d15bd245fb659bacbbf4c2dc8fb9ad2b2835ba0f",
+  "purpose": "TRIGGER_EXACT_ALIAS_REPAIRED_TB_SCIENCE_PATH_VERIFIER",
+  "prior_falsification": {
+    "verifier_pr": 1215,
+    "run_id": 37099612645,
+    "reason": "LIVE_ENDPOINT_RETURNED_SAFE_CANDIDATES_WHILE_CONTROLLER_REQUIRED_CANDIDATES"
+  },
+  "terminal_task_content_read": 0,
+  "terminal_trials_executed": 0,
+  "incremental_spend_usd": 0
+}
