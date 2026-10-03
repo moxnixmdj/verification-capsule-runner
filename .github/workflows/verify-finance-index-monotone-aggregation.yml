@@ -1,0 +1,39 @@
+name: Verify Finance Index monotone aggregation
+
+on:
+  push:
+    paths:
+      - ".github/workflows/verify-finance-index-monotone-aggregation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify official weighted-average definition
+        run: |
+          python - <<'PY'
+          import urllib.request,re
+          url="https://artificialanalysis.ai/models/capabilities/finance-and-accounting"
+          req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"})
+          t=" ".join(urllib.request.urlopen(req,timeout=30).read().decode("utf-8","ignore").split())
+          low=t.lower()
+          assert "weighted average" in low
+          for name,w in [
+            ("business knowledge","30%"),
+            ("agentic knowledge work","30%"),
+            ("reasoning","20%"),
+            ("agentic tool use","10%"),
+            ("long-context","5%"),
+            ("non-hallucination","5%"),
+          ]:
+            assert name in low
+            assert w in t
+          assert "higher is better" in low
+          assert sum([30,30,20,10,5,5])==100
+          print("FINANCE_INDEX_MONOTONE_WEIGHTED_AVERAGE_PASS")
+          PY
