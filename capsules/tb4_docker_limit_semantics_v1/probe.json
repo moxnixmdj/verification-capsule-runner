@@ -1,0 +1,28 @@
+{
+  "schema": "PROJECT_BRAIN_TB4_DOCKER_LIMIT_SEMANTICS_PROBE_V1",
+  "date": "2026-10-03",
+  "status": "PUBLIC_RUNNER_PROBE_REQUIRED__ZERO_CASE__ZERO_CREDIT",
+  "objective": "Falsify or confirm the assumption that task.toml CPU and memory declarations are hard minimum physical-host requirements for the Docker route used in the frozen TB4 attainability cut.",
+  "frozen_terminal_bench_ref": "1dcda8716784493721921c23e4bc7f7d988b4494",
+  "bound_harbor_ref": "fd1521a1da6250d9ed8fc7505caa0b7a72f36c4b",
+  "hypothesis_under_test": "A_STANDARD_4_CPU_HOST_IS_STRUCTURALLY_INCOMPATIBLE_WITH_A_TASK_DECLARING_8_CPUS",
+  "probe": [
+    "REQUIRE_HOST_CPU_LT_8_AND_HOST_MEMORY_MB_LT_16384",
+    "START_A_GENERIC_NON_BENCHMARK_CONTAINER_WITH_DOCKER_CPU_LIMIT_8_AND_MEMORY_LIMIT_16384M",
+    "VERIFY_CGROUP_AND_DOCKER_INSPECT_REPORT_THE_REQUESTED_LIMITS",
+    "BIND_HARBOR_DOCKER_AUTO_MODE_TO_LIMIT_AND_FROZEN_LEADERBOARD_NO_RESOURCE_OVERRIDE_RULE"
+  ],
+  "hard_rules": [
+    "DO_NOT_FETCH_OR_READ_ANY_TB4_TASK_INSTRUCTION",
+    "DO_NOT_FETCH_OR_READ_ANY_TB4_SOLUTION",
+    "DO_NOT_EXECUTE_ANY_TB4_ACCEPTANCE_CASE",
+    "DO_NOT_GRANT_SCORE_CAPABILITY_FAMILY_EXECUTION_OR_PROMOTION_CREDIT",
+    "A_PASS_ONLY_FALSIFIES_THE_STATIC_HOST_CPU_GE_DECLARED_CPU_IMPOSSIBILITY_INFERENCE"
+  ],
+  "new_terminal_acceptance_cases_consumed": 0,
+  "incremental_spend_usd": 0,
+  "capability_credit_delta": 0,
+  "family_credit_delta": 0,
+  "execution_authority": false,
+  "promotion_authority": false
+}
