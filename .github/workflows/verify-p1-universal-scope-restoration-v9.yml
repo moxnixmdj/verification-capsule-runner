@@ -47,7 +47,8 @@ jobs:
           set -euo pipefail
           C=capsules/p1_universal_scope_restoration_v9
           ! grep -R -F 'P1_PUBLIC_RECOVERY_RESULT_INDEPENDENT_ADJUDICATION' "$C/canonical/runtime/p1_universal_scope_restoration_v9.py"
-          ! grep -R -F '37108111537' "$C/canonical/runtime/p1_universal_scope_restoration_v9.py"
+          grep -F 'quarantined_execution_used_as_proof") is False' "$C/canonical/runtime/p1_universal_scope_restoration_v9.py"
+          grep -F 'quarantined_execution_run_id")==37108111537' "$C/canonical/runtime/p1_universal_scope_restoration_v9.py"
 
       - name: Run fail-closed reducer tests and live reduction
         run: |
