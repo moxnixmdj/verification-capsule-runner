@@ -61,3 +61,8 @@ jobs:
           cd capsules/universal_learning_open_world_v4
           export PYTHONPATH=.
           python verify_v4.py
+      - name: Run independent V4 activation projection verifier
+        run: |
+          cd capsules/universal_learning_open_world_v4
+          export PYTHONPATH=.
+          python verify_activation_v4.py
