@@ -1,0 +1,115 @@
+name: Verify P1 recovery sequence violation
+
+on:
+  push:
+    branches: ["verify/p1-recovery-sequence-violation-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-p1-recovery-sequence-violation.yml"
+      - "capsules/p1_recovery_sequence_violation_20261003/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-p1-recovery-sequence-violation.yml"
+      - "capsules/p1_recovery_sequence_violation_20261003/**"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify sequence and result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          B=capsules/p1_recovery_sequence_violation_20261003
+          test "$(git hash-object "$B/candidate.json")" = "88301973b5cc5cce83e52835afaa23ceb20cf3ef"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          b=json.loads(Path("capsules/p1_recovery_sequence_violation_20261003/brain_main.json").read_text())
+          p=json.loads(Path("capsules/p1_recovery_sequence_violation_20261003/brain_pr1258.json").read_text())
+          c=json.loads(Path("capsules/p1_recovery_sequence_violation_20261003/candidate.json").read_text())
+          assert b["name"]=="main"
+          assert b["commit"]["sha"]=="0a90772212ecb92d6405476a6795be20b50086df"
+          assert b["commit"]["commit"]["committer"]["date"]=="2026-10-03T07:56:23Z"
+          assert p["number"]==1258 and p["state"]=="closed" and p["merged_at"] is None
+          assert p["created_at"]=="2026-10-03T07:58:51Z"
+          assert p["base"]["sha"]=="0a90772212ecb92d6405476a6795be20b50086df"
+          assert c["admissibility"]["canonical_active_authority_present_before_execution"] is False
+          assert c["admissibility"]["acceptance_credit_allowed"] is False
+          assert c["fresh_reality_units_consumed"]==1
+          PY
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/moxnixmdj/verification-capsule-runner/pulls/1245 > pr1245.json
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37108111537 > run.json
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37108111537/jobs > jobs.json
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37108111537/artifacts > artifacts.json
+          python - <<'PY'
+          import json
+          pr=json.load(open("pr1245.json")); run=json.load(open("run.json")); jobs=json.load(open("jobs.json")); arts=json.load(open("artifacts.json"))
+          assert pr["number"]==1245 and pr["merged_at"]=="2026-10-03T07:58:07Z"
+          assert run["id"]==37108111537 and run["run_attempt"]==1 and run["conclusion"]=="success"
+          assert run["created_at"]=="2026-10-03T07:58:11Z"
+          assert run["head_sha"]=="e489b191363c52c838b720cd759c99f638170c67"
+          assert jobs["total_count"]==1
+          j=jobs["jobs"][0]
+          step={x["name"]:x["conclusion"] for x in j.get("steps",[])}
+          assert step.get("Consume exactly one authorized fresh P1 reality unit")=="success"
+          assert arts["total_count"]==1
+          a=arts["artifacts"][0]
+          assert a["id"]==11268841992
+          assert a["digest"]=="sha256:e25bcf3fcab61b1fa00882c202a00714ecb81772378005e4934edc712a22d038"
+          PY
+          ART_URL=$(python - <<'PY'
+          import json
+          print(json.load(open("artifacts.json"))["artifacts"][0]["archive_download_url"])
+          PY
+          )
+          curl -fsSL -L -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$ART_URL" -o result.zip
+          unzip -q result.zip -d result
+          python - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+          r=Path("result/P1_PUBLIC_RECOVERY_AUTHORIZED_RESULT.json")
+          x=json.loads(r.read_text())
+          assert x["github_run_id"]==37108111537
+          assert x["fresh_reality_units_consumed"]==1
+          assert x["cases"]==192 and x["passes"]==192 and x["failures"]==0
+          assert x["promotion_authority"] is False
+          assert hashlib.sha256(r.read_bytes()).hexdigest()=="24eec602e4f8bc2762b7c48f1652b97149ba0c995ee8448d3a59b41ed9fcee4f"
+          receipt={
+            "schema":"PROJECT_BRAIN_P1_RECOVERY_SEQUENCE_VIOLATION_INDEPENDENT_VERIFICATION_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__ACTIVE_AUTHORITY_ABSENT_BEFORE_EXECUTION__ONE_REALITY_UNIT_CONSUMED__192_OF_192_RESULT_INADMISSIBLE__ZERO_CREDIT",
+            "brain_main_at_execution":"0a90772212ecb92d6405476a6795be20b50086df",
+            "active_authority_pr":1258,
+            "active_authority_merged":False,
+            "active_authority_pr_created_at":"2026-10-03T07:58:51Z",
+            "execution_workflow_merge_at":"2026-10-03T07:58:07Z",
+            "execution_run_started_at":"2026-10-03T07:58:11Z",
+            "execution_run_id":37108111537,
+            "artifact_id":11268841992,
+            "cases":192,
+            "passes":192,
+            "fresh_reality_units_consumed":1,
+            "acceptance_credit_allowed":False,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "promotion_authority":False
+          }
+          Path("P1_SEQUENCE_VIOLATION_VERIFICATION.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-recovery-sequence-violation-verification
+          path: P1_SEQUENCE_VIOLATION_VERIFICATION.json
+          if-no-files-found: error
