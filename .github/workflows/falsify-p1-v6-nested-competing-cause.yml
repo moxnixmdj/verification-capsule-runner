@@ -1,0 +1,16 @@
+name: Falsify P1 V6 nested competing cause
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_v6_nested_competing_cause/**"
+      - ".github/workflows/falsify-p1-v6-nested-competing-cause.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/p1_v6_nested_competing_cause/verify.py
