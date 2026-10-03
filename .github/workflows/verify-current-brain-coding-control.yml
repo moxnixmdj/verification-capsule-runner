@@ -1,0 +1,42 @@
+name: Verify exact current Brain coding control
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact Brain blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/coding_control_kernel_v1.py)" = "2b5cd4bebc28b8e7096f87aa63ffbb329a819057"
+          test "$(git hash-object canonical/runtime/harbor_brain_agent.py)" = "3d7d803bdd25df0379d81b360af3ea40da254771"
+          test "$(git hash-object canonical/tests/test_harbor_brain_agent.py)" = "68b3d219ca8cec70fcaa07821397b0ecfad6d6a5"
+          test "$(git hash-object canonical/capabilities/internalized/software_engineering/mini_swe_superpowers_v1/COMPOSED_CONFIGURATION_V1.json)" = "d63d7656c7da293a7c22c32042a4f03f2d13593d"
+          test "$(git hash-object canonical/runtime/astra_runtime.py)" = "7f5d16b1db69cb620954bc778e0ba6e15e687b75"
+          test "$(git hash-object canonical/runtime/harbor_environment_transport.py)" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object canonical/runtime/harbor_command_policy.py)" = "a525773417291c7a4841bf35e1baff5370350d0d"
+      - name: Compile exact runtime
+        run: python -m py_compile canonical/runtime/coding_control_kernel_v1.py canonical/runtime/harbor_brain_agent.py canonical/runtime/astra_runtime.py canonical/runtime/harbor_environment_transport.py canonical/runtime/harbor_command_policy.py
+      - name: Run exact Harbor control tests
+        run: python -m unittest -v canonical.tests.test_harbor_brain_agent
+      - name: Inspect material control deterministically
+        shell: bash
+        run: |
+          python - <<'PY'
+          from canonical.runtime.coding_control_kernel_v1 import render_policy_block, configuration_fingerprint
+          b=render_policy_block()
+          assert "BRAIN-OWNED OPERATIVE CODING CONFIGURATION" in b
+          assert "KNOWN_FAILURE_GATE" in b
+          assert "ACCEPTANCE_COVERAGE_GATE" in b
+          assert "SINGLE_TERMINAL_AUTHORITY" in b
+          assert len(configuration_fingerprint()) == 64
+          print("CURRENT_BRAIN_CODING_CONTROL_EXACT_PASS")
+          PY
