@@ -1,0 +1,193 @@
+name: Preflight TB-Science repaired local-Qwen Harbor integration
+on:
+  push:
+    branches: ["science-zero-case-preflight-20261003"]
+    paths:
+      - ".github/workflows/preflight-tb-science-zero-case-qwen-harbor-v1.yml"
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact Harbor release and bind exact repaired Brain bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor") == "0.23.0"
+          PY
+          C=capsules/tb_science_local_qwen_planner_repair_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+      - name: Build exact pinned llama.cpp server
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact loopback-only local endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" \
+            > ZERO_CASE_LLAMA_SERVER.log 2>&1 &
+          echo $! > ZERO_CASE_LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > ZERO_CASE_LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Execute repaired planner-controller-Harbor seam on synthetic zero-case goals
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_local_qwen_planner_repair_v1"
+          PYTHONPATH="$C" python - <<'PY' | tee TB_SCIENCE_ZERO_CASE_INTEGRATION_RESULT.json
+          import asyncio, json, re
+          from pathlib import Path
+          from types import SimpleNamespace
+          from canonical.runtime import harbor_science_agent_v1 as s
+
+          assert getattr(s.BaseAgent, "__module__", "").startswith("harbor."), s.BaseAgent
+          assert getattr(s.AgentCapabilities, "__module__", "").startswith("harbor."), s.AgentCapabilities
+          assert issubclass(s.HarborScienceAgent, s.BaseAgent)
+
+          class Receipt:
+              def __init__(self, returncode=0, stdout="", stderr=""):
+                  self.returncode=returncode
+                  self.stdout=stdout
+                  self.stderr=stderr
+
+          class SyntheticHarborEnv:
+              def __init__(self, path):
+                  self.path=path
+                  self.commands=[]
+              async def exec(self, command, timeout_sec=None, **kwargs):
+                  self.commands.append(command)
+                  allowed={
+                      f"printf ok > {self.path}",
+                      f"test -s {self.path}",
+                  }
+                  if command not in allowed:
+                      return Receipt(97, "", "SYNTHETIC_ENV_COMMAND_NOT_EXACTLY_AUTHORIZED")
+                  proc=await asyncio.create_subprocess_shell(
+                      command,
+                      stdout=asyncio.subprocess.PIPE,
+                      stderr=asyncio.subprocess.PIPE,
+                  )
+                  out,err=await proc.communicate()
+                  return Receipt(proc.returncode,out.decode(),err.decode())
+
+          async def probe(i):
+              path=f"/tmp/brain_science_zero_case_{i}"
+              try:
+                  Path(path).unlink()
+              except FileNotFoundError:
+                  pass
+              goal=(
+                  "SYNTHETIC ZERO-CASE INTEGRATION CHECK ONLY. "
+                  "Use exactly one material requirement named R1. "
+                  "Submit exactly one candidate action A1 covering R1. "
+                  f"The command must be exactly: printf ok > {path}. "
+                  f"The verify_command must be exactly: test -s {path}. "
+                  "Do not use network, packages, git, secrets, benchmark data, or any other command."
+              )
+              env=SyntheticHarborEnv(path)
+              logs=Path(f"/tmp/brain_science_zero_case_logs_{i}")
+              logs.mkdir(parents=True,exist_ok=True)
+              ctx=SimpleNamespace(cost_usd=999.0)
+              agent=s.HarborScienceAgent(logs)
+              await agent.run(goal,env,ctx)
+              trace_path=logs/"project_brain_science_trace.json"
+              assert trace_path.is_file()
+              result=json.loads(trace_path.read_text())
+              assert result["status"]=="FINISHED", result
+              assert result["material_requirements"]==["R1"], result
+              assert result["resolved_requirements"]==["R1"], result
+              assert result["finish_authority"]=="BRAIN_VERIFIED_STATE", result
+              assert result["model_has_terminal_authority"] is False, result
+              assert result["cycles"]==1, result
+              assert env.commands==[
+                  f"printf ok > {path}",
+                  f"test -s {path}",
+              ], env.commands
+              assert Path(path).read_text()=="ok"
+              assert ctx.cost_usd==0.0
+              assert result["planner_model_last"]
+              return {
+                  "probe":i,
+                  "status":"PASS",
+                  "commands":env.commands,
+                  "planner_model_last":result["planner_model_last"],
+                  "finish_authority":result["finish_authority"],
+                  "terminal_task_content_read":0,
+                  "terminal_trials_executed":0,
+                  "terminal_results_observed":0,
+              }
+
+          async def main():
+              rows=[]
+              for i in range(2):
+                  rows.append(await probe(i))
+              print(json.dumps({
+                  "schema":"PROJECT_BRAIN_TB_SCIENCE_LOCAL_QWEN_ZERO_CASE_HARBOR_INTEGRATION_V1",
+                  "status":"PASS",
+                  "passes":len(rows),
+                  "required_passes":2,
+                  "rows":rows,
+                  "harbor_version":"0.23.0",
+                  "planner_blob":"879887984e2ca8abacac486d687f519f5d0d78a5",
+                  "controller_blob":"5557efd21f1a433ad16766def3775a79c459784b",
+                  "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+                  "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+                  "terminal_task_content_read":0,
+                  "terminal_trials_executed":0,
+                  "terminal_results_observed":0,
+                  "incremental_spend_usd":0,
+                  "capability_credit_delta":0,
+                  "family_credit_delta":0,
+              },sort_keys=True))
+          asyncio.run(main())
+          PY
+      - name: Preserve zero-case evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-zero-case-qwen-harbor-integration-v1
+          path: |
+            TB_SCIENCE_ZERO_CASE_INTEGRATION_RESULT.json
+            ZERO_CASE_LLAMA_HEALTH.json
+            ZERO_CASE_LLAMA_SERVER.log
+          if-no-files-found: warn
