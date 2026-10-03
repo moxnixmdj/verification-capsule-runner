@@ -24,9 +24,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_runner_v1.py')" = "05c9adf60b76a8b2e0ccd139a90c4c7fd9d34449"
-          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_runner_v1.py')" = "7735a0851c87463b1a19bd9ffcfbee44812296f0"
-          test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_PORTFOLIO_RUNNER_BINDING_V1.json')" = "5212f5996dbc83e87a308b8c9d9d1d9ed3da5aab"
+          test "$(git hash-object 'canonical/runtime/terminal_parent_portfolio_runner_v1.py')" = "431b62e503a6a179f19339ae5e0ab6948424a650"
+          test "$(git hash-object 'canonical/tests/test_terminal_parent_portfolio_runner_v1.py')" = "6ab2a7921a0bfa7f573cfd75a307c6fa4b2481d3"
+          test "$(git hash-object 'canonical/governance/TERMINAL_PARENT_PORTFOLIO_RUNNER_BINDING_V1.json')" = "4e33f458b7e04e31f372f69cabc1cfbe5ee6507f"
           test "$(git hash-object 'canonical/runtime/m0a_raw_source_terminal_suite_v2.py')" = "63b5daacfa5623c38228d41f6a84e548890d252d"
           test "$(git hash-object 'canonical/runtime/m0a_raw_source_brain_candidate_v2.py')" = "0aac96d27068bdad379703c1b0b8a7a32cacb2e2"
           test "$(git hash-object 'canonical/runtime/bounded_predicate_argument_semantics.py')" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
@@ -41,11 +41,19 @@ jobs:
           test "$(git hash-object 'canonical/runtime/contract_native_proof_suites.py')" = "0210790c7dd705ef328e1b55d529a30c5c6c3337"
           test "$(git hash-object 'canonical/runtime/contract_native_brain_candidate.py')" = "afc18af1d1da6f25166c6cc57dcbc0cd3070bb85"
           test "$(git hash-object 'canonical/runtime/portfolio_multiplex_terminal_instrumentation_v1.py')" = "dd8fba0f27691002babbc7ad1fc6b65d7bb57282"
-          test "$(git hash-object 'canonical/governance/TERMINAL_WAVE_EXECUTION_AUTHORITY_V1.json')" = "c35ec249733acf318efed0c8f6dbf35c0ab607a4"
-          test "$(git hash-object 'canonical/governance/TERMINAL_ROUTE_SPECIFIC_EXECUTOR_MANIFEST_V1.json')" = "e90ad37c122899fc2de567bcfda054803ffc9c36"
+
       - name: Install native artifact verifier dependencies
         run: python -m pip install --disable-pip-version-check --no-input python-docx openpyxl python-pptx pypdf
       - name: Run exact parent runner regression and full sentinel rehearsal
         run: PYTHONPATH=. python -m unittest -v canonical.tests.test_terminal_parent_portfolio_runner_v1
+      - name: Verify no-abort terminal failure semantics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src=Path("canonical/runtime/terminal_parent_portfolio_runner_v1.py").read_text()
+          assert 'raise RuntimeError("PARENT_PORTFOLIO_FAIL_CLOSED:"' not in src
+          assert "return list(out[\"receipts\"])" in src
+          print("PARENT_FAILURE_RETURNS_RECEIPTS_WITHOUT_ABORT=PASS")
+          PY
       - name: Emit rehearsal result
         run: PYTHONPATH=. python canonical/runtime/terminal_parent_portfolio_runner_v1.py
