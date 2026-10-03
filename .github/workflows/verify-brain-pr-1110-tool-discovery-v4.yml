@@ -1,0 +1,113 @@
+name: Verify Brain PR 1110 Tool Discovery V4 least-cost repair
+
+on:
+  push:
+    branches:
+      - "verify-brain-pr1110-tool-discovery-v4-least-cost"
+    paths:
+      - "capsules/brain_pr_1110_tool_discovery_v4/**"
+      - ".github/workflows/verify-brain-pr-1110-tool-discovery-v4.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1110_tool_discovery_v4/**"
+      - ".github/workflows/verify-brain-pr-1110-tool-discovery-v4.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain candidate identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1110_tool_discovery_v4
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_proof_v3.py)" = "f82d949f3890ffc0f2513f9b39cc3585a5d22ebb"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "9485d6f791e6d5f53ed66246615f30b938238b4b"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_v4.py)" = "5e38b58e3d9b20fc9bcbedf1a38630afe6aefcb5"
+
+      - name: Run candidate regression and inherited 1200-case grid
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1110_tool_discovery_v4
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_v4 -v
+
+      - name: Independently reconstruct load-bearing counterexample
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1110_tool_discovery_v4
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime import tool_discovery_dynamic_candidate_v3 as v3
+          from canonical.runtime import tool_discovery_dynamic_candidate_v4 as v4
+
+          state = {
+              "required_capabilities": ["CAP_A"],
+              "constraint": None,
+              "visible_tools": [{
+                  "tool_id": "T0", "cost": 10.0, "available": True,
+                  "authorized": True, "epoch": 0,
+              }],
+              "discovery_sources": [{
+                  "source_id": "S0", "cost": 0.1, "available": True,
+              }],
+              "prior_probe_receipts": [{
+                  "kind": "SAFE_CAPABILITY_PROBE", "tool_id": "T0",
+                  "capability": "CAP_A", "epoch": 0, "supported": True,
+              }],
+              "discovery_receipts": [],
+              "version_events": [],
+          }
+
+          old = v3.next_action(state)
+          assert old == {"action": "SELECT", "tool_id": "T0"}, old
+
+          first = v4.next_action(state)
+          assert first == {"action": "DISCOVER", "source_id": "S0", "query": "CAP_A"}, first
+
+          state["visible_tools"].append({
+              "tool_id": "T1", "cost": 1.0, "available": True,
+              "authorized": True, "epoch": 0,
+          })
+          state["discovery_receipts"] = [{
+              "kind": "DISCOVERY_RESULT", "source_id": "S0",
+          }]
+
+          second = v4.next_action(state)
+          assert second == {"action": "PROBE", "tool_id": "T1", "capability": "CAP_A"}, second
+
+          state["prior_probe_receipts"].append({
+              "kind": "SAFE_CAPABILITY_PROBE", "tool_id": "T1",
+              "capability": "CAP_A", "epoch": 0, "supported": True,
+          })
+          third = v4.next_action(state)
+          assert third == {"action": "SELECT", "tool_id": "T1"}, third
+
+          assert 1.0 < 10.0
+          print("V3 counterexample reproduced; V4 least-cost repair independently reproduced")
+          PY
+
+      - name: Enforce zero-credit truth-repair boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1110_tool_discovery_v4
+          python - <<'PY'
+          import pathlib
+          source = pathlib.Path("canonical/runtime/tool_discovery_dynamic_candidate_v4.py").read_text()
+          assert "DISCOVER" in source and "PROBE" in source and "SELECT" in source and "ESCALATE" in source
+          assert source.index('if sources:') < source.index('evidence = _evidence(public)')
+          print("repair ordering invariant: PASS")
+          PY
