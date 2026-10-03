@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_RECOVERY_OPUS55_ZERO_REALITY_VERIFIER_INPUT_V1",
+  "date": "2026-10-03",
+  "brain_pr": 1296,
+  "source_files": {
+    "canonical/runtime/recovery_opus55_zero_reality_acceptance_reduction_v1.py": "8532ef737fd0a00862c1fbba8bcecaddc5fe9e9d",
+    "canonical/tests/test_recovery_opus55_zero_reality_acceptance_reduction_v1.py": "89b66f4112f5075d08db488f4957f934b365b636",
+    "canonical/governance/RECOVERY_OPUS55_ZERO_REALITY_ACCEPTANCE_CANDIDATE_V1.json": "f8b54f3f9635ab24489b28e8583d710ba2e66b5b",
+    "canonical/governance/RECOVERY_T0_T2_ACCEPTANCE_SCOPE_RELATION_V1.json": "5159f145fad8b07fe2164716aedf653a0b34a6e0",
+    "canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "95422fdb13ada158930486442c9441c9c5cd9852",
+    "canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_SCOPE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "f327bfdb5d52bb9551b52f67da14a4cd425533a3",
+    "canonical/verification/P1_UNIVERSAL_SCOPE_RESTORATION_V9_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "2c6bb594d353e4c6a169821da5f84a91be212ca7",
+    "canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json": "8703c6aa08227467a619a7ae90d0d61f8e54da39",
+    "canonical/governance/OPUS55_MATCHED_TARGET_NORMALIZATION_CANDIDATE_V2.json": "65978d10375093162f24fa61f5fce6cc1ba4d179",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "ee187f611a0e82b2de495ee377682f39bc31dd31"
+  },
+  "hard_requirements": [
+    "NO_OLD_NARROW_P1_TERMINAL_RESULT_AS_LOAD_BEARING_PROOF",
+    "NO_RUN_37108111537",
+    "THREE_RECOVERY_PREDICATES_ONLY",
+    "SCOPE_COMPLETE_STRONGER_PROOF_AT_OBJECTIVE_CEILING_OR_FLOOR",
+    "NO_SELF_PROMOTION"
+  ]
+}
