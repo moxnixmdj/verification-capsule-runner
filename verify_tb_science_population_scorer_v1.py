@@ -69,5 +69,5 @@ out={
   "capability_credit_delta":0,
   "family_credit_delta":0,
 }
-Path("TB_SCIENCE_POPULATION_SCORER_BINDING_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\\n",encoding="utf-8")
+Path("TB_SCIENCE_POPULATION_SCORER_BINDING_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n",encoding="utf-8")
 print(json.dumps(out,sort_keys=True))
