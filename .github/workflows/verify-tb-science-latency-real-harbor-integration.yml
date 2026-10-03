@@ -41,8 +41,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
-          cd brain-under-test
-          PYTHONPATH=. python -m unittest -v             canonical.tests.test_harbor_science_planner_v1             canonical.tests.test_harbor_science_agent_v1
+          C="$GITHUB_WORKSPACE/capsules/tb_science_latency_real_harbor_integration"
+          cd "$C"
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_harbor_science_planner_v1 canonical.tests.test_harbor_science_agent_v1
 
       - name: Verify exact patched controller through real Harbor API without terminal content
         run: |
