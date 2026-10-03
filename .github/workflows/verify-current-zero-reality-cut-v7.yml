@@ -1,0 +1,87 @@
+name: Verify current zero reality cut V7
+on:
+  push:
+    branches: ["verify/current-zero-reality-cut-v7-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-current-zero-reality-cut-v7.yml"
+      - "capsules/current_zero_reality_cut_v7/brain/**"
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact V7 epoch and minimum cut
+        run: |
+          set -euo pipefail
+          ROOT=capsules/current_zero_reality_cut_v7/brain
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          R=Path("capsules/current_zero_reality_cut_v7/brain")
+          expected={
+            "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json":"e94469ffdeb7535f9a921a244e62cde6b84fda5c",
+            "canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json":"fd2b0b5e3020e853dd1d610205fec21fff34f693",
+            "canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json":"5acf38e43574a7b7c6878487f9cbfe20dc3b0e21",
+            "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V7.json":"69003608ff1aaacf826fd2f82daa0bc7712672a2",
+            "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"cf8a535d45c47bb7f5c38cdee50f5cab73bd3b14",
+            "canonical/governance/ROOT2_PUBLIC_ACCESS_REFRESH_20261003_V1.json":"905d4ac3e186b7f69c4dc6eaf83a82b7a7044a75",
+            "canonical/governance/TB4_ZERO_COST_CARRIER_CENSUS_20261003_V1.json":"6c42b74d50276eeeee984707963e93ef5c227df4",
+            "canonical/governance/CURRENT_ROOT3_ZERO_REALITY_STRONGER_PROOF_SATURATION_V1.json":"bdc78fdc147a014e5d77d5daafb5434b1a4e878f",
+            "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json":"a9d3e6ebf05032d30fc20ac785e88e6823474601",
+            "canonical/verification/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json":"48c2318aaffffec67855199523235e6943289fc6",
+            "canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json":"1a67bc568944212c4d235a463c8bd7bea21b3993",
+            "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json":"bc420c6d1a6caaab7a6d5c257640d3f5797170f5",
+            "canonical/governance/FINANCE_ACCOUNTING_INDEX_IDENTITY_RECONCILIATION_V1.json":"dcd910e2af97c1648ab29d614552b072c66d647e",
+            "canonical/governance/AA_BRIEFCASE_OPUS55_COMPARATOR_PROVENANCE_RECONCILIATION_V1.json":"55974d8c5d8e32f276149543959ad88f2c5abb89",
+          }
+          def blob(p):
+            b=(R/p).read_bytes()
+            return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          for p,h in expected.items():
+            assert blob(p)==h,(p,h,blob(p))
+          def L(p): return json.loads((R/p).read_text())
+          root=L("canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json")
+          route=L("canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json")
+          frontier=L("canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json")
+          cut=L("canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V7.json")
+          auth=L("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json")
+          access=L("canonical/governance/ROOT2_PUBLIC_ACCESS_REFRESH_20261003_V1.json")
+          tb4=L("canonical/governance/TB4_ZERO_COST_CARRIER_CENSUS_20261003_V1.json")
+          sat=L("canonical/governance/CURRENT_ROOT3_ZERO_REALITY_STRONGER_PROOF_SATURATION_V1.json")
+          total=L("canonical/verification/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          synth=L("canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")
+          assert root["current_acceptance"]=={"accepted_families":5,"open_families":14,"proved_atomic":12,"unresolved_atomic":26,"total_families":19,"total_atomic":38,"terminal":False}
+          assert root["current_residual_root_partition"]["root1_positive_gap_count"]==0
+          assert root["current_residual_root_partition"]["evidence"]["git_blob_sha"]=="bc420c6d1a6caaab7a6d5c257640d3f5797170f5"
+          assert route["authority"]["root_state"]["git_blob_sha"]=="e94469ffdeb7535f9a921a244e62cde6b84fda5c"
+          assert route["deduplication"]["root2_only_predicate_count"]==15
+          assert route["deduplication"]["unique_benchmark_surface_count"]==14
+          assert frontier["authority"]["root_state"]["git_blob_sha"]=="e94469ffdeb7535f9a921a244e62cde6b84fda5c"
+          assert frontier["authority"]["root2_fixed_bar_route_inventory"]["git_blob_sha"]=="fd2b0b5e3020e853dd1d610205fec21fff34f693"
+          assert access["status"].startswith("CURRENT_PUBLIC_ROUTE_ACCESS_REFRESH")
+          assert "RENDER_INSPECTED" in tb4["status"]
+          assert "NO_ADMISSIBLE_ZERO_COST_8CPU_16GB_50GB_DOCKER_CARRIER_BOUND" in tb4["status"]
+          assert total["verified"]["closed_target_count"]==0 and total["verified"]["residual_target_count"]==8
+          assert synth["verified"]["transported_proved_atom_count"]==7 and synth["verified"]["implies_target"] is False
+          assert sat["status"].startswith("SATURATED_CURRENT_BOUND_ROOT3_STRONGER_PROOF_INPUTS")
+          assert cut["exact_state"]["accepted_families"]==5 and cut["exact_state"]["proved_atomic"]==12 and cut["exact_state"]["unresolved_atomic"]==26
+          assert cut["exact_state"]["root2_unique_benchmark_surfaces"]==14
+          waits={x["class"]:x["state"] for x in cut["exhausted_or_waiting"]}
+          assert waits["CURRENT_NORMALIZED_WITNESS_DIRECT_REUSE"]=="EXHAUSTED"
+          assert waits["GENERIC_ROOT3_STRONGER_PROOF_SEARCH"]=="SATURATED_CURRENT_BOUND_INPUTS"
+          assert waits["PRIVATE_HELDOUT_PUBLIC_ACCESS_SEARCH"]=="SATURATED"
+          assert waits["TB4_CURRENT_CONNECTED_CARRIER_SEARCH"]=="SATURATED__RENDER_INSPECTED_EMPTY"
+          assert cut["fresh_reality_authority"] is False and cut["execution_authority"] is False
+          assert auth["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN" and auth["truth"]["achieved"] is False
+          assert auth["sources"]["current_zero_reality_minimum_cut_v7"]["git_blob_sha"]=="69003608ff1aaacf826fd2f82daa0bc7712672a2"
+          assert "NO_GENERIC_ROOT3_SEARCH" in auth["next_terminal_action"]
+          assert "NO_REPEATED_PRIVATE_ACCESS_SEARCH" in auth["next_terminal_action"]
+          assert "NO_TB4_CARRIER_SEARCH_UNTIL_REOPEN" in auth["next_terminal_action"]
+          assert "NO_FRESH_REALITY" in auth["next_terminal_action"]
+          print("CURRENT_ZERO_REALITY_CUT_V7_PASS")
+          PY
