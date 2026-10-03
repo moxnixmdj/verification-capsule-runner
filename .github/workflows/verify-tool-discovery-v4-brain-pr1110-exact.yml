@@ -1,0 +1,38 @@
+name: Verify exact Brain PR1110 tool-discovery V4
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_v4_brain_pr1110_exact/**'
+      - '.github/workflows/verify-tool-discovery-v4-brain-pr1110-exact.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain Git blob identities
+        run: |
+          set -euo pipefail
+          check_blob() {
+            path="$1"
+            want="$2"
+            got="$(git rev-parse "HEAD:capsules/tool_discovery_v4_brain_pr1110_exact/$path")"
+            test "$got" = "$want"
+            printf '%s %s\n' "$path" "$got"
+          }
+          check_blob canonical/runtime/tool_discovery_dynamic_candidate_v3.py bbbee4d6baf8df937543644397abba38a67dce62
+          check_blob canonical/runtime/tool_discovery_dynamic_candidate_v4.py 9485d6f791e6d5f53ed66246615f30b938238b4b
+          check_blob canonical/runtime/tool_discovery_dynamic_proof_v3.py f82d949f3890ffc0f2513f9b39cc3585a5d22ebb
+          check_blob canonical/tests/test_tool_discovery_dynamic_v4.py 0125582ee4dbef732f2c84b6b70ac180d7f1a91e
+      - name: Run exact candidate and independent adversarial suites
+        working-directory: capsules/tool_discovery_v4_brain_pr1110_exact
+        run: |
+          python -m unittest \
+            canonical.tests.test_tool_discovery_dynamic_v4 \
+            canonical.tests.test_tool_discovery_dynamic_v4_independent \
+            -v
