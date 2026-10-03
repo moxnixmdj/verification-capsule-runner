@@ -1,0 +1,44 @@
+name: Verify terminal scheduling V12 current pointer
+
+on:
+  push:
+    branches: ["verify/scheduling-v12-current-pointer-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-terminal-scheduling-v12-current-pointer.yml"
+      - "capsules/terminal_scheduling_v12_current_pointer/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-terminal-scheduling-v12-current-pointer.yml"
+      - "capsules/terminal_scheduling_v12_current_pointer/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact V12 current-pointer bytes
+        working-directory: capsules/terminal_scheduling_v12_current_pointer
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m canonical.runtime.verify_terminal_scheduling_current_authority_v12_candidate_v1 > /tmp/v12ptr.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/v12ptr.json"))
+          assert x["pass"] is True, x
+          assert x["pointer_blob_sha"] == "bc578e6db4eedcefbed61f6860e1cc5192cf05f4"
+          assert x["active_zero_reality_requirements"] == 17
+          assert x["primitive_zero_reality_work_units"] == 31
+          assert x["tool_discovery_retrieval_authority"] == "V4_OVER_VERIFIED_V3_OVER_VERIFIED_V2_BASE"
+          assert x["fresh_reality_authority"] is False
+          print("TERMINAL_SCHEDULING_V12_CURRENT_POINTER_PASS")
+          PY
+          PYTHONPATH=. python - <<'PY'
+          from canonical.tests.test_terminal_scheduling_current_authority_v12_candidate_v1 import test_v12_final_pointer_exact_blob
+          test_v12_final_pointer_exact_blob()
+          print("TERMINAL_SCHEDULING_V12_CURRENT_POINTER_TEST_PASS")
+          PY
