@@ -24,9 +24,9 @@ jobs:
         run: |
           set -euo pipefail
           cd capsules/brain_pr_1212_tb_science_route
-          test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "8c439e057f53c0ac6e7272c9a1e9030a61ef410c"
+          test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "5d6685d66ca04cec5e332993329e997f6e9fe272"
           test "$(git hash-object canonical/tests/test_harbor_science_agent_v1.py)" = "f788372fbc1a7963a0f0f58673f1c80be2c858f9"
-          test "$(git hash-object canonical/governance/TERMINAL_BENCH_SCIENCE_BRAIN_ROUTE_CANDIDATE_V1.json)" = "c641dbd001ab3fd530c60b2ea74bf6acb026912f"
+          test "$(git hash-object canonical/governance/TERMINAL_BENCH_SCIENCE_BRAIN_ROUTE_CANDIDATE_V1.json)" = "379bf08cc270b3780a7df5a8b94cf0d2f44a2db2"
           test "$(git hash-object canonical/runtime/harbor_command_policy.py)" = "a525773417291c7a4841bf35e1baff5370350d0d"
           test "$(git hash-object canonical/runtime/harbor_environment_transport.py)" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
           test "$(git hash-object canonical/runtime/shared_decision_primitives.py)" = "794e8d1ca9525564b592ffc3af899037183ef655"
