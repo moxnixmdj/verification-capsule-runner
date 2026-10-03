@@ -1,7 +1,7 @@
 name: Preflight TB-Science promotion-safe execution
 on:
   push:
-    branches: ["tb-science-promotion-preflight-20261003-v1"]
+    branches: [main, "tb-science-promotion-preflight-20261003-v1"]
     paths:
       - ".github/workflows/preflight-tb-science-promotion-safe-v1.yml"
   pull_request:
