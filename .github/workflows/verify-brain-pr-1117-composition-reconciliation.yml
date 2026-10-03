@@ -1,0 +1,66 @@
+name: Verify Brain PR 1117 composition reconciliation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1117_composition_post_delegation/**"
+      - ".github/workflows/verify-brain-pr-1117-composition-reconciliation.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain PR 1117 candidate blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1117_composition_post_delegation
+          test "$(git hash-object canonical/action_intents/2026-10-03_COMPOSITION_POST_DELEGATION_TRUTH_REPAIR_V1.json)" = "78432f990cdd07773b0fa42cb01c01ef860b0974"
+          test "$(git hash-object canonical/governance/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_V1.json)" = "66c6056b26851e0b249ac1562b86526cc1ca1f32"
+          test "$(git hash-object canonical/governance/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2.json)" = "6bef2e6e63b520cc17db6e7b3b2629742bfbaba0"
+          test "$(git hash-object canonical/governance/COMPOSITION_POST_DELEGATION_RECONCILIATION_V4.json)" = "7e3aa7f6ffb5f4392aeb990d000b8074dfeec755"
+          test "$(git hash-object canonical/runtime/composition_post_delegation_reconciler_v1.py)" = "a64d867ccb8817e60a398b39332eab52bd314f04"
+          test "$(git hash-object canonical/tests/test_composition_post_delegation_reconciler_v1.py)" = "196cfcb6aa0f4a5fd14fcbcd74317a860966cebc"
+      - name: Run fail-closed reconciliation tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1117_composition_post_delegation
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_composition_post_delegation_reconciler_v1 -v
+      - name: Execute reconciliation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1117_composition_post_delegation
+          export PYTHONPATH=.
+          python -m canonical.runtime.composition_post_delegation_reconciler_v1 > verdict.json
+      - name: Enforce truth-preserving verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1117_composition_post_delegation
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["status"].startswith("PASS__CURRENT_POST_DELEGATION_TRUTH_RECONCILED"),v
+          assert v["source_blob_drift"]==[],v
+          assert v["current_acceptance"]=="3_OF_19__8_OF_38",v
+          assert v["stale_v3_zero_of_12_invalidated_by_current_delegation_closure"] is True,v
+          assert v["tool_discovery_remains_quarantined"] is True,v
+          assert v["current_admissible_scoped_proved"]==2,v
+          assert v["current_open_or_quarantined"]==10,v
+          assert v["scoped_proved_components"]==["delegation","memory"],v
+          assert v["parent_composition_predicate_closed"] is False,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["terminal_results_replayed"]==0,v
+          assert v["incremental_spend_usd"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("composition post-delegation reconciliation: PASS")
+          PY
