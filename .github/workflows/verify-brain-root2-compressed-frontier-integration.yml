@@ -1,0 +1,23 @@
+name: Verify Brain Root2 compressed frontier integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_compressed_frontier_integration/**"
+      - ".github/workflows/verify-brain-root2-compressed-frontier-integration.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify Root2 compressed frontier integration
+        run: python capsules/root2_compressed_frontier_integration/verify.py
