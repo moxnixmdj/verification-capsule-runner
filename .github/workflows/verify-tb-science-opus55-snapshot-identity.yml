@@ -83,9 +83,19 @@ jobs:
         run: |
           set -euo pipefail
           curl -L --fail --silent --show-error --retry 3             -A 'ProjectBrainIndependentVerifier/1.0'             'https://raw.githubusercontent.com/harbor-framework/terminal-bench-science/main/RELEASING.md'             -o RELEASING.md
-          grep -Fq 'Terminal-Bench-Science releases are immutable benchmark snapshots.' RELEASING.md
-          grep -Fq 'Freeze the task set and review all score-affecting changes since the previous release.' RELEASING.md
-          grep -Fq 'If a published release needs correction, create a new patch release instead of moving or replacing its tag.' RELEASING.md
+          python - <<'PY'
+          from pathlib import Path
+          text=" ".join(Path("RELEASING.md").read_text("utf-8","replace").split())
+          required=[
+            "Terminal-Bench-Science releases are immutable benchmark snapshots.",
+            "Freeze the task set and review all score-affecting changes since the previous release.",
+            "Release tags must point to commits on main and must never be moved after publication.",
+            "If a published release needs correction, create a new patch release instead of moving or replacing its tag.",
+          ]
+          missing=[x for x in required if x not in text]
+          assert not missing, ("RELEASE_POLICY_FACTS_MISSING", missing)
+          print("IMMUTABLE_RELEASE_POLICY_PASS")
+          PY
 
       - name: Verify current owner-facing leaderboard comparator row and release population
         run: |
