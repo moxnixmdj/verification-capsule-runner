@@ -1,0 +1,47 @@
+name: Verify live 27 dominance activation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-live-27-dominance-activation.yml"
+      - "capsules/live_27_dominance_activation/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify activation invariants
+        run: |
+          python - <<'PY'
+          import json
+          A=json.load(open("capsules/live_27_dominance_activation/activation.json"))
+          T=json.load(open("capsules/live_27_dominance_activation/authority.json"))
+          C=json.load(open("capsules/live_27_dominance_activation/candidate.json"))
+          V=json.load(open("capsules/live_27_dominance_activation/verification.json"))
+          S=json.load(open("capsules/live_27_dominance_activation/scheduler.json"))
+          assert V["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert V["verified"]["unresolved_predicates"]==27
+          assert V["verified"]["nondominated_certificate_count"]==16
+          assert V["verified"]["unique_zero_reality_requirements"]==19
+          assert A["verified_result"]["candidate_git_blob_sha"]=="fae786d6051277865ed6ecde69be5da98e2bf509"
+          assert A["verified_result"]["verification_git_blob_sha"]=="1931ae5a7edb5dde2021a8a4f7e7a3ad0fd821f1"
+          assert A["current_scheduling_authority"]["git_blob_sha"]=="04f0ee3cd64c3f77b29ece159ac9a35eae47a9dc"
+          assert C["live_world"]["unresolved_predicates"]==27
+          assert C["live_world"]["nondominated_certificate_count"]==16
+          assert C["live_world"]["unique_zero_reality_requirements"]==19
+          assert S["status"].startswith("ACTIVE_INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert T["truth"]["opus55_acceptance"]=="4/19_PASS__15/19_OPEN"
+          assert T["atomic_acceptance_frontier"]["proved"]==11
+          assert T["atomic_acceptance_frontier"]["unresolved"]==27
+          assert "LAUNCH_PARALLEL_ZERO_REALITY_REQUIREMENT_DISCHARGE" in T["next"]
+          assert A["fresh_reality_authority"] is False
+          assert A["execution_authority"] is False
+          assert A["promotion_authority"] is False
+          print("LIVE_27_DOMINANCE_ACTIVATION_PASS")
+          PY
