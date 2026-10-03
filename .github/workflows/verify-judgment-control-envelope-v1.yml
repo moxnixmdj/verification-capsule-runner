@@ -1,6 +1,8 @@
 name: Verify dual judgment control envelope v1
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - verify/judgment-control-envelope-v1-20261002
 permissions:
   contents: read
 jobs:
