@@ -1,0 +1,19 @@
+name: Verify P1 forward-causal intervention V6
+on:
+  pull_request:
+    paths:
+      - "capsules/p1_typed_causal_intervention_v6/**"
+      - ".github/workflows/verify-p1-forward-causal-intervention-v6.yml"
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain V6 blobs and forward-causal rescue
+        run: python capsules/p1_typed_causal_intervention_v6/verify.py
