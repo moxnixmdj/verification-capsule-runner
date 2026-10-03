@@ -1,0 +1,11 @@
+name: Composition V4 recheck
+on:
+  push:
+    branches: ["composition-v4-recheck-20261003"]
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python capsules/composition_slice_v4_recheck/verify.py
