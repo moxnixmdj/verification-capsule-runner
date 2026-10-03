@@ -1,0 +1,22 @@
+{
+  "schema": "BRAIN_PR_1081_P1_V7_UPSTREAM_SOURCE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "p1-v7-upstream-semantics-source-audit-v1-20261003",
+  "brain_pr": 1081,
+  "exact_brain_blobs": {
+    "canonical/governance/P1_V7_UPSTREAM_FAILURE_SEMANTICS_SOURCE_AUDIT_V1.json": "1f45657c20d5760e1773f4b67d3cee642c26fb94",
+    "canonical/runtime/p1_v7_upstream_failure_semantics_source_audit_v1.py": "a2ffbe837b7bea961c4e024a5c3962717ae74d1d",
+    "canonical/tests/test_p1_v7_upstream_failure_semantics_source_audit_v1.py": "fc11a9363bd40ef87fb14bd1b3a321bc14a7fdab",
+    "canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json": "8703c6aa08227467a619a7ae90d0d61f8e54da39",
+    "canonical/governance/TERMINAL_PORTFOLIO_BINDING_MANIFESTS_V1.json": "8b439403a05b4a912f06a8866db25f6e53b52473",
+    "canonical/governance/CONTRACT_NATIVE_PRIVATE_SURFACE_PROOF_ROUTES_V1.json": "75cd1ad0ec0739ebd894cf6075af5837b93d83f8",
+    "canonical/governance/FOUR_UNCOVERED_BEHAVIORAL_PROOF_CONTRACTS_V1.json": "8c7ffe3d9ff789eddd286496f6de3ce84472c909",
+    "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc",
+    "canonical/verification/P1_V7_DIRECT_SURFACE_TRANSPORT_AND_IDENTIFIABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "e9d0632bd85e2deb43247d6bc78e641cb6440db4",
+    "canonical/verification/FOUR_DIRECT_PROOF_MUTATION_PREFLIGHT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "d4abf1dbda1328674489afca49bbece93c794cd1",
+    "canonical/verification/TRAJECTORY_TYPED_IR_V4_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "ee69a93c45a2b16676c49bfb0a01749a5c4ea1e2",
+    "canonical/verification/TRAJECTORY_INFORMATION_SAFE_V2_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json": "c571023e8b126c558f3995b2b0d348a7fbd084a0",
+    "canonical/capabilities/opus55/TRAJECTORY_INVARIANT_CHECKER_HELDOUT_EVIDENCE_V1.json": "53edb3eb870250e690afefbe0db4e85100936357",
+    "canonical/capabilities/opus55/TRAJECTORY_INVARIANT_CHECKER_CANDIDATE_V1.json": "d11f9c88d8bae44fcef14f9e27a5a23d65f6e91e"
+  }
+}
