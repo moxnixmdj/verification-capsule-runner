@@ -26,19 +26,23 @@ class CurrentTerminalSchedulingWorldV1Tests(unittest.TestCase):
             retrieval_gate.evaluate_repository(ROOT),
         )
 
-    def test_live_world_is_38_8_30(self):
+    def test_live_world_is_38_11_27(self):
         out = self.live()
         self.assertTrue(out["pass"], out)
         self.assertEqual(out["registry_predicate_count"], 38)
-        self.assertEqual(out["proved_predicate_count"], 8)
-        self.assertEqual(out["unresolved_predicate_count"], 30)
+        self.assertEqual(out["proved_predicate_count"], 11)
+        self.assertEqual(out["unresolved_predicate_count"], 27)
         self.assertEqual(out["live_action_coverage_count"], 30)
         self.assertEqual(out["uncovered_predicates"], [])
 
-    def test_delegation_is_removed_but_tool_learning_remains_open(self):
+    def test_delegation_and_recovery_are_removed_but_tool_learning_remains_open(self):
         out = self.live()
         self.assertIn("DELEGATION_TERMINAL_SUCCESS_NONINFERIOR", out["proved_predicates"])
+        self.assertIn("RECOVERY_TERMINAL_NONINFERIOR", out["proved_predicates"])
+        self.assertIn("RECOVERY_CAUSAL_LOCALIZATION_NONINFERIOR", out["proved_predicates"])
+        self.assertIn("RECOVERY_ZERO_CRITICAL_FAIL_CLOSED_MISSES", out["proved_predicates"])
         self.assertNotIn("DELEGATION_TERMINAL_SUCCESS_NONINFERIOR", out["unresolved_predicates"])
+        self.assertNotIn("RECOVERY_TERMINAL_NONINFERIOR", out["unresolved_predicates"])
         self.assertIn("TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR", out["unresolved_predicates"])
         live_targets = {
             pid
@@ -106,7 +110,8 @@ class CurrentTerminalSchedulingWorldV1Tests(unittest.TestCase):
             retrieval_gate.evaluate_repository(ROOT),
         )
         self.assertFalse(out["pass"])
-        self.assertIn("UNRESOLVED_COUNT_NOT_30:31", out["errors"])
+        self.assertIn("PROVED_COUNT_NOT_11:10", out["errors"])
+        self.assertIn("UNRESOLVED_COUNT_NOT_27:28", out["errors"])
 
 
 if __name__ == "__main__":
