@@ -1,8 +1,8 @@
 {
   "schema": "PROJECT_BRAIN_TOOLATHLON_MATCHED_ROUTE_PRECONDITION_CUT_V1",
   "date": "2026-10-03",
-  "status": "CANDIDATE__SIX_TO_THREE_MATCHED_ROUTE_PRECONDITION_CUT__REFERENCE_HARNESS_TRUTH_REPAIRED__INDEPENDENT_VERIFICATION_REQUIRED__ZERO_CREDIT",
-  "objective": "Compress the six open preconditions on the already pre-task-frozen Toolathlon-Verified matched Tool Discovery route to the exact irreducible three-fact cut without reading terminal results, replaying terminal cases, weakening the frozen Tool Discovery contract, or granting acceptance credit.",
+  "status": "CANDIDATE__SIX_TO_THREE_RESIDUAL_FACTORIZATION__REFERENCE_HARNESS_AND_OWNERSHIP_TRUTH_REPAIRED__INDEPENDENT_VERIFICATION_REQUIRED__ZERO_CREDIT",
+  "objective": "Compress and factor the six listed open preconditions on the already pre-task-frozen Toolathlon-Verified matched Tool Discovery route into three current fail-closed residual buckets without claiming irreducible minimality, reading terminal results, replaying terminal cases, weakening the frozen Tool Discovery contract, or granting acceptance credit.",
   "canonical_base_commit": "07c4d993c30bde3db4c639864b7376d058dfae5f",
   "target_family": "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
   "target_predicate": "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",
@@ -87,13 +87,24 @@
       "LEAST_COST_VERSIONING_AND_ESCALATION_DIMENSIONS_ARE_EITHER_EXERCISED_BY_THE_TARGET_OR_COVERED_BY_ADMISSIBLE_SCOPE_COMPLETE_INTERNAL_RECEIPTS",
       "FAILED_PROBE_UNNECESSARY_PROBE_AND_TRANSFER_METRICS_ARE_CLASSIFIED_AS_ACCEPTANCE_LOAD_BEARING_OR_DIAGNOSTIC_BEFORE_RESULTS",
       "NO_BENCHMARK_DIMENSION_IS_USED_AS_A_PROXY_FOR_AN_UNEXERCISED_REQUIRED_DIMENSION",
-      "SAME_FROZEN_TARGET_HARNESS_TOOL_AUTHORITY_AND_METRICS_ARE_USED_FOR_BRAIN_AND_MATCHED_REFERENCE"
+      "SAME_FROZEN_TARGET_HARNESS_TOOL_AUTHORITY_AND_METRICS_ARE_USED_FOR_BRAIN_AND_MATCHED_REFERENCE",
+      "BRAIN_OWNED_OPERATIVE_TOOL_DISCOVERY_CONFIGURATION_PASSES_ACCEPTANCE_CAPABILITY_SOURCE_GATE_V2",
+      "IF_A_MODEL_IS_USED_AS_GENERAL_COGNITION_SUBSTRATE__MODEL_DEPENDENCIES_ARE_DECLARED__EXTERNAL_HIDDEN_TARGET_CAPABILITY_PROVIDER_IS_FALSE__AND_GENERAL_SUBSTRATE_MATERIALITY_TEST_INDEPENDENTLY_PASSES",
+      "TOOLATHLON_HOST_AGENT_ADAPTER_CAUSALLY_ROUTES_DISCOVERY_FILTERING_EVIDENCE_AND_SELECTION_THROUGH_THE_FROZEN_BRAIN_CONFIGURATION__THE_SUBSTRATE_MUST_NOT_RECEIVE_AN_UNGATED_FULL_CATALOG_AND_CHOOSE_THE_ROUTE_STANDALONE"
     ]
   },
   "minimum_remaining_cut": [
     {
       "fact": "TOOLATHLON_MATCHED_SCOPE_COMPOSITION_CERTIFICATE",
-      "class": "SCOPE_AND_COMPOSITION"
+      "class": "SCOPE_AND_COMPOSITION",
+      "required_subfacts": [
+        "SIX_FROZEN_PROTOCOL_DIMENSIONS_ARE_COVERED_WITHOUT_PROXY_SUBSTITUTION",
+        "TERMINAL_SUCCESS_AND_VALID_ROUTE_TOP1_METRICS_ARE_BOUND_BEFORE_RESULTS",
+        "EXISTING_TRANSFER_AND_NO_UNSUPPORTED_PROMOTION_ATOMS_REMAIN_SCOPE_COMPLETE",
+        "BRAIN_OWNED_OPERATIVE_TOOL_DISCOVERY_CONFIGURATION_PASSES_ACCEPTANCE_CAPABILITY_SOURCE_GATE_V2",
+        "GENERAL_COGNITION_SUBSTRATE_IF_ANY_IS_CAUSALLY_SEPARATED_FROM_TARGET_TOOL_DISCOVERY_CAPABILITY",
+        "TOOLATHLON_EXECUTION_ADAPTER_MATERIALLY_CONSTRAINS_TOOL_DISCOVERY_AND_SELECTION"
+      ]
     },
     {
       "fact": "TOOLATHLON_ZERO_INCREMENTAL_SPEND_EXECUTION_CARRIER",
@@ -126,10 +137,11 @@
     "original_open_preconditions": 6,
     "closed_by_existing_frozen_evidence_or_selector": 2,
     "absorbed_into_one_joint_certificate": 2,
-    "minimum_remaining_fact_count": 3,
     "legacy_77_8_value_satisfies_matched_reference_fact": false,
     "terminal_execution_authorized": false,
-    "terminal_goal_achieved": false
+    "terminal_goal_achieved": false,
+    "minimum_claim": false,
+    "current_remaining_fact_bucket_count": 3
   },
   "new_reality_units_consumed": 0,
   "terminal_results_replayed": 0,
@@ -138,5 +150,13 @@
   "capability_credit_delta": 0,
   "family_credit_delta": 0,
   "execution_authority": false,
-  "promotion_authority": false
+  "promotion_authority": false,
+  "hard_nonclaims": [
+    "NO_CLAIM_THAT_CLAUDE_AGENT_SDK_OR_ANY_OTHER_EXTERNAL_MODEL_SCAFFOLD_COUNTS_AS_BRAIN_TOOL_DISCOVERY_OWNERSHIP",
+    "NO_TOOLATHLON_RESULT_IS_ADMISSIBLE_UNLESS_SOURCE_GATE_V2_AND_SUBSTRATE_MATERIALITY_PASS"
+  ],
+  "cut_minimality": {
+    "status": "NOT_PROVEN__NO_IRREDUCIBILITY_CLAIM",
+    "rule": "THE_THREE_BUCKET_PARTITION_MAY_BE_FURTHER_REDUCED_ONLY_BY_NEW_ADMISSIBLE_EVIDENCE_OR_EXACT_LOGICAL_IMPLICATION"
+  }
 }
