@@ -1,0 +1,35 @@
+name: Verify Brain Root1 acquisition closure controller V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root1_acquisition_closure_controller_v2/**"
+      - ".github/workflows/verify-brain-root1-acquisition-closure-controller-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile copied Brain V2
+        run: |
+          cd capsules/root1_acquisition_closure_controller_v2
+          python -m py_compile canonical/runtime/structural_transfer_v3.py canonical/runtime/root1_acquisition_closure_controller_v2.py
+      - name: Run copied Brain V2 tests
+        run: |
+          cd capsules/root1_acquisition_closure_controller_v2
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_root1_acquisition_closure_controller_v2 -v
+      - name: Run independent adversarial verifier
+        run: |
+          cd capsules/root1_acquisition_closure_controller_v2
+          export PYTHONPATH=.
+          python verify_root1_v2.py

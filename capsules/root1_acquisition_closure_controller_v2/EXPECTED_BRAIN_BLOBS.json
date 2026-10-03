@@ -1,0 +1,14 @@
+{
+  "schema": "BRAIN_ROOT1_ACQUISITION_CLOSURE_CONTROLLER_V2_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1434,
+  "brain_ref": "feature/root1-acquisition-closure-v2-20261004",
+  "brain_head_sha": "d7307ad55f544c5ea2741ec29fa29bb75cfd9911",
+  "exact_brain_blobs": {
+    "canonical/runtime/root1_acquisition_closure_controller_v2.py": "9683d993a99da27dffbb45a30e941e04094e1046",
+    "canonical/tests/test_root1_acquisition_closure_controller_v2.py": "e8eb7585b33717deb56d8e5368f749f6d7d7aad4",
+    "canonical/runtime/structural_transfer_v3.py": "2c5d854ba88493edcd843ae4ac2994e727319fa7",
+    "canonical/governance/ROOT1_ACQUISITION_CLOSURE_CONTROLLER_V2.json": "2ffec0cba9fc634d9b5a0bf896cfcba839aebfc3",
+    "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json": "e94469ffdeb7535f9a921a244e62cde6b84fda5c"
+  }
+}
