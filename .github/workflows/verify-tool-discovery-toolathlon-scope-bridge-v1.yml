@@ -1,0 +1,46 @@
+name: Verify Tool Discovery Toolathlon scope bridge V1
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_toolathlon_scope_bridge_v1/**'
+      - '.github/workflows/verify-tool-discovery-toolathlon-scope-bridge-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain capsule blobs
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:capsules/tool_discovery_toolathlon_scope_bridge_v1/candidate.json)" = "a5445019120433ca445468306b7364b938e80a9a"
+          test "$(git rev-parse HEAD:capsules/tool_discovery_toolathlon_scope_bridge_v1/brain_internal_receipt.json)" = "d4ce5641e564f330bff32f6ffb7f184e87d8495d"
+          test "$(git rev-parse HEAD:capsules/tool_discovery_toolathlon_scope_bridge_v1/brain_v4_receipt.json)" = "10cb18355d247a05177230d0dd345e161e84111d"
+      - name: Fetch frozen Toolathlon commit sparsely
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/toolathlon
+          git clone --filter=blob:none --no-checkout https://github.com/hkust-nlp/Toolathlon.git /tmp/toolathlon
+          git -C /tmp/toolathlon fetch --depth=1 origin 9be8d8fe07a497b18ee61e3f2ae694e9797f39eb
+          git -C /tmp/toolathlon sparse-checkout init --no-cone
+          cat >/tmp/toolathlon/.git/info/sparse-checkout <<'EOF'
+          /README.md
+          /utils/data_structures/task_config.py
+          /scripts/decoupled/container_tool_gateway.py
+          /scripts/decoupled/host_agent_loop_claude_sdk.py
+          /scripts/run_single_decoupled.sh
+          /tasks/finalpool/*/task_config.json
+          EOF
+          git -C /tmp/toolathlon checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/toolathlon rev-parse HEAD)" = "9be8d8fe07a497b18ee61e3f2ae694e9797f39eb"
+          test "$(git -C /tmp/toolathlon rev-parse HEAD:README.md)" = "f31aebd1cf48a460a79cf86b6d8af69250595611"
+          test "$(git -C /tmp/toolathlon rev-parse HEAD:utils/data_structures/task_config.py)" = "189b179a85f7e93ab4f32458958f7b70ea487f7e"
+          test "$(git -C /tmp/toolathlon rev-parse HEAD:scripts/decoupled/container_tool_gateway.py)" = "130628187647fdcacf2d3cf59934a2b310014a81"
+          test "$(git -C /tmp/toolathlon rev-parse HEAD:scripts/decoupled/host_agent_loop_claude_sdk.py)" = "d53fd8dd032328d7e58bddf19736631b54c60ca2"
+          test "$(git -C /tmp/toolathlon rev-parse HEAD:scripts/run_single_decoupled.sh)" = "48cdbdde67929d87862312b398c74a1814a79936"
+      - name: Run independent structural and scope verifier
+        env:
+          TOOLATHLON_DIR: /tmp/toolathlon
+        run: python capsules/tool_discovery_toolathlon_scope_bridge_v1/verify.py
