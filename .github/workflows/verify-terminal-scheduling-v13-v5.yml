@@ -1,0 +1,30 @@
+name: Verify terminal scheduling V13 V5 capsule
+
+on:
+  push:
+    paths:
+      - "capsules/terminal_scheduling_v13/**"
+      - ".github/workflows/verify-terminal-scheduling-v13-v5.yml"
+  pull_request:
+    paths:
+      - "capsules/terminal_scheduling_v13/**"
+      - ".github/workflows/verify-terminal-scheduling-v13-v5.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: capsules/terminal_scheduling_v13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify pinned V13 candidate and dependencies
+        run: python canonical/runtime/verify_terminal_scheduling_v13_candidate_v1.py
+      - name: Run independent candidate assertions
+        run: python -m canonical.tests.test_terminal_scheduling_v13_candidate_v1
