@@ -1,8 +1,8 @@
 {
   "schema": "PROJECT_BRAIN_P1_SHARED_BATCH_FREEZE_PUBLIC_VERIFIER_INPUT_V2",
   "brain_repository": "moxnixmdj/brain",
-  "brain_pull_request": 1135,
-  "brain_head_sha": "2a38d77d7ddf4f20f5480e5299032549254f7d23",
+  "brain_pull_request": 1172,
+  "brain_head_sha": "fca104b0aff2c9220b87dee882532578fe31da64",
   "exact_blobs": {
     "freeze": "6a4b606a759d5479bb5ddbdf29426b1a1808b007",
     "normalizer": "b6ba06fc6a35fa132eb19389ee256e74a63a4849",
@@ -10,5 +10,11 @@
     "source_generator": "0210790c7dd705ef328e1b55d529a30c5c6c3337",
     "candidate_v7": "28940387bd6c11671035ad9201e37bba13fd9bc9",
     "intervention_scorer_v6": "0f41a36e6ad16722ce05b180e036fb921a2ef886"
+  },
+  "reuse_basis": {
+    "prior_origin_pr": 1135,
+    "current_base_successor_pr": 1172,
+    "rule": "REUSE_BY_EXACT_GIT_BLOB_IDENTITY_ONLY__NO_PATH_OR_NAME_BASED_REUSE",
+    "exact_current_core_blobs_confirmed": true
   }
 }
