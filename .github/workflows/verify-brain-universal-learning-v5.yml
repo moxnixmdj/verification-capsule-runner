@@ -16,8 +16,107 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run V5 test contract
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/universal_learning_v5
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact Brain blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Compile V1 through V5 learning stack
+        run: |
+          cd capsules/universal_learning_v5
+          python -m py_compile             canonical/runtime/universal_learning_contract_v1.py             canonical/runtime/universal_active_transfer_learner_v2.py             canonical/runtime/structural_transfer_v3.py             canonical/runtime/decision_discriminator_v3.py             canonical/runtime/goal_dependency_delta_v4.py             canonical/runtime/open_world_hypothesis_guard_v4.py             canonical/runtime/universal_learning_open_world_router_v4.py             canonical/runtime/dependency_superset_delta_v5.py             canonical/runtime/recursive_abstraction_v5.py             canonical/runtime/compounding_probe_rank_v5.py             canonical/runtime/universal_learning_recursive_abstraction_router_v5.py
+      - name: Run V5 unit and binding tests
         run: |
           cd capsules/universal_learning_v5
           export PYTHONPATH=.
-          python -m unittest canonical.tests.test_universal_learning_recursive_abstraction_v5 -v
+          python -m unittest             canonical.tests.test_universal_learning_recursive_abstraction_v5             canonical.tests.test_universal_learning_recursive_abstraction_binding_v5 -v
+      - name: Execute V5 invariant theorem
+        run: |
+          cd capsules/universal_learning_v5
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.universal_learning_recursive_abstraction_router_v5 import prove_v5_invariants
+          out=prove_v5_invariants()
+          assert out["pass"] is True,out
+          assert out["v4_open_world_guard_preserved"] is True,out
+          assert out["dependency_superset_pruning_sound"] is True,out
+          assert out["abstraction_induction_candidate_only"] is True,out
+          assert out["minimax_primary_order_preserved"] is True,out
+          assert out["semantic_success_rate_proved"] is False,out
+          assert out["unknown_domain_acceptance_proved"] is False,out
+          assert out["acceptance_credit_delta"]==0,out
+          assert out["ownership_credit_delta"]==0,out
+          print("V5 invariant theorem: PASS")
+          PY
+      - name: Run independent adversarial V5 boundaries
+        run: |
+          cd capsules/universal_learning_v5
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime import dependency_superset_delta_v5 as d
+          from canonical.runtime import recursive_abstraction_v5 as a
+          from canonical.runtime import compounding_probe_rank_v5 as r
+          from canonical.runtime import open_world_hypothesis_guard_v4 as g
+
+          graph={"goal":["needed"]}
+          base={"receipt_id":"x","independent_verified":True,"exact_byte_bound":True,"conclusion":"success",
+                "environment_id":"e","goal_id":"g","scope_relation":"PROVEN_SUPERSET",
+                "all_true_decision_relevant_dependencies_contained":True,
+                "dependency_graph_sha256":d.dependency_digest(goals=["goal"],dependencies=graph)}
+          bad=dict(base);bad["scope_relation"]="ANALOGOUS"
+          try:
+              d.goal_delta_upper_bound(environment_id="e",goal_id="g",goals=["goal"],verified_facts=[],dependencies=graph,dependency_receipt=bad)
+              raise AssertionError("analogy dependency relation admitted")
+          except d.DependencySupersetDeltaError:
+              pass
+          bad=dict(base);bad["all_true_decision_relevant_dependencies_contained"]=False
+          try:
+              d.goal_delta_upper_bound(environment_id="e",goal_id="g",goals=["goal"],verified_facts=[],dependencies=graph,dependency_receipt=bad)
+              raise AssertionError("unsound dependency superset admitted")
+          except d.DependencySupersetDeltaError:
+              pass
+
+          def sk(sid,sig,verified=True):
+              dg=a.signature_digest(sig)
+              return {"skill_id":sid,"independent_verified":verified,"exact_byte_bound":True,"conclusion":"success","canonical_signature":sig,
+                      "canonicalization_receipt":{"receipt_id":"r-"+sid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success",
+                      "skill_id":sid,"signature_sha256":dg,"mapping_basis":"FORMAL_REDUCTION"}}
+          try:
+              a.induce_candidate([sk("a",["x","y"]),sk("b",["x","z"],False)])
+              raise AssertionError("unverified skill seeded abstraction")
+          except a.RecursiveAbstractionError:
+              pass
+          cand=a.induce_candidate([sk("a",["x","y"]),sk("b",["x","z"])])
+          assert cand["verified_abstraction"] is False and cand["promotion_authorized"] is False,cand
+
+          env,goal="e","g"
+          def safe(aid):
+              return {"receipt_id":"safe-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success",
+                      "safe_under_all_admissible_worlds":True,"environment_id":env,"goal_id":goal,"action_id":aid}
+          hs=[{"id":"h1","plausible":True,"best_action":"a"},{"id":"h2","plausible":True,"best_action":"b"},{"id":"h3","plausible":True,"best_action":"c"}]
+          actions=[
+              {"id":"primary","safety_receipt":safe("primary"),"outcome_by_hypothesis":{"h1":"1","h2":"2","h3":"3"},
+               "time":2,"cost":0,"risk":0,"incremental_spend_usd_ub":0,"future_transfer_lcb":0,"proof_value_lcb":0,"future_burden_ub":10},
+              {"id":"flashy","safety_receipt":safe("flashy"),"outcome_by_hypothesis":{"h1":"1","h2":"1","h3":"2"},
+               "time":1,"cost":0,"risk":0,"incremental_spend_usd_ub":0,"future_transfer_lcb":100,"proof_value_lcb":100,"future_burden_ub":0}]
+          ranked=r.rank(environment_id=env,goal_id=goal,hypotheses=hs,actions=actions)
+          assert ranked["ranked"][0]["id"]=="primary",ranked
+
+          paid={"id":"paid","safety_receipt":safe("paid"),"outcome_by_hypothesis":{"h1":"1","h2":"2","h3":"3"},
+                "time":1,"cost":0,"risk":0,"incremental_spend_usd_ub":"0.01","future_transfer_lcb":1,"proof_value_lcb":1,"future_burden_ub":0}
+          paid_out=r.rank(environment_id=env,goal_id=goal,hypotheses=hs,actions=[paid])
+          assert paid_out["ranked"]==[],paid_out
+
+          false_consensus=g.decision_sufficient(environment_id=env,goal_id=goal,
+              hypotheses=[{"id":"h","plausible":True,"best_action":"a"}],
+              coverage_receipt=None,residual_action_receipt=None)
+          assert false_consensus["sufficient"] is False,false_consensus
+          print("independent adversarial V5 boundaries: PASS")
+          PY
