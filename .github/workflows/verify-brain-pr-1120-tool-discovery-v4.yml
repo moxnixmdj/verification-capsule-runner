@@ -1,0 +1,67 @@
+name: Verify Brain PR 1120 Tool Discovery V4 soundness
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1120_tool_discovery_v4_soundness/**"
+      - ".github/workflows/verify-brain-pr-1120-tool-discovery-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain PR 1120 blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1120_tool_discovery_v4_soundness
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "56d9553a2ddb37fd513123a369bffa0ff8a87837"
+          test "$(git hash-object canonical/runtime/tool_discovery_v4_soundness_repair_v1.py)" = "6b135d2e249f220fa8afcc6052b1530ae039b978"
+          test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v4.py)" = "2785466b09f3f0f587fe6170d4322fe4281b7289"
+          test "$(git hash-object canonical/tests/test_tool_discovery_v4_soundness_repair_v1.py)" = "bdffaa9ff7acd19822b4eb5b3550ae6b25d5113d"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "f5ade295e5f9e82d6be5cfec99ea6b798c753185"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V3_REFINEMENT_FALSIFICATION_AND_V4_REPAIR_V1.json)" = "c65914fac88eb8b91ddb60c04e9ecb2aa365ec2b"
+          test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_V4_SOUNDNESS_REPAIR_V1.json)" = "ebea7c0473823d090aebd235e21093d838e43c5c"
+      - name: Run adversarial V3 counterexample and V4 tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1120_tool_discovery_v4_soundness
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_candidate_v4 -v
+          python -m unittest canonical.tests.test_tool_discovery_v4_soundness_repair_v1 -v
+      - name: Execute soundness repair verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1120_tool_discovery_v4_soundness
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_v4_soundness_repair_v1 > verdict.json
+      - name: Enforce fail-closed truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1120_tool_discovery_v4_soundness
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json",encoding="utf-8"))
+          assert v["status"].startswith("PASS__V3_CONDITIONAL_REFINEMENT_FALSIFIED"),v
+          assert v["v3_falsified"] is True,v
+          assert v["prior_residual_reduction_to_interface_instance_only_sound"] is False,v
+          assert v["counterexample"]["v3_action"]=={"action":"SELECT","tool_id":"EXPENSIVE"},v
+          assert v["counterexample"]["v4_action_before_discovery"]=={"action":"DISCOVER","source_id":"S0","query":"CAP_A"},v
+          assert v["counterexample"]["v4_action_after_complete_discovery"]=={"action":"SELECT","tool_id":"CHEAP"},v
+          assert v["v4_safe_probe_gate_check"]=={"action":"SELECT","tool_id":"SAFE"},v
+          assert v["v4_repair_checks_pass"] is True,v
+          assert v["universal_target_proved"] is False,v
+          assert v["new_reality_units_consumed"]==0 and v["terminal_results_replayed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Brain PR 1120 Tool Discovery V4 soundness: PASS")
+          PY
