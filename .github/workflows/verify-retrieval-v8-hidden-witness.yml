@@ -1,0 +1,24 @@
+name: Verify Retrieval V8 hidden witness arena
+on:
+  push:
+    branches:
+      - verify/retrieval-v8-hidden-witness-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V8 blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_hidden_witness_arena_v1.py)" = "7cf00ad65bc160f4b3d1e7d90233c52f496a1bd1"
+          test "$(git hash-object canonical/runtime/retrieval_empirical_calibrator_v1.py)" = "598e865415e1651fdd1b14398d75153cd0f74bbf"
+          test "$(git hash-object canonical/tests/test_retrieval_hidden_witness_arena_v1.py)" = "4d543fb4e54a23ab1979c774d938d7fa551e7a98"
+          test "$(git hash-object canonical/tests/test_retrieval_empirical_calibrator_v1.py)" = "0b903e7e4b9f58d5d4a03960c40675f6e8d13932"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_hidden_witness_arena_v1.py
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_empirical_calibrator_v1.py
+      - run: PYTHONPATH=. python canonical/runtime/retrieval_hidden_witness_arena_v1.py
