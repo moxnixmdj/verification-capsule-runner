@@ -1,0 +1,45 @@
+name: Verify Brain PR 1115 tool-discovery universal V4
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1115_tool_discovery_universal_v4/**"
+      - ".github/workflows/verify-brain-pr-1115-tool-discovery-universal-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run adversarial universal-scope tests
+        run: |
+          cd capsules/brain_pr_1115_tool_discovery_universal_v4
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_dynamic_universal_scope_certificate_v1 -v
+      - name: Execute universal scope certificate
+        run: |
+          cd capsules/brain_pr_1115_tool_discovery_universal_v4
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_dynamic_universal_scope_certificate_v1 > verdict.json
+      - name: Enforce zero-credit candidate verdict
+        run: |
+          cd capsules/brain_pr_1115_tool_discovery_universal_v4
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["source_blob_drift"]==[],v
+          assert v["universal_scope_proved"] is True,v
+          assert v["scope_atom_satisfied_candidate"] is True,v
+          assert v["basis_kind"]=="UNIVERSAL_FORMAL_SCOPE_PROOF",v
+          assert v["target_predicate"]=="TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",v
+          assert v["uses_empirical_generalization"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("tool-discovery universal V4 certificate: PASS")
+          PY
