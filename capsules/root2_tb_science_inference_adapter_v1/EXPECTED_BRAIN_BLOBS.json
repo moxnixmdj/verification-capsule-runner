@@ -1,0 +1,17 @@
+{
+  "schema": "BRAIN_ROOT2_TB_SCIENCE_INFERENCE_ADAPTER_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1430,
+  "brain_ref": "repair/root2-tb-science-inference-adapter-20261004-sol",
+  "brain_head_sha": "cbf168eeb99c554793dc7ffc76e4c15726a97fc5",
+  "exact_brain_blobs": {
+    "canonical/runtime/root2_tb_science_inference_adapter_v1.py": "a079797d85582eb354400af3a4c235f9ddd62d5b",
+    "canonical/tests/test_root2_tb_science_inference_adapter_v1.py": "12d9ea59ca398ee2ef010ef9c93ad07278482435",
+    "canonical/governance/ROOT2_EXTERNAL_TASK_ADAPTER_REGISTRY_V1.json": "8b1d9157fbb78085e1295fb99c9a4e30ff8397ce",
+    "canonical/governance/ROOT2_TB_SCIENCE_INFERENCE_ADAPTER_CANDIDATE_V1.json": "ef8a564e345ea8e8c83a9d180d5440d3489d4253",
+    "canonical/runtime/harbor_science_agent_v1.py": "5557efd21f1a433ad16766def3775a79c459784b",
+    "canonical/runtime/harbor_science_planner_v1.py": "fe7c0ce885197217774638df382aeb6f68ff38dd",
+    "canonical/runtime/harbor_command_policy.py": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "canonical/runtime/harbor_environment_transport.py": "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+  }
+}
