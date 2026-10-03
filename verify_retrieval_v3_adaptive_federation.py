@@ -34,7 +34,7 @@ print(cp.stderr, file=sys.stderr)
 assert cp.returncode == 0, cp.returncode
 
 bp = subprocess.run(
-    [sys.executable, "canonical/runtime/retrieval_adversarial_recall_benchmark_v1.py"],
+    [sys.executable, "-m", "canonical.runtime.retrieval_adversarial_recall_benchmark_v1"],
     cwd=ROOT,
     text=True,
     capture_output=True,
