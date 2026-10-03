@@ -71,7 +71,7 @@ jobs:
           import json, os
           x=json.load(open("P1_PUBLIC_RECOVERY_PREFLIGHT.json"))
           assert x["pass"] is True, x
-          assert x["fresh_reality_units_consumed"]==0, x
+          assert x["new_reality_units_consumed"]==0, x
           assert x["execution_authority"] is False, x
           assert x["promotion_authority"] is False, x
           receipt={
