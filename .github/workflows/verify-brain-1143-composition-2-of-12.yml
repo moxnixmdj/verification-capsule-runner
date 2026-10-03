@@ -1,0 +1,19 @@
+name: Verify Brain 1143 current-source composition 2-of-12
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_1143_composition_2_of_12/**"
+      - ".github/workflows/verify-brain-1143-composition-2-of-12.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Recompute exact two-receipt composition slice
+        run: python capsules/brain_1143_composition_2_of_12/verify.py
