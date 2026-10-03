@@ -1,0 +1,23 @@
+name: Verify Brain Root1 V2 final reconciliation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root1_v2_final_reconciliation/**"
+      - ".github/workflows/verify-brain-root1-v2-final-reconciliation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify final Root1 authority reconciliation
+        run: python capsules/root1_v2_final_reconciliation/verify_final.py
