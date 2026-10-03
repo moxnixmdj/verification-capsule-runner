@@ -1,0 +1,22 @@
+name: Verify global Retrieval V7 mechanical entrypoint
+on:
+  push:
+    branches:
+      - verify/global-retrieval-v7-entrypoint-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V7 blobs
+        run: |
+          test "$(git hash-object canonical/runtime/global_retrieval_authority_guard_v1.py)" = "7b4cfd559d68c272f241cd2a6354dcf22f1b6957"
+          test "$(git hash-object canonical/runtime/global_retrieval_entrypoint_v1.py)" = "c206fa36942fd178953434e80ad7ccf51f815e09"
+          test "$(git hash-object canonical/tests/test_global_retrieval_authority_guard_v1.py)" = "e889273c506fcbc33d81bda5e51fe97147156a79"
+      - run: PYTHONPATH=. python canonical/tests/test_global_retrieval_authority_guard_v1.py
+      - run: PYTHONPATH=. python canonical/runtime/global_retrieval_authority_guard_v1.py
