@@ -1,0 +1,201 @@
+name: Verify TB-Science Opus 5.5 snapshot identity
+on:
+  push:
+    branches: ["verify/tb-science-opus55-snapshot-identity-20261003-sol"]
+    paths:
+      - "capsules/tb_science_opus55_snapshot_identity_v1/**"
+      - ".github/workflows/verify-tb-science-opus55-snapshot-identity.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_opus55_snapshot_identity_v1/**"
+      - ".github/workflows/verify-tb-science-opus55-snapshot-identity.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain candidate byte and fail-closed contract
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_opus55_snapshot_identity_v1
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_CANDIDATE_V1.json")" = "29c1c629cd9fd93fd711f61c03a412e43ac923ca"
+          python - <<'PY'
+          import json
+          p="capsules/tb_science_opus55_snapshot_identity_v1/canonical/governance/TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_CANDIDATE_V1.json"
+          x=json.load(open(p))
+          assert x["status"].startswith("CANDIDATE__")
+          assert x["execution_authority"] is False
+          assert x["promotion_authority"] is False
+          assert x["capability_credit_delta"]==0
+          assert x["family_credit_delta"]==0
+          assert x["frozen_brain_snapshot"]["slots"]==210
+          assert x["consequence_if_independently_verified"]["required_successes"]==133
+          assert x["consequence_if_independently_verified"]["fail_lock_failures"]==78
+          PY
+
+      - name: Verify v0.1.0 is the latest published immutable release
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee OFFICIAL_RELEASE_IDENTITY.json
+          import json, urllib.request
+          H={"Accept":"application/vnd.github+json","User-Agent":"ProjectBrainIndependentVerifier/1.0"}
+          def get(url):
+              r=urllib.request.Request(url,headers=H)
+              with urllib.request.urlopen(r,timeout=30) as f:
+                  return json.load(f)
+          latest=get("https://api.github.com/repos/harbor-framework/terminal-bench-science/releases/latest")
+          releases=get("https://api.github.com/repos/harbor-framework/terminal-bench-science/releases?per_page=100")
+          assert latest["tag_name"]=="v0.1.0", latest["tag_name"]
+          published_v01=[r["tag_name"] for r in releases if not r.get("draft") and r["tag_name"].startswith("v0.1.")]
+          assert published_v01==["v0.1.0"], published_v01
+          ref=get("https://api.github.com/repos/harbor-framework/terminal-bench-science/git/ref/tags/v0.1.0")
+          obj=ref["object"]
+          if obj["type"]=="tag":
+              obj=get(obj["url"])["object"]
+          assert obj["type"]=="commit", obj
+          commit_sha=obj["sha"]
+          assert commit_sha.startswith("f81afac"), commit_sha
+          out={
+            "latest_tag":latest["tag_name"],
+            "release_published_at":latest["published_at"],
+            "release_commit_sha":commit_sha,
+            "published_v0_1_tags":published_v01,
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+          curl -L --fail --silent --show-error --retry 3             -A 'ProjectBrainIndependentVerifier/1.0'             'https://raw.githubusercontent.com/harbor-framework/terminal-bench-science/v0.1.0/release-notes-v0.1.0.md'             -o V0_1_0_RELEASE_NOTES.md
+          grep -Fq '# Terminal-Bench-Science v0.1.0' V0_1_0_RELEASE_NOTES.md
+          grep -Fq 'Initial release containing 70 expert-curated research workflow tasks' V0_1_0_RELEASE_NOTES.md
+          grep -Fq '## Tasks (70)' V0_1_0_RELEASE_NOTES.md
+
+      - name: Verify release policy forbids silent scorer mutation
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error --retry 3             -A 'ProjectBrainIndependentVerifier/1.0'             'https://raw.githubusercontent.com/harbor-framework/terminal-bench-science/main/RELEASING.md'             -o RELEASING.md
+          grep -Fq 'Terminal-Bench-Science releases are immutable benchmark snapshots.' RELEASING.md
+          grep -Fq 'Freeze the task set and review all score-affecting changes since the previous release.' RELEASING.md
+          grep -Fq 'If a published release needs correction, create a new patch release instead of moving or replacing its tag.' RELEASING.md
+
+      - name: Verify current owner-facing leaderboard comparator row and release population
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error --retry 3             -A 'Mozilla/5.0 ProjectBrainIndependentVerifier/1.0'             'https://snorkel.ai/leaderboard/terminal-bench-science/'             -o CURRENT_OWNER_LEADERBOARD.html
+          python - <<'PY'
+          from pathlib import Path
+          h=Path("CURRENT_OWNER_LEADERBOARD.html").read_text("utf-8","replace")
+          required=[
+            "Terminal-Bench-Science",
+            "tasks in the v0.1 release",
+            "Opus 5.5",
+            "Claude Code",
+            "63.3",
+            "68.1",
+          ]
+          missing=[x for x in required if x not in h]
+          assert not missing, ("OWNER_LEADERBOARD_FACTS_MISSING",missing)
+          PY
+
+      - name: Verify official announcement binds v0.1 to 70 tasks and 3 trials
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error --retry 3             -A 'Mozilla/5.0 ProjectBrainIndependentVerifier/1.0'             'https://www.terminal-bench-science.ai/announcement'             -o OFFICIAL_ANNOUNCEMENT.html
+          python - <<'PY'
+          from pathlib import Path
+          h=Path("OFFICIAL_ANNOUNCEMENT.html").read_text("utf-8","replace")
+          required=[
+            "first release includes",
+            "70 tasks",
+            "three independent trials per task across all 70 tasks",
+            "every release is tagged",
+          ]
+          missing=[x for x in required if x not in h]
+          assert not missing, ("ANNOUNCEMENT_FACTS_MISSING",missing)
+          PY
+
+      - name: Verify exact Harbor v0.1.0 package content hash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          if harbor version show terminal-bench-science/terminal-bench-science@0.1.0 --json > HARBOR_V0_1_0_METADATA.json 2>HARBOR_V0_1_0_METADATA.err; then
+            :
+          elif harbor version show terminal-bench-science/terminal-bench-science@v0.1.0 --json > HARBOR_V0_1_0_METADATA.json 2>HARBOR_V0_1_0_METADATA.err; then
+            :
+          else
+            cat HARBOR_V0_1_0_METADATA.err
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          x=json.load(open("HARBOR_V0_1_0_METADATA.json"))
+          assert x["package"]=="terminal-bench-science/terminal-bench-science", x
+          assert x["type"]=="dataset", x
+          assert x["content_hash"]=="sha256:91531bf50016a7c64f6cc60794a17c64c6b2c14858a8ae0de39ca16f2abd611a", x
+          PY
+
+      - name: Compile snapshot identity verdict
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_VERDICT.json
+          import json, math
+          rel=json.load(open("OFFICIAL_RELEASE_IDENTITY.json"))
+          meta=json.load(open("HARBOR_V0_1_0_METADATA.json"))
+          score=63.3
+          slots=210
+          required=math.ceil(score*slots/100)
+          fail_lock=slots-required+1
+          assert rel["latest_tag"]=="v0.1.0"
+          assert rel["release_commit_sha"].startswith("f81afac")
+          assert rel["published_v0_1_tags"]==["v0.1.0"]
+          assert meta["content_hash"]=="sha256:91531bf50016a7c64f6cc60794a17c64c6b2c14858a8ae0de39ca16f2abd611a"
+          assert required==133 and fail_lock==78
+          verdict={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__CURRENT_OPUS55_63_3_BOUND_TO_IMMUTABLE_V0_1_0_TASK_SCORER_RELEASE_SNAPSHOT__ZERO_CREDIT",
+            "release_tag":"v0.1.0",
+            "release_commit_sha":rel["release_commit_sha"],
+            "harbor_content_hash":meta["content_hash"],
+            "task_count":70,
+            "trials_per_task":3,
+            "slots":210,
+            "current_opus55_percent":63.3,
+            "required_successes":133,
+            "fail_lock_failures":78,
+            "already_finalized_failures":3,
+            "remaining_failures_before_fail_lock":75,
+            "snapshot_identity_proved":True,
+            "harness_identity_claimed":False,
+            "execution_authority":False,
+            "promotion_authority":False,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "incremental_spend_usd":0,
+          }
+          print(json.dumps(verdict,sort_keys=True))
+          PY
+
+      - name: Preserve independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-opus55-snapshot-identity-v1
+          path: |
+            OFFICIAL_RELEASE_IDENTITY.json
+            V0_1_0_RELEASE_NOTES.md
+            RELEASING.md
+            CURRENT_OWNER_LEADERBOARD.html
+            OFFICIAL_ANNOUNCEMENT.html
+            HARBOR_V0_1_0_METADATA.json
+            HARBOR_V0_1_0_METADATA.err
+            TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_VERDICT.json
+          if-no-files-found: warn
