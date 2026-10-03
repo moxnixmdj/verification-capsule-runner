@@ -15,19 +15,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact V3 lattice blobs
+      - name: Verify exact V4 deep-window blobs
         run: |
-          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v3.py)" = "b6f8d479b5028761bf993d1db23a58e5a4e25196"
-          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v3.py)" = "147438e3c3ef91262c2bfbcd6e2712620315285f"
-      - name: Deterministic V3 tests
-        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v3.py
-      - name: Execute residual multi-query live arena
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v4.py)" = "ac8141f798b18e318f22261ecb3096de4ac8d5d4"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v4.py)" = "fdd6f10f15d7c6fe1ac70bed3c178c5ddeb2a475"
+      - name: Deterministic V4 tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v4.py
+      - name: Execute residual deep-window live arena
         run: |
-          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v3.py | tee live_provider_v3_output.json
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v4.py | tee live_provider_v4_output.json
           python - <<'PY'
           import json
-          d=json.load(open("live_provider_v3_output.json"))
-          assert d["usable_case_count"] >= 4, d
+          d=json.load(open("live_provider_v4_output.json"))
+          assert d["successful_case_count"] >= 4, d
           assert d["open_world_completeness_claim"] is False
-          print("LIVE_PROVIDER_V3_SUMMARY", json.dumps(d,sort_keys=True))
+          print("LIVE_PROVIDER_V4_SUMMARY", json.dumps(d,sort_keys=True))
           PY
