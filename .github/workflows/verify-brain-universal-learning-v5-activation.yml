@@ -1,0 +1,94 @@
+name: Verify Brain Universal Learning V5 Activation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v5_activation/**"
+      - ".github/workflows/verify-brain-universal-learning-v5-activation.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain activation blobs
+        run: |
+          cd capsules/universal_learning_v5_activation
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              raw=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact activation blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Verify V5 activation authority chain and frozen leaves
+        run: |
+          cd capsules/universal_learning_v5_activation
+          python - <<'PY'
+          import hashlib,json,pathlib
+          def load(p):
+              return json.loads(pathlib.Path(p).read_text(encoding="utf-8"))
+          def blob(p):
+              raw=pathlib.Path(p).read_bytes()
+              return hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+
+          activation_path="canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_ACTIVATION_V1.json"
+          residual_path="canonical/governance/UNKNOWN_DOMAIN_V5_STRUCTURAL_RESIDUAL_REDUCTION_V1.json"
+          v5_path="canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5.json"
+          v5_receipt_path="canonical/verification/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json"
+          protocol_path="canonical/governance/UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1.json"
+          v4_path="canonical/governance/UNIVERSAL_LEARNING_OPEN_WORLD_ROUTER_V4.json"
+          v4_receipt_path="canonical/verification/UNIVERSAL_LEARNING_OPEN_WORLD_V4_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json"
+
+          a=load(activation_path); r=load(residual_path); p=load(protocol_path)
+          v5=load(v5_path); vr=load(v5_receipt_path); v4=load(v4_path); v4r=load(v4_receipt_path)
+
+          assert a["v5_candidate"]["git_blob_sha"]==blob(v5_path)
+          assert a["v5_independent_verification"]["git_blob_sha"]==blob(v5_receipt_path)
+          assert a["frozen_protocol"]["git_blob_sha"]==blob(protocol_path)
+          assert a["verified_v4_base"]["governance_git_blob_sha"]==blob(v4_path)
+          assert a["verified_v4_base"]["verification_git_blob_sha"]==blob(v4_receipt_path)
+
+          assert vr["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS__"),vr["status"]
+          assert vr["independent_runner"]["hardened_green_phase"]["conclusion"]=="success"
+          assert vr["verified"]["v4_open_world_false_consensus_guard_preserved"] is True
+          assert vr["verified"]["v4_current_value_density_preserved_before_v5_compounding_tiebreak"] is True
+          assert vr["verified"]["unknown_domain_acceptance_proved"] is False
+          assert vr["acceptance_credit_delta"]==0 and vr["ownership_credit_delta"]==0
+
+          assert a["preserved_residual"]["leaves_open"]==2
+          assert a["preserved_residual"]["leaves_closed_by_activation"]==0
+          assert a["preserved_residual"]["acceptance_proved"] is False
+          for k in ("acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+              assert a[k]==0,(k,a[k])
+          assert a["fresh_reality_authority"] is False
+          assert a["promotion_authority"] is False
+
+          assert r["operative_v5_activation"]["git_blob_sha"]==blob(activation_path)
+          assert r["summary"]["leaves_before"]==2
+          assert r["summary"]["leaves_after"]==2
+          assert r["summary"]["leaves_closed"]==0
+          assert r["summary"]["direct_reality_requirement_eliminated"] is False
+          assert r["summary"]["acceptance_truth_changed"] is False
+          for k in ("acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+              assert r[k]==0,(k,r[k])
+
+          protocol_by_id={leaf["id"]:leaf for leaf in p["leaves"]}
+          residual_by_id={leaf["leaf_id"]:leaf for leaf in r["leaf_reductions"]}
+          assert set(protocol_by_id)==set(residual_by_id)
+          for leaf_id,leaf in protocol_by_id.items():
+              rr=residual_by_id[leaf_id]
+              assert rr["closure"] is False,leaf_id
+              assert rr["frozen_acceptance_preserved_exact"]==leaf["acceptance"],leaf_id
+
+          assert v5["hard_nonclaims"]
+          assert v4r["verified"]["open_hypothesis_consensus_does_not_stop_learning"] is True
+          print("V5 activation and frozen residual preservation: PASS")
+          PY
