@@ -16,3 +16,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: cd verification/opus55_acceptance_calibration && python -m unittest -v test_acceptance_calibration.py
+# trigger exact current Recovery promotion verification
