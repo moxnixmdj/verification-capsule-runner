@@ -1,0 +1,16 @@
+name: Verify Retrieval V6 current authority
+on:
+  push:
+    branches:
+      - verify/retrieval-v6-current-authority-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_retrieval_v6_current_authority.py
