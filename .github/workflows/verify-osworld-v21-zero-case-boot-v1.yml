@@ -1,0 +1,29 @@
+name: Verify OSWorld v2.1 zero-case boot v1
+
+on:
+  push:
+    paths:
+      - "scripts/osworld_v21_zero_case_boot_v1.sh"
+      - ".github/workflows/verify-osworld-v21-zero-case-boot-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  zero-case-boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run zero-case boot
+        run: bash scripts/osworld_v21_zero_case_boot_v1.sh
+      - name: Commit result
+        if: always()
+        run: |
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add results/osworld_v21_zero_case_boot_v1.json || true
+          git commit -m "Record OSWorld v2.1 zero-case boot result" || true
+          git pull --rebase origin main
+          git push origin HEAD:main
