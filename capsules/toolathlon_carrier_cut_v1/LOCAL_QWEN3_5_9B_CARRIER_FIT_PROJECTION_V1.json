@@ -1,0 +1,9 @@
+{
+  "schema":"PROJECT_BRAIN_FRONTIER_ROUTE_FALSIFICATION_V1",
+  "evidence_id":"LOCAL_QWEN3_5_9B_BIOPHYSICS_TASK_B_FALSIFICATION_20260929_V1",
+  "status":"REAL_TASK_NOT_COMPLETED__SUPPLIER_AND_RESEARCH_ACTIONS_WORKED__RECURRENT_TERMINATION_COMPOSITION_RESIDUAL_LOCALIZED",
+  "execution":{"repository":"moxnixmdj/verification-capsule-runner","workflow_run_id":36627371993,"workflow_job_id":109607708784,"incremental_spend_usd":0},
+  "exact_route":{"inference_runtime":"llama.cpp","llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c","base_model":"Qwen/Qwen3.5-9B","quantization_repo":"TheStageAI/Qwen3.5-9B-GGUF","quantization_file":"Qwen3.5-9B-M-TS-Q4_K_M.gguf","quantization_bytes":5060174144,"quantization_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c","hosted_frontier_model_in_execution_path":false},
+  "verified_passes":{"llama_cpp_build_and_commit_pin":true,"model_download_bytes_and_sha256":true,"model_server_health":true,"local_external_planner_bridge":true,"exact_local_model_identity_on_all_planner_responses":true},
+  "terminal_result":{"runtime_state":"BLOCKED","first_causal_runtime_blocker":"GOAL_MAX_CYCLES_WITHOUT_FINISH","runtime_completed":false,"real_task_completed":false,"frontier_capability_promoted":false}
+}
