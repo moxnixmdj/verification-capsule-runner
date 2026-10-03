@@ -15,6 +15,7 @@
     "canonical/runtime/adaptive_experiment_planner_v5.py": "8657cb563f9f4db00f8dfbe0bca1a7af7fb354c8",
     "canonical/runtime/universal_learning_adaptive_router_v5.py": "ea226fd2c226531cbc9d1685d475cacf1831022b",
     "canonical/tests/test_universal_learning_adaptive_router_v5.py": "7273bd7ad4826837921ef9ddeb1de1280463011d",
-    "canonical/governance/UNIVERSAL_LEARNING_ADAPTIVE_ROUTER_V5.json": "0ea4c0d7d257218b80af375833ffc81ec226fdcb"
+    "canonical/governance/UNIVERSAL_LEARNING_ADAPTIVE_ROUTER_V5.json": "0ea4c0d7d257218b80af375833ffc81ec226fdcb",
+    "canonical/runtime/decision_discriminator_v3.py": "3ec9e43a7bbe40a264fa3560a93039461941dbee"
   }
 }
