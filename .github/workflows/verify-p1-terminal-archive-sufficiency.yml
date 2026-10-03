@@ -1,0 +1,51 @@
+name: Verify Brain P1 Terminal V3 archive sufficiency
+
+on:
+  pull_request:
+    paths:
+      - "canonical/runtime/p1_terminal_archive_sufficiency_audit_v1.py"
+      - "canonical/tests/test_p1_terminal_archive_sufficiency_audit_v1.py"
+      - "canonical/governance/P1_TERMINAL_ARCHIVE_SUFFICIENCY_AUDIT_ACTIVATION_V1.json"
+      - ".github/workflows/verify-p1-terminal-archive-sufficiency.yml"
+      - "verification-trigger/p1-terminal-archive-sufficiency.txt"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run fail-closed audit tests
+        run: python -m unittest canonical.tests.test_p1_terminal_archive_sufficiency_audit_v1 -v
+      - name: Download exact immutable Terminal V3 artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p terminal_v3_archive
+          gh run download 36977803089 -n terminal-v3-wave-receipts -D terminal_v3_archive
+          test "$(sha256sum terminal_v3_archive/full_result.json | awk '{print $1}')" = "f4bec690aa0580cb532dbfd5985705bae8d153c9df31ffdf460b02f8b152e0f2"
+      - name: Audit exact archive
+        run: python -m canonical.runtime.p1_terminal_archive_sufficiency_audit_v1 --full-result terminal_v3_archive/full_result.json --out p1_archive_sufficiency_result.json
+      - name: Verify admissibility result
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("p1_archive_sufficiency_result.json", encoding="utf-8"))
+          assert x["pass"] is True, x
+          assert x["archive_can_discharge_two_residuals"] is False
+          assert x["new_observation_irreducible_for_two_residuals"] is True
+          assert x["terminal_v3_replay_authorized"] is False
+          assert x["fresh_observation_may_target_only"] == [
+              "P1_EXPLICIT_SCOPE_FAILURE_CLASS",
+              "P1_HETEROGENEOUS_INTERVENTION_RESCUE",
+          ]
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-terminal-archive-sufficiency-result
+          path: p1_archive_sufficiency_result.json
