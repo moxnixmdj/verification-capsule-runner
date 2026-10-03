@@ -1,0 +1,40 @@
+name: Verify scheduling V11 17 requirements
+
+on:
+  push:
+    branches: ["verify/scheduling-v11-17-requirements-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-scheduling-v11-17-requirements.yml"
+      - "capsules/scheduling_v11_17_requirements/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-scheduling-v11-17-requirements.yml"
+      - "capsules/scheduling_v11_17_requirements/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact V11 scheduling candidate
+        working-directory: capsules/scheduling_v11_17_requirements
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/TERMINAL_SCHEDULING_V11_ACTIVE_AUTHORITY_CANDIDATE_V1.json)" = "b2eae27ce999ce62105c9cbf7ed95048eb1fcac0"
+          test "$(git hash-object canonical/runtime/verify_terminal_scheduling_v11_candidate_v1.py)" = "ef449338b93008804eabd1e8505aead5f93e6a05"
+          PYTHONPATH=. python -m canonical.runtime.verify_terminal_scheduling_v11_candidate_v1 > /tmp/verdict.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/verdict.json"))
+          assert x["pass"] is True, x
+          assert x["active_zero_reality_requirements"] == 17
+          assert x["unresolved_predicates"] == 27
+          assert x["opus55_acceptance"] == "4/19_PASS__15/19_OPEN"
+          assert x["fresh_reality_authority"] is False
+          print("SCHEDULING_V11_17_REQUIREMENTS_PASS")
+          PY
