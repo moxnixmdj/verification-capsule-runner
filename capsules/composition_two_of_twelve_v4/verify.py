@@ -17,6 +17,8 @@ assert actual==expected["exact_brain_blobs"],(actual,expected["exact_brain_blobs
 inp=json.loads((C/"governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4.json").read_text(encoding="utf-8"))
 dv=json.loads((C/"verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text(encoding="utf-8"))
 mv=json.loads((C/"verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text(encoding="utf-8"))
+canonical_out_path=C/"verification/COMPOSITION_COMPONENT_PROOF_SLICE_20261003_V4.json"
+canonical_out=json.loads(canonical_out_path.read_text(encoding="utf-8"))
 
 assert dv["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),dv
 assert dv["public_runner"]["conclusion"]=="success",dv
@@ -30,16 +32,19 @@ assert mv["verified_component_receipt"]["verified"] is True
 assert mv["verified_component_receipt"]["independent"] is True
 assert mv["verified_component_receipt"]["component_id"]=="memory"
 
-rv=inp["receipt_verification"]
-assert rv["delegation"]["git_blob_sha"]==actual["canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"]
-assert rv["memory"]["git_blob_sha"]==actual["canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"]
+assert set(inp["receipt_verifications"])=={
+ "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+ "canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+}
 assert inp["receipts"]==[mv["verified_component_receipt"],dv["verified_component_receipt"]],inp["receipts"]
 
 spec=importlib.util.spec_from_file_location("slicer",C/"runtime/composition_component_proof_slicer_v1.py")
 mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 out=mod.evaluate(inp)
-(C/"verification").mkdir(parents=True,exist_ok=True)
-(ROOT/"composition-component-proof-slice-v4.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+generated_bytes=(json.dumps(out,indent=2)+"\n").encode()
+assert out==canonical_out,(out,canonical_out)
+assert generated_bytes==canonical_out_path.read_bytes(),"CANONICAL_V4_OUTPUT_NOT_EXACT_REPRODUCTION"
+(ROOT/"composition-component-proof-slice-v4.json").write_bytes(generated_bytes)
 
 proved=[x["component_id"] for x in out["interfaces"] if x["state"]=="SCOPED_PROVED"]
 opened=[x["component_id"] for x in out["interfaces"] if x["state"]=="OPEN"]
