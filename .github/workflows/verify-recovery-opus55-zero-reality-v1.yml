@@ -53,6 +53,8 @@ jobs:
           assert o["stronger_proof_basis"]["scope_complete"] is True,o
           assert o["stronger_proof_basis"]["objective_ceiling_or_floor"] is True,o
           assert o["stronger_proof_basis"]["historical_narrow_terminal_run_used_as_proof"] is False,o
+          assert o["stronger_proof_basis"]["historical_relation_observed_bound_used_as_proof"] is False,o
+          assert o["stronger_proof_basis"]["universal_achieved_bounds"]=={"causal_localization":1,"terminal_recovery":1,"critical_fail_closed_misses":0},o
           assert o["stronger_proof_basis"]["quarantined_public_recovery_run_used_as_proof"] is False,o
           assert o["promotion_authority"] is False,o
           print("RECOVERY_STRICT_ELIGIBILITY_PASS")
