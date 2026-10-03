@@ -1,0 +1,60 @@
+name: Verify TB-Science V4 closed dependencies
+
+on:
+  push:
+    branches: ["verify/science-v4-closed-dependencies-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-v4-closed-dependencies.yml"
+      - "capsules/tb_science_v4_closed/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-tb-science-v4-closed-dependencies.yml"
+      - "capsules/tb_science_v4_closed/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact bytes and closed dependency semantics
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/tb_science_v4_closed/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json)" = "dba3ff2c53765f8423d4161e079b663c76959fc1"
+          test "$(git hash-object capsules/tb_science_v4_closed/TB_SCIENCE_CURRENT_TARGET_EXECUTION_OVERLAY_V3.json)" = "7081b77ba6c16c7c10050e1608e212cba8691be3"
+          test "$(git hash-object capsules/tb_science_v4_closed/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "7497bc7249431a832a0e938fcf6d575bfbfaf5f3"
+          test "$(git hash-object capsules/tb_science_v4_closed/TB_SCIENCE_CANARY_V3_FINAL_ZERO_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "9d09ce0f46d48077a27dbb33082ad6200d95a44f"
+          test "$(git hash-object capsules/tb_science_v4_closed/TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "3bff4c8ec68bba45d0538812101fbbfed7b9b2ec"
+          python - <<'PY'
+          import json
+          C=json.load(open("capsules/tb_science_v4_closed/TB_SCIENCE_ONE_SLOT_CANARY_CANDIDATE_V4.json"))
+          O=json.load(open("capsules/tb_science_v4_closed/TB_SCIENCE_CURRENT_TARGET_EXECUTION_OVERLAY_V3.json"))
+          P=json.load(open("capsules/tb_science_v4_closed/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"))
+          Z=json.load(open("capsules/tb_science_v4_closed/TB_SCIENCE_CANARY_V3_FINAL_ZERO_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"))
+          M=json.load(open("capsules/tb_science_v4_closed/TB_SCIENCE_OPUS55_SNAPSHOT_IDENTITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"))
+          assert C["authority_basis"]["current_overlay_path"]=="canonical/governance/TB_SCIENCE_CURRENT_TARGET_EXECUTION_OVERLAY_V3.json"
+          assert O["schema"]=="PROJECT_BRAIN_TB_SCIENCE_CURRENT_TARGET_EXECUTION_OVERLAY_V3"
+          assert O["reduction"]["finalized_failures"]==5
+          assert O["reduction"]["failures_remaining_before_fail_lock"]==73
+          assert C["current_parity"]["finalized_failures_before_canary"]==5
+          assert C["current_parity"]["remaining_failures_before_fail_lock"]==73
+          assert C["candidate_slot"]["slot_id"]=="terminal-bench-science/koopman-mfg-id::trial-0"
+          assert C["candidate_slot"]["slot_id"] not in O["consumed_slots"]
+          assert len(O["consumed_slots"])==5
+          assert Z["verified"]["finalized_failures_after_v3"]==5
+          assert Z["verified"]["slot_id"] in O["consumed_slots"]
+          assert P["status"].startswith("INDEPENDENT_PASS")
+          assert P["compiled_build_cache_reused"] is False
+          assert P["health_pass"] is True
+          assert P["synthetic_completion_contains_READY"] is True
+          assert M["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert C["current_parity"]["required_successes"]==133
+          assert O["current_comparator"]["required_successes"]==133
+          assert C["execution_authority"] is False
+          assert O["execution_authority"] is False
+          print("TB_SCIENCE_V4_CLOSED_DEPENDENCIES_PASS")
+          PY
