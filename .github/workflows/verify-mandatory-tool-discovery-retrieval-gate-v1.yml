@@ -1,0 +1,53 @@
+name: Verify mandatory Tool Discovery retrieval authority
+on:
+  push:
+    branches:
+      - verify/mandatory-tool-discovery-retrieval-gate-v1-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact subject blob identities
+        run: |
+          python - <<'PY'
+          import hashlib, pathlib
+          expected={
+            "gate_subject/canonical/runtime/tool_discovery_retrieval_authority_gate_v1.py":"9af1bd62048277cc8c4fabab8efe5d217c367bac",
+            "gate_subject/canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json":"e29ce3a7c782c7b9ab1097dd3124a917d3fea9d2",
+            "gate_subject/canonical/runtime/current_terminal_scheduling_world_v1.py":"de8434ea4d67f824070a94f70913979a2b4a2acd",
+            "gate_subject/canonical/tests/test_tool_discovery_retrieval_authority_gate_v1.py":"6f8e38356b0a5bebf1815c7d1c199ddc86b4c9de",
+            "gate_subject/canonical/tests/test_current_terminal_scheduling_world_v1.py":"aa401d6363efcc46f55f30fdea1ee3e1b150f9da",
+            "gate_subject/canonical/governance/CURRENT_TERMINAL_SCHEDULING_WORLD_V2.json":"d227569856afaf3212ddf23250134ebf56fcf079",
+          }
+          for path,want in expected.items():
+              raw=pathlib.Path(path).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got==want,(path,got,want)
+          print("EXACT_BRAIN_BLOBS_VERIFIED")
+          PY
+      - name: Run retrieval authority adversarial suite
+        env:
+          PYTHONPATH: gate_subject
+        run: |
+          python -m unittest -v             canonical.tests.test_tool_discovery_retrieval_authority_gate_v1             canonical.tests.test_current_terminal_scheduling_world_v1
+      - name: Execute live scheduler and require gate pass
+        env:
+          PYTHONPATH: gate_subject
+        run: |
+          python gate_subject/canonical/runtime/current_terminal_scheduling_world_v1.py > scheduler.json
+          python - <<'PY'
+          import json
+          x=json.load(open("scheduler.json"))
+          assert x["pass"] is True,x
+          assert x["unresolved_predicate_count"]==30,x
+          assert x["tool_discovery_retrieval_authority_gate_required"] is True,x
+          assert x["tool_discovery_retrieval_authority_gate_pass"] is True,x
+          assert x["execution_authority"] is False,x
+          print("LIVE_SCHEDULER_GATE_PASS")
+          PY
