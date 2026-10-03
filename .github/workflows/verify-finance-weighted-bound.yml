@@ -1,0 +1,15 @@
+name: Verify Finance weighted lower-bound reducer
+on:
+  push:
+    branches: [verify-finance-weighted-bound-20261003-sol]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: finance_weighted_bound
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pytest -q test_finance_index_weighted_lower_bound_reducer_v1.py
