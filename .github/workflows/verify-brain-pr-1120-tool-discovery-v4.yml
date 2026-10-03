@@ -1,5 +1,10 @@
 name: Verify Brain PR 1120 Tool Discovery V4 soundness
 on:
+  push:
+    branches: [verify-brain-pr-1120-tool-discovery-v4]
+    paths:
+      - "capsules/brain_pr_1120_tool_discovery_v4_soundness/**"
+      - ".github/workflows/verify-brain-pr-1120-tool-discovery-v4.yml"
   pull_request:
     branches: [main]
     paths:
