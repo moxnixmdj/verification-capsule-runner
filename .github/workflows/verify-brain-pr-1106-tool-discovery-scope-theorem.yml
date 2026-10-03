@@ -1,0 +1,43 @@
+name: Verify Brain PR 1106 tool-discovery frozen-scope theorem
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/brain_pr_1106_tool_discovery_scope_theorem/**"
+      - ".github/workflows/verify-brain-pr-1106-tool-discovery-scope-theorem.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact theorem tests
+        run: |
+          cd capsules/brain_pr_1106_tool_discovery_scope_theorem
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_frozen_scope_universal_theorem_v1 -v
+      - name: Execute theorem checker
+        run: |
+          cd capsules/brain_pr_1106_tool_discovery_scope_theorem
+          export PYTHONPATH=.
+          python -m canonical.runtime.tool_discovery_frozen_scope_universal_theorem_v1 > verdict.json
+      - name: Enforce theorem verdict
+        run: |
+          cd capsules/brain_pr_1106_tool_discovery_scope_theorem
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["source_blob_drift"]==[],v
+          assert all(v["semantic_preconditions"].values()),v
+          assert all(v["policy_shape_preconditions"].values()),v
+          assert v["minimum_missing_scope_semantics_fact_discharged_for_frozen_protocol"] is True,v
+          assert v["finite_180_case_transport_used"] is False,v
+          assert v["open_domain_identity_exhaustion_claimed"] is False,v
+          assert v["dynamic_v3_promoted"] is False,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          print("PASS")
+          PY
