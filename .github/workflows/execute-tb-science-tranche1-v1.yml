@@ -1,0 +1,147 @@
+name: Execute TB-Science tranche 1 V1
+on:
+  push:
+    branches: ["execute-tb-science-tranche1-v1-20261003"]
+    paths:
+      - "capsules/tb_science_execution_v1/ARM_TRANCHE1.json"
+permissions:
+  contents: read
+jobs:
+  terminal-slot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - slot_id: "terminal-bench-science/genomic-model-ranking::trial-0"
+            task_name: "terminal-bench-science/genomic-model-ranking"
+            safe_id: "genomic-model-ranking-trial-0"
+          - slot_id: "terminal-bench-science/mri-harmonization::trial-0"
+            task_name: "terminal-bench-science/mri-harmonization"
+            safe_id: "mri-harmonization-trial-0"
+          - slot_id: "terminal-bench-science/navigation-sensor-calibration::trial-0"
+            task_name: "terminal-bench-science/navigation-sensor-calibration"
+            safe_id: "navigation-sensor-calibration-trial-0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify armed exact execution capsule
+        env:
+          SLOT_ID: ${{ matrix.slot_id }}
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_execution_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "17472fd2b01b164fbb180aecfc04385b55b11499"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "8ab8287fdb6a9b63b9fe2d2addde731486c89d1e"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          python - <<'PY'
+          import json, os
+          arm=json.load(open("capsules/tb_science_execution_v1/ARM_TRANCHE1.json"))
+          assert arm["schema"]=="PROJECT_BRAIN_TB_SCIENCE_TRANCHE1_ARM_V1"
+          assert arm["status"]=="ARMED"
+          assert arm["execution_authority"] is True
+          slot=os.environ["SLOT_ID"]
+          assert slot in arm["authorized_slot_ids"], (slot,arm["authorized_slot_ids"])
+          assert arm["manifest_blob"]=="6dfa880b1f68881531afbba6ca211681801fd19b"
+          assert arm["controller_blob"]=="8ab8287fdb6a9b63b9fe2d2addde731486c89d1e"
+          assert arm["planner_blob"]=="17472fd2b01b164fbb180aecfc04385b55b11499"
+          PY
+      - name: Install exact Harbor and verify Docker
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+          docker version >/dev/null
+          docker info >/dev/null
+      - name: Execute exactly one frozen slot
+        id: execute
+        continue-on-error: true
+        env:
+          TASK_NAME: ${{ matrix.task_name }}
+          SAFE_ID: ${{ matrix.safe_id }}
+        run: |
+          set -uo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_execution_v1"
+          export PYTHONPATH="$C"
+          mkdir -p "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
+          harbor run             -d terminal-bench-science/terminal-bench-science@0.1.0             -i "$TASK_NAME"             -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent             -k 1 -n 1 -r 0             --agent-timeout-multiplier 0.60             --environment-build-timeout-multiplier 1.0             --verifier-timeout-multiplier 1.0             --job-name "$SAFE_ID"             --jobs-dir "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
+          echo "harbor_exit=$?" >> "$GITHUB_OUTPUT"
+      - name: Finalize conservative slot receipt
+        if: always()
+        env:
+          SLOT_ID: ${{ matrix.slot_id }}
+          TASK_NAME: ${{ matrix.task_name }}
+          SAFE_ID: ${{ matrix.safe_id }}
+          HARBOR_OUTCOME: ${{ steps.execute.outcome }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import glob, hashlib, json, os, pathlib
+          root=pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          base=root/"jobs"/os.environ["SAFE_ID"]
+          candidates=[]
+          for p in base.rglob("result.json") if base.exists() else []:
+              try:
+                  obj=json.loads(p.read_text())
+              except Exception:
+                  continue
+              vr=obj.get("verifier_result")
+              if isinstance(vr,dict) and isinstance(vr.get("rewards"),dict):
+                  candidates.append((p,obj))
+          reward=None; selected=None; errors=[]
+          if len(candidates)==1:
+              selected,obj=candidates[0]
+              raw=obj["verifier_result"]["rewards"].get("reward")
+              if isinstance(raw,(int,float)) and not isinstance(raw,bool):
+                  reward=float(raw)
+              else:
+                  errors.append("REWARD_MISSING_OR_NONNUMERIC")
+          elif not candidates:
+              errors.append("NO_TRIAL_RESULT_WITH_VERIFIER_REWARD")
+          else:
+              errors.append("MULTIPLE_TRIAL_RESULTS_FOR_ONE_SLOT")
+          success=(reward is not None and reward>=1.0 and not errors)
+          hashes={}
+          if selected is not None:
+              hashes[str(selected.relative_to(root))]=hashlib.sha256(selected.read_bytes()).hexdigest()
+          receipt={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_V1",
+              "slot_id":os.environ["SLOT_ID"],
+              "task_name":os.environ["TASK_NAME"],
+              "status":"SUCCESS" if success else "FINAL_ZERO",
+              "reward":reward if reward is not None else 0.0,
+              "errors":errors,
+              "harbor_step_outcome":os.environ.get("HARBOR_OUTCOME"),
+              "manifest_blob":"6dfa880b1f68881531afbba6ca211681801fd19b",
+              "controller_blob":"8ab8287fdb6a9b63b9fe2d2addde731486c89d1e",
+              "planner_blob":"17472fd2b01b164fbb180aecfc04385b55b11499",
+              "source_gate_blob":"b168b131f6383e158bdc0d931439d14e61f2a5de",
+              "reducer_blob":"3b48ea534d606cf47a8321b56427353066393577",
+              "github_run_id":os.environ["GITHUB_RUN_ID"],
+              "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+              "github_sha":os.environ["GITHUB_SHA"],
+              "result_hashes":hashes,
+              "incremental_spend_usd":0
+          }
+          out=root/f'{os.environ["SAFE_ID"]}__SLOT_RECEIPT.json'
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-${{ matrix.safe_id }}
+          path: |
+            ${{ matrix.safe_id }}__SLOT_RECEIPT.json
+            jobs/${{ matrix.safe_id }}/
+          if-no-files-found: error

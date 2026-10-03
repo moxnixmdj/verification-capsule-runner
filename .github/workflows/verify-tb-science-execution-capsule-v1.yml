@@ -1,0 +1,71 @@
+name: Verify TB-Science execution capsule V1
+on:
+  push:
+    branches: ["stage/tb-science-execution-capsule-v1-20261003"]
+    paths:
+      - "capsules/tb_science_execution_v1/**"
+      - ".github/workflows/execute-tb-science-tranche1-v1.yml"
+      - ".github/workflows/verify-tb-science-execution-capsule-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_execution_v1/**"
+      - ".github/workflows/execute-tb-science-tranche1-v1.yml"
+      - ".github/workflows/verify-tb-science-execution-capsule-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact capsule and frozen tranche
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_execution_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "17472fd2b01b164fbb180aecfc04385b55b11499"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "8ab8287fdb6a9b63b9fe2d2addde731486c89d1e"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test ! -e "$C/ARM_TRANCHE1.json"
+          python - <<'PY'
+          import json
+          m=json.load(open("capsules/tb_science_execution_v1/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json"))
+          wanted=[
+            "terminal-bench-science/genomic-model-ranking::trial-0",
+            "terminal-bench-science/mri-harmonization::trial-0",
+            "terminal-bench-science/navigation-sensor-calibration::trial-0",
+          ]
+          assert [x["slot_id"] for x in m["slots"][:3]]==wanted
+          assert all(x["standard_public_storage_feasible"] for x in m["slots"][:3])
+          assert m["execution_authority"] is False
+          PY
+      - name: Install Harbor and dry-run each frozen task
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/tb_science_execution_v1"
+          export PYTHONPATH="$C"
+          for TASK in             terminal-bench-science/genomic-model-ranking             terminal-bench-science/mri-harmonization             terminal-bench-science/navigation-sensor-calibration
+          do
+            harbor run --dry-run               -d terminal-bench-science/terminal-bench-science@0.1.0               -i "$TASK"               -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent               -k 1 -n 1 -r 0               --agent-timeout-multiplier 0.60               --environment-build-timeout-multiplier 1.0               --verifier-timeout-multiplier 1.0               --job-name dry-run               --jobs-dir /tmp/tb-science-dry
+          done
+      - name: Verify terminal workflow is arm-gated and conservative
+        run: |
+          set -euo pipefail
+          W=.github/workflows/execute-tb-science-tranche1-v1.yml
+          grep -q 'execute-tb-science-tranche1-v1-20261003' "$W"
+          grep -q 'ARM_TRANCHE1.json' "$W"
+          grep -q -- '-r 0' "$W"
+          grep -q -- '--agent-timeout-multiplier 0.60' "$W"
+          grep -q 'FINAL_ZERO' "$W"
+          grep -q 'verifier_result' "$W"
+          grep -q 'rewards' "$W"
+          echo '{"schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_CAPSULE_PREFLIGHT_V1","status":"PASS","terminal_trials_executed":0,"incremental_spend_usd":0}'
