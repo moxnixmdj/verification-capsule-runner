@@ -1,0 +1,60 @@
+name: Verify adaptive terminal closure V2 V13 V5
+
+on:
+  push:
+    branches: ["verify/adaptive-terminal-closure-v2-v13-v5-20261003-chatgpt"]
+    paths:
+      - ".github/workflows/verify-adaptive-terminal-closure-v2-v13-v5.yml"
+      - "capsules/adaptive_terminal_closure_v2/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-adaptive-terminal-closure-v2-v13-v5.yml"
+      - "capsules/adaptive_terminal_closure_v2/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V13 V5 subjects and execute controller
+        working-directory: capsules/adaptive_terminal_closure_v2
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/adaptive_terminal_closure_controller_v2.py)" = "166b606113db30a3fed27e7b0f474641afa273e8"
+          test "$(git hash-object canonical/tests/test_adaptive_terminal_closure_controller_v2.py)" = "50ae6a03c36871a1f04420c118a247eea3a9fe39"
+          test "$(git hash-object canonical/governance/ADAPTIVE_TERMINAL_CLOSURE_ACTIVATION_V2.json)" = "3737fe261bd1b0584b04aeadbfc3d8051ddb5c41"
+          test "$(git hash-object canonical/runtime/adaptive_terminal_closure_controller_v1.py)" = "06d16ef1e8caa08835bc4e958c3047833bf52a32"
+          test "$(git hash-object canonical/governance/TERMINAL_SCHEDULING_CURRENT_AUTHORITY_V1.json)" = "6717ff6bda388722b3a28f0ead66db7aadb8e0c7"
+          test "$(git hash-object canonical/governance/CURRENT_27_INFORMATION_DOMINANCE_V1.json)" = "fae786d6051277865ed6ecde69be5da98e2bf509"
+          test "$(git hash-object canonical/verification/CURRENT_27_INFORMATION_DOMINANCE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "1931ae5a7edb5dde2021a8a4f7e7a3ad0fd821f1"
+          test "$(git hash-object canonical/verification/DUAL_JUDGMENT_SOURCE_GATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "6ec5f6d808c88bf9ea728fb7f259edc3b4ae5a51"
+          PYTHONPATH=. python -m unittest canonical.tests.test_adaptive_terminal_closure_controller_v2 -v
+          PYTHONPATH=. python canonical/runtime/adaptive_terminal_closure_controller_v2.py > /tmp/v2.json
+          cat /tmp/v2.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/v2.json"))
+          assert x["pass"] is True,x
+          assert x["live_world"]["unresolved_predicates"]==27,x
+          assert x["live_world"]["nondominated_certificates"]==14,x
+          assert x["live_world"]["verified_zero_reality_requirements"]==17,x
+          assert x["action_refinement"]["primitive_acceptance_work_units"]==31,x
+          assert len(x["first_resource_priority_work_unit_ids"])==16,x
+          assert len(x["ownership_reconciliation_work_units"])==2,x
+          assert x["execution_policy"]["tool_discovery_v5_gate_mandatory"] is True,x
+          assert x["execution_authority"] is False,x
+          assert x["promotion_authority"] is False,x
+          assert x["fresh_reality_authority"] is False,x
+          assert x["acceptance_credit_delta"]==0,x
+          assert x["family_credit_delta"]==0,x
+          assert x["ownership_credit_delta"]==0,x
+          print("ADAPTIVE_TERMINAL_CLOSURE_V2_V13_V5_PASS")
+          PY
