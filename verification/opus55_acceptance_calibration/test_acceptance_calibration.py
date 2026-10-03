@@ -80,13 +80,18 @@ def _git_blob_sha(data:bytes)->str:
 
 MIRROR_ROOT=Path(__file__).resolve().parent/"recovery_promotion_v2"
 
+REPO_ROOT=Path(__file__).resolve().parents[2]
+
 def _fetch_brain(path:str):
-    mirror=MIRROR_ROOT/path.replace("/","__")
+    if path=="canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json":
+        mirror=REPO_ROOT/"capsules/recovery_acceptance_integration_v1/canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json"
+    else:
+        mirror=MIRROR_ROOT/path.replace("/","__")
     data=mirror.read_bytes()
     expected=RECOVERY_PROMOTION_BLOBS[path]
     actual=_git_blob_sha(data)
     if actual!=expected:
-        raise AssertionError((path,expected,actual))
+        raise AssertionError((path,expected,actual,str(mirror)))
     if path.endswith(".json"):
         return json.loads(data.decode("utf-8"))
     return data.decode("utf-8")
