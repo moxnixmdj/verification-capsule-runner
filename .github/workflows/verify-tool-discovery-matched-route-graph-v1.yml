@@ -1,0 +1,69 @@
+name: Verify Tool Discovery matched-route proof graph
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/tool_discovery_matched_route_20261003/**'
+      - '.github/workflows/verify-tool-discovery-matched-route-graph-v1.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'capsules/tool_discovery_matched_route_20261003/**'
+      - '.github/workflows/verify-tool-discovery-matched-route-graph-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blob identities
+        working-directory: capsules/tool_discovery_matched_route_20261003
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+            "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+            "canonical/governance/TERMINAL_CERTIFICATE_FRONTIER_V5.json": "4b5517dbd12978f8ffe481fb775e85592c7790c8",
+            "canonical/governance/OPUS55_ACCEPTANCE_ACTION_HYPERGRAPH_V2.json": "ec0ca144939a19234f1c53378cc76af2014a6179",
+            "canonical/governance/TOOLATHLON_VERIFIED_TOOL_DISCOVERY_ROUTE_FREEZE_V1.json": "f55ae78014e1dc6f92f2696d33b7249251047f1c",
+            "canonical/governance/TOOL_DISCOVERY_MATCHED_ROUTE_PROOF_GRAPH_CORRECTION_V1.json": "8786ac179d4705aa9ee6a178c80df49e25445f38",
+            "canonical/runtime/tool_discovery_matched_route_graph_v1.py": "b164ad157f86a10fb5c525806837ef8e192517dc",
+            "canonical/tests/test_tool_discovery_matched_route_graph_v1.py": "f40d5558f917b50ccf02ab0eb6a52077b5fee526",
+          }
+          for path, want in expected.items():
+              data = Path(path).read_bytes()
+              got = hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+              assert got == want, (path, got, want)
+              print(path, got)
+          PY
+      - name: Run mutation tests
+        working-directory: capsules/tool_discovery_matched_route_20261003
+        run: python -m unittest canonical.tests.test_tool_discovery_matched_route_graph_v1 -v
+      - name: Emit and validate zero-credit verdict
+        working-directory: capsules/tool_discovery_matched_route_20261003
+        run: |
+          python canonical/runtime/tool_discovery_matched_route_graph_v1.py > TOOL_DISCOVERY_MATCHED_ROUTE_GRAPH_VERDICT.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("TOOL_DISCOVERY_MATCHED_ROUTE_GRAPH_VERDICT.json")
+          j=json.loads(p.read_text())
+          assert j["graph_correction_proved"] is True
+          assert j["matched_route_logically_available"] is True
+          assert j["matched_route_satisfied"] is False
+          assert j["new_reality_units_consumed"] == 0
+          assert j["capability_credit_delta"] == 0
+          assert j["family_credit_delta"] == 0
+          assert j["execution_authority"] is False
+          assert j["promotion_authority"] is False
+          print(json.dumps(j, indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tool-discovery-matched-route-graph-verdict
+          path: capsules/tool_discovery_matched_route_20261003/TOOL_DISCOVERY_MATCHED_ROUTE_GRAPH_VERDICT.json
