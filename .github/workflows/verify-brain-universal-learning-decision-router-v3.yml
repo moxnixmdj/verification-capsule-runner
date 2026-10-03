@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "capsules/universal_learning_decision_router_v3/**"
+      - "capsules/universal_learning_open_world_v4/**"
       - ".github/workflows/verify-brain-universal-learning-decision-router-v3.yml"
 
 permissions:
@@ -34,8 +35,29 @@ jobs:
           cd capsules/universal_learning_decision_router_v3
           export PYTHONPATH=.
           python -m unittest canonical.tests.test_universal_learning_decision_router_v3 -v
-      - name: Run independent adversarial verifier
+      - name: Run independent adversarial V3 verifier
         run: |
           cd capsules/universal_learning_decision_router_v3
           export PYTHONPATH=.
           python verify_v3.py
+      - name: Compile copied Brain V4 learning stack
+        run: |
+          cd capsules/universal_learning_open_world_v4
+          python -m py_compile \
+            canonical/runtime/universal_learning_contract_v1.py \
+            canonical/runtime/universal_active_transfer_learner_v2.py \
+            canonical/runtime/structural_transfer_v3.py \
+            canonical/runtime/decision_discriminator_v3.py \
+            canonical/runtime/goal_dependency_delta_v4.py \
+            canonical/runtime/open_world_hypothesis_guard_v4.py \
+            canonical/runtime/universal_learning_open_world_router_v4.py
+      - name: Run copied Brain V4 falsification tests
+        run: |
+          cd capsules/universal_learning_open_world_v4
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_universal_learning_open_world_router_v4 -v
+      - name: Run independent adversarial V4 verifier
+        run: |
+          cd capsules/universal_learning_open_world_v4
+          export PYTHONPATH=.
+          python verify_v4.py
