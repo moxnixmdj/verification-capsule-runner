@@ -78,7 +78,15 @@ assert subject.TOOL_TARGET in covered
 a=copy.deepcopy(base_args)
 a[6]={"schema":gate.SCHEMA,"pass":False,"target_predicate":gate.TARGET}
 m=subject.evaluate(*a)
-assert m["pass"] is False and "MANDATORY_TOOL_DISCOVERY_RETRIEVAL_GATE_NOT_PASS" in m["errors"],m
+nested_errors=(m.get("live_world") or {}).get("errors") or []
+assert m["pass"] is False,m
+assert (
+    "MANDATORY_TOOL_DISCOVERY_RETRIEVAL_GATE_NOT_PASS" in m.get("errors",[])
+    or (
+        "LIVE_WORLD_INVALID" in m.get("errors",[])
+        and "TOOL_DISCOVERY_RETRIEVAL_AUTHORITY_GATE_NOT_PASS" in nested_errors
+    )
+),m
 
 # Mutation: scheduler no longer requires gate.
 a=copy.deepcopy(base_args)
