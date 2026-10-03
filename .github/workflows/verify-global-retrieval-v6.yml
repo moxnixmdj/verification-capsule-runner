@@ -20,8 +20,8 @@ jobs:
           test "$(git hash-object canonical/tests/test_global_retrieval_controller_v1.py)" = "1fcb55a3c8ba792d93b05fbae5918dcb030fb7da"
           test "$(git hash-object canonical/tests/test_retrieval_torture_universe_v2.py)" = "35b6e0132d21149844f8842528f4cfc9bf9795da"
       - name: Run controller tests
-        run: python canonical/tests/test_global_retrieval_controller_v1.py
+        run: PYTHONPATH=. python canonical/tests/test_global_retrieval_controller_v1.py
       - name: Run torture-universe tests
-        run: python canonical/tests/test_retrieval_torture_universe_v2.py
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_torture_universe_v2.py
       - name: Run finite benchmark
-        run: python canonical/runtime/retrieval_torture_universe_v2.py
+        run: PYTHONPATH=. python canonical/runtime/retrieval_torture_universe_v2.py
