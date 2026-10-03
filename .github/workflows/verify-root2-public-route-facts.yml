@@ -1,0 +1,62 @@
+name: Verify Root2 public route facts
+
+on:
+  push:
+    branches: ["verify/root2-route-compression-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-root2-public-route-facts.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-root2-public-route-facts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe runner resources
+        run: |
+          set -euo pipefail
+          echo "CPU=$(nproc)"
+          free -b
+          df -B1 /
+          if [ -e /dev/kvm ]; then
+            echo "KVM_PRESENT=1"
+            ls -l /dev/kvm
+          else
+            echo "KVM_PRESENT=0"
+          fi
+
+      - name: Verify OSWorld v2.1 release manifest
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch osworld-v2.1 https://github.com/xlang-ai/OSWorld-V2.git /tmp/osworld
+          python - <<'PY'
+          import json, shutil, os
+          p=json.load(open("/tmp/osworld/benchmark_releases/osworld-v2.1.json"))
+          d=p["provider_images"]["docker"]["ubuntu"]
+          assert p["release"]=="osworld-v2.1"
+          assert p["task_hash_manifest"]["task_count"]==108
+          assert d["artifact_size"]==14891811084
+          print(json.dumps({
+            "osworld_zip_bytes":d["artifact_size"],
+            "runner_free_bytes":shutil.disk_usage("/").free,
+            "kvm_present":os.path.exists("/dev/kvm")
+          },sort_keys=True))
+          PY
+
+      - name: Verify Chartography leaderboard judge
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/surge-ai/chartography.git /tmp/chartography
+          grep -Fq 'DEFAULT_JUDGE_MODEL = "google/gemini-3.5-flash"' /tmp/chartography/src/chartography/task.py
+          grep -Fq -- '--epochs 10' /tmp/chartography/README.md
+          grep -Fq 'judge_model=google/gemini-3.5-flash' /tmp/chartography/README.md
+          grep -Fq 'one model-graded call per sample' /tmp/chartography/README.md
+          git -C /tmp/chartography rev-parse HEAD

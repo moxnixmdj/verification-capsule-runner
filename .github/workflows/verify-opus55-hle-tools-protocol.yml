@@ -1,0 +1,51 @@
+name: Verify Opus55 HLE tools protocol
+
+on:
+  push:
+    branches: ["verify/root2-route-compression-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-opus55-hle-tools-protocol.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-opus55-hle-tools-protocol.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet pypdf
+      - name: Verify primary Opus 5.5 system-card HLE protocol
+        run: |
+          python - <<'PY'
+          import hashlib, io, urllib.request
+          from pypdf import PdfReader
+          url="https://www-cdn.anthropic.com/fc1b44717c85dc068bc6ba5024219938094694bd/Claude%20Opus%205.5%20System%20Card.pdf"
+          req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0"})
+          data=urllib.request.urlopen(req,timeout=30).read()
+          print("sha256",hashlib.sha256(data).hexdigest())
+          text=" ".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(data)).pages)
+          normalized=" ".join(text.split())
+          required=[
+            "Humanity’s Last Exam",
+            "web search",
+            "web fetch",
+            "programmatic tool calling",
+            "code execution",
+            "thinking was set to auto",
+            "1M",
+            "Context compaction was not used",
+            "Claude Opus 4.6",
+          ]
+          missing=[x for x in required if x not in normalized]
+          assert not missing, missing
+          print("OPUS55_HLE_TOOLS_PROTOCOL_PRIMARY_PASS")
+          PY
