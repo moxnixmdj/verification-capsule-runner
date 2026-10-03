@@ -1,0 +1,185 @@
+name: Verify TB-Science local Qwen Harbor E2E V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_local_qwen_harbor_e2e_v1/**"
+      - ".github/workflows/verify-tb-science-local-qwen-harbor-e2e-v1.yml"
+permissions:
+  contents: read
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact merged Brain runtime bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_local_qwen_harbor_e2e_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "879887984e2ca8abacac486d687f519f5d0d78a5"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          ! grep -R -F 'text.pollinations.ai' "$C/canonical/runtime"
+      - name: Install exact Harbor and verify Docker
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+          docker version >/dev/null
+          docker info >/dev/null
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+            -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local proposal endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 \
+            --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Build synthetic zero-terminal-content Harbor task
+        run: |
+          set -euo pipefail
+          T=/tmp/project-brain-science-local-qwen-canary
+          mkdir -p "$T/environment" "$T/tests"
+          cat >"$T/task.toml" <<'EOF'
+          schema_version = "1.4"
+          [task]
+          name = "project-brain/science-local-qwen-canary"
+          description = "Synthetic Project Brain Science local-Qwen Harbor E2E canary"
+          authors = [{ name = "Project Brain", email = "noreply@example.invalid" }]
+          keywords = ["synthetic", "zero-terminal-content", "canary"]
+          [verifier]
+          timeout_sec = 120.0
+          [agent]
+          timeout_sec = 600.0
+          [environment]
+          build_timeout_sec = 300.0
+          cpus = 1
+          memory_mb = 2048
+          storage_mb = 2048
+          gpus = 0
+          network_mode = "public"
+          EOF
+          cat >"$T/instruction.md" <<'EOF'
+          Create /app/answer.txt containing exactly the single line 42.
+          Do not install packages, access the network, or fetch external files.
+          Independently verify the file content before finishing.
+          EOF
+          cat >"$T/environment/Dockerfile" <<'EOF'
+          FROM ubuntu:24.04
+          WORKDIR /app
+          EOF
+          cat >"$T/tests/test.sh" <<'EOF'
+          #!/bin/sh
+          mkdir -p /logs/verifier
+          if [ -f /app/answer.txt ] && [ "$(cat /app/answer.txt)" = "42" ]; then
+            echo 1 > /logs/verifier/reward.txt
+          else
+            echo 0 > /logs/verifier/reward.txt
+          fi
+          exit 0
+          EOF
+          chmod +x "$T/tests/test.sh"
+      - name: Run exact repaired Brain agent through real Harbor
+        id: harbor
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_local_qwen_harbor_e2e_v1
+        run: |
+          set -uo pipefail
+          rm -rf /tmp/brain-science-local-qwen-canary-jobs
+          harbor run \
+            -p /tmp/project-brain-science-local-qwen-canary \
+            -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent \
+            -k 1 -n 1 -r 0 \
+            --jobs-dir /tmp/brain-science-local-qwen-canary-jobs \
+            --job-name science-local-qwen-e2e
+          echo "harbor_exit=$?" >> "$GITHUB_OUTPUT"
+      - name: Adjudicate synthetic Harbor result and Brain trace
+        if: always()
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee HARBOR_E2E_RESULT.json
+          import json, pathlib
+          root=pathlib.Path("/tmp/brain-science-local-qwen-canary-jobs/science-local-qwen-e2e")
+          assert root.exists(), "NO_HARBOR_JOB_ROOT"
+          candidates=[]
+          for p in root.rglob("result.json"):
+              try: obj=json.loads(p.read_text())
+              except Exception: continue
+              vr=obj.get("verifier_result")
+              if isinstance(vr,dict) and isinstance(vr.get("rewards"),dict):
+                  candidates.append((p,obj))
+          assert len(candidates)==1, [(str(p),o.keys()) for p,o in candidates]
+          p,obj=candidates[0]
+          raw=obj["verifier_result"]["rewards"].get("reward")
+          reward=float(raw) if isinstance(raw,(int,float)) and not isinstance(raw,bool) else 0.0
+          exc=obj.get("exception_info")
+          assert reward>=1.0, {"reward":reward,"exception_info":exc,"result":str(p)}
+          traces=list(root.rglob("project_brain_science_trace.json"))
+          assert len(traces)==1, [str(x) for x in traces]
+          trace=json.loads(traces[0].read_text())
+          assert trace.get("status")=="FINISHED",trace
+          assert trace.get("finish_authority")=="BRAIN_VERIFIED_STATE",trace
+          assert trace.get("model_has_terminal_authority") is False,trace
+          assert trace.get("resolved_requirements"),trace
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_LOCAL_QWEN_HARBOR_E2E_V1",
+            "status":"PASS",
+            "harbor_version":"0.23.0",
+            "reward":reward,
+            "brain_status":trace["status"],
+            "finish_authority":trace["finish_authority"],
+            "planner_model_last":trace.get("planner_model_last"),
+            "resolved_requirements":trace["resolved_requirements"],
+            "terminal_benchmark_case_content_read":0,
+            "terminal_benchmark_trials_executed":0,
+            "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
+      - name: Preserve canary evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-local-qwen-harbor-e2e-v1
+          path: |
+            HARBOR_E2E_RESULT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+            /tmp/brain-science-local-qwen-canary-jobs/
+          if-no-files-found: warn
