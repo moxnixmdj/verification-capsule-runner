@@ -1,0 +1,41 @@
+name: Verify Brain PR 1178 Tool Discovery observability V2
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/brain_pr_1178_tool_observability_v2/**'
+      - '.github/workflows/verify-brain-pr-1178-tool-observability-v2.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain candidate blob identities
+        working-directory: capsules/brain_pr_1178_tool_observability_v2
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+            "canonical/runtime/tool_discovery_observability_partition_v2.py": "69a732c069ad2528fd1fcf3ddc46ba0e820d9760",
+            "canonical/tests/test_tool_discovery_observability_partition_v2.py": "26cfad1271c806331a08b10128779fbe27bea9b7",
+            "canonical/governance/TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V2.json": "628d2018a3b5f7d7d8b48708ff7fb5689ad88d08",
+            "canonical/action_intents/2026-10-03_TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V2.json": "1f0fd5d4b111e6574d021aa651258d3cd0873918",
+          }
+          for path, want in expected.items():
+              data = Path(path).read_bytes()
+              got = hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+              assert got == want, (path, got, want)
+              print(path, got)
+          PY
+      - name: Run exact Brain adversarial suite
+        working-directory: capsules/brain_pr_1178_tool_observability_v2
+        run: python -m unittest canonical.tests.test_tool_discovery_observability_partition_v2 -v
+      - name: Run independent exhaustive and adversarial verifier
+        working-directory: capsules/brain_pr_1178_tool_observability_v2
+        run: python independent_verifier.py
