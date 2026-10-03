@@ -1,0 +1,20 @@
+{
+  "schema": "BRAIN_UNIVERSAL_LEARNING_V5_POINTER_REBIND_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "reconcile/universal-learning-v5-operative-pointer-20261004",
+  "exact_brain_blobs": {
+    "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json": "471cb9f352bf64cc56a262dfe4df829555fc3679",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V8.json": "c0486fd7430255e1376d7f1f179c1621861d89ec",
+    "canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json": "b8dd84fbe2c7ba5cddf6d9fb6baad32a7ca91038",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "0ea52cd54cde7fd6f27b86254a3127d762964b5c"
+  },
+  "expected_v5": {
+    "governance_sha": "bc738d672cfec7f488fe99c94bae3d5197954860",
+    "verification_sha": "ff576ee1a06423037033707faabcabad1775fc99",
+    "activation_sha": "ee5d7e2a989df687e19f6be95c7d25600d1a32ec",
+    "activation_verification_sha": "1001e25ca59c57b13049a22f305e487eb01f693a",
+    "structural_residual_sha": "339e58163573785ef217fbd59df7790c576a2777",
+    "v4_governance_sha": "a08ea261bc83bcf7a32c8fe437b4d491d1124b32",
+    "v4_verification_sha": "8ed4f50303645921458b8429728ffca2c2ce293a"
+  }
+}

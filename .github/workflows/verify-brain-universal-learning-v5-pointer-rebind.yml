@@ -1,0 +1,101 @@
+name: Verify Brain Universal Learning V5 Pointer Rebind
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v5_pointer_rebind/**"
+      - ".github/workflows/verify-brain-universal-learning-v5-pointer-rebind.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/universal_learning_v5_pointer_rebind
+          python - <<'PY'
+          import hashlib, json, pathlib
+          manifest=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in manifest["exact_brain_blobs"].items():
+              p=pathlib.Path(rel)
+              data=p.read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          print("exact Brain blobs: PASS",len(manifest["exact_brain_blobs"]))
+          PY
+      - name: Verify V5 operative pointer chain and truth preservation
+        run: |
+          cd capsules/universal_learning_v5_pointer_rebind
+          python - <<'PY'
+          import hashlib, json, pathlib
+
+          def read(rel):
+              return json.load(open(rel,encoding="utf-8"))
+          def blob(rel):
+              data=pathlib.Path(rel).read_bytes()
+              return hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+
+          m=read("EXPECTED_BRAIN_BLOBS.json")
+          exp=m["expected_v5"]
+          root3p="canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json"
+          cutp="canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V8.json"
+          frontierp="canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json"
+          termp="canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json"
+
+          root3=read(root3p); cut=read(cutp); frontier=read(frontierp); term=read(termp)
+          root3_sha=blob(root3p); cut_sha=blob(cutp); frontier_sha=blob(frontierp)
+
+          rows=[x for x in root3["compressed_residuals"] if x.get("predicate_id")=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT"]
+          assert len(rows)==1,rows
+          u=rows[0]
+          assert u["operative_learning_overlay"]=="UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5",u
+          assert u["operative_learning_overlay_governance"]=="canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5.json",u
+          assert u["operative_learning_overlay_activation"]=="canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_ACTIVATION_V1.json",u
+          assert u["operative_learning_overlay_verified"] is True,u
+          assert "TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES" in u["current_residual"],u
+          assert "TWO_FROZEN_UNKNOWN_DOMAIN_DIRECT_ORACLE_LEAVES" in u["next"],u
+
+          v5a=root3["authority"]["universal_learning_v5_overlay"]
+          assert v5a["governance_git_blob_sha"]==exp["governance_sha"],v5a
+          assert v5a["verification_git_blob_sha"]==exp["verification_sha"],v5a
+          assert v5a["activation_git_blob_sha"]==exp["activation_sha"],v5a
+          assert v5a["activation_verification_git_blob_sha"]==exp["activation_verification_sha"],v5a
+          assert v5a["structural_residual_reduction_git_blob_sha"]==exp["structural_residual_sha"],v5a
+
+          v4=root3["authority"]["universal_learning_v4_overlay"]
+          assert v4["governance_git_blob_sha"]==exp["v4_governance_sha"],v4
+          assert v4["verification_git_blob_sha"]==exp["v4_verification_sha"],v4
+
+          assert cut["authority"]["root3_compression"]["git_blob_sha"]==root3_sha,cut["authority"]["root3_compression"]
+          assert frontier["authority"]["root3_residual_compression"]["git_blob_sha"]==root3_sha,frontier["authority"]["root3_residual_compression"]
+
+          src=term["sources"]
+          assert src["root3_residual_compression_v1"]["git_blob_sha"]==root3_sha,src["root3_residual_compression_v1"]
+          assert src["current_zero_reality_minimum_cut_v8"]["git_blob_sha"]==cut_sha,src["current_zero_reality_minimum_cut_v8"]
+          assert src["root2_root3_minimum_execution_frontier_v1"]["git_blob_sha"]==frontier_sha,src["root2_root3_minimum_execution_frontier_v1"]
+
+          v5t=src["universal_learning_recursive_abstraction_v5"]
+          assert v5t["governance_git_blob_sha"]==exp["governance_sha"],v5t
+          assert v5t["verification_git_blob_sha"]==exp["verification_sha"],v5t
+          assert v5t["activation_git_blob_sha"]==exp["activation_sha"],v5t
+          assert v5t["activation_verification_git_blob_sha"]==exp["activation_verification_sha"],v5t
+          assert v5t["structural_residual_reduction_git_blob_sha"]==exp["structural_residual_sha"],v5t
+
+          assert term["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN",term["truth"]
+          assert term["truth"]["achieved"] is False,term["truth"]
+          assert root3["fresh_reality_authority"] is False,root3
+          assert root3["promotion_authority"] is False,root3
+          assert cut["fresh_reality_authority"] is False,cut
+          assert cut["promotion_authority"] is False,cut
+          assert "ZERO_ACCEPTANCE_OWNERSHIP_OR_FAMILY_CREDIT" in root3["hard_rules"][-1],root3["hard_rules"][-1]
+          print("V5 pointer chain and truth preservation: PASS")
+          PY
