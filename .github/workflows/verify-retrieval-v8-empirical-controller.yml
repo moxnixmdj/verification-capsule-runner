@@ -1,0 +1,43 @@
+name: Verify Retrieval V8 empirical controller
+on:
+  push:
+    branches:
+      - verify/retrieval-v8-empirical-controller-20261003
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V8 empirical blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_event_ledger_v1.py)" = "0a3f5a3dd06150e24511b8bfcd1998f908c65ff5"
+          test "$(git hash-object canonical/runtime/global_retrieval_controller_v2.py)" = "66edae1bfb12f2d46b7018736651b3dd27ed1c03"
+          test "$(git hash-object canonical/runtime/global_retrieval_entrypoint_v2.py)" = "b34bb56b49a71c136c5a72e97acf7aeac94a3b97"
+          test "$(git hash-object canonical/state/retrieval_live_events_v1.jsonl)" = "6637540ad0f9da41217fe2614773d78b563d2259"
+          test "$(git hash-object canonical/tests/test_global_retrieval_empirical_v2.py)" = "4d7338ec1a6ef8c2c3c1e3db373614889ac2cb95"
+          test "$(git hash-object canonical/runtime/global_retrieval_authority_guard_v1.py)" = "7b4cfd559d68c272f241cd2a6354dcf22f1b6957"
+          test "$(git hash-object canonical/governance/GLOBAL_RETRIEVAL_CURRENT_AUTHORITY_V1.json)" = "6a556eb0689e1a122730d46ef37f8d4b272714a2"
+      - run: PYTHONPATH=. python canonical/tests/test_global_retrieval_empirical_v2.py
+      - name: Run authorized empirical entrypoint
+        run: PYTHONPATH=. python canonical/runtime/global_retrieval_entrypoint_v2.py > /tmp/entry.json
+      - name: Print compact empirical state
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/entry.json'))
+          print("EMPIRICAL_ENTRY="+json.dumps({
+            "status":x["status"],
+            "gate":x["authority_gate"]["status"],
+            "live_calibration":x["live_calibration"],
+            "plan_status":x["plan"]["status"],
+            "live_event_count":x["plan"]["live_event_count"],
+            "live_calibration_state":x["plan"]["live_calibration_state"],
+            "fixed_correlation_multiplier_used":x["plan"]["fixed_correlation_multiplier_used"],
+            "fixed_source_independence_multiplier_used":x["plan"]["fixed_source_independence_multiplier_used"]
+          },sort_keys=True))
+          PY
