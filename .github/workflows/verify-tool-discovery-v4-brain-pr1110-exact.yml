@@ -28,7 +28,7 @@ jobs:
           check_blob canonical/runtime/tool_discovery_dynamic_candidate_v3.py bbbee4d6baf8df937543644397abba38a67dce62
           check_blob canonical/runtime/tool_discovery_dynamic_candidate_v4.py 9485d6f791e6d5f53ed66246615f30b938238b4b
           check_blob canonical/runtime/tool_discovery_dynamic_proof_v3.py f82d949f3890ffc0f2513f9b39cc3585a5d22ebb
-          check_blob canonical/tests/test_tool_discovery_dynamic_v4.py 0125582ee4dbef732f2c84b6b70ac180d7f1a91e
+          check_blob canonical/tests/test_tool_discovery_dynamic_v4.py 5e38b58e3d9b20fc9bcbedf1a38630afe6aefcb5
       - name: Run exact candidate and independent adversarial suites
         working-directory: capsules/tool_discovery_v4_brain_pr1110_exact
         run: |
