@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT3_UNIVERSAL_SCOPE_CLOSURE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1427,
+  "brain_head": "3f837b1662d7de3c3756bcb9f6a06be4ae07feb7",
+  "exact_brain_blobs": {
+    "canonical/runtime/root3_universal_scope_closure_compiler_v1.py": "2eee1e584a9f94921a1e83c64dae2634db5d0959",
+    "canonical/tests/test_root3_universal_scope_closure_compiler_v1.py": "6efa3a6cbefee295bf110e14df3cd5f94d8ac2f0",
+    "canonical/governance/ROOT3_UNIVERSAL_SCOPE_CLOSURE_ACTIVATION_V1.json": "c2db2eeb50f724a0ee7409a5a1cf145621b340a0",
+    "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json": "e94469ffdeb7535f9a921a244e62cde6b84fda5c",
+    "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json": "6082b3302927a8b1a287df6977041b2820eee07c",
+    "canonical/governance/CURRENT_ROOT3_ZERO_REALITY_STRONGER_PROOF_SATURATION_V1.json": "bdc78fdc147a014e5d77d5daafb5434b1a4e878f",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V6.json": "5bb089582a5bc2ee4a44143c8d3a11e919fecdff",
+    "canonical/governance/OPUS55_SYNTHESIS_IMPLICATION_RESIDUAL_INPUT_V2.json": "4e5b944c86b8745083cc9d97fe186aa4b1322747"
+  }
+}
