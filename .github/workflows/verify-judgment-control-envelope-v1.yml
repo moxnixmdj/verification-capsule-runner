@@ -2,7 +2,7 @@ name: Verify dual judgment control envelope v1
 on:
   push:
     branches:
-      - verify/judgment-control-envelope-v1-20261002
+      - critical/dual-judgment-isolated-20261003
 permissions:
   contents: read
 jobs:
