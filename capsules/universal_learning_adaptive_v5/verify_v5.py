@@ -26,7 +26,7 @@ assert gov["acceptance_credit_delta"]==0
 assert gov["ownership_credit_delta"]==0
 assert gov["fresh_reality_authority"] is False
 
-ENV="env-v5";GOAL="solve"
+ENV="env-v5";GOAL="solve";EPOCH="epoch-1";STATE="state-1"
 HS=[
  {"id":"h1","plausible":True,"best_action":"A"},
  {"id":"h2","plausible":True,"best_action":"A"},
@@ -35,10 +35,10 @@ HS=[
 ]
 def cov():
     return {"receipt_id":"cov","independent_verified":True,"exact_byte_bound":True,"conclusion":"success","decision_relevant_exhaustive":True,"scope_relation":"EXACT","environment_id":ENV,"goal_id":GOAL,"hypothesis_space_sha256":v4.hypothesis_digest(HS)}
-def safe(aid):
-    return {"receipt_id":"safe-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","safe_under_all_admissible_worlds":True,"environment_id":ENV,"goal_id":GOAL,"action_id":aid}
+def safe(aid,epoch=EPOCH):
+    return {"receipt_id":"safe-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","safe_under_all_admissible_worlds":True,"environment_id":ENV,"goal_id":GOAL,"action_id":aid,"experiment_epoch":epoch}
 def probe(aid,outcomes,cost):
-    return {"id":aid,"outcome_by_hypothesis":outcomes,"time":cost,"safety_receipt":safe(aid),"outcome_model_receipt":{"receipt_id":"model-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","decision_relevant_outcome_partition_complete":True,"environment_id":ENV,"goal_id":GOAL,"action_id":aid,"hypothesis_space_sha256":v4.hypothesis_digest(HS),"outcome_map_sha256":model.outcome_digest(action_id=aid,outcomes=outcomes)}}
+    return {"id":aid,"outcome_by_hypothesis":outcomes,"time":cost,"safety_receipt":safe(aid),"outcome_model_receipt":{"receipt_id":"model-"+aid,"independent_verified":True,"exact_byte_bound":True,"conclusion":"success","decision_relevant_outcome_partition_complete":True,"observation_only_or_state_restored":True,"future_probe_model_invariance_verified":True,"experiment_epoch":EPOCH,"state_fingerprint":STATE,"environment_id":ENV,"goal_id":GOAL,"action_id":aid,"hypothesis_space_sha256":v4.hypothesis_digest(HS),"outcome_map_sha256":model.outcome_digest(action_id=aid,outcomes=outcomes)}}
 PROBES=[
  probe("direct",{"h1":"a","h2":"a","h3":"b","h4":"b"},5),
  probe("x",{"h1":"x","h2":"y","h3":"x","h4":"y"},1),
@@ -51,6 +51,13 @@ tampered["outcome_by_hypothesis"]["h4"]="tampered"
 try: model.admit(environment_id=ENV,goal_id=GOAL,hypotheses=HS,probe=tampered)
 except model.VerifiedProbeModelError: pass
 else: raise AssertionError("TAMPERED_OUTCOME_MODEL_ACCEPTED")
+
+# A state-mutating probe cannot enter an exact adaptive tree without restoration/invariance proof.
+stateful=probe("stateful",{"h1":"a","h2":"a","h3":"b","h4":"b"},1)
+stateful["outcome_model_receipt"]["observation_only_or_state_restored"]=False
+try: model.admit(environment_id=ENV,goal_id=GOAL,hypotheses=HS,probe=stateful)
+except model.VerifiedProbeModelError: pass
+else: raise AssertionError("STATE_MUTATING_PROBE_ACCEPTED_WITHOUT_RESTORATION_PROOF")
 
 # V4's one-step action-class heuristic chooses the direct split (cost 5).
 v4rank=v4.robust_rank(environment_id=ENV,goal_id=GOAL,hypotheses=HS,actions=[
