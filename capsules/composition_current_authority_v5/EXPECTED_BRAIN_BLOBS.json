@@ -1,0 +1,14 @@
+{
+  "current_authority_v5.json": {
+    "brain_path": "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V5.json",
+    "git_blob_sha": "4c51caa97fc10e429b36b7cb82aa1dc83ad784f2"
+  },
+  "terminal_authority.json": {
+    "brain_path": "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json",
+    "git_blob_sha": "a010cab4039f8f23e61a552cebeba8a4cf1d9c6d"
+  },
+  "slice_verification_v5.json": {
+    "brain_path": "canonical/verification/COMPOSITION_COMPONENT_PROOF_SLICE_PUBLIC_RUNNER_VERIFICATION_20261003_V5.json",
+    "git_blob_sha": "4115b5ee386a0258dfcbfe14d68129d836c1f2a5"
+  }
+}
