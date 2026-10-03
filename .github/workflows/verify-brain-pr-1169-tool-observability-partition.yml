@@ -1,0 +1,101 @@
+name: Verify Brain PR 1169 Tool Discovery observability partition
+
+on:
+  pull_request:
+    paths:
+      - "capsules/brain_pr_1169_tool_observability_partition/**"
+      - ".github/workflows/verify-brain-pr-1169-tool-observability-partition.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain PR1169 blob identities
+        working-directory: capsules/brain_pr_1169_tool_observability_partition
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected = {
+              "canonical/runtime/tool_discovery_observability_partition_v1.py": "4c2e6ef72abbd6777cf4a2e3c9dcd616190ae1ac",
+              "canonical/tests/test_tool_discovery_observability_partition_v1.py": "f6866731b1c2119f8cb84e6df4ad53db02faa559",
+              "canonical/governance/TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V1.json": "b93aeba7e7804f013e8acaba3b111b22aab2d9b2",
+              "canonical/action_intents/TOOL_DISCOVERY_OBSERVABILITY_PARTITION_V1.json": "6aec834de339205c44ee241ead2d3b2b3fd98ea6",
+          }
+          for path, want in expected.items():
+              data = Path(path).read_bytes()
+              got = hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+              assert got == want, (path, got, want)
+              print(path, got)
+          PY
+      - name: Run candidate adversarial tests
+        working-directory: capsules/brain_pr_1169_tool_observability_partition
+        run: |
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_tool_discovery_observability_partition_v1 -v
+      - name: Independent partition attacks
+        working-directory: capsules/brain_pr_1169_tool_observability_partition
+        run: |
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.tool_discovery_observability_partition_v1 import classify
+
+          def row(tid,cost,a,b,safe):
+              return {
+                  "tool_id":tid,"cost":cost,
+                  "capability_evidence":{"A":a,"B":b},
+                  "safe_probe_capabilities":safe,
+              }
+
+          # Hidden B on the only cheaper challenger changes the least-cost
+          # decision but cannot be observed: matched evidence is irreducible.
+          state={
+              "identity_scope_complete":True,
+              "required_capabilities":["A","B"],
+              "admissible_tools":[
+                  row("cheap",1,"SUPPORTED","UNKNOWN",[]),
+                  row("expensive",2,"SUPPORTED","SUPPORTED",["A","B"]),
+              ],
+          }
+          out=classify(state)
+          assert out["matched_comparator_required"] is True, out
+          assert out["universal_proof_eligible"] is False, out
+
+          # Making the exact distinguishing fact safely decidable moves only
+          # this world into the universal-proof-eligible partition.
+          state["admissible_tools"][0]["safe_probe_capabilities"]=["B"]
+          out=classify(state)
+          assert out["matched_comparator_required"] is False, out
+          assert out["universal_proof_eligible"] is True, out
+
+          # An unobservable route strictly more expensive than an already
+          # verified sufficient route cannot change the least-cost decision.
+          state={
+              "identity_scope_complete":True,
+              "required_capabilities":["A"],
+              "admissible_tools":[
+                  {"tool_id":"best","cost":1,"capability_evidence":{"A":"SUPPORTED"},"safe_probe_capabilities":[]},
+                  {"tool_id":"worse","cost":3,"capability_evidence":{"A":"UNKNOWN"},"safe_probe_capabilities":[]},
+              ],
+          }
+          out=classify(state)
+          assert out["universal_proof_eligible"] is True, out
+
+          # Identity completeness is a hard precondition, never inferred.
+          state["identity_scope_complete"]=False
+          out=classify(state)
+          assert out["status"]=="FAIL_CLOSED__INVALID_PARTITION_INPUT", out
+          assert out["matched_comparator_required"] is True, out
+          PY
+      - name: Execute partition example
+        working-directory: capsules/brain_pr_1169_tool_observability_partition
+        run: |
+          export PYTHONPATH=.
+          python canonical/runtime/tool_discovery_observability_partition_v1.py
