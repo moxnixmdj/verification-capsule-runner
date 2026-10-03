@@ -1,0 +1,56 @@
+name: Verify Retrieval V12 multi-query recovery
+on:
+  push:
+    branches:
+      - verify/retrieval-v12-multi-query-recovery-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact subject blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v12.py)" = "0fcdfdcbb3c2c16ed9bc2efe38a950d16525221f"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v12.py)" = "db35a37b0950ca95fb1b546f11b1adccaced531f"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v11.py)" = "0e28128d3f67d33ce4058667609e4d513657af55"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v1.py)" = "ae22852836f61dd0f9691bbd89dbb4680aefa917"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v2.py)" = "8fb64595ba6c8872f6086d2c226758afb4b7e493"
+      - name: Run deterministic tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v12.py
+      - name: Run live V11-miss recovery arena
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v12.py > v12_live.json
+          python - <<'PY'
+          import json
+          x=json.load(open("v12_live.json",encoding="utf-8"))
+          assert x["answer_key_identity_used_for_query_generation"] is False
+          assert x["successful_replay_count"] > 0
+          assert x["recovered_v11_miss_count"] > 0
+          assert x["v11_plus_v12_union_recall"] > x["prior_v11_recall"]
+          assert x["open_world_completeness_claim"] is False
+          print("V12_SUMMARY",json.dumps({
+            "replayed":x["replayed_v11_miss_count"],
+            "successful":x["successful_replay_count"],
+            "recovered":x["recovered_v11_miss_count"],
+            "remaining":x["remaining_v11_miss_count"],
+            "prior_recall":x["prior_v11_recall"],
+            "union_hits":x["v11_plus_v12_union_hit_count"],
+            "union_recall":x["v11_plus_v12_union_recall"],
+            "recovered_ids":x["recovered_episode_ids"],
+            "remaining_ids":x["remaining_miss_episode_ids"],
+            "failed_ids":x["failed_episode_ids"],
+            "provider_metrics":x["provider_metrics"],
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-v12-live-result
+          path: v12_live.json
+          if-no-files-found: error
