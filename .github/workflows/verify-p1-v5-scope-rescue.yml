@@ -1,0 +1,112 @@
+name: Verify P1 V5 scope rescue
+
+on:
+  pull_request:
+    paths:
+      - "canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py"
+      - "canonical/runtime/trajectory_failure_typed_ir_proof_v5.py"
+      - "canonical/tests/test_trajectory_failure_typed_ir_v5.py"
+      - "canonical/governance/P1_TYPED_INTERVENTION_ENVELOPE_V5.json"
+      - ".github/workflows/verify-p1-v5-scope-rescue.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        shell: bash
+        run: |
+          test "$(git hash-object canonical/runtime/trajectory_failure_typed_ir_candidate_v5.py)" = "2a8613ddac7402c7e6d2f349f9d3c32d3fb95e1d"
+          test "$(git hash-object canonical/runtime/trajectory_failure_typed_ir_proof_v5.py)" = "3fc600a8176dac250219e3d98b92cf93d8fceef5"
+          test "$(git hash-object canonical/tests/test_trajectory_failure_typed_ir_v5.py)" = "abc87ada119e42b720af5fb0f472816df975bc25"
+          test "$(git hash-object canonical/governance/P1_TYPED_INTERVENTION_ENVELOPE_V5.json)" = "26cd9f4c626d4754200c64c3f298383580d67c14"
+      - name: Run canonical adversarial V5 tests
+        run: python -m unittest canonical.tests.test_trajectory_failure_typed_ir_v5 -v
+      - name: Independently recompute typed scope, rescue, and negative controls
+        run: |
+          python - <<'PY'
+          import inspect
+          from canonical.runtime import trajectory_failure_typed_ir_candidate_v5 as c
+          from canonical.runtime import trajectory_failure_typed_ir_proof_v5 as p
+
+          cases=p.suite_cases()
+          assert len(cases)==192
+          rescue=0
+          symptom_rejections=0
+          interaction_joint=0
+          scope_primary=0
+          scope_delayed=0
+          scope_interaction=0
+          ambiguous=0
+
+          for case in cases:
+              public=p.public_task(case)
+              assert "_oracle" not in public
+              assert "_intervention_model" not in public
+              out=c.solve(public)
+              verdict=p.score_case(case,out)
+              assert verdict["pass"], (case["seed"],case["_oracle"],out,verdict)
+
+              status=case["_oracle"]["status"]
+              roots=case["_oracle"]["roots"]
+              primary_kind=case["_oracle"]["mechanisms"][roots[0]][0]
+              if primary_kind=="SCOPE":
+                  scope_primary+=1
+                  if status=="IDENTIFIED" and len(case["task"]["trajectory"])==6:
+                      scope_delayed+=1
+                  if status=="INTERACTION":
+                      scope_interaction+=1
+
+              if status=="AMBIGUOUS":
+                  ambiguous+=1
+                  assert out["cause_action_id"] is None
+                  continue
+
+              repairs=list(out["repair_targets"])
+              iv=p.evaluate_intervention(case,repairs)
+              assert iv["rescued"] is True
+              rescue+=1
+
+              symptoms=case["_intervention_model"]["downstream_symptom_repairs"]
+              if symptoms:
+                  assert p.evaluate_intervention(case,symptoms)["rescued"] is False
+                  symptom_rejections+=1
+
+              if status=="INTERACTION":
+                  assert len(repairs)==2
+                  for repair in repairs:
+                      assert p.evaluate_intervention(case,[repair])["rescued"] is False
+                  interaction_joint+=1
+
+          src=inspect.getsource(c)
+          assert "_oracle" not in src
+          assert "trajectory_failure_typed_ir_proof_v5" not in src
+          assert "SCOPE" in c.ALLOWED_KINDS
+          assert set(p.KINDS)==set(c.ALLOWED_KINDS)
+
+          assert rescue==144
+          assert symptom_rejections==144
+          assert interaction_joint==48
+          assert ambiguous==48
+          assert scope_primary==24
+          assert scope_delayed==6
+          assert scope_interaction==6
+
+          print({
+              "case_count":len(cases),
+              "machine_checked_rescues":rescue,
+              "symptom_only_repair_rejections":symptom_rejections,
+              "interaction_joint_rescues":interaction_joint,
+              "ambiguous_cases":ambiguous,
+              "primary_scope_cases":scope_primary,
+              "scope_delayed_cases":scope_delayed,
+              "scope_interaction_cases":scope_interaction,
+          })
+          PY
