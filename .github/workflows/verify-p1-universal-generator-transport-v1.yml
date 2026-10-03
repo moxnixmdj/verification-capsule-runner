@@ -36,6 +36,10 @@ jobs:
           test "$(git hash-object "$C/canonical/runtime/p1_universal_generator_transport_theorem_v1.py")" = "cbd638b2e7eb649a45f5fa1fe0124a11f8410594"
           test "$(git hash-object "$C/canonical/tests/test_p1_universal_generator_transport_theorem_v1.py")" = "05f63b7d0169395ce8b470426531553de4cd69c3"
           test "$(git hash-object "$C/canonical/governance/P1_UNIVERSAL_GENERATOR_TRANSPORT_THEOREM_CANDIDATE_V1.json")" = "a69af85b013b14dff02fedb035a07d51f76e595e"
+          test "$(git hash-object "$C/canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json")" = "6a4b606a759d5479bb5ddbdf29426b1a1808b007"
+          test "$(git hash-object "$C/canonical/governance/P1_MINIMUM_REALITY_CUT_INPUT_V1.json")" = "cbcb2faff8404623846e77e19fcc5b0ad00e81d9"
+          test "$(git hash-object "$C/canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "95422fdb13ada158930486442c9441c9c5cd9852"
+          test "$(git hash-object "$C/canonical/governance/P1_UNIVERSAL_GENERATOR_TRANSPORT_SCOPE_REDUCTION_CANDIDATE_V1.json")" = "ccd21a521d08d088aba41112e8d382548ee9e43d"
       - name: Run exact theorem regression
         run: |
           set -euo pipefail
@@ -69,9 +73,116 @@ jobs:
           assert x["incremental_spend_usd"]==0,x
           assert x["execution_authority"] is False and x["promotion_authority"] is False,x
           PY
+      - name: Verify exact frozen scope inclusion
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/p1_universal_generator_transport_v1"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          C=Path("capsules/p1_universal_generator_transport_v1")
+          freeze=json.loads((C/"canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json").read_text())
+          cut=json.loads((C/"canonical/governance/P1_MINIMUM_REALITY_CUT_INPUT_V1.json").read_text())
+          theorem_receipt=json.loads((C/"canonical/verification/P1_UNIVERSAL_GENERATOR_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text())
+          reduction=json.loads((C/"canonical/governance/P1_UNIVERSAL_GENERATOR_TRANSPORT_SCOPE_REDUCTION_CANDIDATE_V1.json").read_text())
+          result=json.loads(Path("P1_UNIVERSAL_GENERATOR_TRANSPORT_RESULT.json").read_text())
+
+          expected_surfaces=[
+            "T0/FRONTIERCODE_V1_1::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T0/CURSORBENCH_4_0::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+            "T2/RECOVERY_SCOPE_COMPOSITION::P1_CAUSAL_FAILURE_LOCALIZATION_DIRECT_PROOF",
+          ]
+          expected_requirements={
+            "P1_FAILURE_SEMANTICS_TRANSPORT_FRONTIERCODE",
+            "P1_FAILURE_SEMANTICS_TRANSPORT_CURSORBENCH",
+            "P1_FAILURE_SEMANTICS_TRANSPORT_RECOVERY_SCOPE_COMPOSITION",
+          }
+
+          # Exact frozen population and exact theorem machinery are identical.
+          assert freeze["behavior_id"]=="TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001"
+          assert freeze["exact_authority"]["source_generator"]["git_blob_sha"]=="0210790c7dd705ef328e1b55d529a30c5c6c3337"
+          assert freeze["exact_authority"]["batch_harness_v2"]["git_blob_sha"]=="695cfe3f283723a52bafb6299236a2d0378dc79e"
+          assert freeze["exact_authority"]["normalizer_v1"]["git_blob_sha"]=="b6ba06fc6a35fa132eb19389ee256e74a63a4849"
+          assert freeze["exact_authority"]["candidate_v7"]["git_blob_sha"]=="28940387bd6c11671035ad9201e37bba13fd9bc9"
+          assert freeze["exact_authority"]["intervention_scorer_v6"]["git_blob_sha"]=="0f41a36e6ad16722ce05b180e036fb921a2ef886"
+          assert freeze["source_native_case_contract"]["generator"]=="canonical/runtime/contract_native_proof_suites.py::generate_case"
+          assert freeze["source_native_case_contract"]["semantics_binder"]=="canonical/runtime/p1_shared_failure_semantics_batch_v1.py::bind_public_source_case"
+          assert freeze["source_native_case_contract"]["semantic_binding_rule"]=="FAILED_PUBLIC_SOURCE_STATE_FAULT_INJECTED_BINDS_DIRECT_CONTRACT__FAILED_PUBLIC_SOURCE_STATE_DOWNSTREAM_DEGRADED_BINDS_DERIVED_UPSTREAM__ANY_OTHER_FAILED_PUBLIC_STATE_FAILS_CLOSED"
+
+          # Exact three surfaces and exact selection domain.
+          assert freeze["frozen_direct_surfaces"]==expected_surfaces
+          sel=freeze["frozen_selection"]
+          assert sel["cases_per_surface"]==64
+          assert sel["surface_count"]==3
+          assert sel["case_index_range_per_surface"]=="0..63"
+          assert sel["difficulty_schedule"]==[1,2,3,4,5]
+          assert sel["difficulty_assignment"]=="DIFFICULTIES[CASE_INDEX_MOD_5]"
+
+          # The independent theorem covers every reachable semantic world of that generator.
+          assert theorem_receipt["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          v=theorem_receipt["verified"]
+          assert v["structural_equivalence_classes"]==30
+          assert v["frozen_surface_count"]==3
+          assert v["frozen_case_indices_per_surface"]==64
+          assert v["deterministic_proof_executions"]==2292
+          assert v["all_v7_intervention_scorer_pass"] is True
+          assert v["all_source_native_rescue_scorer_pass"] is True
+          assert v["quarantined_execution_used_as_proof"] is False
+          assert v["new_reality_units_consumed"]==0
+          assert result["pass"] is True
+          assert result["quarantined_execution_used_as_proof"] is False
+          assert result["new_reality_units_consumed"]==0
+
+          # Every minimum-cut atom is the transport of this same frozen generator
+          # over one of the three exact surfaces; no extra population remains.
+          assert set(cut["requirements"])==expected_requirements
+          shared=next(x for x in cut["observations"] if x["id"]=="P1_SHARED_SOURCE_BOUND_FAILURE_SEMANTICS_BATCH")
+          assert set(shared["covers"])==expected_requirements
+          assert shared["cost"]==1
+          assert reduction["requirements"]==cut["requirements"]
+          rel=reduction["exact_scope_relation"]
+          assert rel["freeze_surfaces"]==expected_surfaces
+          assert rel["theorem_surface_count"]==3
+          assert rel["freeze_case_index_range"]=="0..63"
+          assert rel["theorem_case_indices_per_surface"]==64
+          assert rel["freeze_difficulty_schedule"]==[1,2,3,4,5]
+          assert rel["freeze_difficulty_assignment"]=="DIFFICULTIES[CASE_INDEX_MOD_5]"
+          assert rel["theorem_structural_equivalence_classes"]==30
+          assert rel["source_native_dual_scorer"] is True
+          assert reduction["quarantined_run_37108111537_used_as_proof"] is False
+
+          out={
+            "schema":"PROJECT_BRAIN_P1_UNIVERSAL_GENERATOR_TRANSPORT_SCOPE_REDUCTION_INDEPENDENT_VERIFICATION_V1",
+            "status":"PASS__EXACT_FROZEN_SCOPE_IS_SUBSET_OF_ZERO_REALITY_UNIVERSAL_GENERATOR_THEOREM",
+            "behavior_id":"TRAJECTORY_CRITICAL_FAILURE_LOCALIZATION_001",
+            "scope_relation":"EXACT_FROZEN_SELECTION_DOMAIN_SUBSET_OF_EXHAUSTIVE_GENERATOR_QUOTIENT",
+            "frozen_surface_count":3,
+            "frozen_case_indices_per_surface":64,
+            "generator_structural_equivalence_classes":30,
+            "deterministic_proof_executions":2292,
+            "transport_requirements_discharged":sorted(expected_requirements),
+            "all_three_transport_requirements_deductively_covered":True,
+            "remaining_failure_semantics_information_residual":0,
+            "quarantined_execution_used_as_proof":False,
+            "quarantined_execution_run_id":37108111537,
+            "new_reality_units_consumed":0,
+            "terminal_results_replayed":0,
+            "incremental_spend_usd":0,
+            "p1_scope_quarantine_lift_eligible":True,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+            "execution_authority":False,
+            "promotion_authority":False,
+            "next":"BIND_THIS_RECEIPT_TO_BRAIN__RUN_SEPARATE_P1_WHOLE_SCOPE_RESTORATION_REDUCER_OVER_PRIOR_PROVENANCE_MUTATION_AND_SCOPE_PROOFS__DO_NOT_USE_QUARANTINED_RUN",
+          }
+          Path("P1_UNIVERSAL_SCOPE_REDUCTION_RESULT.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: p1-universal-generator-transport-v1
-          path: P1_UNIVERSAL_GENERATOR_TRANSPORT_RESULT.json
+          path: |
+            P1_UNIVERSAL_GENERATOR_TRANSPORT_RESULT.json
+            P1_UNIVERSAL_SCOPE_REDUCTION_RESULT.json
           if-no-files-found: error
