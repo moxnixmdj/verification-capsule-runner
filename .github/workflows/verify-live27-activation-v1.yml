@@ -1,0 +1,133 @@
+name: Verify live-27 frontier activation v1
+
+on:
+  push:
+    branches: ["verify-live27-activation-v1"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          D=verification/live27_activation_v1
+          test "$(git hash-object "$D/activation.json")" = "d68b067344349e014b3ad52da5530a4645d840e4"
+          test "$(git hash-object "$D/authority.json")" = "cd0036e17fd9645a97cba001aad194d2203b4728"
+          test "$(git hash-object "$D/pointer.json")" = "81412faeff8d538f5d5ea3a7714ed6cff9f23c4a"
+          test "$(git hash-object "$D/goal.json")" = "1c8e2758b917de053b3057ba22418584ca71af15"
+          test "$(git hash-object "$D/intent.json")" = "b8f9d32905c4eedb71905f0baa1a837fd743e18b"
+          test "$(git hash-object "$D/candidate.json")" = "fae786d6051277865ed6ecde69be5da98e2bf509"
+          test "$(git hash-object "$D/candidate_verification.json")" = "1931ae5a7edb5dde2021a8a4f7e7a3ad0fd821f1"
+          test "$(git hash-object "$D/scheduling_authority.json")" = "04f0ee3cd64c3f77b29ece159ac9a35eae47a9dc"
+      - name: Verify activation chain
+        run: |
+          python - <<'PY' | tee LIVE27_ACTIVATION_VERDICT.json
+          import json, pathlib
+          D=pathlib.Path("verification/live27_activation_v1")
+          load=lambda n: json.loads((D/n).read_text())
+          act=load("activation.json")
+          auth=load("authority.json")
+          ptr=load("pointer.json")
+          goal=load("goal.json")
+          intent=load("intent.json")
+          cand=load("candidate.json")
+          ver=load("candidate_verification.json")
+          sched=load("scheduling_authority.json")
+
+          nxt=act["next"]
+          assert act["status"].startswith("ACTIVE_INDEPENDENT_PASS__16_NONDOMINATED_CERTIFICATES__19_ZERO_REALITY_REQUIREMENTS")
+          assert act["candidate"]["git_blob_sha"]=="fae786d6051277865ed6ecde69be5da98e2bf509"
+          assert act["verification"]["git_blob_sha"]=="1931ae5a7edb5dde2021a8a4f7e7a3ad0fd821f1"
+          assert act["current_scheduling_authority"]["git_blob_sha"]=="04f0ee3cd64c3f77b29ece159ac9a35eae47a9dc"
+          assert act["live_world"]["proved_predicates"]==11
+          assert act["live_world"]["unresolved_predicates"]==27
+          assert act["live_world"]["certificate_count"]==16
+          assert act["live_world"]["unique_zero_reality_requirements"]==19
+          assert act["highest_direct_leverage"]["certificate_id"]=="MATCHED_SCOPE_BINDING_CERTIFICATE"
+          assert act["highest_direct_leverage"]["covered_predicates"]==8
+          assert act["execution_policy"]["fresh_reality_authority"] is False
+          assert act["execution_policy"]["tool_discovery_v2_retrieval_authority_mandatory"] is True
+          assert act["execution_authority"] is False
+          assert act["promotion_authority"] is False
+          assert act["fresh_reality_authority"] is False
+
+          assert cand["live_world"]["unresolved_predicates"]==27
+          assert cand["live_world"]["certificate_count"]==16
+          assert cand["live_world"]["unique_zero_reality_requirements"]==19
+          assert cand["execution_policy"]["tool_discovery_v2_retrieval_authority_mandatory"] is True
+          assert cand["fresh_reality_authority"] is False
+
+          assert ver["independent_runner"]["conclusion"]=="success"
+          assert ver["verified"]["unresolved_predicates"]==27
+          assert ver["verified"]["nondominated_certificate_count"]==16
+          assert ver["verified"]["unique_zero_reality_requirements"]==19
+          assert ver["verified"]["complete_live_predicate_coverage"] is True
+          assert ver["fresh_reality_authority"] is False
+
+          assert sched["status"].startswith("ACTIVE_INDEPENDENT_PUBLIC_RUNNER_PASS__V9_CURRENT")
+          sr=sched["mandatory_tool_discovery_retrieval"]
+          assert sr["mandatory"] is True
+          assert sr["direct_bypass_allowed"] is False
+          assert sr["stale_authority_allowed"] is False
+          assert sr["consumed_source_epoch_replay_allowed"] is False
+          assert sr["no_result_means_nonexistence"] is False
+
+          assert auth["truth"]["opus55_acceptance"]=="4/19_PASS__15/19_OPEN"
+          af=auth["atomic_acceptance_frontier"]
+          assert (af["proved"],af["unresolved"],af["total"])==(11,27,38)
+          assert af["authorized_acceptance_case_actions"]==[]
+          s=auth["sources"]["current_27_information_dominance"]
+          assert s["candidate_git_blob_sha"]=="fae786d6051277865ed6ecde69be5da98e2bf509"
+          assert s["verification_git_blob_sha"]=="1931ae5a7edb5dde2021a8a4f7e7a3ad0fd821f1"
+          assert s["activation_git_blob_sha"]=="d68b067344349e014b3ad52da5530a4645d840e4"
+          assert auth["next_terminal_action"]==nxt
+
+          cf=ptr["current_frontier"]
+          assert cf["next_step"]==nxt
+          assert "15_OF_19" in cf["critical_blocker"] and "27_OF_38" in cf["critical_blocker"]
+          assert "MATCHED_SCOPE_BINDING_CERTIFICATE" in cf["highest_leverage_capability_gap"]
+          assert "8_OF_27" in cf["highest_leverage_capability_gap"]
+          assert cf["current_27_information_dominance_activation_path"]=="canonical/governance/CURRENT_27_INFORMATION_DOMINANCE_ACTIVATION_V1.json"
+
+          assert goal["next_required_action_class"]==nxt
+          assert "15_OF_19" in goal["current_parent_blocker"] and "27_OF_38" in goal["current_parent_blocker"]
+          assert goal["current_information_dominance_activation"]=="canonical/governance/CURRENT_27_INFORMATION_DOMINANCE_ACTIVATION_V1.json"
+
+          assert intent["selected_next"]==nxt
+          assert intent["reality_query_admission"]["new_reality_units_consumed"]==0 if "reality_query_admission" in intent else intent["new_reality_units_consumed"]==0
+          assert intent["new_reality_units_consumed"]==0
+          assert intent["execution_authority"] is False
+          assert intent["promotion_authority"] is False
+
+          out={
+            "schema":"PROJECT_BRAIN_LIVE27_FRONTIER_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_V1",
+            "status":"INDEPENDENT_PASS__LIVE27_ZERO_REALITY_FRONTIER_ACTIVATION_AND_OPERATIVE_POINTERS_CONSISTENT__ZERO_CREDIT",
+            "proved_predicates":11,
+            "unresolved_predicates":27,
+            "certificate_count":16,
+            "unique_zero_reality_requirements":19,
+            "highest_direct_certificate":"MATCHED_SCOPE_BINDING_CERTIFICATE",
+            "highest_direct_coverage":8,
+            "fresh_reality_authority":False,
+            "execution_authority":False,
+            "promotion_authority":False,
+            "new_reality_units_consumed":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: live27-frontier-activation-v1
+          path: LIVE27_ACTIVATION_VERDICT.json
+          if-no-files-found: error
