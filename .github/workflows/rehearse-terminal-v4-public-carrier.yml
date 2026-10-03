@@ -1,0 +1,98 @@
+name: Rehearse terminal V4 public carrier
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/terminal_v4_execution/exact_public_snapshot_intersection_v1.json
+      - .github/workflows/rehearse-terminal-v4-public-carrier.yml
+permissions:
+  contents: read
+jobs:
+  rehearse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Assemble exact V4 execution root from hash-equal public bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, shutil
+          from pathlib import Path
+
+          root=Path(".")
+          manifest=json.loads(Path("capsules/terminal_v4_execution/exact_public_snapshot_intersection_v1.json").read_text())
+          assert manifest["brain_execution_snapshot_commit"]=="3757d6777ef0122d21ce1f1ee2e6d6a5e560aeb5"
+          src=Path("capsules/terminal_atomic_closure_v4/snapshot")
+          dst=Path("v4exec")
+          shutil.copytree(src,dst)
+
+          def blob_sha(path: Path) -> str:
+              data=path.read_bytes()
+              return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+
+          copied=0
+          for row in manifest["files"]:
+              p=root/row["path"]
+              assert p.is_file(), row
+              assert blob_sha(p)==row["sha"], (row["path"],blob_sha(p),row["sha"])
+              q=dst/row["path"]
+              q.parent.mkdir(parents=True,exist_ok=True)
+              shutil.copy2(p,q)
+              assert blob_sha(q)==row["sha"], row
+              copied+=1
+          assert copied==manifest["exact_file_count"]
+          print("ASSEMBLED_EXACT_V4_FILES",copied)
+          PY
+      - name: Install frozen-route runtime dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-input             "pydantic>=2,<3" "cadquery==2.6.1"             python-docx openpyxl python-pptx pypdf
+      - name: Rederive exact launch authority without cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd v4exec
+          PYTHONPATH=. python - <<'PY'
+          from pathlib import Path
+          from canonical.runtime import terminal_wave_launch_authority_reducer_v1 as authority
+          out=authority.evaluate(Path("."))
+          print(out)
+          assert out["pass"] is True, out
+          assert out["launch_authority"] is True, out
+          assert out["execution_authority"] is True, out
+          assert out["route_count"]==12, out
+          assert out["failed_predicates"]==[], out
+          assert out["terminal_results_observed"]==0, out
+          assert out["fresh_terminal_evidence_consumed"]==0, out
+          PY
+      - name: Import real frozen launcher
+        run: |
+          cd v4exec
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime import terminal_parent_portfolio_launcher_v1
+          print("V4_LAUNCHER_IMPORT_OK")
+          PY
+      - name: Rehearse all parent portfolios on sentinel-only nonterminal seeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd v4exec
+          PYTHONPATH=. python canonical/runtime/terminal_parent_portfolio_runner_v1.py > ../v4_rehearsal.json
+          cd ..
+          python - <<'PY'
+          import json
+          d=json.load(open("v4_rehearsal.json"))
+          assert d["pass"] is True, d
+          assert d["terminal_result"] is False, d
+          assert d["fresh_terminal_evidence_consumed"]==0, d
+          assert d["capability_credit_delta"]==0, d
+          assert d["family_credit_delta"]==0, d
+          for p,row in d["portfolios"].items():
+              assert row["pass"] is True, (p,row)
+              assert row["terminal_result"] is False, (p,row)
+          print("TERMINAL_V4_PUBLIC_CARRIER_REHEARSAL_PASS")
+          PY
