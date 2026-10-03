@@ -110,4 +110,5 @@ print(json.dumps({
     "candidate_only_authority":True,
     "history_scope_partial_and_explicit":True,
 },sort_keys=True))
-\n# trigger exact-byte verification run\n
+
+# trigger exact-byte verification run
