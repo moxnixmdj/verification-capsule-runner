@@ -42,7 +42,10 @@ jobs:
             --bridge canonical/governance/COMPOSITION_BEHAVIORAL_BRIDGE_V1.json \
             --bridge-verification canonical/verification/COMPOSITION_BEHAVIORAL_BRIDGE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json \
             --memory-bridge canonical/governance/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V1.json \
+            --memory-bridge-verification canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json \
+            --firewall-verification canonical/verification/COMPOSITION_BRIDGE_SCOPE_FIREWALL_RECONCILIATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json \
             --memory-package canonical/capabilities/opus55/OPUS55_LONG_HORIZON_MEMORY_AND_CONTINUITY_V1.json \
+            --delegation-acceptance-verification canonical/verification/DELEGATION_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json \
             > composition-receipt-reactivation-verdict.json
       - name: Enforce exact 2-of-12 truth
         run: |
