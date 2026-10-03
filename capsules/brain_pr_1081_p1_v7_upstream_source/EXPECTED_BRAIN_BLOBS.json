@@ -5,7 +5,7 @@
   "brain_pr": 1081,
   "exact_brain_blobs": {
     "canonical/governance/P1_V7_UPSTREAM_FAILURE_SEMANTICS_SOURCE_AUDIT_V1.json": "1f45657c20d5760e1773f4b67d3cee642c26fb94",
-    "canonical/runtime/p1_v7_upstream_failure_semantics_source_audit_v1.py": "a2ffbe837b7bea961c4e024a5c3962717ae74d1d",
+    "canonical/runtime/p1_v7_upstream_failure_semantics_source_audit_v1.py": "1ec47e0ee7bd931971e17e4a9699b4ed29b5103c",
     "canonical/tests/test_p1_v7_upstream_failure_semantics_source_audit_v1.py": "fc11a9363bd40ef87fb14bd1b3a321bc14a7fdab",
     "canonical/governance/P1_TRAJECTORY_T0_T2_MULTIPLEX_TERMINAL_BINDING_V1.json": "8703c6aa08227467a619a7ae90d0d61f8e54da39",
     "canonical/governance/TERMINAL_PORTFOLIO_BINDING_MANIFESTS_V1.json": "8b439403a05b4a912f06a8866db25f6e53b52473",
