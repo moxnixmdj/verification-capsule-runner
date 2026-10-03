@@ -1,0 +1,18 @@
+{
+  "schema": "BRAIN_COMPOSITION_SLICE_V6_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1369,
+  "brain_ref": "sol/composition-slice-v6-four-current-receipts-20261003",
+  "exact_brain_blobs": {
+    "canonical/runtime/composition_component_proof_slicer_v1.py": "0e5028d8547bc3e17e7128b6311f734ac30a16d8",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V6.json": "cb15018cd7a913bdf250d1cef884d4b1005d3d67",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_CANDIDATE_V6.json": "317b3f6d58e5294577eb645c9fe5c07235efdde1",
+    "canonical/tests/test_composition_component_proof_slice_v6.py": "93286d64c29b20d4d888b4b22564b3a03c35c83f",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V5.json": "efc59990dc08d4262dca7f8d1fbb672111d1219b",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V5.json": "4c51caa97fc10e429b36b7cb82aa1dc83ad784f2",
+    "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "88783df170065d3ff23e4ff3c2d2ab30ec7bc314",
+    "canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "367eaa457c930d5bfcdb44778358ca665d999ae7",
+    "canonical/verification/COMPOSITION_RECOVERY_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "2c18b5029b1a953488b2aefacb00f67b88d27659",
+    "canonical/verification/COMPOSITION_TOOL_DISCOVERY_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "936057358b55a98f6510a8e6ca9062ab903ea83a"
+  }
+}
