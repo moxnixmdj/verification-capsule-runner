@@ -32,7 +32,9 @@ jobs:
         working-directory: capsules/brain_pr_1160_tool_discovery_owned_universal_v5
         env:
           PYTHONPATH: .
-        run: python -m unittest canonical.tests.test_tool_discovery_owned_universal_v5 -v
+        run: |
+          python -m unittest canonical.tests.test_tool_discovery_owned_universal_v5 -v
+          python -m unittest canonical.tests.test_tool_discovery_v5_common_authority_scope_certificate_v1 -v
       - name: Run independent target-preservation and exhaustive oracle
         working-directory: capsules/brain_pr_1160_tool_discovery_owned_universal_v5
         env:
