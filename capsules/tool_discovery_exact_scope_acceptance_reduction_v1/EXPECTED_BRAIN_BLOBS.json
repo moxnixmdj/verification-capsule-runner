@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_TOOL_DISCOVERY_EXACT_SCOPE_ACCEPTANCE_REDUCTION_PUBLIC_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "source_ref": "f6141567ac4feb0d9e511470c08b3676a8829eb9",
+  "exact_brain_blobs": {
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json": "4c7d170418bb95828a23538709aa304a00db6746",
+    "canonical/runtime/acceptance_proof_transmuter_v1.py": "39b5611e53485674b29e2a05da91b89801bc5aa6",
+    "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json": "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",
+    "canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "c9adf25c2e63f9e8b111f1d022acda264d6571f5"
+  }
+}
