@@ -1,0 +1,117 @@
+name: Verify TB-Science local Qwen V2 candidate
+on:
+  push:
+    branches: ["verify-tb-science-local-qwen-v2-20261003"]
+    paths:
+      - "capsules/tb_science_local_qwen_v2/**"
+      - ".github/workflows/verify-tb-science-local-qwen-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored Brain candidate bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_local_qwen_v2
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v2.py")" = "ce17407590343e4535e78f1e5a1592fd815ce332"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v2.py")" = "e11d7116f344dc907ab12baee404f8b97c569208"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v2.py")" = "c959754f790ac2d4adb322647a16e2f2dabfcda1"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v2.py")" = "a4a655bb96d51b015248d32a8f34041cb4409d24"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_LOCAL_QWEN_ROUTE_CANDIDATE_V1.json")" = "83b0be2d640875245db42542df289a647bea5000"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_TRANCHE1_ROOT_CAUSE_RECONCILIATION_20261003_V1.json")" = "07390caaf3bb9eebd799aea297f72f7484c5c1f9"
+      - name: Run exact candidate unit tests
+        env:
+          PYTHONPATH: capsules/tb_science_local_qwen_v2
+        run: |
+          set -euo pipefail
+          python -m unittest -v             canonical.tests.test_harbor_science_planner_v2             canonical.tests.test_harbor_science_agent_v2
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Download and verify exact pinned Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+      - name: Start exact local structured proposal endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}" > LLAMA_SERVER.log 2>&1 &
+          echo $! > LLAMA_SERVER.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > LLAMA_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Run six live synthetic science contract probes
+        env:
+          PYTHONPATH: capsules/tb_science_local_qwen_v2
+          PROJECT_BRAIN_SCIENCE_LOCAL_ENDPOINT: http://127.0.0.1:8080/v1/chat/completions
+          PROJECT_BRAIN_SCIENCE_LOCAL_MODEL: brain-qwen3.5-9b
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_local_qwen_v2/synthetic_probe.py | tee SYNTHETIC_RESULT.json
+      - name: Emit independent verification receipt
+        if: success()
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee VERIFICATION_RECEIPT.json
+          import json, os
+          synthetic=json.load(open("SYNTHETIC_RESULT.json"))
+          assert synthetic["status"]=="PASS"
+          assert synthetic["synthetic_contracts"]==6
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_LOCAL_QWEN_V2_INDEPENDENT_VERIFICATION_V1",
+            "status":"INDEPENDENT_PUBLIC_RUNNER_PASS",
+            "brain_pr":1229,
+            "planner_blob":"ce17407590343e4535e78f1e5a1592fd815ce332",
+            "agent_blob":"e11d7116f344dc907ab12baee404f8b97c569208",
+            "planner_tests_blob":"c959754f790ac2d4adb322647a16e2f2dabfcda1",
+            "agent_tests_blob":"a4a655bb96d51b015248d32a8f34041cb4409d24",
+            "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+            "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+            "model_bytes":5060174144,
+            "synthetic_contracts_passed":6,
+            "terminal_task_content_read":0,
+            "terminal_trials_executed":0,
+            "incremental_spend_usd":0,
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "execution_authority":False,
+            "promotion_authority":False,
+            "capability_credit_delta":0,
+            "family_credit_delta":0,
+          }
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-local-qwen-v2-verification
+          path: |
+            SYNTHETIC_RESULT.json
+            VERIFICATION_RECEIPT.json
+            LLAMA_HEALTH.json
+            LLAMA_SERVER.log
+          if-no-files-found: warn
