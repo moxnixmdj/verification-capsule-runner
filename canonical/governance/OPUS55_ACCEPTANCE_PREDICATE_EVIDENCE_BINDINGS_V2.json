@@ -1,18 +1,17 @@
 {
   "schema": "PROJECT_BRAIN_OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2",
   "date": "2026-10-02",
-  "status": "RECEIPT_SATURATION_COMPLETE__9_PROVED__3_BOUND_BLOCKERS__26_OTHER_UNRESOLVED__ZERO_DIRECT_ACCEPTANCE_CASE_ACTIONS_READY",
+  "status": "AUTHORITY_RECONCILED__11_PROVED__4_BOUND_BLOCKERS__23_OTHER_UNRESOLVED__27_TOTAL_UNRESOLVED__ZERO_DIRECT_ACCEPTANCE_CASE_ACTIONS_READY",
   "objective": "Bind only content-addressed atomic acceptance evidence. Until saturation is complete, benchmark and matched-case execution remains forbidden.",
   "saturation": {
-    "status": "COMPLETE",
-    "source_snapshot_sha": "5023cc222a44f99b57785f5954cc95a29b739193",
-    "receipt": "canonical/verification/DELEGATION_TEMPORAL_CEILING_TRANSMUTATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
-    "receipt_sha": "5023cc222a44f99b57785f5954cc95a29b739193",
-    "proved_predicate_count": 9,
-    "bound_blocker_count": 3,
-    "unresolved_predicate_count": 29,
+    "status": "RECOMPUTED_AFTER_INDEPENDENT_RECOVERY_SCOPE_COMPLETE_STRONGER_PROOF",
+    "source_snapshot_sha": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+    "receipt": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+    "proved_predicate_count": 11,
+    "bound_blocker_count": 4,
+    "unresolved_predicate_count": 27,
     "new_reality_units_consumed": 0,
-    "rule": "COMPLETE_FOR_CURRENT_LEDGER__DELEGATION_TEMPORAL_CEILING_INDEPENDENTLY_VERIFIED__INVALIDATE_ON_AUTHORITY_CHANGE"
+    "rule": "RECOVERY_THREE_PREDICATES_DISCHARGED_BY_HARDENED_INDEPENDENT_SCOPE_COMPLETE_STRONGER_PROOF__HISTORICAL_OBSERVED_BOUNDS_NON_LOAD_BEARING__ZERO_NEW_REALITY"
   },
   "claims": [
     {
@@ -186,57 +185,92 @@
     },
     {
       "predicate_id": "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",
-      "state": "PROVED",
-      "proof_kind": "ABSOLUTE_CEILING",
-      "source_path": "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json",
-      "source_sha": "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",
-      "independent_or_objective": true,
-      "scope_complete": true,
-      "objective_ceiling": true,
-      "brain_value": 1,
-      "objective_ceiling_value": 1,
-      "basis": "FULL_FROZEN_PREWAVE_TOOL_DISCOVERY_COMPARATOR_DELETION_ROUTE_PASSED_180_OF_180__FAMILY_MAPS_EXACTLY_TO_THIS_SINGLE_RESIDUAL_CONTRACT__100_PERCENT_IS_OBJECTIVE_UPPER_CEILING_SO_MATCHED_OPUS_SUCCESS_AND_VALID_ROUTE_BOUNDS_CANNOT_EXCEED_BRAIN",
-      "supporting_sources": [
-        {
-          "path": "canonical/governance/TOOL_DISCOVERY_T2_T3_OBJECTIVE_TERMINAL_BINDING_V1.json",
-          "sha": "6bcabc0a7d0525532ce7b80e132278f7c99caa43"
-        },
-        {
-          "path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
-          "sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc"
-        },
-        {
-          "path": "canonical/verification/TERMINAL_CEILING_WITNESS_LIFTER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
-          "sha": "a1c702c79d2b29bfc9c4d5a238f9c260bc204770"
-        }
-      ]
+      "state": "EXTERNAL_BLOCKED",
+      "blocker": "ABSOLUTE_SCOPE_COMPLETENESS_MISSING",
+      "blocker_class": "SCOPE_COMPLETENESS",
+      "discharge_condition": "PROVIDE_INDEPENDENTLY_VERIFIED_EXACT_COMPLETE_TARGET_CASE_UNIVERSE__EXHAUSTIVE_FINITE_SUPERSET__OR_UNIVERSAL_FORMAL_SCOPE_PROOF_FOR_THE_CLAIMED_PROTOCOL_POPULATION",
+      "source_path": "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json",
+      "source_sha": "ec2d931860e7cd7d9f73a658706f8c33fca3a10d",
+      "family": "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+      "basis": "INDEPENDENT_SCOPE_FIREWALL_REVOKES_FINITE_SAMPLE_ABSOLUTE_DOMINANCE_AS_WHOLE_PROTOCOL_PROOF__RAW_FROZEN_SAMPLE_RESULT_REMAINS_VALID_BUT_SCOPE_INCOMPLETE",
+      "prior_sample_evidence": {
+        "prior_state": "PROVED",
+        "prior_proof_kind": "ABSOLUTE_CEILING",
+        "prior_source_path": "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json",
+        "prior_source_sha": "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",
+        "prior_brain_value": 1,
+        "prior_objective_ceiling_value": 1,
+        "preserved_as_sample_evidence_only": true
+      },
+      "reopened_by": {
+        "path": "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json",
+        "reason": "FINITE_PERFECT_SAMPLE_IS_NOT_PROTOCOL_WIDE_ABSOLUTE_BOUND_WITHOUT_SCOPE_COMPLETENESS"
+      },
+      "scope_complete": false,
+      "objective_ceiling": false
     },
     {
       "predicate_id": "DELEGATION_TERMINAL_SUCCESS_NONINFERIOR",
       "state": "PROVED",
-      "proof_kind": "ABSOLUTE_CEILING",
-      "source_path": "canonical/governance/DELEGATION_ACCEPTANCE_CEILING_WITNESS_V1.json",
-      "source_sha": "cb3b7c4b6c4e1f2a0471c6b6be72c4ca9ebddc80",
-      "independent_or_objective": true,
-      "scope_complete": true,
-      "objective_ceiling": true,
+      "proof_kind": "ABSOLUTE_CEILING_WITH_UNIVERSAL_FORMAL_SCOPE_COMPLETENESS",
+      "source_path": "canonical/verification/DELEGATION_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+      "source_sha": "d04f2a8c5594d261158835db1cae3822411b6b23",
+      "family": "SUBAGENT_DELEGATION_AND_COORDINATION",
+      "basis": "INDEPENDENT_PUBLIC_RUNNER_COMPILED_THE_EXISTING_THEORETICAL_CEILING_WITNESS_WITH_AN_INDEPENDENT_UNIVERSAL_FORMAL_SCOPE_COMPLETENESS_CERTIFICATE__DELEGATION_ONLY_NEW_CLOSURE",
       "brain_value": 1,
       "objective_ceiling_value": 1,
-      "basis": "TEMPORALLY_TRANSPORTED_FULL_FROZEN_DELEGATION_OBJECTIVE_ROUTE_PASSED_132_OF_132__LOAD_BEARING_BINDING_SCOPE_PROTOCOL_CONTRACT_AND_EXECUTOR_IDENTITIES_PRESERVED__INDEPENDENT_TRANSPORT_AND_4_OF_19_TRANSMUTATION_VERIFICATIONS_PASS__100_PERCENT_BINARY_OBJECTIVE_CEILING_DOMINATES_MATCHED_OPUS_TERMINAL_SUCCESS_BOUND",
-      "supporting_sources": [
-        {
-          "path": "canonical/verification/DELEGATION_TEMPORAL_PROOF_TRANSPORT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
-          "sha": "5278abb7fcaa6b97189b67598c75e4df395e1788"
-        },
-        {
-          "path": "canonical/verification/DELEGATION_TEMPORAL_CEILING_TRANSMUTATION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",
-          "sha": "5023cc222a44f99b57785f5954cc95a29b739193"
-        },
-        {
-          "path": "canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json",
-          "sha": "bd86b4c53992b47a4a60b64a60ba03db9a442cfc"
-        }
-      ]
+      "scope_complete": true,
+      "objective_ceiling": true,
+      "scope_completeness": {
+        "basis": "UNIVERSAL_FORMAL_SCOPE_PROOF",
+        "receipt": "canonical/verification/DELEGATION_V4_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+        "receipt_sha": "955ac8f4bd0db2527bfbb465fc8252df6d916156",
+        "all_admissible_target_inputs_proved": true,
+        "formal_completeness": true
+      },
+      "prior_sample_evidence": {
+        "prior_state": "PROVED",
+        "prior_proof_kind": "ABSOLUTE_CEILING",
+        "prior_source_path": "canonical/governance/DELEGATION_ACCEPTANCE_CEILING_WITNESS_V1.json",
+        "prior_source_sha": "cb3b7c4b6c4e1f2a0471c6b6be72c4ca9ebddc80",
+        "prior_brain_value": 1,
+        "prior_objective_ceiling_value": 1,
+        "preserved_as_sample_evidence_only": true
+      },
+      "reopened_by": {
+        "path": "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json",
+        "reason": "FINITE_PERFECT_SAMPLE_IS_NOT_PROTOCOL_WIDE_ABSOLUTE_BOUND_WITHOUT_SCOPE_COMPLETENESS"
+      }
+    },
+    {
+      "predicate_id": "RECOVERY_CAUSAL_LOCALIZATION_NONINFERIOR",
+      "state": "PROVED",
+      "proof_kind": "SCOPE_COMPLETE_STRONGER_PROOF",
+      "source_path": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+      "source_sha": "981c8ac9b66ee7fccf5b531525849e29df9be483",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "HARDENED_INDEPENDENT_ZERO_REALITY_RECOVERY_REDUCER_PROVES_EXACT_FROZEN_SCOPE_AT_OBJECTIVE_CEILING_OR_FLOOR_USING_UNIVERSAL_P1_THEOREM_AND_WHOLE_SCOPE_RESTORATION__HISTORICAL_RELATION_OBSERVED_BOUNDS_AND_QUARANTINED_TERMINAL_RUN_NON_LOAD_BEARING"
+    },
+    {
+      "predicate_id": "RECOVERY_TERMINAL_NONINFERIOR",
+      "state": "PROVED",
+      "proof_kind": "SCOPE_COMPLETE_STRONGER_PROOF",
+      "source_path": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+      "source_sha": "981c8ac9b66ee7fccf5b531525849e29df9be483",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "HARDENED_INDEPENDENT_ZERO_REALITY_RECOVERY_REDUCER_PROVES_EXACT_FROZEN_SCOPE_AT_OBJECTIVE_CEILING_OR_FLOOR_USING_UNIVERSAL_P1_THEOREM_AND_WHOLE_SCOPE_RESTORATION__HISTORICAL_RELATION_OBSERVED_BOUNDS_AND_QUARANTINED_TERMINAL_RUN_NON_LOAD_BEARING"
+    },
+    {
+      "predicate_id": "RECOVERY_ZERO_CRITICAL_FAIL_CLOSED_MISSES",
+      "state": "PROVED",
+      "proof_kind": "SCOPE_COMPLETE_STRONGER_PROOF",
+      "source_path": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
+      "source_sha": "981c8ac9b66ee7fccf5b531525849e29df9be483",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "basis": "HARDENED_INDEPENDENT_ZERO_REALITY_RECOVERY_REDUCER_PROVES_EXACT_FROZEN_SCOPE_AT_OBJECTIVE_CEILING_OR_FLOOR_USING_UNIVERSAL_P1_THEOREM_AND_WHOLE_SCOPE_RESTORATION__HISTORICAL_RELATION_OBSERVED_BOUNDS_AND_QUARANTINED_TERMINAL_RUN_NON_LOAD_BEARING"
     }
   ],
   "rules": [
@@ -244,7 +278,11 @@
     "NO_PROVED_CLAIM_WITHOUT_INDEPENDENT_OR_OBJECTIVE_EVIDENCE",
     "NO_PROVED_CLAIM_WITHOUT_SCOPE_COMPLETE_TRUE",
     "BEHAVIORAL_19_OF_19_PASS_DOES_NOT_AUTOPOPULATE_ATOMIC_ACCEPTANCE_CLAIMS",
-    "NO_NEW_REALITY_BEFORE_RECEIPT_SATURATION_COMPLETE"
+    "NO_NEW_REALITY_BEFORE_RECEIPT_SATURATION_COMPLETE",
+    "FINITE_SAMPLE_100_PERCENT_DOES_NOT_PROVE_PROTOCOL_WIDE_ABSOLUTE_DOMINANCE_WITHOUT_EXACT_EXHAUSTIVE_OR_UNIVERSAL_SCOPE_COMPLETENESS",
+    "RAW_TOOL_DISCOVERY_180_OF_180_AND_DELEGATION_132_OF_132_RESULTS_REMAIN_SAMPLE_EVIDENCE_ONLY_UNTIL_SCOPE_COMPLETENESS_IS_INDEPENDENTLY_VERIFIED",
+    "FINITE_PERFECT_SAMPLE_CANNOT_SUPPORT_ABSOLUTE_DOMINANCE_WITHOUT_INDEPENDENT_EXACT_EXHAUSTIVE_OR_UNIVERSAL_SCOPE_COMPLETENESS",
+    "REOPEN_ONLY_CLAIMS_WHOSE_LOAD_BEARING_PROOF_DEPENDS_ON_INVALIDATED_ABSOLUTE_DOMINANCE"
   ],
   "capability_credit_delta": 0,
   "family_credit_delta": 0
