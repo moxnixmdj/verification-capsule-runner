@@ -15,6 +15,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Run independent common-authority scope oracle
+        run: |
+          cd capsules/brain_pr_1115_tool_discovery_universal_v4
+          export PYTHONPATH=.
+          python independent_scope_oracle_v1.py > independent_oracle_verdict.json
+          python - <<'PY'
+          import json
+          v=json.load(open("independent_oracle_verdict.json"))
+          assert v["blob_drift"]=={},v
+          assert v["universal_scope_proved_by_oracle"] is True,v
+          assert v["basis_kind"]=="INDEPENDENT_FINITE_MEASURE_INDUCTION_PLUS_TRANSITION_ORACLE",v
+          assert v["uses_candidate_certificate"] is False,v
+          assert v["uses_candidate_test_module"] is False,v
+          assert v["terminal_cases_replayed"]==0,v
+          assert v["new_reality_units_consumed"]==0,v
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("independent common-authority Tool Discovery oracle: PASS")
+          PY
       - name: Run adversarial universal-scope tests
         run: |
           cd capsules/brain_pr_1115_tool_discovery_universal_v4
