@@ -1,0 +1,41 @@
+name: Verify Retrieval V10 live provider calibration 20261004
+on:
+  push:
+    branches:
+      - verify/retrieval-v10-live-provider-calibration-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact subject blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v1.py)" = "ae22852836f61dd0f9691bbd89dbb4680aefa917"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v1.py)" = "da930564ced7f959249fac5e50092a625aa269ef"
+      - name: Deterministic unit tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v1.py
+      - name: Execute live provider arena
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v1.py | tee live_provider_output.json
+          python - <<'PY'
+          import json
+          d=json.load(open("live_provider_output.json"))
+          assert d["successful_task_count"] >= 10, d
+          assert len(d["source_metrics"]) >= 5, d
+          assert d["open_world_completeness_claim"] is False
+          print("LIVE_PROVIDER_SUMMARY", json.dumps({
+            "task_count":d["task_count"],
+            "successful_task_count":d["successful_task_count"],
+            "target_hit_count":d["target_hit_count"],
+            "target_recall_on_successful_tasks":d["target_recall_on_successful_tasks"],
+            "source_metrics":d["source_metrics"],
+            "events":d["events"],
+          },sort_keys=True))
+          PY
