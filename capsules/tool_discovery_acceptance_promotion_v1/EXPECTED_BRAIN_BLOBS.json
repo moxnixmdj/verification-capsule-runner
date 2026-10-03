@@ -1,0 +1,17 @@
+{
+  "schema": "BRAIN_TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_V1_PUBLIC_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1361,
+  "brain_ref": "promote/tool-discovery-acceptance-5of19-20261003-sol",
+  "exact_brain_blobs": {
+    "canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_PROMOTION_V1.json": "c6119b07f9d228b52ac2a6b4ca44bae3751b6c6c",
+    "canonical/runtime/tool_discovery_acceptance_promotion_v1.py": "a698b43a09ea918112cbbd739871fe0209c51d64",
+    "canonical/tests/test_tool_discovery_acceptance_promotion_v1.py": "3488c3824c10c5e4d504728fbbb3c9454b43ddfc",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "c5edb55b827d540a13f44dafc8d86ee477dcf5ff",
+    "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json": "c66551ce3c77592f8937d165686a7133807d6654",
+    "canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json": "7d4b89a408416201c0de6e2cb31797a24737223b",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "da0696c775f47f3cecd4ea9f85bad09a4e3d0c92",
+    "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "913d171b3c855000d322e183b142b3200eeaf0a9",
+    "canonical/verification/TOOL_DISCOVERY_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "f44e2378cf00f86a59159cb9d8edb35f0a7c27f4"
+  }
+}
