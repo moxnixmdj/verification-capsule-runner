@@ -1,0 +1,16 @@
+name: Verify Retrieval V4 router epoch executor
+on:
+  push:
+    branches:
+      - verify/retrieval-v4-router-epoch-executor-20261003-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_retrieval_v4_router_epoch_executor_v1.py
