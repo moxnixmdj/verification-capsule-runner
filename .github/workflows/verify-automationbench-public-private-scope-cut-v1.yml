@@ -1,0 +1,32 @@
+name: Verify AutomationBench public/private scope cut
+on:
+  pull_request:
+    paths:
+      - "verify_automationbench_public_private_scope_cut_v1.py"
+      - ".github/workflows/verify-automationbench-public-private-scope-cut-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_automationbench_public_private_scope_cut_v1.py
+      - run: |
+          python - <<'PY'
+          import json
+          j=json.load(open("AUTOMATIONBENCH_PUBLIC_PRIVATE_SCOPE_CUT_V1.json"))
+          d=j["deduction"]
+          assert d["public_600_is_official_leaderboard_population"] is False
+          assert d["public_600_score_is_guaranteed_equal_to_private_leaderboard_score"] is False
+          assert d["public_600_score_can_directly_discharge_private_bar_without_scope_equivalence_proof"] is False
+          assert j["family_credit_delta"] == 0
+          print("FAIL_CLOSED_AUTOMATIONBENCH_SCOPE_CUT_PASS")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: automationbench-public-private-scope-cut-v1
+          path: AUTOMATIONBENCH_PUBLIC_PRIVATE_SCOPE_CUT_V1.json
