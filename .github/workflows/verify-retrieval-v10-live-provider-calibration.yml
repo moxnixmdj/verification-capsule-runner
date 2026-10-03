@@ -8,26 +8,25 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact V6 ESLint residual blobs
+      - name: Verify exact package bridge blobs
         run: |
-          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v6.py)" = "a68d50052941bf587502b6ab6e620a21fb66f14f"
-          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v6.py)" = "fe9869fe4aa0de2785d6f824ab250a01c497dd83"
-      - name: Deterministic V6 tests
-        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v6.py
-      - name: Execute final ESLint residual live arena
+          test "$(git hash-object canonical/runtime/retrieval_registry_repository_bridge_v1.py)" = "1bd144d253c23616de751f4707f355505ca2c41f"
+          test "$(git hash-object canonical/tests/test_retrieval_registry_repository_bridge_v1.py)" = "e3fdf7ba44cf13e46cca59bbb92e010ea3c6abd3"
+      - name: Deterministic bridge tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_registry_repository_bridge_v1.py
+      - name: Execute live registry repository bridge
         run: |
-          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v6.py | tee live_provider_v6_output.json
+          PYTHONPATH=. python canonical/runtime/retrieval_registry_repository_bridge_v1.py | tee registry_bridge_output.json
           python - <<'PY'
           import json
-          d=json.load(open("live_provider_v6_output.json"))
-          assert d["usable_case_count"] == 1, d
+          d=json.load(open("registry_bridge_output.json"))
+          assert d["successful_case_count"] >= 4, d
+          assert d["reverse_index_construction_supported"] is True
           assert d["open_world_completeness_claim"] is False
-          print("LIVE_PROVIDER_V6_SUMMARY", json.dumps(d,sort_keys=True))
+          print("REGISTRY_REPOSITORY_BRIDGE_SUMMARY", json.dumps(d,sort_keys=True))
           PY
