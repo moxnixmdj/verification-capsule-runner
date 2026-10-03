@@ -1,0 +1,84 @@
+name: Verify TB-Science canary V3 carrier
+
+on:
+  push:
+    branches: ["execute/tb-science-canary-v3-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v3-carrier.yml"
+      - ".github/workflows/execute-tb-science-canary-v3.yml"
+      - "capsules/tb_science_canary_v3_execution/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-tb-science-canary-v3-carrier.yml"
+      - ".github/workflows/execute-tb-science-canary-v3.yml"
+      - "capsules/tb_science_canary_v3_execution/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact canonical authority and route
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_canary_v3_execution
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json")" = "ae5bc607b828e8f55092e80e0a806d5a496eb54b"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_ONE_SLOT_CANARY_V3_ACTIVE_AUTHORITY_INDEPENDENT_VERIFICATION_20261003_V1.json")" = "62d167ac430a09412f010a2c6da93a1aa1072f65"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_PATCHED_REAL_HARBOR_INTEGRATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "4512996a6698463be367052b13a891bd0f647f73"
+
+      - name: Verify one-use semantics and untouched slot
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          C="capsules/tb_science_canary_v3_execution"
+          arm=json.load(open(C+"/ARM.json"))
+          auth=json.load(open(C+"/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V3.json"))
+          ver=json.load(open(C+"/canonical/verification/TB_SCIENCE_ONE_SLOT_CANARY_V3_ACTIVE_AUTHORITY_INDEPENDENT_VERIFICATION_20261003_V1.json"))
+          integ=json.load(open(C+"/canonical/verification/TB_SCIENCE_PATCHED_REAL_HARBOR_INTEGRATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"))
+          slot="terminal-bench-science/virtual-baseline-localization::trial-0"
+          assert arm["status"]=="ARMED_AFTER_CANONICAL_AUTHORITY_AND_INDEPENDENT_VERIFICATION"
+          assert arm["authorized_slot"]==slot
+          assert arm["task_digest"]=="sha256:18e64cb62b351e3861e1995bdc3ba08bba37f0ae3e645ee4b250714b6f0c00ee"
+          assert arm["run_attempt_required"]==1 and arm["retries"]==0 and arm["replacement"] is False
+          assert arm["authority_blob"]=="ae5bc607b828e8f55092e80e0a806d5a496eb54b"
+          assert arm["authority_verification_blob"]=="62d167ac430a09412f010a2c6da93a1aa1072f65"
+          assert auth["execution_authority"] is True and auth["promotion_authority"] is False
+          assert auth["authorized_slot"]["slot_id"]==slot
+          assert slot not in auth["permanently_consumed_slots"]
+          assert str(ver["status"]).startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert ver["execution_authority_verified"] is True
+          assert str(integ["status"]).startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert integ["verified"]["terminal_task_content_read"]==0
+          assert integ["verified"]["terminal_results_observed"]==0
+          PY
+
+      - name: Verify execution workflow guardrails
+        run: |
+          set -euo pipefail
+          W=.github/workflows/execute-tb-science-canary-v3.yml
+          grep -F 'branches: [main]' "$W"
+          grep -F 'test "$GITHUB_RUN_ATTEMPT" = "1"' "$W"
+          grep -F 'terminal-bench-science/virtual-baseline-localization::trial-0' "$W"
+          ! grep -F 'terminal-bench-science/baseline-free-localization::trial-0' "$W"
+          ! grep -F 'terminal-bench-science/genomic-model-ranking::trial-0' "$W"
+          ! grep -F 'terminal-bench-science/mri-harmonization::trial-0' "$W"
+          ! grep -F 'terminal-bench-science/navigation-sensor-calibration::trial-0' "$W"
+          grep -F 'bec4772f6a2527d371557b5d2032641e5ff7619c' "$W"
+          grep -F 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c' "$W"
