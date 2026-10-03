@@ -1,0 +1,56 @@
+name: Run Retrieval V10 concurrent live provider epoch
+on:
+  push:
+    branches:
+      - verify/retrieval-v10-live-provider-epoch-v2-20261003
+permissions:
+  contents: read
+jobs:
+  live-epoch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact live epoch subjects
+        run: |
+          test "$(git hash-object subjects/v10/retrieval_live_provider_epoch_v1.py)" = "36d271a7483b7b86ece42d74216611a2e2da43b9"
+          test "$(git hash-object subjects/v10/retrieval_live_provider_epoch_v2.py)" = "7c85abcc8ac3e18a34e9f22134f854e33069a357"
+      - name: Install exact epoch subjects
+        run: |
+          cp subjects/v10/retrieval_live_provider_epoch_v1.py canonical/runtime/retrieval_live_provider_epoch_v1.py
+          cp subjects/v10/retrieval_live_provider_epoch_v2.py canonical/runtime/retrieval_live_provider_epoch_v2.py
+      - name: Execute concurrent live public provider epoch
+        run: PYTHONPATH=. python canonical/runtime/retrieval_live_provider_epoch_v2.py > retrieval_v10_live_epoch_v2.json
+      - name: Validate live epoch structure
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open("retrieval_v10_live_epoch_v2.json",encoding="utf-8"))
+          assert p["schema"]=="PROJECT_BRAIN_RETRIEVAL_LIVE_PROVIDER_EPOCH_V2"
+          assert p["parallel_execution"] is True
+          assert p["episode_count"]==12
+          assert p["event_count"]==30
+          assert p["source_count"]==9
+          assert p["task_class_count"]==6
+          events=p["events"]
+          successes=[x for x in events if x["status"]=="SUCCESS"]
+          sufficient=[x for x in events if x["verified_sufficient_candidate_ids"]]
+          sources={x["source_id"] for x in successes}
+          assert len(successes)>=18, len(successes)
+          assert len(sources)>=6, sources
+          assert len(sufficient)>=5, len(sufficient)
+          assert all(x["latency_seconds"]>=0 for x in events)
+          assert all(x["request_count"]==1 for x in events)
+          assert p["incremental_spend_usd"]==0
+          print("successful_events",len(successes))
+          print("successful_sources",sorted(sources))
+          print("sufficient_events",len(sufficient))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-v10-live-epoch-v2
+          path: retrieval_v10_live_epoch_v2.json
+          if-no-files-found: error
+          retention-days: 30
