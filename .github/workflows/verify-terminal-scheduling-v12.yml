@@ -1,0 +1,19 @@
+name: Verify terminal scheduling V12
+on:
+  push:
+    paths:
+      - "capsules/terminal_scheduling_v12/**"
+      - ".github/workflows/verify-terminal-scheduling-v12.yml"
+  pull_request:
+    paths:
+      - "capsules/terminal_scheduling_v12/**"
+      - ".github/workflows/verify-terminal-scheduling-v12.yml"
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/terminal_scheduling_v12/verify.py
