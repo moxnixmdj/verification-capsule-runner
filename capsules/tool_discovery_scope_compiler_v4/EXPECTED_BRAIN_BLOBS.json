@@ -1,0 +1,11 @@
+{
+  "brain_repository": "moxnixmdj/brain",
+  "brain_branch": "repair/tool-discovery-scope-compiler-v4-20261003-sol",
+  "files": {
+    "canonical/runtime/opus55_acceptance_residual_compiler_v3.py": "6eaea32aedc88591091000557a15189eff2ab911",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "4000854d577f7ab5f0146d21d16e91d017458431",
+    "canonical/reasoning/2026-10-02_EXACT_OPUS55_ZERO_COST_COMPARATOR_ROUTE_RECONCILIATION_V1.json": "f67e22cee5e6fce1ebfae92ebf0946f78fafcee1",
+    "canonical/governance/OPUS55_PUBLIC_BAR_SCORE_READINESS_MATRIX_V1.json": "4e59e30461c9ff1bee1a9474627d5fb4074844b2"
+  }
+}
