@@ -23,14 +23,14 @@ jobs:
           test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v3.py)" = "bbbee4d6baf8df937543644397abba38a67dce62"
           test "$(git hash-object canonical/runtime/tool_discovery_dynamic_candidate_v4.py)" = "b8cd817a07c0b93ff740120f869e7fbb5650f801"
           test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_candidate_v4.py)" = "57a5758becdf3314e1c8dad66af47233c4a443c7"
-          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_refinement_v2.py)" = "6c8bfffe90c5df54dfa479ae4496cf36f845bba9"
+          test "$(git hash-object canonical/runtime/tool_discovery_dynamic_refinement_v2.py)" = "716f7d96ac3f347d49accc382f07f4c768a1004e"
           test "$(git hash-object canonical/tests/test_tool_discovery_dynamic_refinement_v2.py)" = "83b3e949b4c1018b7409e0c2c558d0bb2b9ff357"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "f359e88ae18e79988d0af9e97f05da2ac7cf250d"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V2.json)" = "d342962d6d90f4fdb78446d7f7711c05938a3a25"
           test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_V3_LEAST_COST_COUNTEREXAMPLE_V1.json)" = "062a8b11f75d702ab8fc0e6369091aeb4f7bb6a9"
           test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
           test "$(git hash-object canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json)" = "ee187f611a0e82b2de495ee377682f39bc31dd31"
           test "$(git hash-object canonical/governance/TOOL_DISCOVERY_SCOPE_FORMALISM_CUT_ACTIVATION_V1.json)" = "48ba33998e73b8eec2731be51a7ec78077ed0d4a"
-          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_V2.json)" = "a0db8cc593814cf2464ba79f552e1ecb162abe0e"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_DYNAMIC_REFINEMENT_V2.json)" = "daeffa099bc5934760a662d189b15aa877b50ed7"
           test "$(git hash-object canonical/action_intents/2026-10-03_TOOL_DISCOVERY_DYNAMIC_REFINEMENT_V2.json)" = "95fe30812a4da4300dc422d76b0d5d76c8b95620"
       - name: Reproduce V3 falsification and V4 regression suite
         shell: bash
