@@ -1,0 +1,16 @@
+name: Verify live-27 information dominance
+on:
+  push:
+    branches:
+      - verify/live27-info-20261003-sol
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verification/live27_info/verify_live27_info.py
