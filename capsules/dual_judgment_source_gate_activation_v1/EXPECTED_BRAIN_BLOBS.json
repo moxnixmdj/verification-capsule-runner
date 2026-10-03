@@ -1,0 +1,26 @@
+{
+  "candidate_activation.json": {
+    "brain_path": "canonical/governance/DUAL_JUDGMENT_SOURCE_GATE_ACTIVATION_V1.json",
+    "git_blob_sha": "4211a0eee07c4758035d788c0be897d700c164cb"
+  },
+  "candidate_runtime.py": {
+    "brain_path": "canonical/runtime/dual_judgment_source_gate_activation_v1.py",
+    "git_blob_sha": "259e1bcbb51c0c2ece4fbed94a27423f7a93c0f1"
+  },
+  "candidate_tests.py": {
+    "brain_path": "canonical/tests/test_dual_judgment_source_gate_activation_v1.py",
+    "git_blob_sha": "063e7c17495acc1e841dc3c9af3d216846396cfc"
+  },
+  "fixture/canonical/verification/DUAL_JUDGMENT_GENERAL_SUBSTRATE_ROLE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": {
+    "brain_path": "canonical/verification/DUAL_JUDGMENT_GENERAL_SUBSTRATE_ROLE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+    "git_blob_sha": "047b464ff60d4eaf04c31937b1103c8bf8d678fc"
+  },
+  "fixture/canonical/verification/DUAL_JUDGMENT_CONTROL_CURRENT_MAIN_INDEPENDENT_VERIFICATION_20261003_V1.json": {
+    "brain_path": "canonical/verification/DUAL_JUDGMENT_CONTROL_CURRENT_MAIN_INDEPENDENT_VERIFICATION_20261003_V1.json",
+    "git_blob_sha": "041b73f3c212d86d870554d2dc7b8ad0b691d921"
+  },
+  "fixture/canonical/runtime/acceptance_capability_source_gate_v2.py": {
+    "brain_path": "canonical/runtime/acceptance_capability_source_gate_v2.py",
+    "git_blob_sha": "b168b131f6383e158bdc0d931439d14e61f2a5de"
+  }
+}
