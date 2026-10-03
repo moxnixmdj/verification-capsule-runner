@@ -1,0 +1,75 @@
+name: Verify Tool Discovery acceptance reduction to 4 of 19
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tool_discovery_acceptance_reduction_4of19/**"
+      - ".github/workflows/verify-tool-discovery-acceptance-reduction-4of19.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain inputs
+        run: |
+          set -euo pipefail
+          cd capsules/tool_discovery_acceptance_reduction_4of19
+          test "$(git hash-object canonical/runtime/acceptance_proof_transmuter_v1.py)" = "39b5611e53485674b29e2a05da91b89801bc5aa6"
+          test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
+          test "$(git hash-object canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json)" = "4c7d170418bb95828a23538709aa304a00db6746"
+          test "$(git hash-object canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "c9adf25c2e63f9e8b111f1d022acda264d6571f5"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json)" = "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7"
+      - name: Verify scope receipt and acceptance-input bindings
+        run: |
+          cd capsules/tool_discovery_acceptance_reduction_4of19
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json").read_text())
+          i=json.loads(Path("canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json").read_text())
+          assert r["scope_semantics_discharged"] is True,r
+          assert r["complete_target_case_set"] is True,r
+          assert r["basis_kind"]=="EXACT_COMPLETE_TARGET_CASE_UNIVERSE",r
+          assert r["new_reality_units_consumed"]==0 and r["terminal_cases_replayed"]==0,r
+          assert i["scope_completeness_receipt"]=="canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",i
+          e=i["evidence"]
+          assert len(e)==1,e
+          w=e[0]
+          assert w["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING",w
+          assert w["mode"]=="ABSOLUTE_DOMINANCE",w
+          s=w["scope_completeness"]
+          assert s["verified"] is True and s["independent"] is True,s
+          assert s["basis"]=="EXACT_COMPLETE_TARGET_CASE_UNIVERSE",s
+          assert s["complete_target_case_set"] is True,s
+          assert s["receipt"]==i["scope_completeness_receipt"],s
+          PY
+      - name: Compile acceptance
+        run: |
+          set -euo pipefail
+          cd capsules/tool_discovery_acceptance_reduction_4of19
+          python canonical/runtime/acceptance_proof_transmuter_v1.py             canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json             --evidence canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json             > verdict.json
+      - name: Enforce Tool Discovery only delta
+        run: |
+          cd capsules/tool_discovery_acceptance_reduction_4of19
+          python - <<'PY'
+          import json
+          v=json.load(open("verdict.json"))
+          assert v["status"]=="PASS",v
+          assert v["family_count"]==19,v
+          assert v["closed_family_count"]==4,v
+          assert v["open_family_count"]==15,v
+          closed={x["family"] for x in v["families"] if x["result_status"]=="PASS"}
+          expected={"EXACT_SYMBOLIC_COMPUTATION","LONG_HORIZON_MEMORY_AND_CONTINUITY","SUBAGENT_DELEGATION_AND_COORDINATION","TOOL_DISCOVERY_SELECTION_AND_LEARNING"}
+          assert closed==expected,(closed,expected)
+          td=next(x for x in v["families"] if x["family"]=="TOOL_DISCOVERY_SELECTION_AND_LEARNING")
+          assert td["closure_mode"]=="ABSOLUTE_DOMINANCE",td
+          assert td["witness_reason"]=="THEORETICAL_CEILING_DOMINANCE",td
+          assert v["capability_credit_delta"]==0 and v["family_credit_delta"]==0,v
+          assert v["execution_authority"] is False and v["promotion_authority"] is False,v
+          print("Tool Discovery acceptance reduction: PASS 4/19")
+          PY
