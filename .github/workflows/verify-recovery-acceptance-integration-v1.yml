@@ -1,0 +1,42 @@
+name: Verify Recovery acceptance integration V1
+
+on:
+  push:
+    branches: ["verify/recovery-acceptance-integration-v1-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-recovery-acceptance-integration-v1.yml"
+      - "capsules/recovery_acceptance_integration_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-recovery-acceptance-integration-v1.yml"
+      - "capsules/recovery_acceptance_integration_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute fail-closed integrator and tests
+        working-directory: capsules/recovery_acceptance_integration_v1
+        run: |
+          set -euo pipefail
+          python canonical/runtime/recovery_acceptance_integrator_v1.py > /tmp/recovery-integration.json
+          python -m unittest canonical.tests.test_recovery_acceptance_integrator_v1 -v
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/recovery-integration.json"))
+          assert x["pass"] is True
+          assert x["before"]=={"proved_atomic":8,"unresolved_atomic":30,"accepted_families":3,"open_families":16}
+          assert x["after"]=={"proved_atomic":11,"unresolved_atomic":27,"accepted_families":4,"open_families":15}
+          assert x["newly_closed_families"]==["SELF_VERIFICATION_DEBUGGING_AND_RECOVERY"]
+          assert len(x["newly_proved_predicates"])==3
+          assert x["promotion_eligible"] is True
+          assert x["promotion_authority"] is False
+          assert x["new_reality_units_consumed"]==0
+          print("RECOVERY_ACCEPTANCE_INTEGRATION_V1_PASS")
+          PY
