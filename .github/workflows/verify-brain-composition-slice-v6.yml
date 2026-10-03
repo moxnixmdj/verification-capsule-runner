@@ -29,8 +29,16 @@ jobs:
           if bad: raise SystemExit("\n".join(bad))
           print(f"EXACT_BLOB_IDENTITY_PASS {len(expected)}/{len(expected)}")
           PY
-      - name: Recompute V6 slice
+      - name: Recompute V6 slice without external test dependency
         env:
           PYTHONPATH: capsules/composition_slice_v6
         run: |
-          python -m pytest -q capsules/composition_slice_v6/canonical/tests/test_composition_component_proof_slice_v6.py
+          python - <<'PY'
+          from canonical.tests.test_composition_component_proof_slice_v6 import (
+              test_v6_exact_four_of_twelve_current_source_slice,
+              test_v6_tool_discovery_receipt_is_current_independent_and_narrow,
+          )
+          test_v6_exact_four_of_twelve_current_source_slice()
+          test_v6_tool_discovery_receipt_is_current_independent_and_narrow()
+          print("COMPOSITION_SLICE_V6_PASS")
+          PY
