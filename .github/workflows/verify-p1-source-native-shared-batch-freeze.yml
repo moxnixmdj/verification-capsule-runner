@@ -1,7 +1,7 @@
 name: Verify P1 source-native shared-batch freeze
 on:
   pull_request:
-    branches: [main]
+    branches: [verify-base/p1-source-native-20261003]
 permissions:
   contents: read
 jobs:
