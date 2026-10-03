@@ -71,3 +71,5 @@ jobs:
           assert gov["execution_authority"] is False and gov["promotion_authority"] is False
           print("Brain PR1204 Toolathlon host integration + promotion preflight: PASS")
           PY
+
+# synchronize verification after PR creation
