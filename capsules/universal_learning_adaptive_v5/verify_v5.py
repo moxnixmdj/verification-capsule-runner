@@ -89,7 +89,7 @@ assert independent_optimum==Fraction(2),independent_optimum
 
 out=planner.plan(environment_id=ENV,goal_id=GOAL,hypotheses=HS,hypothesis_coverage_receipt=cov(),probes=PROBES)
 assert out["status"]=="VERIFIED_MINIMUM_WORST_CASE_ADAPTIVE_PLAN",out
-assert Fraction(out["worst_case_cost"])==independent_optimum,out
+assert Fraction(out["worst_case_wall_clock"])==independent_optimum,out
 assert out["worst_case_steps"]==2,out
 assert out["recommended_probe"] in {"x","y"},out
 
@@ -110,7 +110,7 @@ print(json.dumps({
    "exact_brain_blob_identities":True,
    "tampered_outcome_models_rejected":True,
    "v4_greedy_direct_cost_five_reproduced":True,
-   "independent_exhaustive_optimum_cost_two":True,
+   "independent_exhaustive_optimum_wall_clock_two":True,
    "v5_planner_matches_independent_optimum":True,
    "unverified_information_gain_rejected":True,
    "probability_free_adaptive_planning":True,
