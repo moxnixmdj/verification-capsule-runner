@@ -1,0 +1,21 @@
+name: Verify current 26 predicate frontier
+on:
+  push:
+    paths:
+      - "capsules/current26/**"
+      - ".github/workflows/verify-current26-frontier.yml"
+  pull_request:
+    paths:
+      - "capsules/current26/**"
+      - ".github/workflows/verify-current26-frontier.yml"
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify current frontier
+        working-directory: capsules/current26
+        run: python verify.py
