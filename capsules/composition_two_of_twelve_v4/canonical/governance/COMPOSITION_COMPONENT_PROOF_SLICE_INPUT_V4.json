@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4",
   "date": "2026-10-03",
-  "status": "CANDIDATE_TWO_CURRENTLY_ADMISSIBLE_RECEIPTS__DELEGATION_PLUS_MEMORY__2_SCOPED_PROVED_EXPECTED__10_OPEN__ZERO_PARENT_CREDIT__INDEPENDENT_SLICER_VERIFICATION_REQUIRED",
+  "status": "ACTIVE_TWO_CURRENT_SOURCE_INDEPENDENT_RECEIPTS__MEMORY_AND_DELEGATION__EXPECT_2_SCOPED_PROVED__10_OPEN__ZERO_PARENT_CREDIT",
   "claim_id": "MULTI_CAPABILITY_COMPOSITION::FROZEN_PROTOCOL_V1",
   "source_manifest": "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json",
   "source_manifest_git_blob_sha": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
@@ -126,26 +126,18 @@
       "bridge_candidate_path": "canonical/governance/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_V1.json"
     }
   ],
-  "rule": "ONLY_THE_TWO_INDEPENDENTLY_VERIFIED_CURRENT_SOURCE_MEMORY_AND_DELEGATION_RECEIPTS_ARE_ADDED_TO_THE_FROZEN_12_INTERFACE_BASELINE__HISTORICAL_QUARANTINED_RECEIPTS_REMAIN_EXCLUDED__NO_ADJACENT_INTERFACE_OR_PARENT_CREDIT",
+  "quarantined_historical_receipts": [
+    "COMPOSITION_BRIDGE::TOOL_ROUTE_DISCOVERY_AND_SELECTION_001::tool_discovery",
+    "COMPOSITION_BRIDGE::TASK_TO_DELEGATION_GRAPH_001::delegation"
+  ],
+  "rule": "USE_ONLY_INDEPENDENTLY_VERIFIED_CURRENT_SOURCE_COMPONENT_RECEIPTS__MEMORY_V2_AND_NEW_DELEGATION_SCOPE_COMPLETE_BRIDGE__DO_NOT_REUSE_HISTORICAL_QUARANTINED_RECEIPTS__TOOL_DISCOVERY_REMAINS_OPEN__ZERO_PARENT_CREDIT",
+  "receipt_verifications": [
+    "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+    "canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+  ],
   "new_reality_units_consumed": 0,
   "terminal_results_replayed": 0,
   "incremental_spend_usd": 0,
   "capability_credit_delta": 0,
-  "family_credit_delta": 0,
-  "receipt_verification": {
-    "memory": {
-      "path": "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
-      "git_blob_sha": "88783df170065d3ff23e4ff3c2d2ab30ec7bc314",
-      "public_runner_pr": 1120,
-      "workflow_run_id": 37086511516,
-      "conclusion": "success"
-    },
-    "delegation": {
-      "path": "canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
-      "git_blob_sha": "6b46497d5f3cb4dc874fd23280d09f0d62a4472d",
-      "public_runner_pr": 1129,
-      "workflow_run_id": 37086752998,
-      "conclusion": "success"
-    }
-  }
+  "family_credit_delta": 0
 }
