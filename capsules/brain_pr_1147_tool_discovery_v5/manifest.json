@@ -1,0 +1,19 @@
+{
+  "schema": "BRAIN_PR_1147_TOOL_DISCOVERY_V5_INDEPENDENT_VERIFIER_V1",
+  "brain_pr": 1147,
+  "exact_brain_blobs": {
+    "canonical/runtime/tool_discovery_dynamic_candidate_v3.py": "bbbee4d6baf8df937543644397abba38a67dce62",
+    "canonical/runtime/tool_discovery_dynamic_candidate_v5.py": "f4e076626b2aca63059a271bed71759ba6e1b741",
+    "canonical/tests/test_tool_discovery_dynamic_candidate_v5.py": "08888a94998ccba49aa31a4928d66e6bd987fa85",
+    "canonical/governance/TOOL_DISCOVERY_COMPLETE_INTERFACE_CONTRACT_V3.json": "d00afbdf2f0ff09bba32b5b29aa5bd2c8938732f",
+    "canonical/governance/TOOL_DISCOVERY_V5_CONVERGED_SOUNDNESS_REPAIR_V1.json": "1712bae87ec22648e782050c059f748b4860f121",
+    "baseline/current_main_tool_discovery_dynamic_candidate_v4.py": "56d9553a2ddb37fd513123a369bffa0ff8a87837"
+  },
+  "claims": {
+    "current_main_v4_counterexample": true,
+    "v5_fail_closed_repair": true,
+    "exact_query_epoch_receipt_binding": true,
+    "metadata_conflict_fail_closed": true,
+    "zero_credit": true
+  }
+}
