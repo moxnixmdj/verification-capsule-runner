@@ -1,0 +1,104 @@
+name: Verify global ownership postconditions
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ownership_verification/**'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify exact Brain evidence and reduce ownership gates
+        run: |
+          set -euo pipefail
+          mkdir -p ownership_verification/out
+          python - <<'PY'
+          import hashlib, importlib.util, json, urllib.request
+          from pathlib import Path
+
+          root=Path('ownership_verification')
+          bundle=json.loads((root/'evidence_bundle.json').read_text())
+          assert bundle['schema']=='PROJECT_BRAIN_GLOBAL_OWNERSHIP_POSTCONDITIONS_VERIFICATION_BUNDLE_V1'
+
+          def git_blob(raw:str)->str:
+              b=raw.encode('utf-8')
+              return hashlib.sha1(b'blob '+str(len(b)).encode()+bytes([0])+b).hexdigest()
+
+          reducer_raw=(root/'terminal_global_ownership_postconditions_reducer_v1.py').read_text()
+          assert git_blob(reducer_raw)==bundle['reducer']['brain_blob_sha'],('REDUCER_BLOB_DRIFT',git_blob(reducer_raw),bundle['reducer']['brain_blob_sha'])
+
+          docs={}
+          for path,row in bundle['evidence'].items():
+              raw=row['raw']
+              got=git_blob(raw)
+              assert got==row['sha'],('EVIDENCE_BLOB_DRIFT',path,row['sha'],got)
+              docs[path]=json.loads(raw)
+
+          req=urllib.request.Request(
+              'https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/'+str(bundle['expected']['donor_cleanroom_run_id']),
+              headers={'User-Agent':'project-brain-independent-verifier','Accept':'application/vnd.github+json'},
+          )
+          with urllib.request.urlopen(req,timeout=20) as resp:
+              run=json.load(resp)
+          assert run['conclusion']==bundle['expected']['donor_cleanroom_conclusion'],run
+          assert run['head_sha']==bundle['expected']['donor_cleanroom_head_sha'],run
+
+          jobs_url='https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/'+str(bundle['expected']['donor_cleanroom_run_id'])+'/jobs'
+          req=urllib.request.Request(jobs_url,headers={'User-Agent':'project-brain-independent-verifier','Accept':'application/vnd.github+json'})
+          with urllib.request.urlopen(req,timeout=20) as resp:
+              jobs=json.load(resp)['jobs']
+          job=[x for x in jobs if x['id']==bundle['expected']['donor_cleanroom_job_id']]
+          assert len(job)==1 and job[0]['conclusion']=='success',job
+
+          spec=importlib.util.spec_from_file_location('ownership_reducer',root/'terminal_global_ownership_postconditions_reducer_v1.py')
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+
+          args=[
+            docs['canonical/verification/TERMINAL_V3_ONE_SHOT_WAVE_RESULT_20261002_V1.json'],
+            docs['canonical/verification/TERMINAL_V3_POSTWAVE_CONTRACT_AND_FAMILY_REDUCTION_20261002_V1.json'],
+            docs['canonical/governance/PREWAVE_BRAIN_ROUTE_DEPENDENCY_MANIFEST_V2.json'],
+            docs['canonical/governance/PREWAVE_OPAQUE_PROVIDER_DEPENDENCY_CLEANLINESS_AUDIT_V1.json'],
+            docs['canonical/verification/PREWAVE_CONTROLLER_COMPOSITION_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'],
+            docs['canonical/verification/FOUR_DIRECT_PROOF_MUTATION_PREFLIGHT_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'],
+            docs['canonical/verification/TERMINAL_V3_DONOR_DELETION_CLEANROOM_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json'],
+            docs['canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json'],
+          ]
+          out=mod.evaluate_documents(*args)
+          assert out['pass'] is True,out
+          assert out['counters']=={
+            'donor_dependent_required_behaviors':0,
+            'unresolved_verifier_mutations':0,
+            'unresolved_composition_failures':0,
+          },out
+          assert out['terminal_predicates']['final_donor_deletion_cleanroom_pass'] is True,out
+          receipt={
+            'schema':'PROJECT_BRAIN_GLOBAL_OWNERSHIP_POSTCONDITIONS_PUBLIC_RUNNER_VERIFICATION_V1',
+            'date':'2026-10-02',
+            'status':'INDEPENDENT_PUBLIC_RUNNER_PASS__GLOBAL_OWNERSHIP_POSTCONDITIONS_ZERO',
+            'reducer_brain_blob_sha':bundle['reducer']['brain_blob_sha'],
+            'evidence_brain_blob_shas':{p:r['sha'] for p,r in bundle['evidence'].items()},
+            'donor_cleanroom_run_id':bundle['expected']['donor_cleanroom_run_id'],
+            'donor_cleanroom_job_id':bundle['expected']['donor_cleanroom_job_id'],
+            'result':out,
+            'capability_credit_delta':0,
+            'family_credit_delta':0,
+            'incremental_spend_usd':0,
+          }
+          (root/'out'/'receipt.json').write_text(json.dumps(receipt,sort_keys=True,indent=2)+'\n')
+          print('GLOBAL_OWNERSHIP_POSTCONDITIONS_PASS '+hashlib.sha256(json.dumps(out,sort_keys=True,separators=(',',':')).encode()).hexdigest())
+          PY
+      - name: Upload ownership verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: global-ownership-postconditions
+          path: ownership_verification/out/
+          if-no-files-found: error
+          retention-days: 90
