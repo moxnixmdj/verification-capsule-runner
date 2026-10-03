@@ -1,0 +1,13 @@
+{
+  "schema": "PROJECT_BRAIN_COMPOSITION_TWO_CURRENT_SLICE_V4_PUBLIC_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "f6141567ac4feb0d9e511470c08b3676a8829eb9",
+  "exact_brain_blobs": {
+    "canonical/runtime/composition_component_proof_slicer_v1.py": "0e5028d8547bc3e17e7128b6311f734ac30a16d8",
+    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V4.json": "869b48bdb4140fa6a4172f4b5d6c65774c51395b",
+    "canonical/verification/COMPOSITION_COMPONENT_PROOF_SLICE_20261003_V4.json": "7081165dc1052c62436d4a0b2b23726675da321f",
+    "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
+    "canonical/verification/COMPOSITION_MEMORY_OWNED_FAMILY_BRIDGE_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "88783df170065d3ff23e4ff3c2d2ab30ec7bc314",
+    "canonical/verification/COMPOSITION_DELEGATION_SCOPE_COMPLETE_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "367eaa457c930d5bfcdb44778358ca665d999ae7"
+  }
+}

@@ -1,0 +1,19 @@
+name: Verify Brain current composition two-receipt slice V4
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/composition_two_current_slice_v4/**"
+      - ".github/workflows/verify-composition-two-current-slice-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact Brain slicer and enforce two-of-twelve current reduction
+        run: python capsules/composition_two_current_slice_v4/verify.py
