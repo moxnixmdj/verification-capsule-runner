@@ -1,0 +1,54 @@
+name: Verify current witness-target totalization V2
+on:
+  push:
+    branches:
+      - verify/current-witness-target-totalization-v2-20261003-sol
+    paths:
+      - ".github/workflows/verify-current-witness-target-totalization-v2.yml"
+      - "capsules/current_witness_target_totalization_v2/brain/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain capsule
+        run: |
+          set -euo pipefail
+          ROOT=capsules/current_witness_target_totalization_v2/brain
+          test "$(git hash-object "$ROOT/canonical/governance/CURRENT_WITNESS_TARGET_TOTALIZATION_V2_CANDIDATE.json")" = "953161b63ae0fa220cea19ed2b884ab9dd98cc84"
+          test "$(git hash-object "$ROOT/canonical/runtime/current_witness_target_totalization_v2.py")" = "831237e37f53c602c3ed7271c55e0889d21ef52b"
+          test "$(git hash-object "$ROOT/canonical/tests/test_current_witness_target_totalization_v2.py")" = "ad3823d3eed89ead37b690d12ac6d2c642c9ea09"
+          test "$(git hash-object "$ROOT/canonical/governance/OPUS55_MATCHED_TARGET_NORMALIZATION_PROVENANCE_V3.json")" = "72a5cd689f55df84de73693371264f02ef4e7226"
+          test "$(git hash-object "$ROOT/canonical/verification/OPUS55_MATCHED_TARGET_NORMALIZATION_V3_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "b5192b1903dc603e75efe92b9a00ced0b2722f8c"
+          test "$(git hash-object "$ROOT/canonical/governance/OPUS55_BRAIN_WITNESS_NORMALIZATION_V2.json")" = "5526f2c23b6f1eba5362c028f1029a8f15f095e1"
+          test "$(git hash-object "$ROOT/canonical/verification/OPUS55_BRAIN_WITNESS_NORMALIZATION_V2_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json")" = "0488df0f1c13ace2b25695c48ff65d4654f9c3e2"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet pytest
+      - name: Verify fail-closed totalization
+        run: |
+          set -euo pipefail
+          cd capsules/current_witness_target_totalization_v2/brain
+          python -m pytest -q canonical/tests/test_current_witness_target_totalization_v2.py
+          python canonical/runtime/current_witness_target_totalization_v2.py > /tmp/result.json
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/result.json"))
+          assert x["pass"] is True,x
+          assert x["target_count"] == 8,x
+          assert x["witness_count"] == 12,x
+          assert x["pair_count"] == 96,x
+          assert x["target_atom_occurrence_count"] == 37,x
+          assert x["target_metric_occurrence_count"] == 7,x
+          assert x["positive_atom_binding_count"] == 0,x
+          assert x["positive_metric_binding_count"] == 0,x
+          assert x["positive_semantic_edge_count"] == 0,x
+          assert x["closed_target_count"] == 0,x
+          assert x["residual_target_count"] == 8,x
+          assert x["fresh_reality_authority"] is False,x
+          print("CURRENT_WITNESS_TARGET_TOTALIZATION_V2_VERIFIED")
+          PY
