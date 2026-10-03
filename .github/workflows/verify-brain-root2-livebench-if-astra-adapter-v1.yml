@@ -1,0 +1,21 @@
+name: Verify Brain Root2 LiveBench IF Astra Adapter V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_livebench_if_astra_adapter_v1/**"
+      - ".github/workflows/verify-brain-root2-livebench-if-astra-adapter-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact bytes and independent boundary semantics
+        run: |
+          cd capsules/root2_livebench_if_astra_adapter_v1
+          python verify_independent.py
