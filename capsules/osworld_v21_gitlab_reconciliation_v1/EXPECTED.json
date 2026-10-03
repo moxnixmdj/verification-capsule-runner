@@ -1,0 +1,13 @@
+{
+  "schema": "OSWORLD_V21_GITLAB_RECONCILIATION_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_candidate_blob": "a6142a898df97c8d9691b6a810850fa8c962b035",
+  "upstream_repo": "xlang-ai/OSWorld-V2",
+  "upstream_ref": "osworld-v2.1",
+  "upstream_blobs": {
+    "benchmark_releases/osworld-v2.1.json": "6d37c6f4c6c4f6daa5077d4e4c828f68360b7e36",
+    "benchmark_releases/README.md": "b7c97d9fa3e48188c976cd1bb5b4c4ddb7c0acec",
+    ".codex/skills/setup-osworld/SKILL.md": "c6c80e878c212c4d8458cc7d062c348979412b23",
+    ".codex/skills/setup-osworld/references/gitlab.md": "bf05ba17938692ed9393dec5cc879e0bd4b78090",
+    "docs/PUBLIC_EVALUATION_GUIDELINE_v2.1.md": "0beb64223e1071dce22da6f8253bf20955c43daf"
+  }
+}
