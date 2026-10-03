@@ -24,6 +24,8 @@ jobs:
           test "$(git hash-object canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json)" = "62394e5b7d221ec9f69c3458f669e40e253a9d09"
           test "$(git hash-object canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json)" = "4c7d170418bb95828a23538709aa304a00db6746"
           test "$(git hash-object canonical/verification/TOOL_DISCOVERY_FROZEN_SCOPE_COMPLETENESS_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json)" = "c9adf25c2e63f9e8b111f1d022acda264d6571f5"
+          test "$(git hash-object canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json)" = "60a7c1139cad315d977bf5ed97e708cc5ec3fcc7"
+          test "$(git hash-object canonical/verification/TERMINAL_CEILING_WITNESS_LIFTER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json)" = "a1c702c79d2b29bfc9c4d5a238f9c260bc204770"
       - name: Validate independent exact-scope receipt
         shell: bash
         run: |
@@ -42,6 +44,29 @@ jobs:
           assert r["public_runner"]["merge_commit"]=="bc67c03671469a289f022722b6579c0a0608e985",r
           assert r["new_reality_units_consumed"]==0 and r["terminal_cases_replayed"]==0,r
           print("independent exact-scope receipt: PASS")
+          PY
+      - name: Rebind prior ceiling witness instead of trusting copied fields
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/brain_pr_1150_tool_discovery_acceptance
+          python - <<'PY'
+          import copy, json
+          inp=json.load(open("canonical/governance/OPUS55_TOOL_DISCOVERY_SCOPE_COMPLETE_ACCEPTANCE_INPUT_V1.json",encoding="utf-8"))
+          source=json.load(open("canonical/governance/TOOL_DISCOVERY_ACCEPTANCE_CEILING_WITNESS_V1.json",encoding="utf-8"))
+          prior=json.load(open("canonical/verification/TERMINAL_CEILING_WITNESS_LIFTER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",encoding="utf-8"))
+          embedded=copy.deepcopy(inp["evidence"][0])
+          scope=embedded.pop("scope_completeness")
+          assert embedded==source,(embedded,source)
+          assert inp["source_witness"]["git_blob_sha"]=="60a7c1139cad315d977bf5ed97e708cc5ec3fcc7",inp["source_witness"]
+          assert source["independent_verification"]=="canonical/verification/TERMINAL_CEILING_WITNESS_LIFTER_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json",source
+          assert prior["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS"),prior
+          assert prior["public_verifier"]["pull_request"]==857,prior
+          assert prior["public_verifier"]["workflow_run_id"]==36999972524,prior
+          assert prior["public_verifier"]["conclusion"]=="success",prior
+          assert prior["fresh_acceptance_cases_consumed"]==0 and prior["terminal_results_replayed"]==0,prior
+          assert scope["verified"] is True and scope["independent"] is True,scope
+          print("prior ceiling witness exact-byte rebind: PASS")
           PY
       - name: Run fail-closed acceptance transmuter
         shell: bash
