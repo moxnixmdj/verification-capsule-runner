@@ -15,8 +15,8 @@ jobs:
       - name: Verify V7 provenance mutation closure
         run: |
           python -m unittest -v canonical.tests.test_p1_v7_provenance_mutation_closure_v1
-          python canonical/runtime/p1_v7_provenance_mutation_closure_v1.py
+          python -m canonical.runtime.p1_v7_provenance_mutation_closure_v1
       - name: Verify exact minimum reality cut
         run: |
           python -m unittest -v canonical.tests.test_p1_minimum_reality_cut_verifier_v1
-          python canonical/runtime/p1_minimum_reality_cut_verifier_v1.py
+          python -m canonical.runtime.p1_minimum_reality_cut_verifier_v1
