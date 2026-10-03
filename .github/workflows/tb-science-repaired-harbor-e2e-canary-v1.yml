@@ -1,0 +1,109 @@
+name: TB-Science repaired Brain agent Harbor E2E canary
+on:
+  push:
+    branches: ["tb-science-repaired-harbor-e2e-canary-v1"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact Harbor
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          test "$(git hash-object capsules/tb_science_candidate_actions_alias_v1/harbor_science_agent_v1.py)" = "3cffde35fee70e8bd687310e817a92bdfce7df0c"
+      - name: Build synthetic zero-terminal-content task
+        run: |
+          set -euo pipefail
+          T=/tmp/project-brain-science-canary
+          mkdir -p "$T/environment" "$T/tests"
+          cat >"$T/task.toml" <<'EOF'
+          schema_version = "1.4"
+          [task]
+          name = "project-brain/science-canary"
+          description = "Synthetic Project Brain Harbor integration canary"
+          authors = [{ name = "Project Brain", email = "noreply@example.invalid" }]
+          keywords = ["synthetic", "canary"]
+          [verifier]
+          timeout_sec = 120.0
+          [agent]
+          timeout_sec = 300.0
+          [environment]
+          build_timeout_sec = 300.0
+          cpus = 1
+          memory_mb = 2048
+          storage_mb = 2048
+          gpus = 0
+          network_mode = "public"
+          EOF
+          cat >"$T/instruction.md" <<'EOF'
+          Create the file /app/answer.txt containing exactly the text 42 followed by a newline.
+          Do not install packages or fetch external files. Verify the file locally before finishing.
+          EOF
+          cat >"$T/environment/Dockerfile" <<'EOF'
+          FROM ubuntu:24.04
+          WORKDIR /app
+          EOF
+          cat >"$T/tests/test.sh" <<'EOF'
+          #!/bin/sh
+          mkdir -p /logs/verifier
+          if [ -f /app/answer.txt ] && [ "$(cat /app/answer.txt)" = "42" ]; then
+            echo 1 > /logs/verifier/reward.txt
+            exit 0
+          fi
+          echo 0 > /logs/verifier/reward.txt
+          exit 0
+          EOF
+          chmod +x "$T/tests/test.sh"
+      - name: Run repaired Brain agent through real Harbor
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_candidate_actions_alias_v1:${{ github.workspace }}/capsules/brain_pr_1212_tb_science_route
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/brain-science-canary-jobs
+          harbor run -p /tmp/project-brain-science-canary             --agent canonical.runtime.harbor_science_agent_v1:HarborScienceAgent             --n-attempts 1 --n-concurrent 1             --jobs-dir /tmp/brain-science-canary-jobs             --job-name repaired-brain-science-canary             --yes
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path("/tmp/brain-science-canary-jobs/repaired-brain-science-canary")
+          results=list(root.rglob("result.json"))
+          assert results, "NO_HARBOR_RESULT_JSON"
+          trial=[]
+          for p in results:
+              try: obj=json.loads(p.read_text())
+              except Exception: continue
+              if "reward" in obj or "rewards" in obj:
+                  trial.append((p,obj))
+          assert trial, [(str(p),json.loads(p.read_text()).keys()) for p in results]
+          ok=False
+          for p,obj in trial:
+              vals=[]
+              if isinstance(obj.get("reward"),(int,float)): vals.append(float(obj["reward"]))
+              if isinstance(obj.get("rewards"),dict): vals += [float(v) for v in obj["rewards"].values() if isinstance(v,(int,float))]
+              if any(v>=1.0 for v in vals):
+                  ok=True
+          assert ok, [(str(p),o) for p,o in trial]
+          traces=list(root.rglob("project_brain_science_trace.json"))
+          assert traces, "NO_BRAIN_TRACE"
+          trace=json.loads(traces[0].read_text())
+          assert trace["status"]=="FINISHED", trace
+          assert trace["resolved_requirements"], trace
+          print(json.dumps({
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_REPAIRED_HARBOR_E2E_CANARY_V1",
+            "status":"PASS",
+            "controller_blob":"3cffde35fee70e8bd687310e817a92bdfce7df0c",
+            "harbor_version":"0.23.0",
+            "reward_ge_1":True,
+            "brain_status":trace["status"],
+            "terminal_benchmark_case_content_read":0,
+            "terminal_benchmark_trials_executed":0,
+            "incremental_spend_usd":0
+          },sort_keys=True))
+          PY
