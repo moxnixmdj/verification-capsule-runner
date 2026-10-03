@@ -1,0 +1,132 @@
+name: Verify Brain current terminal projection v11 clean
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/current_terminal_projection_v11/**'
+      - '.github/workflows/verify-brain-current-terminal-projection-v11-clean.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify exact candidate Brain blob identities
+        env:
+          EXPECTED_JSON: '{"capsules/current_terminal_projection_v11/canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json":"ce76a378f0208a7ee1f585a7a5ec8647461e3269","capsules/current_terminal_projection_v11/canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json":"886801ea0de58dd18e67c79f0adef6cdacc2b094","capsules/current_terminal_projection_v11/canonical/capabilities/opus55/OPUS_5_5_CAPABILITY_OWNERSHIP_MATRIX_V1.json":"504fa844a931119b55e9ff94e641bda01a8dd2f0","capsules/current_terminal_projection_v11/canonical/verification/OPUS55_ACCEPTANCE_CALIBRATION_AUDIT_20261002_V3.json":"50d0319de27bd54ed8f6166545f640b20ec72ce9","capsules/current_terminal_projection_v11/canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json":"18f2bdcb9bcced0a6f93747ba16d7829b882fe41","capsules/current_terminal_projection_v11/canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_MINIMUM_PROOF_PLAN_V1.json":"fe0be44884bcbe39dfafcfde30cceb537f13acfe","capsules/current_terminal_projection_v11/canonical/governance/OPUS55_ACCEPTANCE_RESIDUAL_PROOF_KERNEL_V2.json":"b5afd6da827066184c3476bea919f06d3cce4822","capsules/current_terminal_projection_v11/canonical/runtime/terminal_projection_consistency_v1.py":"a804856c01c76bcd09ba2e9d1a1845f6c09afc01","capsules/current_terminal_projection_v11/canonical/tests/test_terminal_projection_consistency_v1.py":"eb0a909d79fbb465860a243ebe3d5f5887cf6da6","capsules/current_terminal_projection_v11/canonical/governance/TERMINAL_PROJECTION_CONSISTENCY_V1.json":"070bc8aaa460653999b507626e6d5a76a41af064","capsules/current_terminal_projection_v11/canonical/verification/POST_DELEGATION_ACCEPTANCE_RECONCILIATION_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json":"2e75978214c4ef422f4df66078e5fbd293715d6a","capsules/current_terminal_projection_v11/canonical/verification/TERMINAL_ACTION_COVERAGE_GUARD_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json":"3174b5b49a3614bfdb2596cf13fc1ed8ef91b39e"}'
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          expected=json.loads(os.environ["EXPECTED_JSON"])
+          bad=[]
+          for path,want in expected.items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              if got!=want:
+                  bad.append(f"{path}: {got} != {want}")
+          if bad:
+              raise SystemExit("\n".join(bad))
+          print("EXACT_CANDIDATE_BLOB_IDENTITY_PASS",len(expected))
+          PY
+
+      - name: Run dynamic projection firewall regressions
+        working-directory: capsules/current_terminal_projection_v11
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest -v canonical.tests.test_terminal_projection_consistency_v1
+
+      - name: Run live dynamic projection reducer
+        working-directory: capsules/current_terminal_projection_v11
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m canonical.runtime.terminal_projection_consistency_v1 > /tmp/projection.json
+          cat /tmp/projection.json
+          python - <<'PY'
+          import json
+          out=json.load(open("/tmp/projection.json"))
+          assert out["pass"] is True, out
+          assert out["status"]=="PASS", out
+          assert out["acceptance_calibrated_families"]==4, out
+          assert out["acceptance_pending_families"]==15, out
+          assert out["atomic_predicates_proved"]==9, out
+          assert out["atomic_predicates_blocked"]==29, out
+          assert out["authorized_acceptance_case_actions"]==0, out
+          assert out["terminal_goal_achieved"] is False, out
+          assert out["promotion_authority"] is False, out
+          assert out["execution_authority"] is False, out
+          print("DYNAMIC_PROJECTION_4_OF_19__9_OF_38_PASS")
+          PY
+
+      - name: Verify authority truth and revocations
+        working-directory: capsules/current_terminal_projection_v11
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open("canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json"))
+          assert a["truth"]["terminal_execution"]=="3352/3352_PASS"
+          assert a["truth"]["contracts"]=="12/12_PASS"
+          assert a["truth"]["behavioral_families"]=="19/19_PASS"
+          assert a["truth"]["opus55_acceptance"]=="4/19_PASS__15/19_OPEN"
+          assert a["truth"]["achieved"] is False
+          af=a["atomic_acceptance_frontier"]
+          assert (af["proved"],af["open_direct"],af["blocked"],af["total"])==(9,0,29,38)
+          assert af["authorized_acceptance_case_actions"]==[]
+          tb=a["tb4_threshold_execution"]
+          assert tb["maximum_attainable_successes"]==180
+          assert tb["required_successes"]==220
+          assert tb["maximum_attainable_successes"] < tb["required_successes"]
+          assert tb["execution_authorized"] is False
+          assert a["no_terminal_replay"] is True
+          assert "PROOF_COMPRESSION" in a["next"]
+          print("AUTHORITY_FAIL_CLOSED_TRUTH_PASS")
+          PY
+
+      - name: Verify bound receipts agree
+        working-directory: capsules/current_terminal_projection_v11
+        run: |
+          python - <<'PY'
+          import json
+          cal=json.load(open("canonical/verification/OPUS55_ACCEPTANCE_CALIBRATION_AUDIT_20261002_V3.json"))
+          res=json.load(open("canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json"))
+          rec=json.load(open("canonical/verification/POST_DELEGATION_ACCEPTANCE_RECONCILIATION_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json"))
+          cov=json.load(open("canonical/verification/TERMINAL_ACTION_COVERAGE_GUARD_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json"))
+          assert cal["result"]["acceptance_calibrated_family_count"]==4
+          assert cal["result"]["acceptance_pending_family_count"]==15
+          assert res["proved_predicate_count"]==9
+          assert res["open_predicate_count"]==0
+          assert res["blocked_predicate_count"]==29
+          assert res["authorized_acceptance_case_actions"]==[]
+          assert rec["result"]["acceptance_calibrated_family_count"]==4
+          assert rec["result"]["proved_predicate_count"]==9
+          assert rec["result"]["blocked_predicate_count"]==29
+          assert rec["result"]["authorized_acceptance_case_actions"]==[]
+          assert cov["result"]["unresolved_predicate_count"]==29
+          assert cov["result"]["represented_unresolved_predicate_count"]==29
+          assert cov["result"]["uncovered_unresolved_predicates"]==[]
+          print("BOUND_RECEIPT_AGREEMENT_PASS")
+          PY
+
+      - name: Verify zero replay and zero promotion
+        working-directory: capsules/current_terminal_projection_v11
+        run: |
+          python - <<'PY'
+          import json
+          for p in [
+            "canonical/verification/OPUS55_ACCEPTANCE_CALIBRATION_AUDIT_20261002_V3.json",
+            "canonical/verification/OPUS55_ACCEPTANCE_RESIDUAL_COMPILER_V2_VERDICT_20261002_V10.json",
+            "canonical/verification/POST_DELEGATION_ACCEPTANCE_RECONCILIATION_PUBLIC_RUNNER_VERIFICATION_20261002_V2.json",
+          ]:
+              x=json.load(open(p))
+              assert x.get("terminal_results_replayed",0)==0
+              assert x.get("incremental_spend_usd",0)==0
+              assert x.get("capability_credit_delta",0)==0
+              assert x.get("family_credit_delta",0)==0
+          print("ZERO_REPLAY_ZERO_CREDIT_PASS")
+          PY
