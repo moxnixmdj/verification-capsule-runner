@@ -6,8 +6,8 @@ ROOT=pathlib.Path(__file__).resolve().parent
 SOLVER=ROOT/"livebench_prompt_contract_synthesizer_v1.py"
 RATIO=ROOT/"livebench_ratio_reference_free_constructor_v1.py"
 EXPECTED={
-    "solver":"4ccda5d7b15b6bdc05caed571a9f60c68039c24a",
-    "ratio":"b7fc14cb8ba707cf20d07c2d0d1d5cc891558164",
+    "solver":"574fcf5259eb0345e35aaa304dfa959d0af7384c",
+    "ratio":"494b2aa0f96b07753d7129ba40a2f7bb173478f7",
 }
 LIVEBENCH_COMMIT="8f8e5c381a16e3f24257776edd53471fe86f8091"
 IFBENCH_URL="https://raw.githubusercontent.com/allenai/IFBench/1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d/data/IFBench_test.jsonl"
