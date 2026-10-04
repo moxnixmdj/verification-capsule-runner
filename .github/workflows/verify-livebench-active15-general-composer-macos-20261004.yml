@@ -1,0 +1,50 @@
+name: Verify LiveBench active15 general composer macOS
+
+on:
+  push:
+    branches:
+      - verify-livebench-active15-general-composer-20261004
+    paths:
+      - "subject/livebench_active15_general_composer_20261004/**"
+      - "verify_livebench_active15_general_composer_20261004.py"
+      - ".github/workflows/verify-livebench-active15-general-composer-macos-20261004.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned legacy scorer dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --quiet             nltk==3.10.3 langdetect==1.0.9 immutabledict==4.3.1
+          python - <<'PY'
+          import nltk
+          assert nltk.download("punkt", quiet=True)
+          try:
+              nltk.download("punkt_tab", quiet=True)
+          except Exception:
+              pass
+          PY
+      - name: Checkout frozen LiveBench scorer
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench fetch --quiet --depth=1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/livebench checkout --quiet --detach 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Run 7296-case general-archetype audit
+        run: |
+          mkdir -p /tmp/receipt
+          python verify_livebench_active15_general_composer_20261004.py             --livebench-root /tmp/livebench             --output /tmp/receipt/livebench-active15-general7296.json
+      - name: Upload audit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active15-general7296-macos
+          path: /tmp/receipt/
+          if-no-files-found: error
