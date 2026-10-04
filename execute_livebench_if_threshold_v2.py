@@ -35,6 +35,25 @@ THRESHOLD_DAG_RUNTIME_PATH = "subject/root2_output_threshold_dag_v1/canonical/ru
 THRESHOLD_DAG_RUNTIME_BLOB = "7a0c715d931dbba05bc9e5ae344e1ead787ea5b8"
 BATCH = 8
 
+GENERIC_GOAL_CLOSURE_FILES = {
+    "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py", "46e8e7466479ea298c34e5fa682d49c374510ce9"),
+    "canonical/runtime/bound_capabilities/broad_objective_decompose.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/bound_capabilities/broad_objective_decompose.py", "3ded762075ed222228a14877af631f1e2e6d9e4c"),
+    "canonical/runtime/bound_capabilities/grounded_executable_composition.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/bound_capabilities/grounded_executable_composition.py", "8328e12804f64cab1c0d9509966cb1d2d8fb1f82"),
+    "canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/bound_capabilities/grounded_executable_composition_verify.py", "ab9f6fc19937d23edb24dc26a2affed96cea0a9a"),
+    "canonical/runtime/bound_capabilities/open_research_source_frontend.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/bound_capabilities/open_research_source_frontend.py", "830fd35c816140cb6ddb2d3dac9f0886e595d993"),
+    "canonical/runtime/auto_capability_acquisition.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/auto_capability_acquisition.py", "fc80ede8225cc51dac77be6d41aa2a1c757c6ee8"),
+    "canonical/runtime/capability_discovery.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/capability_discovery.py", "b9e7423ab24bf2da98869b02d782e791a779892a"),
+    "canonical/runtime/semantic_authorities.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/semantic_authorities.py", "1d74b9c2cdc0e387ab1d64f04c8f38f414f2d80e"),
+    "canonical/runtime/auto_python_source_codec_acquisition.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/auto_python_source_codec_acquisition.py", "65453b2eed5e678def3f0ab1c4d44182fb0b9a78"),
+    "canonical/runtime/auto_apt_cli_acquisition.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/auto_apt_cli_acquisition.py", "0b7c67a2680a3aaa1aa5cf1a8bc8d41d69eee271"),
+    "canonical/runtime/auto_pypi_library_acquisition.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/auto_pypi_library_acquisition.py", "6387bd7b8f1dba8bb9f66240e3ebb2627085dd2f"),
+    "canonical/runtime/auto_npm_library_acquisition.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/auto_npm_library_acquisition.py", "b74cdf34a96fc2d591b902e1d582e0381a8a8d08"),
+    "canonical/runtime/npm_package_utils.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/npm_package_utils.py", "05fd0591083034df48c3ee426d6b3e11e0183555"),
+    "canonical/runtime/python_codec_probe.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/python_codec_probe.py", "fc8b5005a9888422e3cb61f6cf0bd147c740ec84"),
+    "canonical/runtime/apt_cli_probe.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/apt_cli_probe.py", "3f3a8f6a0154e1ed3f87fc97b99840598297b119"),
+    "canonical/runtime/cli_contract_inference.py": ("capsules/root2_livebench_generic_goal_closure_v1/canonical/runtime/cli_contract_inference.py", "009c3c45040178844d84eaa15b0d47ca2e1f259f"),
+}
+
 RUNTIME_FILES = {
     "astra_runtime": ("capsules/root2_livebench_astra_adapter_v1/canonical/runtime/astra_runtime.py", "7f5d16b1db69cb620954bc778e0ba6e15e687b75"),
     "adapter": ("capsules/root2_livebench_astra_adapter_v1/canonical/runtime/root2_livebench_if_astra_inference_adapter_v1.py", "7e3885fa7a6e56df656c066e0a8f17cfa21424e7"),
@@ -196,6 +215,20 @@ def build_runtime_template(base: pathlib.Path) -> pathlib.Path:
         dst = root / dst_rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src,dst)
+
+    # Materialize the entire statically reachable generic-goal fallback closure
+    # from the exact frozen candidate commit. This is packaging repair only:
+    # no helper bytes are rebased to current main.
+    for dst_rel, (src_rel, expected_blob) in GENERIC_GOAL_CLOSURE_FILES.items():
+        src = ROOT / src_rel
+        if not src.is_file():
+            raise RuntimeError("GENERIC_GOAL_CLOSURE_SOURCE_MISSING:"+src_rel)
+        got = git_blob_sha(src)
+        if got != expected_blob:
+            raise RuntimeError("GENERIC_GOAL_CLOSURE_BLOB_DRIFT:"+src_rel+":"+got+":"+expected_blob)
+        dst = root / dst_rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
     return root
 
 CASE_DRIVER = r'''
