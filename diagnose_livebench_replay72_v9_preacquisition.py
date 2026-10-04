@@ -23,7 +23,7 @@ def load_base():
     return mod
 
 CASE_DRIVER=r"""
-import json,sys
+import json,sys,re
 def _audit(event,args):
     if event=="socket.connect":
         raise RuntimeError("V9_POLICY_NETWORK_FORBIDDEN")
