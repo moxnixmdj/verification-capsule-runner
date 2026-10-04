@@ -1,0 +1,93 @@
+name: Verify Qwen3.8 4B Root1 semantic seed V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/livebench_qwen38_4b_semantic_seed_v1/**"
+      - ".github/workflows/verify-livebench-qwen38-4b-semantic-seed-v1.yml"
+  push:
+    branches: ["verify/livebench-qwen38-4b-semantic-seed-v1-20261004-sol"]
+    paths:
+      - "capsules/livebench_qwen38_4b_semantic_seed_v1/**"
+      - ".github/workflows/verify-livebench-qwen38-4b-semantic-seed-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact frozen Brain precommit
+        run: |
+          set -euo pipefail
+          P=capsules/livebench_qwen38_4b_semantic_seed_v1/canonical/governance/LIVEBENCH_ROOT1_QWEN38_4B_SEMANTIC_SEED_PRECOMMIT_V1.json
+          test "$(git hash-object "$P")" = "49dad45f14b4afa81799cc0e3dcb18293ab2fca9"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("capsules/livebench_qwen38_4b_semantic_seed_v1/canonical/governance/LIVEBENCH_ROOT1_QWEN38_4B_SEMANTIC_SEED_PRECOMMIT_V1.json")
+          d=json.loads(p.read_text())
+          assert d["status"].startswith("PRECOMMITTED__")
+          assert len(d["frozen_nonterminal_suite"]) == 8
+          assert d["generation_policy"]["attempts_per_case"] == 1
+          assert d["generation_policy"]["adaptive_retry"] is False
+          assert d["accounting"]["new_terminal_cases_exposed"] == 0
+          print("PRECOMMIT_BINDING_PASS")
+          PY
+
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin 0504396140d1c882f5f6ee34466a42db7ae90114
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "0504396140d1c882f5f6ee34466a42db7ae90114"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Download and verify exact Qwen3.8 4B Q4_K_M bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.8-4B-Q4_K_M.gguf             'https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF/resolve/391fc7d103e3942a408def3e4f51c2f85d464417/Qwen3.8-4B-Q4_K_M.gguf?download=true'
+          echo 'dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790  models/Qwen3.8-4B-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.8-4B-Q4_K_M.gguf)" = "2783446304"
+
+      - name: Start exact loopback-only subject
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.8-4B-Q4_K_M.gguf             --alias brain-qwen3.8-4b             --host 127.0.0.1 --port 8080 -c 4096 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}"             > QWEN38_4B_SERVER.log 2>&1 &
+          echo $! > QWEN38_4B_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > QWEN38_4B_HEALTH.json 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute frozen one-shot eight-case semantic qualification
+        run: |
+          set -euo pipefail
+          python capsules/livebench_qwen38_4b_semantic_seed_v1/verify_qwen38_4b_semantic_seed_v1.py
+
+      - name: Preserve independent evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-qwen38-4b-semantic-seed-v1
+          path: |
+            QWEN38_4B_HEALTH.json
+            QWEN38_4B_SERVER.log
+            capsules/livebench_qwen38_4b_semantic_seed_v1/LIVEBENCH_QWEN38_4B_SEMANTIC_SEED_PUBLIC_VERIFICATION_V1.json
+          if-no-files-found: warn
