@@ -267,7 +267,7 @@ def claim_then_execute(
     response_ref=str(response.get("ref") or "")
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
-    if response_ref!=claim_ref or len(obj_sha)!=40:
+    if response_ref!=claim_ref or obj_sha!=launch_sha:
         result={
             "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
             "status":"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
@@ -302,7 +302,8 @@ def claim_then_execute(
                 "target_predicate":TARGET,
                 "authority_claim_id":claim_ref,
                 "exception_type":type(exc).__name__,
-                "exception_message":str(exc),
+                "exception_message_sha256":hashlib.sha256(str(exc).encode()).hexdigest(),
+                "exception_message_persisted":False,
                 "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
                 "persistent_learned_bytes":0,
                 "external_frontier_model_calls":0,
@@ -347,6 +348,7 @@ def main()->None:
     claim_branch,result=claim_then_execute(
         repo=repo,token=token,launch_sha=launch_sha,digest=digest
     )
+    result["execution_identity_sha256"]=digest
     result["execution_lease_sha256"]=digest
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
