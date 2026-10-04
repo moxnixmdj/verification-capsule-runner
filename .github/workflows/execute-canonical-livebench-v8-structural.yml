@@ -1,0 +1,44 @@
+name: Execute canonical LiveBench V8 structural refinement
+on:
+  push:
+    branches:
+      - diagnose/livebench-v8-structural-refinement-20261004
+    paths:
+      - ".github/workflows/execute-canonical-livebench-v8-structural.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    env:
+      REPOSITORY_PRIVATE: "false"
+      LIVEBENCH_V8_ACTIVATION_BLOB: "1ebe6b34b819128210a72143e9c318e96c884905"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: diagnose/livebench-v8-structural-refinement-20261004
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact V8 execution subjects
+        run: |
+          set -euo pipefail
+          test "$(git hash-object launch_livebench_v8_structural_atomic.py)" = "08286046cdb87bcf206d13d520536a4564f6b47f"
+          test "$(git hash-object diagnose_livebench_replay72_v8_structural.py)" = "bc5bfd7d791b1343cbcf4d09d8f41c6f73ed9f68"
+          test "$(git hash-object livebench_v8_structural_classifier.py)" = "0c48d463989f8351e3b0a502a174b59ff391ffe8"
+          test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+          python verify_livebench_v8_atomic_launcher.py
+      - name: Atomic claim and replay exposed prefix
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python launch_livebench_v8_structural_atomic.py | tee LIVEBENCH_V8_STRUCTURAL_RESULT.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: canonical-livebench-v8-structural-evidence
+          path: LIVEBENCH_V8_STRUCTURAL_RESULT.log
+          retention-days: 90
