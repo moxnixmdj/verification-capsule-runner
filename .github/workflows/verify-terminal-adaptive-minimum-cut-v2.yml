@@ -1,0 +1,21 @@
+name: Verify terminal adaptive minimum cut v2
+
+on:
+  push:
+    branches:
+      - verify-terminal-adaptive-mincut-v2-current
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify adaptive cut
+        run: python verify_terminal_adaptive_minimum_cut_v2.py
