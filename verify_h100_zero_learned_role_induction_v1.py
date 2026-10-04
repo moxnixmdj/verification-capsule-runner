@@ -9,9 +9,9 @@ ROOT = Path(__file__).resolve().parent
 
 EXPECTED = {
     "canonical/governance/H100_ZERO_LEARNED_ROLE_INDUCTION_PREEXPOSURE_V1.json": "1d8049556eb073007e1f4686a3034726aeb27698",
-    "canonical/runtime/h100_zero_learned_role_induction_v1.py": "d2cfb2119a77f632267fe93d4df95fb1ed51e05c",
+    "canonical/runtime/h100_zero_learned_role_induction_v1.py": "f18cbb1a1d9e1f1184a06df536a09ba99f3fdfed",
     "canonical/tests/test_h100_zero_learned_role_induction_v1.py": "bfabb4171b207a36d2a2916e74e9d873b0acf9d1",
-    "canonical/governance/H100_ZERO_LEARNED_ROLE_INDUCTION_CANDIDATE_V1.json": "a616220e2e23ebbb401feafc0c61c0e1bb2fc3ae",
+    "canonical/governance/H100_ZERO_LEARNED_ROLE_INDUCTION_CANDIDATE_V1.json": "e0c4d334af10f51ec3f28ba1eb356d3fd7297ae9",
 }
 
 def git_blob_sha(data: bytes) -> str:
