@@ -24,7 +24,7 @@ class ProductionLauncherTests(unittest.TestCase):
     def test_claim_success_executes_once_and_binds_receipt(self):
         calls={"n":0}
         def fake_create(repo,token,ref,sha):
-            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+            return 201,{"ref":ref,"object":{"sha":sha}}
         def fake_execute(**kwargs):
             calls["n"]+=1
             return {"status":"X","authority_claim_id":kwargs["claim_id"]}
@@ -77,6 +77,22 @@ class ProductionLauncherTests(unittest.TestCase):
         changed=prod.canonical_identity_from_lease(altered)
         self.assertNotEqual(original,changed)
 
+
+    def test_claim_201_with_wrong_valid_object_sha_is_sealed_without_execution(self):
+        called={"execute":False}
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+        def fake_execute(**kwargs):
+            called["execute"]=True
+            return {}
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="a"*40,digest="f"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertFalse(called["execute"])
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"f"*64)
+        self.assertEqual(out["status"],"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED")
+        self.assertEqual(out["claim_response_object_sha"],"c"*40)
 
     def test_claim_201_with_invalid_response_is_sealed_without_execution(self):
         called={"execute":False}
