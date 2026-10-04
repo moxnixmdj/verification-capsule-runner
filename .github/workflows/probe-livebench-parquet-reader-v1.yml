@@ -1,0 +1,17 @@
+name: Probe LiveBench Parquet reader V1
+on:
+  pull_request:
+    paths:
+      - 'probe_livebench_parquet_reader_v1.py'
+      - '.github/workflows/probe-livebench-parquet-reader-v1.yml'
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe without reading benchmark cases
+        run: python probe_livebench_parquet_reader_v1.py

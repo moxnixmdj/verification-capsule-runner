@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+import hashlib, importlib.util, pathlib, subprocess, sys
+
+print("PYTHON", sys.version)
+def available(name):
+    try:
+        return importlib.util.find_spec(name) is not None
+    except ModuleNotFoundError:
+        return False
+
+for name in ("pyarrow", "pyarrow.parquet", "pandas"):
+    print("AVAILABLE", name, available(name))
+if available("pyarrow"):
+    import pyarrow
+    print("PYARROW_VERSION", pyarrow.__version__)
+else:
+    out=pathlib.Path("/tmp/livebench-reader-wheel")
+    out.mkdir(parents=True,exist_ok=True)
+    subprocess.run([
+        sys.executable,"-m","pip","download","--no-deps","--only-binary=:all:",
+        "--dest",str(out),"pyarrow==21.0.0"
+    ],check=True)
+    files=list(out.iterdir())
+    assert len(files)==1, files
+    p=files[0]
+    print("CANDIDATE_WHEEL",p.name)
+    print("CANDIDATE_WHEEL_SHA256",hashlib.sha256(p.read_bytes()).hexdigest())
+print("PASS_ZERO_CASE_READER_PROBE")
