@@ -1,0 +1,40 @@
+name: Verify Root1 capability-first scheduler V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root1_capability_first_scheduler_v1/**"
+      - ".github/workflows/verify-root1-capability-first-scheduler-v1.yml"
+  push:
+    branches: ["verify/root1-capability-first-scheduler-v1-20261004-sol"]
+    paths:
+      - "capsules/root1_capability_first_scheduler_v1/**"
+      - ".github/workflows/verify-root1-capability-first-scheduler-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain PR 1778 blobs
+        run: |
+          set -euo pipefail
+          C=capsules/root1_capability_first_scheduler_v1
+          test "$(git hash-object "$C/canonical/runtime/terminal_minimum_causal_depth_policy_v1.py")" = "4d46ce985325eda054a5223d71d069bfdc102f4e"
+          test "$(git hash-object "$C/canonical/runtime/terminal_causal_depth_controller_v1.py")" = "6f5d1dbf73a1b3d8a94a0f05e55a75cbe8224eb3"
+          test "$(git hash-object "$C/canonical/governance/ROOT1_CAPABILITY_REPAIR_REGISTRY_V1.json")" = "17a1cf5ffe038768570f64d274759507cb1041f2"
+
+      - name: Run adversarial scheduler verification
+        run: |
+          set -euo pipefail
+          python capsules/root1_capability_first_scheduler_v1/verify.py
