@@ -20,14 +20,20 @@ from canonical.runtime import livebench_legacy15_composition_archetypes_v1 as ar
 SCHEMA = "PROJECT_BRAIN_LIVEBENCH_LEGACY15_SLOT_FEASIBILITY_V1"
 PINNED_LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 PINNED_INSTRUCTIONS_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
-PINNED_REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+PINNED_REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"\nPINNED_EVALUATION_MAIN_BLOB = "4a341984936c4d609644a3b77f8c030ac5aa7269"\nPINNED_NLTK_VERSION = "3.10.3"\nPINNED_NLTK_PUNKT_SOURCE_BLOB = "48496d2448c009221d2452c8e928699027b20ebe"
 HISTORICAL_GENERATOR_BLOB = "6ff390d6885cf90f88d9d36959735cb327613edc"
 
 NTH = "length_constraints:nth_paragraph_first_word"
 FORBIDDEN = "keywords:forbidden_words"
 EXISTENCE = "keywords:existence"
-END = "startend:end_checker"
+END = "startend:end_checker"\nSENTENCES = "length_constraints:number_sentences"
 SENTENCE = "length_constraints:number_sentences"
+WORDS = "length_constraints:number_words"
+POSTSCRIPT = "detectable_content:postscript"
+BULLETS = "detectable_format:number_bullet_lists"
+TITLE = "detectable_format:title"
+SECTIONS = "detectable_format:multiple_sections"
+QUOTATION = "startend:quotation"
 PUBLIC_END_PHRASES = ("Any other questions?", "Is there anything else I can help with?")
 
 
@@ -89,16 +95,66 @@ def hard_unsat_reasons(contracts: Sequence[Mapping[str, Any]]) -> tuple[str, ...
     # (e.g. "Section1"), which preserves its regex match while destroying the
     # trailing word boundary required by ForbiddenWords for "section".
 
-    if SENTENCE in by_id and END in by_id:
+    if SENTENCE in by_id:
         sentence = by_id[SENTENCE]
         relation = str(sentence.get("relation", "")).strip().casefold()
         try:
             threshold = int(sentence.get("num_sentences"))
         except (TypeError, ValueError):
             threshold = -1
-        end_phrase = str(by_id[END].get("end_phrase", "")).strip()
-        if relation == "less than" and threshold == 1 and end_phrase in PUBLIC_END_PHRASES:
-            reasons.append("SENTENCE_LT_ONE_WITH_MANDATORY_END_PHRASE")
+
+        if relation == "less than" and threshold == 1:
+            # Frozen Punkt sentence tokenization yields zero sentences only for
+            # an empty/whitespace-only response; every non-whitespace response
+            # yields at least the terminal slice. Therefore any simultaneously
+            # active checker that requires non-whitespace output is jointly UNSAT.
+            nonempty_reasons: list[str] = []
+
+            if by_id.get(EXISTENCE, {}).get("keywords"):
+                nonempty_reasons.append(EXISTENCE)
+            if NTH in by_id and str(by_id[NTH].get("first_word", "")).strip():
+                nonempty_reasons.append(NTH)
+            if POSTSCRIPT in by_id and str(by_id[POSTSCRIPT].get("postscript_marker", "")).strip():
+                nonempty_reasons.append(POSTSCRIPT)
+            if BULLETS in by_id:
+                try:
+                    if int(by_id[BULLETS].get("num_bullets")) > 0:
+                        nonempty_reasons.append(BULLETS)
+                except (TypeError, ValueError):
+                    pass
+            if TITLE in by_id:
+                nonempty_reasons.append(TITLE)
+            if SECTIONS in by_id:
+                try:
+                    if (
+                        int(by_id[SECTIONS].get("num_sections")) > 0
+                        and str(by_id[SECTIONS].get("section_spliter", "")).strip()
+                    ):
+                        nonempty_reasons.append(SECTIONS)
+                except (TypeError, ValueError):
+                    pass
+            if END in by_id and str(by_id[END].get("end_phrase", "")).strip():
+                nonempty_reasons.append(END)
+            if QUOTATION in by_id:
+                # QuotationChecker requires len(value.strip()) > 1.
+                nonempty_reasons.append(QUOTATION)
+            if WORDS in by_id:
+                ws = by_id[WORDS]
+                try:
+                    if (
+                        str(ws.get("relation", "")).strip().casefold() == "at least"
+                        and int(ws.get("num_words")) > 0
+                    ):
+                        nonempty_reasons.append(WORDS)
+                except (TypeError, ValueError):
+                    pass
+
+            for iid in sorted(set(nonempty_reasons)):
+                reasons.append("SENTENCE_LT_ONE_REQUIRES_EMPTY_BUT_CHECKER_REQUIRES_OUTPUT:" + iid)
+
+            # Preserve the established diagnostic key for downstream receipts.
+            if END in nonempty_reasons:
+                reasons.append("SENTENCE_LT_ONE_WITH_MANDATORY_END_PHRASE")
 
     return tuple(reasons)
 
