@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_LIVEBENCH_ZERO_SPEND_PUBLIC_CARRIER_RECEIPT_CANDIDATE_V1",
   "date": "2026-10-04",
-  "status": "CANDIDATE__PUBLIC_STANDARD_GITHUB_HOSTED_RUNNER_ZERO_INCREMENTAL_SPEND_ENTITLEMENT__INDEPENDENT_RUNTIME_VERIFICATION_REQUIRED__ZERO_CREDIT",
+  "status": "CANDIDATE__PUBLIC_STANDARD_GITHUB_HOSTED_RUNNER_ZERO_INCREMENTAL_SPEND_ENTITLEMENT__WORKFLOW_ALREADY_ON_DEFAULT_BRANCH__ZERO_CREDIT",
   "target_predicate": "LIVEBENCH_IF_GE_65_7",
   "target_field": "zero_incremental_spend_or_entitlement_verified",
   "carrier": {
@@ -35,5 +35,6 @@
     "new_reality_units_consumed": 0,
     "terminal_cases_consumed": 0,
     "acceptance_credit_delta": 0
-  }
+  },
+  "verification_epoch": 2
 }
