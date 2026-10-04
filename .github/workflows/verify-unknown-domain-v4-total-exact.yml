@@ -1,0 +1,42 @@
+name: Verify Unknown-Domain V4 total exact conjunction
+
+on:
+  create:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event_name != 'create' || (github.ref_type == 'branch' && startsWith(github.ref_name, 'ud-v4-total-exact-fastlane/'))
+    runs-on: macos-14
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bind immutable event SHA on create fastlane
+        if: github.event_name == 'create'
+        run: |
+          python - <<'PY'
+          import os, subprocess
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          assert head==os.environ["GITHUB_SHA"],(head,os.environ["GITHUB_SHA"])
+          assert os.environ["GITHUB_REF_NAME"].startswith("ud-v4-total-exact-fastlane/")
+          print("immutable V4 total exact fastlane subject PASS",head)
+          PY
+      - name: Run independent total+exact verifier
+        run: python verification/unknown_domain_v4_total_exact_independent.py
+      - name: Upload verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v4-total-exact-receipt
+          path: unknown_domain_v4_total_exact_receipt.json
+          if-no-files-found: error
+          retention-days: 7
