@@ -198,9 +198,65 @@ def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
         if not row["output"].strip():
             raise RuntimeError(f"EMPTY_PROBE:{name}")
 
+    def norm_words(text: str) -> set[str]:
+        import re
+        return set(re.findall(r"[a-z]+", text.lower()))
+
+    def has_any(words: set[str], options: set[str]) -> bool:
+        return bool(words & options)
+
+    semantic_checks = {}
+
+    p = probes["paraphrase"]["output"]
+    pw = norm_words(p)
+    semantic_checks["paraphrase"] = {
+        "not_verbatim": p.strip().lower() != "the scientist carefully checked every result before publishing it.",
+        "agent_retained": has_any(pw, {"scientist", "researcher"}),
+        "inspection_retained": has_any(pw, {"check", "checked", "checking", "examine", "examined", "review", "reviewed", "verify", "verified", "inspect", "inspected"}),
+        "result_retained": has_any(pw, {"result", "results", "finding", "findings"}),
+        "publication_retained": has_any(pw, {"publish", "published", "publishing", "publication", "release", "released", "public"}),
+    }
+    semantic_checks["paraphrase"]["pass"] = all(semantic_checks["paraphrase"].values())
+
+    s = probes["simplify"]["output"]
+    sw = norm_words(s)
+    semantic_checks["simplify"] = {
+        "weather_retained": has_any(sw, {"weather", "storm", "conditions"}),
+        "continuation_retained": has_any(sw, {"continue", "continued", "continuing", "kept", "went"}),
+        "preparation_retained": has_any(sw, {"prepare", "prepared", "ready", "planned"}),
+        "simpler_length": len(sw) <= 24,
+    }
+    semantic_checks["simplify"]["pass"] = all(semantic_checks["simplify"].values())
+
+    m = probes["summarize"]["output"]
+    mw = norm_words(m)
+    semantic_checks["summarize"] = {
+        "solar_retained": has_any(mw, {"solar", "sunlight", "sun"}),
+        "electricity_retained": has_any(mw, {"electricity", "electric", "power", "energy"}),
+        "storage_retained": has_any(mw, {"battery", "batteries", "store", "stores", "stored", "storage"}),
+        "short_summary": len(mw) <= 32,
+    }
+    semantic_checks["summarize"]["pass"] = all(semantic_checks["summarize"].values())
+
+    g = probes["story_generation"]["output"]
+    gw = norm_words(g)
+    semantic_checks["story_generation"] = {
+        "child_retained": has_any(gw, {"child", "boy", "girl", "kid"}),
+        "clock_retained": has_any(gw, {"clock", "timepiece", "watch"}),
+        "reverse_time_retained": has_any(gw, {"backward", "backwards", "reverse", "reversed"}),
+        "minimum_story_length": len(gw) >= 20,
+    }
+    semantic_checks["story_generation"]["pass"] = all(semantic_checks["story_generation"].values())
+
+    semantic_smoke_pass = all(x["pass"] for x in semantic_checks.values())
+
     receipt = {
         "schema": "PROJECT_BRAIN_FLAN_T5_SMALL_INT8_SEMANTIC_SMOKE_V1",
-        "status": "PASS__RESOURCE_AND_END_TO_END_EXECUTION_SMOKE_ONLY__SEMANTIC_QUALITY_UNADJUDICATED",
+        "status": (
+            "PASS__RESOURCE_EXECUTION_AND_MINIMUM_SEMANTIC_SMOKE"
+            if semantic_smoke_pass
+            else "FAIL__MINIMUM_SEMANTIC_SMOKE"
+        ),
         "network_phase": "ARTIFACT_PREFETCH_COMPLETED_BEFORE_OFFLINE_EXECUTION",
         "offline_execution_required": True,
         "learned_bytes_total": total,
@@ -225,8 +281,10 @@ def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
             "sentencepiece": getattr(sentencepiece, "__version__", "unknown"),
         },
         "public_nonterminal_smoke_probes": probes,
+        "minimum_semantic_checks": semantic_checks,
         "hard_nonclaims": [
-            "NONEMPTY_GENERATION_IS_NOT_SEMANTIC_QUALITY_PROOF",
+            "FOUR_SYNTHETIC_FAIL_FAST_PROBES_ARE_NOT_OPUS_5_5_PARITY_PROOF",
+            "PASS_ONLY_MEANS_THE_SUB100MB_CANDIDATE_SURVIVED_A_MINIMUM_SEMANTIC_SMOKE_GATE",
             "NO_OPUS_5_5_EQUIVALENCE_CLAIM",
             "NO_LIVEBENCH_THRESHOLD_CLAIM",
             "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
@@ -234,6 +292,8 @@ def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
     }
     receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(receipt, indent=2, sort_keys=True))
+    if not semantic_smoke_pass:
+        raise SystemExit(2)
     return receipt
 
 
