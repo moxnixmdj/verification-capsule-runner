@@ -31,8 +31,8 @@ PUBLIC_FILES = {
     ),
 }
 SUBJECT_ROOT = Path(__file__).resolve().parent / "subjects" / "livebench_single_checker_v1"
-SUBJECT_SOLVER_BLOB = "b74d986fae033ac94827c5f1eb2db655a99ae4cc"
-SUBJECT_HELPER_BLOB = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"
+SUBJECT_SOLVER_BLOB = "b21e2a0946523e7aaa2d4a929676574ddc14c92b"
+SUBJECT_HELPER_BLOB = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"\nSUBJECT_REPEAT_BLOB = "332fbb1fac1cdee2632dc454b497376d319e2287"
 RECEIPT = Path("livebench_single_checker_public_witness_receipt.json")
 
 
@@ -190,7 +190,7 @@ def main() -> int:
         ),
         "subject": {
             "solver_git_blob_sha": SUBJECT_SOLVER_BLOB,
-            "ngram_helper_git_blob_sha": SUBJECT_HELPER_BLOB,
+            "ngram_helper_git_blob_sha": SUBJECT_HELPER_BLOB,\n            "repeat_compiler_git_blob_sha": SUBJECT_REPEAT_BLOB,
         },
         "public_sources": {
             "ifbench_test_git_blob_sha": git_blob_sha(raw),
