@@ -1,0 +1,19 @@
+name: Verify LiveBench cryptographic escrow V1
+on:
+  pull_request:
+    paths:
+      - 'subject/livebench_crypto_escrow_v1_sol/**'
+      - 'verify_livebench_crypto_escrow_v1_sol.py'
+      - '.github/workflows/verify-livebench-crypto-escrow-v1-sol.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: openssl version
+      - run: python verify_livebench_crypto_escrow_v1_sol.py
