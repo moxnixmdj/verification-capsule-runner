@@ -17,7 +17,9 @@ import hashlib
 import json
 import os
 import secrets
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any, Callable, Mapping
@@ -49,17 +51,16 @@ def _git_blob(data:bytes)->str:
     return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
 
 
-def _json_request(method:str,url:str,token:str,payload:Mapping[str,Any]):
-    raw=json.dumps(payload,separators=(",",":")).encode()
-    req=urllib.request.Request(
-        url,data=raw,method=method,
-        headers={
-            "Authorization":"Bearer "+token,
-            "Accept":"application/vnd.github+json",
-            "X-GitHub-Api-Version":"2022-11-28",
-            "Content-Type":"application/json",
-        },
-    )
+def _json_request(method:str,url:str,token:str,payload:Mapping[str,Any]|None=None):
+    raw=None if payload is None else json.dumps(payload,separators=(",",":")).encode()
+    headers={
+        "Authorization":"Bearer "+token,
+        "Accept":"application/vnd.github+json",
+        "X-GitHub-Api-Version":"2022-11-28",
+    }
+    if raw is not None:
+        headers["Content-Type"]="application/json"
+    req=urllib.request.Request(url,data=raw,method=method,headers=headers)
     try:
         with urllib.request.urlopen(req,timeout=30) as resp:
             body=resp.read()
@@ -69,20 +70,86 @@ def _json_request(method:str,url:str,token:str,payload:Mapping[str,Any]):
         try: parsed=json.loads(body or b"{}")
         except Exception: parsed={"message":"non-json error"}
         return int(exc.code), parsed
+    except (urllib.error.URLError,TimeoutError,OSError) as exc:
+        return 0,{"message":type(exc).__name__}
 
 
 def create_ref(repo:str,token:str,ref:str,sha:str):
     return _json_request("POST",f"https://api.github.com/repos/{repo}/git/refs",token,{"ref":ref,"sha":sha})
 
 
+def _result_bytes(content:Mapping[str,Any])->bytes:
+    return (json.dumps(content,indent=2,sort_keys=True)+"\n").encode()
+
+
 def put_result(repo:str,token:str,branch:str,path:str,content:Mapping[str,Any]):
-    raw=(json.dumps(content,indent=2,sort_keys=True)+"\n").encode()
+    raw=_result_bytes(content)
     payload={
         "message":"Record immutable Unknown-Domain one-use production result",
         "content":base64.b64encode(raw).decode(),
         "branch":branch,
     }
     return _json_request("PUT",f"https://api.github.com/repos/{repo}/contents/{path}",token,payload)
+
+
+def get_result_bytes(repo:str,token:str,branch:str,path:str):
+    qbranch=urllib.parse.quote(branch,safe="")
+    qpath=urllib.parse.quote(path,safe="/")
+    status,response=_json_request(
+        "GET",
+        f"https://api.github.com/repos/{repo}/contents/{qpath}?ref={qbranch}",
+        token,
+        None,
+    )
+    if status!=200 or not isinstance(response,Mapping):
+        return status,None,None
+    encoded=str(response.get("content") or "").replace("\n","")
+    try:
+        raw=base64.b64decode(encoded,validate=True)
+    except Exception:
+        return status,None,None
+    return status,raw,str(response.get("sha") or "")
+
+
+def persist_result_durable(
+    *,
+    repo:str,
+    token:str,
+    branch:str,
+    path:str,
+    content:Mapping[str,Any],
+    attempts:int=5,
+    put_fn:Callable[...,tuple[int,Mapping[str,Any]]]=put_result,
+    get_fn:Callable[...,tuple[int,bytes|None,str|None]]=get_result_bytes,
+    sleep_fn:Callable[[float],Any]=time.sleep,
+    emit_recovery:bool=True,
+):
+    if attempts<1:
+        raise ProductionLaunchError("RESULT_PERSISTENCE_ATTEMPTS_INVALID")
+    raw=_result_bytes(content)
+    raw_git_blob=_git_blob(raw)
+    if emit_recovery:
+        print("UNKNOWN_DOMAIN_RESULT_RECOVERY_SHA256_V1="+hashlib.sha256(raw).hexdigest(),flush=True)
+        print("UNKNOWN_DOMAIN_RESULT_RECOVERY_B64_V1="+base64.b64encode(raw).decode(),flush=True)
+    last_status=None
+    for attempt in range(attempts):
+        status,response=put_fn(repo,token,branch,path,content)
+        last_status=status
+        check_status,existing,content_sha=get_fn(repo,token,branch,path)
+        if check_status==200 and existing==raw and content_sha==raw_git_blob:
+            commit=response.get("commit") if status==201 and isinstance(response,Mapping) else None
+            commit_sha=str(commit.get("sha") or "") if isinstance(commit,Mapping) else ""
+            return {
+                "status":"DURABLE_CREATED_AND_READBACK_VERIFIED" if status==201 else "DURABLE_EXISTING_AND_READBACK_VERIFIED",
+                "attempts":attempt+1,
+                "write_status":status,
+                "commit_sha":commit_sha,
+                "content_sha":content_sha,
+                "result_sha256":hashlib.sha256(raw).hexdigest(),
+            }
+        if attempt+1<attempts:
+            sleep_fn(float(min(2**attempt,8)))
+    raise ProductionLaunchError("RESULT_DURABILITY_NOT_ESTABLISHED:"+str(last_status))
 
 
 def lease_bytes_and_digest(path:Path=LEASE_PATH):
@@ -251,11 +318,10 @@ def main()->None:
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
     result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
-    status,response=put_result(repo,token,claim_branch,result_path,result)
-    if status!=201:
-        raise ProductionLaunchError("RESULT_COMMIT_NOT_201:"+str(status))
-    commit=response.get("commit") if isinstance(response,Mapping) else None
-    commit_sha=str(commit.get("sha") or "") if isinstance(commit,Mapping) else ""
+    persistence=persist_result_durable(
+        repo=repo,token=token,branch=claim_branch,path=result_path,content=result
+    )
+    commit_sha=str(persistence.get("commit_sha") or "")
     print(json.dumps({
         "status":result["status"],
         "claim_ref":"refs/heads/"+claim_branch,
@@ -264,6 +330,11 @@ def main()->None:
         "all_27_cases_pass":result["aggregate"].get("all_27_cases_pass"),
         "result_path":result_path,
         "result_commit_sha":commit_sha,
+        "result_persistence_status":persistence.get("status"),
+        "result_persistence_attempts":persistence.get("attempts"),
+        "result_write_status":persistence.get("write_status"),
+        "result_content_sha":persistence.get("content_sha"),
+        "result_sha256":persistence.get("result_sha256"),
     },sort_keys=True))
 
 
