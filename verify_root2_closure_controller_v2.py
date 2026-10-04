@@ -56,3 +56,5 @@ assert i["execution_authority"] is False
 assert i["promotion_authority"] is False
 assert i["fresh_reality_authority"] is False
 print("ROOT2_CLOSURE_CONTROLLER_V2_PUBLIC_RUNNER_PASS")
+
+# synchronize trigger: exact subject bytes unchanged
