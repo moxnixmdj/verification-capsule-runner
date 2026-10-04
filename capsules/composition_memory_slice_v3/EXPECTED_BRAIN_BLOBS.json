@@ -1,9 +1,0 @@
-{
-  "schema": "PROJECT_BRAIN_COMPOSITION_MEMORY_SLICE_V3_PUBLIC_VERIFIER_INPUT",
-  "brain_repository": "moxnixmdj/brain",
-  "brain_ref": "breakthrough/composition-memory-current-v2-20261003",
-  "exact_brain_blobs": {
-    "canonical/runtime/composition_component_proof_slicer_v1.py": "0e5028d8547bc3e17e7128b6311f734ac30a16d8",
-    "canonical/governance/COMPOSITION_COMPONENT_PROOF_SLICE_INPUT_V3.json": "141fa6f38d7da69b7c5e9e24729187da1c9a8c06"
-  }
-}
