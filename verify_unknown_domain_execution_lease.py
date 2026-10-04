@@ -42,7 +42,7 @@ for rel,expected in lease["exact_components"].items():
 digest=hashlib.sha256(raw).hexdigest()
 print(json.dumps({
  "status":"INDEPENDENT_EXECUTION_LEASE_PASS",
- "execution_lease_git_blob_sha":"26f98012ecf01c6a3f20e855bdebf60cf70d1c1f",
+ "execution_lease_git_blob_sha":blob(raw),
  "execution_lease_sha256":digest,
  "exact_component_count":len(lease["exact_components"]),
  "production_cases_allowed":27,
