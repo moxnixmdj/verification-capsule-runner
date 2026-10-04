@@ -1,0 +1,40 @@
+{
+  "acceptance_credit_delta": 0,
+  "activation_blob_sha": "424531d02dfc2e8098a81d57fb46140fc999db12",
+  "case_73_or_later": false,
+  "claim": {
+    "claim_ref": "refs/heads/livebench-v9-retry2-claims/a2c7b719fa717f476426d92cc0bc1828ebfc13800734a4ec84043287c79132cd",
+    "create_http_status": 201,
+    "epoch_digest_sha256": "a2c7b719fa717f476426d92cc0bc1828ebfc13800734a4ec84043287c79132cd",
+    "execution_started_before_claim": false,
+    "reference_created": true,
+    "response_object_sha": "d03e6278ee35657dc40fa1c7e3638adbf7c4036b",
+    "terminal_dataset_read_before_claim": false
+  },
+  "new_case_exposure": false,
+  "promotion_authority": false,
+  "result": {
+    "acceptance_credit_authority": false,
+    "activation_blob_sha": "424531d02dfc2e8098a81d57fb46140fc999db12",
+    "benchmark_id": "LIVEBENCH_IF_2026_06_25",
+    "case_ids_emitted": false,
+    "classification_histogram": {
+      "COMPILE_UNRESOLVED_SUBGOAL|GAP_CAPABILITY_CANDIDATE|GROUND_PARTIAL_GROUNDED|UNRESOLVED_MIXED_UNBINDABLE_AND_NO_MATCH|BROAD_NONE": 26,
+      "COMPILE_UNRESOLVED_SUBGOAL|GAP_CAPABILITY_CANDIDATE|GROUND_PARTIAL_GROUNDED|UNRESOLVED_NO_MATCH|BROAD_NONE": 1,
+      "COMPILE_UNRESOLVED_SUBGOAL|GAP_CAPABILITY_CANDIDATE|GROUND_ZERO_GROUNDED|UNRESOLVED_MIXED_UNBINDABLE_AND_NO_MATCH|BROAD_NONE": 43,
+      "COMPILE_UNRESOLVED_SUBGOAL|GAP_CONTROL_OR_FANOUT|GROUND_ZERO_GROUNDED|UNRESOLVED_MIXED_UNBINDABLE_AND_NO_MATCH|BROAD_NONE": 2
+    },
+    "new_case_exposure": false,
+    "promotion_authority": false,
+    "prompt_text_emitted": false,
+    "raw_exception_text_emitted": false,
+    "replay_prefix_limit": 72,
+    "replayed_already_exposed_cases": 72,
+    "response_text_emitted": false,
+    "schema": "PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_RESULT_V1",
+    "status": "DIAGNOSTIC_COMPLETE"
+  },
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY2_EXECUTION_RECEIPT_V1",
+  "workflow_run_id": "37195392850",
+  "workflow_sha": "d03e6278ee35657dc40fa1c7e3638adbf7c4036b"
+}
