@@ -29,7 +29,7 @@ BRAIN_BLOBS={
     "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py":"721207ba39d502e3f610289578e9d5bab78b1fcc",
     "canonical/runtime/livebench_frozen_active_legacy15_v1.py":"34440ee69322e9d519cbe656cb03c55683a8b9c6",
     "canonical/runtime/livebench_legacy15_composition_partition_v1.py":"b817b4f63f4e98c2705f221c7a4abd8e571f9d80",
-    "canonical/runtime/livebench_legacy15_joint_candidate_generator_v1.py":"8c8e574af8a275a96e2df2f789ebe18cdbb3b162",
+    "canonical/runtime/livebench_legacy15_joint_candidate_generator_v1.py":"287e5a7e320503accf202d634f12b72fa3bbd403",
 }
 
 def git_blob_bytes(raw:bytes)->str:
@@ -69,11 +69,39 @@ solved=0
 compile_fail=0
 generation_fail=0
 checker_fail_rows=0
+proved_unsat_rows=0
 total_candidates=0
 max_candidates=0
 mode_hist=collections.Counter()
 set_hist=collections.Counter()
 failure_samples=[]
+
+def prove_visible_unsat_independent(constraints):
+    forbidden=[]
+    end_phrase=None
+    for c in constraints:
+        iid=str(c.get("instruction_id") or "")
+        slots=dict(c.get("slots") or {})
+        if iid=="keywords:forbidden_words":
+            forbidden.extend(str(x) for x in (slots.get("forbidden_words") or []))
+        elif iid=="startend:end_checker":
+            end_phrase=str(slots.get("end_phrase") or "").strip()
+    if not forbidden or not end_phrase:
+        return None
+    collisions=[]
+    for word in forbidden:
+        try:
+            if __import__("re").search(r"\\b"+word+r"\\b", end_phrase, flags=__import__("re").IGNORECASE):
+                collisions.append(word)
+        except __import__("re").error:
+            return None
+    if not collisions:
+        return None
+    return {
+        "reason":"EXACT_END_PHRASE_FORBIDDEN_WHOLE_WORD_COLLISION",
+        "end_phrase":end_phrase,
+        "colliding_forbidden_words":sorted(collisions),
+    }
 
 def check_candidate(prompt, ids, kwargs, response):
     per=[]
@@ -121,6 +149,15 @@ for idx,row in enumerate(rows):
     total_candidates += len(candidates)
     max_candidates=max(max_candidates,len(candidates))
     if not candidates:
+        proof=prove_visible_unsat_independent(constraints)
+        if (
+            gen.get("status")=="PROVED_UNSAT_VISIBLE_CONSTRAINTS"
+            and proof is not None
+            and (gen.get("unsat_proof") or {}).get("reason")==proof["reason"]
+            and sorted((gen.get("unsat_proof") or {}).get("colliding_forbidden_words") or [])==proof["colliding_forbidden_words"]
+        ):
+            proved_unsat_rows+=1
+            continue
         generation_fail+=1
         if len(failure_samples)<20:
             failure_samples.append({"row":idx,"kind":"generate","ids":ids,"constraints":constraints,"gen":gen})
@@ -151,6 +188,7 @@ print("solved_rows",solved)
 print("compile_fail_rows",compile_fail)
 print("generation_fail_rows",generation_fail)
 print("checker_fail_rows",checker_fail_rows)
+print("proved_unsat_rows",proved_unsat_rows)
 print("total_candidates",total_candidates)
 print("max_candidates_per_row",max_candidates)
 print("route_hist",json.dumps(dict(mode_hist),sort_keys=True))
@@ -162,9 +200,10 @@ assert eligible>0
 assert compile_fail==0,compile_fail
 assert generation_fail==0,generation_fail
 assert checker_fail_rows==0,checker_fail_rows
-assert solved==eligible,(solved,eligible)
+assert proved_unsat_rows==1,proved_unsat_rows
+assert solved+proved_unsat_rows==eligible,(solved,proved_unsat_rows,eligible)
 
-print("LIVEBENCH_LEGACY15_CANDIDATE_PREDECESSOR_REPLAY=PASS")
+print("LIVEBENCH_LEGACY15_CANDIDATE_PREDECESSOR_REPLAY=PASS__ALL_SAT_ROWS_SOLVED__ALL_UNSAT_ROWS_PROVED")
 print("active_terminal_prompt_rows_read=0")
 print("predecessor_rows_read=200")
 print("incremental_spend_usd=0")
