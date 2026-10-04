@@ -14,7 +14,7 @@ FILES={
   "envelope":"subject/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json",
 }
 EXPECTED={
-  "audit":"5abee16893c3bff3c72a48892b75fcee888d2f3e",
+  "audit":"ad58a8d982868d6178b8725ef7520ab43b4078a3",
   "super":"d9ac894594ebcd2883520f7b7977a3548420541c",
   "protocols":"62394e5b7d221ec9f69c3458f669e40e253a9d09",
   "registry":"562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
@@ -53,6 +53,11 @@ assert g["effort"]=="max"
 assert "BEFORE_FUTURE_POST_FREEZE_BEACON" in g["freeze_time"]
 assert audit["route_admissibility_delta"]["conceptual_effort_choice_remaining"] is False
 assert audit["route_admissibility_delta"]["provider_enforcement_remaining"] is True
+native=audit["proof_protocol_interpretation"]["native_claude_api_generic_matched_request_freeze"]
+assert native["model"]=="claude-opus-5-5"
+assert native["thinking"].startswith("ADAPTIVE_ALWAYS_ON")
+assert native["output_config"]=={"effort":"max"}
+assert native["sampling"].startswith("DEFAULT_ONLY")
 
 # TB4's xhigh provenance is explicitly local, not generalized.
 tb=audit["configuration_classes"]["terminal_bench_4_fixed_bar"]
@@ -107,15 +112,28 @@ assert "At max effort, Opus 5.5 scores 1846 Elo" in text
 assert "At default effort (medium), Opus 5.5 scores 54.6%" in text
 assert "At default effort (medium), Opus 5.5 scores 52.5%" in text
 
+effort=fetch_text("https://platform.claude.com/docs/en/build-with-claude/effort")
+assert "Set output_config.effort on the request." in effort
+assert "You can raise the effort level to max for the absolute highest capability" in effort
+assert "Claude Opus 5.5 supports all five effort levels" in effort
+assert "medium is the default" in effort
+
+migration=fetch_text("https://platform.claude.com/docs/en/models/opus-5-5/migration-guide")
+assert "claude-opus-5-5" in migration
+assert "Adaptive thinking is always on" in migration
+assert "All five levels" in migration
+assert "temperature" in migration and "top_p" in migration and "top_k" in migration
+
 # Critical anti-weakening / anti-overclaim assertions.
 nonclaims="\n".join(audit["hard_nonclaims"])
 assert "NO_CLAIM_XHIGH_EQUALS_MAX" in nonclaims
 assert "NO_CLAIM_XHIGH_IS_THE_GENERIC_MATCHED_COMPARATOR_CONFIGURATION" in nonclaims
 assert "NO_CLAIM_THIRD_PARTY_OWNER_BENCHMARKS_USED_ANTHROPIC_MAX_EFFORT_UNLESS_OWNER_OR_PRIMARY_SOURCE_PROVES_IT" in nonclaims
 assert "NO_MATCHED_CASE_GENERATION_OR_EXPOSURE" in nonclaims
+assert "NO_CLAIM_PROVIDER_MODEL_NAME_ALONE_PROVES_EFFORT_THINKING_SAMPLING_OR_TOOL_SEMANTIC_EQUIVALENCE" in nonclaims
 
 print("PASS: Anthropic current source binds general Opus 5.5 benchmark default to adaptive thinking max effort")
 print("PASS: TB4 xhigh exception remains local to frozen 66.4 bar")
 print("PASS: fixed public bars remain scalar comparator facts; no new Opus run required")
 print("PASS: generic live matched comparator effort is frozen pre-exposure to adaptive max")
-print("PASS: provider enforcement/identity/cost/harness remain open; zero cases/spend/credit")
+print("PASS: native Opus55 matched request contract frozen to exact model + adaptive/max + default sampling")\nprint("PASS: provider enforcement/identity/cost/harness remain open; zero cases/spend/credit")
