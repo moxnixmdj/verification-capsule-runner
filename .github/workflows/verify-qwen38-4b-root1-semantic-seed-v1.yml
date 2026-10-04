@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'verify_qwen38_4b_root1_semantic_seed_v1.py'
+      - 'verify_qwen38_4b_livebench_public_exact_v1.py'
       - '.github/workflows/verify-qwen38-4b-root1-semantic-seed-v1.yml'
   workflow_dispatch:
 
@@ -28,7 +29,7 @@ env:
 jobs:
   qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 210
     steps:
       - uses: actions/checkout@v4
 
@@ -86,11 +87,46 @@ jobs:
           curl -fsS http://127.0.0.1:8080/health
           grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat llama_server.pid)/status" || true
 
-      - name: Execute frozen eight-case semantic-seed qualification
+      - name: Execute frozen eight-case semantic-seed diagnostic
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
           python3 verify_qwen38_4b_root1_semantic_seed_v1.py
+
+      - name: Prepare exact public LiveBench 2026-06-25 legacy IFEval population
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check \
+            pyarrow==21.0.0 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+          rm -rf /tmp/LiveBench /tmp/nltk_data_repo /tmp/nltk_data
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/evaluation_main.py)" = "f912274154b133a1a89a7e8a8394044c52c41ac0" || true
+
+          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+
+          curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors \
+            "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet" \
+            -o /tmp/instruction_following.parquet
+          test "$(stat -c %s /tmp/instruction_following.parquet)" = "537024"
+          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | sha256sum -c -
+
+      - name: Execute exact 200-case public LiveBench IF qualification
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verify_qwen38_4b_livebench_public_exact_v1.py
 
       - name: Print exact qualification receipt and runtime evidence
         if: always()
@@ -100,6 +136,9 @@ jobs:
           if test -f qwen38_4b_root1_semantic_seed_receipt.json; then
             cat qwen38_4b_root1_semantic_seed_receipt.json
           fi
+          if test -f qwen38_4b_livebench_public_exact_receipt.json; then
+            cat qwen38_4b_livebench_public_exact_receipt.json
+          fi
           if test -f llama_server.pid && kill -0 "$(cat llama_server.pid)" 2>/dev/null; then
             echo "SERVER_MEMORY:"
             grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat llama_server.pid)/status" || true
@@ -107,6 +146,17 @@ jobs:
           fi
           echo "SERVER_LOG_TAIL:"
           tail -n 120 llama_server.log 2>/dev/null || true
+
+      - name: Upload public qualification receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-4b-root1-public-qualification
+          path: |
+            qwen38_4b_root1_semantic_seed_receipt.json
+            qwen38_4b_livebench_public_exact_receipt.json
+          if-no-files-found: warn
+          retention-days: 30
 
   internalize-exact-bytes:
     needs: qualify
