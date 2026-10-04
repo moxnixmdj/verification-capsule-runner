@@ -1,0 +1,31 @@
+name: Execute Unknown-Domain V2 one-use production
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'production/UNKNOWN_DOMAIN_V2_EXECUTE_20261005.json'
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute exact one-use production transaction
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python execute_unknown_domain_v2_production_20261005.py
+      - name: Preserve immutable case-level result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v2-production-result-20261005
+          path: unknown_domain_v2_production_execution_result_20261005.json
+          if-no-files-found: error
+          retention-days: 90
