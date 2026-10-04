@@ -204,7 +204,7 @@ def main():
         "hidden_kwargs_read":0,
         "target_scores_read":0,
         "acceptance_credit_delta":0,
-        "hard_nonclaim":"FINITE_STRESS_IS_A_CONSTRUCTOR_DISCOVERY_FALSIFIER_NOT_YET_A_UNIVERSAL_COMPOSITION_PROOF",
+        "hard_nonclaim":"FINITE_STRESS_IS_A_CONSTRUCTOR_DISCOVERY_FALSIFIER_NOT_YET_A_UNIVERSAL_COMPOSITION_PROOF__ZERO_TERMINAL_DATA",
     }
     OUT.write_text(json.dumps(payload,indent=2,ensure_ascii=False,sort_keys=True)+"\n",encoding="utf-8")
     print(json.dumps({
