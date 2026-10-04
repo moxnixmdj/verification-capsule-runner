@@ -1,0 +1,30 @@
+name: Verify Retrieval V17 versioned identity
+on:
+  push:
+    branches:
+      - verify/retrieval-v17-versioned-identity-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V17 blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v17.py)" = "ef310cd5cfddb6561949aa86a3b02efccc91285c"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v17.py)" = "a4754160feb126392a4a91afab1fe88c84ff9a3c"
+      - name: Unit tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v17.py
+      - name: Live V17 probe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v17.py | tee retrieval-v17-live-result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-v17-live-result
+          path: retrieval-v17-live-result.json
+          retention-days: 90
