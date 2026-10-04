@@ -155,6 +155,8 @@ def main():
             "shape":list(shape),"dtype":bm["dtype"],"base_shard":bs,"finetune_shard":bfs,
             "sample_row_start":row0,"sample_row_count":rows,
             "sample_payload_bytes_pair":len(br)+len(fr),
+            "base_sample_sha256":hashlib.sha256(br).hexdigest(),
+            "finetune_sample_sha256":hashlib.sha256(fr).hexdigest(),
             "delta_fro_norm":dn,"base_fro_norm":bn,
             "relative_delta_fro":(dn/bn if bn else None),
             "sample_exactly_identical":bool(np.array_equal(b,f)),
