@@ -1,0 +1,29 @@
+name: Verify LiveBench legacy predecessor compiler v2
+on:
+  push:
+    branches:
+      - verify/livebench-legacy-predecessor-replay-20261004-sol
+  pull_request:
+    paths:
+      - verify_livebench_legacy_predecessor_compiler_v2.py
+      - subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py
+      - subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py
+      - .github/workflows/verify_livebench_legacy_predecessor_compiler_v2.yml
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check pyarrow==19.0.1
+      - run: python verify_livebench_legacy_predecessor_compiler_v2.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-predecessor-compiler-v2
+          path: verification_result.json
+          if-no-files-found: ignore
