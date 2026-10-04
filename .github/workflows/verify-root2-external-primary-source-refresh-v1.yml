@@ -1,0 +1,21 @@
+name: Verify Root2 external primary-source refresh
+on:
+  push:
+    branches:
+      - verify/root2-external-primary-source-refresh-20261004-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain subject blobs
+        run: |
+          test "$(git hash-object verification_inputs/root2_external_primary_source_refresh_v1.json)" = "85f2a5de5885d158e08db6cceebf0e30cf5d5bb0"
+          test "$(git hash-object verification_inputs/root2_external_primary_source_intent_v1.json)" = "2a17a8ce85303d980aea78bd8a284ceba3270b3d"
+      - name: Replay current first-party source facts and fail-closed invariants
+        run: python verify_root2_external_primary_source_refresh_v1.py
