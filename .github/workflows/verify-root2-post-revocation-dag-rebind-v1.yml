@@ -1,0 +1,25 @@
+name: verify-root2-post-revocation-dag-rebind-v1
+on:
+  push:
+    branches:
+      - "verify/root2-post-revocation-dag-rebind-v1"
+    paths:
+      - "verify_root2_post_revocation_dag_rebind_v1.py"
+      - ".github/workflows/verify-root2-post-revocation-dag-rebind-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Independently recompute exact 19 predicate transport
+        run: python3 verify_root2_post_revocation_dag_rebind_v1.py
+      - name: Upload receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: root2-post-revocation-dag-rebind-v1
+          path: root2_post_revocation_dag_rebind_receipt.json
