@@ -1,0 +1,49 @@
+name: Verify Unknown-Domain V6 subclass-safe repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v5.py'
+      - 'canonical/tests/test_unknown_domain_direct_v5.py'
+      - 'canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py'
+      - '.github/workflows/verify-unknown-domain-v6-subclass-repair.yml'
+  push:
+    branches:
+      - verify/unknown-domain-v6-subclass-repair
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run repaired V5/V6 regression suite
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_v5 -v
+      - name: Run content-bound V6 universal proof
+        run: python canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py > unknown_domain_v6_subclass_repair_proof.json
+      - name: Assert repaired proof status
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open("unknown_domain_v6_subclass_repair_proof.json"))
+          assert d["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR", d
+          assert d["scope"]["terminal_or_production_cases_generated"]==0, d
+          print(json.dumps({
+            "status":d["status"],
+            "scope":d["scope"],
+            "string_interface_totality":d["string_interface_totality"]
+          },indent=2,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v6-subclass-repair-proof
+          path: unknown_domain_v6_subclass_repair_proof.json
+          if-no-files-found: error
