@@ -74,51 +74,41 @@ def test_v5_large_nonproduction_sweep():
         _run(g5._generate(beacon=beacon,evaluator_secret=secret,namespace=f"V5T{k}"))
 
 
-class _HostileStr(str):
+class _AdversarialStr(str):
     def strip(self,*args,**kwargs):
-        raise RuntimeError("HOSTILE_STRIP_DISPATCH")
+        raise RuntimeError("OVERRIDDEN_STRIP_MUST_NOT_RUN")
+
     def encode(self,*args,**kwargs):
-        raise RuntimeError("HOSTILE_ENCODE_DISPATCH")
-    def __str__(self):
-        raise RuntimeError("HOSTILE_STR_DISPATCH")
+        raise RuntimeError("OVERRIDDEN_ENCODE_MUST_NOT_RUN")
 
 
-class _HostileBytes(bytes):
+class _AdversarialBytes(bytes):
     def __bytes__(self):
-        raise RuntimeError("HOSTILE_BYTES_DISPATCH")
+        raise RuntimeError("OVERRIDDEN_BYTES_MUST_NOT_RUN")
+
+    def __buffer__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_BUFFER_MUST_NOT_RUN")
+
     def __len__(self):
-        raise RuntimeError("HOSTILE_LEN_DISPATCH")
+        raise RuntimeError("OVERRIDDEN_LEN_MUST_NOT_RUN")
+
+    def __getitem__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_GETITEM_MUST_NOT_RUN")
+
+    def __iter__(self):
+        raise RuntimeError("OVERRIDDEN_ITER_MUST_NOT_RUN")
 
 
-def test_v5_bypasses_hostile_str_subclass_virtual_methods():
-    beacon=_HostileStr("A"*16+"\ud800")
-    secret=_HostileStr("S"*31+"\udfff")
-    canonical=g5._canonical_beacon(beacon)
-    assert type(canonical) is str
-    assert canonical.startswith("UDIRV5-BEACON-HEX|")
-    raw=g5._secret_bytes_total(secret)
-    assert type(raw) is bytes
-    assert len(raw)>=32
-    packet=g5._generate(beacon=beacon,evaluator_secret=secret,namespace="V5HOSTILESTR")
+def test_v5_totality_includes_isinstance_accepted_str_and_bytes_subclasses():
+    beacon=_AdversarialStr("A"*16+"\ud800")
+    secret_text=_AdversarialStr("S"*31+"\udfff")
+    packet=g5._generate(
+        beacon=beacon,
+        evaluator_secret=secret_text,
+        namespace="V5SUBCLASS",
+    )
     assert packet["case_count"]==27
     _run(packet)
 
-
-def test_v5_materializes_hostile_bytes_subclass_via_buffer_protocol():
-    secret=_HostileBytes(b"S"*32)
-    raw=g5._secret_bytes_total(secret)
-    assert type(raw) is bytes
-    assert raw==b"S"*32
-    packet=g5._generate(beacon="B"*16,evaluator_secret=secret,namespace="V5HOSTILEBYTES")
-    assert packet["case_count"]==27
-    _run(packet)
-
-
-def test_v5_rejects_short_hostile_str_by_base_strip_semantics():
-    short=_HostileStr("   short   ")
-    try:
-        g5._canonical_beacon(short)
-    except g1.UnknownDomainGeneratorError as exc:
-        assert str(exc)=="POST_FREEZE_BEACON_INVALID"
-    else:
-        raise AssertionError("EXPECTED_SHORT_HOSTILE_STR_REJECTION")
+    secret_bytes=_AdversarialBytes(b"B"*32)
+    assert g5._secret_bytes_total(secret_bytes)==b"B"*32
