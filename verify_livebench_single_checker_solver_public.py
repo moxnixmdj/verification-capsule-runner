@@ -10,14 +10,14 @@ import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
-BRAIN_COMMIT = "22e3dd4ca22c2474995ef0dcf42df4427badd96e"
+BRAIN_COMMIT = "4090f9eb4d50514ca7c4c99470e082c67ffc87ed"
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 IFBENCH_COMMIT = "1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d"
 
 SOURCES = {
     "solver": (
         f"https://raw.githubusercontent.com/moxnixmdj/brain/{BRAIN_COMMIT}/canonical/runtime/livebench_if_single_checker_solver_v1.py",
-        "1071240dd19225d4b7e26f42cfb9da34538eed46",
+        "b74d986fae033ac94827c5f1eb2db655a99ae4cc",
     ),
     "ngram_dependency": (
         f"https://raw.githubusercontent.com/moxnixmdj/brain/{BRAIN_COMMIT}/canonical/runtime/livebench_ngram_reference_free_v1.py",
