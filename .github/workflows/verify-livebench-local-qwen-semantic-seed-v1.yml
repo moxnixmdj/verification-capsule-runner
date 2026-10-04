@@ -1,0 +1,107 @@
+name: Verify LiveBench local Qwen semantic seed V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/livebench_local_qwen_semantic_seed_v1/**"
+      - ".github/workflows/verify-livebench-local-qwen-semantic-seed-v1.yml"
+  push:
+    branches: ["verify/livebench-local-qwen-semantic-seed-v1-20261004-sol"]
+    paths:
+      - "capsules/livebench_local_qwen_semantic_seed_v1/**"
+      - ".github/workflows/verify-livebench-local-qwen-semantic-seed-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain PR 1742 candidate bytes
+        run: |
+          set -euo pipefail
+          C=capsules/livebench_local_qwen_semantic_seed_v1
+          test "$(git hash-object "$C/canonical/governance/LIVEBENCH_LOCAL_QWEN_SEMANTIC_SEED_REUSE_V1.json")" = "aaef67365783f591ea633307c85dd1438add9420"
+          test "$(git hash-object "$C/canonical/runtime/local_qwen_semantic_seed_v1.py")" = "5240e0c5651da0539ab58773f89d503cd4959c9d"
+          test "$(git hash-object "$C/canonical/tests/test_local_qwen_semantic_seed_v1.py")" = "2b9bc7d7966b6fe9ec7450668f46828d5590bf3f"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("capsules/livebench_local_qwen_semantic_seed_v1/PUBLIC_NONTERMINAL_SEMANTIC_CONTRACTS_V1.json")
+          d=json.loads(p.read_text())
+          assert d["status"]=="PRECOMMITTED_PUBLIC_NONTERMINAL_SYNTHETIC_CONTRACTS"
+          assert d["terminal_cases"]==0
+          assert len(d["tasks"])==12
+          assert {k:sum(t["kind"]==k for t in d["tasks"]) for k in ("paraphrase","simplify","summarize","story_generation")} == {
+              "paraphrase":3,"simplify":3,"summarize":3,"story_generation":3
+          }
+          print("CONTRACT_FREEZE_PASS")
+          PY
+
+      - name: Run exact adapter unit tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/livebench_local_qwen_semantic_seed_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_local_qwen_semantic_seed_v1
+
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Download and verify exact pinned Qwen3.5 9B bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error             -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+
+      - name: Start exact loopback-only local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}"             > LOCAL_QWEN_SEMANTIC_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SEMANTIC_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_SEMANTIC_HEALTH.json 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute frozen 12-contract semantic verification
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/livebench_local_qwen_semantic_seed_v1"
+          PYTHONPATH="$C" python "$C/verify_livebench_local_qwen_semantic_seed_v1.py"
+
+      - name: Preserve verifier evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-local-qwen-semantic-seed-v1
+          path: |
+            LOCAL_QWEN_SEMANTIC_HEALTH.json
+            LOCAL_QWEN_SEMANTIC_SERVER.log
+            capsules/livebench_local_qwen_semantic_seed_v1/LIVEBENCH_LOCAL_QWEN_SEMANTIC_SEED_PUBLIC_VERIFICATION_V1.json
+          if-no-files-found: warn
