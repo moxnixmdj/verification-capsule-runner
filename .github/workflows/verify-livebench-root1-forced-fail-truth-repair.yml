@@ -1,5 +1,12 @@
 name: Verify LiveBench Root1 forced-fail truth repair
 on:
+  push:
+    branches:
+      - "verify/livebench-root1-forced-fail-truth-repair-20261004-sol"
+    paths:
+      - "capsules/livebench_root1_truth_repair/**"
+      - "verify_livebench_root1_forced_fail_truth_repair.py"
+      - ".github/workflows/verify-livebench-root1-forced-fail-truth-repair.yml"
   pull_request:
     branches: [main]
     paths:
