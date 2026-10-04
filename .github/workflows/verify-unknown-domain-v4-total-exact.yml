@@ -11,7 +11,7 @@ permissions:
 jobs:
   verify:
     if: github.event_name != 'create' || (github.ref_type == 'branch' && startsWith(github.ref_name, 'ud-v4-total-exact-fastlane/'))
-    runs-on: macos-15-intel
+    runs-on: macos-14
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
