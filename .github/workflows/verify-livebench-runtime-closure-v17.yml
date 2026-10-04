@@ -1,0 +1,19 @@
+name: Verify LiveBench runtime closure V17
+on:
+  pull_request:
+    paths:
+      - 'subject/livebench_runtime_closure_v17/**'
+      - 'verify_livebench_runtime_closure_v17.py'
+      - '.github/workflows/verify-livebench-runtime-closure-v17.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_livebench_runtime_closure_v17.py
