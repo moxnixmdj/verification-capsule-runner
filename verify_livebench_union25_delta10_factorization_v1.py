@@ -6,6 +6,7 @@ import hashlib
 import itertools
 import json
 import pathlib
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -48,6 +49,7 @@ def main():
     assert run(["git","-C",str(live),"rev-parse",f"HEAD:{regpath}"],capture_output=True).stdout.strip()==REGISTRY_BLOB
     sys.path.insert(0,str(live/"livebench/if_runner"))
     from instruction_following_eval import instructions_registry as registry
+    from instruction_following_eval import instructions_util
 
     ids=tuple(registry.INSTRUCTION_DICT)
     assert len(ids)==25 and len(set(ids))==25
@@ -144,6 +146,81 @@ def main():
     nontrivial_projected={k for k in projected if k not in {("CONSTRAINED_SINGLETON",),("DECORATOR_ONLY",)}}
     assert nontrivial_projected=={tuple(sorted(x)) for x in hard_cores}
 
+    # Exact zero-lexical-footprint witnesses for the two positive syntactic
+    # decorators. These atoms satisfy the pinned checkers while adding no
+    # word tokens, ASCII letters, capital words, commas, or sentence-ending
+    # punctuation. Placement relative to structural wrappers remains a
+    # separate composition obligation.
+    placeholder_atoms={}
+    for n in range(1,5):
+        atom="[]"*n
+        checker=registry.INSTRUCTION_DICT["detectable_content:number_placeholders"](
+            "detectable_content:number_placeholders"
+        )
+        checker.build_description(num_placeholders=n)
+        assert checker.check_following(atom)
+        assert instructions_util.count_words(atom)==0
+        assert not re.search(r"[A-Za-z]",atom)
+        assert "," not in atom
+        assert not any(tok.isupper() for tok in instructions_util.nltk.word_tokenize(atom))
+        placeholder_atoms[n]=atom
+
+    highlight_atoms={}
+    for n in range(1,5):
+        atom=" ".join(["*#*"]*n)
+        checker=registry.INSTRUCTION_DICT["detectable_format:number_highlighted_sections"](
+            "detectable_format:number_highlighted_sections"
+        )
+        checker.build_description(num_highlights=n)
+        assert checker.check_following(atom)
+        assert instructions_util.count_words(atom)==0
+        assert not re.search(r"[A-Za-z]",atom)
+        assert "," not in atom
+        assert not any(tok.isupper() for tok in instructions_util.nltk.word_tokenize(atom))
+        highlight_atoms[n]=atom
+
+    # Exact hidden semantic incompatibilities missed by the structural
+    # registry conflict graph.
+    semantic_loss_rules=[]
+
+    repeat=registry.INSTRUCTION_DICT["combination:repeat_prompt"]("combination:repeat_prompt")
+    repeat.build_description(prompt_to_repeat="alpha, beta")
+    comma=registry.INSTRUCTION_DICT["punctuation:no_comma"]("punctuation:no_comma")
+    comma.build_description()
+    assert repeat.check_following("alpha, beta 0")
+    assert not comma.check_following("alpha, beta 0")
+    assert "," in repeat._prompt_to_repeat
+    semantic_loss_rules.append("REPEAT_PREFIX_COMMA_VS_NO_COMMA")
+
+    section_cls=registry.INSTRUCTION_DICT["detectable_format:multiple_sections"]
+    lower_cls=registry.INSTRUCTION_DICT["change_case:english_lowercase"]
+    upper_cls=registry.INSTRUCTION_DICT["change_case:english_capital"]
+    capfreq_cls=registry.INSTRUCTION_DICT["change_case:capital_word_frequency"]
+
+    for splitter in ("Section","SECTION"):
+        section=section_cls("detectable_format:multiple_sections")
+        section.build_description(section_spliter=splitter,num_sections=2)
+        assert section._section_spliter==splitter
+        # A SectionChecker pass with n>=1 requires at least one exact literal
+        # splitter match; both frozen splitters contain uppercase cased letters.
+        assert any(ch.isupper() for ch in splitter)
+        assert not splitter.islower()
+    semantic_loss_rules.append("LOWERCASE_ENGLISH_VS_SECTION_HEADING_CASE")
+
+    assert not "Section".isupper() and "SECTION".isupper()
+    semantic_loss_rules.append("UPPERCASE_ENGLISH_VS_MIXED_CASE_SECTION_HEADING")
+
+    for n in range(1,6):
+        sample="\n".join(f"SECTION {i} 0" for i in range(1,n+1))
+        section=section_cls("detectable_format:multiple_sections")
+        section.build_description(section_spliter="SECTION",num_sections=n)
+        assert section.check_following(sample)
+        uppercase_tokens=[tok for tok in instructions_util.nltk.word_tokenize(sample) if tok.isupper()]
+        assert len(uppercase_tokens)>=n
+        assert uppercase_tokens.count("SECTION")>=n
+    semantic_loss_rules.append("CAPITAL_WORD_UPPER_BOUND_VS_UPPERCASE_SECTION_FLOOR")
+    assert len(set(semantic_loss_rules))==4
+
     receipt={
       "schema":"PROJECT_BRAIN_LIVEBENCH_UNION25_DELTA10_STRUCTURAL_FACTORIZATION_INDEPENDENT_VERIFICATION_V1",
       "status":"PASS__REGISTRY25_EXACTLY_FACTORS_AS_ACTIVE15_928_PLUS_DELTA10_156_EXTENSION_KERNELS__13631_EXPANDED_NEW_SETS",
@@ -158,6 +235,13 @@ def main():
       "delta10_internal_compatible_kernels_size_1_to_5":len(extra_kernels),
       "new_union25_sets_touching_delta10":len(with_extra),
       "delta10_kernel_size_histogram":dict(sorted(kernel_sizes.items())),
+      "delta10_exact_decorator_and_mandatory_loss_lemmas":{
+        "zero_lexical_footprint_placeholder_atoms":placeholder_atoms,
+        "zero_lexical_footprint_highlight_atoms":highlight_atoms,
+        "new_sound_mandatory_loss_rule_ids":semantic_loss_rules,
+        "mandatory_loss_rule_count":len(semantic_loss_rules),
+        "complete_union25_loss_map":False
+      },
       "delta10_second_quotient":{
         "decorator_families":sorted(decorators),
         "constrained_singleton_family":constrained,
@@ -182,7 +266,8 @@ def main():
       "hard_nonclaims":[
         "STRUCTURAL_FACTORIZATION_IS_NOT_MULTI_CONTRACT_SEMANTIC_POINTWISE_OPTIMALITY",
         "THE_19_HARD_CORE_SIGNATURES_STILL_REQUIRE_SEMANTIC_INTERACTION_CLOSURE_WITH_COMPATIBLE_ACTIVE15_RESIDUES",
-        "THE_DECORATOR_PROJECTION_DOES_NOT_BY_ITSELF_PROVE_DECORATOR_NEUTRALITY_IN_EVERY_ACTIVE15_CONTEXT",
+        "THE_DECORATOR_PROJECTION_DOES_NOT_BY_ITSELF_PROVE_PLACEMENT_NEUTRALITY_IN_EVERY_ACTIVE15_CONTEXT",
+        "THE_FOUR_NEW_MANDATORY_LOSS_RULES_ARE_A_SOUND_LOWER_BOUND_NOT_A_COMPLETE_UNION25_LOSS_MAP",
         "NO_LIVEBENCH_ACCEPTANCE_CREDIT_FROM_THIS_RECEIPT_ALONE"
       ]
     }
