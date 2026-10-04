@@ -1,6 +1,6 @@
 import json,pathlib,subprocess
 P={"t":"subject/CURRENT_TERMINAL_AUTHORITY_V1.json","m":"subject/ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1.json","r":"subject/TERMINAL_ROOT_CAUSE_STATE_V1.json","a":"subject/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5_ACTIVATION_V1.json"}
-H={"t":"42615b557661328f9eb321597ea7c523e09ab41b","m":"cbe79b37bf06f5b08c2efd61bef277ba8376fda4","r":"1d26f794f32b14c4d0f6aa6fcef42337dda8a47e","a":"2d15df0daab51c5cc61c4194197da7f7fcd5a1b0"}
+H={"t":"09073acc898ebb2f6091f4afe396c4e0ddcabb16","m":"3e7786a5618f4c6c31a1b072af1d25ef34c56874","r":"45faf1ff23c9f888c617bb1f4e83dba785af494b","a":"2d15df0daab51c5cc61c4194197da7f7fcd5a1b0"}
 for k,p in P.items(): assert subprocess.check_output(["git","rev-parse",f"HEAD:{p}"],text=True).strip()==H[k]
 t,m,r,a=[json.loads(pathlib.Path(P[k]).read_text()) for k in "tmra"]
 F="canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5.json"; FS="e948022f0a4e8d91b949a5155d850d56aa137c87"
