@@ -10,5 +10,5 @@
     "canonical/runtime/livebench_frozen_active_legacy15_v1.py": "34440ee69322e9d519cbe656cb03c55683a8b9c6",
     "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "b0376cb1e791af6abeb9536e41797b321bb7f7cb"
   },
-  "verification_trigger": "isolated_push_v2"
+  "verification_trigger": "registered_default_branch_push_v3"
 }
