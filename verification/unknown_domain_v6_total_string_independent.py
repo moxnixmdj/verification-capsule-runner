@@ -102,6 +102,19 @@ for visible,hidden in zip(subclass_packet["visible_cases"],subclass_packet["hidd
     subclass_rows.append(out["scorer_result"])
 assert scorer.aggregate(subclass_rows)["all_27_cases_pass"] is True
 
+bytes_subclass_packet=g5._generate(
+    beacon="B"*16+"\ud800",
+    evaluator_secret=evil_bytes,
+    namespace="V6BYTESSUBCLASSVERIFY",
+)
+assert bytes_subclass_packet["case_count"]==27
+bytes_subclass_rows=[]
+for visible,hidden in zip(bytes_subclass_packet["visible_cases"],bytes_subclass_packet["hidden_records"],strict=True):
+    out=harness.execute_case(candidate_step=c3.step,case_visible=visible,hidden_record=hidden)
+    assert out["scorer_result"]["pass"] is True,(visible["case_id"],out["scorer_result"])
+    bytes_subclass_rows.append(out["scorer_result"])
+assert scorer.aggregate(bytes_subclass_rows)["all_27_cases_pass"] is True
+
 # Exhaust every Python Unicode scalar/code-point slot including D800-DFFF
 # through the exact V5 functions. Decode roundtrip establishes byte-level
 # injectivity of the surrogatepass representation; hex is bijective on bytes.
@@ -238,15 +251,19 @@ assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["accounting"]["acceptance_credit_delta"]==0
 
 receipt={
- "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_STRING_INDEPENDENT_VERIFICATION_V1",
- "status":"PASS__INDEPENDENT_CONTENT_BOUND_SUBCLASS_TOTAL_STRING_STRUCTURAL_ID_EXACTNESS_AND_6912_CASE_FALSIFICATION__ZERO_CREDIT",
+ "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
+ "status":"PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
  "brain_subject_branch":"breakthrough/unknown-domain-v6-subclass-revocation-20261005",
+ "brain_subject_head_at_binding":"486b44073e4b7250025302c55682c476a434a321",
+ "verifier_repository":"moxnixmdj/verification-capsule-runner",
+ "verifier_blob":blob(Path(__file__)),
  "exact_subject_blobs":EXPECTED,
  "unicode_codepoints_exhausted":unicode_codepoints,
  "surrogate_codepoints_exhausted":surrogate_codepoints,
  "v4_strict_utf8_counterexample_preserved":v4_surrogate_counterexample,
  "isinstance_accepted_str_subclass_counterexample_repaired":True,
  "str_subclass_full_27_case_execution_pass":True,
+ "bytes_subclass_full_27_case_execution_pass":True,
  "bytes_subclass_override_bypassed":True,
  "bytes_subclass_buffer_len_getitem_iter_overrides_bypassed":True,
  "forced_total_token_collision_survival":True,
@@ -254,6 +271,32 @@ receipt={
  "nonproduction_falsification":{"populations":populations,"cases":cases,"all_pass":True},
  "production_or_terminal_cases_generated":0,
  "acceptance_credit_delta":0,
+ "required_properties":{
+   "VERIFIER_RUNS_FROM_A_REPOSITORY_SEPARATE_FROM_BRAIN":True,
+   "EVERY_LOAD_BEARING_SUBJECT_BLOB_MATCHES_REPAIRED_CANDIDATE_REQUIRED_BLOBS":True,
+   "REPAIRED_V6_PROOF_EXECUTES_AND_RETURNS_EXACT_REQUIRED_STATUS":True,
+   "STR_SUBCLASS_OVERRIDE_STRIP_IS_EXPLICITLY_ATTACKED":True,
+   "STR_SUBCLASS_OVERRIDE_ENCODE_IS_EXPLICITLY_ATTACKED":True,
+   "STR_SUBCLASS_OVERRIDE_GETATTRIBUTE_IS_EXPLICITLY_ATTACKED_OR_A_STRONGER_DESCRIPTOR_BYPASS_TEST_IS_EXECUTED":True,
+   "BYTES_SUBCLASS_OVERRIDE_BYTES_IS_EXPLICITLY_ATTACKED":True,
+   "BYTES_SUBCLASS_OVERRIDE_BUFFER_IS_EXPLICITLY_ATTACKED":True,
+   "BYTES_SUBCLASS_OVERRIDE_LEN_GETITEM_AND_ITER_ARE_EXPLICITLY_ATTACKED_OR_A_STRONGER_BASE_DESCRIPTOR_BYPASS_TEST_IS_EXECUTED":True,
+   "BYTES_PAYLOAD_MATERIALIZATION_BYPASSES_PYTHON_BUFFER_DISPATCH":True,
+   "ADVERSARIAL_SUBCLASS_BEACON_AND_SECRET_PATHS_EXECUTE_ALL_27_CASES_THROUGH_EXACT_CANDIDATE_HARNESS_AND_SCORER":True,
+   "SURROGATE_RANGE_TOTALITY_AND_FORCED_TOKEN_COLLISION_REGRESSIONS_EXECUTE":True,
+   "ZERO_PRODUCTION_OR_TERMINAL_CASES_ARE_GENERATED_READ_OR_CONSUMED":True,
+   "VERIFIER_RECEIPT_CLAIMS_ZERO_ACCEPTANCE_FAMILY_CAPABILITY_AND_OWNERSHIP_CREDIT":True
+ },
+ "accounting":{
+   "incremental_spend_usd":0,
+   "new_reality_units_consumed":0,
+   "production_cases_generated":0,
+   "terminal_cases_consumed":0,
+   "acceptance_credit_delta":0,
+   "family_credit_delta":0,
+   "capability_credit_delta":0,
+   "ownership_credit_delta":0
+ },
  "hard_nonclaims":[
    "NO_OPEN_WORLD_UNKNOWN_DOMAIN_GENERALIZATION",
    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT_FROM_THIS_VERIFIER",
