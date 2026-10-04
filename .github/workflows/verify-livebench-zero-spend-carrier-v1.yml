@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "verify_livebench_zero_spend_carrier_v1.py"
+      - "execute_livebench_if_threshold_v1.py"
       - ".github/workflows/verify-livebench-zero-spend-carrier-v1.yml"
       - "capsules/root2_livebench_astra_adapter_v1/**"
       - "canonical/runtime/goal_compiler.py"
