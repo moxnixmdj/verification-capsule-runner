@@ -42,6 +42,28 @@ jobs:
           NLTK_DATA: /tmp/nltk_data
         run: |
           python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py --livebench-root /tmp/LiveBench --output livebench_legacy15_synthetic7424_receipt_v1.json
+      - name: Run generator-boundary diagnostic V3
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        env:
+          PYTHONPATH: .
+          NLTK_DATA: /tmp/nltk_data
+        shell: bash
+        run: |
+          set +e
+          python canonical/runtime/livebench_legacy15_boundary_stress_audit_v3.py \
+            --livebench-root /tmp/LiveBench \
+            --output livebench_legacy15_boundary_stress_receipt_v3.json
+          rc=$?
+          echo "BOUNDARY_DIAGNOSTIC_EXIT=$rc"
+          test -f livebench_legacy15_boundary_stress_receipt_v3.json
+
+      - name: Print generator-boundary diagnostic V3
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        run: |
+          test -f livebench_legacy15_boundary_stress_receipt_v3.json && cat livebench_legacy15_boundary_stress_receipt_v3.json || true
+
       - name: Print receipt
         if: always()
         working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
