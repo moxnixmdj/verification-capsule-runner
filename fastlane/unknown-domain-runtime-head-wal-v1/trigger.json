@@ -1,0 +1,9 @@
+{
+  "schema": "UNKNOWN_DOMAIN_RUNTIME_HEAD_WAL_FASTLANE_TRIGGER_V1",
+  "subject_head_sha": "54fbefb803caf79400d847c6fabf44e14ec56c26",
+  "lease_git_blob_sha": "c6d268559a59ee7e33cafef793dd04db4710d7e3",
+  "launcher_git_blob_sha": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
+  "production_workflow_git_blob_sha": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+  "production_authority": false,
+  "production_cases_generated": 0
+}
