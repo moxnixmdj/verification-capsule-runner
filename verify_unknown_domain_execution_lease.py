@@ -1,5 +1,6 @@
 from __future__ import annotations
-import ast,hashlib,json
+import ast,copy,hashlib,json
+from canonical.runtime import unknown_domain_direct_production_once_v1 as prod
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 LEASE=ROOT/"canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json"
@@ -32,6 +33,13 @@ assert lease["verification_chain"]["point_of_use_preflight"]["status"]=="READY_F
 assert lease["verification_chain"]["production_launcher"]["conclusion"]=="success"
 assert lease["atomic_claim"]["required_first_claim_create_http_status"]==201
 assert lease["atomic_claim"]["claim_uniqueness_source"]=="ATOMIC_CREATE_RESPONSE"
+assert lease["atomic_claim"]["claim_key_rule"]=="SHA256_OF_CANONICAL_QUALIFIED_EXECUTION_TUPLE_V2"
+assert lease["result_recovery"]["launcher_git_blob_sha"]==lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"]
+assert lease["result_recovery"]["claim_response_object_rule"]=="RETURNED_OBJECT_SHA_MUST_EQUAL_EXACT_LAUNCH_SHA"
+assert lease["result_recovery"]["exception_message_persisted"] is False
+assert lease["result_recovery"]["raw_hidden_records_persisted"] is False
+assert lease["result_recovery"]["raw_evaluator_secret_persisted"] is False
+assert lease["result_recovery"]["raw_beacon_persisted"] is False
 assert lease["authority"]=={"global_fresh_reality":False,"promotion":False,"acceptance_credit":False}
 def blob(b): return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
 for rel,expected in lease["exact_components"].items():
@@ -65,12 +73,24 @@ for rel in sorted(components):
     if dep not in components:
      missing_local_dependencies.append((rel,dep))
 assert not missing_local_dependencies,missing_local_dependencies
-digest=hashlib.sha256(raw).hexdigest()
+identity=prod.canonical_identity_from_lease(lease)
+assert lease["lease_identity"]==identity
+canonical=json.dumps(identity,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+digest=hashlib.sha256(canonical).hexdigest()
+mutated=copy.deepcopy(lease)
+mutated["date"]="2099-12-31"
+mutated["status"]="INCIDENTAL_METADATA_CHANGED"
+assert prod.canonical_identity_from_lease(mutated)==identity
+altered=copy.deepcopy(lease)
+altered["exact_components"]["canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"]="0"*40
+assert prod.canonical_identity_from_lease(altered)!=identity
+prod.validate_lease(lease,digest)
 lease_blob=blob(raw)
 print(json.dumps({
- "status":"INDEPENDENT_EXECUTION_LEASE_PASS",
+ "status":"INDEPENDENT_DETERMINISTIC_EXECUTION_IDENTITY_V2_PASS",
  "execution_lease_git_blob_sha":lease_blob,
- "execution_lease_sha256":digest,
+ "execution_identity_sha256":digest,
+ "incidental_metadata_affects_claim_identity":False,
  "exact_component_count":len(lease["exact_components"]),
  "checked_local_dependency_edges":checked_local_dependency_edges,
  "production_cases_allowed":27,
