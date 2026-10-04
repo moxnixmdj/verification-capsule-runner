@@ -16,7 +16,7 @@ EXPECTED_BLOBS = {
     "canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py": "34f4df9f0bd265fc555686bd251a264e446d4c04",
     "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py": "721207ba39d502e3f610289578e9d5bab78b1fcc",
     "canonical/runtime/livebench_legacy15_joint_witness_v1.py": "7c53741cb40c51aad5303097b020cb7684d2dcc3",
-    "canonical/runtime/livebench_legacy15_general_composer_v1.py": "ced56b94e472a615f70180a4797fda178358e7fe",
+    "canonical/runtime/livebench_legacy15_general_composer_v1.py": "af42fccbf9275014818fd4cbd1e0fdf05219d4ff",
     "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
     "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "b0376cb1e791af6abeb9536e41797b321bb7f7cb",
 }
