@@ -1,0 +1,48 @@
+{
+  "active_key_nonnull_count": 0,
+  "active_key_set_sha256": null,
+  "active_key_set_subset_of_public": false,
+  "active_key_unique_count": 0,
+  "active_keys_in_public_count": 0,
+  "active_question_id_unique_count": 200,
+  "active_question_ids_equal_keys_count": 0,
+  "active_rows": 200,
+  "active_task_counts": {
+    "paraphrase": 50,
+    "simplify": 50,
+    "story_generation": 50,
+    "summarize": 50
+  },
+  "frozen_rows_total": 400,
+  "hard_nonclaims": [
+    "IDENTIFIER_SET_MEMBERSHIP_ALONE_DOES_NOT_PROVE_ROW_CONTENT_IDENTITY",
+    "NO_PROMPT_OR_KWARGS_READ_FROM_FROZEN_TERMINAL_PARQUET",
+    "NO_ACCEPTANCE_OR_EXECUTION_CREDIT"
+  ],
+  "key_column_present": false,
+  "public_ifbench_key_count": 300,
+  "public_ifbench_unique_key_count": 300,
+  "public_key_set_sha256": "25ed22988cb9684a8de9fc74c603e79ef44792f0e3bfd4c3b9e74c2e2a301c87",
+  "schema": "LIVEBENCH_IFBENCH_IDENTIFIER_ONLY_PROVENANCE_DIAGNOSTIC_V1",
+  "source_bindings": {
+    "ifbench_commit": "1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d",
+    "ifbench_jsonl_git_blob": "a8e343ed928d8b4e649b9dba651fed7757ccacc3",
+    "livebench_hf_revision": "0868379c4b5cf62aeacaf8be4f08fced815c81bb",
+    "livebench_parquet_sha256": "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
+  },
+  "status": "DIAGNOSTIC_ONLY_ZERO_CREDIT",
+  "terminal_fields_explicitly_not_read": [
+    "turns",
+    "prompt",
+    "kwargs",
+    "instruction_id_list",
+    "reference_answer",
+    "model_answer"
+  ],
+  "terminal_fields_read": [
+    "question_id",
+    "task",
+    "livebench_release_date",
+    "livebench_removal_date"
+  ]
+}
