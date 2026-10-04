@@ -1,0 +1,27 @@
+name: Isolated Unknown-Domain universal proof check
+
+on:
+  pull_request:
+    branches:
+      - verify-sink/ud-v2-universal-base-20261005
+    paths:
+      - verification/unknown_domain_v2_universal_proof_isolated_v1.py
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolated-ud-v2-universal-base-check
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact content-bound universal proof
+        run: python3 verification/unknown_domain_v2_universal_proof_isolated_v1.py
