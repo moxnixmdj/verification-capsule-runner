@@ -32,6 +32,10 @@ jobs:
         with:
           ref: verify-legacy15-direct-exact-20261004-v1
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.14"
+
       - name: Install exact scorer dependencies in isolated venv
         run: |
           set -euo pipefail
