@@ -1,0 +1,39 @@
+name: Verify Unknown-Domain V7 genuine runtime types
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
+      - "canonical/tests/test_unknown_domain_direct_v5.py"
+      - "canonical/runtime/unknown_domain_direct_v7_genuine_type_proof_v1.py"
+      - "verification/unknown_domain_v7_genuine_type_independent.py"
+      - ".github/workflows/verify-unknown-domain-v7-genuine-type.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12.10", "3.13"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Independent V7 adversarial verification
+        run: PYTHONPATH=. python verification/unknown_domain_v7_genuine_type_independent.py
+      - name: Exact V5 regression suite
+        run: PYTHONPATH=. python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v7-genuine-type-${{ matrix.python }}
+          path: unknown_domain_v7_genuine_type_receipt.json
+          if-no-files-found: error
