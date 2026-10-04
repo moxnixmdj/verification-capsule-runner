@@ -11,6 +11,7 @@ EXPECTED = {
     "goal_compiler": ("canonical/runtime/goal_compiler.py", "4b61fe911471854ec15c7900816f61e9e55f602e"),
     "bound_registry": ("canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json", "7badee4878700f2cd4176beb8319d2a6a0bdf782"),
     "capability_planner": ("canonical/runtime/capability_planner.py", "64ff65cb184f50d3336326f33cccfcc0a53301a8"),
+    "capability_proposal_generators": ("canonical/runtime/capability_proposal_generators.py", "71f2bbfda66a65d8d75e035b9ae073671ebd56e2"),
 }
 
 def git_blob_sha(path:pathlib.Path)->str:
@@ -62,6 +63,7 @@ def main()->int:
           EXPECTED["goal_compiler"][0]:"canonical/runtime/goal_compiler.py",
           EXPECTED["bound_registry"][0]:"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
           EXPECTED["capability_planner"][0]:"canonical/runtime/capability_planner.py",
+          EXPECTED["capability_proposal_generators"][0]:"canonical/runtime/capability_proposal_generators.py",
         }
         for src_rel,dst_rel in mapping.items():
             dst=temp/dst_rel
