@@ -1,0 +1,25 @@
+name: Verify Chartography zero-spend guard activation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/chartography_zero_spend_activation/**"
+      - ".github/workflows/verify-chartography-zero-spend-activation.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact activation blobs
+        run: |
+          test "$(git hash-object capsules/chartography_zero_spend_activation/CHARTOGRAPHY_ZERO_SPEND_GUARD_ACTIVATION_V1.json)" = "78191aa871d18d8fb850be2a18e3b8ac07eb4a03"
+          test "$(git hash-object capsules/chartography_zero_spend_activation/CHARTOGRAPHY_ZERO_SPEND_GUARD_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json)" = "d97fd0e5bae8fb103a539187b2cadf9b25457e5d"
+          test "$(git hash-object capsules/chartography_zero_spend_activation/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json)" = "caed1246dcbe38a075646edfddaf5107b9799469"
+      - name: Verify activation projection
+        run: python capsules/chartography_zero_spend_activation/verify.py
