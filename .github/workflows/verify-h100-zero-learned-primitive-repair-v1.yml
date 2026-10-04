@@ -1,0 +1,51 @@
+name: Verify H100 zero-learned primitive repair V1
+
+on:
+  pull_request:
+    paths:
+      - 'subject/h100_primitive_repair_v1/**'
+      - 'verify_h100_zero_learned_primitive_repair_v1.py'
+      - '.github/workflows/verify-h100-zero-learned-primitive-repair-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: h100-zero-learned-primitive-repair-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run copied subject tests before phase2 replay
+        env:
+          PYTHONPATH: subject/h100_primitive_repair_v1
+        run: |
+          python -m unittest canonical.tests.test_h100_zero_learned_parametric_unary_v1 -v
+          python -m unittest canonical.tests.test_h100_zero_learned_primitive_repair_v1 -v
+      - name: Run independent fresh-parameter verifier
+        run: python verify_h100_zero_learned_primitive_repair_v1.py
+      - name: Replay PERIODIC_SINE
+        env:
+          PYTHONPATH: subject/h100_primitive_repair_v1
+        run: >
+          python subject/h100_primitive_repair_v1/canonical/runtime/h100_zero_learned_primitive_repair_v1.py
+          --task PERIODIC_SINE --require-useful
+      - name: Replay EXPONENTIAL
+        env:
+          PYTHONPATH: subject/h100_primitive_repair_v1
+        run: >
+          python subject/h100_primitive_repair_v1/canonical/runtime/h100_zero_learned_primitive_repair_v1.py
+          --task EXPONENTIAL --require-useful
+      - name: Replay SIGN_STEP
+        env:
+          PYTHONPATH: subject/h100_primitive_repair_v1
+        run: >
+          python subject/h100_primitive_repair_v1/canonical/runtime/h100_zero_learned_primitive_repair_v1.py
+          --task SIGN_STEP --require-useful
