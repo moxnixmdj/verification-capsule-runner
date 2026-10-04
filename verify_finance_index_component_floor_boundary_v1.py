@@ -29,8 +29,8 @@ assert direct["target"]=="61"
 assert direct["compensation_across_components_allowed"] is True
 assert "NO_DEFAULT_COMPONENT_FLOORS" in direct["rules"]
 assert agg["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
-assert agg["verified"]["weights_nonnegative"] is True
-assert agg["verified"]["weights_sum_to_one"] is True
+assert agg["verified"]["all_weights_nonnegative"] is True
+assert agg["verified"]["weight_sum"] == 1
 
 floor_facts=candidate["underlying_evaluation_floor_facts"]
 assert len(floor_facts)==8
