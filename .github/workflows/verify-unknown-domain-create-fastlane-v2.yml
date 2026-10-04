@@ -23,8 +23,8 @@ jobs:
           from pathlib import Path
           raw=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
           digest=hashlib.sha256(raw).hexdigest()
-          expected="unknown-domain-verify-fastlane-v2/"+digest
-          assert os.environ["GITHUB_REF_NAME"]==expected,(os.environ["GITHUB_REF_NAME"],expected)
+          prefix="unknown-domain-verify-fastlane-v2/"+digest+"-"
+          assert os.environ["GITHUB_REF_NAME"].startswith(prefix),(os.environ["GITHUB_REF_NAME"],prefix)
           head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
           assert head==os.environ["GITHUB_SHA"],(head,os.environ["GITHUB_SHA"])
           print("immutable fastlane V2 subject PASS",digest,head)
