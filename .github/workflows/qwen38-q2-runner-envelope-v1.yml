@@ -28,3 +28,4 @@ jobs:
           test "$disk_b" -ge 11000000000
           echo 'qwen38_q2_download_fit_preflight=PASS'
           echo 'incremental_spend_usd=0'
+# registration-trigger-v1
