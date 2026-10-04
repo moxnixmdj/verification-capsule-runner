@@ -16,7 +16,7 @@ sys.path.insert(0, str(HERE))
 LIVEBENCH_ROOT = Path(os.environ["LIVEBENCH_ROOT"]).resolve()
 sys.path.insert(0, str(LIVEBENCH_ROOT / "livebench" / "if_runner"))
 
-from canonical.runtime.livebench_frozen_active_legacy15_v1 import ACTIVE_IDS  # noqa: E402
+from canonical.runtime.livebench_frozen_active_legacy15_v1 import ACTIVE_IDS, verify as verify_active15  # noqa: E402
 from canonical.runtime.livebench_legacy_visible_constraint_compiler_v4 import compile_visible_constraints  # noqa: E402
 from canonical.runtime.livebench_legacy15_joint_witness_v1 import solve  # noqa: E402
 from instruction_following_eval import instructions_registry  # noqa: E402
