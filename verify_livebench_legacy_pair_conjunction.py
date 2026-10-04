@@ -24,6 +24,25 @@ UPSTREAM = {
 
 BASE_REQUEST = "Explain why deterministic verification matters"
 
+ACTIVE15 = (
+    "keywords:existence",
+    "keywords:forbidden_words",
+    "length_constraints:number_paragraphs",
+    "length_constraints:number_words",
+    "length_constraints:number_sentences",
+    "length_constraints:nth_paragraph_first_word",
+    "detectable_content:postscript",
+    "detectable_format:number_bullet_lists",
+    "detectable_format:title",
+    "detectable_format:multiple_sections",
+    "detectable_format:json_format",
+    "combination:repeat_prompt",
+    "combination:two_responses",
+    "startend:end_checker",
+    "startend:quotation",
+)
+EXPECTED_ACTIVE15_COMMITMENT = "af4eeddebf27394eb689d2049f2f8104ae081ebafe237258bdc1a992e96f598d"
+
 SAMPLE_ARGS = {
     "keywords:existence":{"keywords":["alpha","beta"]},
     "keywords:frequency":{"keyword":"alpha","frequency":3,"relation":"at least"},
@@ -117,9 +136,14 @@ with tempfile.TemporaryDirectory() as td_s:
     solver = importlib.import_module("canonical.runtime.livebench_legacy_ifeval_constructive_solver_v1")
     registry = importlib.import_module("instruction_following_eval.instructions_registry")
 
-    active = list(registry.INSTRUCTION_DICT.keys())
-    assert len(active) == 25, len(active)
-    assert set(active) == set(SAMPLE_ARGS), (set(active)-set(SAMPLE_ARGS), set(SAMPLE_ARGS)-set(active))
+    registry_ids = list(registry.INSTRUCTION_DICT.keys())
+    assert len(registry_ids) == 25, len(registry_ids)
+    assert set(registry_ids) == set(SAMPLE_ARGS), (set(registry_ids)-set(SAMPLE_ARGS), set(SAMPLE_ARGS)-set(registry_ids))
+    active = list(ACTIVE15)
+    assert len(active) == 15 and len(set(active)) == 15
+    assert set(active) <= set(registry_ids)
+    got_commitment = hashlib.sha256(json.dumps(sorted(active)).encode()).hexdigest()
+    assert got_commitment == EXPECTED_ACTIVE15_COMMITMENT, (got_commitment, EXPECTED_ACTIVE15_COMMITMENT)
 
     descriptions = {}
     checkers = {}
@@ -208,7 +232,9 @@ with tempfile.TemporaryDirectory() as td_s:
         "upstream":{
             "livebench_commit":LIVEBENCH_COMMIT,
             "blobs":observed,
-            "active_types":len(active),
+            "registry_types":len(registry_ids),
+            "frozen_active_types_under_commitment":len(active),
+            "active15_commitment_sha256":got_commitment,
         },
         "compatible_unordered_pairs":compatible_pairs,
         "tested_pair_orientations":tested_orientations,
