@@ -70,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
           ./llama.cpp/build/bin/llama-server -m "$MODEL_FILE" -c 4096 -t 4 -np 1 \
-            --host 127.0.0.1 --port 8080 > llama_server_exact200.log 2>&1 &
+            --reasoning off --host 127.0.0.1 --port 8080 > llama_server_exact200.log 2>&1 &
           echo "$!" > llama_server.pid
           ready=0
           for _ in $(seq 1 240); do
