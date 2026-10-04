@@ -1,0 +1,12 @@
+{
+  "isolated_runner_branch": "exec/unknown-domain-v2-universal-proof-isolated-20261005",
+  "isolated_runner_commit_receipt": true,
+  "isolated_runner_job_id": "verify",
+  "isolated_runner_run_id": "37241106676",
+  "isolated_runner_source_sha": "01ce7778d76c8d76da3b2fa855a7ad6cabafcbc5",
+  "isolated_runner_workflow": "isolated-unknown-domain-v2-universal-proof.yml",
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_EXECUTION_V1",
+  "status": "VERIFIER_DID_NOT_EMIT_SUCCESS_RECEIPT",
+  "verifier_step_conclusion": "success",
+  "verifier_step_outcome": "failure"
+}
