@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_ONE_USE_ATOMIC_CLAIM_RUN_INDEX_V1",
+  "run_id": 37192846038,
+  "name": "Verify one-use benchmark atomic claim V1",
+  "head_sha": "e172d9f297a0c8375dcf6bfe2b2dc020a737b769",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 111408497286,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}
