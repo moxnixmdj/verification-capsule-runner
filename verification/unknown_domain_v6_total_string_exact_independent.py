@@ -8,8 +8,9 @@ import sys
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0,str(ROOT))
+SUBJECT=ROOT/"subject"/"unknown_domain_v6_20261005"
+if str(SUBJECT) not in sys.path:
+    sys.path.insert(0,str(SUBJECT))
 
 from canonical.runtime import unknown_domain_direct_candidate_v1 as c1
 from canonical.runtime import unknown_domain_direct_candidate_v2 as c2
@@ -29,18 +30,18 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py":"e52858b9fef2d795f72b45cd3ae82ad04344aa91",
- "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"a97459fe407ea4852f57f12f504fbc0121db9824",
+ "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"60373126f3ee27368ae06e6d7d559f1b826d90d4",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
- "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58410966e17c1bc546db8cab039891f3ab2bf8a8",
- "canonical/tests/test_unknown_domain_direct_v5.py":"81cd6ecabec51029175f6036a13eac7667fccd03",
+ "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
+ "canonical/tests/test_unknown_domain_direct_v5.py":"5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
 }
 
 def blob(path:Path)->str:
     data=path.read_bytes()
     return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
 
-got={rel:blob(ROOT/rel) for rel in EXPECTED}
+got={rel:blob(SUBJECT/rel) for rel in EXPECTED}
 assert got==EXPECTED, {"expected":EXPECTED,"got":got}
 
 # Independent string-interface falsification/proof checks.
@@ -85,6 +86,54 @@ for i,b in enumerate(edge_beacons):
     for j,s in enumerate(edge_secrets):
         packet=g5._generate(beacon=b,evaluator_secret=s,namespace=f"V6EDGE{i}{j}")
         assert packet["case_count"]==27
+
+# Second-order hostile-subclass attack required by the frozen V2 gate.
+class HostileStr(str):
+    def __getattribute__(self,name):
+        if name in {"strip","encode"}:
+            raise RuntimeError("HOSTILE_STR_GETATTRIBUTE_MUST_NOT_RUN:"+name)
+        return super().__getattribute__(name)
+    def strip(self,*args,**kwargs):
+        raise RuntimeError("HOSTILE_STR_STRIP_MUST_NOT_RUN")
+    def encode(self,*args,**kwargs):
+        raise RuntimeError("HOSTILE_STR_ENCODE_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("HOSTILE_STR_LEN_MUST_NOT_RUN")
+
+class HostileBytes(bytes):
+    def __bytes__(self):
+        raise RuntimeError("HOSTILE_BYTES_BYTES_MUST_NOT_RUN")
+    def __buffer__(self,*args,**kwargs):
+        raise RuntimeError("HOSTILE_BYTES_BUFFER_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("HOSTILE_BYTES_LEN_MUST_NOT_RUN")
+    def __getitem__(self,*args,**kwargs):
+        raise RuntimeError("HOSTILE_BYTES_GETITEM_MUST_NOT_RUN")
+    def __iter__(self):
+        raise RuntimeError("HOSTILE_BYTES_ITER_MUST_NOT_RUN")
+
+def score_all_27(packet):
+    assert packet["case_count"]==27
+    rows=[]
+    for visible,hidden in zip(packet["visible_cases"],packet["hidden_records"],strict=True):
+        out=harness.execute_case(candidate_step=c3.step,case_visible=visible,hidden_record=hidden)
+        assert out["scorer_result"]["pass"] is True,(visible["case_id"],out)
+        rows.append(out["scorer_result"])
+    aggregate=scorer.aggregate(rows)
+    assert aggregate["all_27_cases_pass"] is True
+    return 27
+
+hostile_beacon=HostileStr("A"*16+"\\ud800")
+hostile_str_secret=HostileStr("S"*31+"\\udfff")
+hostile_bytes_secret=HostileBytes(b"B"*32)
+assert isinstance(hostile_beacon,str) and isinstance(hostile_bytes_secret,bytes)
+assert g5._canonical_beacon(hostile_beacon).isascii()
+plain_from_hostile_bytes=g5._secret_bytes_total(hostile_bytes_secret)
+assert type(plain_from_hostile_bytes) is bytes
+assert plain_from_hostile_bytes==b"B"*32
+hostile_str_cases=score_all_27(g5._generate(beacon=hostile_beacon,evaluator_secret=hostile_str_secret,namespace="V6HOSTILESTR"))
+hostile_bytes_cases=score_all_27(g5._generate(beacon=hostile_beacon,evaluator_secret=hostile_bytes_secret,namespace="V6HOSTILEBYTES"))
+assert hostile_str_cases==hostile_bytes_cases==27
 
 # Structural ID totality must not depend on token collision resistance.
 # Force every rank/suffix token to the exact same string and score the complete
@@ -170,7 +219,7 @@ for i in range(populations):
 assert cases==6912
 
 # Only after independent derivation and falsification do we evaluate Brain's proof.
-theorem=proposed.prove(ROOT)
+theorem=proposed.prove(SUBJECT)
 assert theorem["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
 assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["string_interface_totality"]["legacy_strict_utf8_partiality_removed"] is True
@@ -179,12 +228,12 @@ assert theorem["transfer_proof"]["add2_exact_float_order_repaired"] is True
 assert theorem["accounting"]["acceptance_credit_delta"]==0
 
 receipt={
- "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_STRING_EXACT_INDEPENDENT_VERIFICATION_V1",
- "status":"PASS__INDEPENDENT_CONTENT_BOUND_TOTAL_STRING_STRUCTURAL_ID_EXACT_FLOAT_AND_6912_CASE_FALSIFICATION__ZERO_CREDIT",
+ "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
+ "status":"PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
  "exact_subject_blobs":EXPECTED,
  "python_codepoints_roundtripped":codepoints,
  "v4_unpaired_surrogate_counterexample_preserved":v4_counterexample,
- "forced_total_token_collision_full_population_pass":True,
+ "hostile_str_override_strip_encode_getattribute_len_attacked":True,\n "hostile_bytes_override_bytes_buffer_len_getitem_iter_attacked":True,\n "base_bytes_getitem_full_slice_plain_payload_verified":True,\n "hostile_str_secret_all_27_cases_pass":hostile_str_cases==27,\n "hostile_bytes_secret_all_27_cases_pass":hostile_bytes_cases==27,\n "forced_total_token_collision_full_population_pass":True,
  "post_v5_v2_exact_float_counterexample":float_counterexample,
  "nonproduction_falsification":{"populations":populations,"cases":cases,"all_pass":True},
  "production_or_terminal_cases_generated":0,
