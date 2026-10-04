@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# verification trigger after PR creation; no subject semantics
 from __future__ import annotations
 
 import hashlib
