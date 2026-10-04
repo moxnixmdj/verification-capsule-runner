@@ -11,7 +11,7 @@ on:
       - 'canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py'
       - 'livebench_clean_dev_precommit_v1.json'
       - 'verify_livebench_clean_dev_v1.py'
-      - '.github/workflows/livebench-clean-dev-v1.yml'
+      - '.github/workflows/livebench-clean-dev-macos-v1.yml'
 
 permissions:
   contents: write
