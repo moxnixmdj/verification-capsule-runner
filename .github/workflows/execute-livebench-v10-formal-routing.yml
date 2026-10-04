@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       REPOSITORY_PRIVATE: "false"
-      LIVEBENCH_V10_ACTIVATION_BLOB: "38296a76cc45f3c01d1794b24b167afe1a324c80"
+      LIVEBENCH_V10_ACTIVATION_BLOB: "7a2c2fdc3cc08862850a13667ee2cd2b2e2aae91"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
