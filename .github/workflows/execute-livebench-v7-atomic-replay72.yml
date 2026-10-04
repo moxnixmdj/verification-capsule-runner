@@ -1,0 +1,36 @@
+name: Execute LiveBench V7 atomic sanitized replay72
+on:
+  push:
+    branches:
+      - "execute/livebench-v7-sanitized-classification-20261004"
+    paths:
+      - "EXECUTE_LIVEBENCH_V7_ATOMIC_REPLAY72"
+permissions:
+  contents: write
+jobs:
+  replay72:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      REPOSITORY_PRIVATE: "false"
+      LIVEBENCH_V7_ACTIVATION_BLOB: "00cac718909d9d311189efb7cadcbc75dfad84dc"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact bound bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object launch_livebench_v7_sanitized_atomic.py)" = "d977690efd97e093b28474d23b37ee6e4520ed0f"
+          test "$(git hash-object diagnose_livebench_replay72_v7_sanitized.py)" = "55d4b961f58dc45c1513f9c9282a63773444773d"
+          test "$(git hash-object livebench_v7_sanitized_classifier.py)" = "44df7313c83914204299953dda81900fae85ab68"
+          test "$(git hash-object verify_livebench_v7_sanitized_diagnostic.py)" = "0c63704ba4e462c957516bc0f1ee0bdbdea8465c"
+          test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+      - name: Point-of-use zero-case verifier
+        run: python verify_livebench_v7_sanitized_diagnostic.py
+      - name: Atomic claim then sanitized replay
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python launch_livebench_v7_sanitized_atomic.py
