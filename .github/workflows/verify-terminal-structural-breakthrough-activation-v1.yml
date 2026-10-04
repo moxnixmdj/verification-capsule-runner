@@ -1,0 +1,16 @@
+name: Verify structural breakthrough activation V1
+on:
+  pull_request:
+    paths:
+      - 'capsules/terminal_structural_breakthrough_activation_v1/**'
+      - '.github/workflows/verify-terminal-structural-breakthrough-activation-v1.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python capsules/terminal_structural_breakthrough_activation_v1/verify_activation.py
