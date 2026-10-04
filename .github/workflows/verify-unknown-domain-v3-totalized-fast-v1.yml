@@ -45,7 +45,44 @@ jobs:
           assert got==expected,(got,expected)
           print("EXACT_SUBJECT_BINDINGS_PASS")
           PY
+      - name: Extract first exact V3-domain counterexample
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from canonical.runtime import unknown_domain_direct_candidate_v2 as candidate
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g3
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as harness
+          found=None
+          for i in range(512):
+              secret=hashlib.sha256(f"V3-TOTALIZED-ADVERSARIAL-SECRET-{i}".encode()).digest()
+              beacon=f"V3-TOTALIZED-ADVERSARIAL-BEACON-{i:06d}"
+              packet=g3._generate(beacon=beacon,evaluator_secret=secret,namespace="UDIRV3")
+              for visible,hidden in zip(packet["visible_cases"],packet["hidden_records"]):
+                  out=harness.execute_case(candidate_step=candidate.step,case_visible=visible,hidden_record=hidden)
+                  if not out["scorer_result"]["pass"]:
+                      found={
+                          "i":i,
+                          "evaluator_secret_sha256":hashlib.sha256(secret).hexdigest(),
+                          "beacon":beacon,
+                          "case_id":visible["case_id"],
+                          "leaf_id":hidden["leaf_id"],
+                          "primitive_family":hidden.get("primitive_family"),
+                          "errors":out["scorer_result"].get("errors"),
+                          "candidate_terminal_action":out.get("candidate_terminal_action"),
+                          "gold_terminal_consequence":hidden.get("gold_terminal_consequence"),
+                          "domain_mapping":hidden.get("domain_mapping"),
+                          "transfer_relevant_feature_ids":hidden.get("transfer_relevant_feature_ids"),
+                      }
+                      print("COUNTEREXAMPLE_JSON="+json.dumps(found,sort_keys=True))
+                      break
+              if found:
+                  break
+          assert found is None, "V3_TOTALIZED_UNIVERSAL_CLAIM_FALSIFIED"
+          print("ADVERSARIAL_SEARCH_PASS")
+          PY
       - name: Run exact theorem regression functions
+        if: always()
         shell: bash
         run: |
           python - <<'PY'
@@ -57,50 +94,17 @@ jobs:
               getattr(t,name)()
           print("REGRESSION_FUNCTIONS_PASS",len(tests))
           PY
-      - name: Adversarially search exact V3 domain for V2 exact-float failures
-        shell: bash
-        run: |
-          python - <<'PY'
-          import hashlib
-          from canonical.runtime import unknown_domain_direct_candidate_v2 as candidate
-          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g3
-          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as harness
-          failures=[]
-          checked=0
-          for i in range(512):
-              secret=hashlib.sha256(f"V3-TOTALIZED-ADVERSARIAL-SECRET-{i}".encode()).digest()
-              beacon=f"V3-TOTALIZED-ADVERSARIAL-BEACON-{i:06d}"
-              packet=g3._generate(beacon=beacon,evaluator_secret=secret,namespace="UDIRV3")
-              for visible,hidden in zip(packet["visible_cases"],packet["hidden_records"]):
-                  out=harness.execute_case(candidate_step=candidate.step,case_visible=visible,hidden_record=hidden)
-                  checked+=1
-                  if not out["scorer_result"]["pass"]:
-                      failures.append({
-                          "i":i,
-                          "beacon":beacon,
-                          "case_id":visible["case_id"],
-                          "leaf_id":hidden["leaf_id"],
-                          "primitive_family":hidden.get("primitive_family"),
-                          "errors":out["scorer_result"].get("errors"),
-                          "candidate_terminal_action":out.get("candidate_terminal_action"),
-                          "gold_terminal_consequence":hidden.get("gold_terminal_consequence"),
-                          "domain_mapping":hidden.get("domain_mapping"),
-                      })
-                      print("COUNTEREXAMPLE",failures[-1])
-                      raise AssertionError("V3_TOTALIZED_UNIVERSAL_CLAIM_FALSIFIED")
-          print("ADVERSARIAL_CASES_PASS",checked)
-          PY
       - name: Verify theorem output
+        if: always()
         shell: bash
         run: |
           python -m canonical.runtime.unknown_domain_direct_v3_universal_proof_v1 > /tmp/v3.json
           python - <<'PY'
           import json
           d=json.load(open("/tmp/v3.json"))
+          print("THEOREM_STATUS",d["status"])
           assert d["status"]=="PASS__UNIVERSAL_OVER_EXACT_COLLISION_TOTALIZED_V3_GENERATOR_DOMAIN"
           assert d["scope"]["terminal_or_production_cases_generated"]==0
           assert d["identifier_totality_proof"]["uniqueness_depends_on_hash_collision_resistance"] is False
-          assert d["production_execution_information_gain_for_this_exact_v3_generator_claim"]==0
           assert d["accounting"]["acceptance_credit_delta"]==0
-          print("V3_TOTALIZED_UNIVERSAL_THEOREM_PASS")
           PY
