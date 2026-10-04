@@ -1,0 +1,19 @@
+name: Verify isolated repaired Unknown-Domain lease
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'isolated/unknown-domain-execution-lease-v2/**'
+      - 'verify_unknown_domain_execution_lease_v2_isolated.py'
+      - '.github/workflows/verify-unknown-domain-execution-lease-v2-isolated.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_unknown_domain_execution_lease_v2_isolated.py
