@@ -1,0 +1,24 @@
+name: Verify LiveBench frozen production capsule
+on:
+  pull_request:
+    paths:
+      - "execute_livebench_if_frozen_20261004.py"
+      - ".github/workflows/execute-livebench-if-frozen-20261004.yml"
+      - "verify_livebench_if_production_capsule_v1.py"
+      - ".github/workflows/verify-livebench-if-production-capsule-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify frozen production capsule without terminal cases
+        run: python verify_livebench_if_production_capsule_v1.py
+      - name: Re-run exact eight-blob synthetic carrier closure
+        env:
+          REPOSITORY_PRIVATE: false
+        run: python verify_livebench_zero_spend_carrier_v1.py
