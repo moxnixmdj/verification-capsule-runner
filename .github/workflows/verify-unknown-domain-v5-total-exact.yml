@@ -1,0 +1,43 @@
+name: Verify Unknown-Domain V5 total exact
+
+on:
+  push:
+    branches:
+      - verify/unknown-domain-v5-total-exact-20261005-sol
+    paths:
+      - "canonical/runtime/unknown_domain_direct_candidate_v1.py"
+      - "canonical/runtime/unknown_domain_direct_candidate_v2.py"
+      - "canonical/runtime/unknown_domain_direct_candidate_v3.py"
+      - "canonical/runtime/unknown_domain_direct_execution_harness_v1.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py"
+      - "canonical/runtime/unknown_domain_direct_v4_universal_proof_v1.py"
+      - "canonical/runtime/unknown_domain_direct_v5_total_exact_universal_proof_v1.py"
+      - "verification/unknown_domain_v5_total_exact_independent.py"
+      - ".github/workflows/verify-unknown-domain-v5-total-exact.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run independent V5 verifier
+        run: python verification/unknown_domain_v5_total_exact_independent.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v5-total-exact-receipt
+          path: unknown_domain_v5_total_exact_receipt.json
+          if-no-files-found: warn

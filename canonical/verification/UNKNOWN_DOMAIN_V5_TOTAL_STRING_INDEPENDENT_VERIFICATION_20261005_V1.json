@@ -1,0 +1,42 @@
+{
+  "acceptance_credit_delta": 0,
+  "exact_subject_blobs": {
+    "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
+    "canonical/runtime/unknown_domain_direct_candidate_v2.py": "4470716f95a559a700e461262df909ae19a41651",
+    "canonical/runtime/unknown_domain_direct_candidate_v3.py": "8df7f13455b710623806a8219174b397a2c3c442",
+    "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v3.py": "8b855851b8a0fec3a0811c5033cc4ea6d2436954",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "6685a1b173acacc69cffc99efeafd48fee793d69",
+    "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
+    "canonical/runtime/unknown_domain_direct_v4_universal_proof_v1.py": "72bbed393ac1bcaccb4cf33cd37835662c421f6c",
+    "canonical/runtime/unknown_domain_direct_v5_universal_proof_v1.py": "ab6ea01260b13133d208a7eea08317cfaa1e9ab0",
+    "canonical/tests/test_unknown_domain_v4_total_string_domain_v1.py": "fa329273cb7b236575d7b2ab2638574c487996fb"
+  },
+  "fisher_yates_exhaustive_choice_paths_n_le_7": 5913,
+  "hard_nonclaims": [
+    "NO_OPEN_WORLD_UNKNOWN_DOMAIN_GENERALIZATION",
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT_FROM_THIS_VERIFIER",
+    "SEPARATE_FAIL_CLOSED_ROOT3_AND_ACCEPTANCE_REDUCTION_REQUIRED"
+  ],
+  "nonproduction_falsification": {
+    "adversarial_string_cases": 432,
+    "all_pass": true,
+    "ordinary_cases": 6912,
+    "ordinary_populations": 256,
+    "total_scored_cases": 7344
+  },
+  "prior_v4_string_totality_counterexample_reproduced": true,
+  "production_or_terminal_cases_generated": 0,
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V5_TOTAL_STRING_INDEPENDENT_VERIFICATION_V1",
+  "status": "PASS__INDEPENDENT_TOTAL_STRING_TOTAL_ID_EXACT_FLOAT_AND_7344_CASE_FALSIFICATION__ZERO_CREDIT",
+  "surrogate_codepoints_exhausted": 2048,
+  "v2_exact_float_counterexample": {
+    "beacon": "V5-FLOAT-0011-BEACON",
+    "gold": 7.141397696475902,
+    "index": 4,
+    "v2_terminal": 7.141397696475903,
+    "v3_probe_count": 1
+  }
+}
