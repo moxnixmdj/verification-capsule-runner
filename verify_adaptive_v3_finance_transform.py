@@ -101,3 +101,5 @@ assert r3["fresh_reality_authority"] is False
 assert v3["fresh_reality_authority"] is False
 
 print("ADAPTIVE_V3_FINANCE_TRANSFORM_SEARCH_DELETION_PASS__V2_SEMANTICS_PRESERVED__ZERO_CREDIT")
+
+# path-scoped push verification trigger
