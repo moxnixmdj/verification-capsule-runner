@@ -1,0 +1,133 @@
+name: Diagnose Unknown-Domain V4 total exact verifier
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/diagnose-unknown-domain-v4-total-exact.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  permutation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: |
+          python - <<'PY'
+          import itertools
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g
+          def ap(n,choices):
+              out=list(range(n)); k=0
+              for i in range(n-1,0,-1):
+                  j=choices[k]; k+=1; out[i],out[j]=out[j],out[i]
+              return tuple(out)
+          total=0
+          for n in range(1,8):
+              ds=[range(i+1) for i in range(n-1,0,-1)]
+              for ch in itertools.product(*ds):
+                  p=ap(n,ch); assert len(p)==n and set(p)==set(range(n)); total+=1
+          assert total==5913,total
+          for n in (2,3,4,12,15):
+              for secret in (b'\x00'*32,b'\xff'*32,b'A'*32,b'B'*32,bytes(range(32))):
+                  p=g._perm(secret,'TOTALITY-EDGE-00000001',f'n={n}',n)
+                  assert len(p)==n and set(p)==set(range(n))
+          print('permutation PASS',total)
+          PY
+
+  float-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: |
+          python - <<'PY'
+          import inspect
+          from canonical.runtime import unknown_domain_direct_candidate_v1 as c
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v1 as g
+          a=''.join(inspect.getsource(g._eval).split())
+          b=''.join(inspect.getsource(c._program_eval).split())
+          print(a); print(b)
+          assert 'returnfloat(p["bias"])+float(role_values["r0"])+float(role_values["r1"])' in a
+          assert 'return_finite(params["bias"],"bias")+_finite(role_values["r0"],"r0")+_finite(role_values["r1"],"r1")' in b
+          PY
+
+  counterexample:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: |
+          python - <<'PY'
+          import hashlib
+          from canonical.runtime import unknown_domain_direct_candidate_v2 as c2
+          from canonical.runtime import unknown_domain_direct_candidate_v3 as c3
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as h
+          secret=hashlib.sha256(b'INDEPENDENT-V4-FLOAT-SEARCH').digest()
+          found=None
+          for k in range(1024):
+              beacon=f'INDEPENDENT-V4-FLOAT-{k:04d}-BEACON'
+              for index in (4,10):
+                  v,r=g._transfer_case(secret,beacon,index,namespace='V4VERIFY')
+                  bad=h.execute_case(candidate_step=c2.step,case_visible=v,hidden_record=r)
+                  if (not bad['scorer_result']['pass'] and
+                      'DOMAIN_B_TERMINAL_CONSEQUENCE_WRONG' in bad['scorer_result']['errors']):
+                      good=h.execute_case(candidate_step=c3.step,case_visible=v,hidden_record=r)
+                      assert good['scorer_result']['pass'],good
+                      assert good['candidate_terminal_action']['terminal_consequence']==r['gold_terminal_consequence']
+                      found=(beacon,index,bad['candidate_terminal_action']['terminal_consequence'],r['gold_terminal_consequence'])
+                      break
+              if found: break
+          assert found is not None
+          print('counterexample PASS',found)
+          PY
+
+  one-population:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: |
+          python - <<'PY'
+          from canonical.runtime import unknown_domain_direct_candidate_v3 as c
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as h
+          from canonical.runtime import unknown_domain_direct_hidden_scorer_v1 as s
+          p=g.generate_qualification_fixture_population(beacon='INDEPENDENT-V4-TOTAL-EXACT-0000')
+          rows=[]
+          for i,(v,r) in enumerate(zip(p['visible_cases'],p['hidden_records'])):
+              out=h.execute_case(candidate_step=c.step,case_visible=v,hidden_record=r)
+              assert out['scorer_result']['pass'],(i,v['case_id'],out['scorer_result'])
+              rows.append(out['scorer_result'])
+          assert s.aggregate(rows)['all_27_cases_pass']
+          print('one population PASS')
+          PY
+
+  sweep:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: |
+          python - <<'PY'
+          from canonical.runtime import unknown_domain_direct_candidate_v3 as c
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as h
+          count=0
+          for i in range(256):
+              p=g.generate_qualification_fixture_population(beacon=f'INDEPENDENT-V4-TOTAL-EXACT-{i:04d}')
+              for j,(v,r) in enumerate(zip(p['visible_cases'],p['hidden_records'])):
+                  out=h.execute_case(candidate_step=c.step,case_visible=v,hidden_record=r)
+                  assert out['scorer_result']['pass'],(i,j,v['case_id'],out['scorer_result'])
+                  count+=1
+          assert count==6912
+          print('sweep PASS',count)
+          PY
