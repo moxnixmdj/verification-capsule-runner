@@ -7,8 +7,8 @@ SUB = ROOT / "subject/public_description_inverter_v1"
 RUNTIME = SUB / "canonical/runtime/public_description_template_inverter_v1.py"
 TESTS = SUB / "canonical/tests/test_public_description_template_inverter_v1.py"
 BRAIN_BLOBS = {
-    "runtime": "ec958baa0cb6ad8ece4b69437b88abbcbea5994e",
-    "tests": "2a87383de2f2ebf0b9c73ad544f9a4324475650f",
+    "runtime": "c70de5ca0c9206b4875d26c4ff0bbefb3a9c29cc",
+    "tests": "b0c6c97770ca2f99cc839d11018f8d2803d3cac5",
 }
 UPSTREAM_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 UPSTREAM = {
@@ -40,7 +40,7 @@ mod = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
 spec.loader.exec_module(mod)
 test_names = sorted(x for x in dir(mod) if x.startswith("test_"))
-assert len(test_names) == 6, test_names
+assert len(test_names) == 9, test_names
 for name in test_names:
     getattr(mod, name)()
 
@@ -70,6 +70,14 @@ legacy_audit = inv.audit(sources["legacy_source"], expected_classes=legacy_activ
 assert modern_audit["all_expected_classes_covered"], modern_audit["missing_expected_classes"]
 assert legacy_audit["all_expected_classes_covered"], legacy_audit["missing_expected_classes"]
 
+modern_bindings = inv.extract_registry_bindings(sources["modern_registry"])
+legacy_bindings = inv.extract_registry_bindings(sources["legacy_registry"])
+assert len(modern_bindings) == 58, len(modern_bindings)
+assert len(legacy_bindings) == 25, len(legacy_bindings)
+legacy_coverage = inv.audit_registered_coverage(sources["legacy_source"], sources["legacy_registry"])
+assert legacy_coverage["active_instruction_id_count"] == 25, legacy_coverage
+assert legacy_coverage["all_active_classes_have_description_templates"], legacy_coverage
+
 # Exact real-public-template round trip on a rendered parameter.
 modern_specs = inv.extract_templates(sources["modern_source"])
 hits = inv.match_prompt(
@@ -84,7 +92,7 @@ receipt = {
     "schema": "PROJECT_BRAIN_PUBLIC_DESCRIPTION_TEMPLATE_INVERTER_V1_INDEPENDENT_VERIFICATION",
     "status": "PASS",
     "brain_pr": 1727,
-    "brain_head": "1f3578a7ee4e56cecada8447db4e98a898ed4d59",
+    "brain_head": "8f24f0446adb7a4f6f279af5fdf5aa7d0d1a2f49",
     "exact_brain_blobs": BRAIN_BLOBS,
     "upstream_commit": UPSTREAM_COMMIT,
     "upstream_blobs": {k: v[1] for k, v in UPSTREAM.items()},
@@ -97,6 +105,9 @@ receipt = {
         "legacy_active_description_coverage": len(legacy_active) - len(legacy_audit["missing_expected_classes"]),
         "modern_all_active_covered": modern_audit["all_expected_classes_covered"],
         "legacy_all_active_covered": legacy_audit["all_expected_classes_covered"],
+        "modern_registry_binding_count": len(modern_bindings),
+        "legacy_registry_binding_count": len(legacy_bindings),
+        "legacy_registry_bound_description_coverage": legacy_coverage["all_active_classes_have_description_templates"],
         "real_public_parameter_round_trip": True,
     },
     "terminal_cases_consumed": 0,
