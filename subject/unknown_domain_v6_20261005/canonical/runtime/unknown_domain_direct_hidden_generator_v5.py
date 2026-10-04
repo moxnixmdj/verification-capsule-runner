@@ -21,23 +21,16 @@ IDENTIFIER_TOTALITY="INHERITS_V4_STRUCTURAL_SLOT_ORDINAL_UNIQUENESS"
 
 
 def _beacon_gate(beacon: Any)->str:
-    if not isinstance(beacon,str):
-        raise v1.UnknownDomainGeneratorError("POST_FREEZE_BEACON_INVALID")
-    # Call the exact built-in implementation instead of virtual dispatch on
-    # the accepted str instance. A hostile str subclass may override strip(),
-    # encode(), __str__, or other methods; the declared isinstance-accepted
-    # domain must remain total for those values too.
-    stripped=str.strip(beacon)
-    if len(stripped)<16:
+    # Preserve the existing isinstance-accepted domain, including str subclasses,
+    # but bypass overridable subclass methods so accepted values cannot make the
+    # supposedly total interface partial.
+    if not isinstance(beacon,str) or len(str.strip(beacon))<16:
         raise v1.UnknownDomainGeneratorError("POST_FREEZE_BEACON_INVALID")
     return beacon
 
 
 def _canonical_beacon(beacon: Any)->str:
     text=_beacon_gate(beacon)
-    # Explicit base-method dispatch bypasses a str subclass's overridden
-    # encode(). The return is exact built-in bytes, after which hex() yields an
-    # exact built-in ASCII str for every downstream legacy helper.
     raw=str.encode(text,"utf-8","surrogatepass")
     # surrogatepass is total over Python str code-point sequences; hex is a
     # byte-injective ASCII representation, so no legacy strict-UTF8 helper can
@@ -47,11 +40,12 @@ def _canonical_beacon(beacon: Any)->str:
 
 def _secret_bytes_total(secret: Any)->bytes:
     if isinstance(secret,bytes):
-        # Materialize through the immutable buffer interface rather than
-        # virtual bytes-subclass methods such as __bytes__ or __len__.
-        out=memoryview(secret).tobytes()
+        # bytes subclasses may override __bytes__, __buffer__, and __getitem__.
+        # Invoke the base bytes descriptor directly on a full slice: this reads
+        # the inherited immutable bytes payload, bypasses subclass Python hooks,
+        # and materializes an exact plain bytes value.
+        out=bytes.__getitem__(secret,slice(None))
     elif isinstance(secret,str):
-        # Same non-virtual rule as the beacon path.
         out=str.encode(secret,"utf-8","surrogatepass")
     else:
         raise v1.UnknownDomainGeneratorError("EVALUATOR_SECRET_INVALID")
