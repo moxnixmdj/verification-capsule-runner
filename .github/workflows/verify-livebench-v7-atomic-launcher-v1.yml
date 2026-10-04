@@ -1,0 +1,45 @@
+name: Verify LiveBench V7 atomic launcher V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "launch_livebench_v7_sanitized_atomic.py"
+      - ".github/workflows/verify-livebench-v7-atomic-launcher-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact launcher and ordering
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object launch_livebench_v7_sanitized_atomic.py)" = "5470223c39f78af008eb90bafd5d780a35230895"
+          test "$(git hash-object diagnose_livebench_replay72_v7_sanitized.py)" = "55d4b961f58dc45c1513f9c9282a63773444773d"
+          test "$(git hash-object verify_livebench_v7_sanitized_diagnostic.py)" = "0c63704ba4e462c957516bc0f1ee0bdbdea8465c"
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("launch_livebench_v7_sanitized_atomic.py").read_text()
+          body=s[s.index("def execute("):s.index("def main()")]
+          order=[
+            "verify_exact_subjects()",
+            "run_point_of_use_zero_case_verifier()",
+            "claim = create_atomic_claim(token, commit_sha)",
+            "replay_rc = run_sanitized_replay(activation_blob)",
+          ]
+          pos=[body.index(x) for x in order]
+          assert pos==sorted(pos),pos
+          assert 'method="POST"' in s
+          assert 'if status != 201:' in s
+          assert 'ATOMIC_CLAIM_CREATE_NON_201' in s
+          assert 'CLAIM_REF = "refs/heads/livebench-v7-claims/" + EPOCH_DIGEST' in s
+          assert 'REPLAY_LIMIT' not in s
+          assert "download_dataset" not in s
+          assert "parse_population" not in s
+          print("PASS__ZERO_CASE_STATIC_ATOMIC_LAUNCH_ORDER")
+          PY
