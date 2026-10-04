@@ -64,3 +64,5 @@ assert delta["execution_authority"] is False
 assert delta["promotion_authority"] is False
 assert delta["fresh_reality_authority"] is False
 print("ROOT2_STABLE_DELTA_V2_OSWORLD_INDEPENDENT_PASS__EXACT_6_BLOB_CHAIN__ZERO_CREDIT")
+
+# trigger: exact-chain-v2
