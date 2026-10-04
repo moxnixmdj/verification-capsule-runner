@@ -1,0 +1,30 @@
+name: Verify LiveBench score-only structural witness V3
+on:
+  push:
+    branches:
+      - verify/livebench-score-witness-v3-20261004
+    paths:
+      - ".github/workflows/verify-livebench-score-witness-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: verify/livebench-score-witness-v3-20261004
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact subjects and run synthetic tests
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v1.py)" = "7e3885fa7a6e56df656c066e0a8f17cfa21424e7"
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v2.py)" = "dbc895a0e458e411aafd3c96e0ddc2c01e657375"
+          test "$(git hash-object canonical/runtime/instruction_constraint_compiler_v1.py)" = "a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v3.py)" = "ff977b2e34d551e5a2751852bb77d23c7c503647"
+          test "$(git hash-object canonical/tests/test_root2_livebench_if_astra_inference_adapter_v3.py)" = "647a216d934c939a4d10fcbab0e39e66369e195a"
+          python -m unittest canonical.tests.test_root2_livebench_if_astra_inference_adapter_v3 -v
