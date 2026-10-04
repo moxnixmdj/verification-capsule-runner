@@ -78,6 +78,39 @@ Path("livebench/if_runner/ifbench/instructions_registry.py").write_bytes(raw["in
 Path("livebench/if_runner/ifbench/evaluation_lib.py").write_bytes(raw["evaluation_lib"])
 
 sys.path.insert(0, str(Path.cwd()))
+
+# Reuse the independently preflighted frozen-checker bootstrap. NLTK resources
+# must stay local; spaCy is a dead download bootstrap in these exact checker bytes.
+import types
+import nltk
+
+_RESOURCE_PATHS = {
+    "punkt": "tokenizers/punkt",
+    "punkt_tab": "tokenizers/punkt_tab",
+    "stopwords": "corpora/stopwords",
+    "averaged_perceptron_tagger": "taggers/averaged_perceptron_tagger",
+    "averaged_perceptron_tagger_eng": "taggers/averaged_perceptron_tagger_eng",
+}
+_download_calls = []
+def _local_only_download(name, *args, **kwargs):
+    _download_calls.append(name)
+    path = _RESOURCE_PATHS.get(name)
+    if path is None:
+        raise RuntimeError("unapproved NLTK resource request: " + str(name))
+    nltk.data.find(path)
+    return True
+nltk.download = _local_only_download
+
+spacy = types.ModuleType("spacy")
+spacy.util = types.SimpleNamespace(is_package=lambda _name: True)
+spacy_cli = types.ModuleType("spacy.cli")
+def _forbidden_spacy_download(*args, **kwargs):
+    raise RuntimeError("spaCy network download forbidden")
+spacy_cli.download = _forbidden_spacy_download
+spacy.cli = spacy_cli
+sys.modules["spacy"] = spacy
+sys.modules["spacy.cli"] = spacy_cli
+
 from canonical.runtime import livebench_if_single_checker_solver_v1 as solver
 from livebench.if_runner.ifbench import evaluation_lib
 
