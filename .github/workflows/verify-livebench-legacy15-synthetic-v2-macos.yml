@@ -29,9 +29,9 @@ jobs:
           set -euo pipefail
           test "$(git hash-object canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py)" = "b0376cb1e791af6abeb9536e41797b321bb7f7cb"
           test "$(git hash-object canonical/runtime/livebench_legacy15_composition_archetypes_v1.py)" = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
-          test "$(git hash-object canonical/runtime/livebench_legacy15_joint_witness_v1.py)" = "029d6018fd705fa5d1a53c88c4c3dd60764d8489"
+          test "$(git hash-object canonical/runtime/livebench_legacy15_joint_witness_v1.py)" = "e767bb2180a1e753ebb7b5ad61029ace754b6f0b"
           test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py)" = "721207ba39d502e3f610289578e9d5bab78b1fcc"
-          test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py)" = "e986035ff68b53c0dc7a7eb478f6e3d8882214aa"
+          test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py)" = "34f4df9f0bd265fc555686bd251a264e446d4c04"
           python - <<'PY'
           import hashlib, json
           from canonical.runtime.livebench_frozen_active_legacy15_v1 import ACTIVE_IDS
