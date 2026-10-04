@@ -22,6 +22,9 @@ from canonical.runtime import livebench_legacy15_end2end_exact_synthetic_audit_v
 
 SCHEMA="PROJECT_BRAIN_LIVEBENCH_LEGACY15_PARAMETER_BOUNDARY_AUDIT_V1"
 EXPECTED_UTIL_BLOB="1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+EXPECTED_EVALUATOR_BLOB="4a341984936c4d609644a3b77f8c030ac5aa7269"
+EXPECTED_SCORER_BLOB="8ce01747887ec0792c8f024e1972e34ece781676"
+EXPECTED_NLTK_PUNKT_BLOB="48496d2448c009221d2452c8e928699027b20ebe"
 
 E0=["rock","river","signal","system","brain"]
 # Exact generated-word collisions with forced structural literals from the\n# pinned source: Section/SECTION and the two exact end phrases.  `phrase` was\n# previously used here but is not forced by any checker; `can` is forced by\n# the second end phrase and therefore must be represented.\nE1=["section","other","anything","can","help"]
@@ -90,6 +93,23 @@ def audit(livebench_root: Path, max_failures:int=100):
     assert base.git_blob_sha(legacy/"instructions_registry.py")==base.FROZEN_REGISTRY_BLOB
     assert base.git_blob_sha(legacy/"instructions.py")==base.FROZEN_INSTRUCTIONS_BLOB
     assert base.git_blob_sha(legacy/"instructions_util.py")==EXPECTED_UTIL_BLOB
+    evaluator_path=legacy/"evaluation_main.py"
+    scorer_path=livebench_root/"livebench/process_results/instruction_following/utils.py"
+    assert base.git_blob_sha(evaluator_path)==EXPECTED_EVALUATOR_BLOB
+    assert base.git_blob_sha(scorer_path)==EXPECTED_SCORER_BLOB
+
+    import inspect
+    import nltk
+    import nltk.tokenize.punkt as punkt
+    assert nltk.__version__=="3.10.3", nltk.__version__
+    assert base.git_blob_sha(Path(punkt.__file__).resolve())==EXPECTED_NLTK_PUNKT_BLOB
+    punkt_slices_source=inspect.getsource(punkt.PunktSentenceTokenizer._slices_from_text)
+    assert "yield slice(last_break, len(text.rstrip()))" in punkt_slices_source
+    evaluator_source=evaluator_path.read_text()
+    assert "if response.strip() and instruction.check_following(response):" in evaluator_source
+    scorer_source=scorer_path.read_text()
+    assert "avg_score = (score_1 + score_2) / 2" in scorer_source
+
     sys.path.insert(0,str(livebench_root/"livebench/if_runner"))
     from instruction_following_eval import instructions_registry as registry
     from instruction_following_eval import instructions, instructions_util
@@ -177,6 +197,11 @@ def audit(livebench_root: Path, max_failures:int=100):
         "livebench_commit":base.FROZEN_LIVEBENCH_COMMIT,
         "registry_blob":base.FROZEN_REGISTRY_BLOB,
         "instructions_blob":base.FROZEN_INSTRUCTIONS_BLOB,
+        "instructions_util_blob":EXPECTED_UTIL_BLOB,
+        "strict_evaluator_blob":EXPECTED_EVALUATOR_BLOB,
+        "scorer_blob":EXPECTED_SCORER_BLOB,
+        "nltk_version":nltk.__version__,
+        "nltk_punkt_blob":EXPECTED_NLTK_PUNKT_BLOB,
         "witness_schema":witness.SCHEMA,
         "archetype_schema":archetypes.SCHEMA,
       },
@@ -206,6 +231,27 @@ def audit(livebench_root: Path, max_failures:int=100):
       "by_archetype":{k:dict(v) for k,v in sorted(by_archetype.items())},
       "failed_identity_shapes_top":[{"ids":list(k),"failures":v} for k,v in failed_shapes.most_common(50)],
       "failure_samples":failures,
+      "unavoidable_failure_lower_bound_theorem":{
+        "sentence_less_than_one":{
+          "claim":"STRICT_EVALUATOR_NONBLANK_RESPONSE_IMPLIES_PUNKT_SENTENCE_COUNT_AT_LEAST_ONE__THEREFORE_LESS_THAN_ONE_IS_UNSATISFIABLE",
+          "strict_nonblank_guard_bound":true,
+          "punkt_final_slice_bound":true,
+          "failure_lower_bound_instruction_ids":["length_constraints:number_sentences"]
+        },
+        "forbidden_vs_forced_whole_word":{
+          "claim":"WHEN_FORBIDDEN_WORDS_CONTAINS_A_WHOLE_WORD_EXACTLY_FORCED_BY_NTH_FIRST_WORD__SECTION_SPLITTER__OR_END_PHRASE__AT_LEAST_ONE_OF_FORBIDDEN_OR_THE_FORCING_CHECKER_MUST_FAIL",
+          "forced_sources":["length_constraints:nth_paragraph_first_word","detectable_format:multiple_sections","startend:end_checker"],
+          "candidate_cut_choice":"FAIL_KEYWORDS_FORBIDDEN_WORDS_ONLY__SATISFY_ALL_FORCING_CHECKERS",
+          "failure_lower_bound_instruction_ids":["keywords:forbidden_words"]
+        },
+        "additivity":{
+          "claim":"SENTENCE_IMPOSSIBILITY_AND_FORBIDDEN_VS_FORCED_CONTRADICTION_TOUCH_DISTINCT_CHECKER_IDS__WHEN_BOTH_APPLY_THE_MINIMUM_UNAVOIDABLE_FAILURE_COUNT_IS_TWO"
+        },
+        "scorer_ceiling":{
+          "claim":"FOR_K_INSTRUCTIONS_AND_M_MINIMUM_UNAVOIDABLE_FAILURES__MAX_STRICT_ROW_SCORE_IS_1_IF_M_ZERO_ELSE_(K_MINUS_M)/(2K)",
+          "source":"PINNED_LIVEBENCH_SCORE_RESULTS"
+        }
+      },
       "basis_semantics":[
         "NUMBER_WORDS_AT_LEAST_TESTS_SOURCE_MAX_500__LESS_THAN_TESTS_SOURCE_MIN_100",
         "NUMBER_SENTENCES_AT_LEAST_TESTS_SOURCE_MAX_20__LESS_THAN_TESTS_2_AND_SOURCE_MIN_1",
