@@ -42,6 +42,7 @@ RUNTIME_FILES = {
 }
 
 SCORER_FILES = {
+    "livebench/gen_ground_truth_judgment.py": "b36561da5b54380c724c507462d0ee65feefeac8",
     "livebench/if_runner/ifbench/evaluation_lib.py": "2c7bd1290031dbe4ae0f016c53255f4af0ec645b",
     "livebench/if_runner/ifbench/instructions.py": "02b2dfeb50f036b89bec3df34522c73f756d8f44",
     "livebench/if_runner/ifbench/instructions_registry.py": "adfed4832877566e62970257b50c6fa32c302fb2",
@@ -85,8 +86,8 @@ def install_scorer_deps():
         "setuptools==80.9.0",
         "spacy==3.8.16",
         "langdetect==1.0.9",
-        "immutabledict==4.2.1",
-        "pandas==2.2.3",
+        "immutabledict==4.3.1",
+        "pandas==2.3.3",
         "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     ]
     run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--quiet", *pkgs])
@@ -343,7 +344,7 @@ def main() -> int:
         if unknown_legacy or unknown_ifbench:
             material={"legacy":sorted(unknown_legacy),"ifbench":sorted(unknown_ifbench)}
             raise SystemExit("FAIL_CLOSED:UNKNOWN_INSTRUCTION_IDS:"+hashlib.sha256(json.dumps(material,sort_keys=True).encode()).hexdigest())
-        if legacy_count + ifbench_count != POPULATION or legacy_count == 0 or ifbench_count == 0:
+        if legacy_count + ifbench_count != POPULATION:
             raise SystemExit(f"FAIL_CLOSED:SCORER_DISPATCH_PARTITION:{legacy_count}:{ifbench_count}")
 
         template=build_runtime_template(base)
@@ -402,6 +403,9 @@ def main() -> int:
             "case_order":"QUESTION_ID_ASCENDING_FIXED_PREEXECUTION",
             "adaptive_case_selection":False,
             "case_replacement":False,
+            "legacy_scorer_case_count":legacy_count,
+            "ifbench_scorer_case_count":ifbench_count,
+            "scorer_dispatch_boundary":"2025-11-25",
             "threshold_percent":65.7,
             "threshold_mass":THRESHOLD_MASS,
             "observed_score_mass":cumulative,
