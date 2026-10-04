@@ -1,0 +1,57 @@
+name: Verify LiveBench Single Checker Public Solver
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - subject/canonical/runtime/livebench_if_single_checker_solver_v1.py
+      - subject/canonical/runtime/livebench_ngram_reference_free_v1.py
+      - verification/livebench_single_checker_public_exact.py
+      - .github/workflows/verify-livebench-single-checker-public.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned Python dependencies
+        run: python -m pip install --no-cache-dir nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2
+      - name: Fetch pinned LiveBench and public IFBench sources
+        run: |
+          git init /tmp/livebench
+          git -C /tmp/livebench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/livebench fetch --depth=1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/livebench checkout --detach FETCH_HEAD
+          git init /tmp/ifbench
+          git -C /tmp/ifbench remote add origin https://github.com/allenai/IFBench.git
+          git -C /tmp/ifbench fetch --depth=1 origin 1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d
+          git -C /tmp/ifbench checkout --detach FETCH_HEAD
+      - name: Fetch pinned NLTK data
+        run: |
+          git init /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo remote add origin https://github.com/nltk/nltk_data.git
+          git -C /tmp/nltk_data_repo fetch --depth=1 origin 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          git -C /tmp/nltk_data_repo checkout --detach FETCH_HEAD
+          mkdir -p /tmp/nltk_runtime/tokenizers /tmp/nltk_runtime/corpora /tmp/nltk_runtime/taggers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_runtime/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_runtime/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/corpora/stopwords.zip -d /tmp/nltk_runtime/corpora
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger.zip -d /tmp/nltk_runtime/taggers
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger_eng.zip -d /tmp/nltk_runtime/taggers
+      - name: Verify all 256 public single-checker rows against exact frozen scorer
+        env:
+          LIVEBENCH_ROOT: /tmp/livebench
+          IFBENCH_DATA: /tmp/ifbench/data/IFBench_test.jsonl
+          NLTK_DATA: /tmp/nltk_runtime
+        run: python verification/livebench_single_checker_public_exact.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-single-checker-public-exact-receipt
+          path: livebench_single_checker_public_exact_receipt.json
+          if-no-files-found: error
