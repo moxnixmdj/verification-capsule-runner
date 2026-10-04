@@ -13,7 +13,7 @@ LIVEBENCH = ROOT / "livebench-src"
 IFBENCH = ROOT / "ifbench-src"
 
 EXPECTED_BLOBS = {
-    "canonical/runtime/livebench_if_single_checker_solver_v1.py": "8ad19dcb09ddb853fb00e28ae673c748c8639d72",
+    "canonical/runtime/livebench_if_single_checker_solver_v1.py": "b6b89fe645046ccde1c31d3a9909fea42186a9b6",
     "canonical/runtime/livebench_ngram_reference_free_v1.py": "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea",
     "canonical/runtime/livebench_prompt_only_repeat_compiler_v1.py": "332fbb1fac1cdee2632dc454b497376d319e2287",
 }
