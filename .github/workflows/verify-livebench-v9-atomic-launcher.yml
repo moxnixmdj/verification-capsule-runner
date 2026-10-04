@@ -1,0 +1,22 @@
+name: Verify LiveBench V9 atomic launcher
+on:
+  pull_request:
+    paths:
+      - 'launch_livebench_v9_formal_routing_atomic.py'
+      - 'diagnose_livebench_replay72_v9_formal_routing.py'
+      - 'verify_livebench_v9_atomic_launcher.py'
+      - '.github/workflows/verify-livebench-v9-atomic-launcher.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact V9 atomic launcher
+        run: python verify_livebench_v9_atomic_launcher.py
