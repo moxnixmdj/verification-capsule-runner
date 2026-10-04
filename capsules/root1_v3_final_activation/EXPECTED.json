@@ -1,0 +1,11 @@
+{
+  "schema":"BRAIN_ROOT1_V3_FINAL_ACTIVATION_VERIFIER_INPUT",
+  "brain_pull_request":1501,
+  "candidate_head_sha":"1af28ae44f17d71e9d53057e9d6d2ed0836a5e80",
+  "base_main_sha":"87d7ac20b97be8b9d0b88160eee893e1e9868ec1",
+  "candidate_activation_blob":"d48cb0f608675256cdd57402288f1a045f8414e6",
+  "candidate_root_blob":"abebc62e71a5d2100d963078eecf5fb086d73cce",
+  "base_root_blob":"32bbdc6f1fb489f23669b42a3f1db93a1db7836e",
+  "core_verification_blob":"060788a84f33ff3474c62151f415688f1297ea4f",
+  "prior_activation_verifier_merge":"cd85e987ca2ce952f9e5b47a37a12d3bd2d89ec4"
+}
