@@ -1,0 +1,84 @@
+name: Verify LiveBench Root1 Qwen3.8 4B Semantic Seed V3 Direct
+
+on:
+  push:
+    branches:
+      - verify/qwen38-4b-semantic-seed-v3-direct-20261004
+    paths:
+      - verification/livebench_root1_qwen38_4b_semantic_seed_v3.py
+      - .github/workflows/verify-livebench-root1-qwen38-4b-semantic-seed-v3-direct.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: livebench-root1-qwen38-4b-semantic-seed-v3-direct
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Freeze free-runner resource state
+        shell: bash
+        run: |
+          set -euo pipefail
+          uname -a
+          echo "cpu_count=$(nproc)"
+          free -b
+          df -B1 "$RUNNER_TEMP"
+          mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+          disk_b="$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1 | tr -d ' ')"
+          test "$mem_kb" -ge 6000000
+          test "$disk_b" -ge 6500000000
+
+      - name: Build pinned llama.cpp CPU server
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/llama.cpp"
+          git init "$src"
+          git -C "$src" remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C "$src" fetch --depth 1 origin 0504396140d1c882f5f6ee34466a42db7ae90114
+          git -C "$src" checkout --detach FETCH_HEAD
+          cmake -S "$src" -B "$src/build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DLLAMA_CURL=OFF \
+            -DGGML_NATIVE=OFF
+          cmake --build "$src/build" --config Release -j 4 --target llama-server
+          "$src/build/bin/llama-server" --version
+
+      - name: Download exact precommitted 2.783 GB subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          model="$RUNNER_TEMP/Qwen3.8-4B-Q4_K_M.gguf"
+          curl --fail --location --retry 5 --retry-delay 4 \
+            --output "$model" \
+            "https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF/resolve/391fc7d103e3942a408def3e4f51c2f85d464417/Qwen3.8-4B-Q4_K_M.gguf?download=true"
+          test "$(stat -c '%s' "$model")" -eq 2783446304
+          echo "dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790  $model" | sha256sum -c -
+
+      - name: Run exact one-shot V3 qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verification/livebench_root1_qwen38_4b_semantic_seed_v3.py \
+            --model "$RUNNER_TEMP/Qwen3.8-4B-Q4_K_M.gguf" \
+            --server "$RUNNER_TEMP/llama.cpp/build/bin/llama-server" \
+            --receipt livebench_root1_qwen38_4b_semantic_seed_v3_receipt.json
+
+      - name: Upload V3 receipt and runtime log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-root1-qwen38-4b-semantic-seed-v3
+          path: |
+            livebench_root1_qwen38_4b_semantic_seed_v3_receipt.json
+            llama_server_semantic_seed.log
+          if-no-files-found: warn
+          retention-days: 7
