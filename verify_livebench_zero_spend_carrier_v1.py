@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import hashlib, importlib, json, os, pathlib, shutil, sys, tempfile
+import hashlib, importlib, json, os, pathlib, shutil, sys, tempfile, traceback
 
 ROOT = pathlib.Path(__file__).resolve().parent
 EXPECTED = {
@@ -76,6 +76,20 @@ def main()->int:
                     sys.modules.pop(name,None)
             ep=importlib.import_module("canonical.runtime.root2_external_task_entrypoint_v1")
             adapter=importlib.import_module("canonical.runtime.root2_livebench_if_astra_inference_adapter_v1")
+            compiler=importlib.import_module("canonical.runtime.goal_compiler")
+            raw_registry=json.loads((temp/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json").read_text(encoding="utf-8"))
+            try:
+                direct_compiled=compiler.compile_goal(
+                    "Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json. Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json.",
+                    compiler._platform_admissible_registry(raw_registry["capabilities"]),
+                    temp,
+                )
+            except Exception as direct_exc:
+                errors.append(
+                    "DIRECT_COMPILER_EXCEPTION:"
+                    +type(direct_exc).__name__+":"+repr(direct_exc)
+                    +"::TRACE="+traceback.format_exc().replace("\n"," | ")[:5000]
+                )
             preflight=ep.preflight("LIVEBENCH_IF_2026_06_25")
             if preflight.get("inference_ready") is not True:
                 errors.append("ENTRYPOINT_PREFLIGHT_FAILED:"+json.dumps(preflight,sort_keys=True))
