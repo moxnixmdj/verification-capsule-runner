@@ -1,22 +1,21 @@
 name: Verify generic atomic execution claim V1
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - "verify/generic-atomic-execution-claim-v1-20261004"
     paths:
-      - 'generic_atomic_execution_claim_v1.py'
-      - 'verify_generic_atomic_execution_claim_v1.py'
-      - 'verify_livebench_atomic_git_ref_20261004.sh'
-      - '.github/workflows/verify-livebench-atomic-claim-v2-20261004.yml'
+      - "VERIFY_GENERIC_ATOMIC_EXECUTION_CLAIM_V1"
 permissions:
   contents: write
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
-          python-version: '3.12.14'
+          python-version: "3.12.14"
       - name: Verify generic exact-epoch claim semantics
         run: python verify_generic_atomic_execution_claim_v1.py
       - name: Reuse real create-once Git ref transport proof
