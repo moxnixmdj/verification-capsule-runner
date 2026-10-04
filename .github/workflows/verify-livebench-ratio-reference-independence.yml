@@ -1,0 +1,31 @@
+name: Verify LiveBench Ratio Reference Independence
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_ratio_reference_independence.py
+      - .github/workflows/verify-livebench-ratio-reference-independence.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independently recompute theorem from pinned public bytes
+        run: python verify_livebench_ratio_reference_independence.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-ratio-reference-independence-receipt
+          path: livebench_ratio_overlap_reference_independence_receipt.json
+          if-no-files-found: error
