@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the frozen 7,424-case zero-terminal legacy15 exact synthetic audit."""
+"""Run the frozen 7,424-case zero-terminal legacy15 exact synthetic audit."""\n\n# Independent trigger 2026-10-05: execute the already-frozen subject without changing verifier semantics.
 from __future__ import annotations
 
 import json
