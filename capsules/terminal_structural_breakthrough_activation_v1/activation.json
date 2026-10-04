@@ -41,7 +41,13 @@
     "NO_FRESH_REALITY_BEFORE_SEPARATE_BENCHMARK_SPECIFIC_AUTHORITY",
     "UNKNOWN_PROBABILITIES_REMAIN_UNKNOWN"
   ],
-  "authority":{"scheduling":true,"candidate_generation":true,"execution":false,"promotion":false,"fresh_reality":false},
+  "authority":{
+    "scheduling":true,
+    "candidate_generation":true,
+    "execution":false,
+    "promotion":false,
+    "fresh_reality":false
+  },
   "accounting":{"incremental_spend_usd":0,"new_reality_units_consumed":0,"terminal_cases_consumed":0,"acceptance_credit_delta":0,"family_credit_delta":0,"capability_credit_delta":0,"ownership_credit_delta":0},
   "independent_current_main_activation_verification_required":true
 }
