@@ -53,6 +53,20 @@ def _signature(
 
 
 def enumerate_reachable_signatures() -> tuple[tuple[Any, ...], ...]:
+    """Enumerate every reachable checker-relevant lexical collision signature.
+
+    The construction is combinatorial, not a raw-word product:
+    - forbidden_words is a 5-element sample without replacement;
+    - the five fixed relevant words may independently be in that sample;
+    - if nth_category is one of those fixed words, nth_is_forbidden equals that
+      fixed membership bit;
+    - if nth_category is generic, nth_is_forbidden is independently selectable
+      unless all five forbidden slots are already occupied by the fixed words.
+
+    The 1,525-word domain is vastly larger than the at-most-six distinguished
+    words, so every signature admitted by these capacity constraints is
+    constructively reachable.
+    """
     out: set[tuple[Any, ...]] = set()
     for end_phrase_index in range(len(END_PHRASES)):
         for nth_category in NTH_CATEGORIES:
@@ -74,6 +88,10 @@ def enumerate_reachable_signatures() -> tuple[tuple[Any, ...], ...]:
                     distinguished_forbidden = fixed_count + int(nth_is_forbidden)
                     if distinguished_forbidden > FORBIDDEN_SAMPLE_SIZE:
                         continue
+                    # There are enough undistinguished public words to fill the
+                    # remaining forbidden slots while keeping all sampled words
+                    # distinct.  Keep the capacity check explicit so future
+                    # source-domain shrinkage fails closed.
                     filler_needed = FORBIDDEN_SAMPLE_SIZE - distinguished_forbidden
                     excluded_distinguished = len(FIXED_RELEVANT_WORDS) + 1
                     filler_available = WORD_DOMAIN_SIZE - excluded_distinguished
@@ -90,6 +108,7 @@ def enumerate_reachable_signatures() -> tuple[tuple[Any, ...], ...]:
 
 
 def lexical_unsat_reasons(signature: tuple[Any, ...]) -> tuple[str, ...]:
+    """Return the hard lexical UNSAT classes represented by a signature."""
     end_phrase_index, nth_category, bits, nth_is_forbidden = signature
     bits = tuple(bool(x) for x in bits)
     if len(bits) != len(FIXED_RELEVANT_WORDS):
@@ -124,6 +143,7 @@ def exact_reachable_signature_count() -> int:
 
 
 def conservative_cartesian_bound() -> int:
+    """Naive independent-bit bound after adding the section collision bit."""
     independent_boolean_dimensions = len(FIXED_RELEVANT_WORDS) + 1
     return (
         len(NTH_CATEGORIES)
