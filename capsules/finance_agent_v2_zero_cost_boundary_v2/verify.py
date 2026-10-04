@@ -1,0 +1,68 @@
+import base64, json, pathlib, re, subprocess, urllib.request
+
+SUBJECT="capsules/finance_agent_v2_zero_cost_boundary_v2/subject.json"
+EXPECTED="b7ba653977771df8312fd140cf4b563bcc4e21e4"
+
+def blob(path):
+    return subprocess.check_output(["git","rev-parse",f"HEAD:{path}"],text=True).strip()
+
+assert blob(SUBJECT)==EXPECTED
+s=json.loads(pathlib.Path(SUBJECT).read_text())
+assert s["target_predicate"]=="FINANCE_AGENT_V2_GE_58_59"
+assert s["prior_v1"]["git_blob_sha"]=="032caa374280983945321f0a5706c0c665c097a6"
+
+def fetch(url):
+    req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 Project-Brain-Independent-Verifier"})
+    with urllib.request.urlopen(req,timeout=45) as r:
+        return r.read().decode("utf-8","ignore")
+
+def gh_blob(sha):
+    d=json.loads(fetch("https://api.github.com/repos/vals-ai/finance-agent-v2/git/blobs/"+sha))
+    assert d["sha"]==sha
+    return base64.b64decode(d["content"]).decode("utf-8")
+
+q=s["first_party_runner"]["public_question_file"]
+questions=gh_blob(q["git_blob_sha"])
+assert len([x for x in questions.splitlines() if x.strip()])==27
+assert q["public_question_count"]==27
+
+a=s["first_party_runner"]["agent_runtime"]
+agent=gh_blob(a["git_blob_sha"])
+assert "MAX_TIME_SECONDS = 2 * 60 * 60" in agent
+assert "max_turns: int | None = None" in agent
+assert a["max_time_seconds"]==7200 and a["default_max_turns"] is None
+
+def textify(html):
+    return re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",html)).lower()
+
+vals=textify(fetch("https://www.vals.ai/benchmarks/fabv2"))
+assert "927 expert-reviewed questions" in vals
+assert "public (27 open-source samples)" in vals
+assert "private validation (450 samples" in vals
+assert "test (450 samples)" in vals
+assert "all results reported on this page are based solely on the test set" in vals
+assert "two-hour time limit" in vals
+assert "weighted checks" in vals and "dealbreakers" in vals
+
+tavily=textify(fetch("https://www.tavily.com/pricing"))
+sec=textify(fetch("https://sec-api.io/"))
+tiingo=textify(fetch("https://www.tiingo.com/pricing"))
+assert "1,000 api credits" in tavily and "no credit card required" in tavily and "requests will stop" in tavily
+assert "no credit card is required" in sec and "free tier covers every endpoint" in sec
+assert "starter" in tiingo and ("$0/month" in tiingo or "$0 / month" in tiingo)
+assert "500" in tiingo and "50" in tiingo and "1000" in tiingo and "1 gb" in tiingo
+
+assert s["first_party_methodology"]["dataset_total_questions"]==927
+assert s["first_party_methodology"]["splits"]=={"public":27,"private_validation":450,"test":450}
+assert s["first_party_methodology"]["scored_population"]=="TEST"
+assert s["first_party_methodology"]["reported_results_based_solely_on_test"] is True
+assert "UNKNOWN_OFFICIAL_FINANCE_AGENT_V2_TEST_POPULATION_SIZE" in s["delete_as_blockers"]
+assert "NO_CLAIM_FREE_QUOTAS_ARE_SUFFICIENT_FOR_OFFICIAL_TEST_450" in s["hard_nonclaims"]
+assert s["accounting"]["incremental_spend_usd"]==0
+assert s["accounting"]["terminal_cases_consumed"]==0
+assert s["accounting"]["acceptance_credit_delta"]==0
+assert s["execution_authority"] is False
+assert s["promotion_authority"] is False
+assert s["fresh_reality_authority"] is False
+
+print("FINANCE_AGENT_V2_ZERO_COST_BOUNDARY_V2_PASS__TEST_450_CLOSED__PROVIDER_DEMAND_BOUNDS_OPEN__ZERO_CREDIT")
