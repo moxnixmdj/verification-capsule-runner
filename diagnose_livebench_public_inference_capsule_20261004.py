@@ -65,9 +65,9 @@ adapter=load("canonical.runtime.root2_livebench_if_astra_inference_adapter_v1",S
 
 request={
   "benchmark_id":"LIVEBENCH_IF_2026_06_25",
-  "task_id":"SYNTHETIC_ZERO_CASE_INFERENCE",
+  "task_id":"SYNTHETIC_ZERO_CASE_OWNED_CAPABILITY_V2",
   "allowed_tools":[],
-  "task_payload":{"instruction":"Reply with exactly SYNTHETIC_OK."},
+  "task_payload":{"instruction":"Calculate the numeric scalar expression 2 + 2."},
 }
 
 try:
@@ -75,6 +75,7 @@ try:
 except Exception as exc:
     result={
       "schema":"PROJECT_BRAIN_LIVEBENCH_PUBLIC_INFERENCE_CAPSULE_DIAGNOSTIC_V1",
+      "synthetic_probe_semantics":"VERIFIED_ALREADY_OWNED_ZERO_COST_CAPABILITY__NOT_ACQUISITION",
       "status":"BLOCKED",
       "error_type":type(exc).__name__,
       "error":str(exc),
