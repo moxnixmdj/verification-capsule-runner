@@ -1,0 +1,17 @@
+name: Verify Finance Agent v2 zero-cost boundary V2
+on:
+  pull_request:
+    paths:
+      - "capsules/finance_agent_v2_zero_cost_boundary_v2/**"
+      - ".github/workflows/verify-finance-agent-v2-zero-cost-boundary-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/finance_agent_v2_zero_cost_boundary_v2/verify.py
