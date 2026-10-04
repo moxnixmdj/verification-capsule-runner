@@ -1,0 +1,173 @@
+name: Verify legacy IFEval contract structure V2
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify-legacy-ifeval-contract-structure-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Recompute public legacy contract invariants
+        shell: bash
+        env:
+          SOURCE_REPO: https://github.com/google-research/google-research.git
+          SOURCE_COMMIT: e49bbfe381c9c0e564b937f1c4e163a2273c65cc
+          SOURCE_PATH: instruction_following_eval/data/input_data.jsonl
+          EXPECTED_BLOB: cbe52f6eecf3986fdac745b4acba4da1408eb146
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          git -C "$work" init -q
+          git -C "$work" remote add origin "$SOURCE_REPO"
+          git -C "$work" fetch -q --depth=1 origin "$SOURCE_COMMIT"
+          git -C "$work" show "FETCH_HEAD:$SOURCE_PATH" > "$work/input_data.jsonl"
+          actual_blob="$(git hash-object "$work/input_data.jsonl")"
+          test "$actual_blob" = "$EXPECTED_BLOB"
+
+          python - "$work/input_data.jsonl" <<'PY'
+          import json
+          import re
+          import sys
+          from collections import Counter
+
+          path = sys.argv[1]
+          rows = [json.loads(line) for line in open(path, encoding="utf-8") if line.strip()]
+
+          def canonical_kwargs(value):
+              return json.dumps(value or {}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+          family_duplicate_rows = []
+          exact_duplicate_rows = []
+          exact_duplicate_extra = 0
+          total_instances = 0
+
+          for row in rows:
+              ids = row["instruction_id_list"]
+              kwargs = row["kwargs"]
+              total_instances += len(ids)
+
+              family_counts = Counter(ids)
+              if any(n > 1 for n in family_counts.values()):
+                  family_duplicate_rows.append(row["key"])
+
+              semantic = Counter(
+                  f"{iid}|{canonical_kwargs(kw)}"
+                  for iid, kw in zip(ids, kwargs)
+              )
+              dups = {k: n for k, n in semantic.items() if n > 1}
+              if dups:
+                  exact_duplicate_rows.append((row["key"], dups))
+                  exact_duplicate_extra += sum(n - 1 for n in dups.values())
+
+          repeat_token = re.compile(r"\brep(?:eat|leat)\b", re.I)
+          repeat_object = re.compile(r"\b(request|question|prompt|sentence|line|text)\b", re.I)
+          repeat_exact = re.compile(
+              r"\b(word\s+(?:for|by)\s+word|exact(?:ly)?|without\s+(?:any\s+)?change|"
+              r"without\s+changing|do\s+not\s+change|don['’]?t\s+change|"
+              r"no\s+change|as\s+it\s+is|above|below|first)\b",
+              re.I,
+          )
+
+          def looks_directive(text):
+              return bool(
+                  repeat_token.search(text)
+                  and repeat_object.search(text)
+                  and repeat_exact.search(text)
+              )
+
+          def recover(prompt):
+              blank = re.search(r"\n\s*\n", prompt)
+              if blank is not None:
+                  head = prompt[:blank.start()].strip()
+                  tail = prompt[blank.end():].strip()
+                  if head and tail and looks_directive(head):
+                      return tail
+
+              for match in re.finditer(r"\n+", prompt):
+                  left = prompt[:match.start()].strip()
+                  right = prompt[match.end():]
+                  first_line = right.split("\n", 1)[0].strip()
+                  if left and first_line and looks_directive(first_line):
+                      return left
+              return None
+
+          repeat_rows = 0
+          exact_repeat_recovery = 0
+          false_positive_recovery = 0
+          repeat_orient_prefix = 0
+          repeat_orient_suffix = 0
+
+          for row in rows:
+              repeat_indexes = [
+                  i for i, iid in enumerate(row["instruction_id_list"])
+                  if iid == "combination:repeat_prompt"
+              ]
+              recovered = recover(row["prompt"])
+              if repeat_indexes:
+                  assert len(repeat_indexes) == 1
+                  repeat_rows += 1
+                  expected = row["kwargs"][repeat_indexes[0]]["prompt_to_repeat"]
+                  assert expected in row["prompt"]
+                  if row["prompt"].startswith(expected):
+                      repeat_orient_prefix += 1
+                  elif row["prompt"].endswith(expected):
+                      repeat_orient_suffix += 1
+                  else:
+                      raise AssertionError(("repeat target not at edge", row["key"]))
+                  if recovered == expected:
+                      exact_repeat_recovery += 1
+                  else:
+                      raise AssertionError(("repeat recovery mismatch", row["key"], expected, recovered))
+              elif recovered is not None:
+                  false_positive_recovery += 1
+
+          result = {
+              "schema": "PROJECT_BRAIN_LEGACY_IFEVAL_PUBLIC_CONTRACT_STRUCTURE_PUBLIC_RUNNER_V2",
+              "source_commit": "e49bbfe381c9c0e564b937f1c4e163a2273c65cc",
+              "source_blob": "cbe52f6eecf3986fdac745b4acba4da1408eb146",
+              "rows": len(rows),
+              "instruction_instances": total_instances,
+              "same_family_duplicate_rows": len(family_duplicate_rows),
+              "exact_semantic_duplicate_rows": len(exact_duplicate_rows),
+              "exact_semantic_duplicate_extra_instances": exact_duplicate_extra,
+              "exact_semantic_duplicate_keys": [x[0] for x in exact_duplicate_rows],
+              "repeat_prompt_rows": repeat_rows,
+              "repeat_target_prefix_rows": repeat_orient_prefix,
+              "repeat_target_suffix_rows": repeat_orient_suffix,
+              "repeat_target_exact_recovery_rows": exact_repeat_recovery,
+              "non_repeat_false_positive_recoveries": false_positive_recovery,
+          }
+
+          assert result["rows"] == 541
+          assert result["instruction_instances"] == 834
+          assert result["same_family_duplicate_rows"] == 17
+          assert result["exact_semantic_duplicate_rows"] == 1
+          assert result["exact_semantic_duplicate_extra_instances"] == 1
+          assert result["exact_semantic_duplicate_keys"] == [30]
+          assert result["repeat_prompt_rows"] == 41
+          assert result["repeat_target_prefix_rows"] == 33
+          assert result["repeat_target_suffix_rows"] == 8
+          assert result["repeat_target_exact_recovery_rows"] == 41
+          assert result["non_repeat_false_positive_recoveries"] == 0
+
+          with open("legacy-ifeval-contract-structure-v2.json", "w", encoding="utf-8") as f:
+              json.dump(result, f, ensure_ascii=False, sort_keys=True, indent=2)
+              f.write("\n")
+          print(json.dumps(result, sort_keys=True))
+          PY
+
+      - name: Upload receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-ifeval-contract-structure-v2
+          path: legacy-ifeval-contract-structure-v2.json
+          if-no-files-found: error
