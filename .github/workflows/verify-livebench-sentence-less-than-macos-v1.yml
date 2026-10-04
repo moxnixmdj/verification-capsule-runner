@@ -1,22 +1,13 @@
-name: Verify LiveBench legacy15 universal exact V2 macOS
-
+name: Verify LiveBench sentence-less-than closure macOS
+# exact zero-terminal falsification
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
-      - 'subject/livebench_legacy15_exact_router_v1/**'
-      - '.github/workflows/verify-livebench-legacy15-universal-exact-macos-v2-20261005.yml'
   pull_request:
     paths:
       - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
       - 'subject/livebench_legacy15_exact_router_v1/**'
-      - '.github/workflows/verify-livebench-legacy15-universal-exact-macos-v2-20261005.yml'
-  workflow_dispatch:
-
+      - '.github/workflows/verify-livebench-sentence-less-than-macos-v1.yml'
 permissions:
   contents: read
-
 jobs:
   verify:
     runs-on: macos-15-intel
@@ -38,15 +29,15 @@ jobs:
         run: |
           git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
           git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
-      - name: Run assertion-bearing 7424-case zero-terminal universal exact audit
+      - name: Run 7424-case exact audit
         shell: bash
         run: |
           set -o pipefail
-          python verify_livebench_legacy15_universal_exact_v2_20261004.py | tee livebench-legacy15-universal-exact-v2-macos.log
-      - name: Upload immutable execution log
+          python verify_livebench_legacy15_universal_exact_v2_20261004.py | tee sentence-less-than-closure.log
+      - name: Upload log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: livebench-legacy15-universal-exact-v2-macos
-          path: livebench-legacy15-universal-exact-v2-macos.log
+          name: livebench-sentence-less-than-closure
+          path: sentence-less-than-closure.log
           if-no-files-found: error
