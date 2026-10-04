@@ -200,3 +200,54 @@ assert r7["current_acceptance"]["accepted_families"]==5
 assert r7["current_acceptance"]["proved_atomic"]==12
 assert r7["current_acceptance"]["unresolved_atomic"]==26
 print("PASS__ROOT2_V7_ACTIVATION_COHERENT__SCHEDULING_ONLY__ZERO_CREDIT")
+
+
+# Finance Index evaluation-floor boundary.
+import urllib.request, re
+_floor_p=Path(__file__).with_name("FINANCE_INDEX_COMPONENT_FLOOR_BOUNDARY_20261004_V1.json")
+assert blob2(_floor_p.name)=="277feb222baaa87526a17ac846d16413b31df44a"
+_floor=json.loads(_floor_p.read_text())
+assert _floor["scheduling_effect_if_verified"]["zero_floor_substitution_authorized"] is False
+assert _floor["exact_missing_theorem"]["statement"].startswith("FOR_EACH_FINANCE_CAPABILITY_C_i")
+assert _floor["accounting"]["acceptance_credit_delta"]==0
+assert _floor["fresh_reality_authority"] is False
+
+def live(url):
+    req=urllib.request.Request(url,headers={"User-Agent":"Project-Brain-Independent-Verifier"})
+    with urllib.request.urlopen(req,timeout=30) as rr:
+        return re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",rr.read().decode("utf-8","ignore")))
+
+cap=live("https://artificialanalysis.ai/models/capabilities/finance-and-accounting")
+cap_norm=cap.lower().replace("-"," ")
+for token in ["weighted average","business knowledge","agentic knowledge work","reasoning","agentic tool use","long context","non hallucination","30%","20%","10%","5%"]:
+    assert token in cap_norm,token
+
+intel=live("https://artificialanalysis.ai/methodology/intelligence-benchmarking")
+for token in [
+    "clamp((Elo - 500) / 2000)",
+    "GDPval-AA v2.1",
+    "AA-Briefcase v1.1",
+    "AutomationBench-AA",
+    "AA-LCR v1.1",
+    "Humanity's Last Exam",
+    "Accuracy",
+    "1 - Hallucination Rate",
+    "All-pass",
+]:
+    assert token.lower() in intel.lower(),token
+assert intel.lower().count("clamp((elo - 500) / 2000)")>=2
+assert "equality checker llm, pass@1" in intel.lower()
+
+auto=live("https://artificialanalysis.ai/evaluations/automationbench-aa")
+assert "share of task objectives" in auto.lower()
+assert "guardrail violation scores zero" in auto.lower()
+
+lcr=live("https://artificialanalysis.ai/evaluations/artificial-analysis-long-context-reasoning")
+assert "average pass rate" in lcr.lower()
+gdp=live("https://artificialanalysis.ai/evaluations/gdp-pdf")
+assert "all-pass" in gdp.lower() and "criterion pass rate" in gdp.lower()
+omni=live("https://artificialanalysis.ai/evaluations/omniscience")
+assert "proportion of correctly answered questions" in omni.lower()
+assert "1 minus the hallucination rate" in omni.lower() or "1 - hallucination rate" in intel.lower()
+
+print("PASS__FINANCE_INDEX_UNDERLYING_EVAL_FLOORS_BOUND__CAPABILITY_FLOOR_STILL_FAIL_CLOSED__ZERO_CREDIT")
