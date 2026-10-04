@@ -1,6 +1,8 @@
 name: Verify Unknown-Domain candidate V2 qualification
 on:
-  pull_request:
+  push:
+    branches:
+      - verify/unknown-domain-candidate-v2-push
     paths:
       - 'canonical/runtime/unknown_domain_direct_candidate_v1.py'
       - 'canonical/runtime/unknown_domain_direct_candidate_v2.py'
