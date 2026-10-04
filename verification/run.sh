@@ -15,3 +15,7 @@ assert d["terminal_results_replayed"] == 0
 assert d["incremental_spend_usd"] == 0
 print("ZERO_FRESH_REALITY_PREFLIGHT_CONFIRMED")
 PY
+
+
+# Root2 V7 finance compression independent verification.
+python verify_root2_v7_finance_compression.py
