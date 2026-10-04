@@ -1,35 +1,23 @@
-name: Verify rank26 exact vLLM execution surface
+name: Verify V20 fresh frozen-V4 retrieval holdout
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'verification/rank26_surface/Dockerfile'
       - '.github/workflows/verify-rank26-exact-surface.yml'
-      - 'verification/rank26_surface/trigger.txt'
+      - 'canonical/runtime/retrieval_fresh_v4_holdout_v20.py'
+      - 'canonical/tests/test_retrieval_fresh_v4_holdout_v20.py'
 permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Verify exact Dockerfile Git blob
-        run: |
-          test "$(git hash-object verification/rank26_surface/Dockerfile)" = "aae5ccf4a5fc9f28e375bf98337c6a34b74c963f"
-      - name: Build exact frozen task image
-        run: docker build --pull -t brain-rank26-surface verification/rank26_surface
-      - name: Verify declared surface without task execution
-        run: |
-          docker run --rm --entrypoint /bin/bash brain-rank26-surface -lc '
-            set -euo pipefail
-            test -d /app/vllm/vllm/reasoning
-            test -d /app/vllm/vllm
-            test -L "$(python3 -c "import os, vllm; print(os.path.dirname(vllm.__file__))")" || true
-            python3 - <<'"'"'PY'"'"'
-import importlib.metadata, pathlib
-assert importlib.metadata.version("vllm") == "0.21.0"
-assert pathlib.Path("/app/vllm/vllm/reasoning").is_dir()
-print("RANK26_EXACT_SURFACE_PASS")
-PY
-          '
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: test "$(git hash-object canonical/runtime/retrieval_fresh_v4_holdout_v20.py)" = "bc16dcb63ed882005cb8e836f4fad4c47e19d3de"
+      - run: test "$(git hash-object canonical/tests/test_retrieval_fresh_v4_holdout_v20.py)" = "cbd75bf9142c3a24bb49e389f1d594b1a2e590cc"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_fresh_v4_holdout_v20.py
+      - run: PYTHONPATH=. python canonical/runtime/retrieval_fresh_v4_holdout_v20.py
