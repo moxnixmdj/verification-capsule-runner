@@ -1,0 +1,19 @@
+name: Verify sub100MB ARC library transfer V1
+on:
+  pull_request:
+    paths:
+      - 'subject/sub100mb_arc_library_transfer_v1/**'
+      - 'verify_sub100mb_arc_library_transfer_v1.py'
+      - '.github/workflows/verify-sub100mb-arc-library-transfer-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_sub100mb_arc_library_transfer_v1.py
