@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent
 SUB = ROOT / "subject" / "livebench_legacy15_joint_historical_replay_v1_20261004"
 sys.path.insert(0, str(SUB))
 
-EXPECTED_JOINT_WITNESS_BLOB = "029d6018fd705fa5d1a53c88c4c3dd60764d8489"
+EXPECTED_JOINT_WITNESS_BLOB = "34505603fb03749bafd7515277a9f026fd114d8f"
 JOINT_WITNESS_PATH = SUB / "canonical/runtime/livebench_legacy15_joint_witness_v1.py"
 
 def git_blob_sha(path: Path) -> str:
@@ -37,7 +37,7 @@ print(json.dumps({
     "exact_failed_instruction_ids": result["exact_failed_instruction_ids"],
     "failure_samples": result["failure_samples"][:50],
 }, ensure_ascii=False, sort_keys=True))
-assert result["scope"]["synthetic_cases"] == 7424
+assert result["scope"]["synthetic_cases"] == 9280
 assert result["scope"]["terminal_rows_read"] == 0
 assert result["scope"]["terminal_prompts_read"] == 0
 assert result["scope"]["terminal_scores_read"] == 0
