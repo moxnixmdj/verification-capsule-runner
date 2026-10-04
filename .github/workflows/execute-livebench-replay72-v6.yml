@@ -1,0 +1,60 @@
+name: Execute LiveBench replay72 V6
+on:
+  push:
+    branches:
+      - "execute/livebench-replay72-v6-20261004"
+    paths:
+      - "EXECUTE_LIVEBENCH_REPLAY72_V6"
+permissions:
+  contents: write
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "execute/livebench-replay72-v6-20261004"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact launcher and executor bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object launch_livebench_replay72_v6.py)" = "e0e2c3581b389efd1c5cab4b4eff78762d1ec61b"
+          test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+          python -m py_compile launch_livebench_replay72_v6.py execute_livebench_if_replay72_v4_candidate.py
+      - name: Execute exact verified replay72 epoch
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          python launch_livebench_replay72_v6.py 2>&1 | tee LIVEBENCH_REPLAY72_V6.log
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "${code}" > LIVEBENCH_REPLAY72_V6_EXIT_CODE
+          exit "${code}"
+      - name: Persist immutable replay evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f LIVEBENCH_REPLAY72_V6_EXIT_CODE || echo "workflow_failed_before_exit_capture" > LIVEBENCH_REPLAY72_V6_EXIT_CODE
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add LIVEBENCH_REPLAY72_V6_EXIT_CODE
+          test ! -f LIVEBENCH_REPLAY72_V6.log || git add LIVEBENCH_REPLAY72_V6.log
+          git diff --cached --quiet || git commit -m "Record LiveBench replay72 V6 execution evidence"
+          git push origin HEAD:"execute/livebench-replay72-v6-20261004"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-replay72-v6-evidence
+          path: |
+            LIVEBENCH_REPLAY72_V6_EXIT_CODE
+            LIVEBENCH_REPLAY72_V6.log
+          if-no-files-found: warn
+          retention-days: 90
