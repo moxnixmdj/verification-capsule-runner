@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+# frozen-gate-v2-exact-trigger
+
 import hashlib
 import json
 import pathlib
