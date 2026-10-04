@@ -1,0 +1,43 @@
+name: Verify LiveBench Legacy Semantic Seed Composer V2 Direct
+on:
+  push:
+    branches:
+      - 'verify/livebench-legacy-semantic-seed-composer-v2-direct-20261004-sol'
+    paths:
+      - 'verification_inputs/canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py'
+      - 'verification_inputs/canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py'
+      - 'verification_inputs/canonical/runtime/livebench_legacy_semantic_seed_composer_v2.py'
+      - 'verification/verify_livebench_legacy_semantic_seed_composer_v2.py'
+      - 'verification_trigger_livebench_legacy_semantic_seed_composer_v2.txt'
+      - '.github/workflows/verify-livebench-legacy-semantic-seed-composer-v2-direct.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned checker dependencies
+        run: python -m pip install --disable-pip-version-check langdetect==1.0.9 nltk==3.9.1 immutabledict==4.2.1
+      - name: Checkout exact pinned LiveBench source
+        run: |
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+      - name: Verify exact upstream checker behavior and seed preservation
+        run: python verification/verify_livebench_legacy_semantic_seed_composer_v2.py
+      - name: Upload independent receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-semantic-seed-composer-v2-direct-receipt
+          path: livebench_legacy_semantic_seed_composer_v2_receipt.json
+          if-no-files-found: warn
