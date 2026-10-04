@@ -14,6 +14,15 @@ FILES={
  "canonical/runtime/capability_planner.py":"canonical/runtime/capability_planner.py",
  "canonical/runtime/capability_proposal_generators.py":"canonical/runtime/capability_proposal_generators.py",
  "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py":"canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
+ "canonical/runtime/auto_capability_acquisition.py":"canonical/runtime/auto_capability_acquisition.py",
+ "canonical/runtime/auto_apt_cli_acquisition.py":"canonical/runtime/auto_apt_cli_acquisition.py",
+ "canonical/runtime/auto_pypi_library_acquisition.py":"canonical/runtime/auto_pypi_library_acquisition.py",
+ "canonical/runtime/auto_npm_library_acquisition.py":"canonical/runtime/auto_npm_library_acquisition.py",
+ "canonical/runtime/auto_python_source_codec_acquisition.py":"canonical/runtime/auto_python_source_codec_acquisition.py",
+ "canonical/runtime/npm_package_utils.py":"canonical/runtime/npm_package_utils.py",
+ "canonical/runtime/capability_discovery.py":"canonical/runtime/capability_discovery.py",
+ "canonical/runtime/apt_cli_probe.py":"canonical/runtime/apt_cli_probe.py",
+ "canonical/runtime/cli_contract_inference.py":"canonical/runtime/cli_contract_inference.py",
 }
 DRIVER=r"""
 import json,sys
