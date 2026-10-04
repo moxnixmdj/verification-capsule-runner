@@ -2,7 +2,7 @@ name: Fast verify Adaptive V3 Finance transform
 on:
   push:
     branches:
-      - verify-adaptive-v3-finance-transform-20261004-sol
+      - fast-clean-adaptive-v3-finance-20261004-sol
     paths:
       - "subject/TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V2.json"
       - "subject/TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V3.json"
