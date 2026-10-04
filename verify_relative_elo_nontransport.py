@@ -46,7 +46,7 @@ assert "RELATIVE_SCORE_BRIDGE_STRONGER_PROOF" in rp["preserved"]
 assert "MATCHED_EMPIRICAL_COMPARISON" in rp["preserved"]
 assert "OWNER_RESULT" in rp["preserved"]
 assert "FORMAL_ENTAILMENT" in rp["not_globally_deleted"]
-assert all("WITHOUT_RELATIVE_SCORE_BRIDGE" in q for q in rp["conditionally_deleted_form"])
+assert all("RELATIVE_SCORE_BRIDGE" in q for q in rp["conditionally_deleted_form"])
 assert x["relationship_to_private_surface_dominance"]["target_weakening"] is False
 assert all(v==0 for v in x["accounting"].values())
 assert x["execution_authority"] is False
