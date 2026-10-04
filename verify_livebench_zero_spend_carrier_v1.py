@@ -82,7 +82,7 @@ def main()->int:
             request={
               "benchmark_id":"LIVEBENCH_IF_2026_06_25",
               "task_id":"SYNTHETIC_ZERO_REALITY_CARRIER_PROBE",
-              "task_payload":{"instruction":"Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json."},
+              "task_payload":{"instruction":"Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json. Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json."},
               "allowed_tools":[],
             }
             result=adapter.infer(request)
@@ -126,7 +126,7 @@ def main()->int:
       "synthetic_probe":{
         "benchmark_case_exposed":False,
         "fresh_reality_consumed":False,
-        "instruction":"Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json.",
+        "instruction":"Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json. Read canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json.",
         "preflight":preflight,
         "result_status":(result or {}).get("status") if isinstance(result,dict) else None,
         "cognition_dependency_class":(result or {}).get("cognition_dependency_class") if isinstance(result,dict) else None,
