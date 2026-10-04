@@ -2,6 +2,9 @@ name: Verify Unknown-Domain V4 total exact conjunction
 
 on:
   create:
+  push:
+    branches:
+      - 'ud-v4-total-exact-diagnostic/**'
   pull_request:
     branches: [main]
 
