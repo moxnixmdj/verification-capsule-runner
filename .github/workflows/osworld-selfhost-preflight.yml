@@ -1,8 +1,13 @@
 name: OSWorld selfhost preflight
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - verify/osworld-v21-selfhost-zero-case-20261004-sol
+  workflow_dispatch:
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - run: bash capsules/osworld_v21_selfhost_zero_case/run.sh
