@@ -23,7 +23,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git clone --depth 1 https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          git clone https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          git -C /tmp/llama.cpp checkout 11fe02151f79c41d0d4af7da708755d73b9c0da6
+          test "$(git -C /tmp/llama.cpp rev-parse HEAD)" = "11fe02151f79c41d0d4af7da708755d73b9c0da6"
           cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build \
             -DCMAKE_BUILD_TYPE=Release \
             -DGGML_NATIVE=OFF \
