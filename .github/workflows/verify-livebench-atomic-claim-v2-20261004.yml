@@ -1,28 +1,25 @@
-name: Verify LiveBench atomic claim V2
-
+name: Verify generic atomic execution claim V1
 on:
   pull_request:
+    branches: [main]
     paths:
-      - 'verify_livebench_atomic_claim_v2_20261004.py'
+      - 'generic_atomic_execution_claim_v1.py'
+      - 'verify_generic_atomic_execution_claim_v1.py'
       - 'verify_livebench_atomic_git_ref_20261004.sh'
-      - 'subject/livebench_atomic_claim_v2_20261004/**'
       - '.github/workflows/verify-livebench-atomic-claim-v2-20261004.yml'
-  workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
-          python-version: '3.12'
-      - name: Verify exact atomic-claim semantics
-        run: python verify_livebench_atomic_claim_v2_20261004.py
-      - name: Verify real create-once Git ref linearization point
+          python-version: '3.12.14'
+      - name: Verify generic exact-epoch claim semantics
+        run: python verify_generic_atomic_execution_claim_v1.py
+      - name: Reuse real create-once Git ref transport proof
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash verify_livebench_atomic_git_ref_20261004.sh
