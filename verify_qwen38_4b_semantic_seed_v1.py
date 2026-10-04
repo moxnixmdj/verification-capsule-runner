@@ -87,3 +87,5 @@ def main()->int:
 
 if __name__=="__main__":
     raise SystemExit(main())
+
+# launch-marker-v1: semantics frozen above; this line exists only to trigger the verifier workflow.
