@@ -55,6 +55,8 @@ with tempfile.TemporaryDirectory(prefix="lb-v4-zero-case-") as td:
     assert qid=="SYNTHETIC_ZERO_CASE"
     assert not (err and err.startswith("INFERENCE_EXIT_")), (answer,err)
     assert (err is None and bool(answer)) or err=="POLICY_BLOCKED_POST_PROMPT_CAPABILITY_ACQUISITION", (answer,err)
+    synthetic_class=("VALID_FROZEN_CANDIDATE_RESPONSE" if err is None else err)
+    synthetic_answer_sha256=(hashlib.sha256(answer.encode()).hexdigest() if answer else None)
 
 out={
  "schema":"PROJECT_BRAIN_LIVEBENCH_V4_REPLAY72_EXECUTOR_VERIFICATION_V1",
@@ -64,7 +66,8 @@ out={
  "replay_limit":mod.REPLAY_LIMIT,
  "terminal_cases_consumed":0,
  "terminal_case_content_read":False,
- "synthetic_result":"VALID_RESPONSE_OR_POLICY_BLOCK_ONLY",
+ "synthetic_result":synthetic_class,
+ "synthetic_answer_sha256":synthetic_answer_sha256,
  "post_prompt_acquisition_loader_denied":True,
  "external_network_defense_in_depth":True,
  "subprocess_install_defense_in_depth":True,
