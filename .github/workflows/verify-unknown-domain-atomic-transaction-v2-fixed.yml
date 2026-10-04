@@ -1,0 +1,32 @@
+name: Verify Unknown-Domain atomic transaction V2 fixed subject
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-unknown-domain-atomic-transaction-v2-fixed.yml'
+  push:
+    branches:
+      - verify/unknown-domain-atomic-transaction-v2-run
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - name: Checkout exact fixed subject
+        uses: actions/checkout@v4
+        with:
+          ref: 042bb04337c0475399a9c1fc957c08251cccf91b
+      - name: Prove exact checked commit
+        run: test "$(git rev-parse HEAD)" = "042bb04337c0475399a9c1fc957c08251cccf91b"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify atomic transaction launcher
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify exact lease and transaction invariants
+        run: python verify_unknown_domain_execution_lease.py
