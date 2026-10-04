@@ -51,10 +51,10 @@ assert r2["authority"]["fresh_reality"] is False
 
 r3b=p["authority_bindings"]["root3"]
 assert r3b["cut_git_blob_sha"]=="4d8ce78ebe312100bbfc524062199961c0c6479d"
-assert r3["live_root3_predicates"]==10
-assert r3["matched_scope_targets"]==7
-assert r3["event_class_count"]==3
-assert r3["currently_runnable_event_count"]==0
+assert r3["derivation"]["live_root3_predicates"]==10
+assert r3["derivation"]["formal_matched_scope_targets"]==7
+assert len(r3["minimum_event_classes"])==3
+assert "NO_NONDOMINATED_ROOT3_EXECUTION_CURRENTLY_AUTHORIZED" in r3["current_consequence"]
 assert r3["fresh_reality_authority"] is False
 
 retb=p["authority_bindings"]["retrieval"]
