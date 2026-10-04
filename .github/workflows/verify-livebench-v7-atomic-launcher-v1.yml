@@ -1,10 +1,11 @@
 name: Verify LiveBench V7 atomic launcher V1
+# Exact launcher bytes are verified below; this workflow consumes zero terminal cases.
 on:
   pull_request:
     branches: [main]
     paths:
       - "launch_livebench_v7_sanitized_atomic.py"
-      - ".github/workflows/verify-livebench-v7-atomic-launcher-v1.yml"\n      - "VERIFY_LIVEBENCH_V7_ATOMIC_LAUNCHER_V1"
+      - ".github/workflows/verify-livebench-v7-atomic-launcher-v1.yml"
 permissions:
   contents: read
 jobs:
