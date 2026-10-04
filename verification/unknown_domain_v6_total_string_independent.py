@@ -243,8 +243,8 @@ assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["accounting"]["acceptance_credit_delta"]==0
 
 receipt={
- "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_STRING_INDEPENDENT_VERIFICATION_V1",
- "status":"PASS__INDEPENDENT_CONTENT_BOUND_SUBCLASS_SAFE_TOTAL_STRING_STRUCTURAL_ID_EXACTNESS_AND_6912_CASE_FALSIFICATION__ZERO_CREDIT",
+ "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
+ "status":"PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
  "brain_subject_ref":"breakthrough/unknown-domain-v6-subclass-revocation-20261005",
  "exact_subject_blobs":EXPECTED,
  "unicode_codepoints_exhausted":unicode_codepoints,
