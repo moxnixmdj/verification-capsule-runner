@@ -26,6 +26,7 @@ Root2InferenceBlocked=type("Root2InferenceBlocked",(RuntimeError,),{})
 source={
  "BOUND_CAPABILITY_GROUNDING_AVAILABLE_COMPOSITION_BLOCKED",
  "GROUNDED_EXECUTABLE_COMPOSITION_VERIFY_FAILED",
+ "NO_BINDABLE_CANDIDATE_FOR_CLAUSE",
  "GOAL_ARCHITECTURAL_GAP",
  "CAUSAL_COMPOSITION",
  "SOME_STATIC_BLOCKER",
@@ -36,9 +37,9 @@ for marker in m.POLICY_MARKERS:
     got=m.classify_exception(Root2InferenceBlocked(marker),source)
     assert got=={"kind":"POLICY_BLOCK","code":marker},got
 
-comp='Blocker:BOUND_CAPABILITY_GROUNDING_AVAILABLE_COMPOSITION_BLOCKED:{"composition_error":"GROUNDED_EXECUTABLE_COMPOSITION_VERIFY_FAILED:UNSAFE_DETAIL","gap":"REDACTED"}'
+comp='Blocker:BOUND_CAPABILITY_GROUNDING_AVAILABLE_COMPOSITION_BLOCKED:{"composition_error":"GROUNDED_EXECUTABLE_COMPOSITION_FAILED:CompositionError:NO_BINDABLE_CANDIDATE_FOR_CLAUSE:3","gap":"REDACTED"}'
 got=m.classify_exception(Root2InferenceBlocked(comp),source)
-assert got=={"kind":"COMPOSITION_SUBBLOCKER","code":"GROUNDED_EXECUTABLE_COMPOSITION_VERIFY_FAILED"},got
+assert got=={"kind":"COMPOSITION_SUBBLOCKER","code":"NO_BINDABLE_CANDIDATE_FOR_CLAUSE"},got
 
 arch='Blocker:GOAL_ARCHITECTURAL_GAP:{"gap_class":"CAUSAL_COMPOSITION","subgoal":"DO_NOT_EMIT"}'
 got=m.classify_exception(Root2InferenceBlocked(arch),source)
