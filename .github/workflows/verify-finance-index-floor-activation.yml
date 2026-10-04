@@ -1,0 +1,22 @@
+name: Verify Finance Index floor activation
+on:
+  push:
+    branches:
+      - verify/finance-index-floor-activation-20261004-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain inputs
+        run: |
+          test "$(git hash-object verification_inputs/finance_floor_activation.json)" = "73ca9026ec6db04c062319da557e4b1fa943c06c"
+          test "$(git hash-object verification_inputs/finance_floor_receipt.json)" = "4b34bdca9c990a8bacdca78b2a1c6f9ae0170c3b"
+          test "$(git hash-object verification_inputs/finance_public_transform_saturation.json)" = "2a831b8632b18fe9e10ed423f131b6ae93d99b77"
+      - name: Verify scheduling-only floor activation
+        run: python verify_finance_index_floor_activation_v1.py
