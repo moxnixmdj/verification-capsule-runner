@@ -107,6 +107,43 @@ def main():
     kernel_sizes=Counter(len(s) for s in extra_kernels)
     assert dict(sorted(kernel_sizes.items()))=={1:10,2:30,3:50,4:45,5:21}
 
+    # Exact second quotient: three syntactic decorators carry no independent
+    # parameter interaction class, while constrained_response is structurally
+    # singleton. The remaining load-bearing semantic kernel is only six
+    # families and has 19 conflict-compatible nonempty signatures.
+    decorators=frozenset({
+      "detectable_content:number_placeholders",
+      "detectable_format:number_highlighted_sections",
+      "punctuation:no_comma",
+    })
+    constrained="detectable_format:constrained_response"
+    hard6=tuple(x for x in extra if x not in decorators and x != constrained)
+    assert set(hard6)=={
+      "keywords:frequency",
+      "keywords:letter_frequency",
+      "language:response_language",
+      "change_case:capital_word_frequency",
+      "change_case:english_capital",
+      "change_case:english_lowercase",
+    }
+    hard_cores=enum_compatible(hard6,conflicts)
+    assert len(hard_cores)==19
+    assert Counter(len(x) for x in hard_cores)==Counter({1:6,2:9,3:4})
+    projected={}
+    for kernel in extra_kernels:
+        if constrained in kernel:
+            key=("CONSTRAINED_SINGLETON",)
+        else:
+            core=tuple(sorted(set(kernel)&set(hard6)))
+            key=core if core else ("DECORATOR_ONLY",)
+        projected.setdefault(key,0)
+        projected[key]+=1
+    assert len(projected)==21
+    assert projected[("CONSTRAINED_SINGLETON",)]==1
+    assert projected[("DECORATOR_ONLY",)]==7
+    nontrivial_projected={k for k in projected if k not in {("CONSTRAINED_SINGLETON",),("DECORATOR_ONLY",)}}
+    assert nontrivial_projected=={tuple(sorted(x)) for x in hard_cores}
+
     receipt={
       "schema":"PROJECT_BRAIN_LIVEBENCH_UNION25_DELTA10_STRUCTURAL_FACTORIZATION_INDEPENDENT_VERIFICATION_V1",
       "status":"PASS__REGISTRY25_EXACTLY_FACTORS_AS_ACTIVE15_928_PLUS_DELTA10_156_EXTENSION_KERNELS__13631_EXPANDED_NEW_SETS",
@@ -121,6 +158,18 @@ def main():
       "delta10_internal_compatible_kernels_size_1_to_5":len(extra_kernels),
       "new_union25_sets_touching_delta10":len(with_extra),
       "delta10_kernel_size_histogram":dict(sorted(kernel_sizes.items())),
+      "delta10_second_quotient":{
+        "decorator_families":sorted(decorators),
+        "constrained_singleton_family":constrained,
+        "hard_family_count":len(hard6),
+        "hard_families":list(hard6),
+        "hard_compatible_core_signature_count":len(hard_cores),
+        "hard_core_size_histogram":dict(sorted(Counter(len(x) for x in hard_cores).items())),
+        "projected_class_count_including_decorator_only_and_constrained":len(projected),
+        "decorator_only_kernel_count":projected[("DECORATOR_ONLY",)],
+        "constrained_kernel_count":projected[("CONSTRAINED_SINGLETON",)],
+        "claim_scope":"STRUCTURAL_SEMANTIC_BURDEN_PROJECTION_ONLY__DECORATOR_NEUTRALITY_WITH_ACTIVE15_CONTEXT_REQUIRES_SEPARATE_EXACT_LEMMA"
+      },
       "expanded_set_extra_family_count_histogram":dict(sorted(by_extra_count.items())),
       "delta10_touch_counts":touch,
       "delta10_families":list(extra),
@@ -132,7 +181,8 @@ def main():
       "acceptance_credit_delta":0,
       "hard_nonclaims":[
         "STRUCTURAL_FACTORIZATION_IS_NOT_MULTI_CONTRACT_SEMANTIC_POINTWISE_OPTIMALITY",
-        "THE_156_KERNELS_STILL_REQUIRE_SEMANTIC_INTERACTION_CLOSURE_WITH_COMPATIBLE_ACTIVE15_RESIDUES",
+        "THE_19_HARD_CORE_SIGNATURES_STILL_REQUIRE_SEMANTIC_INTERACTION_CLOSURE_WITH_COMPATIBLE_ACTIVE15_RESIDUES",
+        "THE_DECORATOR_PROJECTION_DOES_NOT_BY_ITSELF_PROVE_DECORATOR_NEUTRALITY_IN_EVERY_ACTIVE15_CONTEXT",
         "NO_LIVEBENCH_ACCEPTANCE_CREDIT_FROM_THIS_RECEIPT_ALONE"
       ]
     }
