@@ -1,6 +1,9 @@
 name: Verify terminal adaptive minimum cut v1
 
 on:
+  push:
+    branches:
+      - "verify-terminal-adaptive-mincut-v1-20261004"
   pull_request:
     paths:
       - "verify_terminal_adaptive_minimum_cut_v1.py"
