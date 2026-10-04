@@ -1,0 +1,58 @@
+name: Verify LiveBench seven-archetype router V1
+
+on:
+  push:
+    branches:
+      - 'verify/livebench-seven-archetype-router-20261005-sol'
+    paths:
+      - 'subject/livebench_legacy15_exact_router_v1/**'
+      - '.github/workflows/verify-livebench-seven-archetype-router-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact checker dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir nltk==3.9.2 langdetect==1.0.9 immutabledict==4.2.1
+          python - <<'PY'
+          import nltk
+          for name in ["punkt","punkt_tab"]:
+              nltk.download(name, quiet=True)
+          PY
+      - name: Checkout exact frozen LiveBench checker source
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Verify vendored Brain subject blobs
+        working-directory: subject/livebench_legacy15_exact_router_v1
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.loads(pathlib.Path("SUBJECT_MANIFEST.json").read_text())
+          for src,expected in m["subjects"].items():
+              p=pathlib.Path("canonical/runtime")/pathlib.Path(src).name
+              b=p.read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+              assert got==expected,(p,got,expected)
+          print("subject blobs verified")
+          PY
+      - name: Run exact 7424-case constructive audit
+        working-directory: subject/livebench_legacy15_exact_router_v1
+        run: |
+          python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py \
+            --livebench-root /tmp/livebench \
+            --output livebench-seven-archetype-router-v1.json
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-seven-archetype-router-v1
+          path: subject/livebench_legacy15_exact_router_v1/livebench-seven-archetype-router-v1.json
+          if-no-files-found: warn
