@@ -1,0 +1,28 @@
+name: Verify seed-preserving instruction postprocessor V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/seed_preserving_instruction_postprocessor_v2/**"
+      - "verify_seed_preserving_instruction_postprocessor_v2.py"
+      - ".github/workflows/verify-seed-preserving-instruction-postprocessor-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs and verbatim seed invariant
+        run: python verify_seed_preserving_instruction_postprocessor_v2.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-preserving-instruction-postprocessor-v2-receipt
+          path: seed_preserving_instruction_postprocessor_v2_verification_receipt.json
+          if-no-files-found: error
