@@ -110,6 +110,8 @@ score_src = spath.read_text(encoding="utf-8")
 assert "avg_score = (score_1 + score_2) / 2" in score_src
 case_score_ceiling = (0.0 + 0.5) / 2.0
 assert case_score_ceiling == 0.25
+superset_case_score_ceilings = {k: ((k - 1) / k) / 2.0 for k in range(2, 6)}
+assert max(superset_case_score_ceilings.values()) == 0.4
 
 receipt = {
     "schema": "PROJECT_BRAIN_LIVEBENCH_SLOT_FEASIBILITY_V2_INDEPENDENT_VERIFICATION_20261005_V1",
@@ -136,6 +138,8 @@ receipt = {
         "V2_PRESERVES_ZERO_TERMINAL_DATA_AND_ZERO_ACCEPTANCE_CREDIT",
     ],
     "unsat_pair_exact_case_score_ceiling": case_score_ceiling,
+    "unsat_pair_superset_case_score_ceiling_by_k": superset_case_score_ceilings,
+    "unsat_pair_superset_case_score_ceiling_for_k_le_5": max(superset_case_score_ceilings.values()),
     "terminal_rows_read": 0,
     "terminal_scores_read": 0,
     "acceptance_credit_delta": 0,
