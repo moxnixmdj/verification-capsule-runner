@@ -1,0 +1,30 @@
+name: Verify Unknown-Domain direct V1
+
+on:
+  pull_request:
+    paths:
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_ORACLE_FAMILY_FREEZE_V1.json'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_REQUALIFICATION_V1.json'
+      - 'canonical/runtime/unknown_domain_direct_generator_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_scorer_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v1.py'
+      - 'canonical/runtime/decision_discriminator_v3.py'
+      - 'canonical/tests/test_unknown_domain_direct_family_freeze_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_candidate_v1.py'
+      - 'verify_unknown_domain_direct_v1.py'
+      - '.github/workflows/verify-unknown-domain-direct-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independent exact-byte and behavior verification
+        run: python verify_unknown_domain_direct_v1.py
