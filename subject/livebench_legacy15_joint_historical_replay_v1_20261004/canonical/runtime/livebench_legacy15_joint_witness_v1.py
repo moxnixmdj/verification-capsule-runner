@@ -143,12 +143,6 @@ def _build_general(constraints: list[dict[str, Any]]) -> str:
 
     if bullets:
         n = int(_slots(bullets)["num_bullets"])
-        # Quotation wraps the whole response. If a bullet is the first visible
-        # line, the leading quote prevents the frozen checker from matching
-        # ^\s*\*. Prefix one punctuation-free safe line so every bullet remains
-        # a true line-start after outer quoting.
-        if quote and not body_parts:
-            body_parts.append(filler)
         body_parts.extend(f"* {filler}{i}" for i in range(n))
 
     # Sentence requirement is isolated from exact/nth paragraphs by the frozen
@@ -206,11 +200,26 @@ def _build_general(constraints: list[dict[str, Any]]) -> str:
             raise JointWitnessError("UNKNOWN_WORD_RELATION")
 
     # Postscript is placed after ordinary body but before an exact end phrase.
+    #
+    # The frozen Punkt scorer treats the trailing period in "P.S." as a
+    # sentence boundary when whitespace follows it.  For the compatible
+    # visible contract "less than 2 sentences", concatenate the filler
+    # directly after the marker.  The exact legacy PostscriptChecker accepts
+    # this form (its regex requires "P." + optional whitespace + "S" and then
+    # arbitrary tail text), while the literal "P.S." marker remains present.
+    # All other postscript cases preserve the historical spelling.
     if post:
         marker = str(_slots(post).get("postscript_marker") or "")
         if not marker:
             raise JointWitnessError("POSTSCRIPT_MARKER_REQUIRED")
-        core = core.rstrip() + "\n" + marker + " " + filler
+        sentence_slots = _slots(sentence) if sentence else {}
+        compact_ps = (
+            marker == "P.S."
+            and str(sentence_slots.get("relation") or "") == "less than"
+            and int(sentence_slots.get("num_sentences") or 0) == 2
+        )
+        separator = "" if compact_ps else " "
+        core = core.rstrip() + "\n" + marker + separator + filler
 
     if end:
         phrase = str(_slots(end).get("end_phrase") or "").strip()
@@ -219,7 +228,16 @@ def _build_general(constraints: list[dict[str, Any]]) -> str:
         core = core.rstrip() + " " + phrase
 
     if quote:
-        core = '"' + core.strip('"') + '"'
+        # A quote directly before the first '*' hides that bullet from the
+        # frozen legacy regex ^\\s*\\*... . Put the opening quote on its own
+        # line when bullets are active. The closing quote stays attached to the
+        # tail so EndChecker still ends on the exact phrase after stripping
+        # outer quotes. Bullet-list and nth-paragraph constraints conflict in
+        # the frozen generator, so this does not perturb nth first-word logic.
+        if bullets:
+            core = '"\\n' + core.strip('"') + '"'
+        else:
+            core = '"' + core.strip('"') + '"'
 
     # Final whole-word forbidden guard. Required/forbidden overlap is handled
     # above, but other generated structure may still collide with a forbidden word.
