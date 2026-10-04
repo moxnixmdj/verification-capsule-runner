@@ -1,0 +1,23 @@
+name: Verify LiveBench structural successor v1
+on:
+  pull_request:
+    paths:
+      - 'subject/livebench_structural_successor_v1/**'
+      - 'verify_livebench_structural_successor_v1.py'
+      - '.github/workflows/verify-livebench-structural-successor-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact successor bytes and zero-acquisition direct route
+        run: python verify_livebench_structural_successor_v1.py
