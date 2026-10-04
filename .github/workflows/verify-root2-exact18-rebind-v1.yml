@@ -1,0 +1,22 @@
+name: Verify Root2 exact18 rebind after LiveBench pass V1
+
+on:
+  push:
+    branches: [verify-livebench-exact-brain-bytes-20261004-sol]
+    paths:
+      - 'root2_post_livebench_exactpass_18_predicate_rebind_v1.json'
+      - 'verify_root2_exact18_rebind_v1.py'
+      - '.github/workflows/verify-root2-exact18-rebind-v1.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain rebind candidate blob
+        run: |
+          set -euo pipefail
+          test "$(git hash-object root2_post_livebench_exactpass_18_predicate_rebind_v1.json)" = "46411d83217b23c74ba700a6f065be49e20557df"
+      - name: Verify exact18 domain and guards
+        run: python verify_root2_exact18_rebind_v1.py
