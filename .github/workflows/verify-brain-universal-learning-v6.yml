@@ -149,6 +149,21 @@ jobs:
           assert out["open_world_terminal_decision_authorized"] is False,out
           assert out["recommended_probe"]=="p",out
 
+          hs=[{"id":c["id"],"plausible":True,"best_action":c["best_action"]} for c in cs]
+          stale_cov={
+              "receipt_id":"cov","independent_verified":True,"exact_byte_bound":True,
+              "conclusion":"success","decision_relevant_exhaustive":True,"scope_relation":"EXACT",
+              "environment_id":env,"goal_id":goal,
+              "hypothesis_space_sha256":g.hypothesis_digest(hs),
+              "mechanism_class_semantics_bound":False,
+              "mechanism_class_sha256":class_digest(cs),
+          }
+          try:
+              s.synthesize(environment_id=env,goal_id=goal,candidates=cs,probes=[p],hypothesis_coverage_receipt=stale_cov)
+              raise AssertionError("ID-only/stale coverage authorized open-world V6 decision")
+          except s.ExperimentSynthesisError:
+              pass
+
           paid=probe("paid",{"a":"0","b":"1"},1,"0.01")
           try:
               s.synthesize(environment_id=env,goal_id=goal,candidates=cs,probes=[paid])
