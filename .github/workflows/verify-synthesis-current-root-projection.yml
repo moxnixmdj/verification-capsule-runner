@@ -1,0 +1,16 @@
+name: Verify synthesis current root projection
+on:
+  pull_request:
+    paths:
+      - 'subject/synthesis_current_root_projection_20261004_sol/**'
+      - 'verify_synthesis_current_root_projection.py'
+      - '.github/workflows/verify-synthesis-current-root-projection.yml'
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python verify_synthesis_current_root_projection.py
