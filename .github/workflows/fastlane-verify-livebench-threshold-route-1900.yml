@@ -8,12 +8,20 @@ on:
       - 'verify_livebench_threshold_route_1900_fastlane.py'
       - 'subject/livebench_threshold_route_1900/**'
       - '.github/workflows/fastlane-verify-livebench-threshold-route-1900.yml'
+  pull_request:
+    branches:
+      - 'fastlane/verify-livebench-threshold-route-1900-v1'
+    paths:
+      - 'verify_livebench_threshold_route_1900_fastlane.py'
+      - 'subject/livebench_threshold_route_1900/**'
+      - '.github/workflows/fastlane-verify-livebench-threshold-route-1900.yml'
+      - 'fastlane-trigger-1900.txt'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: livebench-threshold-route-1900-fastlane-v1
+  group: livebench-threshold-route-1900-fastlane-v3-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,7 +39,6 @@ jobs:
         run: |
           git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
           git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
-          git -C /tmp/livebench fetch origin 686be1e78a0ba8036d7e355bc406e1a265da5292
           git -C /tmp/livebench cat-file -e 6ff390d6885cf90f88d9d36959735cb327613edc
       - name: Verify source reachability and exact candidate theorem
         env:
@@ -43,10 +50,3 @@ jobs:
           name: livebench-threshold-route-1900-fastlane-receipt
           path: livebench-threshold-route-1900-fastlane-receipt.json
           if-no-files-found: error
-      - name: Persist verification receipt on isolated branch
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add livebench-threshold-route-1900-fastlane-receipt.json
-          git commit -m "Record LiveBench threshold route 1900 fastlane pass"
-          git push origin HEAD:fastlane/verify-livebench-threshold-route-1900-v1
