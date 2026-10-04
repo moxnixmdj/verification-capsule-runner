@@ -18,7 +18,7 @@ else:
     out.mkdir(parents=True,exist_ok=True)
     subprocess.run([
         sys.executable,"-m","pip","download","--no-deps","--only-binary=:all:",
-        "--dest",str(out),"pyarrow==20.0.0"
+        "--dest",str(out),"pyarrow==21.0.0"
     ],check=True)
     files=list(out.iterdir())
     assert len(files)==1, files
