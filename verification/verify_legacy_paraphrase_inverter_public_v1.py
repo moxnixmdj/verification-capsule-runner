@@ -118,3 +118,5 @@ if __name__=="__main__":
     main()
 
 # trigger: audit subject after workflow installation
+
+# run2 trigger: execute installed independent audit
