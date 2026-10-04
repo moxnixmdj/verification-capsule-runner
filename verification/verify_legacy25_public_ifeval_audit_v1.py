@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# trigger-after-default-install-v1
 from __future__ import annotations
 import collections
 import hashlib
