@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import hashlib, importlib.util, json, pathlib
+import hashlib, importlib.util, json, pathlib, sys
 
 ROOT=pathlib.Path(__file__).resolve().parent
 SUB=ROOT/"subject"/"livebench_root1_revocation_v1"
