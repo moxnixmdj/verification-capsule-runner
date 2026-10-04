@@ -39,13 +39,12 @@ def _safe_json(detail):
 def _nested_static_code(text,source_codes):
     if not isinstance(text,str):
         return None
-    m=re.search(r"(?:^|:)Blocker:([A-Z][A-Z0-9_]{2,160})(?::|$)",text)
-    if m and m.group(1) in source_codes:
-        return m.group(1)
-    m=re.search(r"([A-Z][A-Z0-9_]{2,160})(?::|$)",text)
-    if m and m.group(1) in source_codes:
-        return m.group(1)
-    return None
+    found=[]
+    for m in re.finditer(r"([A-Z][A-Z0-9_]{2,160})(?=[:\"' ,}]|$)",text):
+        code=m.group(1)
+        if code in source_codes:
+            found.append(code)
+    return found[-1] if found else None
 
 def classify_exception(exc,source_codes):
     typ=type(exc).__name__
