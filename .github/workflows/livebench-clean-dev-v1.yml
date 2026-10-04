@@ -33,7 +33,7 @@ jobs:
           test "$(git hash-object canonical/runtime/livebench_legacy25_clean_witness_v1.py)" = "261ba2902e5406b373b4ec4bba14a90f6bc0c142"
           test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py)" = "e986035ff68b53c0dc7a7eb478f6e3d8882214aa"
           test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py)" = "721207ba39d502e3f610289578e9d5bab78b1fcc"
-          test "$(git hash-object livebench_clean_dev_precommit_v1.json)" = "5cbd02a16a496181eab7f4928158ca4c526ee98f"
+          test "$(git hash-object livebench_clean_dev_precommit_v1.json)" = "f4405b98b8da41090a706c1b9207e4caa5fbb4ce"
           python -m py_compile canonical/runtime/livebench_legacy25_clean_witness_v1.py
       - name: Install pinned runtime
         run: |
