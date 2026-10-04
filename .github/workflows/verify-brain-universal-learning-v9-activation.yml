@@ -67,7 +67,11 @@ jobs:
 
           assert v7a["fresh_reality_authority"] is False,v7a
           assert v7a["promotion_authority"] is False,v7a
-          assert frozen["predicate_id"]=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",frozen
-          assert len(frozen["direct_oracle_leaves"])==2,frozen["direct_oracle_leaves"]
+          assert frozen["schema"]=="PROJECT_BRAIN_UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1",frozen
+          assert len(frozen["leaves"])==2,frozen["leaves"]
+          assert [x["id"] for x in frozen["leaves"]]==[
+              "CROSS_DOMAIN_TRANSFER_OUTSIDE_MYSTERYMECHANISM_TASK_STRUCTURE",
+              "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
+          ],frozen["leaves"]
           print("V7-V9 activation semantics: PASS")
           PY
