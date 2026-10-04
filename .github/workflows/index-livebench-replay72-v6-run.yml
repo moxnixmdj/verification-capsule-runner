@@ -1,0 +1,57 @@
+name: Index authorized LiveBench V6 replay72 run
+on:
+  push:
+    branches:
+      - "execute/livebench-replay72-v6-20261004-r1"
+    paths:
+      - ".github/workflows/index-livebench-replay72-v6-run.yml"
+permissions:
+  actions: read
+  contents: write
+jobs:
+  index:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXECUTION_HEAD_SHA: "c3c14e3143aa6f0b87cd57cbd398c49059f64b0a"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "execute/livebench-replay72-v6-20261004-r1"
+      - name: Locate and wait for the single authorized run
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=""
+          for i in $(seq 1 90); do
+            data="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=execute%2Flivebench-replay72-v6-20261004-r1&event=push&per_page=100")"
+            run_id="$(printf '%s' "$data" | jq -r --arg sha "$EXECUTION_HEAD_SHA" '.workflow_runs[] | select(.name=="Execute authorized LiveBench V6 replay72" and .head_sha==$sha) | .id' | head -n1)"
+            if [ -n "$run_id" ] && [ "$run_id" != "null" ]; then
+              status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id" --jq '.status')"
+              if [ "$status" = "completed" ]; then
+                break
+              fi
+            fi
+            sleep 10
+          done
+          test -n "$run_id"
+          run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id")"
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id/jobs?per_page=100")"
+          jq -n             --argjson run "$run"             --argjson jobs "$jobs"             '{schema:"PROJECT_BRAIN_LIVEBENCH_V6_REPLAY72_RUN_INDEX_V1",
+              run_id:$run.id,
+              name:$run.name,
+              event:$run.event,
+              head_sha:$run.head_sha,
+              status:$run.status,
+              conclusion:$run.conclusion,
+              html_url:$run.html_url,
+              jobs:[$jobs.jobs[]|{id,name,status,conclusion,started_at,completed_at}]}'             > LIVEBENCH_V6_REPLAY72_RUN_INDEX.json
+      - name: Persist run index
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "brain-verification"
+          git config user.email "brain-verification@users.noreply.github.com"
+          git add LIVEBENCH_V6_REPLAY72_RUN_INDEX.json
+          git commit -m "Bind authorized LiveBench V6 replay72 run index"
+          git push origin HEAD:execute/livebench-replay72-v6-20261004-r1
