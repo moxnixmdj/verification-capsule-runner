@@ -31,10 +31,12 @@ jobs:
         with:
           ref: verify-legacy15-direct-exact-20261004-v1
 
-      - name: Install exact scorer dependencies
+      - name: Install exact scorer dependencies in isolated venv
         run: |
           set -euo pipefail
-          python3 -m pip install --disable-pip-version-check             pyarrow==21.0.0 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check \
+            pyarrow==21.0.0 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
 
       - name: Checkout exact frozen legacy scorer and NLTK assets
         shell: bash
@@ -51,7 +53,8 @@ jobs:
           test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_util.py)" = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
 
           git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
-          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a --             packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- \
+            packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
           mkdir -p /tmp/nltk_data/tokenizers
           unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
           unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
@@ -60,7 +63,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors             "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet"             -o /tmp/instruction_following.parquet
+          curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors \
+            "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet" \
+            -o /tmp/instruction_following.parquet
           python3 - <<'PY'
           import hashlib
           from pathlib import Path
@@ -75,7 +80,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 verify_legacy15_joint_public_exact_v1.py
+          .venv/bin/python verify_legacy15_joint_public_exact_v1.py
 
       - name: Print receipt
         if: always()
