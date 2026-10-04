@@ -27,6 +27,11 @@ CONSONANT_CLUSTER = re.compile(
     flags=re.I,
 )
 
+BOUNDARY_IGNORABLE = re.compile(
+    r"^[\s\u200B\u200C\u200D\u2060\uFEFF]+|"
+    r"[\s\u200B\u200C\u200D\u2060\uFEFF]+$"
+)
+
 def fetch(url: str) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": "project-brain-independent-verifier"})
     with urllib.request.urlopen(req, timeout=30) as response:
@@ -36,8 +41,8 @@ def git_blob_sha(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 def norm_ws(value: str) -> str:
-    return re.sub(r"\s+", " ", str(value or "")).strip()
-
+    collapsed = re.sub(r"\s+", " ", str(value or "")).strip()
+    return BOUNDARY_IGNORABLE.sub("", collapsed).strip()
 def recover(prompt: str) -> tuple[str, float, dict[str, int]]:
     matches = list(OVERLAP.finditer(prompt))
     assert len(matches) == 1, len(matches)
