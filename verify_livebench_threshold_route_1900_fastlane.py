@@ -4,9 +4,10 @@
 Verifies:
 - exact carried candidate/dependency Git blob identities;
 - candidate runtime/tests execute from an isolated temporary package;
-- exact pinned LiveBench public source contains generator-reachable word "rock";
-- illustrative word "alpha" is absent from the pinned WORD_LIST;
-- both relevant checker slots draw from generate_keywords/WORD_LIST;
+- exact pinned LiveBench public source contains every five-word forbidden sample
+  used by the candidate and does not contain illustrative-only "alpha";
+- ParagraphFirstWordCheck draws one keyword and ForbiddenWords draws five via
+  generate_keywords/WORD_LIST;
 - historical generator can sample the two compatible instruction IDs;
 - candidate theorem returns the expected 1/4 ceiling below 65.7%.
 
@@ -29,8 +30,8 @@ SUBJECT = ROOT / "subject" / "livebench_threshold_route_1900"
 LIVEBENCH = Path(os.environ.get("LIVEBENCH_ROOT", "/tmp/livebench"))
 
 EXPECTED = {
-    "livebench_generator_support_threshold_route_falsifier_v2.py": "33be56766f6d81bc17441c0d6bdfc4af6af6358e",
-    "test_livebench_generator_support_threshold_route_falsifier_v2.py": "69ee7350e55b361fe75082c5a0c3fd70db972506",
+    "livebench_generator_support_threshold_route_falsifier_v2.py": "3a10b70f8cf010a03afac3b34271c67b8825f3c1",
+    "test_livebench_generator_support_threshold_route_falsifier_v2.py": "d75a3dd53a641606e2700199a9315cec53ddfea7",
     "livebench_legacy15_slot_feasibility_v1.py": "9502f2237af47b422376f2babcd3b7ca3e47eda1",
     "livebench_if_score_bound_v1.py": "f8e4f2bb0d537bfd4646c4037cf74238f7b0d4df",
     "livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
@@ -46,6 +47,8 @@ PUBLIC = {
     "score_process_blob": "8ce01747887ec0792c8f024e1972e34ece781676",
 }
 
+COUNTEREXAMPLE_FORBIDDEN = ("rock", "western", "sentence", "signal", "dump")
+
 
 def git_blob_sha(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
@@ -56,9 +59,7 @@ def class_source(text: str, name: str) -> str:
     lines = text.splitlines(keepends=True)
     for node in tree.body:
         if isinstance(node, ast.ClassDef) and node.name == name:
-            start = node.lineno - 1
-            end = node.end_lineno
-            return "".join(lines[start:end])
+            return "".join(lines[node.lineno - 1:node.end_lineno])
     raise AssertionError(f"class not found: {name}")
 
 
@@ -95,16 +96,17 @@ def verify_public_source() -> dict:
 
     util_text = paths["instructions_util_blob"].read_text(encoding="utf-8")
     words = literal_assignment(util_text, "WORD_LIST")
-    assert "rock" in words
+    assert all(word in words for word in COUNTEREXAMPLE_FORBIDDEN)
     assert "alpha" not in words
     generate_keywords = function_source(util_text, "generate_keywords")
     assert "random.sample(WORD_LIST" in generate_keywords
 
     inst_text = paths["instructions_blob"].read_text(encoding="utf-8")
+    assert literal_assignment(inst_text, "_NUM_KEYWORDS") == 5
     nth = class_source(inst_text, "ParagraphFirstWordCheck")
     forbidden = class_source(inst_text, "ForbiddenWords")
-    assert "instructions_util.generate_keywords" in nth
-    assert "instructions_util.generate_keywords" in forbidden
+    assert "instructions_util.generate_keywords(1)" in nth
+    assert "instructions_util.generate_keywords(_NUM_KEYWORDS)" in forbidden
 
     generator = subprocess.check_output(
         ["git", "-C", str(LIVEBENCH), "cat-file", "-p", PUBLIC["historical_generator_blob"]],
@@ -120,8 +122,10 @@ def verify_public_source() -> dict:
 
     return {
         "word_list_count": len(words),
-        "rock_in_word_list": True,
+        "all_five_counterexample_forbidden_words_in_word_list": True,
         "alpha_in_word_list": False,
+        "nth_default_keyword_count": 1,
+        "forbidden_default_keyword_count": 5,
         "both_lexical_slots_use_generate_keywords": True,
         "historical_generator_contains_both_ids": True,
         "historical_generator_samples_without_replacement": True,
@@ -177,6 +181,8 @@ def verify_candidate() -> dict:
 
     assert out["status"] == "PASS__GENERATOR_SUPPORT_UNIVERSAL_THRESHOLD_ROUTE_FALSIFIED"
     assert out["counterexample_word"] == "rock"
+    assert tuple(out["counterexample_forbidden_words"]) == COUNTEREXAMPLE_FORBIDDEN
+    assert out["counterexample_forbidden_word_count"] == 5
     assert out["maximum_counterexample_score"] == "1/4"
     assert out["target_predicate_floor"] == "657/1000"
     return out
@@ -186,15 +192,17 @@ def main() -> None:
     source = verify_public_source()
     candidate = verify_candidate()
     receipt = {
-        "schema": "PROJECT_BRAIN_LIVEBENCH_THRESHOLD_ROUTE_1900_FASTLANE_VERIFICATION_V1",
+        "schema": "PROJECT_BRAIN_LIVEBENCH_THRESHOLD_ROUTE_1900_FASTLANE_VERIFICATION_V2",
         "status": "PASS__INDEPENDENT_FASTLANE_SOURCE_AND_RUNTIME_VERIFICATION",
         "brain_pr": 1900,
-        "brain_candidate_head": "f116ee3366f9e550165287fcb4255602a5613cb9",
+        "brain_candidate_head": "f282f3a4647bd3cd3658e1f12965fc82546c62d5",
         "subject_blob_shas": EXPECTED,
         "public_source_bindings": PUBLIC,
         "public_source_facts": source,
         "candidate_status": candidate["status"],
         "counterexample_word": candidate["counterexample_word"],
+        "counterexample_forbidden_words": candidate["counterexample_forbidden_words"],
+        "counterexample_forbidden_word_count": candidate["counterexample_forbidden_word_count"],
         "maximum_counterexample_score": candidate["maximum_counterexample_score"],
         "target_predicate_floor": candidate["target_predicate_floor"],
         "terminal_rows_read": 0,
