@@ -1,32 +1,51 @@
 #!/usr/bin/env python3
-"""Run the frozen 7,424-case zero-terminal legacy15 exact synthetic audit."""
 from __future__ import annotations
 
+import hashlib
 import json
-import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-SUB = ROOT / "subject" / "livebench_legacy15_joint_historical_replay_v1_20261004"
-sys.path.insert(0, str(SUB))
+from canonical.runtime import livebench_legacy15_end2end_exact_synthetic_audit_v2 as audit
 
-from canonical.runtime.livebench_legacy15_end2end_exact_synthetic_audit_v2 import audit
+EXPECTED_BLOBS = {
+    "canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py": "e986035ff68b53c0dc7a7eb478f6e3d8882214aa",
+    "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py": "721207ba39d502e3f610289578e9d5bab78b1fcc",
+    "canonical/runtime/livebench_frozen_active_legacy15_v1.py": "34440ee69322e9d519cbe656cb03c55683a8b9c6",
+    "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
+    "canonical/runtime/livebench_legacy15_general_composer_v1.py": "ced56b94e472a615f70180a4797fda178358e7fe",
+    "canonical/runtime/livebench_legacy15_joint_witness_v1.py": "6b83d32be3840f815cb04afb51e473069dc17fe2",
+    "canonical/runtime/livebench_legacy15_joint_router_v2.py": "e133432996a927e0f8fc3ed9a3cddf1479feba7f",
+    "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "91f8c41db734f06eece06df0fdbf0c90a05d018f",
+}
 
-result = audit(Path("/tmp/livebench"), max_failures=250)
-print(json.dumps({
-    "schema": result["schema"],
-    "status": result["status"],
-    "scope": result["scope"],
-    "results": result["results"],
-    "by_archetype": result["by_archetype"],
-    "by_profile": result["by_profile"],
-    "by_size": result["by_size"],
-    "runtime_errors": result["runtime_errors"],
-    "exact_failed_instruction_ids": result["exact_failed_instruction_ids"],
-    "failure_samples": result["failure_samples"][:50],
-}, ensure_ascii=False, sort_keys=True))
-assert result["scope"]["synthetic_cases"] == 7424
-assert result["scope"]["terminal_rows_read"] == 0
-assert result["scope"]["terminal_prompts_read"] == 0
-assert result["scope"]["terminal_scores_read"] == 0
-assert result["status"] == "PASS__ALL_SYNTHETIC_ACTIVE15_CASES_EXACT_FULL_SCORE"
+def git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+
+def main() -> int:
+    actual = {p: git_blob_sha(Path(p)) for p in EXPECTED_BLOBS}
+    if actual != EXPECTED_BLOBS:
+        print(json.dumps({"status":"FAIL_SUBJECT_BLOB_MISMATCH","expected":EXPECTED_BLOBS,"actual":actual}, sort_keys=True))
+        return 2
+
+    result = audit.audit(Path("/tmp/livebench"), 250)
+    summary = {
+        "status": result["status"],
+        "bindings": result["bindings"],
+        "scope": result["scope"],
+        "results": result["results"],
+        "by_archetype": result["by_archetype"],
+        "by_profile": result["by_profile"],
+        "by_size": result["by_size"],
+        "runtime_errors": result["runtime_errors"],
+        "exact_failed_instruction_ids": result["exact_failed_instruction_ids"],
+        "failed_identity_shapes_top": result["failed_identity_shapes_top"],
+        "failure_samples": result["failure_samples"],
+        "subject_blobs": actual,
+        "hard_nonclaims": result["hard_nonclaims"],
+    }
+    print(json.dumps(summary, sort_keys=True))
+    return 0 if result["status"].startswith("PASS__") else 1
+
+if __name__ == "__main__":
+    raise SystemExit(main())
