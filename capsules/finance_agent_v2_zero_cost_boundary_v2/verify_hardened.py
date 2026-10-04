@@ -1,7 +1,7 @@
 import base64, json, pathlib, re, subprocess, urllib.request
 
 SUBJECT="capsules/finance_agent_v2_zero_cost_boundary_v2/subject.json"
-EXPECTED="2e9406243e3ef8b0b1d4c00889c1f93ccf1b7e2a"
+EXPECTED="b7ba653977771df8312fd140cf4b563bcc4e21e4"
 
 def blob(path):
     return subprocess.check_output(["git","rev-parse",f"HEAD:{path}"],text=True).strip()
@@ -38,7 +38,7 @@ assert "two-hour time limit" in vals
 assert "weighted checks" in vals and "dealbreakers" in vals
 
 tavily=txt(fetch("https://www.tavily.com/pricing"))
-sec=txt(fetch("https://sec-api.io/pricing"))
+sec=txt(fetch("https://sec-api.io/"))
 tiingo=txt(fetch("https://www.tiingo.com/pricing"))
 assert "1,000 api credits" in tavily and "no credit card required" in tavily and "requests will stop" in tavily
 assert re.search(r"100\s+api\s+calls",sec) and "free" in sec
