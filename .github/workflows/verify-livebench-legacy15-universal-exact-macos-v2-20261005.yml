@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
-      - 'subject/livebench_legacy15_joint_historical_replay_v1_20261004/**'
+      - 'subject/livebench_legacy15_exact_router_v1/**'
       - '.github/workflows/verify-livebench-legacy15-universal-exact-macos-v2-20261005.yml'
   workflow_dispatch:
 
