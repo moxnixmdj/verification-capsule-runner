@@ -1,0 +1,30 @@
+name: Verify Unknown-Domain V6 universal totality
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/unknown_domain_v6_20261005/**"
+      - "verify_unknown_domain_v6_universal.py"
+      - ".github/workflows/verify-unknown-domain-v6-universal.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Run exact content-bound and adversarial V6 verification
+        run: python verify_unknown_domain_v6_universal.py
+      - name: Print receipt
+        if: always()
+        run: test ! -f unknown_domain_v6_independent_receipt.json || cat unknown_domain_v6_independent_receipt.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v6-independent-receipt
+          path: unknown_domain_v6_independent_receipt.json
+          if-no-files-found: error
