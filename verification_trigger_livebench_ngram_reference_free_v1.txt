@@ -1,1 +1,2 @@
 trigger after bootstrap workflow was installed on default branch
+trigger after PR fan-out closure
