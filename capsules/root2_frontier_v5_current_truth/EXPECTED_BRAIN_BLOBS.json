@@ -1,0 +1,13 @@
+{
+  "schema": "BRAIN_ROOT2_FRONTIER_V5_CURRENT_TRUTH_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "obs/root2-frontier-v5-20261004-sol",
+  "exact_brain_blobs": {
+    "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5.json": "e948022f0a4e8d91b949a5155d850d56aa137c87",
+    "canonical/governance/TB4_CIRCLECI_FREE_XLARGE_CONTRADICTION_RECONCILIATION_20261004_V1.json": "0c5d16da02e7a71c5583f7c1a743adf389fc47b1",
+    "canonical/governance/FINANCE_AGENT_V2_PUBLIC_RUNNER_ROUTE_RECONCILIATION_20261004_V1.json": "126ff389982aab89f810388b1adbe402c25a7a59",
+    "canonical/verification/ROOT2_V5_COMPONENT_TRUTH_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "0f0e8632425e32a1f446291b5536843b07545255",
+    "canonical/action_intents/2026-10-04_ROOT2_FRONTIER_V5_CURRENT_MAIN_TRUTH_REPAIR_V1.json": "b6313c364802e34f03ba5609f7aad88f4ae2e2d8",
+    "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V4.json": "8c90a1dc4903f9b895788ff2864822d6ebc26ac9"
+  }
+}
