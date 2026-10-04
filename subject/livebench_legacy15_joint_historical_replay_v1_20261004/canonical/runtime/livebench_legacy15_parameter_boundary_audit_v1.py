@@ -20,9 +20,10 @@ from canonical.runtime import livebench_legacy15_joint_witness_v1 as witness
 from canonical.runtime import livebench_legacy15_end2end_exact_synthetic_audit_v2 as base
 
 SCHEMA="PROJECT_BRAIN_LIVEBENCH_LEGACY15_PARAMETER_BOUNDARY_AUDIT_V1"
+EXPECTED_UTIL_BLOB="1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
 
 E0=["rock","river","signal","system","brain"]
-E1=["section","other","anything","help","phrase"]
+# Exact generated-word collisions with forced structural literals from the\n# pinned source: Section/SECTION and the two exact end phrases.  `phrase` was\n# previously used here but is not forced by any checker; `can` is forced by\n# the second end phrase and therefore must be represented.\nE1=["section","other","anything","can","help"]
 F0=["apple","market","glass","shoe","hotel"]
 F1=list(E0)
 F2=list(E1)
@@ -87,8 +88,17 @@ def audit(livebench_root: Path, max_failures:int=100):
     legacy=livebench_root/"livebench/if_runner/instruction_following_eval"
     assert base.git_blob_sha(legacy/"instructions_registry.py")==base.FROZEN_REGISTRY_BLOB
     assert base.git_blob_sha(legacy/"instructions.py")==base.FROZEN_INSTRUCTIONS_BLOB
+    assert base.git_blob_sha(legacy/"instructions_util.py")==EXPECTED_UTIL_BLOB
     sys.path.insert(0,str(livebench_root/"livebench/if_runner"))
     from instruction_following_eval import instructions_registry as registry
+    from instruction_following_eval import instructions, instructions_util
+
+    # Mechanically derive the lexical words that the witness is forced to emit\n    # when SectionChecker or EndChecker is active.  Intersecting with the exact\n    # frozen generator WORD_LIST yields the complete forbidden-word collision\n    # class; this prevents hand-picked representatives from silently missing a\n    # generated word such as `can`.\n    forced_text=" ".join(list(instructions._SECTION_SPLITER)+list(instructions._ENDING_OPTIONS))
+    structural_collision_words=sorted(set(re.findall(r"[a-z]+",forced_text.lower())) & set(instructions_util.WORD_LIST))
+    assert structural_collision_words==sorted(F2), structural_collision_words
+    assert len(instructions_util.WORD_LIST)==1525
+    assert len(set(instructions_util.WORD_LIST))==1525
+    assert all(re.fullmatch(r"[a-z]+",w) for w in instructions_util.WORD_LIST)
 
     sets=archetypes.enumerate_compatible_sets()
     assert len(sets)==928
@@ -141,6 +151,8 @@ def audit(livebench_root: Path, max_failures:int=100):
       },
       "scope":{
         "compatible_identity_sets":len(sets),
+        "word_list_size":len(instructions_util.WORD_LIST),
+        "structural_forbidden_collision_words":structural_collision_words,
         "boundary_cases":total,
         "terminal_rows_read":0,
         "terminal_prompts_read":0,
@@ -163,7 +175,8 @@ def audit(livebench_root: Path, max_failures:int=100):
         "EXACT_COUNTS_ENUMERATE_ALL_SOURCE_VALUES_1_TO_5",
         "NTH_ENUMERATES_ALL_15_NUMERIC_COUNT_INDEX_PAIRS_AND_NORMAL_PLUS_COLLISION_WORD_CLASSES",
         "POSTSCRIPT_SECTION_SPLITTER_END_PHRASE_ENUMERATE_ALL_SOURCE_ENUM_VALUES",
-        "LEXICAL_BASIS_INCLUDES_REQUIRED_FORBIDDEN_OVERLAP_AND_FIXED_STRUCTURE_WORD_COLLISIONS",
+        "LEXICAL_BASIS_INCLUDES_REQUIRED_FORBIDDEN_OVERLAP_AND_COMPLETE_SOURCE_DERIVED_FIXED_STRUCTURE_WORD_COLLISIONS",
+        "STRUCTURAL_FORBIDDEN_COLLISION_CLASS_IS_DERIVED_MECHANICALLY_FROM_PINNED_SECTION_AND_END_LITERALS_INTERSECTED_WITH_PINNED_WORD_LIST",
       ],
       "hard_nonclaims":[
         "BOUNDARY_BASIS_IS_NOT_BY_ITSELF_A_FORMAL_UNIVERSAL_PARAMETER_PROOF",
