@@ -55,8 +55,28 @@ for needle in [
     "return avg_score",
 ]:
     assert needle in score_src,needle
+def executable_tokens(fn: ast.FunctionDef) -> set[str]:
+    """Return identifiers/attribute names/string literals used by executable statements.
+
+    The function docstring is intentionally excluded: descriptive prose may mention
+    concepts that the executable scorer never reads.
+    """
+    body = list(fn.body)
+    if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) and isinstance(body[0].value.value, str):
+        body = body[1:]
+    tokens: set[str] = set()
+    for stmt in body:
+        for node in ast.walk(stmt):
+            if isinstance(node, ast.Name):
+                tokens.add(node.id)
+            elif isinstance(node, ast.Attribute):
+                tokens.add(node.attr)
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                tokens.add(node.value)
+    return tokens
+
 for forbidden in ["ground_truth","reference_answer","expected_answer","semantic_score","relevance_score"]:
-    assert forbidden not in score_src
+    assert forbidden not in executable_tokens(score_node), forbidden
 
 # IFBench path: strict public checker booleans are the sole inputs to score_results.
 assert "evaluation_lib.test_instruction_following_strict(inp, response)" in ifb_src
