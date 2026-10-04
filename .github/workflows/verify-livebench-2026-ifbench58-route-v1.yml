@@ -1,4 +1,5 @@
 name: Verify LiveBench 2026 IFBench58 scorer route V1
+# explicit post-install dispatch trigger
 
 on:
   push:
