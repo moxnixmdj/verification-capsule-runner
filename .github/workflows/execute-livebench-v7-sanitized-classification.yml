@@ -1,0 +1,72 @@
+name: Execute LiveBench V7 sanitized classification
+on:
+  push:
+    branches:
+      - "execute/livebench-v7-sanitized-classification-20261004"
+    paths:
+      - "EXECUTE_LIVEBENCH_V7_SANITIZED"
+permissions:
+  contents: write
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      GH_TOKEN: ${{ github.token }}
+      LIVEBENCH_V7_ACTIVATION_BLOB: "e394a1bf48de226c184617980e513e98137ca9ff"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "execute/livebench-v7-sanitized-classification-20261004"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact V7 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object launch_livebench_v7_sanitized_atomic.py)" = "d977690efd97e093b28474d23b37ee6e4520ed0f"
+          test "$(git hash-object diagnose_livebench_replay72_v7_sanitized.py)" = "55d4b961f58dc45c1513f9c9282a63773444773d"
+          test "$(git hash-object livebench_v7_sanitized_classifier.py)" = "44df7313c83914204299953dda81900fae85ab68"
+          test "$(git hash-object verify_livebench_v7_sanitized_diagnostic.py)" = "0c63704ba4e462c957516bc0f1ee0bdbdea8465c"
+          test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+          python -m py_compile launch_livebench_v7_sanitized_atomic.py diagnose_livebench_replay72_v7_sanitized.py livebench_v7_sanitized_classifier.py verify_livebench_v7_sanitized_diagnostic.py
+      - name: Point-of-use zero-case verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python verify_livebench_v7_sanitized_diagnostic.py | tee LIVEBENCH_V7_POINT_OF_USE_VERIFY.log
+      - name: Atomic claim and sanitized replay72 classification
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          python launch_livebench_v7_sanitized_atomic.py 2>&1 | tee LIVEBENCH_V7_SANITIZED_RESULT.log
+          code=${PIPESTATUS[0]}
+          set -e
+          echo "${code}" > LIVEBENCH_V7_SANITIZED_EXIT_CODE
+          exit "${code}"
+      - name: Persist immutable V7 evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f LIVEBENCH_V7_SANITIZED_EXIT_CODE || echo "workflow_failed_before_exit_capture" > LIVEBENCH_V7_SANITIZED_EXIT_CODE
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add LIVEBENCH_V7_SANITIZED_EXIT_CODE
+          test ! -f LIVEBENCH_V7_POINT_OF_USE_VERIFY.log || git add LIVEBENCH_V7_POINT_OF_USE_VERIFY.log
+          test ! -f LIVEBENCH_V7_SANITIZED_RESULT.log || git add LIVEBENCH_V7_SANITIZED_RESULT.log
+          git diff --cached --quiet || git commit -m "Record LiveBench V7 sanitized classification evidence"
+          git push origin HEAD:"execute/livebench-v7-sanitized-classification-20261004"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-v7-sanitized-classification-evidence
+          path: |
+            LIVEBENCH_V7_SANITIZED_EXIT_CODE
+            LIVEBENCH_V7_POINT_OF_USE_VERIFY.log
+            LIVEBENCH_V7_SANITIZED_RESULT.log
+          if-no-files-found: warn
+          retention-days: 90
