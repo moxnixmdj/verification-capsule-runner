@@ -93,5 +93,11 @@
     "capability_credit_delta": 0,
     "ownership_credit_delta": 0
   },
-  "independent_verification_required": true
+  "independent_verification_required": true,
+  "exact_bound_components": {
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "76daa690f10c1356cd81e9f843a3397cff0f62ba",
+    "canonical/tests/test_unknown_domain_direct_hidden_generator_v1.py": "e81e92e6d68b3de008b974e956437cc90b301be4",
+    "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EVALUATOR_FAMILY_V1.json": "52090daf78d12020af48c1b6ffaea056d9029e1b",
+    "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d"
+  }
 }
