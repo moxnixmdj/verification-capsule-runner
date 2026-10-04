@@ -1,0 +1,102 @@
+{
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
+  "date": "2026-10-04",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
+  "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+  "authorized_leaves": [
+    "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
+    "CROSS_DOMAIN_TRANSFER_OUTSIDE_MYSTERYMECHANISM_TASK_STRUCTURE"
+  ],
+  "source_brain": {
+    "activation_merge_commit": "ec77d3591ec6f70c7836e4f0c481d61461f9f4ac",
+    "final_activation_blob": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
+    "final_activation_verification_blob": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec"
+  },
+  "verification_chain": {
+    "qualification": {
+      "run_id": 37200785576,
+      "job_id": 111431859382,
+      "conclusion": "success",
+      "fresh_hidden_scored_cases": 81,
+      "persistent_learned_bytes": 0
+    },
+    "final_activation": {
+      "run_id": 37238845317,
+      "job_id": 111543276312,
+      "conclusion": "success"
+    },
+    "point_of_use_preflight": {
+      "pull_request": 2029,
+      "merge_commit": "dd4516fd2e2cef9ff8f9f748e4a770b1ec039342",
+      "run_id": 37239282297,
+      "job_id": 111544537727,
+      "conclusion": "success",
+      "status": "READY_FOR_ATOMIC_ONE_USE_CLAIM_ONLY"
+    },
+    "production_launcher": {
+      "pull_request": 2030,
+      "merge_commit": "a57e64e29ff03042df644013b1f61f68f1725ef6",
+      "run_id": 37239607102,
+      "job_id": 111545469095,
+      "conclusion": "success"
+    }
+  },
+  "atomic_claim": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "launch_ref_prefix": "refs/heads/unknown-domain-direct-launch/",
+    "claim_ref_prefix": "refs/heads/unknown-domain-direct-claims/",
+    "claim_key_rule": "SHA256_OF_EXACT_RAW_EXECUTION_LEASE_BYTES",
+    "required_first_claim_create_http_status": 201,
+    "any_non_201_behavior": "ABORT_BEFORE_BEACON_OR_CASE_GENERATION",
+    "claim_uniqueness_source": "ATOMIC_CREATE_RESPONSE"
+  },
+  "exact_components": {
+    "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
+    "canonical/runtime/unknown_domain_direct_candidate_v2.py": "4470716f95a559a700e461262df909ae19a41651",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+    "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
+    "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
+    "canonical/runtime/unknown_domain_direct_production_preflight_v1.py": "e1365ccdba308c529f182797cf68075b2f1dc07c",
+    "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
+    "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
+    "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+    ".github/workflows/unknown-domain-direct-one-use-production.yml": "190ac379f5cf2b2b2005b6f537f43643a80ff24e"
+  },
+  "limits": {
+    "production_populations": 1,
+    "production_cases": 27,
+    "max_transfer_probes_per_case": 2,
+    "replay_allowed": false,
+    "replacement_allowed": false,
+    "post_result_tuning_allowed": false
+  },
+  "resources": {
+    "persistent_learned_bytes": 0,
+    "external_frontier_model_calls": 0,
+    "external_learned_capability_calls": 0,
+    "incremental_spend_usd": 0
+  },
+  "result_policy": {
+    "persist_raw_hidden_records": false,
+    "persist_raw_evaluator_secret": false,
+    "persist_raw_beacon": false,
+    "immutable_case_level_frozen_scorer_verdicts": true,
+    "separate_independent_reduction_required": true,
+    "acceptance_promotion_separate": true
+  },
+  "authority": {
+    "global_fresh_reality": false,
+    "promotion": false,
+    "acceptance_credit": false
+  },
+  "hard_rules": [
+    "RAW_LEASE_SHA256_IS_THE_LAUNCH_AND_CLAIM_KEY",
+    "NO_CLAIM_ABSENCE_PRECHECK",
+    "ONLY_ATOMIC_CLAIM_CREATE_HTTP_201_MAY_ADVANCE",
+    "BEACON_AND_EVALUATOR_SECRET_MUST_NOT_EXIST_BEFORE_CLAIM_201",
+    "EXACTLY_ONE_27_CASE_PRODUCTION_POPULATION",
+    "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
+    "ZERO_INCREMENTAL_SPEND"
+  ]
+}
