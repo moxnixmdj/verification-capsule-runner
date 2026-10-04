@@ -7,15 +7,15 @@ on:
     paths:
       - verify_livebench_legacy15_joint_predecessor_v1.py
       - canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py
-      - canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py
+      - canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py
       - canonical/runtime/livebench_frozen_active_legacy15_v1.py
       - canonical/runtime/livebench_legacy15_joint_witness_v1.py
       - .github/workflows/verify-livebench-legacy15-joint-predecessor-v1.yml
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    runs-on: macos-15-intel
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
