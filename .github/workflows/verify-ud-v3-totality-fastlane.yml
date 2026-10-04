@@ -1,0 +1,22 @@
+name: Fastlane verify Unknown-Domain V3 namespace-total theorem
+
+on:
+  push:
+    branches:
+      - 'fastlane/ud-v3-totality-2095-v1'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent content-bound theorem verifier
+        working-directory: subject/ud_v3_totality
+        run: PYTHONPATH=. python verify_ud_v3_namespace_totality.py
