@@ -177,6 +177,56 @@ cases = [
         "min_words": 45,
         "max_words": 130,
     },
+    {
+        "id": "paraphrase_3",
+        "kind": "paraphrase",
+        "source": "Researcher Amina Farouk stored nine lunar soil samples in Vault C at 18:40 after the spectrometer calibration finished.",
+        "prompt": (
+            "Paraphrase this sentence without changing any fact. Use exactly one sentence and at most 27 words. "
+            "Do not copy it verbatim.\n"
+            "Researcher Amina Farouk stored nine lunar soil samples in Vault C at 18:40 after the spectrometer calibration finished."
+        ),
+        "anchors": ["Amina Farouk", "nine", "lunar soil samples", "Vault C", "18:40", "spectrometer calibration"],
+        "max_words": 27,
+    },
+    {
+        "id": "simplify_3",
+        "kind": "simplify",
+        "source": (
+            "Following three consecutive pressure alerts, supervisor Karim Hassan redirected 28 cubic meters of water "
+            "from Reservoir 2 to Basin 7 at 09:05 to protect the northern pipeline."
+        ),
+        "prompt": (
+            "Make this easier to understand for a 12-year-old without losing any fact. Use one sentence and at most 26 words.\n"
+            "Following three consecutive pressure alerts, supervisor Karim Hassan redirected 28 cubic meters of water "
+            "from Reservoir 2 to Basin 7 at 09:05 to protect the northern pipeline."
+        ),
+        "anchors": ["three", "Karim Hassan", "28", "Reservoir 2", "Basin 7", "09:05", "northern pipeline"],
+        "max_words": 26,
+    },
+    {
+        "id": "summarize_3",
+        "kind": "summarize",
+        "prompt": (
+            "Summarize the report in exactly one sentence of at most 31 words while preserving the key facts.\n"
+            "Report: Museum Delta received 96 ceramic fragments from Site R. Conservator Huda Nabil catalogued 40 fragments on Wednesday. "
+            "The other 56 will be photographed in Room 12 on Friday."
+        ),
+        "anchors": ["Museum Delta", "96", "Site R", "Huda Nabil", "40", "Wednesday", "56", "Room 12", "Friday"],
+        "max_words": 31,
+    },
+    {
+        "id": "story_3",
+        "kind": "story",
+        "prompt": (
+            "Write a coherent 3-to-6 sentence microstory of 45 to 130 words. "
+            "First, VEGA-3 finds CRYSTAL-8 beside GATE-2. Later VEGA-3 carries CRYSTAL-8 through CANYON-4. "
+            "At the end, VEGA-3 places CRYSTAL-8 inside ARCHIVE-6. Keep every uppercase token exact and preserve that event order."
+        ),
+        "ordered": ["VEGA-3", "CRYSTAL-8", "GATE-2", "VEGA-3", "CRYSTAL-8", "CANYON-4", "VEGA-3", "CRYSTAL-8", "ARCHIVE-6"],
+        "min_words": 45,
+        "max_words": 130,
+    },
 ]
 
 results = []
