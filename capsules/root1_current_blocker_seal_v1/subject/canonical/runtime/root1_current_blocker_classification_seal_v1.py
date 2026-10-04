@@ -14,6 +14,14 @@ def _rows(value: Any, name: str) -> Sequence[Mapping[str, Any]]:
         raise Root1SealError(name.upper() + "_ROW_INVALID")
     return value
 
+def _required_int(mapping: Mapping[str, Any], key: str) -> int:
+    if key not in mapping or isinstance(mapping.get(key), bool):
+        raise Root1SealError(key.upper() + "_INTEGER_REQUIRED")
+    try:
+        return int(mapping[key])
+    except Exception as exc:
+        raise Root1SealError(key.upper() + "_INTEGER_REQUIRED") from exc
+
 def _unique_ids(rows: Sequence[Mapping[str, Any]], key: str, name: str) -> set[str]:
     out: set[str] = set()
     for row in rows:
@@ -82,13 +90,13 @@ def compute_current_root1_blocker_seal(
     current_acceptance = root_state.get("current_acceptance")
     if not isinstance(current_acceptance, Mapping):
         raise Root1SealError("CURRENT_ACCEPTANCE_REQUIRED")
-    if int(current_acceptance.get("total_families") or -1) != declared_target_count:
+    if _required_int(current_acceptance, "total_families") != declared_target_count:
         raise Root1SealError("ROOT_STATE_FAMILY_COUNT_DRIFT")
-    if int(current_acceptance.get("total_atomic") or -1) != len(predicate_ids):
+    if _required_int(current_acceptance, "total_atomic") != len(predicate_ids):
         raise Root1SealError("ROOT_STATE_ATOMIC_COUNT_DRIFT")
-    if int(current_acceptance.get("proved_atomic") or -1) != len(proved):
+    if _required_int(current_acceptance, "proved_atomic") != len(proved):
         raise Root1SealError("ROOT_STATE_PROVED_COUNT_DRIFT")
-    if int(current_acceptance.get("unresolved_atomic") or -1) != len(unresolved):
+    if _required_int(current_acceptance, "unresolved_atomic") != len(unresolved):
         raise Root1SealError("ROOT_STATE_UNRESOLVED_COUNT_DRIFT")
 
     partition = root_state.get("current_residual_root_partition")
@@ -111,15 +119,15 @@ def compute_current_root1_blocker_seal(
             + ";EXTRA=" + ",".join(extra)
         )
 
-    if int(partition.get("unresolved_total") or -1) != len(unresolved):
+    if _required_int(partition, "unresolved_total") != len(unresolved):
         raise Root1SealError("ROOT_PARTITION_UNRESOLVED_COUNT_DRIFT")
-    if int(partition.get("root2_only_count") or -1) != len(r2):
+    if _required_int(partition, "root2_only_count") != len(r2):
         raise Root1SealError("ROOT2_COUNT_DRIFT")
-    if int(partition.get("root3_only_count") or -1) != len(r3):
+    if _required_int(partition, "root3_only_count") != len(r3):
         raise Root1SealError("ROOT3_COUNT_DRIFT")
-    if int(partition.get("root2_and_root3_count") or -1) != len(mixed):
+    if _required_int(partition, "root2_and_root3_count") != len(mixed):
         raise Root1SealError("MIXED_COUNT_DRIFT")
-    if int(partition.get("root1_positive_gap_count") or -1) != 0:
+    if _required_int(partition, "root1_positive_gap_count") != 0:
         raise Root1SealError("ROOT1_POSITIVE_GAP_COUNT_NONZERO")
 
     roots = root_state.get("roots")
