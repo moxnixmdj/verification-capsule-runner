@@ -56,7 +56,34 @@ jobs:
           print("LIVEBENCH_V9_BINDING_VERIFIED")
           PY
 
+      - name: Synthetic zero-case V9 child probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util,json,os,pathlib,shutil,subprocess,sys,tempfile,re
+          root=pathlib.Path(".").resolve()
+          spec=importlib.util.spec_from_file_location("v9diag",root/"diagnose_livebench_replay72_v9_preacquisition.py")
+          d=importlib.util.module_from_spec(spec);spec.loader.exec_module(d)
+          b=d.load_base()
+          with tempfile.TemporaryDirectory(prefix="v9-synth-") as td:
+              base=pathlib.Path(td)
+              template=d.build_template(base,b)
+              case=base/"case"
+              shutil.copytree(template,case,dirs_exist_ok=True)
+              env=os.environ.copy();env["PYTHONPATH"]=str(case)
+              req={"benchmark_id":b.BENCHMARK_ID,"task_id":"SYNTHETIC_ZERO_CASE","task_payload":{"instruction":"Reply with exactly SYNTHETIC_OK."},"allowed_tools":[]}
+              cp=subprocess.run([sys.executable,"-c",d.CASE_DRIVER],input=json.dumps(req),text=True,capture_output=True,cwd=case,env=env,timeout=45)
+              known=("ModuleNotFoundError","ImportError","FileNotFoundError","PermissionError","NameError","AttributeError","TypeError","ValueError","KeyError","RuntimeError","SystemExit","MemoryError","TimeoutError","SyntaxError")
+              typ=next((x for x in known if x in (cp.stderr or "")),"OTHER")
+              sign="NEG" if cp.returncode<0 else "POS"
+              print("V9_SYNTH_CHILD_RETURN="+sign+"_"+str(abs(cp.returncode)))
+              print("V9_SYNTH_CHILD_EXCEPTION_TYPE="+typ)
+              print("V9_SYNTH_CHILD_STDOUT_JSON="+str(bool((cp.stdout or "").lstrip().startswith("{"))).lower())
+          PY
+
       - name: Execute one-use V9 sanitized static replay
+        if: ${{ false }}
         shell: bash
         run: |
           set -euo pipefail
