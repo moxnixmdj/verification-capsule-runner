@@ -1,0 +1,51 @@
+name: Verify LiveBench V11 V3 replay tuple
+on:
+  push:
+    branches:
+      - verify/livebench-v11-v3-replay72-20261004
+    paths:
+      - ".github/workflows/verify-livebench-v11-v3-tuple.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: verify/livebench-v11-v3-replay72-20261004
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact V11 tuple
+        run: |
+          set -euo pipefail
+          test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v1.py)" = "7e3885fa7a6e56df656c066e0a8f17cfa21424e7"
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v2.py)" = "dbc895a0e458e411aafd3c96e0ddc2c01e657375"
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v3.py)" = "ff977b2e34d551e5a2751852bb77d23c7c503647"
+          test "$(git hash-object canonical/runtime/instruction_constraint_compiler_v1.py)" = "a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"
+          test "$(git hash-object measure_livebench_replay72_v11_v3.py)" = "6dcd8f27e8a47258b645bf872c1246b9b8a53efa"
+          test "$(git hash-object launch_livebench_v11_v3_atomic.py)" = "362bac9016c749a21a410f5f1da60469346614eb"
+          python -m py_compile measure_livebench_replay72_v11_v3.py launch_livebench_v11_v3_atomic.py
+          python -m unittest canonical.tests.test_root2_livebench_if_astra_inference_adapter_v3 -v
+      - name: Verify aggregate-only and preclaim guards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          m=Path("measure_livebench_replay72_v11_v3.py").read_text()
+          l=Path("launch_livebench_v11_v3_atomic.py").read_text()
+          assert 'replay_prefix_limit": REPLAY_LIMIT' in m
+          assert '"case_73_or_later": False' in m
+          assert '"case_ids_emitted": False' in m
+          assert '"prompt_text_emitted": False' in m
+          assert '"response_text_emitted": False' in m
+          assert 'LIVEBENCH_CASE_RECEIPT=' not in m
+          assert 'atomic_claim()' in l
+          assert l.index('atomic_claim()') < l.index('import measure_livebench_replay72_v11_v3')
+          assert 'CANDIDATE_GIT_BLOB = "70e22fa3c494711ddc00e7c36d98b9be0239cbb9"' in l
+          assert 'MEASURER_GIT_BLOB = "6dcd8f27e8a47258b645bf872c1246b9b8a53efa"' in l
+          print("PASS: V11 tuple and chronology guards")
+          PY
