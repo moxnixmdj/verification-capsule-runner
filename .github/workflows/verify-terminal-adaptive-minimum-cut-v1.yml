@@ -1,0 +1,48 @@
+name: Verify terminal adaptive minimum cut v1
+
+on:
+  pull_request:
+    paths:
+      - "verify_terminal_adaptive_minimum_cut_v1.py"
+      - "canonical/runtime/minimum_terminal_cut_solver_v2.py"
+      - "canonical/tests/test_minimum_terminal_cut_solver_v2.py"
+      - "canonical/runtime/terminal_adaptive_supertransaction_v1.py"
+      - "canonical/tests/test_terminal_adaptive_supertransaction_v1.py"
+      - "canonical/governance/TERMINAL_ADAPTIVE_MINIMUM_CUT_ACTIVATION_V1.json"
+      - "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json"
+      - "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5.json"
+      - "canonical/governance/ROOT3_MINIMUM_ACTION_CUT_V2.json"
+      - "canonical/governance/GLOBAL_RETRIEVAL_CURRENT_AUTHORITY_V1.json"
+      - "canonical/verification/TB4_ATTAINABILITY_CUT_VERDICT_20261002_V1.json"
+      - "canonical/governance/FINANCE_INDEX_DIRECT_THRESHOLD_ACTIVATION_V1.json"
+      - "canonical/governance/FINANCE_AGENT_V2_ZERO_COST_TOOL_BOUNDARY_20261004_V1.json"
+      - "canonical/governance/OSWORLD_OPUS55_METHODOLOGY_PUBLIC_CORROBORATION_20261004_V1.json"
+      - ".github/workflows/verify-terminal-adaptive-minimum-cut-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: ${{ github.event.pull_request.head.sha || github.sha }} }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python verify_terminal_adaptive_minimum_cut_v1.py
+      - run: python -m pytest -q canonical/tests/test_minimum_terminal_cut_solver_v2.py
+      - run: python -m pytest -q canonical/tests/test_terminal_adaptive_supertransaction_v1.py
+      - run: python canonical/runtime/terminal_adaptive_supertransaction_v1.py > adaptive_result.json
+      - run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("adaptive_result.json"))
+          assert x["pass"] is True,x
+          assert x["causal_phase_upper_bound"]==2,x
+          assert x["automatic_finality"]["separate_manual_phase_required"] is False,x
+          assert x["terminal_state"]["unresolved_predicates"]==26,x
+          assert x["fresh_reality_authority"] is False,x
+          PY
