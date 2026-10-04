@@ -176,7 +176,7 @@ def _transfer_case(secret: bytes, beacon: str, index: int, *, namespace: str) ->
     rows = _role_rows(len(roles))
     a_map, a_distractors = _surface_ids(secret, beacon, index, namespace + "_A", roles)
     b_map, b_distractors = _surface_ids(secret, beacon, index, namespace + "_B", roles)
-    if set(a_map.values()) | set(a_distractors) & (set(b_map.values()) | set(b_distractors)):
+    if (set(a_map.values()) | set(a_distractors)) & (set(b_map.values()) | set(b_distractors)):
         raise UnknownDomainGeneratorError("DOMAIN_VOCABULARY_OVERLAP")
 
     source_observations = []
