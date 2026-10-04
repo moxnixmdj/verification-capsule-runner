@@ -1,0 +1,20 @@
+name: Verify LiveBench output-overlay authority rebind V2
+
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_output_overlay_rebind_v2_20261004.py'
+      - 'subject/livebench_output_overlay_rebind_v2_20261004/**'
+      - '.github/workflows/verify-livebench-output-overlay-rebind-v2-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact root delta and scoped authority preservation
+        run: python verify_livebench_output_overlay_rebind_v2_20261004.py
