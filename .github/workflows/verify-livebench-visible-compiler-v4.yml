@@ -1,0 +1,50 @@
+name: Verify LiveBench visible compiler V4
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_visible_compiler_v4_20261005/**"
+      - "verify_livebench_visible_compiler_v4.py"
+      - ".github/workflows/verify-livebench-visible-compiler-v4.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Install exact import dependencies
+        run: python -m pip install --disable-pip-version-check nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+      - name: Checkout pinned public source and historical generator
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench /tmp/LiveBenchGenerator
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          git init /tmp/LiveBenchGenerator
+          git -C /tmp/LiveBenchGenerator remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBenchGenerator fetch --depth 1 origin 686be1e78a0ba8036d7e355bc406e1a265da5292
+          git -C /tmp/LiveBenchGenerator checkout --detach FETCH_HEAD
+      - name: Run exact public grammar roundtrip audit
+        run: python verify_livebench_visible_compiler_v4.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_visible_compiler_v4_audit.json; then
+            cat livebench_visible_compiler_v4_audit.json
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-visible-compiler-v4-audit
+          path: livebench_visible_compiler_v4_audit.json
+          if-no-files-found: error
