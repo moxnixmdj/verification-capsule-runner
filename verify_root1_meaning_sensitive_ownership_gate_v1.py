@@ -6,7 +6,7 @@ from pathlib import Path
 
 EXPECTED = {
   "canonical/governance/ROOT1_MEANING_SENSITIVE_OWNERSHIP_GATE_V1.json": "1323e66bcad9c3ba994c19ca765076a2e87605d2",
-  "canonical/runtime/root1_meaning_sensitive_ownership_gate_v1.py": "791e8349a56404d558f78be5bb86eec39b2a9f17",
+  "canonical/runtime/root1_meaning_sensitive_ownership_gate_v1.py": "d8ea9e56a98113e65769ccbadad2d11a9e32ae03",
   "canonical/tests/test_root1_meaning_sensitive_ownership_gate_v1.py": "f6220cea98ca72f6d4c53e988ce15ec96f3d9d1b",
   "canonical/action_intents/2026-10-04_ROOT1_MEANING_SENSITIVE_OWNERSHIP_GATE_V1.json": "252e28be941f7ac036876da52512c548906c7303",
   "canonical/governance/LIVEBENCH_ROOT1_QWEN38_4B_SEMANTIC_SEED_PRECOMMIT_V1.json": "49dad45f14b4afa81799cc0e3dcb18293ab2fca9",
