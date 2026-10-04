@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
   "date": "2026-10-04",
-  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__DETERMINISTIC_IDENTITY_AND_POST_201_RECOVERY_CANDIDATE__INDEPENDENT_VERIFICATION_REQUIRED__NO_CASES_CONSUMED__ZERO_CREDIT",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__DETERMINISTIC_IDENTITY_AND_COMPLETE_POST_201_RECOVERY_CANDIDATE__INDEPENDENT_VERIFICATION_REQUIRED__NO_CASES_CONSUMED__ZERO_CREDIT",
   "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
   "authorized_leaves": [
     "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
@@ -62,7 +62,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "0293f9ac3532e56d4e1013b788806b63291384fa",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "00eada56105a27956668d04a02830be8ae32a991",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "a4315a0ee28ae82145594b7a9abbd00bae61ceb9",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/verification/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "36452412fb60ce38405f139111eba98b5cebc040",
@@ -169,11 +169,12 @@
     "production_cases_consumed_before_repair": 0
   },
   "result_recovery": {
-    "invariant": "HTTP_201_IS_THE_IRREVERSIBLE_ONE_USE_LINEARIZATION_POINT__EVERY_ORDINARY_POST_201_PATH_MUST_PRODUCE_A_SANITIZED_NONREPLAYABLE_RESULT_OR_PRESERVE_IT_BEFORE_REMOTE_COMMIT",
-    "launcher_git_blob_sha": "0293f9ac3532e56d4e1013b788806b63291384fa",
-    "invalid_201_response_behavior": "SEAL_NO_EXECUTION_FAIL_CLOSED_RESULT",
+    "invariant": "HTTP_201_IS_THE_IRREVERSIBLE_ONE_USE_LINEARIZATION_POINT__EVERY_ORDINARY_POST_201_PATH_MUST_SEAL_A_SANITIZED_NONREPLAYABLE_RESULT",
+    "launcher_git_blob_sha": "00eada56105a27956668d04a02830be8ae32a991",
+    "invalid_or_nonmapping_201_response_behavior": "SEAL_NO_EXECUTION_FAIL_CLOSED_RESULT",
     "execution_exception_behavior": "SEAL_POST_CLAIM_EXCEPTION_FAIL_CLOSED_RESULT",
-    "pre_remote_commit_recovery": "WRITE_LOCAL_SANITIZED_RESULT_AND_EMIT_SHA256_PLUS_SANITIZED_JSON_TO_ACTIONS_LOG",
+    "pre_remote_commit_recovery": "EMIT_SANITIZED_RESULT_SHA256_AND_JSON_TO_ACTIONS_LOG_BEFORE_BEST_EFFORT_LOCAL_FILE_WRITE_AND_REMOTE_RESULT_COMMIT",
+    "local_write_failure_behavior": "LOG_FAILURE_AND_CONTINUE_TO_REMOTE_RESULT_COMMIT",
     "raw_hidden_records_persisted": false,
     "raw_evaluator_secret_persisted": false,
     "raw_beacon_persisted": false,
