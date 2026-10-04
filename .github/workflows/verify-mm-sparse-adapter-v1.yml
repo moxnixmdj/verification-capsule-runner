@@ -1,0 +1,30 @@
+name: Verify MM sparse symbolic adapter
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/mm_sparse_adapter_v1/**"
+      - "verify_mm_sparse_adapter_v1.py"
+      - ".github/workflows/verify-mm-sparse-adapter-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify frozen sparse symbolic adapter
+        run: python verify_mm_sparse_adapter_v1.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mm-sparse-adapter-v1-verification
+          path: mm_sparse_adapter_v1_verification.json
+          if-no-files-found: error
