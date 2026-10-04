@@ -1,0 +1,35 @@
+name: Probe Qwen3.8 Q3/Q2 Zero-Cost Fit
+on:
+  push:
+    branches:
+      - probe/qwen38-q3-zero-cost-fit-20261004-v1
+    paths:
+      - run_qwen38_quant_zero_cost_fit_probe.py
+      - .github/workflows/probe-qwen38-quant-zero-cost-fit.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qwen38-quant-zero-cost-fit-20261004-v1
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record runner baseline
+        run: |
+          df -h
+          free -h
+      - name: Run exact Q3 then Q2 fallback fit probe
+        run: python run_qwen38_quant_zero_cost_fit_probe.py
+      - name: Upload fit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-quant-zero-cost-fit-receipt
+          path: qwen38_quant_zero_cost_fit_receipt.json
+          if-no-files-found: error
