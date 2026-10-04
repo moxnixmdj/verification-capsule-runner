@@ -4,6 +4,15 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 SUB=ROOT/"subject"/"livebench_zero_case_resource_fit_20261004"
+EXPECTED_GOAL_COMPILER_BLOB="4b61fe911471854ec15c7900816f61e9e55f602e"
+
+def git_blob(path: Path) -> str:
+    b=path.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+
+actual_goal_compiler_blob=git_blob(SUB/"goal_compiler.py")
+assert actual_goal_compiler_blob==EXPECTED_GOAL_COMPILER_BLOB,(actual_goal_compiler_blob,EXPECTED_GOAL_COMPILER_BLOB)
+
 
 canonical=types.ModuleType("canonical")
 runtime=types.ModuleType("canonical.runtime")
@@ -55,4 +64,6 @@ else:
       "paid_external_model_or_api_used":False,
     }
 
+result["goal_compiler_blob_sha"]=actual_goal_compiler_blob
+result["goal_compiler_exact"]=actual_goal_compiler_blob==EXPECTED_GOAL_COMPILER_BLOB
 print(json.dumps(result,sort_keys=True))
