@@ -13,13 +13,13 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    runs-on: macos-14
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12.10"
+          python-version: "3.12.14"
       - name: Install exact scorer dependencies
         run: |
           set -euo pipefail
