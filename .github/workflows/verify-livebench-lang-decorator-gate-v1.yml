@@ -1,0 +1,36 @@
+name: Verify LiveBench language decorator gate V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verification/livebench_lang_decorator_gate_v1.py"
+      - ".github/workflows/verify-livebench-lang-decorator-gate-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12.10", "3.13"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install exact detector dependency
+        run: python -m pip install --disable-pip-version-check "langdetect==1.0.9"
+      - name: Verify exact 30-carrier decorator gate
+        run: python verification/livebench_lang_decorator_gate_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-lang-decorator-gate-v1-${{ matrix.python }}
+          path: livebench_lang_decorator_gate_v1_receipt.json
+          if-no-files-found: error
