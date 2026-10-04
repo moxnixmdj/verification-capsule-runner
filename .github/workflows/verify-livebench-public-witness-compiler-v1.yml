@@ -1,0 +1,38 @@
+name: Verify LiveBench public witness compiler v1
+on:
+  push:
+    branches:
+      - "verify/livebench-public-witness-compiler-v1-20261004"
+    paths:
+      - "capsules/livebench_public_witness_compiler_v1/**"
+      - ".github/workflows/verify-livebench-public-witness-compiler-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/livebench_public_witness_compiler_v1/**"
+      - ".github/workflows/verify-livebench-public-witness-compiler-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact public scorer dependency surface
+        run: |
+          python -m pip install --disable-pip-version-check nltk
+          python - <<'PY'
+          import nltk
+          nltk.download("punkt", quiet=True)
+          nltk.download("punkt_tab", quiet=True)\n          nltk.download("stopwords", quiet=True)
+          PY
+      - name: Compile candidate and verifier
+        run: |
+          python -m py_compile capsules/livebench_public_witness_compiler_v1/subject/livebench_public_witness_compiler_v1.py
+          python -m py_compile capsules/livebench_public_witness_compiler_v1/verify.py
+      - name: Execute pinned public checker bodies
+        run: python capsules/livebench_public_witness_compiler_v1/verify.py
