@@ -74,5 +74,38 @@ class ProductionLauncherTests(unittest.TestCase):
             import hashlib
             self.assertEqual(digest,hashlib.sha256(raw).hexdigest())
 
+    def test_result_persistence_recovers_exact_existing_bytes_after_ambiguous_write(self):
+        content={"schema":"X","status":"PRODUCTION_PASS","case_results":[{"case_id":"c1","pass":True}]}
+        raw=prod._result_bytes(content)
+        puts={"n":0}
+        def fake_put(repo,token,branch,path,doc):
+            puts["n"]+=1
+            return 0,{"message":"TimeoutError"}
+        def fake_get(repo,token,branch,path):
+            return 200,raw,"d"*40
+        receipt=prod.persist_result_durable(
+            repo="x/y",token="t",branch="claim",path="result.json",content=content,
+            attempts=1,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,emit_recovery=False,
+        )
+        self.assertEqual(puts["n"],1)
+        self.assertEqual(receipt["status"],"DURABLE_VERIFIED_EXISTING")
+        self.assertEqual(receipt["content_sha"],"d"*40)
+
+    def test_result_persistence_retries_and_fails_closed_without_exact_remote_bytes(self):
+        content={"schema":"X","status":"PRODUCTION_PASS"}
+        puts={"n":0}
+        def fake_put(repo,token,branch,path,doc):
+            puts["n"]+=1
+            return 503,{"message":"temporary"}
+        def fake_get(repo,token,branch,path):
+            return 200,b"wrong-bytes","e"*40
+        with self.assertRaisesRegex(prod.ProductionLaunchError,"RESULT_DURABILITY_NOT_ESTABLISHED:503"):
+            prod.persist_result_durable(
+                repo="x/y",token="t",branch="claim",path="result.json",content=content,
+                attempts=3,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,emit_recovery=False,
+            )
+        self.assertEqual(puts["n"],3)
+
+
 if __name__=="__main__":
     unittest.main(verbosity=2)
