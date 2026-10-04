@@ -1,0 +1,132 @@
+name: Verify Brain Universal Learning V6 Pointer Rebind
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v6_pointer_rebind/**"
+      - ".github/workflows/verify-brain-universal-learning-v6-pointer-rebind.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/universal_learning_v6_pointer_rebind
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          print("exact Brain blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+
+      - name: Verify V6 activation dependencies and frozen leaves
+        run: |
+          cd capsules/universal_learning_v6_pointer_rebind
+          python - <<'PY'
+          import json
+          def r(p): return json.load(open(p,encoding="utf-8"))
+
+          act=r("canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6_ACTIVATION_V1.json")
+          red=r("canonical/governance/UNKNOWN_DOMAIN_V6_STRUCTURAL_RESIDUAL_REDUCTION_V1.json")
+          proto=r("canonical/governance/UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1.json")
+          v6=r("canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6.json")
+          v6v=r("canonical/verification/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json")
+          v5a=r("canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_ACTIVATION_V1.json")
+          v5av=r("canonical/verification/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json")
+
+          assert v6v["independent_runner"]["conclusion"]=="success",v6v
+          assert "INDEPENDENT_PUBLIC_RUNNER_PASS" in v6v["status"],v6v["status"]
+          assert act["v6_candidate"]["git_blob_sha"]=="65e291e3afebbf3547771ee580104361d1920788",act
+          assert act["v6_independent_verification"]["git_blob_sha"]=="ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",act
+          assert act["verified_v5_base"]["activation_git_blob_sha"]=="ee5d7e2a989df687e19f6be95c7d25600d1a32ec",act
+          assert act["verified_v5_base"]["activation_verification_git_blob_sha"]=="1001e25ca59c57b13049a22f305e487eb01f693a",act
+          assert act["frozen_protocol"]["git_blob_sha"]=="fd586455d582c38c7062ffe735f86cb9f2e803ab",act
+
+          assert v5av["independent_runner"]["final_green"]["conclusion"]=="success",v5av
+          assert v5a["preserved_residual"]["leaves_open"]==2,v5a
+
+          leaves={x["id"]:x for x in proto["leaves"]}
+          reduced={x["leaf_id"]:x for x in red["leaf_reductions"]}
+          assert set(leaves)==set(reduced), (set(leaves),set(reduced))
+          for leaf_id,leaf in leaves.items():
+              rr=reduced[leaf_id]
+              assert rr["closure"] is False,rr
+              assert rr["frozen_acceptance_preserved_exact"]==leaf["acceptance"],(leaf_id,rr["frozen_acceptance_preserved_exact"],leaf["acceptance"])
+
+          assert red["summary"]["leaves_before"]==2,red["summary"]
+          assert red["summary"]["leaves_after"]==2,red["summary"]
+          assert red["summary"]["leaves_closed"]==0,red["summary"]
+          assert red["summary"]["acceptance_truth_changed"] is False,red["summary"]
+
+          assert v6["acceptance_credit_delta"]==0 and v6["ownership_credit_delta"]==0,v6
+          assert v6["fresh_reality_authority"] is False and v6["promotion_authority"] is False,v6
+          assert act["acceptance_credit_delta"]==0 and act["ownership_credit_delta"]==0,act
+          assert act["fresh_reality_authority"] is False and act["promotion_authority"] is False,act
+          print("V6 activation dependencies and frozen leaves: PASS")
+          PY
+
+      - name: Verify content-addressed pointer chain and terminal truth
+        run: |
+          cd capsules/universal_learning_v6_pointer_rebind
+          python - <<'PY'
+          import hashlib,json,pathlib
+          def r(p): return json.load(open(p,encoding="utf-8"))
+          def sha(p):
+              b=pathlib.Path(p).read_bytes()
+              return hashlib.sha1(f"blob {len(b)}\0".encode()+b).hexdigest()
+
+          rootp="canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json"
+          cutp="canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V8.json"
+          frontp="canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json"
+          termp="canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json"
+
+          root=r(rootp); cut=r(cutp); front=r(frontp); term=r(termp)
+          root_sha,cut_sha,front_sha=sha(rootp),sha(cutp),sha(frontp)
+
+          rows=[x for x in root["compressed_residuals"] if x.get("predicate_id")=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT"]
+          assert len(rows)==1,rows
+          u=rows[0]
+          assert u["operative_learning_overlay"]=="UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6",u
+          assert u["operative_learning_overlay_verified"] is True,u
+          assert "TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES" in u["current_residual"],u
+
+          v6a=root["authority"]["universal_learning_v6_overlay"]
+          assert v6a["governance_git_blob_sha"]=="65e291e3afebbf3547771ee580104361d1920788",v6a
+          assert v6a["verification_git_blob_sha"]=="ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",v6a
+          assert v6a["activation_git_blob_sha"]=="917a645e103189755cd7e8370f141012c6b8cb87",v6a
+          assert v6a["structural_residual_reduction_git_blob_sha"]=="1d47f707bf5bd3d2f07c8f02bc66d7edab046541",v6a
+
+          assert cut["authority"]["root3_compression"]["git_blob_sha"]==root_sha,cut["authority"]["root3_compression"]
+          assert front["authority"]["root3_residual_compression"]["git_blob_sha"]==root_sha,front["authority"]["root3_residual_compression"]
+
+          src=term["sources"]
+          assert src["root3_residual_compression_v1"]["git_blob_sha"]==root_sha,src["root3_residual_compression_v1"]
+          assert src["current_zero_reality_minimum_cut_v8"]["git_blob_sha"]==cut_sha,src["current_zero_reality_minimum_cut_v8"]
+          assert src["root2_root3_minimum_execution_frontier_v1"]["git_blob_sha"]==front_sha,src["root2_root3_minimum_execution_frontier_v1"]
+
+          tv6=src["universal_learning_mechanism_discovery_v6"]
+          assert tv6["governance_git_blob_sha"]=="65e291e3afebbf3547771ee580104361d1920788",tv6
+          assert tv6["verification_git_blob_sha"]=="ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",tv6
+          assert tv6["activation_git_blob_sha"]=="917a645e103189755cd7e8370f141012c6b8cb87",tv6
+          assert tv6["structural_residual_reduction_git_blob_sha"]=="1d47f707bf5bd3d2f07c8f02bc66d7edab046541",tv6
+
+          assert term["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN",term["truth"]
+          assert term["truth"]["achieved"] is False,term["truth"]
+          assert root["fresh_reality_authority"] is False and root["promotion_authority"] is False,root
+          assert cut["fresh_reality_authority"] is False and cut["promotion_authority"] is False,cut
+          print("V6 pointer chain and terminal truth: PASS")
+          PY
