@@ -1,0 +1,21 @@
+name: Probe LiveBench langdetect beacons
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'probe_livebench_lang_beacons_v1.py'
+      - '.github/workflows/probe-livebench-lang-beacons-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-cache-dir langdetect==1.0.9
+      - run: python probe_livebench_lang_beacons_v1.py
