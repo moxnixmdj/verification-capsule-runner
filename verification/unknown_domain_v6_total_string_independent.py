@@ -26,11 +26,11 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py":"e52858b9fef2d795f72b45cd3ae82ad04344aa91",
- "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"a97459fe407ea4852f57f12f504fbc0121db9824",
+ "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"60373126f3ee27368ae06e6d7d559f1b826d90d4",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
- "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58410966e17c1bc546db8cab039891f3ab2bf8a8",
- "canonical/tests/test_unknown_domain_direct_v5.py":"81cd6ecabec51029175f6036a13eac7667fccd03",
+ "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
+ "canonical/tests/test_unknown_domain_direct_v5.py":"5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
 }
 
 def blob(path:Path)->str:
@@ -42,12 +42,15 @@ assert got==EXPECTED, {"expected":EXPECTED,"got":got}
 
 # 1. Independently bind the actual implementation to total surrogatepass
 # canonicalization before any legacy strict-UTF8 helper is reached.
+gate_src="".join(inspect.getsource(g5._beacon_gate).split())
 beacon_src="".join(inspect.getsource(g5._canonical_beacon).split())
 secret_src="".join(inspect.getsource(g5._secret_bytes_total).split())
-assert '.encode("utf-8","surrogatepass")' in beacon_src
+assert 'len(str.strip(beacon))<16' in gate_src
+assert 'str.encode(text,"utf-8","surrogatepass")' in beacon_src
 assert '.hex()' in beacon_src
 assert 'return"UDIRV5-BEACON-HEX|"+raw.hex()' in beacon_src
-assert '.encode("utf-8","surrogatepass")' in secret_src
+assert 'str.encode(secret,"utf-8","surrogatepass")' in secret_src
+assert 'bytes.__getitem__(secret,slice(None))' in secret_src
 
 # Exhaust every Python Unicode scalar/code-point slot including D800-DFFF
 # through the exact V5 functions. Decode roundtrip establishes byte-level
@@ -69,6 +72,61 @@ for cp in range(0x110000):
         surrogate_codepoints+=1
 assert unicode_codepoints==0x110000
 assert surrogate_codepoints==0x800
+
+# 1b. Explicitly attack the domain that falsified the old universal theorem:
+# isinstance-accepted subclasses whose overridable instance hooks explode.
+class EvilStr(str):
+    def __getattribute__(self,name):
+        raise RuntimeError("OVERRIDDEN_GETATTRIBUTE_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("OVERRIDDEN_LEN_MUST_NOT_RUN")
+    def __getitem__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_GETITEM_MUST_NOT_RUN")
+    def __iter__(self):
+        raise RuntimeError("OVERRIDDEN_ITER_MUST_NOT_RUN")
+    def strip(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_STRIP_MUST_NOT_RUN")
+    def encode(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_ENCODE_MUST_NOT_RUN")
+
+class EvilBytes(bytes):
+    def __getattribute__(self,name):
+        raise RuntimeError("OVERRIDDEN_GETATTRIBUTE_MUST_NOT_RUN")
+    def __bytes__(self):
+        raise RuntimeError("OVERRIDDEN_BYTES_MUST_NOT_RUN")
+    def __buffer__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_BUFFER_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("OVERRIDDEN_LEN_MUST_NOT_RUN")
+    def __getitem__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_GETITEM_MUST_NOT_RUN")
+    def __iter__(self):
+        raise RuntimeError("OVERRIDDEN_ITER_MUST_NOT_RUN")
+
+evil_beacon=EvilStr("A"*16+"\ud800")
+evil_secret=EvilStr("S"*31+"\udfff")
+evil_bytes=EvilBytes(b"B"*32)
+assert isinstance(evil_beacon,str)
+assert isinstance(evil_secret,str)
+assert isinstance(evil_bytes,bytes)
+canon_evil=g5._canonical_beacon(evil_beacon)
+assert canon_evil.isascii()
+assert canon_evil=="UDIRV5-BEACON-HEX|"+str.encode(evil_beacon,"utf-8","surrogatepass").hex()
+assert g5._secret_bytes_total(evil_secret)==str.encode(evil_secret,"utf-8","surrogatepass")
+assert g5._secret_bytes_total(evil_bytes)==b"B"*32
+
+evil_packet=g5._generate(
+    beacon=evil_beacon,
+    evaluator_secret=evil_secret,
+    namespace="V6SUBCLASS",
+)
+assert evil_packet["case_count"]==27
+evil_rows=[]
+for visible,hidden in zip(evil_packet["visible_cases"],evil_packet["hidden_records"],strict=True):
+    out=harness.execute_case(candidate_step=c3.step,case_visible=visible,hidden_record=hidden)
+    assert out["scorer_result"]["pass"] is True,(visible["case_id"],out["scorer_result"])
+    evil_rows.append(out["scorer_result"])
+assert scorer.aggregate(evil_rows)["all_27_cases_pass"] is True
 
 # 2. Preserve the concrete pre-repair failure: V4 accepts the string gate but
 # legacy strict UTF-8 cannot encode a lone surrogate.
@@ -176,6 +234,8 @@ assert cases==6912
 theorem=proposed.prove(ROOT)
 assert theorem["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
 assert theorem["string_interface_totality"]["legacy_strict_utf8_partiality_removed"] is True
+assert theorem["string_interface_totality"]["isinstance_accepted_subclass_override_hooks_bypassed"] is True
+assert theorem["string_interface_totality"]["bytes_subclass_buffer_protocol_override_bypassed"] is True
 assert theorem["identifier_totality_proof"]["token_collision_resistance_required_for_semantic_distinctness"] is False
 assert theorem["identifier_totality_proof"]["forced_total_token_collision_survives_construction"] is True
 assert theorem["transfer_proof"]["add2_exact_float_order_repaired"] is True
@@ -183,12 +243,29 @@ assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["accounting"]["acceptance_credit_delta"]==0
 
 receipt={
- "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_STRING_INDEPENDENT_VERIFICATION_V1",
- "status":"PASS__INDEPENDENT_CONTENT_BOUND_TOTAL_STRING_STRUCTURAL_ID_EXACTNESS_AND_6912_CASE_FALSIFICATION__ZERO_CREDIT",
- "brain_subject_commit":"704a60674e30de927bafaacecaf8a840d4632dbd",
+ "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
+ "status":"PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
+ "brain_subject_ref":"breakthrough/unknown-domain-v6-subclass-revocation-20261005",
  "exact_subject_blobs":EXPECTED,
  "unicode_codepoints_exhausted":unicode_codepoints,
  "surrogate_codepoints_exhausted":surrogate_codepoints,
+ "adversarial_str_subclass_totality_pass":True,
+ "adversarial_str_hooks_overridden":["__getattribute__","__len__","__getitem__","__iter__","strip","encode"],
+ "adversarial_bytes_subclass_totality_pass":True,
+ "adversarial_bytes_hooks_overridden":["__getattribute__","__bytes__","__buffer__","__len__","__getitem__","__iter__"],
+ "base_bytes_descriptor_full_slice_verified":True,
+ "repair_properties_verified":[
+   "STR_GATE_USES_BASE_STR_STRIP_DESCRIPTOR",
+   "STR_CANONICALIZATION_USES_BASE_STR_ENCODE_DESCRIPTOR",
+   "BYTES_SECRET_MATERIALIZATION_USES_BASE_BYTES_GETITEM_FULL_SLICE",
+   "NO_INSTANCE_STRIP_ENCODE_BYTES_BUFFER_LEN_GETITEM_OR_ITER_HOOK_IS_LOAD_BEARING"
+ ],
+ "required_subclass_attack_properties_pass":True,
+ "all_2048_surrogate_codepoints_rechecked":surrogate_codepoints==2048,
+ "forced_total_token_collision_regression_rechecked":True,
+ "nonproduction_ordinary_edge_matrix_rechecked":cases==6912,
+ "zero_production_or_terminal_cases_consumed":True,
+ "subclass_nonproduction_cases_exact_scorer_pass":27,
  "v4_strict_utf8_counterexample_preserved":v4_surrogate_counterexample,
  "forced_total_token_collision_survival":True,
  "v2_exact_float_counterexample":counterexample,
@@ -201,7 +278,7 @@ receipt={
    "SEPARATE_FAIL_CLOSED_ROOT3_AND_ACCEPTANCE_REDUCTION_REQUIRED"
  ],
 }
-Path("unknown_domain_v6_total_string_receipt.json").write_text(
+Path("unknown_domain_v6_subclass_repair_receipt.json").write_text(
     json.dumps(receipt,indent=2,sort_keys=True,ensure_ascii=True)+"\n",encoding="utf-8"
 )
 print(json.dumps(receipt,sort_keys=True,ensure_ascii=True))
