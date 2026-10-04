@@ -151,3 +151,4 @@ def main():
 
 if __name__=="__main__":
     raise SystemExit(main())
+# synchronize trigger: relaunch range-only delta probe; semantics unchanged
