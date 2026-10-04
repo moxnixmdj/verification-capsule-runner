@@ -57,3 +57,5 @@ assert b["promotion_authority"] is False
 assert b["fresh_reality_authority"] is False
 
 print("ROOT2_V6_PROJECTION_INDEPENDENT_PASS__POINTER_COHERENT__EFFECTIVE_SCHEDULING_FALSE__ZERO_CREDIT")
+
+# trigger independent base-resident workflow
