@@ -1,0 +1,31 @@
+name: Verify Unknown-Domain V6 subclass repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/unknown_domain_v6_20261005/**"
+      - "verify_unknown_domain_v6_subclass_repair.py"
+      - "verify_unknown_domain_v6_total_exact.py"
+      - ".github/workflows/verify-unknown-domain-v6-subclass-repair.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently attack repaired subclass totality
+        run: python verify_unknown_domain_v6_subclass_repair.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v6-subclass-repair-verification
+          path: unknown_domain_v6_subclass_repair_verification.json
+          if-no-files-found: error
