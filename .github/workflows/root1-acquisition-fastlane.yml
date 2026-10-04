@@ -21,7 +21,7 @@ jobs:
       - name: Q2 exact identity and runner fit preflight
         run: python fastlane_qwen38_q2_preflight.py
       - name: Install numeric dependency for Smaug delta probe
-        run: python -m pip install --quiet "numpy==2.3.3"
+        run: python -m pip install --quiet "numpy==2.3.3" "requests==2.32.5"
       - name: Smaug delta singular-spectrum probe
         run: python fastlane_smaug_delta_probe.py
       - name: Upload receipts
@@ -31,5 +31,5 @@ jobs:
           name: root1-acquisition-fastlane
           path: |
             qwen38_q2_standard_runner_preflight_receipt.json
-            smaug_lora_delta_range_probe_v1.json
+            smaug_remote_range_delta_spectrum_v1.json
           if-no-files-found: warn
