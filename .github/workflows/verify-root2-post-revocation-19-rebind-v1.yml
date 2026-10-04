@@ -1,0 +1,17 @@
+name: Verify Root2 post-revocation 19-predicate rebind V1
+on:
+  pull_request:
+    paths:
+      - 'subject/root2_post_revocation_19_rebind_v1/**'
+      - 'verify_root2_post_revocation_19_rebind_v1.py'
+      - '.github/workflows/verify-root2-post-revocation-19-rebind-v1.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_root2_post_revocation_19_rebind_v1.py
