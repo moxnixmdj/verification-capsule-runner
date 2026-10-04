@@ -1,0 +1,26 @@
+name: Verify LiveBench V8 structural refinement
+on:
+  push:
+    branches:
+      - "diagnose/livebench-v8-structural-refinement-20261004"
+    paths:
+      - "VERIFY_LIVEBENCH_V8_STRUCTURAL"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "diagnose/livebench-v8-structural-refinement-20261004"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact structural diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile livebench_v8_structural_classifier.py diagnose_livebench_replay72_v8_structural.py verify_livebench_v8_structural_refinement.py
+          python verify_livebench_v8_structural_refinement.py
