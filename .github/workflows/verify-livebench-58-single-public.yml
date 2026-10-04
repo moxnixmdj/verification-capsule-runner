@@ -1,0 +1,55 @@
+name: Verify LiveBench 58-family public single-checker solver
+on:
+  push:
+    branches:
+      - verify/livebench-58-single-public-20261004
+    paths:
+      - ".github/workflows/verify-livebench-58-single-public.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: verify/livebench-58-single-public-20261004
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Pin subject bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/livebench_if_single_checker_solver_v1.py)" = "b74d986fae033ac94827c5f1eb2db655a99ae4cc"
+          test "$(git hash-object canonical/runtime/livebench_ngram_reference_free_v1.py)" = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"
+          test "$(git hash-object canonical/tests/test_livebench_if_single_checker_solver_v1.py)" = "57d64193746f653db09357bf2a0070fa27fcae22"
+          python -m pytest -q canonical/tests/test_livebench_if_single_checker_solver_v1.py
+      - name: Install exact public scorer dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --quiet             nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 setuptools==80.9.0             spacy==3.8.16 langdetect==1.0.9 immutabledict==4.3.1 pandas==2.3.3             https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+          python - <<'PY'
+          import nltk
+          for pkg in ("punkt","punkt_tab","stopwords","averaged_perceptron_tagger","averaged_perceptron_tagger_eng"):
+              assert nltk.download(pkg, quiet=True)
+          PY
+      - name: Fetch exact public sources
+        run: |
+          set -euo pipefail
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/LiveBench/LiveBench.git LiveBench
+          git -C LiveBench fetch --quiet --depth=1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C LiveBench checkout --quiet --detach 8f8e5c381a16e3f24257776edd53471fe86f8091
+          test "$(git -C LiveBench rev-parse HEAD:livebench/if_runner/ifbench/instructions.py)" = "02b2dfeb50f036b89bec3df34522c73f756d8f44"
+          test "$(git -C LiveBench rev-parse HEAD:livebench/if_runner/ifbench/evaluation_lib.py)" = "2c7bd1290031dbe4ae0f016c53255f4af0ec645b"
+          test "$(git -C LiveBench rev-parse HEAD:livebench/if_runner/ifbench/instructions_registry.py)" = "adfed4832877566e62970257b50c6fa32c302fb2"
+
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/allenai/IFBench.git IFBench
+          git -C IFBench fetch --quiet --depth=1 origin 1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d
+          git -C IFBench checkout --quiet --detach 1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d
+          test "$(git -C IFBench rev-parse HEAD:data/IFBench_test.jsonl)" = "a8e343ed928d8b4e649b9dba651fed7757ccacc3"
+      - name: Measure every public row against exact frozen scorer
+        run: |
+          set -euo pipefail
+          python verify_livebench_58_single_public.py             --livebench-root LiveBench             --ifbench-jsonl IFBench/data/IFBench_test.jsonl
