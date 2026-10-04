@@ -7,6 +7,12 @@ on:
     paths:
       - verification/qwen38_q2_cpu_semantic_probe_v1.py
       - .github/workflows/qwen38-q2-cpu-semantic-smoke-v1.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verification/qwen38_q2_cpu_semantic_probe_v1.py
+      - .github/workflows/qwen38-q2-cpu-semantic-smoke-v1.yml
   workflow_dispatch:
 
 permissions:
