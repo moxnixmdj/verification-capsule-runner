@@ -1,0 +1,22 @@
+name: Verify LiveBench exact200 promotion reduction V1
+
+on:
+  push:
+    branches: [verify-livebench-exact-brain-bytes-20261004-sol]
+    paths:
+      - 'livebench_if_exact200_acceptance_reduction_candidate_v1.json'
+      - 'verify_livebench_exact200_promotion_v1.py'
+      - '.github/workflows/verify-livebench-exact200-promotion-v1.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact Brain candidate blob
+        run: |
+          set -euo pipefail
+          test "$(git hash-object livebench_if_exact200_acceptance_reduction_candidate_v1.json)" = "ca06d966f02048fa4d857c11e8e21c4acda2f907"
+      - name: Verify reduction arithmetic and guards
+        run: python verify_livebench_exact200_promotion_v1.py
