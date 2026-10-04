@@ -326,6 +326,7 @@ def main() -> int:
         encoding="utf-8",
     )
     print(json.dumps(receipt, sort_keys=True))
+    subprocess.run([sys.executable, str(ROOT / "verify_livebench_union25_language_carrier_v1.py")], check=True)
     return 0
 
 
