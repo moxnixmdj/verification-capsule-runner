@@ -23,8 +23,8 @@ DATASET_REV = "0868379c4b5cf62aeacaf8be4f08fced815c81bb"
 DATASET_SHA256 = "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
 DATASET_BYTES = 537024
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
-AUTHORIZED_ACTIVATION_BLOB = "08929577573866dc2bead65a19a856a6b4e152d2"
-AUTHORIZED_ROOT_BLOB = "e353d54f4608d25b7f0ea06fba5d8fbf2ddfbb59"
+AUTHORIZED_ACTIVATION_BLOB = "d410d6952cb34f2fd3fb4dc48bf2a613d11c57d1"
+AUTHORIZED_ROOT_BLOB = "601e82d00104b4ed36ee5968ad966a0c02e627c1"
 AUTHORIZED_FRONTIER_BLOB = "8c1325dd652b65a7d5c24e041ac06556a84f569c"
 PRECOMMIT_BLOB = "66554061f204d8a86b37a30c84d0cf07a525a786"
 BATCH = 8
@@ -245,11 +245,33 @@ def receipts_root(receipts:list[dict])->str:
     raw=json.dumps(receipts,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
     return hashlib.sha256(raw).hexdigest()
 
+def verify_local_authority_transport():
+    local = {
+        ROOT / "subject/livebench_threshold_root_transport_v1/activation_v2.json": AUTHORIZED_ACTIVATION_BLOB,
+        ROOT / "subject/root2_output_only_threshold_activation_v1_20261004/TERMINAL_ROOT_CAUSE_STATE_V1.json": AUTHORIZED_ROOT_BLOB,
+        ROOT / "subject/livebench_threshold_root_transport_v1/threshold_projection_verification.json": "eef494009e47b758a99ab48649e050c332e4988a",
+        ROOT / "subject/livebench_threshold_root_transport_v1/prior_activation_verification.json": "34e65d54026fd246c76e0dc3ded8f9f8a1b2a4d9",
+    }
+    for p,expected in local.items():
+        if not p.is_file() or git_blob_sha(p)!=expected:
+            raise SystemExit("FAIL_CLOSED:AUTHORITY_TRANSPORT_BLOB_DRIFT:"+str(p))
+    act=json.loads((ROOT / "subject/livebench_threshold_root_transport_v1/activation_v2.json").read_text())
+    if act.get("authorized_predicates") != ["LIVEBENCH_IF_GE_65_7"]:
+        raise SystemExit("FAIL_CLOSED:AUTHORITY_SCOPE_DRIFT")
+    if (act.get("authority") or {}).get("execution") is not True:
+        raise SystemExit("FAIL_CLOSED:EXECUTION_AUTHORITY_FALSE")
+    if (act.get("authority") or {}).get("global_fresh_reality") is not False:
+        raise SystemExit("FAIL_CLOSED:GLOBAL_FRESH_REALITY_WIDENED")
+    if (act.get("authority_basis") or {}).get("root_state",{}).get("git_blob_sha") != AUTHORIZED_ROOT_BLOB:
+        raise SystemExit("FAIL_CLOSED:ROOT_BINDING_DRIFT")
+
 def main() -> int:
     if os.environ.get("GITHUB_ACTIONS") != "true" or str(os.environ.get("REPOSITORY_PRIVATE","")).lower() != "false":
         raise SystemExit("FAIL_CLOSED:PUBLIC_STANDARD_GITHUB_RUNNER_REQUIRED")
     if sys.version_info[:2] != (3,12):
         raise SystemExit("FAIL_CLOSED:PYTHON_3_12_REQUIRED")
+
+    verify_local_authority_transport()
 
     # All zero-case component checks already ran in the invoking carrier verifier.
     # Recheck exact frozen bytes here before any terminal-case download/read.
