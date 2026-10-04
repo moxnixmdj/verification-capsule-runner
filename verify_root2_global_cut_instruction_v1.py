@@ -114,15 +114,19 @@ def brute_force_cut(cut) -> dict:
 
     # Explicit dependency-reuse case that breaks naïve per-mask DP.
     actions = [
-        cut.Action("D", frozenset(), 4, 0, 1, ()),
+        cut.Action("D", frozenset(), 1, 0, 1, ()),
         cut.Action("A", frozenset({"P0"}), 1, 0, 1, ("D",)),
         cut.Action("B", frozenset({"P1"}), 1, 0, 1, ("D",)),
-        cut.Action("C", frozenset({"P0"}), 2, 0, 1, ()),
-        cut.Action("E", frozenset({"P1"}), 2, 0, 1, ()),
+        cut.Action("C", frozenset({"P0"}), 4, 0, 1, ()),
+        cut.Action("E", frozenset({"P1"}), 4, 0, 1, ()),
     ]
     out = cut.solve(["P0", "P1"], actions)
-    if out["objective"]["critical_path_wall_clock_s"] != 5.0:
+    if out["objective"]["critical_path_wall_clock_s"] != 2.0:
         raise AssertionError("DEPENDENCY_CRITICAL_PATH_WRONG")
+    if set(out["selected_root_actions"]) != {"A", "B"}:
+        raise AssertionError("SHARED_DEPENDENCY_ROUTE_NOT_SELECTED")
+    if set(out["selected_with_dependencies"]) != {"A", "B", "D"}:
+        raise AssertionError("SHARED_DEPENDENCY_NOT_ACCOUNTED")
     return {"random_exact_instances": checked, "dependency_reuse_case": "PASS"}
 
 
