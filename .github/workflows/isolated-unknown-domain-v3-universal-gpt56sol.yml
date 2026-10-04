@@ -1,0 +1,125 @@
+name: Isolated Unknown-Domain V3 universal verifier
+
+on:
+  pull_request:
+    branches:
+      - verify-sink/unknown-domain-v3-universal-20261005-gpt56sol
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_candidate_v3.py'
+      - 'canonical/tests/test_unknown_domain_direct_v3_universal_proof_v1.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolated-unknown-domain-v3-universal-20261005-gpt56sol
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact content binding
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/unknown_domain_direct_candidate_v1.py":"a2a77269a8175ce315b466035049da0f761b8734",
+            "canonical/runtime/unknown_domain_direct_candidate_v2.py":"4470716f95a559a700e461262df909ae19a41651",
+            "canonical/runtime/unknown_domain_direct_candidate_v3.py":"8df7f13455b710623806a8219174b397a2c3c442",
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+            "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
+            "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
+            "canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py":"ee5f3832fdbad5ae645b0626e9f39ebeaee2b1da",
+            "canonical/tests/test_unknown_domain_direct_candidate_v3.py":"1317f7143d0b9103bdebc817fd0b057cc9bcd43b",
+            "canonical/tests/test_unknown_domain_direct_v3_universal_proof_v1.py":"f1fa117edaf1f10401f4d33a6f78b815fa02c073",
+          }
+          def blob(path):
+            b=Path(path).read_bytes()
+            return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          got={p:blob(p) for p in expected}
+          assert got==expected,{"expected":expected,"got":got}
+          print("EXACT_CONTENT_BINDING_PASS",len(got))
+          PY
+      - name: Independent theorem attack and falsification
+        run: |
+          python - <<'PY'
+          import hashlib
+          from fractions import Fraction
+          from canonical.runtime import unknown_domain_direct_candidate_v2 as c2
+          from canonical.runtime import unknown_domain_direct_candidate_v3 as c3
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v1 as g1
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v2 as g2
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as harness
+          from canonical.runtime import unknown_domain_direct_v3_universal_proof_v1 as proof
+
+          # Independent structural checks, not copied from proof output.
+          assert tuple(g1.PRIMITIVE_FAMILIES)==(
+            "ORDER_PRESERVING_TRANSFORM","PARITY_OR_SIGN_INVARIANT",
+            "CONSERVATION_RELATION","MONOTONE_CAUSAL_EDGE",
+            "COMPOSITIONAL_REWRITE","THRESHOLD_OR_PARTITION_INVARIANT")
+          assert g1.PRODUCTION_CASE_COUNTS=={g1.TRANSFER:12,g1.ABSTAIN:15}
+          assert harness.MAX_TRANSFER_PROBES==2
+          assert Fraction(3,5)*Fraction(19,4)==Fraction(57,20)
+          assert Fraction(7,10)*Fraction(19,4)/121 > Fraction(45,10)*Fraction(1,10**9)
+          assert -Fraction(7,2)+Fraction(19,4)==Fraction(5,4)
+          assert Fraction(19,4)-Fraction(11,5)==Fraction(51,20)
+          assert min(
+            Fraction(19,4)-(Fraction(7,2)-Fraction(1,4)),
+            Fraction(25,4),Fraction(19,4),
+            Fraction(25,4)-(Fraction(7,2)-Fraction(1,4)),
+            Fraction(19,4)+Fraction(25,4))==Fraction(3,2)
+          for index in (4,10):
+            r0=tuple(-1 if (j+index)%2==0 else 1 for j in range(3))
+            r1=tuple(-1 if (j+index+1)%3==0 else 1 for j in range(3))
+            assert r0==c3.ADD2_R0_SIG==(-1,1,-1)
+            assert r1==c3.ADD2_R1_SIG==(1,-1,1)
+            assert r0!=r1
+
+          # Reproduce the exact V2 failure that falsified the first theorem.
+          secret=hashlib.sha256(b"secret0").digest()
+          beacon="beacon-qualification-0000000000000000"
+          visible,hidden=g2._transfer_case(secret,beacon,4,namespace="VERIFY")
+          v2=harness.execute_case(candidate_step=c2.step,case_visible=visible,hidden_record=hidden)
+          assert v2["scorer_result"]["pass"] is False
+          assert "DOMAIN_B_TERMINAL_CONSEQUENCE_WRONG" in v2["scorer_result"]["errors"]
+          assert set(v2["candidate_terminal_action"]["support_feature_ids"])==set(hidden["transfer_relevant_feature_ids"])
+          v3=harness.execute_case(candidate_step=c3.step,case_visible=visible,hidden_record=hidden)
+          assert v3["scorer_result"]["pass"] is True,v3
+          assert v3["candidate_terminal_action"]["terminal_consequence"]==hidden["gold_terminal_consequence"]
+
+          # Execute the content-bound theorem.
+          theorem=proof.prove()
+          assert theorem["status"]=="PASS__UNIVERSAL_OVER_EXACT_FROZEN_V2_GENERATOR_DOMAIN_WITH_V3_EXACTNESS_REPAIR"
+          assert theorem["fresh_reality_required_for_this_exact_frozen_evaluator_claim"] is False
+          assert theorem["production_execution_information_gain_for_this_exact_evaluator_claim"]==0
+
+          # Independent deterministic falsification sweep over 1,024 post-freeze-like populations.
+          cases=0
+          max_probes=0
+          for i in range(1024):
+            secret=hashlib.sha256(("v3-independent-secret-"+str(i)).encode()).digest()
+            beacon=f"V3-INDEPENDENT-BEACON-{i:06d}-20261005"
+            pop=g2._generate(beacon=beacon,evaluator_secret=secret,namespace="VERIFY")
+            assert pop["case_count"]==27
+            for visible,hidden in zip(pop["visible_cases"],pop["hidden_records"]):
+              out=harness.execute_case(candidate_step=c3.step,case_visible=visible,hidden_record=hidden)
+              sr=out["scorer_result"]
+              assert sr["pass"] is True,(i,visible["case_id"],sr.get("errors"))
+              max_probes=max(max_probes,int(out.get("probe_count",0)))
+              cases+=1
+          assert cases==27648
+          assert max_probes<=2
+          print("INDEPENDENT_V3_PASS",{"populations":1024,"cases":cases,"max_probes":max_probes})
+          PY
