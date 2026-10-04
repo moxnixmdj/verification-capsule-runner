@@ -1,0 +1,53 @@
+name: Verify LiveBench legacy15 joint witness exhaustively
+
+on:
+  push:
+    branches:
+      - "verify/livebench-legacy15-joint-exhaustive-20261004-sol"
+    paths:
+      - "capsules/livebench_legacy15_joint_exhaustive/**"
+      - ".github/workflows/verify-livebench-legacy15-joint-exhaustive.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/livebench_legacy15_joint_exhaustive/**"
+      - ".github/workflows/verify-livebench-legacy15-joint-exhaustive.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install exact checker dependencies
+        run: |
+          python -m pip install --quiet "immutabledict==4.2.1" "langdetect==1.0.9" "nltk==3.9.1"
+          python - <<'PY'
+          import nltk
+          nltk.download("punkt", quiet=True)
+          nltk.download("punkt_tab", quiet=True)
+          PY
+
+      - name: Fetch pinned LiveBench checker source
+        run: |
+          git clone --quiet https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout --quiet 8f8e5c381a16e3f24257776edd53471fe86f8091
+
+      - name: Exhaustively postvalidate all source-valid active15 subsets up to generator cardinality
+        run: |
+          python capsules/livebench_legacy15_joint_exhaustive/verify.py             --livebench-root /tmp/livebench             --output livebench_legacy15_joint_exhaustive_receipt.json
+
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy15-joint-exhaustive-receipt
+          path: livebench_legacy15_joint_exhaustive_receipt.json
+          if-no-files-found: error
