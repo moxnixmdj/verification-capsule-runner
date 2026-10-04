@@ -1,0 +1,19 @@
+name: Verify LiveBench write-only result escrow fastlane
+
+on:
+  push:
+    branches:
+      - brain/lbzr3-write-only-escrow-fastlane-20261004
+
+jobs:
+  verify:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned cryptography
+        run: python -m pip install --disable-pip-version-check cryptography==50.0.2
+      - name: Verify exact write-only escrow implementation
+        run: python verify_livebench_write_only_result_escrow_20261004.py
