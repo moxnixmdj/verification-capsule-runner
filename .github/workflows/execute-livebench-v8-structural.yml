@@ -1,0 +1,64 @@
+name: Execute LiveBench V8 structural diagnostic
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    env:
+      REPOSITORY_PRIVATE: "false"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: diag/livebench-v8-structural-20261004
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Static zero-case verification
+        run: |
+          set -euo pipefail
+          python -m py_compile livebench_v8_structural_classifier.py diagnose_livebench_replay72_v8_structural.py
+          test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+      - name: Atomic one-use claim
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os,urllib.request,urllib.error
+          sha=os.environ["GITHUB_SHA"]
+          ref="refs/heads/livebench-v8-claims/"+sha
+          req=urllib.request.Request(
+              "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/git/refs",
+              data=json.dumps({"ref":ref,"sha":sha}).encode(),
+              headers={
+                  "Authorization":"Bearer "+os.environ["GH_TOKEN"],
+                  "Accept":"application/vnd.github+json",
+                  "X-GitHub-Api-Version":"2022-11-28",
+                  "Content-Type":"application/json",
+              },
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(req,timeout=30) as r:
+                  status=r.status
+                  body=json.load(r)
+          except urllib.error.HTTPError as e:
+              raise SystemExit(f"FAIL_CLOSED:ATOMIC_CLAIM_HTTP_{e.code}")
+          if status!=201 or body.get("ref")!=ref or (body.get("object") or {}).get("sha")!=sha:
+              raise SystemExit("FAIL_CLOSED:ATOMIC_CLAIM_RESPONSE_INVALID")
+          print(json.dumps({"atomic_claim":True,"http_status":status,"claim_ref":ref,"commit_sha":sha},sort_keys=True))
+          PY
+      - name: Replay exposed 72 cases with structural classifier
+        run: |
+          set -euo pipefail
+          python diagnose_livebench_replay72_v8_structural.py | tee LIVEBENCH_V8_STRUCTURAL_RESULT.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-v8-structural-evidence
+          path: LIVEBENCH_V8_STRUCTURAL_RESULT.log
+          retention-days: 90
