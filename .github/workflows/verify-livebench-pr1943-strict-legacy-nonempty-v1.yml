@@ -1,0 +1,26 @@
+name: Verify Brain PR 1943 strict legacy nonempty semantics
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_livebench_pr1943_strict_legacy_nonempty_v1.py'
+      - 'canonical/runtime/livebench_legacy15_exact_postvalidator_v1.py'
+      - 'canonical/runtime/livebench_legacy15_exact_contract_checker_v1.py'
+      - 'canonical/runtime/livebench_legacy15_composition_archetypes_v1.py'
+      - '.github/workflows/verify-livebench-pr1943-strict-legacy-nonempty-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact checker dependencies
+        run: python -m pip install --disable-pip-version-check nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2
+      - name: Verify exact legacy strict wrapper and Brain repair
+        run: python verify_livebench_pr1943_strict_legacy_nonempty_v1.py
