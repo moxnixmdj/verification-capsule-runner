@@ -451,4 +451,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    rc = main()
+    if rc:
+        raise SystemExit(rc)
+    import verify_livebench_punkt_context_v1 as punkt_verify
+    raise SystemExit(punkt_verify.main())
