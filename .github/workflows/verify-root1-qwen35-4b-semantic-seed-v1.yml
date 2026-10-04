@@ -1,7 +1,9 @@
 name: Verify Root1 Qwen3.5 4B semantic seed V1
 
 on:
-  pull_request:
+  push:
+    branches:
+      - "verify/root1-qwen35-4b-semantic-seed-20261004-v1"
     paths:
       - "verify_root1_qwen35_4b_semantic_seed_v1.py"
       - ".github/workflows/verify-root1-qwen35-4b-semantic-seed-v1.yml"
