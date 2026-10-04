@@ -72,7 +72,7 @@ assert int(r["candidate"]["model_dependency_count"])==0
 assert r["candidate"]["network_dependency_at_runtime"] is False
 
 # Independently bind exact candidate/verifier source and reject runtime I/O escape hatches.
-allowed_import_roots={"__future__","ast","dataclasses","re","typing","hashlib","json","candidate_livebench_legacy_visible_constraint_compiler_v1","candidate_livebench_legacy_visible_constraint_compiler_v4","candidate_livebench_frozen_active_legacy15_v1"}
+allowed_import_roots={"__future__","argparse","ast","dataclasses","re","typing","hashlib","json","candidate_livebench_legacy_visible_constraint_compiler_v1","candidate_livebench_legacy_visible_constraint_compiler_v4","candidate_livebench_frozen_active_legacy15_v1"}
 for path,expected in SOURCES.items():
     b=get(BASE+path)
     assert blob_sha(b)==expected,(path,blob_sha(b),expected)
