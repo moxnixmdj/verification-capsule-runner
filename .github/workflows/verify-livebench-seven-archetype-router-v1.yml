@@ -9,9 +9,16 @@ on:
       - '.github/workflows/verify-livebench-seven-archetype-router-v1.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +60,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: livebench-seven-archetype-router-v1
+          name: livebench-seven-archetype-router-v1-${{ matrix.os }}
           path: subject/livebench_legacy15_exact_router_v1/livebench-seven-archetype-router-v1.json
           if-no-files-found: warn
