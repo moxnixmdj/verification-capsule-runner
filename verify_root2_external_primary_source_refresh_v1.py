@@ -56,9 +56,9 @@ osw_release = get("https://github.com/xlang-ai/OSWorld-V2/releases")
 must(osw_release, "All 108 task files passed download and hash checks", "live Docker VM boot was not tested")
 
 bk = get("https://buildkite.com/docs/agent/buildkite-hosted/linux")
-must(bk, "8", "32 GB", "158 GB", "Free plan only provides access to small-sized instance shapes")
+must(bk, "8", "32 GB", "158 GB")
 bkp = get("https://www.buildkite.com/pricing/")
-must(bkp, "30-day all-access trial", "No credit card")
+must(bkp, "30-day all-access trial", "No credit card", "Small only", "Small, Medium, Large")
 
 auto = get("https://raw.githubusercontent.com/zapier/AutomationBench/main/README.md")
 must(auto, "600-task public benchmark", "separate, held-out private task set", "purposely harder", "may not match the official leaderboard 1:1")
