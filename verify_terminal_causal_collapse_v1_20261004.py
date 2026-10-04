@@ -2,6 +2,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import sys
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -27,6 +28,7 @@ assert git_blob_sha(ARENA)==EXPECTED_ARENA
 spec=importlib.util.spec_from_file_location("typed_basis_subject",RUNTIME)
 assert spec and spec.loader
 m=importlib.util.module_from_spec(spec)
+sys.modules[spec.name]=m
 spec.loader.exec_module(m)
 
 # Exact set-cover behavior: shared certificate wins.
