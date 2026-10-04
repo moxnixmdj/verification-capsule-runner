@@ -22,7 +22,15 @@ jobs:
       - name: Run exact current Brain V5 falsification suite
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: python -m pytest -q canonical/tests/test_unknown_domain_current_brain_v5_universal_v1.py
+        run: |
+          python - <<'PY'
+          from canonical.tests import test_unknown_domain_current_brain_v5_universal_v1 as t
+          tests=[getattr(t,n) for n in sorted(dir(t)) if n.startswith("test_")]
+          for fn in tests:
+              fn()
+              print("PASS",fn.__name__)
+          assert len(tests)==5
+          PY
       - name: Run content-bound universal reduction
         env:
           PYTHONPATH: ${{ github.workspace }}
