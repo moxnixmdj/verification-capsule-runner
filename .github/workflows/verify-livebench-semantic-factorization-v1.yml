@@ -1,0 +1,55 @@
+name: Verify LiveBench semantic factorization V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_semantic_factorization_v1_20261005/**"
+      - "verify_livebench_semantic_factorization_v1.py"
+      - ".github/workflows/verify-livebench-semantic-factorization-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Install exact scorer dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+      - name: Checkout exact frozen LiveBench and Punkt data
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench /tmp/nltk_data_repo /tmp/nltk_data
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+      - name: Run semantic-factorization closure
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        run: python verify_livebench_semantic_factorization_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_semantic_factorization_v1_verification.json; then
+            cat livebench_semantic_factorization_v1_verification.json
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-semantic-factorization-v1
+          path: livebench_semantic_factorization_v1_verification.json
+          if-no-files-found: error
