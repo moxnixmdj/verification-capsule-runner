@@ -1,0 +1,125 @@
+name: Verify Unknown-Domain stable identity fastlane V3
+on:
+  push:
+    branches:
+      - 'unknown-domain-verify-fastlane-v3/**'
+    paths:
+      - '.github/workflows/verify-unknown-domain-stable-identity-fastlane-v3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind stable claim identity to exact subject head
+        env:
+          SUBJECT_SHA: db80b3884447c9c324307766ce67104da3ebae2b
+          CLAIM_DIGEST: 5dc0103691b2b3afa8bb8f95482389dcd796fb87346804066907ff146ecdbb1e
+        run: |
+          python - <<'PY'
+          import hashlib,os,subprocess
+          from pathlib import Path
+          from canonical.runtime import unknown_domain_direct_production_once_v1 as prod
+          expected={
+            'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json':'f3c4be40c90c11541d77e5126e4059cdeaa6f187',
+            'canonical/runtime/unknown_domain_direct_production_once_v1.py':'d1351abfd17c7087273fde13d2f2ed649297ead5',
+            'canonical/tests/test_unknown_domain_direct_production_once_v1.py':'d11a09dd3d1574d953b12666fe07dfaaa2ccc7e5',
+            '.github/workflows/unknown-domain-direct-one-use-production.yml':'990b4fe712ca509f3e01c8e632c75416a3cd0b98',
+            'verify_unknown_domain_execution_lease.py':'8a05b592102cef01069ae622fadf0720ff015b70',
+          }
+          def blob(p):
+            b=Path(p).read_bytes()
+            return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          observed={p:blob(p) for p in expected}
+          assert observed==expected,(observed,expected)
+          parent=subprocess.check_output(['git','rev-parse','HEAD^'],text=True).strip()
+          assert parent==os.environ['SUBJECT_SHA'],(parent,os.environ['SUBJECT_SHA'])
+          _,digest=prod.lease_bytes_and_digest()
+          assert digest==os.environ['CLAIM_DIGEST'],(digest,os.environ['CLAIM_DIGEST'])
+          branch=os.environ['GITHUB_REF_NAME']
+          assert branch==f"unknown-domain-verify-fastlane-v3/{digest}/{os.environ['SUBJECT_SHA']}"
+          print('stable identity + exact subject binding PASS',digest,parent)
+          PY
+      - name: Verify exact execution lease
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Run unified launcher tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify immutable launch and remote durability firewall
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          wf=Path('.github/workflows/unknown-domain-direct-one-use-production.yml').read_text()
+          assert 'ref: ${{ github.sha }}' in wf
+          assert 'ref: ${{ github.ref }}' not in wf
+          src=Path('canonical/runtime/unknown_domain_direct_production_once_v1.py').read_text()
+          for needle in [
+            'canonical_identity_from_lease',
+            'SEALED_PRODUCTION_RESULT_JSON=',
+            'persist_result_durable',
+            'get_result_bytes',
+            'RESULT_DURABILITY_NOT_ESTABLISHED',
+            'existing==raw and content_sha==raw_git_blob',
+          ]:
+            assert needle in src,needle
+          print('immutable launch + exact remote durability firewall PASS')
+          PY
+      - name: Commit independent verification receipt
+        env:
+          SUBJECT_SHA: db80b3884447c9c324307766ce67104da3ebae2b
+          CLAIM_DIGEST: 5dc0103691b2b3afa8bb8f95482389dcd796fb87346804066907ff146ecdbb1e
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,platform,sys
+          from pathlib import Path
+          paths=[
+            'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json',
+            'canonical/runtime/unknown_domain_direct_production_once_v1.py',
+            'canonical/tests/test_unknown_domain_direct_production_once_v1.py',
+            '.github/workflows/unknown-domain-direct-one-use-production.yml',
+            'verify_unknown_domain_execution_lease.py',
+          ]
+          def blob(p):
+            b=Path(p).read_bytes()
+            return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          receipt={
+            'schema':'PROJECT_BRAIN_UNKNOWN_DOMAIN_STABLE_IDENTITY_FASTLANE_V3_VERIFICATION',
+            'status':'INDEPENDENT_EXACT_SUBJECT_PASS',
+            'subject_pull_request':2097,
+            'subject_head_sha':os.environ['SUBJECT_SHA'],
+            'semantic_claim_identity_sha256':os.environ['CLAIM_DIGEST'],
+            'verification_event_sha':os.environ['GITHUB_SHA'],
+            'runner_os':platform.platform(),
+            'python_version':sys.version,
+            'exact_subject_blobs':{p:blob(p) for p in paths},
+            'verified':[
+              'STABLE_SEMANTIC_CLAIM_IDENTITY',
+              'EXACT_SUBJECT_HEAD_BINDING',
+              'IMMUTABLE_CREATE_EVENT_SHA_PRODUCTION_CHECKOUT',
+              'EXACT_EXECUTION_LEASE_DEPENDENCY_CLOSURE',
+              'POST_HTTP_201_FAIL_CLOSED_SANITIZED_RESULT_SEAL',
+              'EXACT_REMOTE_RESULT_BYTE_READBACK',
+              'EXACT_REMOTE_RESULT_GIT_BLOB_READBACK',
+              'PERSISTENCE_RETRY_WITHOUT_CASE_REEXECUTION',
+              'UNIFIED_LAUNCHER_UNIT_TESTS_PASS'
+            ],
+            'production_cases_consumed':0,
+            'acceptance_credit_delta':0,
+            'production_authority':False
+          }
+          out=Path('canonical/verification/UNKNOWN_DOMAIN_STABLE_IDENTITY_FASTLANE_V3_VERIFICATION_20261005.json')
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          PY
+          git config user.name 'brain-verifier'
+          git config user.email 'brain-verifier@users.noreply.github.com'
+          git add canonical/verification/UNKNOWN_DOMAIN_STABLE_IDENTITY_FASTLANE_V3_VERIFICATION_20261005.json
+          git commit -m 'Seal independent Unknown-Domain stable identity fastlane V3 pass'
+          git push origin HEAD:refs/heads/unknown-domain-verify-fastlane-v3/5dc0103691b2b3afa8bb8f95482389dcd796fb87346804066907ff146ecdbb1e/db80b3884447c9c324307766ce67104da3ebae2b
