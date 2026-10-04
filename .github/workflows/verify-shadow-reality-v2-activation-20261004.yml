@@ -1,0 +1,20 @@
+name: Verify shadow reality V2 activation current root
+
+on:
+  pull_request:
+    paths:
+      - 'verify_shadow_reality_v2_activation_20261004.py'
+      - 'subject/shadow_reality_v2_activation_20261004/**'
+      - '.github/workflows/verify-shadow-reality-v2-activation-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact current-root projection
+        run: python verify_shadow_reality_v2_activation_20261004.py
