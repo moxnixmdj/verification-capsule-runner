@@ -96,6 +96,30 @@ def main() -> int:
     assert result["transfer_proof"]["add2_exact_float_order_repaired"] is True
     assert result["abstention_proof"]["all_three_classes_universal"] is True
 
+    # Independently reproduce the class-reporting hole that defeated the prior
+    # isinstance domain. Mock(spec=...) reports the requested class to
+    # isinstance while its actual runtime type is still Mock.
+    fake_str = Mock(spec=str)
+    fake_bytes = Mock(spec=bytes)
+    assert isinstance(fake_str, str) is True
+    assert isinstance(fake_bytes, bytes) is True
+    assert g5._genuine_str(fake_str) is False
+    assert g5._genuine_bytes(fake_bytes) is False
+
+    try:
+        g5._canonical_beacon(fake_str)
+    except Exception as exc:
+        assert exc.__class__.__name__ == "UnknownDomainGeneratorError"
+    else:
+        raise AssertionError("CLASS_REPORTING_STR_PROXY_MUST_FAIL_CLOSED")
+
+    try:
+        g5._secret_bytes_total(fake_bytes)
+    except Exception as exc:
+        assert exc.__class__.__name__ == "UnknownDomainGeneratorError"
+    else:
+        raise AssertionError("CLASS_REPORTING_BYTES_PROXY_MUST_FAIL_CLOSED")
+
     # Reproduce the exact pre-repair defect class first.
     old_style = HostileStr("A" * 16 + "\ud800")
     try:
