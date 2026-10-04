@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -46,6 +47,11 @@ SCORER_FILES = {
     "livebench/if_runner/ifbench/instructions_registry.py": "adfed4832877566e62970257b50c6fa32c302fb2",
     "livebench/if_runner/ifbench/instructions_util.py": "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342",
     "livebench/if_runner/ifbench/README.md": "de771a18e7c7625270768fc284e8931cf40f3009",
+    "livebench/if_runner/instruction_following_eval/evaluation_main.py": "4a341984936c4d609644a3b77f8c030ac5aa7269",
+    "livebench/if_runner/instruction_following_eval/instructions_registry.py": "903ed738398648c7cfac61d5ffa478c22f1f0891",
+    "livebench/if_runner/instruction_following_eval/instructions.py": "4997bab885a676d92545fd91a9a20b48d234a2b2",
+    "livebench/if_runner/instruction_following_eval/instructions_util.py": "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b",
+    "livebench/process_results/instruction_following/utils.py": "8ce01747887ec0792c8f024e1972e34ece781676",
 }
 
 NLTK = {
@@ -78,6 +84,9 @@ def install_scorer_deps():
         "syllapy==0.7.2",
         "setuptools==80.9.0",
         "spacy==3.8.16",
+        "langdetect==1.0.9",
+        "immutabledict==4.2.1",
+        "pandas==2.2.3",
         "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
     ]
     run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--quiet", *pkgs])
@@ -225,21 +234,36 @@ def infer_one(template: pathlib.Path, q: dict) -> tuple[str,str,str|None]:
         except Exception as exc:
             return qid, "", type(exc).__name__+":"+str(exc)[:300]
 
-def case_score(evaluation_lib, q: dict, answer: str) -> tuple[float,bool,int,int,str|None]:
+def case_score(ifbench_eval, legacy_eval, q: dict, answer: str) -> tuple[float,bool,int,int,str|None]:
     try:
-        inp = evaluation_lib.InputExample(
-            key=q.get("key",q.get("question_id")),
-            instruction_id_list=list(q["instruction_id_list"]),
-            prompt=q["turns"][0],
-            kwargs=[dict(x or {}) for x in q["kwargs"]],
-        )
-        out = evaluation_lib.test_instruction_following_strict(inp, answer)
-        n = len(out.follow_instruction_list)
-        followed = sum(1 for x in out.follow_instruction_list if x)
-        score = ((1.0 if out.follow_all_instructions else 0.0) + (followed / n)) / 2.0
-        return score, bool(out.follow_all_instructions), n, followed, None
+        clean = re.sub(r"<think>.*?</think>", "", answer, flags=re.DOTALL).strip()
+        if str(q.get("livebench_release_date") or "") < "2025-11-25":
+            kwargs=[{k:v for k,v in dict(x or {}).items() if v is not None} for x in q["kwargs"]]
+            inp = legacy_eval.InputExample(
+                key=q["question_id"],
+                instruction_id_list=list(q["instruction_id_list"]),
+                prompt=q["turns"][0],
+                kwargs=kwargs,
+            )
+            out = legacy_eval.test_instruction_following_strict(inp, {q["turns"][0]:clean})
+        else:
+            solution_match=re.search(r"<solution>(.*?)</solution>", clean, re.DOTALL)
+            response=solution_match.group(1).strip() if solution_match else clean
+            inp = ifbench_eval.InputExample(
+                key=q.get("key",q.get("question_id",0)),
+                instruction_id_list=list(q["instruction_id_list"]),
+                prompt=q["turns"][0],
+                kwargs=q["kwargs"],
+            )
+            out = ifbench_eval.test_instruction_following_strict(inp, response)
+        n=len(out.follow_instruction_list)
+        if n <= 0:
+            raise RuntimeError("EMPTY_INSTRUCTION_LIST")
+        followed=sum(1 for x in out.follow_instruction_list if x)
+        score=((1.0 if out.follow_all_instructions else 0.0)+(followed/n))/2.0
+        return score,bool(out.follow_all_instructions),n,followed,None
     except Exception as exc:
-        return 0.0, False, len(q.get("instruction_id_list") or []), 0, type(exc).__name__+":"+str(exc)[:300]
+        return 0.0,False,len(q.get("instruction_id_list") or []),0,type(exc).__name__+":"+str(exc)[:300]
 
 def receipts_root(receipts:list[dict])->str:
     raw=json.dumps(receipts,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
@@ -288,29 +312,39 @@ def main() -> int:
         prepare_nltk(base)
         lb=clone_livebench(base)
         sys.path.insert(0,str(lb))
-        from livebench.if_runner.ifbench import evaluation_lib, instructions_registry
+        from livebench.if_runner.ifbench import evaluation_lib as ifbench_eval
+        from livebench.if_runner.ifbench import instructions_registry as ifbench_registry
+        from livebench.if_runner.instruction_following_eval import evaluation_main as legacy_eval
+        from livebench.if_runner.instruction_following_eval import instructions_registry as legacy_registry
 
-        # Synthetic scorer smoke, still zero terminal cases.
-        synthetic = evaluation_lib.InputExample(
-            key=0,
-            instruction_id_list=[],
-            prompt="synthetic",
-            kwargs=[],
-        )
-        out = evaluation_lib.test_instruction_following_strict(synthetic,"synthetic")
-        if out.follow_all_instructions is not True:
+        # Import/synthetic smoke for both frozen scorer families, still zero terminal cases.
+        synthetic_new=ifbench_eval.InputExample(key=0,instruction_id_list=[],prompt="synthetic",kwargs=[])
+        out_new=ifbench_eval.test_instruction_following_strict(synthetic_new,"synthetic")
+        synthetic_old=legacy_eval.InputExample(key=0,instruction_id_list=[],prompt="synthetic",kwargs=[])
+        out_old=legacy_eval.test_instruction_following_strict(synthetic_old,{"synthetic":"synthetic"})
+        if out_new.follow_all_instructions is not True or out_old.follow_all_instructions is not True:
             raise SystemExit("FAIL_CLOSED:SYNTHETIC_SCORER_SMOKE")
 
         # Terminal case exposure begins only after all preceding gates pass.
         parquet=download_dataset(base)
         questions=parse_population(base,parquet)
-        unknown=set()
+        unknown_legacy=set()
+        unknown_ifbench=set()
+        legacy_count=0
+        ifbench_count=0
         for q in questions:
+            is_legacy=str(q.get("livebench_release_date") or "") < "2025-11-25"
+            registry=legacy_registry.INSTRUCTION_DICT if is_legacy else ifbench_registry.INSTRUCTION_DICT
+            if is_legacy: legacy_count+=1
+            else: ifbench_count+=1
             for iid in q.get("instruction_id_list") or []:
-                if iid not in instructions_registry.INSTRUCTION_DICT:
-                    unknown.add(iid)
-        if unknown:
-            raise SystemExit("FAIL_CLOSED:UNKNOWN_INSTRUCTION_IDS:"+hashlib.sha256(json.dumps(sorted(unknown)).encode()).hexdigest())
+                if iid not in registry:
+                    (unknown_legacy if is_legacy else unknown_ifbench).add(iid)
+        if unknown_legacy or unknown_ifbench:
+            material={"legacy":sorted(unknown_legacy),"ifbench":sorted(unknown_ifbench)}
+            raise SystemExit("FAIL_CLOSED:UNKNOWN_INSTRUCTION_IDS:"+hashlib.sha256(json.dumps(material,sort_keys=True).encode()).hexdigest())
+        if legacy_count + ifbench_count != POPULATION or legacy_count == 0 or ifbench_count == 0:
+            raise SystemExit(f"FAIL_CLOSED:SCORER_DISPATCH_PARTITION:{legacy_count}:{ifbench_count}")
 
         template=build_runtime_template(base)
         receipts=[]
@@ -330,7 +364,7 @@ def main() -> int:
                 if inf_err:
                     score,allok,n,followed,score_err=0.0,False,len(q.get("instruction_id_list") or []),0,None
                 else:
-                    score,allok,n,followed,score_err=case_score(evaluation_lib,q,answer)
+                    score,allok,n,followed,score_err=case_score(ifbench_eval,legacy_eval,q,answer)
                 rec={
                     "question_id":qid,
                     "response_sha256":hashlib.sha256(answer.encode()).hexdigest(),
