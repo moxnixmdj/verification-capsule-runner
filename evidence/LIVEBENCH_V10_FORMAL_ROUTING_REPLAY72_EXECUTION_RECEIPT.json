@@ -1,0 +1,14 @@
+{
+  "acceptance_credit_delta": 0,
+  "activation_blob_sha": "38296a76cc45f3c01d1794b24b167afe1a324c80",
+  "case_73_or_later": false,
+  "claim": null,
+  "epoch_digest_sha256": "a71f24f79df6b6be6e910efb1299776ac9fede9e78539577695d6e386fc2eb52",
+  "new_case_exposure": false,
+  "promotion_authority": false,
+  "replayed_already_exposed_prefix_only": true,
+  "result": null,
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V10_FORMAL_ROUTING_REPLAY72_EXECUTION_RECEIPT_V1",
+  "workflow_run_id": "37195826665",
+  "workflow_sha": "63e13f8f492dc4dc59b918f494675827822ed741"
+}
