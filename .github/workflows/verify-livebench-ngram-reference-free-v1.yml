@@ -1,0 +1,28 @@
+name: Verify LiveBench reference-free trigram constructor V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_ngram_reference_free_v1/**"
+      - "verify_livebench_ngram_reference_free_v1.py"
+      - ".github/workflows/verify-livebench-ngram-reference-free-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify theorem, exact pinned scorer, and 12-row public audit
+        run: python verify_livebench_ngram_reference_free_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-ngram-reference-free-v1-receipt
+          path: livebench_ngram_reference_free_public_verification_receipt.json
+          if-no-files-found: error
