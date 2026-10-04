@@ -11,8 +11,12 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: h100-zero-learned-primitive-repair-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  independent:
+  verify-and-replay:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,24 +31,21 @@ jobs:
           python -m unittest canonical.tests.test_h100_zero_learned_primitive_repair_v1 -v
       - name: Run independent fresh-parameter verifier
         run: python verify_h100_zero_learned_primitive_repair_v1.py
-
-  phase2:
-    name: phase2-${{ matrix.task }}
-    needs: independent
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        task: [PERIODIC_SINE, EXPONENTIAL, SIGN_STEP]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Replay exact frozen phase1 residual with new route
+      - name: Replay PERIODIC_SINE
         env:
           PYTHONPATH: subject/h100_primitive_repair_v1
         run: >
           python subject/h100_primitive_repair_v1/canonical/runtime/h100_zero_learned_primitive_repair_v1.py
-          --task "${{ matrix.task }}"
-          --require-useful
+          --task PERIODIC_SINE --require-useful
+      - name: Replay EXPONENTIAL
+        env:
+          PYTHONPATH: subject/h100_primitive_repair_v1
+        run: >
+          python subject/h100_primitive_repair_v1/canonical/runtime/h100_zero_learned_primitive_repair_v1.py
+          --task EXPONENTIAL --require-useful
+      - name: Replay SIGN_STEP
+        env:
+          PYTHONPATH: subject/h100_primitive_repair_v1
+        run: >
+          python subject/h100_primitive_repair_v1/canonical/runtime/h100_zero_learned_primitive_repair_v1.py
+          --task SIGN_STEP --require-useful
