@@ -1,0 +1,50 @@
+name: Index one-use atomic claim verification
+on:
+  push:
+    branches:
+      - "verify/one-use-benchmark-atomic-claim-v1-20261004"
+    paths:
+      - ".github/workflows/index-one-use-atomic-claim-verification.yml"
+permissions:
+  actions: read
+  contents: write
+jobs:
+  index:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: "b7e45e064f88e23a19e25b5459d5cd6acf87fbb0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "verify/one-use-benchmark-atomic-claim-v1-20261004"
+      - name: Locate verification run
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=""
+          for i in $(seq 1 60); do
+            data="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=verify%2Fone-use-benchmark-atomic-claim-v1-20261004&event=push&per_page=100")"
+            run_id="$(printf '%s' "$data" | jq -r --arg sha "$TARGET_SHA" '.workflow_runs[] | select(.name=="Verify one-use benchmark atomic claim V1" and .head_sha==$sha) | .id' | head -n1)"
+            if [ -n "$run_id" ] && [ "$run_id" != "null" ]; then
+              status="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id" --jq '.status')"
+              if [ "$status" = "completed" ]; then break; fi
+            fi
+            sleep 5
+          done
+          test -n "$run_id"
+          run="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id")"
+          jobs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run_id/jobs?per_page=100")"
+          jq -n --argjson run "$run" --argjson jobs "$jobs"             '{schema:"PROJECT_BRAIN_ONE_USE_ATOMIC_CLAIM_RUN_INDEX_V1",
+              run_id:$run.id,name:$run.name,head_sha:$run.head_sha,status:$run.status,
+              conclusion:$run.conclusion,
+              jobs:[$jobs.jobs[]|{id,name,status,conclusion}]}'             > ONE_USE_ATOMIC_CLAIM_RUN_INDEX.json
+      - name: Persist run index
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "brain-verification"
+          git config user.email "brain-verification@users.noreply.github.com"
+          git add ONE_USE_ATOMIC_CLAIM_RUN_INDEX.json
+          git commit -m "Bind one-use atomic claim verification run index"
+          git push origin HEAD:verify/one-use-benchmark-atomic-claim-v1-20261004
