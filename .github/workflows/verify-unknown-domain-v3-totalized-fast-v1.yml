@@ -45,8 +45,18 @@ jobs:
           assert got==expected,(got,expected)
           print("EXACT_SUBJECT_BINDINGS_PASS")
           PY
-      - name: Run exact theorem regression suite
-        run: python -m unittest canonical.tests.test_unknown_domain_direct_v3_universal_proof_v1 -v
+      - name: Run exact theorem regression functions
+        shell: bash
+        run: |
+          python - <<'PY'
+          from canonical.tests import test_unknown_domain_direct_v3_universal_proof_v1 as t
+          tests=[name for name in sorted(dir(t)) if name.startswith("test_") and callable(getattr(t,name))]
+          assert tests, "NO_TEST_FUNCTIONS_FOUND"
+          for name in tests:
+              print("RUN",name)
+              getattr(t,name)()
+          print("REGRESSION_FUNCTIONS_PASS",len(tests))
+          PY
       - name: Verify theorem output
         shell: bash
         run: |
