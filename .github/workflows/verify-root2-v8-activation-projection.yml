@@ -1,0 +1,19 @@
+name: Verify Root2 V8 activation projection
+on:
+  pull_request:
+    paths:
+      - "subject/root2_v8_activation_20261004_sol/**"
+      - "verify_root2_v8_activation_projection.py"
+      - ".github/workflows/verify-root2-v8-activation-projection.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_v8_activation_projection.py
