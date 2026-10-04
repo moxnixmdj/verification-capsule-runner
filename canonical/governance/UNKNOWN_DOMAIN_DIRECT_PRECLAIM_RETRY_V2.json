@@ -46,5 +46,11 @@
     "acceptance_credit_delta": 0,
     "capability_credit_delta": 0,
     "ownership_credit_delta": 0
+  },
+  "trigger_commit": {
+    "purpose": "EMIT_PUSH_AFTER_RETRY_WORKFLOW_EXISTS_ON_BRANCH",
+    "execution_lease_sha256": "9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb",
+    "changes_candidate_or_evaluator_bytes": false,
+    "changes_execution_lease_bytes": false
   }
 }
