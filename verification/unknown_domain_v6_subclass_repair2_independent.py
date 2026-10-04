@@ -183,7 +183,8 @@ assert cases==81
 # independent adversarial attacks above have passed.
 theorem=proof.prove(ROOT)
 assert theorem["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
-assert theorem["string_interface_totality"]["genuine_runtime_subclass_override_hooks_bypassed"] is True\nassert theorem["string_interface_totality"]["fake_class_proxy_spoof_rejected"] is True
+assert theorem["string_interface_totality"]["genuine_runtime_subclass_override_hooks_bypassed"] is True
+assert theorem["string_interface_totality"]["fake_class_proxy_spoof_rejected"] is True
 assert theorem["string_interface_totality"]["bytes_subclass_buffer_protocol_override_bypassed"] is True
 assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["accounting"]["acceptance_credit_delta"]==0
@@ -194,7 +195,11 @@ receipt={
  "python":platform.python_version(),
  "exact_subject_blobs":EXPECTED,
  "attacks":{
-   "fake_str_class_proxy_isinstance_spoof_reproduced":True,\n   "fake_str_class_proxy_rejected_by_actual_type_gate":fake_str_rejected,\n   "fake_bytes_class_proxy_isinstance_spoof_reproduced":True,\n   "fake_bytes_class_proxy_rejected_by_actual_type_gate":fake_bytes_rejected,\n   "str_subclass_override_getattribute":True,
+   "fake_str_class_proxy_isinstance_spoof_reproduced":True,
+   "fake_str_class_proxy_rejected_by_actual_type_gate":fake_str_rejected,
+   "fake_bytes_class_proxy_isinstance_spoof_reproduced":True,
+   "fake_bytes_class_proxy_rejected_by_actual_type_gate":fake_bytes_rejected,
+   "str_subclass_override_getattribute":True,
    "str_subclass_override_strip":True,
    "str_subclass_override_encode":True,
    "str_subclass_override_len":True,
