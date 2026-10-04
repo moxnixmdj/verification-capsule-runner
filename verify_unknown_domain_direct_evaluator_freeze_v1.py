@@ -8,7 +8,7 @@ from canonical.runtime.unknown_domain_direct_hidden_scorer_v1 import (
 
 ROOT=Path(__file__).resolve().parent
 EXPECTED={
- "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EVALUATOR_FAMILY_V1.json":"fb180c4a13158cc8382435dd6fb51c187ebb9321",
+ "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EVALUATOR_FAMILY_V1.json":"52090daf78d12020af48c1b6ffaea056d9029e1b",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/tests/test_unknown_domain_direct_hidden_scorer_v1.py":"fbea87d7d05647af2dfb66ef344908dfd055e5c0",
 }
