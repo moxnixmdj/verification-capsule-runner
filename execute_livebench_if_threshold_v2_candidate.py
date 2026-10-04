@@ -28,7 +28,6 @@ AUTHORIZED_ACTIVATION_BLOB = "d410d6952cb34f2fd3fb4dc48bf2a613d11c57d1"
 AUTHORIZED_ROOT_BLOB = "601e82d00104b4ed36ee5968ad966a0c02e627c1"
 AUTHORIZED_FRONTIER_BLOB = "8c1325dd652b65a7d5c24e041ac06556a84f569c"
 PRECOMMIT_BLOB = "66554061f204d8a86b37a30c84d0cf07a525a786"
-RETRY_EPOCH_ACTIVATION_BLOB = "PENDING"
 SCORER_SUPPLEMENT_BLOB = "13105f751550ea89646bb82bd4c1d8325afe2840"
 BATCH = 8
 
@@ -293,16 +292,15 @@ def verify_local_authority_transport():
     if (act.get("authority_basis") or {}).get("root_state",{}).get("git_blob_sha") != AUTHORIZED_ROOT_BLOB:
         raise SystemExit("FAIL_CLOSED:ROOT_BINDING_DRIFT")
 
-def main() -> int:
+def main(*, authorized: bool=False) -> int:
+    if authorized is not True:
+        raise SystemExit("FAIL_CLOSED:VERIFIED_RETRY_EPOCH_LAUNCHER_REQUIRED")
     if os.environ.get("GITHUB_ACTIONS") != "true" or str(os.environ.get("REPOSITORY_PRIVATE","")).lower() != "false":
         raise SystemExit("FAIL_CLOSED:PUBLIC_STANDARD_GITHUB_RUNNER_REQUIRED")
     if sys.version_info[:2] != (3,12):
         raise SystemExit("FAIL_CLOSED:PYTHON_3_12_REQUIRED")
 
     verify_local_authority_transport()
-
-    if RETRY_EPOCH_ACTIVATION_BLOB == "PENDING":
-        raise SystemExit("FAIL_CLOSED:RETRY_EXECUTION_EPOCH_NOT_BOUND")
 
     # All zero-case component checks already ran in the invoking carrier verifier.
     # Recheck exact frozen bytes here before any terminal-case download/read.
@@ -440,7 +438,7 @@ def main() -> int:
             "precommit_blob_sha":PRECOMMIT_BLOB,
             "scorer_supplement_blob_sha":SCORER_SUPPLEMENT_BLOB,
             "scorer_dispatch":"PUBLIC_UPSTREAM_RELEASE_DATE_SPLIT__LEGACY_IFEVAL_BEFORE_2025_11_25__IFBENCH_OTHERWISE",
-            "retry_epoch_activation_blob_sha":RETRY_EPOCH_ACTIVATION_BLOB,
+            "retry_epoch_authorized_by_verified_launcher":True,
             "incremental_spend_usd":0,
             "paid_external_model_or_api_used":False,
             "cognition_dependency_class":"MODEL_INDEPENDENT",
@@ -451,4 +449,4 @@ def main() -> int:
         return 0
 
 if __name__=="__main__":
-    raise SystemExit(main())
+    raise SystemExit("FAIL_CLOSED:VERIFIED_RETRY_EPOCH_LAUNCHER_REQUIRED")
