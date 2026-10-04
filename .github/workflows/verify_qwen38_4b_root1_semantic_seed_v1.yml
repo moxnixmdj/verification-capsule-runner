@@ -1,0 +1,44 @@
+name: Verify Qwen3.8-4B Root1 semantic seed
+on:
+  pull_request:
+    paths:
+      - 'verify_qwen38_4b_root1_semantic_seed_v1.py'
+      - '.github/workflows/verify_qwen38_4b_root1_semantic_seed_v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned llama.cpp server
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git
+          cd llama.cpp
+          git checkout 0504396140d1c882f5f6ee34466a42db7ae90114
+          cmake -B build -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-server -j2
+      - name: Download exact content-addressed Qwen3.8-4B Q4 subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 5 --retry-all-errors \
+            -o Qwen3.8-4B-Q4_K_M.gguf \
+            https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF/resolve/391fc7d103e3942a408def3e4f51c2f85d464417/Qwen3.8-4B-Q4_K_M.gguf
+      - name: Run frozen nonterminal semantic seed qualification
+        env:
+          MODEL_PATH: Qwen3.8-4B-Q4_K_M.gguf
+          LLAMA_SERVER: llama.cpp/build/bin/llama-server
+        run: python verify_qwen38_4b_root1_semantic_seed_v1.py
+      - name: Publish bounded result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-4b-root1-semantic-seed-result
+          path: |
+            qwen38_4b_semantic_seed_result.json
+            qwen38_4b_server.log
+          if-no-files-found: ignore
