@@ -1,0 +1,40 @@
+name: Verify Unknown-Domain identity recovery fastlane
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_production_once_v1.py'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json'
+      - 'canonical/tests/test_unknown_domain_direct_production_once_v1.py'
+      - 'verify_unknown_domain_execution_lease.py'
+      - '.github/workflows/unknown-domain-direct-one-use-production.yml'
+      - '.github/workflows/verify-unknown-domain-identity-recovery-fastlane.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify deterministic identity and post-201 recovery
+        run: |
+          python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+          python verify_unknown_domain_execution_lease.py
+      - name: Verify package-safe production workflow
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          p=Path('.github/workflows/unknown-domain-direct-one-use-production.yml').read_text()
+          assert 'create:' in p
+          assert 'workflow_dispatch' not in p
+          assert 'run: python -m canonical.runtime.unknown_domain_direct_production_once_v1' in p
+          raw=Path('.github/workflows/unknown-domain-direct-one-use-production.yml').read_bytes()
+          blob=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+          lease=json.loads(Path('canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json').read_text())
+          assert lease['exact_components']['.github/workflows/unknown-domain-direct-one-use-production.yml']==blob
+          print('fastlane workflow firewall PASS', blob)
+          PY
