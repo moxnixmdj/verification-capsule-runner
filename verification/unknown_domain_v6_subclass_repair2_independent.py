@@ -24,10 +24,10 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py":"e52858b9fef2d795f72b45cd3ae82ad04344aa91",
- "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"d3b5e7279ca1068d1532046f35e6752107e42e24",
+ "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"e92dfde05672a249f2dcb71c7ce87fc783142816",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
- "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"1afe856f327d52c05c0be3b828b2602f0015f389",
+ "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"70bbb5a09b1225b60915cc74bf81593516e26f16",
  "canonical/tests/test_unknown_domain_direct_v5.py":"e2ade4b713bb8103ae577de35a35b1caa03bc5a9",
 }
 
@@ -87,8 +87,8 @@ class FakeBytesViaClassProperty:
 got={p:blob(ROOT/p) for p in EXPECTED}
 assert got==EXPECTED,{"expected":EXPECTED,"got":got}
 
-# Reproduce the third-order class-spoof failure that invalidates isinstance
-# as a load-bearing type-domain gate, then require the runtime-type successor
+# Reproduce the V3 class-spoof failure that invalidates isinstance
+# as a load-bearing type-domain gate, then require the runtime-type V4 successor
 # to reject those same proxies before any built-in descriptor is invoked.
 fake_str=FakeStrViaClassProperty()
 fake_bytes=FakeBytesViaClassProperty()
