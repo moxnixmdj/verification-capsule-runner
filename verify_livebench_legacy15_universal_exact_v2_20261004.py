@@ -12,7 +12,7 @@ EXPECTED_BLOBS = {
     "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py": "721207ba39d502e3f610289578e9d5bab78b1fcc",
     "canonical/runtime/livebench_frozen_active_legacy15_v1.py": "34440ee69322e9d519cbe656cb03c55683a8b9c6",
     "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
-    "canonical/runtime/livebench_legacy15_general_composer_v1.py": "ced56b94e472a615f70180a4797fda178358e7fe",
+    "canonical/runtime/livebench_legacy15_general_composer_v1.py": "34ecf1a082faae4e6ac273689101f8e8d75933e4",
     "canonical/runtime/livebench_legacy15_joint_witness_v1.py": "6b83d32be3840f815cb04afb51e473069dc17fe2",
     "canonical/runtime/livebench_legacy15_joint_router_v2.py": "e133432996a927e0f8fc3ed9a3cddf1479feba7f",
     "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "7ea615d11c0ceea95b4fb7a2143d37887bc3b80a",
