@@ -1,0 +1,22 @@
+{
+  "schema": "BRAIN_UNIVERSAL_LEARNING_V7_CURRENT_MAIN_V2_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "activate/universal-learning-v7-current-main-v2-20261004",
+  "exact_brain_blobs": {
+    "canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6_ACTIVATION_V1.json": "d3093f6c624b3c5a0de588e2da5c8c7b49d07238",
+    "canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7_ACTIVATION_V1.json": "58cbfecea60e7f4259c5b7c0218ebc15c4e33399",
+    "canonical/governance/UNKNOWN_DOMAIN_V7_STRUCTURAL_RESIDUAL_REDUCTION_V1.json": "26704949fa0d6b4db74a5701758a07569e8268c3",
+    "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json": "3358c94f8dcd5edda7aea1d2bb0d61207d1b1867",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V8.json": "251362e084f51632fca56ea5da43ea2b3c7b33b7",
+    "canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json": "9fe037d807fe733faa5731daa9c089be05864dbd",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "b37c25d850a88cb2e71f5831be9827bfe1170dbf",
+    "canonical/governance/UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1.json": "fd586455d582c38c7062ffe735f86cb9f2e803ab"
+  },
+  "expected": {
+    "v6_governance_sha": "65e291e3afebbf3547771ee580104361d1920788",
+    "v6_verification_sha": "ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",
+    "v7_governance_sha": "e26c8f4d8614720c1a45f28bcd2703dbb36bd980",
+    "v7_verification_sha": "87f8660095b9a9d71eb160bf23616a46d4c3e1cf",
+    "protocol_sha": "fd586455d582c38c7062ffe735f86cb9f2e803ab"
+  }
+}
