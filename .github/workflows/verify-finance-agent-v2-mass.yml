@@ -1,0 +1,19 @@
+name: Verify Finance Agent v2 execution mass
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/finance_agent_v2_mass/**"
+      - ".github/workflows/verify-finance-agent-v2-mass.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/finance_agent_v2_mass/verify.py
