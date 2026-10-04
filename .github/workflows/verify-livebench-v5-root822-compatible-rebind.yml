@@ -1,0 +1,20 @@
+name: Verify LiveBench V5 current-root compatible rebind
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_v5_root822_compatible_rebind.py"
+      - ".github/workflows/verify-livebench-v5-root822-compatible-rebind.yml"
+      - "subject/livebench_retry_v5_activation_20261004/root.json"
+      - "subject/root2_decision_only_root_projection_v1/TERMINAL_ROOT_CAUSE_STATE_V1.json"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - run: python verify_livebench_v5_root822_compatible_rebind.py
