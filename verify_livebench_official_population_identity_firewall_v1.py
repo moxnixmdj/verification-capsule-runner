@@ -11,10 +11,12 @@ SUBJECT_DIR = pathlib.Path("subject/livebench_official_population_identity_firew
 RUNTIME = SUBJECT_DIR / "livebench_official_population_identity_firewall_v1.py"
 GOVERNANCE = SUBJECT_DIR / "LIVEBENCH_OFFICIAL_POPULATION_IDENTITY_TRUTH_REPAIR_V1.json"
 PROXY_RECEIPT = SUBJECT_DIR / "LIVEBENCH_ACTIVE_SCORER_FAMILY_INDEPENDENT_VERIFICATION_20261004_V1.json"
+HISTORICAL_POPULATION_VERIFIER = SUBJECT_DIR / "verify-livebench-if-release-population-v2.yml"
 
 EXPECTED_RUNTIME_BLOB = "7b134265f7513292248a49edeb3313acab51c665"
 EXPECTED_GOVERNANCE_BLOB = "786bfb0373743702394180ba3d7f325f468edc0b"
 EXPECTED_PROXY_RECEIPT_BLOB = "fd05652cda4f5b4d1f69617a5488f9bfeae4c225"
+EXPECTED_HISTORICAL_POPULATION_VERIFIER_BLOB = "043e9b8339fca0effc921cb1d721567e5e0d0358"
 
 UPSTREAM_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 README_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{UPSTREAM_COMMIT}/README.md"
@@ -74,6 +76,10 @@ def main() -> int:
     runtime = load_runtime()
     gov = json.loads(assert_blob(GOVERNANCE, EXPECTED_GOVERNANCE_BLOB))
     proxy = json.loads(assert_blob(PROXY_RECEIPT, EXPECTED_PROXY_RECEIPT_BLOB))
+    historical_verifier = assert_blob(
+        HISTORICAL_POPULATION_VERIFIER,
+        EXPECTED_HISTORICAL_POPULATION_VERIFIER_BLOB,
+    ).decode("utf-8")
 
     readme = fetch_pinned(README_URL, EXPECTED_README_BLOB)
     changelog = fetch_pinned(CHANGELOG_URL, EXPECTED_CHANGELOG_BLOB)
@@ -116,6 +122,26 @@ def main() -> int:
     ):
         assert forbidden_identity_claim not in serialized_proxy
     same_counts_do_not_imply_identity()
+
+    # Audit the exact historical verifier that promoted "active population identity".
+    # It checks leaderboard aggregate scores/counts and, separately, public-HF
+    # question IDs/counts. It never obtains a leaderboard-side question-ID set.
+    release_step = historical_verifier.split(
+        "- name: Verify first-party release and comparator bar", 1
+    )[1].split("- name: Download exact frozen HF parquet", 1)[0]
+    hf_step = historical_verifier.split(
+        "- name: Verify metadata-only active population", 1
+    )[1].split("- name: Verify fail-closed consequence", 1)[0]
+    assert "public/table_2026_06_25.csv" in release_step
+    assert "public/cost_2026_06_25.csv" in release_step
+    assert "nq_" in release_step
+    assert "question_id" not in release_step
+    assert 'cols=["question_id","task","livebench_release_date","livebench_removal_date"]' in hf_step
+    assert 'ids=[r["question_id"] for r in rows]' in hf_step
+    assert "len(ids)==len(set(ids))" in hf_step
+    assert "table_question_ids" not in historical_verifier
+    assert "official_question_ids" not in historical_verifier
+    assert "leaderboard_question_ids" not in historical_verifier
 
     # Exact candidate semantics must fail closed on proxy-only single-family claims.
     blocked = runtime.adjudicate({
@@ -167,6 +193,7 @@ def main() -> int:
         "brain_runtime_git_blob_sha":EXPECTED_RUNTIME_BLOB,
         "brain_governance_git_blob_sha":EXPECTED_GOVERNANCE_BLOB,
         "historical_proxy_receipt_git_blob_sha":EXPECTED_PROXY_RECEIPT_BLOB,
+        "historical_population_verifier_git_blob_sha":EXPECTED_HISTORICAL_POPULATION_VERIFIER_BLOB,
         "upstream_livebench_commit":UPSTREAM_COMMIT,
         "upstream_readme_git_blob_sha":EXPECTED_README_BLOB,
         "upstream_changelog_git_blob_sha":EXPECTED_CHANGELOG_BLOB,
@@ -175,6 +202,7 @@ def main() -> int:
             "PUBLIC_HF_PROXY_CAN_LAG_CURRENT_RELEASE",
             "2025_11_25_REFRESHED_INSTRUCTION_FOLLOWING_AND_IS_SCORER_ROUTING_BOUNDARY",
             "VERIFIED_PROXY_IS_200_LEGACY_ROWS",
+            "HISTORICAL_POPULATION_VERIFIER_HAS_NO_LEADERBOARD_SIDE_QUESTION_ID_SET_OR_ROW_ID_JOIN",
             "PROXY_CARDINALITY_DOES_NOT_BIND_OFFICIAL_2026_ROW_IDENTITY",
             "PROXY_ONLY_SINGLE_FAMILY_COLLAPSE_FAILS_CLOSED",
             "DUAL_FAMILY_VERIFIED_COVERAGE_CAN_DELETE_IDENTITY_DEPENDENCY",
