@@ -19,4 +19,4 @@ jobs:
       - name: Atomic claim then exactly one production population
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python canonical/runtime/unknown_domain_direct_production_once_v1.py
+        run: python -m canonical.runtime.unknown_domain_direct_production_once_v1
