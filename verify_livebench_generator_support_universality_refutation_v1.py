@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-EXPECTED = {
+# Frozen source commitments. Changing any of these invalidates the theorem.\nEXPECTED = {
     "instructions.py": "4997bab885a676d92545fd91a9a20b48d234a2b2",
     "instructions_util.py": "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b",
     "instructions_registry.py": "903ed738398648c7cfac61d5ffa478c22f1f0891",
