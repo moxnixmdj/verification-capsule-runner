@@ -1,5 +1,12 @@
 name: Verify semantic seed SmolLM2 135M V1
 on:
+  push:
+    branches:
+      - research/semantic-seed-smollm2-135m-v1
+    paths:
+      - SEMANTIC_SEED_SMOLLM2_135M_PREEXPOSURE_V1.json
+      - verify_semantic_seed_smollm2_135m_v1.py
+      - .github/workflows/verify-semantic-seed-smollm2-135m-v1.yml
   pull_request:
     branches:
       - main
