@@ -232,18 +232,35 @@ def build_runtime_template(base: pathlib.Path) -> pathlib.Path:
     return root
 
 CASE_DRIVER = r'''
-import json,sys,subprocess
+import json,sys
 def _audit(event,args):
     if event=="socket.connect":
         raise RuntimeError("LIVEBENCH_POLICY_EXTERNAL_NETWORK_FORBIDDEN")
     if event=="subprocess.Popen":
-        raw=args[0] if args else ""
-        text=(" ".join(str(x) for x in raw) if isinstance(raw,(list,tuple)) else str(raw)).lower()
-        forbidden=(" pip install"," -m pip install","npm install","npm i ","apt-get install","apt install","git clone","curl ","wget ")
+        exe=args[0] if len(args)>0 else ""
+        argv=args[1] if len(args)>1 else ()
+        parts=[str(exe)]
+        if isinstance(argv,(list,tuple)):
+            parts.extend(str(x) for x in argv)
+        else:
+            parts.append(str(argv))
+        text=" ".join(parts).lower()
+        forbidden=(
+            " pip install"," -m pip install","npm install","npm i ",
+            "apt-get install","apt install","git clone","curl ","wget "
+        )
         padded=" "+text
         if any(tok in padded for tok in forbidden):
             raise RuntimeError("LIVEBENCH_POLICY_POST_PROMPT_ACQUISITION_FORBIDDEN")
 sys.addaudithook(_audit)
+from canonical.runtime import astra_runtime
+class LiveBenchPostPromptAcquisitionForbidden(RuntimeError):
+    pass
+def _deny_auto_capability_acquisition():
+    raise LiveBenchPostPromptAcquisitionForbidden(
+        "LIVEBENCH_POLICY_POST_PROMPT_CAPABILITY_ACQUISITION_FORBIDDEN"
+    )
+astra_runtime._load_auto_capability_acquisition=_deny_auto_capability_acquisition
 from canonical.runtime.root2_livebench_if_astra_inference_adapter_v1 import infer
 req=json.loads(sys.stdin.read())
 try:
@@ -251,8 +268,9 @@ try:
 except Exception as exc:
     msg=type(exc).__name__+":"+str(exc)
     if ("CAPABILITY_ACQUISITION_REQUIRED" in msg or
-        "LIVEBENCH_POLICY_POST_PROMPT_ACQUISITION_FORBIDDEN" in msg or
-        "LIVEBENCH_POLICY_EXTERNAL_NETWORK_FORBIDDEN" in msg):
+        "LIVEBENCH_POLICY_POST_PROMPT_CAPABILITY_ACQUISITION_FORBIDDEN" in msg or
+        "LIVEBENCH_POLICY_EXTERNAL_NETWORK_FORBIDDEN" in msg or
+        "LiveBenchPostPromptAcquisitionForbidden" in msg):
         out={
             "task_id":req.get("task_id"),
             "status":"BLOCKED__POST_PROMPT_CAPABILITY_ACQUISITION_FORBIDDEN",
