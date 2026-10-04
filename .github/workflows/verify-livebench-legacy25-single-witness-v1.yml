@@ -7,6 +7,10 @@ on:
     paths:
       - verify_livebench_legacy25_single_witness_v1.py
       - .github/workflows/verify-livebench-legacy25-single-witness-v1.yml
+  pull_request:
+    paths:
+      - verify_livebench_legacy25_single_witness_v1.py
+      - .github/workflows/verify-livebench-legacy25-single-witness-v1.yml
   workflow_dispatch:
 
 jobs:
