@@ -1,7 +1,9 @@
 name: Verify LiveBench seven-archetype router V1
 
 on:
-  pull_request:
+  push:
+    branches:
+      - 'verify/livebench-seven-archetype-router-20261005-sol'
     paths:
       - 'subject/livebench_legacy15_exact_router_v1/**'
       - '.github/workflows/verify-livebench-seven-archetype-router-v1.yml'
