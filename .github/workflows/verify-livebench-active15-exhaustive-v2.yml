@@ -1,0 +1,75 @@
+name: Verify LiveBench active15 exhaustive exact V2
+
+on:
+  pull_request:
+    paths:
+      - "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py"
+      - "canonical/runtime/livebench_frozen_active_legacy15_v1.py"
+      - "canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py"
+      - "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py"
+      - "canonical/runtime/livebench_legacy15_joint_witness_v1.py"
+      - "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py"
+      - ".github/workflows/verify-livebench-active15-exhaustive-v2.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain subject blobs
+        run: |
+          python - <<'PY'
+          import subprocess
+          expected = {
+              "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py":"0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
+              "canonical/runtime/livebench_frozen_active_legacy15_v1.py":"34440ee69322e9d519cbe656cb03c55683a8b9c6",
+              "canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py":"e986035ff68b53c0dc7a7eb478f6e3d8882214aa",
+              "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py":"721207ba39d502e3f610289578e9d5bab78b1fcc",
+              "canonical/runtime/livebench_legacy15_joint_witness_v1.py":"029d6018fd705fa5d1a53c88c4c3dd60764d8489",
+              "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py":"b0376cb1e791af6abeb9536e41797b321bb7f7cb",
+          }
+          for p,w in expected.items():
+              g=subprocess.check_output(["git","rev-parse","HEAD:"+p],text=True).strip()
+              print(p,g)
+              if g!=w:
+                  raise SystemExit(f"BLOB_MISMATCH {p}: {g} != {w}")
+          PY
+
+      - name: Install exact checker dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install nltk==3.9.2 langdetect==1.0.9 immutabledict==4.2.1
+          python - <<'PY'
+          import nltk
+          for name in ["punkt", "punkt_tab"]:
+              if not nltk.download(name, quiet=True):
+                  raise SystemExit("NLTK_DOWNLOAD_FAILED:"+name)
+          PY
+
+      - name: Checkout frozen LiveBench scorer
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+
+      - name: Execute 7424-case exact synthetic closure audit
+        run: |
+          mkdir -p /tmp/receipt
+          python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py \
+            --livebench-root /tmp/livebench \
+            --output /tmp/receipt/livebench-active15-exhaustive-v2.json
+
+      - name: Upload exact receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active15-exhaustive-v2
+          path: /tmp/receipt/livebench-active15-exhaustive-v2.json
+          if-no-files-found: ignore
