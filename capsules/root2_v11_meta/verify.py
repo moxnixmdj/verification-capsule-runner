@@ -85,3 +85,5 @@ assert r3.get("fresh_reality_authority") is False
 assert ret["status"]
 py_compile.compile(str(B/"scheduler_runtime.py"),doraise=True)
 print("ROOT2_V11_META_V3_PACKAGE_PASS__SCHEDULER_SEMANTICS_PRESERVED__ZERO_CREDIT__NO_FRESH_REALITY")
+
+# isolated push verification trigger
