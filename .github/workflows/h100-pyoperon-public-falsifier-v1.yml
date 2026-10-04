@@ -1,0 +1,30 @@
+name: H100 pyoperon public falsifier V1
+
+on:
+  pull_request:
+    paths:
+      - 'research/h100_pyoperon_public_falsifier_v1.py'
+      - '.github/workflows/h100-pyoperon-public-falsifier-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen deterministic symbolic-regression donor
+        run: python -m pip install --disable-pip-version-check 'pyoperon==0.6.1'
+      - name: Run public-example donor falsifier
+        run: python research/h100_pyoperon_public_falsifier_v1.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h100-pyoperon-public-falsifier-v1
+          path: /tmp/h100_pyoperon_public_falsifier_v1.json
+          if-no-files-found: error
