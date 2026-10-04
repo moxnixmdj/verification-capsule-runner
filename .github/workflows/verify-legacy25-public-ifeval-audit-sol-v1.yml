@@ -1,0 +1,29 @@
+name: Legacy25 public IFEval audit Sol v1
+
+on:
+  push:
+    branches:
+      - verify/legacy25-public-ifeval-audit-20261004-sol-v1
+    paths:
+      - verification/verify_legacy25_public_ifeval_audit_v1.py
+      - verification/subjects/livebench_legacy25_prompt_inverter_v1__brain_de598627.py
+      - .github/workflows/verify-legacy25-public-ifeval-audit-sol-v1.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run independent public IFEval audit
+        run: python verification/verify_legacy25_public_ifeval_audit_v1.py
+      - name: Upload exact audit receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy25-public-ifeval-audit-sol-v1
+          path: legacy25_public_ifeval_audit_v1.json
+          if-no-files-found: error
+          retention-days: 7
