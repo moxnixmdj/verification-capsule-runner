@@ -8,12 +8,13 @@ import re
 import subprocess
 import sys
 from collections import Counter
-from itertools import cycle
+from itertools import combinations, cycle
 
 ARCH_BLOB = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
 FEAS_BLOB = "7477f5ea5bdeac3595ee2784a38d078fe2f385b0"
 COMPOSER_BLOB = "d73ec366b32252996258eae6d10d67d4d6a5e042"
 PLANNER_BLOB = "71e637c70edf1c582e28ea38b3b798965c803a06"
+SCOPE_BLOB = "8af85028ca49a2abd4561a915927b8f67fa9a069"
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 INSTRUCTIONS_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
 REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
@@ -25,6 +26,7 @@ ARCH = SUBJECT / "canonical/runtime/livebench_legacy15_composition_archetypes_v1
 FEAS = SUBJECT / "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py"
 COMPOSER = SUBJECT / "canonical/runtime/livebench_legacy15_contract_composer_v2.py"
 PLANNER = SUBJECT / "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py"
+SCOPE = SUBJECT / "canonical/runtime/livebench_public_scope_union_v1.py"
 
 
 def run(cmd, **kw):
@@ -44,6 +46,7 @@ def main() -> int:
     assert hash_object(FEAS) == FEAS_BLOB
     assert hash_object(COMPOSER) == COMPOSER_BLOB
     assert hash_object(PLANNER) == PLANNER_BLOB
+    assert hash_object(SCOPE) == SCOPE_BLOB
 
     live = pathlib.Path("/tmp/LiveBench")
     assert run(["git", "-C", str(live), "rev-parse", "HEAD"], capture_output=True).stdout.strip() == LIVEBENCH_COMMIT
@@ -61,7 +64,57 @@ def main() -> int:
     from canonical.runtime import livebench_legacy15_composition_archetypes_v1 as arch
     from canonical.runtime import livebench_legacy15_contract_composer_v2 as comp
     from canonical.runtime import livebench_legacy15_pointwise_optimal_v1 as opt
+    from canonical.runtime import livebench_public_scope_union_v1 as scope
     from instruction_following_eval import instructions_registry, instructions_util
+
+    historical_commit = "686be1e78a0ba8036d7e355bc406e1a265da5292"
+    historical_blob_expected = "6ff390d6885cf90f88d9d36959735cb327613edc"
+    run(["git", "-C", str(live), "fetch", "--depth=1", "origin", historical_commit])
+    historical_blob = run(
+        ["git", "-C", str(live), "rev-parse", "FETCH_HEAD:livebench/if_runner/live_data.py"],
+        capture_output=True,
+    ).stdout.strip()
+    assert historical_blob == historical_blob_expected, (historical_blob, historical_blob_expected)
+    historical_source = run(
+        ["git", "-C", str(live), "show", "FETCH_HEAD:livebench/if_runner/live_data.py"],
+        capture_output=True,
+    ).stdout
+    scope_result = scope.analyze_source(historical_source)
+    assert scope_result["status"] == "PASS__PUBLIC_SCOPE_LATTICE_15_LT_24_LT_25"
+    assert scope_result["historical_generator_count"] == 24
+    assert scope_result["public_union_count"] == 25
+    assert scope_result["public_union25_minus_generator24"] == ["language:response_language"]
+    assert scope_result["terminal_data_used"] is False
+    assert scope_result["acceptance_credit"] is False
+
+    registry_ids = tuple(instructions_registry.INSTRUCTION_DICT.keys())
+    assert len(registry_ids) == 25
+    assert set(registry_ids) == set(scope.TABLE4_25)
+    conflict_pairs = set()
+    for left, rights in instructions_registry.INSTRUCTION_CONFLICTS.items():
+        for right in rights:
+            if left != right:
+                conflict_pairs.add(frozenset((left, right)))
+    assert len(conflict_pairs) == 97, len(conflict_pairs)
+
+    structural_counts = {}
+    structural_total = 0
+    for cardinality in range(1, 6):
+        count = 0
+        for ids in combinations(registry_ids, cardinality):
+            chosen = set(ids)
+            if not any(pair <= chosen for pair in conflict_pairs):
+                count += 1
+        structural_counts[cardinality] = count
+        structural_total += count
+    assert structural_counts == {1: 25, 2: 203, 3: 1055, 4: 3750, 5: 9526}
+    assert structural_total == 14559
+
+    scope_result["public_union_equals_entire_pinned_registry"] = True
+    scope_result["pinned_registry_family_count"] = len(registry_ids)
+    scope_result["pinned_registry_conflict_pair_count"] = len(conflict_pairs)
+    scope_result["compatible_structural_sets_by_cardinality"] = structural_counts
+    scope_result["compatible_structural_set_total_1_to_5"] = structural_total
 
     words = list(instructions_util.WORD_LIST)
     assert len(words) == 1525, len(words)
@@ -418,6 +471,7 @@ def main() -> int:
             "registry_blob": REGISTRY_BLOB,
             "instructions_util_blob": UTIL_BLOB,
         },
+        "public_scope_union": scope_result,
         "public_generator_word_domain": {
             "count": len(words),
             "unique": len(set(words)),
