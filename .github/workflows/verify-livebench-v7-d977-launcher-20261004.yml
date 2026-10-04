@@ -1,4 +1,5 @@
 name: Verify exact LiveBench V7 d977 launcher
+# Zero terminal cases; exact content-addressed launcher verification only.
 on:
   pull_request:
     branches: [main]
