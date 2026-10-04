@@ -1,0 +1,37 @@
+{
+  "acceptance_credit_delta": 0,
+  "activation_blob_sha": "1c529af946178adb123af531de9b7e9a6bade982",
+  "case_73_or_later": false,
+  "claim": {
+    "claim_ref": "refs/heads/livebench-v9-retry1-claims/f937fb0c495fd24c5f083b1eddd09ea82fc26fa66e078e42826ccf470e385ec9",
+    "create_http_status": 201,
+    "epoch_digest_sha256": "f937fb0c495fd24c5f083b1eddd09ea82fc26fa66e078e42826ccf470e385ec9",
+    "execution_started_before_claim": false,
+    "reference_created": true,
+    "response_object_sha": "24bf8c8a1c3e1d8b4d6008a96a6e6fa96b8514c5",
+    "terminal_dataset_read_before_claim": false
+  },
+  "new_case_exposure": false,
+  "promotion_authority": false,
+  "result": {
+    "acceptance_credit_authority": false,
+    "activation_blob_sha": "1c529af946178adb123af531de9b7e9a6bade982",
+    "benchmark_id": "LIVEBENCH_IF_2026_06_25",
+    "case_ids_emitted": false,
+    "classification_histogram": {
+      "V9_DRIVER_FAILURE": 72
+    },
+    "new_case_exposure": false,
+    "promotion_authority": false,
+    "prompt_text_emitted": false,
+    "raw_exception_text_emitted": false,
+    "replay_prefix_limit": 72,
+    "replayed_already_exposed_cases": 72,
+    "response_text_emitted": false,
+    "schema": "PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_RESULT_V1",
+    "status": "DIAGNOSTIC_COMPLETE"
+  },
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY1_EXECUTION_RECEIPT_V1",
+  "workflow_run_id": "37195176743",
+  "workflow_sha": "24bf8c8a1c3e1d8b4d6008a96a6e6fa96b8514c5"
+}
