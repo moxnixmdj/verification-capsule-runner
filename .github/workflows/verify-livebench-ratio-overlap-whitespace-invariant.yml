@@ -1,0 +1,28 @@
+name: Verify LiveBench Ratio Overlap Whitespace Invariance
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_ratio_overlap_whitespace_invariant.py
+      - .github/workflows/verify-livebench-ratio-overlap-whitespace-invariant.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact public ratio-overlap construction
+        run: python verify_livebench_ratio_overlap_whitespace_invariant.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-ratio-overlap-whitespace-invariant-receipt
+          path: livebench_ratio_overlap_whitespace_invariant_receipt.json
+          if-no-files-found: error
