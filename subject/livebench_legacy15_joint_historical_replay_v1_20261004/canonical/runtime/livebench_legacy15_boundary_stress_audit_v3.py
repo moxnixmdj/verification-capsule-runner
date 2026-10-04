@@ -23,7 +23,7 @@ from typing import Any
 from canonical.runtime import livebench_legacy15_composition_archetypes_v1 as archetypes
 from canonical.runtime import livebench_legacy15_joint_witness_v1 as witness
 
-SCHEMA = "PROJECT_BRAIN_LIVEBENCH_LEGACY15_END2END_EXACT_SYNTHETIC_AUDIT_V2"
+SCHEMA = "PROJECT_BRAIN_LIVEBENCH_LEGACY15_BOUNDARY_STRESS_AUDIT_V3"
 FROZEN_LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 FROZEN_REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
 FROZEN_INSTRUCTIONS_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
@@ -94,6 +94,32 @@ PROFILES = (
         "postscript": "P.P.S",
         "bullets": 1,
         "sections": ("SECTION", 1),
+        "end": "Is there anything else I can help with?",
+    },
+    {
+        "name": "MIN_SENTENCE_LT1",
+        "existence": ["western", "signal", "river", "proof", "brain"],
+        "forbidden": ["apple", "market", "glass", "shoe", "hotel"],
+        "paragraphs": 1,
+        "words": (100, "less than"),
+        "sentences": (1, "less than"),
+        "nth": (1, 1, "river"),
+        "postscript": "P.S.",
+        "bullets": 1,
+        "sections": ("Section", 1),
+        "end": "Any other questions?",
+    },
+    {
+        "name": "MAX_SENTENCE_ATLEAST20",
+        "existence": ["western", "signal", "river", "proof", "brain"],
+        "forbidden": ["apple", "market", "glass", "shoe", "hotel"],
+        "paragraphs": 5,
+        "words": (500, "at least"),
+        "sentences": (20, "at least"),
+        "nth": (5, 1, "river"),
+        "postscript": "P.P.S",
+        "bullets": 5,
+        "sections": ("SECTION", 5),
         "end": "Is there anything else I can help with?",
     },
 )

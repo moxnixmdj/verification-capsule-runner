@@ -1,0 +1,84 @@
+name: Verify LiveBench synthetic 7424 V1
+on:
+  push:
+    branches: [verify-livebench-synthetic7424-20261004-v1]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+
+      - name: Materialize pinned NLTK sentence assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/nltk_data_repo /tmp/nltk_data
+          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- \
+            packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+      - name: Materialize pinned scorer files
+        run: |
+          mkdir -p /tmp/LiveBench/livebench/if_runner/instruction_following_eval
+          base=https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091/livebench/if_runner/instruction_following_eval
+          for f in instructions.py instructions_registry.py instructions_util.py __init__.py; do
+            curl -fsSL "$base/$f" -o "/tmp/LiveBench/livebench/if_runner/instruction_following_eval/$f"
+          done
+      - name: Run audit
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        env:
+          PYTHONPATH: .
+          NLTK_DATA: /tmp/nltk_data
+        run: |
+          python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py --livebench-root /tmp/LiveBench --output livebench_legacy15_synthetic7424_receipt_v1.json
+      - name: Run generator-boundary diagnostic V3
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        env:
+          PYTHONPATH: .
+          NLTK_DATA: /tmp/nltk_data
+        shell: bash
+        run: |
+          set +e
+          python canonical/runtime/livebench_legacy15_boundary_stress_audit_v3.py \
+            --livebench-root /tmp/LiveBench \
+            --output livebench_legacy15_boundary_stress_receipt_v3.json
+          rc=$?
+          echo "BOUNDARY_DIAGNOSTIC_EXIT=$rc"
+          test -f livebench_legacy15_boundary_stress_receipt_v3.json
+
+      - name: Print generator-boundary diagnostic V3
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        run: |
+          test -f livebench_legacy15_boundary_stress_receipt_v3.json && cat livebench_legacy15_boundary_stress_receipt_v3.json || true
+
+      - name: Print receipt
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        run: |
+          test -f livebench_legacy15_synthetic7424_receipt_v1.json && cat livebench_legacy15_synthetic7424_receipt_v1.json || true
+      - name: Print synthetic repair ledger
+        if: always()
+        run: |
+          if test -f subject/livebench_legacy15_joint_historical_replay_v1_20261004/livebench_legacy15_synthetic7424_receipt_v1.json; then
+            cat subject/livebench_legacy15_joint_historical_replay_v1_20261004/livebench_legacy15_synthetic7424_receipt_v1.json
+          fi
+
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-synthetic7424-v1
+          path: subject/livebench_legacy15_joint_historical_replay_v1_20261004/livebench_legacy15_synthetic7424_receipt_v1.json
+          if-no-files-found: warn
