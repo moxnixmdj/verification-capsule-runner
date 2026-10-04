@@ -43,3 +43,5 @@ assert x["terminal_state"]["unresolved_predicates"]==26,x
 assert x["fresh_reality_authority"] is False,x
 print("TERMINAL_ADAPTIVE_MINIMUM_CUT_ISOLATED_PASS")
 PY
+
+# adaptive-mincut-trigger-v2: rerun after removing third-party pytest dependency.
