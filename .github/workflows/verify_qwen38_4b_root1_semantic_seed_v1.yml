@@ -1,5 +1,7 @@
 name: Verify Qwen3.8-4B Root1 semantic seed
 on:
+  push:
+    branches: ['verify/qwen38-4b-root1-semantic-seed-20261004']
   pull_request:
     paths:
       - 'verify_qwen38_4b_root1_semantic_seed_v1.py'
