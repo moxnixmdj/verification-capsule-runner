@@ -1,0 +1,46 @@
+name: Fast-lane verify LiveBench threshold route PR 1900
+
+on:
+  push:
+    branches:
+      - 'fastlane/verify-livebench-threshold-route-1900-v1'
+    paths:
+      - 'verify_livebench_threshold_route_1900_fastlane.py'
+      - 'subject/livebench_threshold_route_1900/**'
+      - '.github/workflows/fastlane-verify-livebench-threshold-route-1900.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: livebench-threshold-route-1900-fastlane-v1
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install verifier dependency
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pytest==8.3.5
+      - name: Checkout exact public LiveBench sources
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/livebench fetch origin 686be1e78a0ba8036d7e355bc406e1a265da5292
+          git -C /tmp/livebench cat-file -e 6ff390d6885cf90f88d9d36959735cb327613edc
+      - name: Verify source reachability and exact candidate theorem
+        env:
+          LIVEBENCH_ROOT: /tmp/livebench
+        run: python verify_livebench_threshold_route_1900_fastlane.py
+      - name: Upload immutable verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-threshold-route-1900-fastlane-receipt
+          path: livebench-threshold-route-1900-fastlane-receipt.json
+          if-no-files-found: error
