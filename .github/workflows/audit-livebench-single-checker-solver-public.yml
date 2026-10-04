@@ -1,0 +1,36 @@
+name: Audit LiveBench single-checker solver
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_single_checker_solver_public.py"
+      - ".github/workflows/audit-livebench-single-checker-solver-public.yml"
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen-checker dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install absl-py langdetect nltk immutabledict spacy emoji "syllapy>=0.8.0"
+          python -m spacy download en_core_web_sm
+          python - <<'PY'
+          import nltk
+          for package in ("punkt", "punkt_tab"):
+              nltk.download(package, quiet=True)
+          PY
+      - name: Execute public single-checker audit
+        run: python verify_livebench_single_checker_solver_public.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-single-checker-solver-public-audit
+          path: livebench_single_checker_solver_public_audit_receipt.json
+          if-no-files-found: error
