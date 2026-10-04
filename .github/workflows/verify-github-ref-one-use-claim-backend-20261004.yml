@@ -1,0 +1,24 @@
+name: Verify GitHub ref one-use claim backend
+
+on:
+  pull_request:
+    paths:
+      - 'verify_github_ref_one_use_claim_backend_20261004.py'
+      - '.github/workflows/verify-github-ref-one-use-claim-backend-20261004.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify atomic first-create and replay rejection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python verify_github_ref_one_use_claim_backend_20261004.py
