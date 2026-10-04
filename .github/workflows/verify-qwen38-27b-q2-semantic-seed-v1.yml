@@ -1,0 +1,307 @@
+name: Verify Qwen3.8 27B Q2 semantic seed V1
+
+on:
+  push:
+    branches: ["verify/qwen38-27b-q2-semantic-seed-v1-20261004"]
+    paths:
+      - ".github/workflows/verify-qwen38-27b-q2-semantic-seed-v1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      HF_REPO: unsloth/Qwen3.8-27B-GGUF
+      HF_REVISION: 4ca720788d1e01f1bff70c033e0d0028fd02e502
+      MODEL_FILE: Qwen3.8-27B-UD-Q2_K_XL.gguf
+      MODEL_BYTES: "9828981664"
+      MODEL_SHA256: fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0
+      LLAMA_CPP_COMMIT: 7e4c0a96880dae4fc4268ad441f8a6446bd5460a
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Freeze runner resource envelope before acquisition
+        id: resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          MEM_KB="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
+          DISK_KB="$(df -Pk "$GITHUB_WORKSPACE" | awk 'NR==2 {print $4}')"
+          CPU_COUNT="$(nproc)"
+          echo "mem_kb=$MEM_KB" >> "$GITHUB_OUTPUT"
+          echo "disk_kb=$DISK_KB" >> "$GITHUB_OUTPUT"
+          echo "cpu_count=$CPU_COUNT" >> "$GITHUB_OUTPUT"
+          # Fail before model download if this disposable verifier cannot safely fit
+          # the 9.83 GB subject plus runtime/build headroom.
+          test "$MEM_KB" -ge 14000000
+          test "$DISK_KB" -ge 15000000
+          test "$CPU_COUNT" -ge 2
+
+      - name: Install pinned acquisition tooling
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "huggingface_hub[hf_xet]==0.35.3"
+
+      - name: Acquire and content-address exact quantized subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/model"
+          hf download "$HF_REPO" "$MODEL_FILE"             --revision "$HF_REVISION"             --local-dir "$RUNNER_TEMP/model"
+          MODEL="$RUNNER_TEMP/model/$MODEL_FILE"
+          test -f "$MODEL"
+          test "$(stat -c %s "$MODEL")" = "$MODEL_BYTES"
+          echo "$MODEL_SHA256  $MODEL" | sha256sum -c -
+          printf '%s\n' "$MODEL" > "$RUNNER_TEMP/model_path"
+
+      - name: Build pinned CPU-only llama.cpp runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/llama.cpp"
+          git -C "$RUNNER_TEMP/llama.cpp" remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C "$RUNNER_TEMP/llama.cpp" fetch --depth 1 origin "$LLAMA_CPP_COMMIT"
+          git -C "$RUNNER_TEMP/llama.cpp" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/llama.cpp" rev-parse HEAD)" = "$LLAMA_CPP_COMMIT"
+          cmake -S "$RUNNER_TEMP/llama.cpp" -B "$RUNNER_TEMP/llama.cpp/build"             -DCMAKE_BUILD_TYPE=Release             -DGGML_NATIVE=OFF             -DGGML_OPENMP=ON             -DGGML_CUDA=OFF             -DLLAMA_CURL=OFF
+          cmake --build "$RUNNER_TEMP/llama.cpp/build" -j "$(nproc)" --target llama-server
+          test -x "$RUNNER_TEMP/llama.cpp/build/bin/llama-server"
+
+      - name: Start exact local semantic subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL="$(cat "$RUNNER_TEMP/model_path")"
+          SERVER="$RUNNER_TEMP/llama.cpp/build/bin/llama-server"
+          "$SERVER"             -m "$MODEL"             -c 1536             -ngl 0             --parallel 1             --host 127.0.0.1             --port 8080             > "$RUNNER_TEMP/llama-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/llama-server.pid"
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then
+              exit 0
+            fi
+            if ! kill -0 "$(cat "$RUNNER_TEMP/llama-server.pid")" 2>/dev/null; then
+              cat "$RUNNER_TEMP/llama-server.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/llama-server.log"
+          exit 1
+
+      - name: Run frozen nonterminal semantic seed challenge
+        shell: bash
+        env:
+          MEM_KB: ${{ steps.resources.outputs.mem_kb }}
+          DISK_KB: ${{ steps.resources.outputs.disk_kb }}
+          CPU_COUNT: ${{ steps.resources.outputs.cpu_count }}
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics/qwen38-q2-semantic-seed-v1
+          python - <<'PY'
+          import json, os, re, urllib.request
+          from pathlib import Path
+
+          URL="http://127.0.0.1:8080/v1/chat/completions"
+
+          tasks=[
+            {
+              "id":"PARAPHRASE_FACT_PRESERVATION",
+              "max_tokens":72,
+              "source":"Aster sent the bronze compass to Nilo on Tuesday after the storm ended.",
+              "prompt":"Paraphrase this sentence in one sentence without changing its meaning. Keep the names Aster and Nilo, the object bronze compass, the day Tuesday, and that the sending happened after the storm ended. Do not repeat the original sentence verbatim. Output only the paraphrase.\n\nAster sent the bronze compass to Nilo on Tuesday after the storm ended.",
+            },
+            {
+              "id":"SIMPLIFY_CAUSAL_PRESERVATION",
+              "max_tokens":84,
+              "source":"Although the observatory remained operational during the outage, the technicians postponed the calibration because the backup generator was unstable.",
+              "prompt":"Rewrite this for a young reader in at most two short sentences. Preserve all three facts: the observatory stayed working during the outage; the technicians delayed the calibration; the reason was an unstable backup generator. Output only the simplified text.\n\nAlthough the observatory remained operational during the outage, the technicians postponed the calibration because the backup generator was unstable.",
+            },
+            {
+              "id":"SUMMARIZE_KEY_FACTS",
+              "max_tokens":80,
+              "source":"On Monday, the Aurora probe entered lunar orbit. It deployed two weather sensors. One sensor failed after twelve minutes. The second sensor remained healthy and returned 18 gigabytes of data. Mission control delayed landing by one day to inspect the failure.",
+              "prompt":"Summarize the passage in 30 words or fewer. Preserve these key facts: Aurora entered lunar orbit; one sensor failed; the healthy sensor returned 18 gigabytes; landing was delayed by one day. Output only the summary.\n\nOn Monday, the Aurora probe entered lunar orbit. It deployed two weather sensors. One sensor failed after twelve minutes. The second sensor remained healthy and returned 18 gigabytes of data. Mission control delayed landing by one day to inspect the failure.",
+            },
+            {
+              "id":"STORY_INSTRUCTION_GROUNDED",
+              "max_tokens":128,
+              "source":"Mira finds a red key; Mira gives it to Ivo; Ivo opens a locked greenhouse; inside they discover a sleeping fox; nobody harms the fox.",
+              "prompt":"Write a coherent short story of 45 to 90 words. The events must occur in this order: Mira finds a red key; Mira gives the key to Ivo; Ivo opens a locked greenhouse; inside they discover a sleeping fox; they leave the fox unharmed. Output only the story.",
+            },
+          ]
+
+          def call(prompt,max_tokens):
+              body={
+                  "model":"local",
+                  "messages":[
+                    {"role":"system","content":"You are a precise writing engine. Follow the requested transformation faithfully and answer with only the requested text."},
+                    {"role":"user","content":prompt},
+                  ],
+                  "temperature":0,
+                  "seed":0,
+                  "max_tokens":max_tokens,
+                  "chat_template_kwargs":{"enable_thinking":False},
+              }
+              req=urllib.request.Request(URL,data=json.dumps(body).encode(),headers={"Content-Type":"application/json"})
+              with urllib.request.urlopen(req,timeout=900) as resp:
+                  obj=json.load(resp)
+              return str(obj["choices"][0]["message"].get("content") or "").strip()
+
+          def words(s):
+              return re.findall(r"[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)?",s)
+
+          def norm(s):
+              return " ".join(words(s.lower()))
+
+          def check(task,out):
+              low=out.lower()
+              tid=task["id"]
+              checks={}
+              if tid=="PARAPHRASE_FACT_PRESERVATION":
+                  for token in ("aster","nilo","bronze","compass","tuesday","storm"):
+                      checks["has_"+token]=token in low
+                  checks["transfer_relation"]=any(x in low for x in ("sent","send","gave","given","delivered","mailed","passed","handed","dispatched","forwarded"))
+                  checks["temporal_after"]=any(x in low for x in ("after","following","once the storm","when the storm had ended","storm ended"))
+                  checks["not_verbatim"]=norm(out)!=norm(task["source"])
+                  checks["sentence_shape"]=8 <= len(words(out)) <= 40 and "\n-" not in out
+              elif tid=="SIMPLIFY_CAUSAL_PRESERVATION":
+                  checks["observatory"]= "observatory" in low
+                  checks["working"]=any(x in low for x in ("working","operational","kept running","stayed open","remained open","continued operating"))
+                  checks["outage"]="outage" in low
+                  checks["technicians"]="technician" in low
+                  checks["calibration"]="calibration" in low
+                  checks["delay"]=any(x in low for x in ("delay","delayed","postpone","postponed","put off"))
+                  checks["generator"]="generator" in low
+                  checks["unstable"]=any(x in low for x in ("unstable","not stable","unreliable"))
+                  checks["causal"]=any(x in low for x in ("because","since","due to","so"))
+                  checks["bounded"]=len(words(out)) <= 55
+              elif tid=="SUMMARIZE_KEY_FACTS":
+                  checks["aurora"]="aurora" in low
+                  checks["lunar_orbit"]="lunar" in low and "orbit" in low
+                  checks["sensor_failure"]="sensor" in low and any(x in low for x in ("failed","failure"))
+                  checks["18_gb"]=bool(re.search(r"\b18\b",low)) and any(x in low for x in ("gigabyte","gb"))
+                  checks["landing_delay"]="landing" in low and any(x in low for x in ("delay","delayed","postpone","postponed"))
+                  checks["one_day"]=bool(re.search(r"\b(one|1)\s+day\b",low))
+                  checks["word_limit"]=len(words(out)) <= 30
+              elif tid=="STORY_INSTRUCTION_GROUNDED":
+                  markers=[
+                    low.find("mira"),
+                    low.find("red key"),
+                    low.find("ivo"),
+                    low.find("greenhouse"),
+                    low.find("fox"),
+                  ]
+                  checks["all_markers"]=all(x>=0 for x in markers)
+                  checks["event_order"]=all(markers[i] <= markers[i+1] for i in range(len(markers)-1)) if all(x>=0 for x in markers) else False
+                  checks["locked"]= "locked" in low or "lock" in low
+                  checks["sleeping"]= "sleep" in low
+                  checks["unharmed"]=any(x in low for x in ("unharmed","did not harm","didn't harm","left the fox","leave the fox","quietly left","let the fox sleep","without disturbing"))
+                  checks["story_length"]=45 <= len(words(out)) <= 100
+              passed=all(checks.values())
+              return passed,checks
+
+          results=[]
+          for task in tasks:
+              out=call(task["prompt"],task["max_tokens"])
+              passed,checks=check(task,out)
+              results.append({
+                  "task_id":task["id"],
+                  "passed":passed,
+                  "checks":checks,
+                  "word_count":len(words(out)),
+                  "output":out,
+              })
+
+          doc={
+              "schema":"QWEN38_27B_UD_Q2_K_XL_SEMANTIC_SEED_PUBLIC_NONTERMINAL_VERIFICATION_V1",
+              "status":"PASS" if all(r["passed"] for r in results) else "FAIL",
+              "subject":{
+                  "base_model":"Qwen/Qwen3.8-27B",
+                  "quant_repository":os.environ["HF_REPO"],
+                  "quant_revision":os.environ["HF_REVISION"],
+                  "quant_file":os.environ["MODEL_FILE"],
+                  "quant_bytes":int(os.environ["MODEL_BYTES"]),
+                  "quant_sha256":os.environ["MODEL_SHA256"],
+                  "quantization":"UD-Q2_K_XL",
+                  "llama_cpp_commit":os.environ["LLAMA_CPP_COMMIT"],
+              },
+              "runner":{
+                  "mem_kb":int(os.environ["MEM_KB"]),
+                  "disk_free_kb_before_acquisition":int(os.environ["DISK_KB"]),
+                  "cpu_count":int(os.environ["CPU_COUNT"]),
+                  "gpu_used":False,
+                  "external_general_reasoning_calls":0,
+                  "incremental_spend_usd":0,
+              },
+              "challenge":{
+                  "terminal_cases_consumed":0,
+                  "terminal_prompts_consumed":0,
+                  "public_nonterminal_synthetic_tasks":len(tasks),
+                  "tasks_passed":sum(r["passed"] for r in results),
+                  "all_pass":all(r["passed"] for r in results),
+                  "results":results,
+              },
+              "hard_nonclaims":[
+                  "THIS_FINITE_PUBLIC_SYNTHETIC_CHALLENGE_IS_NOT_OPUS_5_5_EQUIVALENCE",
+                  "THIS_DOES_NOT_INHERIT_THE_FULL_PRECISION_QWEN3_8_27B_LIVEBENCH_SCORE",
+                  "THIS_DOES_NOT_ESTABLISH_LIVEBENCH_65_7_FOR_THE_QUANTIZED_SUBJECT",
+                  "THIS_DOES_NOT_BY_ITSELF_ESTABLISH_DURABLE_BRAIN_OWNERSHIP",
+                  "NO_TERMINAL_ACCEPTANCE_OR_FAMILY_CREDIT",
+              ],
+          }
+          Path("diagnostics/qwen38-q2-semantic-seed-v1/result.json").write_text(
+              json.dumps(doc,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print(json.dumps({
+              "status":doc["status"],
+              "tasks_passed":doc["challenge"]["tasks_passed"],
+              "tasks_total":len(tasks),
+              "task_statuses":{r["task_id"]:r["passed"] for r in results},
+          },sort_keys=True))
+          if doc["status"]!="PASS":
+              raise SystemExit(2)
+          PY
+
+      - name: Persist independent verification receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/llama-server.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/llama-server.pid")" 2>/dev/null || true
+          fi
+          if [ -f diagnostics/qwen38-q2-semantic-seed-v1/result.json ]; then
+            git config user.name "brain-verifier"
+            git config user.email "brain-verifier@users.noreply.github.com"
+            git add diagnostics/qwen38-q2-semantic-seed-v1/result.json
+            git commit -m "Record Qwen3.8 27B Q2 semantic seed verification" || true
+            git push origin HEAD:verify/qwen38-27b-q2-semantic-seed-v1-20261004
+          else
+            mkdir -p diagnostics/qwen38-q2-semantic-seed-v1
+            python - <<'PY'
+          import json, os
+          from pathlib import Path
+          doc={
+            "schema":"QWEN38_27B_UD_Q2_K_XL_SEMANTIC_SEED_PUBLIC_NONTERMINAL_VERIFICATION_V1",
+            "status":"ABORTED_BEFORE_SEMANTIC_RESULT",
+            "subject":{
+              "quant_repository":os.environ["HF_REPO"],
+              "quant_revision":os.environ["HF_REVISION"],
+              "quant_file":os.environ["MODEL_FILE"],
+              "quant_bytes":int(os.environ["MODEL_BYTES"]),
+              "quant_sha256":os.environ["MODEL_SHA256"],
+              "llama_cpp_commit":os.environ["LLAMA_CPP_COMMIT"],
+            },
+            "hard_nonclaim":"NO_SEMANTIC_CAPABILITY_RESULT_WAS_OBTAINED"
+          }
+          Path("diagnostics/qwen38-q2-semantic-seed-v1/result.json").write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n")
+          PY
+            git config user.name "brain-verifier"
+            git config user.email "brain-verifier@users.noreply.github.com"
+            git add diagnostics/qwen38-q2-semantic-seed-v1/result.json
+            git commit -m "Record aborted Qwen3.8 Q2 semantic verification" || true
+            git push origin HEAD:verify/qwen38-27b-q2-semantic-seed-v1-20261004
+          fi
