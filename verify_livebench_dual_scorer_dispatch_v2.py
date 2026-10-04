@@ -13,7 +13,7 @@ def main():
     from livebench_dual_scorer_dispatch_v2 import scorer_family,strip_think,modern_response,score_case
     assert scorer_family({"category":"instruction_following","livebench_release_date":"2025-11-24"})=="LEGACY_IFEVAL"
     assert scorer_family({"category":"instruction_following","livebench_release_date":"2025-11-25"})=="IFBENCH"
-    assert strip_think("<think>private reasoning</think> answer")=="answer"
+    assert strip_think("<think>hidden text</think> answer")=="answer"
     assert modern_response("<think>x</think><solution> Hello World </solution>")=="Hello World"
     with tempfile.TemporaryDirectory(prefix="lb-dispatch-v2-") as td:
         repo=pathlib.Path(td)/"LiveBench"
@@ -40,9 +40,9 @@ def main():
               "instruction_id_list":["punctuation:no_comma"],"turns":["synthetic old"],"kwargs":[{}]}
         newq={"question_id":2,"category":"instruction_following","livebench_release_date":"2025-11-25",
               "instruction_id_list":["format:no_whitespace"],"turns":["synthetic new"],"kwargs":[{}]}
-        old=score_case(oldq,"<think>ignored, with comma</think>Hello world",
+        old=score_case(oldq,"<think>hidden comma, text</think>Hello world",
                        legacy_eval=legacy_eval,current_eval=current_eval,score_results=score_results)
-        new=score_case(newq,"<think>ignored text</think><solution>HelloWorld</solution>",
+        new=score_case(newq,"<think>hidden text</think><solution>HelloWorld</solution>",
                        legacy_eval=legacy_eval,current_eval=current_eval,score_results=score_results)
         assert old["score"]==1.0 and old["scorer_family"]=="LEGACY_IFEVAL",old
         assert new["score"]==1.0 and new["scorer_family"]=="IFBENCH",new
