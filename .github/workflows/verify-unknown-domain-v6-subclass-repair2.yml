@@ -37,3 +37,4 @@ jobs:
           name: unknown-domain-v6-subclass-repair2-${{ matrix.python }}
           path: unknown_domain_v6_subclass_repair2_receipt.json
           if-no-files-found: error
+# execution-trigger: independent frozen-gate replay 2026-10-05 sol2
