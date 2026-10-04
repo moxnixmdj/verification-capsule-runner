@@ -1,0 +1,30 @@
+name: Verify Brain 1967 root consistency
+
+on:
+  push:
+    branches:
+      - verify/brain-1967-root-consistency-20261005
+  pull_request:
+    paths:
+      - "subjects/brain1967/**"
+      - "verify_brain1967_root_consistency.py"
+      - ".github/workflows/verify-brain1967-root-consistency.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact content-addressed root consistency
+        run: python verify_brain1967_root_consistency.py
+      - name: Upload independent receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: brain1967-root-consistency-receipt
+          path: brain1967_verification_receipt.json
