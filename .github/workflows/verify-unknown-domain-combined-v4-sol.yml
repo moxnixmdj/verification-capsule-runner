@@ -1,0 +1,27 @@
+name: Independent verify Unknown-Domain combined V4
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-combined-v4-20261005-sol'
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_combined_v4_universal_proof_v1.py'
+      - 'verify_unknown_domain_combined_v4.py'
+      - '.github/workflows/verify-unknown-domain-combined-v4-sol.yml'
+permissions:
+  contents: read
+concurrency:
+  group: verify-unknown-domain-combined-v4-sol
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independent structural proof and adversarial falsification
+        run: python verify_unknown_domain_combined_v4.py
