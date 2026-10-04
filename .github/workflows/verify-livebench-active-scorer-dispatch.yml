@@ -1,0 +1,29 @@
+name: Verify LiveBench active scorer dispatch
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_livebench_active_scorer_dispatch.py'
+      - '.github/workflows/verify-livebench-active-scorer-dispatch.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet "pyarrow==21.0.0"
+      - run: python verify_livebench_active_scorer_dispatch.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active-scorer-dispatch-receipt
+          path: livebench_active_scorer_dispatch_receipt.json
+          if-no-files-found: error
