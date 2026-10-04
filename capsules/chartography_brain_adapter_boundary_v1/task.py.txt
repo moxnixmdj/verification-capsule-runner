@@ -1,0 +1,56 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from inspect_ai import Task, task
+from inspect_ai.model import ModelInfo, get_model, set_model_info
+from inspect_ai.solver import generate
+
+from chartography.dataset import load_samples
+from chartography.scorer import golden_answer_scorer
+
+# Inspect changes the working directory during evaluation.
+DEFAULT_TASK_PACK = (
+    Path(__file__).resolve().parents[2] / "task_packs" / "sample_charts"
+)
+DEFAULT_JUDGE_MODEL = "google/gemini-3.5-flash"
+
+
+def _register_family(model_name: str, family: str) -> None:
+    """Register prefixed and bare model names for capability detection."""
+    names = {model_name}
+    if "/" in model_name:
+        names.add(model_name.split("/", 1)[1])
+    for name in names:
+        set_model_info(name, ModelInfo(family=family))
+
+
+@task
+def chartography(
+    hf_repo: str | None = None,
+    split: str = "test",
+    task_pack: str | None = None,
+    limit: int | None = None,
+    judge_model: str = DEFAULT_JUDGE_MODEL,
+    model_family: str | None = None,
+    judge_model_family: str | None = None,
+) -> Task:
+    """Build the chart-reading task with optional dataset and family overrides."""
+    if model_family:
+        _register_family(str(get_model()), model_family)
+    if judge_model_family:
+        _register_family(judge_model, judge_model_family)
+
+    if hf_repo is None and task_pack is None:
+        task_pack = str(DEFAULT_TASK_PACK)
+
+    return Task(
+        dataset=load_samples(
+            hf_repo=hf_repo,
+            split=split,
+            task_pack=task_pack,
+            limit=limit,
+        ),
+        solver=generate(),
+        scorer=golden_answer_scorer(judge_model=judge_model),
+    )
