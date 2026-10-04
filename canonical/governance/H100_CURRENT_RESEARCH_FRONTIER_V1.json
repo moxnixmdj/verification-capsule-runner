@@ -1,0 +1,242 @@
+{
+  "schema": "PROJECT_BRAIN_H100_RESEARCH_FRONTIER_STATE_V1",
+  "date": "2026-10-04",
+  "status": "ACTIVE_RESEARCH_FRONTIER__ZERO_LEARNED_BOUNDED_TRANSFER_RATCHET_INDEPENDENT_PASS__NEXT_DIRECT_UNKNOWN_DOMAIN_TRANSFER_AND_CALIBRATED_ABSTENTION__ZERO_CREDIT",
+  "hypothesis": "FULL_FROZEN_BRAIN_CAPABILITY_ENVELOPE_WITH_LE_100000000_PERSISTENT_LEARNED_BYTES_AND_ZERO_EXTERNAL_LEARNED_CAPABILITY_PROVIDER_DURING_SCORED_EXECUTION",
+  "current_evidence": {
+    "measurement_layer": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_PROPOSAL_MEASUREMENT_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json"
+    },
+    "numeric_novelty_and_primitive_repair": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "phase1_result": "canonical/verification/H100_ZERO_LEARNED_NOVELTY_STRESS_PUBLIC_RUNNER_RESULT_20261004_V1.json",
+      "phase2_verification": "canonical/verification/H100_ZERO_LEARNED_PRIMITIVE_REPAIR_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "cumulative_frozen_tasks_solved": "12_OF_12",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "THE_OBSERVED_NUMERIC_RESIDUAL_WAS_PRIMITIVE_GRAMMAR_COVERAGE_NOT_LEARNED_REPRESENTATION"
+    },
+    "bounded_schema_compilation": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_ZERO_LEARNED_SCHEMA_COMPILER_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "preexposed_tasks_solved": "8_OF_8",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0
+    },
+    "structural_role_induction": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_ZERO_LEARNED_ROLE_INDUCTION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "identifiable_tasks_correct": "5_OF_5",
+      "ambiguous_tasks_abstained": "1_OF_1",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0
+    },
+    "bounded_semantic_paraphrase": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_ZERO_LEARNED_SEMANTIC_PARAPHRASE_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "identifiable_tasks_correct": "8_OF_8",
+      "ambiguous_tasks_abstained": "2_OF_2",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "A_FINITE_EXPLICIT_ROLE_ONTOLOGY_NORMALIZES_MULTIPLE_DOMAIN_PARAPHRASES_WITH_ZERO_PERSISTENT_LEARNED_STATE__THIS_DOES_NOT_ESTABLISH_OPEN_WORLD_SEMANTICS"
+    },
+    "jit_lexical_relation_consumption": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_JIT_LEXICAL_ROLE_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "preexposed_identifiable_tasks": "3_OF_3",
+      "mandatory_abstentions": "2_OF_2",
+      "independent_fresh_token_challenge": "PASS",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "GENERIC_RUNTIME_NO_LONGER_REQUIRES_ROLE_CUE_VOCABULARY_PRECOMPILED_INTO_CODE__UNSEEN_CUE_TOKENS_CAN_BE_RESOLVED_FROM_RAW_RELATION_GRAPHS__REAL_WORLD_GRAPH_ACQUISITION_AND_SENSE_DISAMBIGUATION_REMAIN_OPEN"
+    },
+    "bounded_real_oewn_lexical_acquisition": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_OEWN_REAL_LEXICAL_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "source": "OPEN_ENGLISH_WORDNET_2025",
+      "preexposed_tasks": "9_OF_9_EXACT",
+      "role_identified": "6_OF_6",
+      "mandatory_abstentions": "3_OF_3",
+      "fresh_real_polysemy_challenges": "2_OF_2_PASS",
+      "prior_real_source_probe": {
+        "frozen_lemmas": 14,
+        "polysemous": 10,
+        "unambiguous": 2,
+        "missing": 2,
+        "query_failures": 0,
+        "missing_lemmas": [
+          "covariate",
+          "regressor"
+        ]
+      },
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "BOUNDED_REAL_OEWN_LEXICAL_ACQUISITION_AND_CONTEXT_SENSE_SELECTION_IS_VERIFIED_AT_ZERO_LEARNED_BYTES__REAL_PROBE_EXPOSES_MISSING_DOMAIN_TERM_COVERAGE_AS_THE_REMAINING_LEXICAL_RESIDUAL"
+    },
+    "observed_lexical_source_fallback": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_LEXICAL_SOURCE_FALLBACK_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "observed_oewn_missing_terms": [
+        "covariate",
+        "regressor"
+      ],
+      "observed_missing_terms_repaired": "2_OF_2",
+      "live_source_relation_checks": "2_OF_2_PASS",
+      "fresh_generic_challenges": "INPUT_TARGET_CONFLICT_ALL_PASS",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "THE_OBSERVED_OEWN_COVERAGE_GAPS_WERE_SOURCE_COVERAGE_GAPS_NOT_EVIDENCE_FOR_A_LEARNED_REPRESENTATION__PINNED_PUBLIC_SOURCE_RELATIONS_PLUS_TERM_AGNOSTIC_ROLE_BRIDGING_REPAIRED_BOTH"
+    },
+    "bounded_compositional_language": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_ZERO_LEARNED_COMPOSITIONAL_LANGUAGE_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "verification_git_blob_sha": "b58c0fd2df9313c8a25645a8f0343f17821ef344",
+      "preexposed_tasks": "12_OF_12_EXACT",
+      "fresh_independent_challenges": "5_OF_5_PASS",
+      "proposition_ir": [
+        "SIGNED_ROLE_ASSERTION",
+        "DIRECTIONAL_EDGE",
+        "METADATA_EXCLUSION",
+        "MENTION_GROUP",
+        "BOUNDED_REFERENCE_BINDING"
+      ],
+      "covered": [
+        "MULTIPLE_CLAUSES",
+        "NEGATED_ROLE_ASSERTIONS",
+        "NEGATED_DIRECTIONAL_EDGES",
+        "FORMER_LATTER_REFERENCES",
+        "IT_AND_THEY_REFERENCES",
+        "RELATIVE_WHICH_REFERENCE",
+        "CONTRADICTION_ABSTENTION",
+        "MULTIPLE_TARGET_ABSTENTION"
+      ],
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "THE_OBSERVED_BOUNDED_MULTI_CLAUSE_NEGATION_AND_REFERENCE_COMPOSITIONAL_RESIDUAL_CAN_BE_COMPILED_TO_A_PROPOSITION_IR_WITH_ZERO_PERSISTENT_LEARNED_STATE__OPEN_WORLD_LANGUAGE_REMAINS_UNCLAIMED"
+    },
+    "bounded_tool_trace_normalization": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_ZERO_LEARNED_TOOL_TRACE_NORMALIZER_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "verification_git_blob_sha": "67e1df0801494c3dbd2d4d0bbdd067f2a33be3a3",
+      "preexposed_tasks": "10_OF_10_EXACT",
+      "fresh_independent_challenges": "5_OF_5_PASS",
+      "covered": [
+        "REQUEST_RESPONSE_WRAPPERS",
+        "PARAMS_OUTPUT_WRAPPERS",
+        "NAME_VALUE_ARGUMENT_LISTS",
+        "NESTED_PAYLOAD_DATA",
+        "EVENT_STREAM_CALL_ID_CORRELATION",
+        "ATTEMPT_ID_RETRY_CORRELATION",
+        "SAFE_IDENTICAL_INPUT_RETRY",
+        "CONFLICT_ABSTENTION",
+        "INCOMPLETE_TRACE_ABSTENTION",
+        "NONNUMERIC_ABSTENTION",
+        "UNKNOWN_WRAPPER_ABSTENTION"
+      ],
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "THE_OBSERVED_BOUNDED_TOOL_TRACE_VARIATION_RESIDUAL_CAN_BE_NORMALIZED_FROM_EXPLICIT_STRUCTURE_DECLARED_SCHEMA_AND_CORRELATION_IDS_WITH_ZERO_PERSISTENT_LEARNED_STATE__OPEN_WORLD_TOOL_SEMANTICS_REMAINS_UNCLAIMED"
+    },
+    "zero_learned_paired_transfer": {
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS",
+      "verification": "canonical/verification/H100_ZERO_LEARNED_TRANSFER_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "paired_families": "3_OF_3_PASS",
+      "baseline_proposal_mass": 0,
+      "post_compile_proposal_mass": 0.25,
+      "post_compile_n95": 11,
+      "reuse_effect": "UNBOUNDED_TO_FINITE_T95",
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "deduction": "FINITE_PREEXPOSED_PAIRED_TRANSFER_SHOWS_COMPILED_ZERO_LEARNED_REUSE_CAN_CREATE_NONZERO_PROPOSAL_MASS_ON_DISTINCT_SAME_FAMILY_TASKS__OPEN_WORLD_TRANSFER_REMAINS_UNCLAIMED"
+    }
+  },
+  "next_structural_residuals_ranked": [
+    {
+      "rank": 1,
+      "residual": "DIRECT_UNKNOWN_DOMAIN_TRANSFER_AND_CALIBRATED_ABSTENTION_EVIDENCE",
+      "reason": "BOUNDED_PAIRED_TRANSFER_RATCHET_NOW_HAS_INDEPENDENT_ZERO_LEARNED_EVIDENCE__THE_HIGHEST_INFORMATION_NEXT_STEP_IS_DIRECT_UNKNOWN_DOMAIN_TRANSFER_WITH_CORRECT_SUCCESS_OR_ABSTENTION_BEHAVIOR"
+    },
+    {
+      "rank": 2,
+      "residual": "OPEN_WORLD_PROPOSAL_PROBABILITY_AND_TRANSFER",
+      "reason": "FINITE_PAIRED_TRANSFER_P_0_25_AND_N95_11_DO_NOT_ESTABLISH_NONCOLLAPSING_PROPOSAL_MASS_ACROSS ARBITRARY_NOVEL STRUCTURAL FAMILIES"
+    },
+    {
+      "rank": 3,
+      "residual": "OPEN_WORLD_LEXICAL_COVERAGE_COMPLETENESS",
+      "reason": "OBSERVED_OEWN_MISSES_HAVE_VERIFIED_EVENT_DRIVEN_FALLBACKS__FUTURE_MISSES_REMAIN_EVENT_DRIVEN_AND_FAIL_CLOSED"
+    }
+  ],
+  "decision_policy": [
+    "STAY_AT_ZERO_LEARNED_BYTES_WHILE_ANY_ZERO_LEARNED_REPAIR_FOR_THE_CURRENT_OBSERVED_RESIDUAL_REMAINS_UNFALSIFIED",
+    "FOR_PROPOSAL_TRANSFER_FREEZE_NOVEL_STRUCTURAL_FAMILIES_BEFORE OUTCOMES__MEASURE PER_TASK P_LOWER T95 AND SECOND_TASK_REUSE_DELTA__POOLED_SUCCESS MAY NOT HIDE ZERO_SUCCESS TASKS",
+    "COMPILE EACH VERIFIED SUCCESS INTO REUSABLE NONLEARNED CAPABILITY AND RETEST ON A DISTINCT FROZEN TASK FROM THE SAME STRUCTURAL FAMILY",
+    "ONLY CONSTRUCTIVE FAILURE OF NONLEARNED SCHEMA ROLE SEMANTIC RETRIEVAL VERIFICATION SEARCH AND PROGRAM_REPAIR CAN JUSTIFY A LEARNED BYTE RUNG",
+    "EVERY LEARNED_BYTE RUNG MUST BE FROZEN BEFORE OUTCOMES AND MUST SHOW MATERIAL DELTA_T95 PER ADDED BYTE",
+    "FOR MISSING DOMAIN TERMS USE EVENT_DRIVEN PINNED NONLEARNED SOURCES WITH PROVENANCE GENERIC RELATION BRIDGING AND CONFLICT ABSTENTION"
+  ],
+  "learned_byte_ladder": {
+    "current_rung_bytes": 0,
+    "allowed_future_rungs_bytes": [
+      1000000,
+      4000000,
+      16000000,
+      64000000,
+      100000000
+    ],
+    "advance_rule": "ADVANCE_ONLY_AFTER_CONTENT_ADDRESSED_CONSTRUCTIVE_EVIDENCE_THAT_ZERO_LEARNED_AND_ALL_LOWER_RUNGS_CANNOT_REPAIR_THE_CURRENT_RESIDUAL_WITHIN_THE_FROZEN_VIABILITY_BOUND",
+    "rollback_rule": "IF_A_HIGHER_RUNG_SOLVES_A_RESIDUAL_THEN_ATTEMPT_PROGRAM_COMPILATION_AND_RETEST_AT_THE_LOWEST_RUNG_BEFORE_RETAINING_LEARNED_STATE"
+  },
+  "optimization_target": {
+    "primary": "MINIMIZE_T95_EXPECTED_WALL_CLOCK_TO_VERIFIED_USEFUL_CANDIDATE",
+    "formula": "T95_EQUALS_MEASURED_COST_PER_PROPOSAL_TIMES_CEIL_LN_0_05_DIV_LN_1_MINUS_P_LOWER",
+    "secondary": "MINIMIZE_PERSISTENT_LEARNED_BYTES_SUBJECT_TO_CAPABILITY_AND_TRUTH"
+  },
+  "terminal_truth": {
+    "h100_closed": false,
+    "full_19_family_contract_closed": false,
+    "numeric_novelty_stress_12_of_12_zero_learned": true,
+    "bounded_schema_stress_8_of_8_zero_learned": true,
+    "bounded_structural_role_stress_5_identified_plus_1_abstention_zero_learned": true,
+    "bounded_semantic_paraphrase_stress_8_identified_plus_2_abstentions_zero_learned": true,
+    "unseen_lexical_semantics_not_claimed": true,
+    "open_world_semantics_not_claimed": true,
+    "open_world_generalization_not_claimed": true,
+    "runtime_ram_below_100mb_not_claimed": true,
+    "total_compute_small_not_claimed": true,
+    "jit_unseen_token_relation_consumption_zero_learned": true,
+    "real_world_lexical_acquisition_not_claimed": true,
+    "conditional_unseen_token_relation_consumption_proved": true,
+    "bounded_real_oewn_lexical_disambiguation_zero_learned": true,
+    "open_world_lexical_coverage_not_claimed": true,
+    "observed_oewn_missing_terms_repaired_zero_learned": true,
+    "compositional_free_form_language_not_claimed": false,
+    "bounded_compositional_language_12_of_12_plus_5_fresh_zero_learned": true,
+    "open_world_tool_trace_semantics_not_claimed": false,
+    "bounded_tool_trace_10_of_10_plus_5_fresh_zero_learned": true,
+    "open_world_proposal_probability_and_transfer_not_claimed": true,
+    "bounded_paired_transfer_3_of_3_zero_learned": true,
+    "bounded_paired_transfer_baseline_p": 0,
+    "bounded_paired_transfer_post_compile_p": 0.25,
+    "bounded_paired_transfer_n95": 11
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
