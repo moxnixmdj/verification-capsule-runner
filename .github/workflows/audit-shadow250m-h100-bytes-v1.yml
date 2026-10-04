@@ -1,0 +1,52 @@
+name: Audit SHADOW-250M H100 byte fit V1
+
+on:
+  pull_request:
+    paths:
+      - 'audit_shadow250m_bytes_v1.py'
+      - '.github/workflows/audit-shadow250m-h100-bytes-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch upstream artifacts without executing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GIT_LFS_SKIP_SMUDGE=1
+          ROOT="$RUNNER_TEMP/shadow250m"
+          git clone --depth 1 --filter=blob:none https://github.com/QLNI/SHADOW-250M-Instruct.git "$ROOT"
+          UPSTREAM_COMMIT="$(git -C "$ROOT" rev-parse HEAD)"
+          echo "UPSTREAM_COMMIT=$UPSTREAM_COMMIT" >> "$GITHUB_ENV"
+          echo "SHADOW_ROOT=$ROOT" >> "$GITHUB_ENV"
+          git -C "$ROOT" lfs install --local
+          git -C "$ROOT" lfs pull -I 'deployment/shadow250m_instruct.shdw,deployment/fp131072.npy,tokenizer/**'
+          test -f "$ROOT/deployment/shadow250m_instruct.shdw"
+          test -f "$ROOT/deployment/fp131072.npy"
+          test -d "$ROOT/tokenizer"
+
+      - name: Run conservative byte accounting
+        shell: bash
+        run: |
+          set -euo pipefail
+          python audit_shadow250m_bytes_v1.py \
+            --root "$SHADOW_ROOT" \
+            --upstream-commit "$UPSTREAM_COMMIT" \
+            --out shadow250m_byte_audit_v1.json
+          cat shadow250m_byte_audit_v1.json
+
+      - name: Upload audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow250m-h100-byte-audit-v1
+          path: shadow250m_byte_audit_v1.json
+          if-no-files-found: error
+          retention-days: 30
