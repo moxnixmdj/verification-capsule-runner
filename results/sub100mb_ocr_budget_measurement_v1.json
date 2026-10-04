@@ -1,0 +1,35 @@
+{
+  "schema": "PROJECT_BRAIN_SUB100MB_OCR_BUDGET_MEASUREMENT_V1",
+  "status": "PUBLIC_RUNNER_EMPIRICAL_BYTE_MEASUREMENT__ZERO_CREDIT",
+  "date": "2026-10-04",
+  "controller": {
+    "artifact": "SmolLM2-135M-Instruct-Q3_K_M.gguf",
+    "bytes": 93511232,
+    "sha256": "61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4"
+  },
+  "ocr": {
+    "repository": "tesseract-ocr/tessdata_fast",
+    "artifact": "eng.traineddata",
+    "license": "Apache-2.0",
+    "learned_state": true,
+    "bytes": 4113088,
+    "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+  },
+  "combined_learned_bytes": 97624320,
+  "strict_budget_bytes_exclusive": 100000000,
+  "remaining_bytes": 2375680,
+  "under_budget": true,
+  "public_runner": {
+    "pull_request": 1711,
+    "workflow_run_id": 37182183170,
+    "workflow_job_id": 111376799614,
+    "artifact_id": 11295990565,
+    "artifact_digest": "sha256:6a8d0fc768d6995fc261e769ca79e25fadec67eecd8e0dce7bdc3a253170a02d",
+    "conclusion": "success"
+  },
+  "hard_nonclaims": [
+    "NO_OCR_ACCURACY_CLAIM",
+    "NO_CAD_CAPABILITY_CLAIM",
+    "NO_TERMINAL_CREDIT"
+  ]
+}

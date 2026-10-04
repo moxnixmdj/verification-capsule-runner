@@ -1,0 +1,49 @@
+name: Measure sub100MB OCR budget v1
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/measure-sub100mb-ocr-budget-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch exact English OCR learned state and measure H100 composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/eng.traineddata"
+          curl -L --fail --retry 3 \
+            'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/eng.traineddata' \
+            -o "$OUT"
+          BYTES="$(stat -c%s "$OUT")"
+          SHA="$(sha256sum "$OUT" | awk '{print $1}')"
+          TOTAL=$((93511232 + BYTES))
+          REMAINING=$((100000000 - TOTAL))
+          python - "$BYTES" "$SHA" "$TOTAL" "$REMAINING" <<'PY'
+          import json,sys
+          b=int(sys.argv[1]); sha=sys.argv[2]; total=int(sys.argv[3]); remaining=int(sys.argv[4])
+          x={
+            "schema":"PROJECT_BRAIN_SUB100MB_OCR_BUDGET_MEASUREMENT_V1",
+            "status":"EMPIRICAL_BYTE_MEASUREMENT__ZERO_CREDIT",
+            "controller":{"artifact":"SmolLM2-135M-Instruct-Q3_K_M.gguf","sha256":"61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4","bytes":93511232},
+            "ocr":{"repository":"tesseract-ocr/tessdata_fast","artifact":"eng.traineddata","learned_state":True,"license":"Apache-2.0","sha256":sha,"bytes":b},
+            "combined_learned_bytes":total,
+            "strict_budget_bytes_exclusive":100000000,
+            "remaining_bytes":remaining,
+            "under_budget":total < 100000000,
+            "hard_nonclaims":["NO_OCR_ACCURACY_CLAIM","NO_CAD_CAPABILITY_CLAIM","NO_TERMINAL_CREDIT"]
+          }
+          open("sub100mb_ocr_budget_measurement_v1.json","w").write(json.dumps(x,indent=2,sort_keys=True))
+          print(json.dumps(x,indent=2))
+          assert x["under_budget"]
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sub100mb-ocr-budget-measurement-v1
+          path: sub100mb_ocr_budget_measurement_v1.json
+          if-no-files-found: error
+          retention-days: 30
