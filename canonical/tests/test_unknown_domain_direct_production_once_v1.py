@@ -71,9 +71,29 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertIsNone(out["claim_create_http_status"])
         self.assertEqual(out["status"],"ATOMIC_CLAIM_TRANSPORT_EXCEPTION__OUTCOME_AMBIGUOUS__NO_EXECUTION__FAIL_CLOSED")
         self.assertTrue(out["posthoc_claim_ref_reconciliation_required"])
+        self.assertIn("claim_transport_exception_message_sha256",out)
+        self.assertNotIn("claim_transport_exception_message",out)
         self.assertEqual(out["production_cases_generated"],0)
         self.assertFalse(out["replay_allowed"])
         self.assertFalse(out["replacement_allowed"])
+
+    def test_claim_201_object_sha_must_equal_requested_launch_sha(self):
+        called={"execute":False}
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":ref,"object":{"sha":"b"*40}}
+        def fake_execute(**kwargs):
+            called["execute"]=True
+            return {}
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="a"*40,digest="1"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertFalse(called["execute"])
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"1"*64)
+        self.assertEqual(out["status"],"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED")
+        self.assertEqual(out["claim_response_object_sha"],"b"*40)
+        self.assertEqual(out["production_cases_generated"],0)
+        self.assertFalse(out["replay_allowed"])
 
     def test_post_claim_execution_exception_is_sealed_fail_closed(self):
         def fake_create(repo,token,ref,sha):
@@ -88,6 +108,8 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertEqual(out["claim_create_http_status"],201)
         self.assertEqual(out["status"],"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED")
         self.assertEqual(out["exception_type"],"RuntimeError")
+        self.assertIn("exception_message_sha256",out)
+        self.assertNotIn("exception_message",out)
         self.assertFalse(out["replay_allowed"])
         self.assertFalse(out["replacement_allowed"])
 

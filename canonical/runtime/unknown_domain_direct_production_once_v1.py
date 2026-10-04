@@ -227,7 +227,7 @@ def claim_then_execute(
             "claim_response_ref":"",
             "claim_response_object_sha":"",
             "claim_transport_exception_type":type(exc).__name__,
-            "claim_transport_exception_message":str(exc),
+            "claim_transport_exception_message_sha256":hashlib.sha256(str(exc).encode()).hexdigest(),
             "posthoc_claim_ref_reconciliation_required":True,
             "production_cases_generated":0,
             "persistent_learned_bytes":0,
@@ -249,7 +249,7 @@ def claim_then_execute(
     response_ref=str(response.get("ref") or "")
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
-    if response_ref!=claim_ref or len(obj_sha)!=40:
+    if response_ref!=claim_ref or obj_sha!=launch_sha:
         result={
             "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
             "status":"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
@@ -281,7 +281,7 @@ def claim_then_execute(
                 "target_predicate":TARGET,
                 "authority_claim_id":claim_ref,
                 "exception_type":type(exc).__name__,
-                "exception_message":str(exc),
+                "exception_message_sha256":hashlib.sha256(str(exc).encode()).hexdigest(),
                 "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
                 "persistent_learned_bytes":0,
                 "external_frontier_model_calls":0,
