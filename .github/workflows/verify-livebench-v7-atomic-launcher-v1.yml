@@ -4,7 +4,7 @@ on:
     branches:
       - "verify/livebench-v7-result-public-20261004"
     paths:
-      - "VERIFY_LIVEBENCH_V7_PUBLIC_RESULT"
+      - ".github/workflows/verify-livebench-v7-atomic-launcher-v1.yml"
 permissions:
   contents: read
   actions: read
