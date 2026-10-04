@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object capsules/chart_visual_primitives_v1/canonical/runtime/chart_visual_primitives_v1.py)" = "8f3a4df9facec40cafa2693f5f3972d43ce70ef4"
-          test "$(git hash-object capsules/chart_visual_primitives_v1/canonical/tests/test_chart_visual_primitives_v1.py)" = "b5b03445973971268541d3fe17b99d2b8c027ecd"
+          test "$(git hash-object capsules/chart_visual_primitives_v1/canonical/tests/test_chart_visual_primitives_v1.py)" = "a2011290b990b2f5e03fc477a16c0bb54b542e10"
       - name: Run synthetic primitive extraction tests
         working-directory: capsules/chart_visual_primitives_v1
         run: |
