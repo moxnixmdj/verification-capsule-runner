@@ -1,0 +1,49 @@
+name: Verify LiveBench strict scorer binding
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_strict_scorer_binding_20261005/**"
+      - "verify_livebench_strict_scorer_binding.py"
+      - ".github/workflows/verify-livebench-strict-scorer-binding.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      NLTK_DATA: ${{ github.workspace }}/upstream/nltk_data/packages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen Python runtime dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --quiet \
+            nltk==3.10.3 immutabledict==4.3.1 langdetect==1.0.9
+      - name: Fetch pinned public LiveBench source
+        run: |
+          mkdir -p upstream
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/LiveBench/LiveBench.git upstream/LiveBench
+          git -C upstream/LiveBench fetch --quiet --depth=1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C upstream/LiveBench checkout --quiet --detach 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Fetch frozen NLTK tokenizer data
+        run: |
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git upstream/nltk_data
+          git -C upstream/nltk_data fetch --quiet --depth=1 origin 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          git -C upstream/nltk_data sparse-checkout init --cone
+          git -C upstream/nltk_data sparse-checkout set packages/tokenizers
+          git -C upstream/nltk_data checkout --quiet --detach 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+      - name: Verify exact strict scorer boundary
+        run: python verify_livebench_strict_scorer_binding.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-strict-scorer-binding-verification
+          path: livebench_strict_scorer_binding_verification.json
+          if-no-files-found: error
