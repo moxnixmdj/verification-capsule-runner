@@ -508,9 +508,6 @@ def main() -> int:
         result_doc={"threshold_prepass":prepass,"summary":summary,"case_receipts":receipts}
         result_path=ROOT/"LIVEBENCH_IF_THRESHOLD_RESULT_V2.json"
         result_path.write_text(json.dumps(result_doc,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-        summary["result_sha256"]=sha256(result_path)
-        result_doc["summary"]=summary
-        result_path.write_text(json.dumps(result_doc,indent=2,sort_keys=True)+"\n",encoding="utf-8")
         print("LIVEBENCH_TERMINAL_RESULT="+json.dumps(summary,sort_keys=True),flush=True)
         return 0
 
