@@ -1,0 +1,29 @@
+name: Screen FLAN-T5-small semantic seed capability
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "experiments/flan_t5_small_semantic_screen_20261004.mjs"
+      - ".github/workflows/screen-flan-t5-small-semantic-20261004.yml"
+permissions:
+  contents: read
+jobs:
+  screen:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned Transformers.js runtime
+        run: npm install --no-save @huggingface/transformers@3.8.1
+      - name: Run public nonterminal semantic screen
+        run: node experiments/flan_t5_small_semantic_screen_20261004.mjs
+      - name: Upload screening receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flan-t5-small-semantic-screen
+          path: flan_t5_small_semantic_screen_receipt.json
+          if-no-files-found: warn
