@@ -1,5 +1,5 @@
 from __future__ import annotations
-import importlib.util, json, sys, types
+import hashlib, importlib.util, json, sys, types
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
