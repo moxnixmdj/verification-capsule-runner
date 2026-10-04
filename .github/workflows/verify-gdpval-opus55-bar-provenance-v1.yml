@@ -1,0 +1,21 @@
+name: Verify GDPval Opus55 fixed-bar provenance
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/gdpval_opus55_bar_provenance_v1/**"
+      - ".github/workflows/verify-gdpval-opus55-bar-provenance-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          cd capsules/gdpval_opus55_bar_provenance_v1
+          python verify.py
