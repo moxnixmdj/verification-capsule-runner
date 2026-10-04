@@ -5,6 +5,10 @@ on:
     paths:
       - ".github/workflows/mirror_qwen38_27b_release.yml"
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "mirror-qwen38-27b-trigger/**"
 
 permissions:
   contents: write
@@ -20,6 +24,7 @@ env:
 
 jobs:
   prepare:
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'mirror-qwen38-27b-run-20261004')
     runs-on: ubuntu-latest
     steps:
       - name: Create immutable versioned release if absent
