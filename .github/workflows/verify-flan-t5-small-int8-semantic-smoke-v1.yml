@@ -1,7 +1,9 @@
 name: Verify FLAN T5 Small INT8 Semantic Smoke V1
 
 on:
-  pull_request:
+  push:
+    branches:
+      - "verify/flan-t5-small-int8-semantic-smoke-20261004"
     paths:
       - "verify_flan_t5_small_int8_public_smoke_v1.py"
       - ".github/workflows/verify-flan-t5-small-int8-semantic-smoke-v1.yml"
@@ -19,7 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install deterministic runtime dependencies
+      - name: Install runtime dependencies
         run: |
           python -m pip install --disable-pip-version-check onnxruntime sentencepiece numpy
       - name: Verify exact bytes and offline semantic smoke
