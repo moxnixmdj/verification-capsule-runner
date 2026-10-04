@@ -173,4 +173,7 @@ if __name__=="__main__":
     if rc==0:
         import verify_livebench_legacy_scorer_supplement_v1 as legacy_supplement
         rc=legacy_supplement.main()
+    if rc==0:
+        import verify_livebench_scorer_repair_admissibility_v1 as repair_admissibility
+        rc=repair_admissibility.main()
     raise SystemExit(rc)
