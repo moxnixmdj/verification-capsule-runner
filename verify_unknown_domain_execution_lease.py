@@ -34,6 +34,12 @@ assert lease["verification_chain"]["production_launcher"]["conclusion"]=="succes
 assert lease["atomic_claim"]["required_first_claim_create_http_status"]==201
 assert lease["atomic_claim"]["claim_uniqueness_source"]=="ATOMIC_CREATE_RESPONSE"
 assert lease["atomic_claim"]["claim_key_rule"]=="SHA256_OF_CANONICAL_QUALIFIED_EXECUTION_TUPLE_V2"
+assert lease["result_recovery"]["launcher_git_blob_sha"]==lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"]
+assert lease["result_recovery"]["claim_response_object_rule"]=="RETURNED_OBJECT_SHA_MUST_EQUAL_EXACT_LAUNCH_SHA"
+assert lease["result_recovery"]["exception_message_persisted"] is False
+assert lease["result_recovery"]["raw_hidden_records_persisted"] is False
+assert lease["result_recovery"]["raw_evaluator_secret_persisted"] is False
+assert lease["result_recovery"]["raw_beacon_persisted"] is False
 assert lease["authority"]=={"global_fresh_reality":False,"promotion":False,"acceptance_credit":False}
 def blob(b): return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
 for rel,expected in lease["exact_components"].items():
