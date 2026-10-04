@@ -1,0 +1,30 @@
+name: Verify adaptive V2 final activation
+
+on:
+  pull_request:
+    paths:
+      - 'ADAPTIVE_FINAL_ACTIVATION_V1.json'
+      - 'ADAPTIVE_FINAL_ROOT_STATE_V1.json'
+      - 'ADAPTIVE_FINAL_TERMINAL_AUTHORITY_V1.json'
+      - 'verify_adaptive_v2_final_activation.py'
+      - '.github/workflows/verify-adaptive-v2-final-activation.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain projection blobs
+        shell: bash
+        run: |
+          test "$(git hash-object ADAPTIVE_FINAL_ACTIVATION_V1.json)" = "637e8802e33856ba6760aaaf4999993f6df8b338"
+          test "$(git hash-object ADAPTIVE_FINAL_ROOT_STATE_V1.json)" = "b0da0e9e9f876d820e322928b7d1fdc8cc94167f"
+          test "$(git hash-object ADAPTIVE_FINAL_TERMINAL_AUTHORITY_V1.json)" = "8e5ab30e86cebfae2b44d8ea2e798b244177de70"
+      - name: Verify final activation semantics
+        run: python verify_adaptive_v2_final_activation.py
