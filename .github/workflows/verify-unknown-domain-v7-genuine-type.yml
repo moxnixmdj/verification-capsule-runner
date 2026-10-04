@@ -1,14 +1,17 @@
 name: Verify Unknown-Domain V7 genuine runtime types
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - "verify/unknown-domain-v7-genuine-type-20261005-sol2"
     paths:
+      - "VERIFY_UNKNOWN_DOMAIN_V7_GENUINE_TYPE"
       - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
       - "canonical/tests/test_unknown_domain_direct_v5.py"
       - "canonical/runtime/unknown_domain_direct_v7_genuine_type_proof_v1.py"
       - "verification/unknown_domain_v7_genuine_type_independent.py"
       - ".github/workflows/verify-unknown-domain-v7-genuine-type.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
