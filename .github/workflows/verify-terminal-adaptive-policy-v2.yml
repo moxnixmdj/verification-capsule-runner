@@ -1,0 +1,35 @@
+name: Verify terminal adaptive policy V2
+
+on:
+  pull_request:
+    paths:
+      - 'TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V2.json'
+      - 'ADAPTIVE_V2_TERMINAL_ROOT_CAUSE_STATE_V1.json'
+      - 'ADAPTIVE_V2_ROOT2_FRONTIER_V10_FINAL_ACTIVATION_V1.json'
+      - 'ADAPTIVE_V2_ROOT3_MINIMUM_ACTION_CUT_V2.json'
+      - 'ADAPTIVE_V2_GLOBAL_RETRIEVAL_CURRENT_AUTHORITY_V1.json'
+      - 'verify_terminal_adaptive_policy_v2.py'
+      - '.github/workflows/verify-terminal-adaptive-policy-v2.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain authority fixtures
+        shell: bash
+        run: |
+          test "$(git hash-object TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V2.json)" = "c5b9a287b51c0594f7925770f0f22fbbbb2738dc"
+          test "$(git hash-object ADAPTIVE_V2_TERMINAL_ROOT_CAUSE_STATE_V1.json)" = "59711b491e5f4c94661f78401e66ea1f546f96c7"
+          test "$(git hash-object ADAPTIVE_V2_ROOT2_FRONTIER_V10_FINAL_ACTIVATION_V1.json)" = "f5eda02fcc104bc8a5e13a82bfc8ec3d9515dcb2"
+          test "$(git hash-object ADAPTIVE_V2_ROOT3_MINIMUM_ACTION_CUT_V2.json)" = "4d8ce78ebe312100bbfc524062199961c0c6479d"
+          test "$(git hash-object ADAPTIVE_V2_GLOBAL_RETRIEVAL_CURRENT_AUTHORITY_V1.json)" = "55b1d411561f720fcd9d66c127cecd63ef0b5f5e"
+          test "$(git hash-object terminal_adaptive_minimum_action_policy_v1_candidate.py)" = "bfffe6dff32f5445a0c52657f7d9ec8d544b1f79"
+      - name: Verify current policy coherence
+        run: python verify_terminal_adaptive_policy_v2.py
