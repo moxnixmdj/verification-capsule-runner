@@ -1,0 +1,19 @@
+name: Verify Root3 synthesis current v2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "fixtures/root3_synth_v2_*.json"
+      - "verify_root3_synthesis_current_v2.py"
+      - ".github/workflows/verify-root3-synthesis-current-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root3_synthesis_current_v2.py
