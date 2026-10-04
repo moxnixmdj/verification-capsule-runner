@@ -167,3 +167,36 @@ adapterv=json.loads(Path(__file__).with_name("adapter_verification.json").read_t
 assert guardv["independent_runner"]["conclusion"]=="success"
 assert adapterv["verifier"]["conclusion"]=="success"
 print("PASS__ROOT2_V7_FINANCE_ZERO_SPEND_COMPRESSION__COUNTS_STABLE__NO_FRESH_REALITY__ZERO_CREDIT")
+
+
+# Root2 V7 activation coherence
+V7ACT_EXPECTED={"v7_root_authority.json":"c5139a9a80aea6ee89779ca5324dc31daf8f2719","v7_measurement_bridge.json":"5f94b47f181711a1afc401c4fe46f2d4f7ff693b","v7_terminal_authority.json":"0d1f17b69de839c3505268f12e22f345cc3f3573","v7_activation.json":"ccfc97ca8f5586d583990f0e37277b88c12227e9"}
+def v7blob(name):
+    p=Path(__file__).with_name(name); b=p.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+for n,h in V7ACT_EXPECTED.items(): assert v7blob(n)==h,(n,v7blob(n),h)
+r7=json.loads(Path(__file__).with_name("v7_root_authority.json").read_text())
+b7=json.loads(Path(__file__).with_name("v7_measurement_bridge.json").read_text())
+t7=json.loads(Path(__file__).with_name("v7_terminal_authority.json").read_text())
+a7=json.loads(Path(__file__).with_name("v7_activation.json").read_text())
+F7="35e8b578aca1290bcf469d6350ae085ba8a86c64"
+A7="ccfc97ca8f5586d583990f0e37277b88c12227e9"
+rr=r7["roots"]["root_2_measurement_or_comparator"]["active_closure_controller"]
+bb=b7["root2_closure_controller_v2"]
+tt=t7["sources"]["root2_closure_v2_current_frontier"]
+assert rr["current_frontier_git_blob_sha"]==F7
+assert bb["frontier_git_blob_sha"]==F7
+assert tt["git_blob_sha"]==F7
+assert rr["current_frontier_activation_git_blob_sha"]==A7
+assert bb["frontier_activation_git_blob_sha"]==A7
+assert tt["activation_git_blob_sha"]==A7
+assert rr["effective_scheduling_authority"] is True
+assert bb["effective_scheduling_authority"] is True
+assert tt["effective_scheduling_authority"] is True
+assert a7["authority"]["execution"] is False
+assert a7["authority"]["promotion"] is False
+assert a7["authority"]["fresh_reality"] is False
+assert r7["current_acceptance"]["accepted_families"]==5
+assert r7["current_acceptance"]["proved_atomic"]==12
+assert r7["current_acceptance"]["unresolved_atomic"]==26
+print("PASS__ROOT2_V7_ACTIVATION_COHERENT__SCHEDULING_ONLY__ZERO_CREDIT")
