@@ -62,7 +62,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "b40859b4ba770433d9e1382920f086d76dd0cfbe",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4a7c8b1b19e05bd0eb8b902455aa5c67c988854e",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "f05f16251a1567a85ebfd2ca8a1a4ccf75a5d38e",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/verification/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "36452412fb60ce38405f139111eba98b5cebc040",
@@ -108,7 +108,9 @@
     "POST_201_FAILURES_MUST_SEAL_FAIL_CLOSED_WITHOUT_REPLAY",
     "ONE_USE_RESULT_MUST_HAVE_RECOVERY_ENVELOPE_AND_REMOTE_BYTE_EQUALITY_DURABILITY_CHECK",
     "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
-    "ZERO_INCREMENTAL_SPEND"
+    "ZERO_INCREMENTAL_SPEND",
+    "ATOMIC_CLAIM_RESPONSE_OBJECT_SHA_MUST_EQUAL_IMMUTABLE_LAUNCH_SHA",
+    "RECOVERY_BYTES_MUST_BE_EMITTED_BEFORE_FALLIBLE_POST_CLAIM_PERSISTENCE"
   ],
   "entrypoint_repair": {
     "defect": "CREATE_TRIGGER_REACHED_RUNNER_BUT_PATH_EXECUTION_SET_SYS_PATH_TO_CANONICAL_RUNTIME_AND_FAILED_IMPORT_CANONICAL_BEFORE_ATOMIC_CLAIM",
@@ -179,7 +181,7 @@
   },
   "result_recovery": {
     "invariant": "HTTP_201_IS_THE_IRREVERSIBLE_ONE_USE_LINEARIZATION_POINT__EVERY_ORDINARY_POST_201_PATH_MUST_SEAL_A_SANITIZED_NONREPLAYABLE_RESULT",
-    "launcher_git_blob_sha": "b40859b4ba770433d9e1382920f086d76dd0cfbe",
+    "launcher_git_blob_sha": "4a7c8b1b19e05bd0eb8b902455aa5c67c988854e",
     "invalid_201_response_behavior": "SEAL_NO_EXECUTION_FAIL_CLOSED_RESULT",
     "execution_exception_behavior": "SEAL_POST_CLAIM_EXCEPTION_FAIL_CLOSED_RESULT",
     "pre_remote_commit_recovery": "WRITE_SANITIZED_LOCAL_RESULT__EMIT_SHA256_AND_SANITIZED_JSON__EMIT_BASE64_EXACT_RECOVERY_ENVELOPE",
@@ -189,12 +191,15 @@
     "raw_beacon_persisted": false,
     "replay_allowed": false,
     "production_cases_consumed_before_repair": 0,
-    "exception_detail_persisted": false
+    "exception_detail_persisted": false,
+    "recovery_envelope_emitted_before_fallible_local_or_remote_persistence": true,
+    "local_result_write_is_best_effort": true,
+    "claim_response_object_sha_must_equal_launch_sha": true
   },
   "result_durability_repair": {
     "defect": "A_TRANSIENT_OR_AMBIGUOUS_REMOTE_RESULT_WRITE_AFTER_THE_ONE_USE_CLAIM_COULD_LOSE_THE_ONLY_ADMISSIBLE_OUTCOME",
     "repair": "RECOVERY_ENVELOPE_PLUS_RETRY_PLUS_EXACT_REMOTE_BYTE_EQUALITY_VERIFICATION",
-    "launcher_git_blob_sha": "b40859b4ba770433d9e1382920f086d76dd0cfbe",
+    "launcher_git_blob_sha": "4a7c8b1b19e05bd0eb8b902455aa5c67c988854e",
     "replay_policy_unchanged": false,
     "independent_verification_required": true
   }
