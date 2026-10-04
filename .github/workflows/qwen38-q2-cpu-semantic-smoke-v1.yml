@@ -83,16 +83,16 @@ jobs:
           raw="$RUNNER_TEMP/model_output.txt"
           err="$RUNNER_TEMP/model_stderr.txt"
           cat > "$prompt" <<'PROMPT'
-Do not show reasoning. Follow the requested output format exactly. Output only four lines beginning with the four labels below.
-
-PARAPHRASE: Paraphrase this sentence while preserving all facts, names, numbers, and locations: "On Tuesday, Mira moved 12 blue crates from Dock A to Dock B because the east gate was closed."
-
-SIMPLIFY: Rewrite this for a 10-year-old in one short sentence: "Through photosynthesis, plants convert light energy into chemical energy stored in sugars."
-
-SUMMARY: Summarize in one sentence: "Orion Labs received $3 million in funding on Monday. The company said the money will expand its battery recycling pilot. It plans to double the pilot's processing capacity by December."
-
-STORY: Write a compact 40-80 word story about a fox named Rill who finds a broken compass beside a bridge, repairs it, and returns it to its owner.
-PROMPT
+          Do not show reasoning. Follow the requested output format exactly. Output only four lines beginning with the four labels below.
+          
+          PARAPHRASE: Paraphrase this sentence while preserving all facts, names, numbers, and locations: "On Tuesday, Mira moved 12 blue crates from Dock A to Dock B because the east gate was closed."
+          
+          SIMPLIFY: Rewrite this for a 10-year-old in one short sentence: "Through photosynthesis, plants convert light energy into chemical energy stored in sugars."
+          
+          SUMMARY: Summarize in one sentence: "Orion Labs received $3 million in funding on Monday. The company said the money will expand its battery recycling pilot. It plans to double the pilot's processing capacity by December."
+          
+          STORY: Write a compact 40-80 word story about a fox named Rill who finds a broken compass beside a bridge, repairs it, and returns it to its owner.
+          PROMPT
           start="$(date +%s)"
           "$RUNNER_TEMP/llama-cli"             -m "$RUNNER_TEMP/$MODEL_FILE"             -f "$prompt"             -n 260             -c 2048             -t 4             --temp 0             --no-display-prompt             >"$raw" 2>"$err"
           end="$(date +%s)"
