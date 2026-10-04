@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import hashlib, json, os, pathlib, urllib.request, zipfile, io
+import hashlib, json, os, pathlib, subprocess, urllib.request
 
 REPO="moxnixmdj/verification-capsule-runner"
 RUN_ID=37191933717
@@ -35,13 +35,15 @@ def main():
     if run.get("head_sha")!=HEAD_SHA:
         raise SystemExit("RUN_HEAD_MISMATCH")
 
-    raw,ctype=get(f"https://api.github.com/repos/{REPO}/actions/jobs/{JOB_ID}/logs")
-    # GitHub currently returns decoded text for one job; tolerate zip defensively.
-    if raw[:2]==b"PK":
-        z=zipfile.ZipFile(io.BytesIO(raw))
-        log="\n".join(z.read(n).decode("utf-8","replace") for n in z.namelist())
-    else:
-        log=raw.decode("utf-8","replace")
+    env=os.environ.copy()
+    env["GH_TOKEN"]=env.get("GITHUB_TOKEN","")
+    cp=subprocess.run(
+        ["gh","run","view",str(RUN_ID),"--repo",REPO,"--job",str(JOB_ID),"--log"],
+        text=True,capture_output=True,env=env,timeout=60
+    )
+    if cp.returncode!=0:
+        raise SystemExit("GH_LOG_FETCH_FAILED:"+cp.stderr[:500])
+    log=cp.stdout
 
     pre=[x.split("LIVEBENCH_V6_PRELAUNCH=",1)[1] for x in log.splitlines() if "LIVEBENCH_V6_PRELAUNCH=" in x]
     cases=[x.split("LIVEBENCH_CASE_RECEIPT=",1)[1] for x in log.splitlines() if "LIVEBENCH_CASE_RECEIPT=" in x]
