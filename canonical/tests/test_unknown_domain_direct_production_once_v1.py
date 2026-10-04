@@ -46,7 +46,6 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertNotIn("hidden_records",raw)
         self.assertNotIn("evaluator_secret",raw)
 
-
     def test_lease_does_not_require_impossible_self_digest(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
@@ -73,6 +72,21 @@ class ProductionLauncherTests(unittest.TestCase):
             raw,digest=prod.lease_bytes_and_digest(p)
             import hashlib
             self.assertEqual(digest,hashlib.sha256(raw).hexdigest())
+
+    def test_current_frozen_lease_validates_without_self_mutation(self):
+        raw,digest=prod.lease_bytes_and_digest()
+        lease=json.loads(raw)
+        prod.validate_lease(lease,digest)
+        self.assertTrue(lease["entrypoint_repair"]["independent_verification_required"])
+        self.assertNotIn(
+            "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json",
+            lease["exact_components"],
+        )
+        workflow=prod.ROOT/".github/workflows/unknown-domain-direct-one-use-production.yml"
+        self.assertEqual(
+            prod._git_blob(workflow.read_bytes()),
+            lease["exact_components"][".github/workflows/unknown-domain-direct-one-use-production.yml"],
+        )
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
