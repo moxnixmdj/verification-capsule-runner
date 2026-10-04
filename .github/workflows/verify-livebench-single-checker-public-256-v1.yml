@@ -1,0 +1,54 @@
+name: Verify LiveBench single-checker public 256 V1
+
+on:
+  push:
+    branches:
+      - verify/livebench-single-checker-public-256-v1
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/canonical/runtime/livebench_if_single_checker_solver_v1.py'
+      - 'subject/canonical/runtime/livebench_ngram_reference_free_v1.py'
+      - 'subject/canonical/runtime/livebench_prompt_only_repeat_compiler_v1.py'
+      - 'verify_livebench_single_checker_public_256_v1.py'
+      - '.github/workflows/verify-livebench-single-checker-public-256-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact-scorer dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install nltk spacy emoji syllapy
+          python -m nltk.downloader punkt punkt_tab stopwords averaged_perceptron_tagger averaged_perceptron_tagger_eng cmudict
+          python -m spacy download en_core_web_sm
+      - name: Fetch pinned LiveBench scorer
+        run: |
+          git init livebench-src
+          git -C livebench-src remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C livebench-src fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C livebench-src checkout --detach FETCH_HEAD
+          test "$(git -C livebench-src rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+      - name: Fetch pinned public IFBench population
+        run: |
+          git init ifbench-src
+          git -C ifbench-src remote add origin https://github.com/allenai/IFBench.git
+          git -C ifbench-src fetch --depth 1 origin 1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d
+          git -C ifbench-src checkout --detach FETCH_HEAD
+          test "$(git -C ifbench-src rev-parse HEAD)" = "1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d"
+      - name: Replay all 256 public single-checker rows
+        run: python verify_livebench_single_checker_public_256_v1.py
+      - name: Upload exact replay result
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-single-checker-public-256-v1
+          path: livebench_single_checker_public_256_result.json
