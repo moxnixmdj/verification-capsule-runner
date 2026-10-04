@@ -1,0 +1,46 @@
+name: Verify LiveBench Punkt context V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_punkt_context_v1.py"
+      - ".github/workflows/verify-livebench-punkt-context-v1.yml"
+      - "subject/livebench_composer_v2_20261005/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Install exact import dependencies
+        run: python -m pip install --disable-pip-version-check nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+      - name: Checkout pinned LiveBench source
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBenchPunkt
+          git init /tmp/LiveBenchPunkt
+          git -C /tmp/LiveBenchPunkt remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBenchPunkt fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBenchPunkt checkout --detach FETCH_HEAD
+      - name: Run exact Punkt context quotient
+        run: python verify_livebench_punkt_context_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_punkt_context_v1.json; then
+            cat livebench_punkt_context_v1.json
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-punkt-context-v1
+          path: livebench_punkt_context_v1.json
+          if-no-files-found: error
