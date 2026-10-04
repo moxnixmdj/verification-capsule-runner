@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parent
 EXPECTED={
  "canonical/governance/H100_JIT_LEXICAL_RAW_KNOWLEDGE_V1.json":"611d6d1ed968c5b56b72d1949e16fcb4474b2056",
  "canonical/governance/H100_JIT_LEXICAL_ROLE_PREEXPOSURE_V1.json":"78a3b94bce549b67a6dda3d316dea96c25aca7e4",
- "canonical/runtime/h100_jit_lexical_role_v1.py":"82a7230443e09fba9acb76202954801e47ec93dc",
+ "canonical/runtime/h100_jit_lexical_role_v1.py":"d751354ae8ef8dfbe720f4837d4ac6c0849f7a9a",
  "canonical/tests/test_h100_jit_lexical_role_v1.py":"353afbdbe247451327f5e3811ff08e1885604788",
 }
 FORBIDDEN_RUNTIME_CUES=("cue_a","cue_b","cue_c","cue_d","cue_e","cue_f","cue_ambiguous","cue_unknown")
