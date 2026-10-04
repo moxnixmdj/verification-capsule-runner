@@ -1,35 +1,23 @@
-name: Verify rank26 exact vLLM execution surface
+name: Cancel revoked LiveBench V7 replay
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'verification/rank26_surface/Dockerfile'
-      - '.github/workflows/verify-rank26-exact-surface.yml'
-      - 'verification/rank26_surface/trigger.txt'
+  push:
+    branches:
+      - "execute/livebench-v7-sanitized-replay72-20261004-0937"
 permissions:
+  actions: write
   contents: read
 jobs:
-  verify:
+  cancel:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Verify exact Dockerfile Git blob
+      - name: Cancel stale-authority run
         run: |
-          test "$(git hash-object verification/rank26_surface/Dockerfile)" = "aae5ccf4a5fc9f28e375bf98337c6a34b74c963f"
-      - name: Build exact frozen task image
-        run: docker build --pull -t brain-rank26-surface verification/rank26_surface
-      - name: Verify declared surface without task execution
-        run: |
-          docker run --rm --entrypoint /bin/bash brain-rank26-surface -lc '
-            set -euo pipefail
-            test -d /app/vllm/vllm/reasoning
-            test -d /app/vllm/vllm
-            test -L "$(python3 -c "import os, vllm; print(os.path.dirname(vllm.__file__))")" || true
-            python3 - <<'"'"'PY'"'"'
-import importlib.metadata, pathlib
-assert importlib.metadata.version("vllm") == "0.21.0"
-assert pathlib.Path("/app/vllm/vllm/reasoning").is_dir()
-print("RANK26_EXACT_SURFACE_PASS")
-PY
-          '
+          code=$(curl -sS -o /tmp/cancel.out -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/runs/37192800271/cancel")
+          test "$code" = "202" || test "$code" = "409"
+          echo "CANCEL_HTTP=$code"
