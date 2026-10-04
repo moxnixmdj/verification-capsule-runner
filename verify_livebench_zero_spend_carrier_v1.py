@@ -10,6 +10,7 @@ EXPECTED = {
     "adapter_registry": ("capsules/root2_livebench_astra_adapter_v1/canonical/governance/ROOT2_EXTERNAL_TASK_ADAPTER_REGISTRY_V1.json", "afa021a25d2de53e293d10ab6759e55eaabaea21"),
     "goal_compiler": ("canonical/runtime/goal_compiler.py", "4b61fe911471854ec15c7900816f61e9e55f602e"),
     "bound_registry": ("canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json", "7badee4878700f2cd4176beb8319d2a6a0bdf782"),
+    "capability_planner": ("canonical/runtime/capability_planner.py", "64ff65cb184f50d3336326f33cccfcc0a53301a8"),
 }
 
 def git_blob_sha(path:pathlib.Path)->str:
@@ -60,6 +61,7 @@ def main()->int:
           EXPECTED["adapter_registry"][0]:"canonical/governance/ROOT2_EXTERNAL_TASK_ADAPTER_REGISTRY_V1.json",
           EXPECTED["goal_compiler"][0]:"canonical/runtime/goal_compiler.py",
           EXPECTED["bound_registry"][0]:"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
+          EXPECTED["capability_planner"][0]:"canonical/runtime/capability_planner.py",
         }
         for src_rel,dst_rel in mapping.items():
             dst=temp/dst_rel
