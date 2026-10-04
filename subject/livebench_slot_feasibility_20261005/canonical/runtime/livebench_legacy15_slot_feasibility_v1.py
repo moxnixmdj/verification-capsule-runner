@@ -25,7 +25,7 @@ HISTORICAL_GENERATOR_BLOB = "6ff390d6885cf90f88d9d36959735cb327613edc"
 
 NTH = "length_constraints:nth_paragraph_first_word"
 FORBIDDEN = "keywords:forbidden_words"
-END = "startend:end_checker"
+END = "startend:end_checker"\nSECTIONS = "detectable_format:multiple_sections"
 
 
 def _slots_by_id(contracts: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -63,6 +63,12 @@ def hard_unsat_reasons(contracts: Sequence[Mapping[str, Any]]) -> tuple[str, ...
 
     forbidden = by_id.get(FORBIDDEN, {}).get("forbidden_words", ())
     forbidden_words = [str(x) for x in forbidden]
+
+    # Existence/forbidden overlap is NOT an UNSAT class. The pinned existence
+    # checker performs raw regex substring search while ForbiddenWords wraps the
+    # generated alphabetic word in word boundaries. A carrier such as "rock0"
+    # therefore satisfies required "rock" while avoiding \\brock\\b. Keep this
+    # asymmetry explicit so the feasibility layer never emits a false certificate.
 
     if NTH in by_id and FORBIDDEN in by_id:
         first_word = str(by_id[NTH].get("first_word", ""))
