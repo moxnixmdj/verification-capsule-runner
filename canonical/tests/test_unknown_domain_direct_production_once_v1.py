@@ -24,7 +24,7 @@ class ProductionLauncherTests(unittest.TestCase):
     def test_claim_success_executes_once_and_binds_receipt(self):
         calls={"n":0}
         def fake_create(repo,token,ref,sha):
-            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+            return 201,{"ref":ref,"object":{"sha":sha}}
         def fake_execute(**kwargs):
             calls["n"]+=1
             return {"status":"X","authority_claim_id":kwargs["claim_id"]}
