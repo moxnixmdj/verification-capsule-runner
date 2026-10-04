@@ -1,0 +1,22 @@
+name: H100 OEWN lexical acquisition V1
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Wn client
+        run: python -m pip install --disable-pip-version-check 'wn==1.1.1'
+      - name: Run frozen OEWN acquisition probe
+        run: python h100_oewn/run_oewn_lexical_acquisition_v1.py
