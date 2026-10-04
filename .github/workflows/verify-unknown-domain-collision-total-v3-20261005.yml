@@ -1,0 +1,22 @@
+name: Verify Unknown-Domain collision-total V3
+
+on:
+  pull_request:
+    paths:
+      - "subject/unknown_domain_collision_total_v3_20261005/**"
+      - "verify_unknown_domain_collision_total_v3_20261005.py"
+      - ".github/workflows/verify-unknown-domain-collision-total-v3-20261005.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run independent collision-total proof and adversarial executions
+        run: python verify_unknown_domain_collision_total_v3_20261005.py
