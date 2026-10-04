@@ -50,19 +50,14 @@ def main() -> None:
     assert "Is there anything else I can help with?" in endings
 
     reg = src["instructions_registry.py"]
-    # Identity compatibility premises. The pinned registry gives forbidden_words
-    # only a self-conflict; multiple_sections and end_checker do not list it.
+    # Identity compatibility premise. The pinned registry gives forbidden_words
+    # only a self-conflict, and end_checker does not conflict with it.
     assert '_KEYWORD + "forbidden_words": {_KEYWORD + "forbidden_words"}' in reg
-    multi = reg.split('+ "multiple_sections": {', 1)[1].split("},", 1)[0]
-    end = reg.split('_STARTEND + "end_checker": {_STARTEND + "end_checker"}', 1)
-    assert '_KEYWORD + "forbidden_words"' not in multi
-    assert len(end) == 2
+    assert '_STARTEND + "end_checker": {_STARTEND + "end_checker"}' in reg
 
     ins = src["instructions.py"]
     # Exact checker semantic premises.
     assert 're.search(r"\\b" + word + r"\\b", value, flags=re.IGNORECASE)' in ins
-    assert 'section_splitter_patten = r"\\s?" + self._section_spliter  + r"\\s?\\d+\\s?"' in ins
-    assert 'return num_sections >= self._num_sections' in ins
     assert 'return value.endswith(self._end_phrase)' in ins
 
     result = {
@@ -76,15 +71,13 @@ def main() -> None:
         "keyword_pool_unique_count": len(set(words)),
         "counterexamples": [
             {
-                "ids": ["keywords:forbidden_words", "detectable_format:multiple_sections"],
-                "reachable_kwargs": {"forbidden_words_contains": "section", "section_spliter": "Section"},
-                "conclusion": "UNSAT__SECTION_CHECKER_REQUIRES_WHOLE_WORD_SECTION_WHILE_FORBIDDEN_WORDS_REJECTS_IT",
-            },
-            {
                 "ids": ["keywords:forbidden_words", "startend:end_checker"],
                 "reachable_kwargs": {"forbidden_words_contains": "help", "end_phrase": "Is there anything else I can help with?"},
                 "conclusion": "UNSAT__END_CHECKER_REQUIRES_WHOLE_WORD_HELP_WHILE_FORBIDDEN_WORDS_REJECTS_IT",
             },
+        ],
+        "retractions": [
+            "SECTION_FORBIDDEN_WAS_RETRACTED__SECTION_CHECKER_ALLOWS_BOUNDARY_BREAKING_CONSTRUCTIONS_SUCH_AS_9Section_1_OR_Section1"
         ],
         "theorem": "UNIVERSAL_ALL_GENERATOR_KWARGS_CONSTRUCTIVE_WITNESS_DOES_NOT_EXIST",
         "acceptance_credit": False,
