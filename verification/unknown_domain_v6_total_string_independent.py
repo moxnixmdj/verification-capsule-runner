@@ -26,11 +26,11 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py":"e52858b9fef2d795f72b45cd3ae82ad04344aa91",
- "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"a97459fe407ea4852f57f12f504fbc0121db9824",
+ "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"d087601a62a0b8ec9ab264487fb0b27a6246b977",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
- "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58410966e17c1bc546db8cab039891f3ab2bf8a8",
- "canonical/tests/test_unknown_domain_direct_v5.py":"81cd6ecabec51029175f6036a13eac7667fccd03",
+ "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"4a3e72b365ffa7e163abc63d197fcd386bdd104d",
+ "canonical/tests/test_unknown_domain_direct_v5.py":"c98733407d594c3fa5713de5742022325463f390",
 }
 
 def blob(path:Path)->str:
@@ -44,10 +44,54 @@ assert got==EXPECTED, {"expected":EXPECTED,"got":got}
 # canonicalization before any legacy strict-UTF8 helper is reached.
 beacon_src="".join(inspect.getsource(g5._canonical_beacon).split())
 secret_src="".join(inspect.getsource(g5._secret_bytes_total).split())
-assert '.encode("utf-8","surrogatepass")' in beacon_src
+assert 'str.strip(beacon)' in "".join(inspect.getsource(g5._beacon_gate).split())
+assert 'beacon.strip(' not in "".join(inspect.getsource(g5._beacon_gate).split())
+assert 'str.encode(text,"utf-8","surrogatepass")' in beacon_src
+assert 'text.encode(' not in beacon_src
 assert '.hex()' in beacon_src
 assert 'return"UDIRV5-BEACON-HEX|"+raw.hex()' in beacon_src
-assert '.encode("utf-8","surrogatepass")' in secret_src
+assert 'memoryview(secret).tobytes()' in secret_src
+assert 'str.encode(secret,"utf-8","surrogatepass")' in secret_src
+assert 'secret.encode(' not in secret_src
+
+# The falsifier that revoked the first V6 promotion is part of the proof domain,
+# not a regression anecdote. Exercise hostile subclasses whose ordinary method
+# dispatch explodes, and require the repaired route to bypass those hooks.
+class EvilStr(str):
+    def __getattribute__(self,name):
+        if name in {"strip","encode"}:
+            raise RuntimeError("DYNAMIC_STR_METHOD_DISPATCH_FORBIDDEN")
+        return super().__getattribute__(name)
+    def strip(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_STRIP_MUST_NOT_RUN")
+    def encode(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_ENCODE_MUST_NOT_RUN")
+
+class EvilBytes(bytes):
+    def __bytes__(self):
+        raise RuntimeError("OVERRIDDEN_BYTES_MUST_NOT_RUN")
+
+evil_beacon=EvilStr("A"*16+"\ud800")
+evil_secret=EvilStr("S"*31+"\udfff")
+evil_bytes=EvilBytes(b"B"*32)
+assert isinstance(evil_beacon,str) and isinstance(evil_secret,str)
+assert isinstance(evil_bytes,bytes)
+assert g5._canonical_beacon(evil_beacon).isascii()
+assert g5._secret_bytes_total(evil_secret)==str.encode(evil_secret,"utf-8","surrogatepass")
+assert g5._secret_bytes_total(evil_bytes)==b"B"*32
+
+subclass_packet=g5._generate(
+    beacon=evil_beacon,
+    evaluator_secret=evil_secret,
+    namespace="V6SUBCLASSVERIFY",
+)
+assert subclass_packet["case_count"]==27
+subclass_rows=[]
+for visible,hidden in zip(subclass_packet["visible_cases"],subclass_packet["hidden_records"],strict=True):
+    out=harness.execute_case(candidate_step=c3.step,case_visible=visible,hidden_record=hidden)
+    assert out["scorer_result"]["pass"] is True,(visible["case_id"],out["scorer_result"])
+    subclass_rows.append(out["scorer_result"])
+assert scorer.aggregate(subclass_rows)["all_27_cases_pass"] is True
 
 # Exhaust every Python Unicode scalar/code-point slot including D800-DFFF
 # through the exact V5 functions. Decode roundtrip establishes byte-level
@@ -176,6 +220,7 @@ assert cases==6912
 theorem=proposed.prove(ROOT)
 assert theorem["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
 assert theorem["string_interface_totality"]["legacy_strict_utf8_partiality_removed"] is True
+assert theorem["string_interface_totality"]["isinstance_accepted_subclass_override_hooks_bypassed"] is True
 assert theorem["identifier_totality_proof"]["token_collision_resistance_required_for_semantic_distinctness"] is False
 assert theorem["identifier_totality_proof"]["forced_total_token_collision_survives_construction"] is True
 assert theorem["transfer_proof"]["add2_exact_float_order_repaired"] is True
@@ -184,12 +229,15 @@ assert theorem["accounting"]["acceptance_credit_delta"]==0
 
 receipt={
  "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_STRING_INDEPENDENT_VERIFICATION_V1",
- "status":"PASS__INDEPENDENT_CONTENT_BOUND_TOTAL_STRING_STRUCTURAL_ID_EXACTNESS_AND_6912_CASE_FALSIFICATION__ZERO_CREDIT",
- "brain_subject_commit":"704a60674e30de927bafaacecaf8a840d4632dbd",
+ "status":"PASS__INDEPENDENT_CONTENT_BOUND_SUBCLASS_TOTAL_STRING_STRUCTURAL_ID_EXACTNESS_AND_6912_CASE_FALSIFICATION__ZERO_CREDIT",
+ "brain_subject_branch":"breakthrough/unknown-domain-v6-subclass-revocation-20261005",
  "exact_subject_blobs":EXPECTED,
  "unicode_codepoints_exhausted":unicode_codepoints,
  "surrogate_codepoints_exhausted":surrogate_codepoints,
  "v4_strict_utf8_counterexample_preserved":v4_surrogate_counterexample,
+ "isinstance_accepted_str_subclass_counterexample_repaired":True,
+ "str_subclass_full_27_case_execution_pass":True,
+ "bytes_subclass_override_bypassed":True,
  "forced_total_token_collision_survival":True,
  "v2_exact_float_counterexample":counterexample,
  "nonproduction_falsification":{"populations":populations,"cases":cases,"all_pass":True},
@@ -206,4 +254,4 @@ Path("unknown_domain_v6_total_string_receipt.json").write_text(
 )
 print(json.dumps(receipt,sort_keys=True,ensure_ascii=True))
 
-# PR synchronize trigger: verifier semantics unchanged.
+# Repaired after the original universal claim was revoked by an admitted str-subclass counterexample.
