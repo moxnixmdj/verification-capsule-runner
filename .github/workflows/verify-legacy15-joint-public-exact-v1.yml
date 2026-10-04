@@ -33,10 +33,6 @@ jobs:
         with:
           ref: verify-legacy15-direct-exact-20261004-v1
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12.14"
-
       - name: Set up wheel-compatible Python
         uses: actions/setup-python@v6
         with:
