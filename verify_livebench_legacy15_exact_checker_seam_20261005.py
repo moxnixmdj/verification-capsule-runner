@@ -11,7 +11,7 @@ sys.path.insert(0, str(SUBJECT))
 
 from canonical.runtime import livebench_legacy15_exact_postvalidator_v1 as exact
 
-EXPECTED_POSTVALIDATOR_BLOB = "b6984b26bb0df3c6e5aefd875665f61977e5e5eb"
+EXPECTED_POSTVALIDATOR_BLOB = "d3c821a1ff9803590cf6899a598503fb6b7d3eec"
 EXPECTED_ARCHETYPE_BLOB = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
 RECEIPT = ROOT / "livebench_legacy15_exact_checker_seam_verification.json"
 
