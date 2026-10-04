@@ -1,0 +1,89 @@
+name: Verify LiveBench legacy15 synthetic universe V2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-livebench-legacy15-synthetic-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: verify/livebench-legacy15-synthetic-v2-20261004
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+
+      - name: Verify copied Brain subject blobs and active-ID commitment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py)" = "b0376cb1e791af6abeb9536e41797b321bb7f7cb"
+          test "$(git hash-object canonical/runtime/livebench_legacy15_composition_archetypes_v1.py)" = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
+          test "$(git hash-object canonical/runtime/livebench_legacy15_joint_witness_v1.py)" = "029d6018fd705fa5d1a53c88c4c3dd60764d8489"
+          test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py)" = "721207ba39d502e3f610289578e9d5bab78b1fcc"
+          test "$(git hash-object canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py)" = "e986035ff68b53c0dc7a7eb478f6e3d8882214aa"
+          python - <<'PY'
+          import hashlib, json
+          from canonical.runtime.livebench_frozen_active_legacy15_v1 import ACTIVE_IDS
+          got=hashlib.sha256(json.dumps(sorted(ACTIVE_IDS)).encode()).hexdigest()
+          exp="af4eeddebf27394eb689d2049f2f8104ae081ebafe237258bdc1a992e96f598d"
+          assert got == exp, (got, exp)
+          assert len(ACTIVE_IDS)==15 and len(set(ACTIVE_IDS))==15
+          print("active15 commitment", got)
+          PY
+
+      - name: Install pinned checker dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'nltk==3.8.1' 'langdetect==1.0.9' 'immutabledict==4.2.0' 'absl-py==2.1.0'
+          python -m nltk.downloader punkt
+
+      - name: Checkout exact frozen LiveBench checker
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git upstream-livebench
+          git -C upstream-livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+          test "$(git -C upstream-livebench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C upstream-livebench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+
+      - name: Execute 7424 zero-terminal synthetic exact-checker cases
+        run: |
+          mkdir -p receipts
+          PYTHONPATH="$GITHUB_WORKSPACE" python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py \
+            --livebench-root "$GITHUB_WORKSPACE/upstream-livebench" \
+            --output receipts/livebench_legacy15_synthetic_v2.json \
+            --max-failures 250
+
+      - name: Validate receipt boundary
+        if: always()
+        run: |
+          if test -f receipts/livebench_legacy15_synthetic_v2.json; then
+            python - <<'PY'
+          import json
+          p="receipts/livebench_legacy15_synthetic_v2.json"
+          o=json.load(open(p))
+          s=o["scope"]
+          assert s["synthetic_cases"] == 7424
+          assert s["terminal_rows_read"] == 0
+          assert s["terminal_prompts_read"] == 0
+          assert s["terminal_scores_read"] == 0
+          print(json.dumps({"status":o["status"], **o["results"]}, sort_keys=True))
+          PY
+          fi
+
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy15-synthetic-v2
+          path: receipts/livebench_legacy15_synthetic_v2.json
+          if-no-files-found: warn
