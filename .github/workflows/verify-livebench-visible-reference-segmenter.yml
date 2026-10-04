@@ -1,0 +1,28 @@
+name: Verify LiveBench Visible Reference Segmenter
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_visible_reference_segmenter.py
+      - .github/workflows/verify-livebench-visible-reference-segmenter.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify prompt-only recovery on pinned public population
+        run: python verify_livebench_visible_reference_segmenter.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-visible-reference-segmenter-receipt
+          path: livebench_visible_reference_segmenter_receipt.json
+          if-no-files-found: error
