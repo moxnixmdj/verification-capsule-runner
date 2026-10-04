@@ -36,12 +36,19 @@ jobs:
         with:
           python-version: "3.12.14"
 
+      - name: Set up wheel-compatible Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+
       - name: Install exact scorer dependencies in isolated venv
         run: |
           set -euo pipefail
-          python3 -m venv .venv
+          python -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --only-binary=:all: pyarrow==21.0.0
           .venv/bin/python -m pip install --disable-pip-version-check \
-            pyarrow==21.0.0 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+            nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
 
       - name: Checkout exact frozen legacy scorer and NLTK assets
         shell: bash
