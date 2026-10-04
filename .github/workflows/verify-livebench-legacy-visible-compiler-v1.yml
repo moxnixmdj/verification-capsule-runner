@@ -1,0 +1,44 @@
+name: Verify LiveBench Legacy Visible Compiler
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/livebench_legacy_visible_compiler_v1/**'
+      - 'verify_livebench_legacy_visible_compiler_v1.py'
+      - '.github/workflows/verify-livebench-legacy-visible-compiler-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bind exact candidate blobs
+        run: |
+          test "$(git hash-object subject/livebench_legacy_visible_compiler_v1/canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py)" = "e986035ff68b53c0dc7a7eb478f6e3d8882214aa"
+          test "$(git hash-object subject/livebench_legacy_visible_compiler_v1/canonical/tests/test_livebench_legacy_visible_constraint_compiler_v1.py)" = "aa279543c6fbd9dea353aa4b18cf283d4e6e25c6"
+      - name: Fetch pinned LiveBench
+        run: |
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check --quiet langdetect nltk immutabledict pytest
+      - name: Run regression tests
+        run: PYTHONPATH=subject/livebench_legacy_visible_compiler_v1 pytest -q subject/livebench_legacy_visible_compiler_v1/canonical/tests/test_livebench_legacy_visible_constraint_compiler_v1.py
+      - name: Verify all 25 pinned renderings
+        run: python verify_livebench_legacy_visible_compiler_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-visible-compiler-receipt
+          path: livebench_legacy_visible_compiler_receipt.json
+          if-no-files-found: error
