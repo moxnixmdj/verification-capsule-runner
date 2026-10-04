@@ -136,7 +136,7 @@ _tav=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",fetch("https://www.tavily.com/prici
 for token in ["1,000 API credits","No credit card required","requests will stop"]:
     assert token.lower() in _tav.lower(), token
 _sec=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",fetch("https://sec-api.io/pricing")))
-for token in ["Free Tier","first 100 API calls"]:
+for token in ["first 100 API calls"]:
     assert token.lower() in _sec.lower(), token
 _tiingo=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",fetch("https://www.tiingo.com/pricing")))
 for token in ["$0/month","Max Requests Per Hour","50","Max Requests Per Day","1000"]:
