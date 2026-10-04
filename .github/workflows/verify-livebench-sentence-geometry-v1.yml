@@ -1,0 +1,34 @@
+name: Verify LiveBench sentence geometry V1
+on:
+  push:
+    branches:
+      - 'verify/livebench-sentence-budget-20261005-sol'
+    paths:
+      - 'verification/livebench_sentence_geometry_public_audit_v1.py'
+      - '.github/workflows/verify-livebench-sentence-geometry-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install source dependency
+        run: python -m pip install 'nltk>=3.8,<4'
+      - name: Install Punkt data
+        run: |
+          python - <<'PY'
+          import nltk
+          assert nltk.download("punkt", quiet=True)
+          # NLTK >=3.9 may consult punkt_tab. Installing it is harmless on
+          # versions that do not require it.
+          nltk.download("punkt_tab", quiet=True)
+          print("nltk", nltk.__version__)
+          PY
+      - name: Run zero-terminal sentence geometry audit
+        run: python verification/livebench_sentence_geometry_public_audit_v1.py
