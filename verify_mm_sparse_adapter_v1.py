@@ -91,7 +91,7 @@ def main() -> int:
         "schema": "PROJECT_BRAIN_MYSTERYMECHANISM_SPARSE_SYMBOLIC_ADAPTER_INDEPENDENT_VERIFICATION_V1",
         "status": "PASS__CONTENT_BOUND_SPARSE_5_TO_7_ROW_ACTIVE_SYMBOLIC_ADAPTER__FRESH_MOTIFS_PASS__ZERO_CREDIT",
         "subject_blobs": got,
-        "brain_authored_tests": "PASS",
+        "brain_authored_tests": "PASS",\n        "finite_probe_nonidentifiability": theorem["status"],
         "fresh_independent_challenges": fresh,
         "public_contract_shape": {
             "two_dimensional_active_budget": 5,
