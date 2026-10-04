@@ -8,7 +8,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject" / "unknown_domain_v6_20261005"
-BRAIN_SUBJECT_COMMIT = "704a60674e30de927bafaacecaf8a840d4632dbd"
+BRAIN_SUBJECT_REF = "breakthrough/unknown-domain-v6-subclass-revocation-20261005"
 
 EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
@@ -17,16 +17,47 @@ EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "e52858b9fef2d795f72b45cd3ae82ad04344aa91",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "a97459fe407ea4852f57f12f504fbc0121db9824",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "d087601a62a0b8ec9ab264487fb0b27a6246b977",
     "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
     "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
-    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58410966e17c1bc546db8cab039891f3ab2bf8a8",
-    "canonical/tests/test_unknown_domain_direct_v5.py": "81cd6ecabec51029175f6036a13eac7667fccd03",
+    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "4a3e72b365ffa7e163abc63d197fcd386bdd104d",
+    "canonical/tests/test_unknown_domain_direct_v5.py": "c98733407d594c3fa5713de5742022325463f390",
 }
 
 def git_blob_sha(path: pathlib.Path) -> str:
     data = path.read_bytes()
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+
+class HostileStr(str):
+    def strip(self, *args, **kwargs):
+        raise RuntimeError("INSTANCE_STRIP_MUST_NOT_RUN")
+    def encode(self, *args, **kwargs):
+        raise RuntimeError("INSTANCE_ENCODE_MUST_NOT_RUN")
+    def __str__(self):
+        raise RuntimeError("INSTANCE_STR_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("INSTANCE_LEN_MUST_NOT_RUN")
+
+class HostileBytes(bytes):
+    def __bytes__(self):
+        raise RuntimeError("INSTANCE_BYTES_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("INSTANCE_LEN_MUST_NOT_RUN")
+    def __getitem__(self, key):
+        raise RuntimeError("INSTANCE_GETITEM_MUST_NOT_RUN")
+
+def exact_run(packet, c3, harness, scorer):
+    rows = []
+    for visible, hidden in zip(packet["visible_cases"], packet["hidden_records"], strict=True):
+        out = harness.execute_case(
+            candidate_step=c3.step,
+            case_visible=visible,
+            hidden_record=hidden,
+        )
+        assert out["scorer_result"]["pass"] is True, (visible["case_id"], out)
+        rows.append(out["scorer_result"])
+    assert scorer.aggregate(rows)["all_27_cases_pass"] is True
+    return len(rows)
 
 def main() -> int:
     observed = {}
@@ -47,11 +78,73 @@ def main() -> int:
     assert result["status"] == "PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
     assert result["scope"]["terminal_or_production_cases_generated"] == 0
     assert result["string_interface_totality"]["surrogate_codepoints_exhausted"] == 2048
+    assert result["string_interface_totality"]["isinstance_accepted_subclass_override_hooks_bypassed"] is True
     assert result["identifier_totality_proof"]["forced_total_token_collision_survives_construction"] is True
     assert result["transfer_proof"]["all_six_families_universal"] is True
     assert result["transfer_proof"]["add2_exact_float_order_repaired"] is True
     assert result["abstention_proof"]["all_three_classes_universal"] is True
 
+    # Reproduce the exact pre-repair defect class first.
+    old_style = HostileStr("A" * 16 + "\ud800")
+    try:
+        old_style.strip()
+    except RuntimeError:
+        old_instance_strip_fails = True
+    else:
+        raise AssertionError("HOSTILE_INSTANCE_STRIP_DID_NOT_FAIL")
+    assert str.strip(old_style) == ("A" * 16 + "\ud800")
+    try:
+        old_style.encode("utf-8", "surrogatepass")
+    except RuntimeError:
+        old_instance_encode_fails = True
+    else:
+        raise AssertionError("HOSTILE_INSTANCE_ENCODE_DID_NOT_FAIL")
+    assert str.encode(old_style, "utf-8", "surrogatepass").endswith(b"\xed\xa0\x80")
+
+    # The repaired gate/canonicalizer must bypass all Python-level overrides.
+    assert g5._beacon_gate(old_style) is old_style
+    canonical = g5._canonical_beacon(old_style)
+    assert canonical.startswith("UDIRV5-BEACON-HEX|")
+    assert canonical.isascii()
+
+    hostile_secret_text = HostileStr("S" * 31 + "\udfff")
+    text_bytes = g5._secret_bytes_total(hostile_secret_text)
+    assert isinstance(text_bytes, bytes) and len(text_bytes) >= 32
+
+    hostile_secret_bytes = HostileBytes(b"B" * 32)
+    raw_bytes = g5._secret_bytes_total(hostile_secret_bytes)
+    assert type(raw_bytes) is bytes and raw_bytes == b"B" * 32
+
+    # A subclass shorter than the public gate must still reject deterministically
+    # without invoking its hostile instance methods.
+    try:
+        g5._beacon_gate(HostileStr("short"))
+    except Exception as exc:
+        assert exc.__class__.__name__ == "UnknownDomainGeneratorError"
+    else:
+        raise AssertionError("SHORT_HOSTILE_SUBCLASS_MUST_REJECT")
+
+    # Exact non-production population on the formerly falsifying subclass.
+    subclass_cases = 0
+    subclass_cases += exact_run(
+        g5._generate(
+            beacon=old_style,
+            evaluator_secret=hostile_secret_text,
+            namespace="VERIFY-SUBCLASS-TEXT",
+        ),
+        c3, harness, scorer,
+    )
+    subclass_cases += exact_run(
+        g5._generate(
+            beacon=HostileStr("\udfff" + "B" * 16),
+            evaluator_secret=hostile_secret_bytes,
+            namespace="VERIFY-SUBCLASS-BYTES",
+        ),
+        c3, harness, scorer,
+    )
+    assert subclass_cases == 54
+
+    # Preserve prior exact counterexample and finite falsification coverage.
     beacon = "A" * 16 + "\ud800"
     try:
         g4._generate(beacon=beacon, evaluator_secret=b"x" * 32, namespace="V4FAIL")
@@ -67,35 +160,44 @@ def main() -> int:
     for i, b in enumerate(beacons):
         for j, s in enumerate(secrets):
             packet = g5._generate(beacon=b, evaluator_secret=s, namespace=f"VERIFY-{i}-{j}")
-            rows = []
-            for visible, hidden in zip(packet["visible_cases"], packet["hidden_records"], strict=True):
-                out = harness.execute_case(candidate_step=c3.step, case_visible=visible, hidden_record=hidden)
-                assert out["scorer_result"]["pass"] is True, (visible["case_id"], out)
-                rows.append(out["scorer_result"])
-                cases += 1
-            assert scorer.aggregate(rows)["all_27_cases_pass"] is True
+            cases += exact_run(packet, c3, harness, scorer)
             populations += 1
     assert populations == 16
     assert cases == 432
 
     receipt = {
-        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_EXACT_INDEPENDENT_VERIFICATION_V1",
-        "status": "PASS__INDEPENDENT_CONTENT_BOUND_TOTAL_STRING_STRUCTURAL_ID_EXACT_FLOAT_AND_432_CASE_FALSIFICATION__ZERO_CREDIT",
-        "brain_subject_commit": BRAIN_SUBJECT_COMMIT,
+        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
+        "status": "PASS__CONTENT_BOUND_SUBCLASS_TOTALITY_REPAIR__OLD_FALSIFIER_REPRODUCED_AND_BYPASSED__EXACT_486_CASE_FALSIFICATION__ZERO_CREDIT",
+        "brain_subject_ref": BRAIN_SUBJECT_REF,
         "subject_blobs": observed,
         "universal_theorem_status": result["status"],
         "surrogate_codepoints_exhausted": 2048,
+        "isinstance_str_subclass_override_hooks_bypassed": True,
+        "isinstance_bytes_subclass_override_hooks_bypassed": True,
+        "old_instance_strip_failure_reproduced": old_instance_strip_fails,
+        "old_instance_encode_failure_reproduced": old_instance_encode_fails,
+        "hostile_subclass_exact_scorer_cases": subclass_cases,
         "structural_identifier_totality": True,
         "exact_add2_float_order_repaired": True,
         "all_six_transfer_families_universal": True,
         "all_three_abstention_classes_universal": True,
         "v4_string_domain_counterexample_reproduced": v4_counterexample,
-        "nonproduction_falsification": {"populations": populations, "cases": cases, "all_pass": True},
+        "ordinary_nonproduction_falsification": {
+            "populations": populations,
+            "cases": cases,
+            "all_pass": True,
+        },
+        "total_exact_scorer_cases": cases + subclass_cases,
         "production_or_terminal_cases_generated": 0,
         "acceptance_credit_delta": 0,
         "family_credit_delta": 0,
         "capability_credit_delta": 0,
         "ownership_credit_delta": 0,
+        "hard_nonclaims": [
+            "NO_ACCEPTANCE_PROMOTION_FROM_THIS_VERIFIER_BY_ITSELF",
+            "NO_OPEN_WORLD_GENERALIZATION_BEYOND_THE_BOUND_EVALUATOR_CONTRACT",
+            "SEPARATE_FAIL_CLOSED_ACCEPTANCE_REDUCTION_REQUIRED",
+        ],
     }
     out = ROOT / "unknown_domain_v6_total_exact_verification.json"
     out.write_text(json.dumps(receipt, indent=2, sort_keys=True, ensure_ascii=True) + "\n")
