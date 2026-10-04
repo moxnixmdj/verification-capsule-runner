@@ -114,7 +114,7 @@ class ProductionLauncherTests(unittest.TestCase):
 
     def test_post_claim_execution_exception_is_sealed_fail_closed(self):
         def fake_create(repo,token,ref,sha):
-            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+            return 201,{"ref":ref,"object":{"sha":sha}}
         def fake_execute(**kwargs):
             raise RuntimeError("synthetic-post-claim-failure")
         branch,out=prod.claim_then_execute(
