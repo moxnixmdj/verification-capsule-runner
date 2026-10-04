@@ -1,0 +1,22 @@
+name: Verify Unknown-Domain V2 production executor
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'execute_unknown_domain_v2_production_20261005.py'
+      - 'verify_unknown_domain_v2_production_executor_20261005.py'
+      - '.github/workflows/verify-unknown-domain-v2-production-executor-20261005.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_unknown_domain_v2_production_executor_20261005.py
