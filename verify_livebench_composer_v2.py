@@ -110,4 +110,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    rc = main()
+    if rc == 0:
+        from verify_livebench_union25_delta10_factorization_v1 import main as factorization_main
+        factorization_main()
+    raise SystemExit(rc)
