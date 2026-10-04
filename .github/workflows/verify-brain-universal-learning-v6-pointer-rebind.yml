@@ -108,7 +108,7 @@ jobs:
           assert v6a["governance_git_blob_sha"]=="65e291e3afebbf3547771ee580104361d1920788",v6a
           assert v6a["verification_git_blob_sha"]=="ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",v6a
           assert v6a["activation_git_blob_sha"]=="917a645e103189755cd7e8370f141012c6b8cb87",v6a
-          assert v6a["structural_residual_reduction_git_blob_sha"]=="529d39cca80a5ae6bd2260c5fadb9dc1ba47746b",v6a
+          assert v6a["structural_residual_reduction_git_blob_sha"]=="1d47f707bf5bd3d2f07c8f02bc66d7edab046541",v6a
 
           assert cut["authority"]["root3_compression"]["git_blob_sha"]==root_sha,cut["authority"]["root3_compression"]
           assert front["authority"]["root3_residual_compression"]["git_blob_sha"]==root_sha,front["authority"]["root3_residual_compression"]
@@ -122,7 +122,7 @@ jobs:
           assert tv6["governance_git_blob_sha"]=="65e291e3afebbf3547771ee580104361d1920788",tv6
           assert tv6["verification_git_blob_sha"]=="ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",tv6
           assert tv6["activation_git_blob_sha"]=="917a645e103189755cd7e8370f141012c6b8cb87",tv6
-          assert tv6["structural_residual_reduction_git_blob_sha"]=="529d39cca80a5ae6bd2260c5fadb9dc1ba47746b",tv6
+          assert tv6["structural_residual_reduction_git_blob_sha"]=="1d47f707bf5bd3d2f07c8f02bc66d7edab046541",tv6
 
           assert term["truth"]["opus55_acceptance"]=="5/19_PASS__14/19_OPEN",term["truth"]
           assert term["truth"]["achieved"] is False,term["truth"]
