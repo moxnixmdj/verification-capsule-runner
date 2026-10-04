@@ -1,0 +1,24 @@
+name: Verify Unknown-Domain production reducer candidate
+
+on:
+  pull_request:
+    paths:
+      - "candidate/unknown_domain_direct_production_reducer_v1.py"
+      - "candidate/test_unknown_domain_direct_production_reducer_v1.py"
+      - ".github/workflows/verify-unknown-domain-production-reducer-candidate.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run reducer fail-closed tests
+        run: |
+          python -m pip install pytest
+          pytest -q candidate/test_unknown_domain_direct_production_reducer_v1.py
