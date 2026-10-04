@@ -1,0 +1,49 @@
+name: Verify Unknown-Domain launch push bridge
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/unknown-domain-direct-launch-push-bridge.yml'
+      - '.github/workflows/verify-unknown-domain-launch-push-bridge.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify transport-only bridge firewall
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('.github/workflows/unknown-domain-direct-launch-push-bridge.yml').read_text()
+          required = [
+              "on:",
+              "push:",
+              "unknown-domain-direct-launch/**",
+              "contents: write",
+              "startsWith(github.ref_name, 'unknown-domain-direct-launch/')",
+              "python canonical/runtime/unknown_domain_direct_production_once_v1.py",
+          ]
+          for token in required:
+              assert token in p, token
+          assert "workflow_dispatch" not in p
+          assert "create:" not in p
+
+          frozen = {
+              "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+              ".github/workflows/unknown-domain-direct-one-use-production.yml": "190ac379f5cf2b2b2005b6f537f43643a80ff24e",
+              "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json": "26f98012ecf01c6a3f20e855bdebf60cf70d1c1f",
+          }
+          import hashlib
+          def blob(data):
+              return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+          for rel, expected in frozen.items():
+              got = blob(Path(rel).read_bytes())
+              assert got == expected, (rel, got, expected)
+
+          print("Unknown-Domain push bridge transport firewall PASS")
+          PY
