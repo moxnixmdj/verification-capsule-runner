@@ -66,7 +66,7 @@ jobs:
           curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors \
             "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet" \
             -o /tmp/instruction_following.parquet
-          python3 - <<'PY'
+          .venv/bin/python - <<'PY'
           import hashlib
           from pathlib import Path
           p = Path("/tmp/instruction_following.parquet")
