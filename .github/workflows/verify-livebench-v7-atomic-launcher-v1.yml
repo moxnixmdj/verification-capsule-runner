@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths:
       - "launch_livebench_v7_sanitized_atomic.py"
-      - ".github/workflows/verify-livebench-v7-atomic-launcher-v1.yml"\n      - "VERIFY_LIVEBENCH_V7_ATOMIC_LAUNCHER_V1"
+      - ".github/workflows/verify-livebench-v7-atomic-launcher-v1.yml"
 permissions:
   contents: read
 jobs:
