@@ -1,0 +1,24 @@
+name: Verify LiveBench V6 forced fail
+on:
+  push:
+    branches:
+      - 'verify/livebench-v6-forced-fail-20261004'
+    paths:
+      - 'VERIFY_LIVEBENCH_V6_FORCED_FAIL'
+      - 'verify_livebench_v6_forced_fail_20261004.py'
+      - 'subject/livebench_v6_forced_fail_20261004/**'
+      - '.github/workflows/verify-livebench-v6-forced-fail-20261004.yml'
+  pull_request:
+    paths:
+      - 'verify_livebench_v6_forced_fail_20261004.py'
+      - 'subject/livebench_v6_forced_fail_20261004/**'
+      - '.github/workflows/verify-livebench-v6-forced-fail-20261004.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_livebench_v6_forced_fail_20261004.py
