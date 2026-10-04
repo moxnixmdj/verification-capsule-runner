@@ -8,7 +8,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject" / "unknown_domain_v6_20261005"
-BRAIN_SUBJECT_COMMIT = "704a60674e30de927bafaacecaf8a840d4632dbd"
+BRAIN_SUBJECT_COMMIT = "429419c7f7e3f206563f9ffbd98a7f30334b9a30"
 
 EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
@@ -17,11 +17,11 @@ EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "e52858b9fef2d795f72b45cd3ae82ad04344aa91",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "a97459fe407ea4852f57f12f504fbc0121db9824",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "a31184eceb3e90cae8c84ef46726232729fa6347",
     "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
     "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
-    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58410966e17c1bc546db8cab039891f3ab2bf8a8",
-    "canonical/tests/test_unknown_domain_direct_v5.py": "81cd6ecabec51029175f6036a13eac7667fccd03",
+    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "54e1f0dd91b49901fb2b165f92e61683753444c9",
+    "canonical/tests/test_unknown_domain_direct_v5.py": "a512a9ae421ce1f726bf4129a4266790c2111896",
 }
 
 def git_blob_sha(path: pathlib.Path) -> str:
@@ -51,6 +51,40 @@ def main() -> int:
     assert result["transfer_proof"]["all_six_families_universal"] is True
     assert result["transfer_proof"]["add2_exact_float_order_repaired"] is True
     assert result["abstention_proof"]["all_three_classes_universal"] is True
+    assert result["string_interface_totality"]["hostile_str_subclass_virtual_dispatch_bypassed"] is True
+    assert result["string_interface_totality"]["hostile_bytes_subclass_virtual_dispatch_bypassed"] is True
+
+    class HostileStr(str):
+        def strip(self,*args,**kwargs):
+            raise RuntimeError("HOSTILE_STRIP_DISPATCH")
+        def encode(self,*args,**kwargs):
+            raise RuntimeError("HOSTILE_ENCODE_DISPATCH")
+        def __str__(self):
+            raise RuntimeError("HOSTILE_STR_DISPATCH")
+
+    class HostileBytes(bytes):
+        def __bytes__(self):
+            raise RuntimeError("HOSTILE_BYTES_DISPATCH")
+        def __len__(self):
+            raise RuntimeError("HOSTILE_LEN_DISPATCH")
+
+    hostile_beacon = HostileStr("H" * 16 + "\\ud800")
+    hostile_secret = HostileStr("S" * 31 + "\\udfff")
+    hostile_bytes = HostileBytes(b"B" * 32)
+    assert type(g5._canonical_beacon(hostile_beacon)) is str
+    assert type(g5._secret_bytes_total(hostile_secret)) is bytes
+    assert g5._secret_bytes_total(hostile_bytes) == b"B" * 32
+    hostile_packet = g5._generate(
+        beacon=hostile_beacon,
+        evaluator_secret=hostile_secret,
+        namespace="INDEPENDENT-HOSTILE-SUBCLASS",
+    )
+    hostile_rows = []
+    for visible, hidden in zip(hostile_packet["visible_cases"], hostile_packet["hidden_records"], strict=True):
+        out = harness.execute_case(candidate_step=c3.step, case_visible=visible, hidden_record=hidden)
+        assert out["scorer_result"]["pass"] is True, (visible["case_id"], out)
+        hostile_rows.append(out["scorer_result"])
+    assert scorer.aggregate(hostile_rows)["all_27_cases_pass"] is True
 
     beacon = "A" * 16 + "\ud800"
     try:
@@ -79,8 +113,8 @@ def main() -> int:
     assert cases == 432
 
     receipt = {
-        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_TOTAL_EXACT_INDEPENDENT_VERIFICATION_V1",
-        "status": "PASS__INDEPENDENT_CONTENT_BOUND_TOTAL_STRING_STRUCTURAL_ID_EXACT_FLOAT_AND_432_CASE_FALSIFICATION__ZERO_CREDIT",
+        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_SAFE_INDEPENDENT_VERIFICATION_V2",
+        "status": "PASS__INDEPENDENT_CONTENT_BOUND_SUBCLASS_SAFE_TOTAL_STRING_STRUCTURAL_ID_EXACT_FLOAT_AND_FALSIFICATION__ZERO_CREDIT",
         "brain_subject_commit": BRAIN_SUBJECT_COMMIT,
         "subject_blobs": observed,
         "universal_theorem_status": result["status"],
@@ -90,6 +124,8 @@ def main() -> int:
         "all_six_transfer_families_universal": True,
         "all_three_abstention_classes_universal": True,
         "v4_string_domain_counterexample_reproduced": v4_counterexample,
+        "hostile_str_subclass_pass": True,
+        "hostile_bytes_subclass_pass": True,
         "nonproduction_falsification": {"populations": populations, "cases": cases, "all_pass": True},
         "production_or_terminal_cases_generated": 0,
         "acceptance_credit_delta": 0,
