@@ -1,0 +1,81 @@
+name: Verify LiveBench lexical signature V2 no-checkout
+
+on:
+  push:
+    branches:
+      - verify/livebench-lexical-signature-v2-20261005-sol
+    paths:
+      - ".github/workflows/verify-livebench-lexical-signature-v2-nocheckout.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 3
+    steps:
+      - name: Verify exact embedded subject and independent quotient
+        shell: python
+        run: |
+          import hashlib, json
+          SUBJECT = "#!/usr/bin/env python3\n\"\"\"Exact finite lexical quotient for frozen LiveBench legacy15 composition.\n\nThis module replaces raw enumeration over the 1,525-word public generator\ndomain with the checker-relevant collision signature induced by the current\nsemantic UNSAT kernel.\n\nThe only fixed generated words whose membership in forbidden_words can force a\nhard contradiction are:\n- other / anything / can / help, because they occur in the two fixed end phrases;\n- section, because MultipleSections requires literal \"Section X\" labels.\n\nThe nth-paragraph first word is also relevant because equality with any\nforbidden word is a hard contradiction.  When the nth word itself is one of the\nfive fixed words, that collision bit is not independent of the corresponding\nfixed-word membership bit.  When it is any other public word, it is independent\nexcept that forbidden_words contains exactly five distinct sampled words.\n\nNo terminal rows, prompts, kwargs, responses, frequencies, or scores are read.\n\"\"\"\nfrom __future__ import annotations\n\nfrom itertools import product\nfrom typing import Any, Iterable\n\nSCHEMA = \"PROJECT_BRAIN_LIVEBENCH_LEGACY15_LEXICAL_COLLISION_SIGNATURE_V2\"\n\nWORD_DOMAIN_SIZE = 1525\nFORBIDDEN_SAMPLE_SIZE = 5\nFIXED_RELEVANT_WORDS = (\"other\", \"anything\", \"can\", \"help\", \"section\")\nNTH_CATEGORIES = (*FIXED_RELEVANT_WORDS, \"generic\")\nEND_PHRASES = (\n    \"Any other questions?\",\n    \"Is there anything else I can help with?\",\n)\n\n_FIXED_INDEX = {word: i for i, word in enumerate(FIXED_RELEVANT_WORDS)}\n\n\ndef _signature(\n    *,\n    end_phrase_index: int,\n    nth_category: str,\n    fixed_forbidden_bits: tuple[bool, ...],\n    nth_is_forbidden: bool,\n) -> tuple[Any, ...]:\n    return (\n        int(end_phrase_index),\n        str(nth_category),\n        tuple(bool(x) for x in fixed_forbidden_bits),\n        bool(nth_is_forbidden),\n    )\n\n\ndef enumerate_reachable_signatures() -> tuple[tuple[Any, ...], ...]:\n    \"\"\"Enumerate every reachable checker-relevant lexical collision signature.\n\n    The construction is combinatorial, not a raw-word product:\n    - forbidden_words is a 5-element sample without replacement;\n    - the five fixed relevant words may independently be in that sample;\n    - if nth_category is one of those fixed words, nth_is_forbidden equals that\n      fixed membership bit;\n    - if nth_category is generic, nth_is_forbidden is independently selectable\n      unless all five forbidden slots are already occupied by the fixed words.\n\n    The 1,525-word domain is vastly larger than the at-most-six distinguished\n    words, so every signature admitted by these capacity constraints is\n    constructively reachable.\n    \"\"\"\n    out: set[tuple[Any, ...]] = set()\n    for end_phrase_index in range(len(END_PHRASES)):\n        for nth_category in NTH_CATEGORIES:\n            for bits in product((False, True), repeat=len(FIXED_RELEVANT_WORDS)):\n                bits = tuple(bool(x) for x in bits)\n                fixed_count = sum(bits)\n\n                if nth_category in _FIXED_INDEX:\n                    nth_is_forbidden = bits[_FIXED_INDEX[nth_category]]\n                    out.add(_signature(\n                        end_phrase_index=end_phrase_index,\n                        nth_category=nth_category,\n                        fixed_forbidden_bits=bits,\n                        nth_is_forbidden=nth_is_forbidden,\n                    ))\n                    continue\n\n                for nth_is_forbidden in (False, True):\n                    distinguished_forbidden = fixed_count + int(nth_is_forbidden)\n                    if distinguished_forbidden > FORBIDDEN_SAMPLE_SIZE:\n                        continue\n                    # There are enough undistinguished public words to fill the\n                    # remaining forbidden slots while keeping all sampled words\n                    # distinct.  Keep the capacity check explicit so future\n                    # source-domain shrinkage fails closed.\n                    filler_needed = FORBIDDEN_SAMPLE_SIZE - distinguished_forbidden\n                    excluded_distinguished = len(FIXED_RELEVANT_WORDS) + 1\n                    filler_available = WORD_DOMAIN_SIZE - excluded_distinguished\n                    if filler_needed > filler_available:\n                        continue\n                    out.add(_signature(\n                        end_phrase_index=end_phrase_index,\n                        nth_category=nth_category,\n                        fixed_forbidden_bits=bits,\n                        nth_is_forbidden=nth_is_forbidden,\n                    ))\n\n    return tuple(sorted(out, key=repr))\n\n\ndef lexical_unsat_reasons(signature: tuple[Any, ...]) -> tuple[str, ...]:\n    \"\"\"Return the hard lexical UNSAT classes represented by a signature.\"\"\"\n    end_phrase_index, nth_category, bits, nth_is_forbidden = signature\n    bits = tuple(bool(x) for x in bits)\n    if len(bits) != len(FIXED_RELEVANT_WORDS):\n        raise ValueError(\"FIXED_FORBIDDEN_BIT_WIDTH_MISMATCH\")\n    if int(end_phrase_index) not in range(len(END_PHRASES)):\n        raise ValueError(\"END_PHRASE_INDEX_OUT_OF_RANGE\")\n    if str(nth_category) not in NTH_CATEGORIES:\n        raise ValueError(\"UNKNOWN_NTH_CATEGORY\")\n\n    by_word = dict(zip(FIXED_RELEVANT_WORDS, bits))\n    reasons: list[str] = []\n\n    if bool(nth_is_forbidden):\n        reasons.append(\"NTH_FIRST_WORD_IS_FORBIDDEN_WORD\")\n\n    if int(end_phrase_index) == 0:\n        if by_word[\"other\"]:\n            reasons.append(\"MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:other\")\n    else:\n        for word in (\"anything\", \"can\", \"help\"):\n            if by_word[word]:\n                reasons.append(\"MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:\" + word)\n\n    if by_word[\"section\"]:\n        reasons.append(\"MANDATORY_SECTION_SPLITTER_IS_FORBIDDEN_WORD:section\")\n\n    return tuple(reasons)\n\n\ndef exact_reachable_signature_count() -> int:\n    return len(enumerate_reachable_signatures())\n\n\ndef conservative_cartesian_bound() -> int:\n    \"\"\"Naive independent-bit bound after adding the section collision bit.\"\"\"\n    independent_boolean_dimensions = len(FIXED_RELEVANT_WORDS) + 1\n    return (\n        len(NTH_CATEGORIES)\n        * len(END_PHRASES)\n        * (2 ** independent_boolean_dimensions)\n    )\n\n\ndef prove_count() -> dict[str, Any]:\n    signatures = enumerate_reachable_signatures()\n    fixed_category_count = (\n        len(FIXED_RELEVANT_WORDS)\n        * (2 ** len(FIXED_RELEVANT_WORDS))\n        * len(END_PHRASES)\n    )\n    generic_per_end = (\n        (2 ** len(FIXED_RELEVANT_WORDS))\n        + ((2 ** len(FIXED_RELEVANT_WORDS)) - 1)\n    )\n    generic_count = generic_per_end * len(END_PHRASES)\n    derived = fixed_category_count + generic_count\n    if derived != len(signatures):\n        raise RuntimeError(\"SIGNATURE_COUNT_DERIVATION_MISMATCH\")\n    return {\n        \"schema\": SCHEMA,\n        \"status\": \"PASS__EXACT_REACHABLE_LEXICAL_SIGNATURE_QUOTIENT\",\n        \"word_domain_size\": WORD_DOMAIN_SIZE,\n        \"forbidden_sample_size\": FORBIDDEN_SAMPLE_SIZE,\n        \"fixed_relevant_words\": list(FIXED_RELEVANT_WORDS),\n        \"nth_categories\": list(NTH_CATEGORIES),\n        \"end_phrase_count\": len(END_PHRASES),\n        \"fixed_nth_category_signature_count\": fixed_category_count,\n        \"generic_nth_signature_count\": generic_count,\n        \"exact_reachable_signature_count\": len(signatures),\n        \"conservative_cartesian_bound\": conservative_cartesian_bound(),\n        \"prior_320_bound_is_sound_for_current_kernel\": 320 >= len(signatures),\n        \"raw_word_combination_enumeration_required\": False,\n        \"terminal_data_used\": False,\n        \"acceptance_credit\": False,\n    }\n\n\ndef run(args=None, root=None):\n    return prove_count()\n\n\nif __name__ == \"__main__\":\n    import json\n    print(json.dumps(prove_count(), indent=2, sort_keys=True))\n"
+          expected = "a87d53a8f21d1fa0b05b3e3500799f5153a649ad"
+          data = SUBJECT.encode("utf-8")
+          actual = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+          assert actual == expected, (actual, expected)
+
+          ns = {}
+          exec(compile(SUBJECT, "<exact-brain-subject>", "exec"), ns)
+          signatures = ns["enumerate_reachable_signatures"]()
+
+          fixed_nth = 5 * 32 * 2
+          generic_nth = (32 + 31) * 2
+          total = fixed_nth + generic_nth
+          assert (fixed_nth, generic_nth, total) == (320, 126, 446)
+          assert len(signatures) == total
+          assert len(set(signatures)) == total
+          assert ns["conservative_cartesian_bound"]() == 768
+          assert ns["prove_count"]()["prior_320_bound_is_sound_for_current_kernel"] is False
+
+          fixed_words = ("other", "anything", "can", "help", "section")
+          fixed_index = {w:i for i,w in enumerate(fixed_words)}
+          fixed = generic0 = generic1 = 0
+          for end_idx, nth_cat, bits, nth_forbidden in signatures:
+              assert end_idx in (0, 1)
+              assert len(bits) == 5
+              if nth_cat in fixed_index:
+                  fixed += 1
+                  assert nth_forbidden == bits[fixed_index[nth_cat]]
+              else:
+                  assert nth_cat == "generic"
+                  if nth_forbidden:
+                      generic1 += 1
+                      assert sum(bits) <= 4
+                  else:
+                      generic0 += 1
+          assert (fixed, generic0, generic1) == (320, 64, 62)
+
+          assert "MANDATORY_SECTION_SPLITTER_IS_FORBIDDEN_WORD:section" in ns["lexical_unsat_reasons"](
+              (0, "generic", (False, False, False, False, True), False)
+          )
+          assert ns["lexical_unsat_reasons"](
+              (0, "generic", (True, False, False, False, False), False)
+          ) == ("MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:other",)
+          assert ns["lexical_unsat_reasons"](
+              (0, "generic", (False, False, False, False, False), True)
+          ) == ("NTH_FIRST_WORD_IS_FORBIDDEN_WORD",)
+
+          print(json.dumps({
+              "status":"PASS__EXACT_BLOB_AND_446_REACHABLE_SIGNATURES_VERIFIED",
+              "subject_git_blob_sha":actual,
+              "fixed_nth":fixed_nth,
+              "generic_nth":generic_nth,
+              "exact_reachable_signature_count":total,
+              "conservative_cartesian_bound":768,
+              "prior_320_bound_valid":False,
+              "terminal_rows_read":0,
+              "terminal_prompts_read":0,
+              "terminal_scores_read":0,
+              "acceptance_credit":False
+          }, sort_keys=True))
