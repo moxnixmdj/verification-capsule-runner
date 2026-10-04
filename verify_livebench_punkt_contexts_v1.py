@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import hashlib
 import itertools
 import json
@@ -12,7 +13,8 @@ from collections import Counter
 
 ARCH_BLOB = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
 FEAS_BLOB = "7477f5ea5bdeac3595ee2784a38d078fe2f385b0"
-COMPOSER_BLOB = "ec6cee3e9cb36773527294c8677fe2d62453f712"\nV2_COMPOSER_BLOB = "d73ec366b32252996258eae6d10d67d4d6a5e042"
+COMPOSER_BLOB = "ec6cee3e9cb36773527294c8677fe2d62453f712"
+V2_COMPOSER_BLOB = "d73ec366b32252996258eae6d10d67d4d6a5e042"
 PLANNER_BLOB = "71e637c70edf1c582e28ea38b3b798965c803a06"
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 INSTRUCTIONS_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
@@ -23,7 +25,8 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject/livebench_composer_v2_20261005"
 ARCH = SUBJECT / "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py"
 FEAS = SUBJECT / "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py"
-COMPOSER = SUBJECT / "canonical/runtime/livebench_legacy15_contract_composer_v3.py"\nV2_COMPOSER = SUBJECT / "canonical/runtime/livebench_legacy15_contract_composer_v2.py"
+COMPOSER = SUBJECT / "canonical/runtime/livebench_legacy15_contract_composer_v3.py"
+V2_COMPOSER = SUBJECT / "canonical/runtime/livebench_legacy15_contract_composer_v2.py"
 PLANNER = SUBJECT / "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py"
 
 
@@ -43,7 +46,44 @@ def main() -> int:
     assert hash_object(ARCH) == ARCH_BLOB
     assert hash_object(FEAS) == FEAS_BLOB
     assert hash_object(COMPOSER) == COMPOSER_BLOB
+    assert hash_object(V2_COMPOSER) == V2_COMPOSER_BLOB
     assert hash_object(PLANNER) == PLANNER_BLOB
+
+    # Fail closed on any executable V2->V3 drift beyond the one intended
+    # synthetic sentence-boundary token change. Comments and the module
+    # explanatory docstring are non-executable and ignored.
+    def normalized_tree(path, rewrite_v3_question=False):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        if (
+            tree.body
+            and isinstance(tree.body[0], ast.Expr)
+            and isinstance(tree.body[0].value, ast.Constant)
+            and isinstance(tree.body[0].value.value, str)
+        ):
+            tree.body = tree.body[1:]
+
+        rewrites = 0
+
+        class BoundaryNormalizer(ast.NodeTransformer):
+            def visit_JoinedStr(self, node):
+                nonlocal rewrites
+                node = self.generic_visit(node)
+                if rewrite_v3_question:
+                    for value in node.values:
+                        if isinstance(value, ast.Constant) and value.value == "?":
+                            value.value = "."
+                            rewrites += 1
+                return node
+
+        tree = BoundaryNormalizer().visit(tree)
+        ast.fix_missing_locations(tree)
+        return ast.dump(tree, include_attributes=False), rewrites
+
+    v2_tree, v2_rewrites = normalized_tree(V2_COMPOSER, False)
+    v3_tree, v3_rewrites = normalized_tree(COMPOSER, True)
+    assert v2_rewrites == 0
+    assert v3_rewrites == 1, ("UNEXPECTED_V3_QUESTION_FSTRING_COUNT", v3_rewrites)
+    assert v2_tree == v3_tree, "EXECUTABLE_V2_V3_DRIFT_BEYOND_SYNTHETIC_BOUNDARY_TOKEN"
 
     live = pathlib.Path("/tmp/LiveBench")
     assert run(["git", "-C", str(live), "rev-parse", "HEAD"], capture_output=True).stdout.strip() == LIVEBENCH_COMMIT
@@ -280,7 +320,8 @@ def main() -> int:
         "subject_blobs": {
             "archetypes": ARCH_BLOB,
             "slot_feasibility": FEAS_BLOB,
-            "composer_v3": COMPOSER_BLOB,\n            "composer_v2_reference": V2_COMPOSER_BLOB,
+            "composer_v3": COMPOSER_BLOB,
+            "composer_v2_reference": V2_COMPOSER_BLOB,
             "pointwise_planner": PLANNER_BLOB,
         },
         "pinned_livebench": {
