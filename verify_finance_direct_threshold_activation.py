@@ -74,7 +74,11 @@ assert activation["authority"]=={
   "fresh_reality_authority":False,
 }
 
-for obj in (activation,receipt,theorem,residual):
+for k in ("incremental_spend_usd","new_reality_units_consumed","terminal_cases_consumed",
+          "acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+    assert activation["accounting"][k]==0,(activation["schema"],k)
+
+for obj in (receipt,theorem,residual):
     if "accounting" in obj:
         for k in ("incremental_spend_usd","new_reality_units_consumed","terminal_cases_consumed",
                   "acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
