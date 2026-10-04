@@ -1,0 +1,30 @@
+name: Verify Unknown-Domain V6 total exact
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/unknown_domain_v6_20261005/**"
+      - "verify_unknown_domain_v6_total_exact.py"
+      - ".github/workflows/verify-unknown-domain-v6-total-exact.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify frozen Unknown-Domain V6
+        run: python verify_unknown_domain_v6_total_exact.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v6-total-exact-verification
+          path: unknown_domain_v6_total_exact_verification.json
+          if-no-files-found: error
