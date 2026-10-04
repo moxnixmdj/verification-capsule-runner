@@ -1,0 +1,29 @@
+name: Verify LiveBench minimum-cut and numeric reduction
+
+on:
+  pull_request:
+    paths:
+      - "subject/livebench_reduction_m_20261005/**"
+      - "verify_livebench_reduction_m_20261005.py"
+      - ".github/workflows/verify-livebench-reduction-m-20261005.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run content-bound reduction verifier
+        run: python verify_livebench_reduction_m_20261005.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-reduction-independent-receipt
+          path: livebench_reduction_independent_receipt.json
+          if-no-files-found: error
