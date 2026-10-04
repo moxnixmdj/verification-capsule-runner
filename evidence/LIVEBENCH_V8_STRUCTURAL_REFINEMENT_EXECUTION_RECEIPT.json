@@ -1,0 +1,45 @@
+{
+  "acceptance_credit_delta": 0,
+  "activation_blob_sha": "27f7af154b419cc9961eb9f9882823a8dc9780ea",
+  "case_73_or_later": false,
+  "claim": {
+    "claim_ref": "refs/heads/livebench-v8-claims/78f7e799c3e1edf70516c02badebde0adbad7c5846aec8fbff53f8db2152f192",
+    "create_http_status": 201,
+    "epoch_digest_sha256": "78f7e799c3e1edf70516c02badebde0adbad7c5846aec8fbff53f8db2152f192",
+    "execution_started_before_claim": false,
+    "reference_created": true,
+    "response_object_sha": "c66c3ebffd3f0516ac7e29d62c3b88c800798c5d",
+    "response_ref": "refs/heads/livebench-v8-claims/78f7e799c3e1edf70516c02badebde0adbad7c5846aec8fbff53f8db2152f192",
+    "schema": "PROJECT_BRAIN_LIVEBENCH_V8_ATOMIC_ONE_USE_CLAIM_RECEIPT_V1",
+    "terminal_dataset_read_before_claim": false,
+    "uniqueness_linearization_event": "FIRST_ATOMIC_GIT_REF_CREATE_HTTP_201"
+  },
+  "new_case_exposure": false,
+  "promotion_authority": false,
+  "result": {
+    "acceptance_credit_authority": false,
+    "activation_blob_sha": "27f7af154b419cc9961eb9f9882823a8dc9780ea",
+    "base_executor_git_blob_sha": "2a57ce896ddbd6819246aab8b44d17a00f36b61e",
+    "benchmark_id": "LIVEBENCH_IF_2026_06_25",
+    "case_ids_emitted": false,
+    "classification_histogram": {
+      "ARCHITECTURAL_GAP:CONTROL_OR_FANOUT": 2,
+      "COMPOSITION_PRODUCER:UNRESOLVED_GROUNDED_CLAUSES": 27,
+      "POLICY_BLOCK:POST_PROMPT_CAPABILITY_ACQUISITION_FORBIDDEN": 43
+    },
+    "new_case_exposure": false,
+    "promotion_authority": false,
+    "prompt_text_emitted": false,
+    "raw_composition_detail_emitted": false,
+    "raw_exception_text_emitted": false,
+    "replay_prefix_limit": 72,
+    "replayed_already_exposed_cases": 72,
+    "response_text_emitted": false,
+    "schema": "PROJECT_BRAIN_LIVEBENCH_V8_STRUCTURAL_REFINEMENT_RESULT_V1",
+    "status": "DIAGNOSTIC_COMPLETE",
+    "unclassified_runtime_count": 0
+  },
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V8_STRUCTURAL_REFINEMENT_EXECUTION_RECEIPT_V1",
+  "workflow_run_id": "37194573632",
+  "workflow_sha": "c66c3ebffd3f0516ac7e29d62c3b88c800798c5d"
+}
