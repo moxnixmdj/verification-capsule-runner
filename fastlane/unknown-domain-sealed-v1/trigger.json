@@ -1,0 +1,8 @@
+{
+  "schema": "UNKNOWN_DOMAIN_SEALED_FASTLANE_TRIGGER_V1",
+  "subject_head_sha": "29fca3b5b1fcbbd1995900af0b25376bd3b587f7",
+  "lease_git_blob_sha": "8ecdd481f3c87729618ea9d17cfae33e8328ed94",
+  "production_workflow_git_blob_sha": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+  "production_authority": false,
+  "production_cases_generated": 0
+}
