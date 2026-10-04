@@ -254,6 +254,17 @@ receipt={
  "adversarial_bytes_subclass_totality_pass":True,
  "adversarial_bytes_hooks_overridden":["__getattribute__","__bytes__","__buffer__","__len__","__getitem__","__iter__"],
  "base_bytes_descriptor_full_slice_verified":True,
+ "repair_properties_verified":[
+   "STR_GATE_USES_BASE_STR_STRIP_DESCRIPTOR",
+   "STR_CANONICALIZATION_USES_BASE_STR_ENCODE_DESCRIPTOR",
+   "BYTES_SECRET_MATERIALIZATION_USES_BASE_BYTES_GETITEM_FULL_SLICE",
+   "NO_INSTANCE_STRIP_ENCODE_BYTES_BUFFER_LEN_GETITEM_OR_ITER_HOOK_IS_LOAD_BEARING"
+ ],
+ "required_subclass_attack_properties_pass":True,
+ "all_2048_surrogate_codepoints_rechecked":surrogate_codepoints==2048,
+ "forced_total_token_collision_regression_rechecked":True,
+ "nonproduction_ordinary_edge_matrix_rechecked":cases==6912,
+ "zero_production_or_terminal_cases_consumed":True,
  "subclass_nonproduction_cases_exact_scorer_pass":27,
  "v4_strict_utf8_counterexample_preserved":v4_surrogate_counterexample,
  "forced_total_token_collision_survival":True,
@@ -267,7 +278,7 @@ receipt={
    "SEPARATE_FAIL_CLOSED_ROOT3_AND_ACCEPTANCE_REDUCTION_REQUIRED"
  ],
 }
-Path("unknown_domain_v6_total_string_receipt.json").write_text(
+Path("unknown_domain_v6_subclass_repair_receipt.json").write_text(
     json.dumps(receipt,indent=2,sort_keys=True,ensure_ascii=True)+"\n",encoding="utf-8"
 )
 print(json.dumps(receipt,sort_keys=True,ensure_ascii=True))
