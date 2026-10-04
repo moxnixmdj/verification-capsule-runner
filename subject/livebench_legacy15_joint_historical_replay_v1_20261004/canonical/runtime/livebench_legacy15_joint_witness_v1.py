@@ -3,8 +3,10 @@
 
 Reads visible prompt text only through the historical-envelope compiler V4.
 It never consumes instruction_id_list, hidden kwargs, question ids, active row
-metadata, prior responses, or scores. Unsupported/contradictory compositions
-fail closed.
+metadata, prior responses, or scores. Unsupported compositions fail closed.
+Source-semantic contradictions with a proved minimum unavoidable failure set are
+handled by satisfying every remaining checker, which attains the rowwise strict
+scorer ceiling for that contract.
 
 This is a candidate until independently replayed against the exact frozen legacy
 checker bytes on the removed 200-row predecessor population.
@@ -66,6 +68,48 @@ def _get_one(constraints: list[dict[str, Any]], iid: str) -> dict[str, Any] | No
     if len(xs) > 1:
         raise JointWitnessError("DUPLICATE_ACTIVE_CONSTRAINT:" + iid)
     return xs[0] if xs else None
+
+
+def _forced_forbidden_collision_words(constraints: list[dict[str, Any]]) -> list[str]:
+    """Whole words simultaneously forbidden and forced by another exact checker."""
+    forbidden = {w.lower() for w in _forbidden(constraints)}
+    forced: set[str] = set()
+
+    nth = _get_one(constraints, "length_constraints:nth_paragraph_first_word")
+    if nth:
+        first = str(_slots(nth).get("first_word") or "").strip().lower()
+        if first:
+            forced.add(first)
+
+    sections = _get_one(constraints, "detectable_format:multiple_sections")
+    if sections:
+        splitter = str(_slots(sections).get("section_spliter") or "").strip().lower()
+        forced.update(re.findall(r"\b\w+\b", splitter))
+
+    end = _get_one(constraints, "startend:end_checker")
+    if end:
+        phrase = str(_slots(end).get("end_phrase") or "").strip().lower()
+        forced.update(re.findall(r"\b\w+\b", phrase))
+
+    return sorted(forbidden & forced)
+
+
+def _known_unavoidable_failures(constraints: list[dict[str, Any]]) -> list[str]:
+    """Minimum independent checker failures implied by frozen public semantics."""
+    out: list[str] = []
+    sentence = _get_one(constraints, "length_constraints:number_sentences")
+    if sentence:
+        s = _slots(sentence)
+        if str(s.get("relation") or "") == "less than" and int(s.get("num_sentences") or 0) <= 1:
+            # Strict evaluation also requires response.strip(). Punkt's frozen
+            # tokenizer emits at least one sentence for every such nonblank
+            # response, so "< 1 sentence" cannot pass.
+            out.append("length_constraints:number_sentences")
+    if _forced_forbidden_collision_words(constraints):
+        # One forbidden_words checker conflicts with one or more independently
+        # forced whole words. Failing forbidden_words alone is the minimum cut.
+        out.append("keywords:forbidden_words")
+    return out
 
 def _special_json(constraints: list[dict[str, Any]]) -> str:
     import json
@@ -240,10 +284,16 @@ def _build_general(constraints: list[dict[str, Any]]) -> str:
             core = '"' + core.strip('"') + '"'
 
     # Final whole-word forbidden guard. Required/forbidden overlap is handled
-    # above, but other generated structure may still collide with a forbidden word.
+    # above. Remaining collisions are allowed only when the same whole word is
+    # *forced* by another exact checker (nth-first-word, section splitter, or
+    # exact end phrase). In that source-semantic contradiction, satisfying every
+    # other checker and deliberately sacrificing forbidden_words is rowwise
+    # scorer-optimal. Any unproved collision still fails closed.
+    unavoidable_collision_words = set(_forced_forbidden_collision_words(constraints))
     for w in forbidden:
         if re.search(r"\b" + re.escape(w) + r"\b", core, re.I):
-            raise JointWitnessError("FORBIDDEN_COLLISION:" + w)
+            if w.lower() not in unavoidable_collision_words:
+                raise JointWitnessError("UNPROVED_FORBIDDEN_COLLISION:" + w)
 
     # Exact final word bound check after postscript/end/quotation.
     if words:
@@ -324,6 +374,8 @@ def solve(prompt: str) -> dict[str, Any]:
         "route": route,
         "instruction_ids": ids,
         "constraint_count": len(ids),
+        "known_unavoidable_failures": _known_unavoidable_failures(constraints),
+        "forced_forbidden_collision_words": _forced_forbidden_collision_words(constraints),
         "hidden_instruction_ids_used": False,
         "hidden_kwargs_used": False,
         "terminal_case_metadata_used": False,
