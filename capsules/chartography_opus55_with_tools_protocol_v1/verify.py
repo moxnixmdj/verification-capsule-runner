@@ -76,10 +76,10 @@ card=fetch(URLS["system_card"])
 surge=fetch(URLS["surge_readme"],2_000_000)
 
 assert "Chartography" in launch and "89.0%" in launch and "with tools" in launch.lower()
+assert "adaptive thinking" in launch.lower()
+assert "max effort" in launch.lower()
 for phrase in [
   "Chartography",
-  "adaptive thinking",
-  "max effort",
   "evaluated with and without tools",
   "provided with a container",
   "image file and standard libraries installed",
