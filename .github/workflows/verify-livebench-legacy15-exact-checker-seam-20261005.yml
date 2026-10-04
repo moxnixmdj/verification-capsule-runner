@@ -1,0 +1,38 @@
+name: Verify LiveBench legacy15 exact checker seam 20261005
+
+on:
+  push:
+    branches:
+      - "verify/livebench-legacy15-exact-checker-seam-20261005"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout verification capsule
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned LiveBench
+        uses: actions/checkout@v4
+        with:
+          repository: LiveBench/LiveBench
+          ref: 8f8e5c381a16e3f24257776edd53471fe86f8091
+          path: livebench-src
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install exact checker runtime dependencies
+        run: |
+          python -m pip install --disable-pip-version-check langdetect immutabledict nltk
+          python -m nltk.downloader punkt punkt_tab
+
+      - name: Verify exact checker seam
+        run: python verify_livebench_legacy15_exact_checker_seam_20261005.py
