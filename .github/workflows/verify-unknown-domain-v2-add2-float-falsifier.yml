@@ -1,0 +1,58 @@
+name: Verify Unknown-Domain V2 ADD2 float falsifier
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-unknown-domain-v2-add2-float-falsifier.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact frozen subject blobs
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/unknown_domain_direct_candidate_v2.py":"4470716f95a559a700e461262df909ae19a41651",
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+            "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
+            "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
+          }
+          def blob(p):
+              b=Path(p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          got={p:blob(p) for p in expected}
+          assert got==expected,(got,expected)
+          print("exact subject bindings PASS")
+          PY
+      - name: Reproduce exact deterministic counterexample
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from canonical.runtime import unknown_domain_direct_candidate_v2 as c2
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as harness
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v2 as g2
+          secret=hashlib.sha256(b"secret0").digest()
+          beacon="beacon-qualification-0000000000000000"
+          visible,hidden=g2._transfer_case(secret,beacon,4,namespace="QUALONLY")
+          out=harness.execute_case(candidate_step=c2.step,case_visible=visible,hidden_record=hidden)
+          assert out["scorer_result"]["pass"] is False, out["scorer_result"]
+          assert "DOMAIN_B_TERMINAL_CONSEQUENCE_WRONG" in out["scorer_result"]["errors"]
+          got=out["candidate_terminal_action"]["terminal_consequence"]
+          gold=hidden["gold_terminal_consequence"]
+          assert got != gold
+          delta=abs(got-gold)
+          assert 0 < delta < 1e-12
+          assert set(out["candidate_terminal_action"]["support_feature_ids"]) == set(hidden["transfer_relevant_feature_ids"])
+          print(json.dumps({"v2_universal_theorem":False,"support_correct":True,"got":got,"gold":gold,"abs_delta":delta},sort_keys=True))
+          PY
