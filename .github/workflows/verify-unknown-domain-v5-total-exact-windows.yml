@@ -1,0 +1,31 @@
+name: Verify Unknown-Domain V5 total exact Windows fastlane
+
+on:
+  push:
+    branches:
+      - verify/unknown-domain-v5-total-exact-20261005-sol
+    paths:
+      - ".github/workflows/verify-unknown-domain-v5-total-exact-windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run independent V5 verifier
+        run: python verification/unknown_domain_v5_total_exact_independent.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v5-total-exact-windows-receipt
+          path: unknown_domain_v5_total_exact_receipt.json
+          if-no-files-found: warn
