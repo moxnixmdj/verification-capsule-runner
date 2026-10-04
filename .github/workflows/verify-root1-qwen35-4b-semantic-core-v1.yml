@@ -1,0 +1,73 @@
+name: Verify Root1 Qwen3.5 4B semantic core V1
+
+on:
+  push:
+    branches: ["verify/root1-qwen35-4b-semantic-core-v1-20261004"]
+    paths:
+      - "verify_root1_qwen35_4b_semantic_core_v1.py"
+      - ".github/workflows/verify-root1-qwen35-4b-semantic-core-v1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record pre-acquisition resource geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '/MemTotal:/ {print}' /proc/meminfo
+          df -h .
+          nproc
+
+      - name: Build the already-proved pinned llama.cpp runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/llama.cpp
+          git -C /tmp/llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C /tmp/llama.cpp fetch --depth 1 origin 7fe450e19305b828c199d602c23a8337aaa1f03b
+          git -C /tmp/llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/llama.cpp rev-parse HEAD)" = "7fe450e19305b828c199d602c23a8337aaa1f03b"
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build             -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_OPENMP=ON -DLLAMA_CURL=OFF
+          cmake --build /tmp/llama.cpp/build -j2 --target llama-cli
+          /tmp/llama.cpp/build/bin/llama-cli --version
+
+      - name: Fetch exact previously executed 4B carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL=/tmp/Qwen_Qwen3.5-4B-Q4_K_M.gguf
+          curl --fail --location --retry 3 --output "$MODEL"             "https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/ba06320255db2dbec194dad738d066be90dabf29/Qwen_Qwen3.5-4B-Q4_K_M.gguf?download=true"
+          test "$(stat -c '%s' "$MODEL")" = "3013027808"
+          echo "13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983  $MODEL" | sha256sum -c -
+
+      - name: Run exact frozen eight-task semantic gate
+        id: semantic
+        continue-on-error: true
+        shell: bash
+        run: |
+          python verify_root1_qwen35_4b_semantic_core_v1.py             --llama-cli /tmp/llama.cpp/build/bin/llama-cli             --model /tmp/Qwen_Qwen3.5-4B-Q4_K_M.gguf             --result diagnostics/root1-qwen35-4b-semantic-core-v1/result.json
+
+      - name: Persist result on isolated verifier branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f diagnostics/root1-qwen35-4b-semantic-core-v1/result.json
+          git config user.name "brain-verifier"
+          git config user.email "brain-verifier@users.noreply.github.com"
+          git add diagnostics/root1-qwen35-4b-semantic-core-v1/result.json
+          git commit -m "Record Qwen3.5 4B Root1 semantic-core result" || true
+          git push origin HEAD:verify/root1-qwen35-4b-semantic-core-v1-20261004
+
+      - name: Enforce frozen candidate gate
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.semantic.outcome }}" = "success"
