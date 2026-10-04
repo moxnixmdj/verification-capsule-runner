@@ -15,18 +15,18 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          apt-cache policy python3-opencv libopencv-core406 | tee /tmp/policy.txt
+          apt-cache policy python3-opencv | tee /tmp/policy.txt
           cd /tmp
-          apt-get download python3-opencv libopencv-core406 >/tmp/download.log 2>&1
-          sha256sum python3-opencv_*.deb libopencv-core406_*.deb | tee /tmp/archive_sha256.txt
+          apt-get download python3-opencv >/tmp/download.log 2>&1
+          sha256sum python3-opencv_*.deb | tee /tmp/archive_sha256.txt
           sudo apt-get install -y -qq python3-opencv >/tmp/install.log
           /usr/bin/python3 - <<'PY'
           import cv2, json, platform
-          info={
+          print(json.dumps({
             "cv2_version":cv2.__version__,
             "python":platform.python_version(),
-            "build_information_head":cv2.getBuildInformation().splitlines()[:40],
-          }
-          print(json.dumps(info,indent=2,sort_keys=True))
+            "build_information_head":cv2.getBuildInformation().splitlines()[:50],
+          },indent=2,sort_keys=True))
           PY
-          dpkg-query -W -f='${Package}=${Version}\n' python3-opencv libopencv-core406
+          dpkg-query -W -f='${Package}=${Version}\n' python3-opencv
+          dpkg-query -W -f='${Package}=${Version}\n' 'libopencv-*' | sort
