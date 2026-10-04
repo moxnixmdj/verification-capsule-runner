@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Execution trigger: 2026-10-04 canonical Root1 resource-minimum qualification; verifier logic unchanged.
 from __future__ import annotations
 
 import json
