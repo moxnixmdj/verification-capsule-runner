@@ -1,3 +1,4 @@
+# frozen-runtime-diagnostic-trigger-v1
 #!/usr/bin/env python3
 from __future__ import annotations
 import hashlib, importlib, json, os, pathlib, shutil, sys, tempfile, traceback
