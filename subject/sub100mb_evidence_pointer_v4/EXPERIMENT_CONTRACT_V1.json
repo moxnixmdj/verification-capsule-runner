@@ -1,0 +1,86 @@
+{
+  "schema": "PROJECT_BRAIN_SUB100MB_EVIDENCE_POINTER_EXPERIMENT_V4",
+  "date": "2026-10-04",
+  "status": "PRECOMMITTED_CAUSAL_ABLATION__ZERO_CREDIT",
+  "objective": "TEST_WHETHER_VISIBLE_SOURCE_CANDIDATE_ENUMERATION_PLUS_MANDATORY_EVIDENCE_POINTERS_CAN_RESOLVE_THE_SEMANTIC_SELECTION_AND_NUMERIC_ASSOCIATION_FAILURE_LEFT_AFTER_V3_GRAMMAR_CONSTRAINTS",
+  "baseline_v3": {
+    "workflow_run_id": 37183359069,
+    "model_learned_bytes": 93511232,
+    "tasks_solved": 0,
+    "tasks": 8,
+    "decoder_errors": 0,
+    "conclusion": "OUTPUT_FORMATTING_ELIMINATED_BUT_SEMANTIC_SELECTION_REMAINED_DOMINANT"
+  },
+  "subject": {
+    "script_path": "sub100mb_evidence_pointer_smoke_v4.py",
+    "script_git_blob_sha": "44e793b5549c0bb9a658569b0f9387dd167a1206",
+    "task_population": "IDENTICAL_8_V1_SYNTHETIC_NONTERMINAL_PARTSPECLITE_TEXT_SURROGATES",
+    "model_artifact": "SmolLM2-135M-Instruct-Q3_K_M.gguf",
+    "model_sha256": "61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4",
+    "learned_bytes": 93511232
+  },
+  "intervention": {
+    "choice_values": "UNCHANGED_ALLOWED_ENUMS",
+    "numeric_values": "ENUMERATE_NUMERIC_LITERALS_WORD_NUMBERS_AND_FIXED_STRUCTURAL_COUNTS_0_TO_8_FROM_VISIBLE_SOURCE_ONLY",
+    "evidence": "MODEL_MUST_SELECT_ONE_VISIBLE_SOURCE_CLAUSE_INDEX",
+    "generation": "ARBITRARY_NUMERIC_GENERATION_FORBIDDEN",
+    "hidden_expected_feedback": false
+  },
+  "constants_held_fixed": {
+    "model": true,
+    "quantization": true,
+    "learned_state_bytes": true,
+    "llama_cpp_commit": "11fe02151f79c41d0d4af7da708755d73b9c0da6",
+    "context_size": 2048,
+    "cpu_threads": 2,
+    "parallel_slots": 1,
+    "temperature": 0,
+    "first_attempt_seed_namespace": true,
+    "tasks": true,
+    "atomic_questions": true,
+    "deterministic_assembly": true,
+    "exact_final_scoring": true,
+    "incremental_spend_usd": 0
+  },
+  "validity_gate": {
+    "decoder_errors_required": 0,
+    "model_bytes_required": 93511232,
+    "strict_learned_budget_bytes_exclusive": 100000000,
+    "task_count_required": 8
+  },
+  "precommitted_interpretation": [
+    {
+      "tasks_solved": 0,
+      "disposition": "EVIDENCE_POINTER_AND_CANDIDATE_SELECTION_NOT_SUFFICIENT__DEMOTE_THIS_CONTROLLER_FOR_THE_SEMANTIC_TRANSFORM"
+    },
+    {
+      "tasks_solved": "1-2",
+      "disposition": "SMALL_GROUNDING_GAIN__CONTROLLER_ARCHITECTURE_CHANGE_DOMINATES_MORE_DECOMPOSITION"
+    },
+    {
+      "tasks_solved": "3-7",
+      "disposition": "MATERIAL_GROUNDING_GAIN__ANALYZE_RESIDUAL_FIRST_ERROR_CLASSES_BEFORE_CONTROLLER_REPLACEMENT"
+    },
+    {
+      "tasks_solved": 8,
+      "disposition": "SURROGATE_POPULATION_CLOSED_BY_VISIBLE_EVIDENCE_SELECTION__NO_OPEN_WORLD_OR_FRONTIER_INFERENCE"
+    }
+  ],
+  "next_if_zero_to_two": "SCREEN_STRONGER_SUB100MB_CONTROLLER_ARCHITECTURES_UNDER_EXACT_BYTE_ACCOUNTING__PRIORITIZE_VOCABULARY_FREE_OR_VOCABULARY_COMPRESSED_DESIGNS_AND_NO_EXTERNAL_LEARNED_PROVIDER",
+  "hard_nonclaims": [
+    "NO_FRONTIER_CAPABILITY_CLAIM",
+    "NO_IMAGE_PERCEPTION_CLAIM",
+    "NO_OPEN_WORLD_GENERALIZATION_CLAIM",
+    "NO_MINIMUM_LEARNED_STATE_CLAIM",
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
+    "NO_TERMINAL_CASES_CONSUMED"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
