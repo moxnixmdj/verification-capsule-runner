@@ -373,7 +373,7 @@ def claim_then_execute(
                 "target_predicate":TARGET,
                 "authority_claim_id":claim_ref,
                 "exception_type":type(exc).__name__,
-                "exception_message":str(exc),
+                "exception_detail_persisted":False,
                 "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
                 "persistent_learned_bytes":0,
                 "external_frontier_model_calls":0,
