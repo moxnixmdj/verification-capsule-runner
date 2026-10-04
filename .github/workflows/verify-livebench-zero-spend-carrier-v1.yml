@@ -10,9 +10,6 @@ on:
       - "canonical/runtime/capability_proposal_generators.py"
       - "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json"
   workflow_dispatch:
-permissions:
-  contents: read
-  actions: read
 jobs:
   verify:
     runs-on: ubuntu-24.04
