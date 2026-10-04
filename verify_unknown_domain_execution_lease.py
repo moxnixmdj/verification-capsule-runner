@@ -30,6 +30,9 @@ assert lease["verification_chain"]["qualification"]["fresh_hidden_scored_cases"]
 assert lease["verification_chain"]["final_activation"]["conclusion"]=="success"
 assert lease["verification_chain"]["point_of_use_preflight"]["status"]=="READY_FOR_ATOMIC_ONE_USE_CLAIM_ONLY"
 assert lease["verification_chain"]["production_launcher"]["conclusion"]=="success"
+assert lease["verification_chain"]["first_launch_zero_case_failure"]["production_cases_consumed"]==0
+assert lease["verification_chain"]["first_launch_zero_case_failure"]["atomic_claim_created"] is False
+assert lease["verification_chain"]["production_launcher_repair"]["candidate_or_evaluator_bytes_changed"] is False
 assert lease["atomic_claim"]["required_first_claim_create_http_status"]==201
 assert lease["atomic_claim"]["claim_uniqueness_source"]=="ATOMIC_CREATE_RESPONSE"
 assert lease["authority"]=={"global_fresh_reality":False,"promotion":False,"acceptance_credit":False}
@@ -42,7 +45,7 @@ for rel,expected in lease["exact_components"].items():
 digest=hashlib.sha256(raw).hexdigest()
 print(json.dumps({
  "status":"INDEPENDENT_EXECUTION_LEASE_PASS",
- "execution_lease_git_blob_sha":"26f98012ecf01c6a3f20e855bdebf60cf70d1c1f",
+ "execution_lease_git_blob_sha":blob(raw),
  "execution_lease_sha256":digest,
  "exact_component_count":len(lease["exact_components"]),
  "production_cases_allowed":27,
