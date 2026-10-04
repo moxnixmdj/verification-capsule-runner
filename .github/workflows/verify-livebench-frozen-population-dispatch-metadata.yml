@@ -1,0 +1,26 @@
+name: Verify LiveBench Frozen Population Dispatch Metadata
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_frozen_population_dispatch_metadata.py
+      - .github/workflows/verify-livebench-frozen-population-dispatch-metadata.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --quiet pyarrow==19.0.1
+      - run: python verify_livebench_frozen_population_dispatch_metadata.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-frozen-population-dispatch-metadata-receipt
+          path: livebench_frozen_population_dispatch_metadata_receipt.json
+          if-no-files-found: error
