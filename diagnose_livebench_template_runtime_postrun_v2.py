@@ -13,6 +13,7 @@ FILES={
  "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json":"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json",
  "canonical/runtime/capability_planner.py":"canonical/runtime/capability_planner.py",
  "canonical/runtime/capability_proposal_generators.py":"canonical/runtime/capability_proposal_generators.py",
+ "canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py":"canonical/runtime/bound_capabilities/plain_goal_bound_grounding.py",
 }
 DRIVER=r"""
 import json,sys
