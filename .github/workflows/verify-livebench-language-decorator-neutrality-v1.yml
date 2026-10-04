@@ -1,0 +1,49 @@
+name: Verify LiveBench language decorator neutrality V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_language_decorator_20261005/**"
+      - "verify_livebench_language_decorator_neutrality_v1.py"
+      - ".github/workflows/verify-livebench-language-decorator-neutrality-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Install exact checker dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --quiet \
+            nltk==3.10.3 langdetect==1.0.9 immutabledict==4.3.1
+      - name: Checkout exact frozen LiveBench source
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench
+          git init -q /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch -q --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout -q --detach FETCH_HEAD
+      - name: Run independent language decorator neutrality matrix
+        run: python verify_livebench_language_decorator_neutrality_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_language_decorator_neutrality_verification.json; then
+            cat livebench_language_decorator_neutrality_verification.json
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-language-decorator-neutrality
+          path: livebench_language_decorator_neutrality_verification.json
+          if-no-files-found: error
