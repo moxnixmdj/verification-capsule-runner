@@ -17,7 +17,7 @@ jobs:
           python-version: "3.12"
       - name: Verify exact subject blobs
         run: |
-          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v16.py)" = "28236d84fd783bea7ec53f0b7449d31f2af6f093"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v16.py)" = "bd36e3d4d24feb04fee491d485ceae0d8107c66c"
           test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v16.py)" = "d9b2c024dc3a2b76fac1542b2e19edb35d6170f7"
           test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v14.py)" = "fc0327ff562d855280617a6e73748d55146c5c8b"
           test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v13.py)" = "d36f5f29060db6ad5db5f44b16751099f54873ca"
