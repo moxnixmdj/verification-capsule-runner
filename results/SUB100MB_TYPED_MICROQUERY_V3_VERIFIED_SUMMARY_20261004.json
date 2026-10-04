@@ -1,0 +1,113 @@
+{
+  "schema": "PROJECT_BRAIN_SUB100MB_TYPED_MICROQUERY_V3_VERIFIED_SUMMARY",
+  "date": "2026-10-04",
+  "status": "PUBLIC_RUNNER_EMPIRICAL_PASS__NEGATIVE_ARCHITECTURE_RESULT__ZERO_TERMINAL_CREDIT",
+  "subject": {
+    "source_head_sha": "53cc91f8f6532ba259902e79f79b17f33c9b40eb",
+    "script_path": "sub100mb_typed_microquery_smoke_v3.py",
+    "script_git_blob_sha": "939bbd0b5aed550c222f13d022a7ec520ab7f474",
+    "experiment_contract_path": "subject/sub100mb_typed_microquery_v3/EXPERIMENT_CONTRACT_V1.json",
+    "experiment_contract_git_blob_sha": "81c7d04a081882009506f191a77ce3000d6737d6",
+    "workflow_git_blob_sha": "ca2b8a3eb64ab221f8cdfb7d525d5118388316c6"
+  },
+  "model": {
+    "artifact": "SmolLM2-135M-Instruct-Q3_K_M.gguf",
+    "sha256": "61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4",
+    "learned_bytes": 93511232,
+    "strict_budget_bytes_exclusive": 100000000,
+    "remaining_bytes": 6488768
+  },
+  "intervention": {
+    "baseline": "V2_SAME_MODEL_SAME_8_TASKS__0_OF_8",
+    "primary_change": "LLAMA_CPP_JSON_SCHEMA_CONSTRAINED_ATOMIC_OUTPUT",
+    "decoder_errors": 0,
+    "decoder_error_rate": 0,
+    "conclusion": "OUTPUT_CHANNEL_NONCOMPLIANCE_ELIMINATED_WITHOUT_ANY_TASK_LEVEL_GAIN"
+  },
+  "public_runner": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "pull_request": 1722,
+    "workflow_run_id": 37183359069,
+    "workflow_job_id": 111380193067,
+    "artifact_id": 11295938354,
+    "artifact_digest": "sha256:6e47275de9b7f8543cc6ac1daaa8e2d29b5610f4fe5bda372217a6a626726348",
+    "conclusion": "success"
+  },
+  "result": {
+    "tasks_solved": 0,
+    "tasks": 8,
+    "task_success_rate": 0,
+    "task_success_wilson95": [
+      0,
+      0.32440756488388023
+    ],
+    "atomic_model_queries": 29,
+    "mean_atomic_queries_per_task": 3.625,
+    "decoder_errors": 0
+  },
+  "task_failures": [
+    {
+      "task_id": "plate_one_hole",
+      "first_semantic_error": "GEOMETRY_KIND_REVOLVED_INSTEAD_OF_EXTRUDED",
+      "downstream": "SEGMENT_COUNT_10_INVALID"
+    },
+    {
+      "task_id": "plate_two_holes",
+      "first_semantic_error": "GEOMETRY_KIND_REVOLVED_INSTEAD_OF_EXTRUDED",
+      "downstream": "SEGMENT_COUNT_1E12_INVALID"
+    },
+    {
+      "task_id": "counterbore_plate",
+      "first_semantic_error": "GEOMETRY_KIND_REVOLVED_INSTEAD_OF_EXTRUDED",
+      "downstream": "SEGMENT_COUNT_10_INVALID"
+    },
+    {
+      "task_id": "stepped_shaft",
+      "first_semantic_error": "GEOMETRY_KIND_CORRECT_REVOLVED",
+      "downstream": "SEGMENT_COUNT_1E12_INVALID"
+    },
+    {
+      "task_id": "l_bracket",
+      "first_semantic_error": "GEOMETRY_KIND_EXTRUDED_INSTEAD_OF_MULTIBODY",
+      "downstream": "PROFILE_POLYGON_AND_POINT_COUNT_1E15_INVALID"
+    },
+    {
+      "task_id": "triangular_prism",
+      "first_semantic_error": "GEOMETRY_KIND_REVOLVED_INSTEAD_OF_EXTRUDED",
+      "downstream": "SEGMENT_COUNT_1E12_INVALID"
+    },
+    {
+      "task_id": "unsupported_envelope",
+      "first_semantic_error": "GEOMETRY_KIND_CORRECT_UNSUPPORTED",
+      "downstream": "HEIGHT_120_INSTEAD_OF_80_AND_HOLE_COUNT_1E15"
+    },
+    {
+      "task_id": "inch_plate",
+      "first_semantic_error": "UNIT_MM_INSTEAD_OF_IN_AND_GEOMETRY_MULTIBODY_INSTEAD_OF_EXTRUDED",
+      "downstream": "BODY_COUNT_1E12_INVALID"
+    }
+  ],
+  "precommitted_disposition": "GRAMMAR_CONSTRAINT_NOT_SUFFICIENT__SEMANTIC_SELECTION_OR_DECOMPOSITION_REMAINS_DOMINANT",
+  "causal_update": {
+    "v2_output_formatting_hypothesis": "FALSIFIED_AS_SUFFICIENT_EXPLANATION",
+    "current_bottleneck": "SEMANTIC_FIELD_SELECTION_AND_NUMERIC_ASSOCIATION",
+    "reopen_same_controller_rule": "ONLY_NEW_CAUSAL_SEMANTIC_MECHANISM_MAY_REOPEN",
+    "next_high_information_intervention": "EVIDENCE_POINTER_FIRST__DETERMINISTIC_EXTRACT_THEN_TYPED_SELECT__MEASURE_POINTER_CORRECTNESS_BEFORE_VALUE_GENERATION"
+  },
+  "hard_nonclaims": [
+    "DOES_NOT_FALSIFY_H100",
+    "DOES_NOT_ESTABLISH_MINIMUM_LEARNED_STATE",
+    "DOES_NOT_PROVE_ALL_SUB100MB_CONTROLLERS_FAIL",
+    "NO_FRONTIER_CAPABILITY_CLAIM",
+    "NO_TERMINAL_CASES_CONSUMED",
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
