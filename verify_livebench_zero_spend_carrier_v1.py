@@ -169,4 +169,8 @@ def main()->int:
     return 0 if not errors else 1
 
 if __name__=="__main__":
-    raise SystemExit(main())
+    rc=main()
+    if rc==0:
+        import diagnose_livebench_template_runtime_postrun as postrun_diag
+        rc=postrun_diag.main()
+    raise SystemExit(rc)
