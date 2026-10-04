@@ -1,0 +1,48 @@
+name: Isolated Unknown-Domain V2 universal proof
+
+on:
+  push:
+    branches:
+      - exec/unknown-domain-v2-universal-proof-isolated-20261005
+    paths:
+      - verification/unknown_domain_v2_universal_proof_isolated_v1.py
+      - .github/workflows/isolated-unknown-domain-v2-universal-proof.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: isolated-unknown-domain-v2-universal-proof-20261005
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: exec/unknown-domain-v2-universal-proof-isolated-20261005
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run exact content-bound verifier
+        run: python3 verification/unknown_domain_v2_universal_proof_isolated_v1.py
+      - name: Seal success receipt into isolated branch
+        run: |
+          mkdir -p receipts
+          cp unknown_domain_v2_universal_proof_receipt.json receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json
+          python3 - <<'PY'
+          import json, pathlib
+          p=pathlib.Path("receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json")
+          d=json.loads(p.read_text())
+          d["isolated_runner_branch"]="exec/unknown-domain-v2-universal-proof-isolated-20261005"
+          d["isolated_runner_workflow"]="isolated-unknown-domain-v2-universal-proof.yml"
+          d["isolated_runner_commit_receipt"]=True
+          p.write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
+          PY
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json
+          git commit -m "Seal isolated Unknown-Domain universal proof receipt"
+          git push origin HEAD:exec/unknown-domain-v2-universal-proof-isolated-20261005
