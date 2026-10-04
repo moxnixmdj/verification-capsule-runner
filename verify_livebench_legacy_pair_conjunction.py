@@ -9,9 +9,9 @@ import sys
 import tempfile
 import urllib.request
 
-BRAIN_COMMIT = "410579713f89ba64a542870b0820dbb23581b3e8"
+BRAIN_COMMIT = "9c33b53de768c65dea9bd906662952ff1031d0e2"
 SOLVER_PATH = "canonical/runtime/livebench_legacy_ifeval_constructive_solver_v1.py"
-SOLVER_BLOB = "c293426df092ca1b82d77aa194ef182b510a0294"
+SOLVER_BLOB = "45ad0f2b3818ef733cb4d3c9fb92c28d1e24cddb"
 INVERTER_PATH = "canonical/runtime/livebench_legacy_ifeval_prompt_inverter_v1.py"
 INVERTER_BLOB = "74904d2a00ed3f0bb2e8ab7787c59c0a8f828f7a"
 
