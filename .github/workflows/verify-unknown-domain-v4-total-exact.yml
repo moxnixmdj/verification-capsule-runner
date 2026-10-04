@@ -1,0 +1,37 @@
+name: Verify Unknown-Domain V4 total exact conjunction
+
+on:
+  push:
+    branches:
+      - verify/unknown-domain-v4-total-exact-20261005
+    paths:
+      - 'verification/unknown_domain_v4_total_exact_independent.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v4_universal_proof_v1.py'
+      - '.github/workflows/verify-unknown-domain-v4-total-exact.yml'
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent total+exact verifier
+        run: python verification/unknown_domain_v4_total_exact_independent.py
+      - name: Upload verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v4-total-exact-receipt
+          path: unknown_domain_v4_total_exact_receipt.json
+          if-no-files-found: error
+          retention-days: 7
