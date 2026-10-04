@@ -1,6 +1,9 @@
 name: Verify terminal structural breakthrough V1
 
 on:
+  push:
+    branches:
+      - 'verify/terminal-structural-breakthrough-v1-20261004-sol'
   pull_request:
     paths:
       - 'capsules/terminal_structural_breakthrough_v1/**'
