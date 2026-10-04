@@ -81,11 +81,11 @@ def main():
 
         ci=current.InputExample(
             key=2,
-            instruction_id_list=["format:title_case"],
-            prompt="Write two title-cased words.",
+            instruction_id_list=["format:no_whitespace"],
+            prompt="Write one token with no whitespace.",
             kwargs=[{}],
         )
-        co=current.test_instruction_following_strict(ci,"Hello World")
+        co=current.test_instruction_following_strict(ci,"HelloWorld")
         if co.follow_all_instructions is not True or co.follow_instruction_list != [True]:
             raise SystemExit("FAIL:IFBENCH_SYNTHETIC_SMOKE")
 
