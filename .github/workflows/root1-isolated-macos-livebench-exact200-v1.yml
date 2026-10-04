@@ -1,0 +1,141 @@
+name: Root1 isolated macOS exact public 200 V1
+
+on:
+  push:
+    branches:
+      - root1-isolated-macos-20261004
+    paths:
+      - '.github/workflows/root1-isolated-macos-livebench-exact200-v1.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: root1-isolated-macos-livebench-exact200-v1
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  MODEL_REPO: empero-ai/Qwen3.8-4B-Distill-GGUF
+  MODEL_REV: 391fc7d103e3942a408def3e4f51c2f85d464417
+  MODEL_FILE: Qwen3.8-4B-Q4_K_M.gguf
+  MODEL_BYTES: '2783446304'
+  MODEL_SHA256: dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790
+  LLAMA_COMMIT: 0504396140d1c882f5f6ee34466a42db7ae90114
+
+jobs:
+  qualify:
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prove public zero-spend runner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = "false"
+          sysctl -n hw.ncpu
+          sysctl -n hw.memsize
+          df -h .
+          echo "incremental_spend_usd=0"
+
+      - name: Acquire exact frozen subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 8 --retry-all-errors --retry-delay 3 --connect-timeout 30 \
+            -o "$MODEL_FILE" "https://huggingface.co/$MODEL_REPO/resolve/$MODEL_REV/$MODEL_FILE?download=true"
+          test "$(stat -f '%z' "$MODEL_FILE")" = "$MODEL_BYTES"
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_FILE" | shasum -a 256 -c -
+
+      - name: Build exact frozen llama.cpp runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_COMMIT"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_COMMIT"
+          cmake -S llama.cpp -B llama.cpp/build \
+            -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_METAL=OFF \
+            -DGGML_ACCELERATE=ON -DLLAMA_CURL=OFF
+          cmake --build llama.cpp/build --config Release -j 4 --target llama-server
+
+      - name: Start exact local subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./llama.cpp/build/bin/llama-server -m "$MODEL_FILE" -c 4096 -t 4 -np 1 \
+            --host 127.0.0.1 --port 8080 > llama_server_exact200.log 2>&1 &
+          echo "$!" > llama_server.pid
+          ready=0
+          for _ in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat llama_server.pid)" 2>/dev/null; then break; fi
+            sleep 2
+          done
+          if test "$ready" != "1"; then cat llama_server_exact200.log; exit 1; fi
+
+      - name: Freeze exact LiveBench public population and scorer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check \
+            pyarrow==21.0.0 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+          rm -rf /tmp/LiveBench /tmp/nltk_data_repo /tmp/nltk_data
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_util.py)" = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+
+          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- \
+            packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+
+          curl -fL --retry 8 --retry-all-errors --retry-delay 3 \
+            "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet" \
+            -o /tmp/instruction_following.parquet
+          test "$(stat -f '%z' /tmp/instruction_following.parquet)" = "537024"
+          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | shasum -a 256 -c -
+
+      - name: Execute exact 200-case public Root1 qualification
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verify_qwen38_4b_livebench_public_exact_v1.py
+
+      - name: Emit exact evidence
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          cat qwen38_4b_livebench_public_exact_receipt.json 2>/dev/null || true
+          tail -n 150 llama_server_exact200.log 2>/dev/null || true
+          if test -f llama_server.pid; then kill "$(cat llama_server.pid)" 2>/dev/null || true; fi
+
+      - name: Upload exact public receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root1-isolated-macos-livebench-exact200-v1
+          path: |
+            qwen38_4b_livebench_public_exact_receipt.json
+            llama_server_exact200.log
+          if-no-files-found: warn
+          retention-days: 30
