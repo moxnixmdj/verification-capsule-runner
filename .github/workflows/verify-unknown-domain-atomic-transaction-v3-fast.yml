@@ -1,0 +1,58 @@
+name: Verify Unknown-Domain atomic transaction V3 fast
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-atomic-transaction-v3-fast'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert exact reviewed transaction blobs
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            ".github/workflows/unknown-domain-direct-one-use-production.yml":"f05f16251a1567a85ebfd2ca8a1a4ccf75a5d38e",
+            ".github/workflows/verify-unknown-domain-production-launcher.yml":"334aee836af00dde8ee2b4983ff437ada2e9aa71",
+            "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json":"6120316cdb35b9acd02556578d59c0e22dea4938",
+            "canonical/runtime/unknown_domain_direct_production_once_v1.py":"4a7c8b1b19e05bd0eb8b902455aa5c67c988854e",
+            "canonical/tests/test_unknown_domain_direct_production_once_v1.py":"6a1be00cfe2913ae77ee682c77ee951f7d5f0714",
+            "verify_unknown_domain_execution_lease.py":"67d2bba97cdae986f721c0770f7b824e7fa9eacb",
+          }
+          def blob(path):
+            b=Path(path).read_bytes()
+            return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          for p,e in expected.items():
+            g=blob(p)
+            assert g==e,(p,g,e)
+          print("EXACT_REVIEWED_TRANSACTION_BLOBS_PASS")
+          PY
+      - name: Independent execution-lease verifier
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Frozen production launcher adversarial tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Final static transaction invariants
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          wf=Path(".github/workflows/unknown-domain-direct-one-use-production.yml").read_text()
+          src=Path("canonical/runtime/unknown_domain_direct_production_once_v1.py").read_text()
+          assert "ref: ${{ github.sha }}" in wf
+          assert "ref: ${{ github.ref }}" not in wf
+          assert "if response_ref!=claim_ref or obj_sha!=launch_sha:" in src
+          assert '"exception_message"' not in src
+          assert src.index('print("UNKNOWN_DOMAIN_RESULT_RECOVERY_B64_V1="') < src.index("RESULT_ARTIFACT_PATH.write_bytes")
+          assert "emit_recovery=False" in src
+          print("ATOMIC_TRANSACTION_INVARIANTS_PASS")
+          PY
