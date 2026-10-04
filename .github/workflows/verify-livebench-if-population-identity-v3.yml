@@ -1,0 +1,131 @@
+name: Verify LiveBench IF population identity truth repair V3
+
+on:
+  push:
+    branches: ["verify/livebench-if-population-identity-v3-20261004"]
+    paths:
+      - ".github/workflows/verify-livebench-if-population-identity-v3.yml"
+      - "capsules/livebench_if_population_identity_v3/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-if-population-identity-v3.yml"
+      - "capsules/livebench_if_population_identity_v3/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind candidate and fail-closed claims
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/livebench_if_population_identity_v3/brain/CANDIDATE.json)" = "dd7ada392a599c372d5bb2d30544aa0ed7a628c3"
+          python - <<'PY'
+          import json
+          c=json.load(open("capsules/livebench_if_population_identity_v3/brain/CANDIDATE.json"))
+          assert c["target_predicate"]=="LIVEBENCH_IF_GE_65_7"
+          assert c["accounting"]["new_terminal_cases_exposed"]==0
+          assert c["accounting"]["acceptance_credit_delta"]==0
+          assert c["authority"]["execution"] is False
+          assert c["authority"]["promotion"] is False
+          assert c["authority"]["fresh_reality"] is False
+          assert "PUBLIC_PROXY_QUESTION_ID_SET_EQUALS_OFFICIAL_2026_COMPARATOR_QUESTION_ID_SET" in c["logical_repair"]["not_proved"]
+          PY
+
+      - name: Fetch exact first-party LiveBench source
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/gen_ground_truth_judgment.py)" = "b36561da5b54380c724c507462d0ee65feefeac8"
+          test "$(git -C /tmp/LiveBench hash-object changelog.md)" = "97a0b6ffd845aec29f48f96ca24b96ac100e4162"
+          python - <<'PY'
+          from pathlib import Path
+          router=Path("/tmp/LiveBench/livebench/gen_ground_truth_judgment.py").read_text()
+          change=Path("/tmp/LiveBench/changelog.md").read_text()
+          readme=Path("/tmp/LiveBench/README.md").read_text()
+          assert 'livebench_release_date", "") < "2025-11-25"' in router
+          assert "Updated the instruction following tasks with both newer articles as well as new, more difficult types of instructions" in change
+          assert "not all questions for this release are public on Huggingface" in readme
+          print("FIRST_PARTY_SCOPE_FACTS_PASS")
+          PY
+
+      - name: Fetch exact official 2026 leaderboard metadata
+        run: |
+          set -euo pipefail
+          git init /tmp/new-livebench
+          git -C /tmp/new-livebench remote add origin https://github.com/LiveBench/new-livebench.git
+          git -C /tmp/new-livebench fetch --depth 1 origin caa4253c8a3aa93b5c7ec234e681d4f120a20240
+          git -C /tmp/new-livebench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/new-livebench hash-object public/categories_2026_06_25.json)" = "50b5672fe14023f5ba14efc1ce16e221e6573056"
+          test "$(git -C /tmp/new-livebench hash-object public/table_2026_06_25.csv)" = "73ab7d8d9752b4d7cc1bc8c574ab0eb80c36c84b"
+          test "$(git -C /tmp/new-livebench hash-object public/cost_2026_06_25.csv)" = "6f6271ed5497706e290675a1ad92a716a0f45b6b"
+          python - <<'PY'
+          import csv,json
+          cats=json.load(open("/tmp/new-livebench/public/categories_2026_06_25.json"))
+          assert cats["IF"]==["paraphrase","simplify","story_generation","summarize"]
+          rows={r["model"]:r for r in csv.DictReader(open("/tmp/new-livebench/public/table_2026_06_25.csv"))}
+          costs={r["model"]:r for r in csv.DictReader(open("/tmp/new-livebench/public/cost_2026_06_25.csv"))}
+          m="claude-opus-5-5-max-effort"
+          vals=[float(rows[m][x]) for x in cats["IF"]]
+          assert vals==[64.267,58.667,70.917,69.1]
+          assert abs(sum(vals)/4-65.73775)<1e-12
+          assert [int(costs[m]["nq_"+x]) for x in cats["IF"]]==[50,50,50,50]
+          # Aggregate files expose counts/scores, not a comparator question-id set.
+          assert "question_id" not in (next(csv.reader(open("/tmp/new-livebench/public/cost_2026_06_25.csv"))))
+          print("OFFICIAL_AGGREGATE_METADATA_PASS")
+          PY
+
+      - name: Verify exact older public HF proxy metadata without reading prompts
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --silent --show-error             "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet"             -o /tmp/instruction_following.parquet
+          test "$(stat -c %s /tmp/instruction_following.parquet)" = "537024"
+          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | sha256sum -c -
+          python -m pip install --quiet "pyarrow==21.0.0"
+          python - <<'PY'
+          from collections import Counter
+          import pyarrow.parquet as pq
+          cols=["question_id","task","livebench_release_date","livebench_removal_date"]
+          rows=pq.read_table("/tmp/instruction_following.parquet",columns=cols).to_pylist()
+          assert len(rows)==400
+          def ds(x):
+              return x.strftime("%Y-%m-%d") if hasattr(x,"strftime") else str(x)
+          dates=[ds(r["livebench_release_date"]) for r in rows]
+          assert min(dates)=="2024-06-24"
+          assert max(dates)=="2024-11-25"
+          assert all(d < "2025-11-25" for d in dates)
+          release="2026-06-25"
+          active=[r for r in rows if (r["livebench_removal_date"] or "")=="" or (r["livebench_removal_date"] or "")>release]
+          counts=Counter(r["task"] for r in active)
+          assert counts=={"paraphrase":50,"simplify":50,"story_generation":50,"summarize":50}
+          assert len(active)==200
+          print("OLDER_PUBLIC_PROXY_METADATA_PASS")
+          PY
+
+      - name: Verify logical non-equivalence boundary
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          c=json.load(open("capsules/livebench_if_population_identity_v3/brain/CANDIDATE.json"))
+          p=c["logical_repair"]
+          assert "THE_OFFICIAL_2026_06_25_IF_CATEGORY_HAS_FOUR_TASKS_AND_50_SCORED_QUESTIONS_PER_TASK__N_EQUALS_200" in p["proved"]
+          assert "PUBLIC_PROXY_QUESTION_ID_SET_EQUALS_OFFICIAL_2026_COMPARATOR_QUESTION_ID_SET" in p["not_proved"]
+          assert "OFFICIAL_2026_COMPARATOR_ROWS_ARE_ALL_PRE_2025_11_25" in p["not_proved"]
+          assert "OFFICIAL_2026_COMPARATOR_USES_ONLY_THE_LEGACY_25_CHECKER_REGISTRY" in p["not_proved"]
+          # Finite counterexample to the invalid inference: equal per-task counts can have disjoint IDs.
+          old={(task,i) for task in range(4) for i in range(50)}
+          new={(task,i+1000) for task in range(4) for i in range(50)}
+          assert len(old)==len(new)==200 and old.isdisjoint(new)
+          print("COUNT_EQUALITY_DOES_NOT_PROVE_ROW_IDENTITY_PASS")
+          PY
