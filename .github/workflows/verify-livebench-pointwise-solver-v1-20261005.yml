@@ -1,0 +1,50 @@
+name: Verify LiveBench pointwise solver V1
+
+on:
+  push:
+    branches:
+      - verify-livebench-pointwise-solver-6bd4e7c
+    paths:
+      - 'subject/livebench_legacy15_pointwise_solver_v1_20261005/**'
+      - '.github/workflows/verify-livebench-pointwise-solver-v1-20261005.yml'
+  pull_request:
+    paths:
+      - 'subject/livebench_legacy15_pointwise_solver_v1_20261005/**'
+      - '.github/workflows/verify-livebench-pointwise-solver-v1-20261005.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned checker dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir langdetect==1.0.9 nltk==3.9.2 immutabledict==4.2.1
+          python - <<'PY'
+          import nltk
+          for name in ["punkt", "punkt_tab"]:
+              nltk.download(name, quiet=True)
+          PY
+      - name: Checkout exact frozen LiveBench source
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Run zero-terminal pointwise audit
+        working-directory: subject/livebench_legacy15_pointwise_solver_v1_20261005
+        run: |
+          python verify_pointwise_solver_v1.py --livebench-root /tmp/livebench --output pointwise_audit.json
+      - name: Upload exact audit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-pointwise-solver-audit
+          path: subject/livebench_legacy15_pointwise_solver_v1_20261005/pointwise_audit.json
+          if-no-files-found: warn
