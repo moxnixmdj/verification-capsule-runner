@@ -12,7 +12,7 @@ ROOT=Path(__file__).resolve().parent
 EXPECTED={
  "canonical/governance/H100_LEXICAL_SOURCE_FALLBACK_KNOWLEDGE_V1.json":"fe50744543f7c4c5ffe1a8d1d4855568a868df80",
  "canonical/governance/H100_LEXICAL_SOURCE_FALLBACK_PREEXPOSURE_V1.json":"86e39332746383b4f8a8169018b341006bd9d362",
- "canonical/runtime/h100_lexical_source_fallback_v1.py":"b10b572c5a4ba7c6ac3f704385c56c93347b4124",
+ "canonical/runtime/h100_lexical_source_fallback_v1.py":"3980b1066058c77e515bd3b82b31a0f1298415f2",
  "canonical/tests/test_h100_lexical_source_fallback_v1.py":"6b59aacf8fbd687744e828bf07f546f9db6bca53",
 }
 FORBIDDEN_RUNTIME_TERMS=("covariate","regressor")
