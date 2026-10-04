@@ -102,7 +102,10 @@ def main(*,authorized=False,activation_blob=None):
     mod=load_base()
     with tempfile.TemporaryDirectory(prefix="lb-v7-diagnostic-") as td:
         base=pathlib.Path(td)
-        # Point-of-use zero-case template build. No terminal dataset read yet.
+        # Recreate the exact V6 pre-case dependency environment before any terminal dataset read.
+        # This prevents the diagnostic from manufacturing new runtime exits that were absent in V6.
+        mod.install_scorer_deps()
+        mod.prepare_nltk(base)
         template=build_diagnostic_template(base,mod)
         # Synthetic check must produce only an allowed aggregate class, never raw text.
         synthetic={"question_id":"SYNTHETIC_ZERO_CASE","turns":["Reply with exactly SYNTHETIC_OK."]}
