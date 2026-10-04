@@ -65,3 +65,55 @@ assert root["current_acceptance"]["accepted_families"]==5
 assert root["current_acceptance"]["proved_atomic"]==12
 assert root["current_acceptance"]["unresolved_atomic"]==26
 print("PASS__ROOT2_V6_ACTIVATION_COHERENT__SCHEDULING_ONLY__ZERO_CREDIT")
+
+
+# Finance Agent v2 zero-spend harness adapter
+import os, subprocess, sys
+A=Path(__file__).with_name("adapter")
+def blob3(p):
+    b=p.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+
+EXPECTED_ADAPTER={
+ "canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py":"c90d2e693621ae0a268e3c4f96bbdbfdcc827ec2",
+ "canonical/runtime/zero_spend_provider_guard_v1.py":"356af559fc74ac3eab5532b2d8fee9ddfb98f962",
+ "canonical/tests/test_finance_agent_v2_zero_spend_adapter_v1.py":"81d49edb2e7d265a14d2780eb8cad7b6adcb6435",
+ "FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json":"280fc9b41221f6b4fa58ac50b18a0a4d6fceb5ec",
+ "upstream/tools.py":"19b85ce4e110e39f410c52b2efa0e33f651fa6d1",
+ "upstream/get_agent.py":"22c012241a430975266fb7f8d2fe7af8e9f1b8d4",
+}
+for rel,h in EXPECTED_ADAPTER.items():
+    got=blob3(A/rel)
+    assert got==h,(rel,h,got)
+
+tools_src=(A/"upstream/tools.py").read_text()
+get_agent_src=(A/"upstream/get_agent.py").read_text()
+assert "response = await self.client.search(" in tools_src
+assert 'self.sec_api_url: str = "https://api.sec-api.io/full-text-search"' in tools_src
+assert "async with session.post(" in tools_src and "self.sec_api_url" in tools_src
+assert 'EQUITY_URL = "https://api.tiingo.com/tiingo/daily/{ticker}/prices"' in tools_src
+assert "async with session.get(" in tools_src
+assert '"web_search": TavilyWebSearch' in get_agent_src
+assert '"edgar_search": EDGARSearch' in get_agent_src
+assert '"price_history": PriceHistory' in get_agent_src
+
+gov=json.loads((A/"FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json").read_text())
+assert gov["brain_subject"]["adapter_runtime"]["git_blob_sha"]==EXPECTED_ADAPTER["canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py"]
+assert gov["exact_upstream_source"]["tools_py_git_blob_sha"]==EXPECTED_ADAPTER["upstream/tools.py"]
+assert gov["exact_upstream_source"]["get_agent_py_git_blob_sha"]==EXPECTED_ADAPTER["upstream/get_agent.py"]
+assert gov["fresh_reality_authority"] is False
+assert gov["accounting"]["acceptance_credit_delta"]==0
+
+env=dict(os.environ)
+env["PYTHONPATH"]=str(A)
+cp=subprocess.run(
+    [sys.executable,"-m","unittest","-v","canonical.tests.test_finance_agent_v2_zero_spend_adapter_v1"],
+    cwd=A,
+    env=env,
+    text=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+)
+print(cp.stdout)
+assert cp.returncode==0,cp.stdout
+print("PASS__FINANCE_AGENT_ZERO_SPEND_ADAPTER__EXACT_VALS_BOUNDARIES__RETRY_SAFE__UNIT_TESTS_PASS__ZERO_CREDIT")
