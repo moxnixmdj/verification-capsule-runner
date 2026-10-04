@@ -1,0 +1,8 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT1_SEMANTIC_SEED_RUN_TRIGGER_V1",
+  "run_reason": "EXACT_REUSED_4B_FIRST_RUNG_QUALIFICATION",
+  "subject_sha256": "13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983",
+  "gate": "root1_semantic_seed_gate_v1.py",
+  "incremental_spend_usd": 0,
+  "terminal_case_content_used": false
+}
