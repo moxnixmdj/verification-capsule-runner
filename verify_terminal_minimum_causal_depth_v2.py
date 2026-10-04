@@ -14,7 +14,7 @@ EXPECTED = {
 
 def git_blob_sha(path: str) -> str:
     data = Path(path).read_bytes()
-    return hashlib.sha1(f"blob {len(data)}\\0".encode() + data).hexdigest()
+    header = f"blob {len(data)}".encode() + b"\x00"\n    return hashlib.sha1(header + data).hexdigest()
 
 for path, want in EXPECTED.items():
     got = git_blob_sha(path)
