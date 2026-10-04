@@ -1,0 +1,26 @@
+name: Verify Unknown-Domain V4 total successor macOS
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_unknown_domain_v4_total_successor_independent_20261005.py'
+      - 'subject/unknown_domain_v4_total_successor_20261005/**'
+      - '.github/workflows/verify-unknown-domain-v4-total-successor*.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_unknown_domain_v4_total_successor_independent_20261005.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v4-total-successor-macos-15-intel
+          path: unknown_domain_v4_total_successor_independent_verification_v1.json
+          if-no-files-found: error
