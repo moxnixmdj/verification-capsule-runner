@@ -1,0 +1,30 @@
+name: Verify MysteryMechanism root repair V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/mystery_root_v2_20261005/**"
+      - "verify_mystery_root_v2.py"
+      - ".github/workflows/verify-mystery-root-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify target-preserving root repair
+        run: python verify_mystery_root_v2.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mystery-root-v2-verification
+          path: mystery_root_v2_verification.json
+          if-no-files-found: error
