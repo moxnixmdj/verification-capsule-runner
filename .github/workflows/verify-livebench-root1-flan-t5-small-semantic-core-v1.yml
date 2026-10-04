@@ -1,0 +1,62 @@
+name: Verify LiveBench Root1 FLAN-T5-small semantic core V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "verify_livebench_root1_flan_t5_small_semantic_core_v1.py"
+      - ".github/workflows/verify-livebench-root1-flan-t5-small-semantic-core-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          git -C /tmp/llama.cpp checkout 0504396140d1c882f5f6ee34466a42db7ae90114
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF -DLLAMA_CURL=OFF
+          cmake --build /tmp/llama.cpp/build --config Release -j2 --target llama-cli
+          /tmp/llama.cpp/build/bin/llama-cli --version
+
+      - name: Fetch and verify pinned sub-100MB learned artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL=/tmp/flan-t5-small.Q5_K_M.gguf
+          curl --fail --location --retry 3 --output "$MODEL"             "https://huggingface.co/Felladrin/gguf-flan-t5-small/resolve/c00340d67f4b652559885f5f4c56400ad37ea502/flan-t5-small.Q5_K_M.gguf?download=true"
+          echo "dcff9f630f3528b9675d4018596ff5fc7a51f7162fd655675d52fba0d9f7a986  $MODEL" | sha256sum -c -
+          SIZE="$(stat -c '%s' "$MODEL")"
+          test "$SIZE" -eq 98638592
+          test "$SIZE" -le 100000000
+          printf 'model_bytes=%s\n' "$SIZE"
+
+      - name: Run frozen four-effect semantic preflight
+        id: semantic
+        continue-on-error: true
+        shell: bash
+        run: |
+          python verify_livebench_root1_flan_t5_small_semantic_core_v1.py             --llama-cli /tmp/llama.cpp/build/bin/llama-cli             --model /tmp/flan-t5-small.Q5_K_M.gguf             --result semantic-core-result.json
+
+      - name: Upload exact preflight result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-root1-flan-t5-small-semantic-core-v1
+          path: semantic-core-result.json
+          if-no-files-found: error
+
+      - name: Enforce candidate gate
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.semantic.outcome }}" = "success"
