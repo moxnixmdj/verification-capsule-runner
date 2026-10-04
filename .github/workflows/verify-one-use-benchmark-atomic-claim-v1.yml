@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - "verify/one-use-benchmark-atomic-claim-v1-20261004"
+    paths:
+      - "subject/one_use_benchmark_atomic_claim_v1/**"
+      - "verify_one_use_benchmark_atomic_claim_v1.py"
+      - ".github/workflows/verify-one-use-benchmark-atomic-claim-v1.yml"
   pull_request:
     branches: [main]
     paths:
