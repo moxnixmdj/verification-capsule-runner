@@ -30,8 +30,10 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          set +e
           python execute_livebench_if_threshold_v2.py 2>&1 | tee LIVEBENCH_IF_THRESHOLD_RUN_V2.log
           code=${PIPESTATUS[0]}
+          set -e
           echo "${code}" > LIVEBENCH_IF_THRESHOLD_EXIT_CODE_V2
           exit "${code}"
       - name: Persist immutable execution evidence on execution branch
