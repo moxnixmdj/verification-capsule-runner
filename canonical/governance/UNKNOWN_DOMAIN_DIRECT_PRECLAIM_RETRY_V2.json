@@ -52,5 +52,12 @@
     "execution_lease_sha256": "9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb",
     "changes_candidate_or_evaluator_bytes": false,
     "changes_execution_lease_bytes": false
+  },
+  "trigger_commit_2": {
+    "purpose": "EMIT_PUSH_AFTER_MACOS_RETRY_WORKFLOW_EXISTS_ON_BRANCH",
+    "execution_lease_sha256": "9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb",
+    "changes_candidate_or_evaluator_bytes": false,
+    "changes_execution_lease_bytes": false,
+    "parallel_transport_atomicity": "SAME_CLAIM_REF_EXACTLY_ONE_HTTP_201"
   }
 }
