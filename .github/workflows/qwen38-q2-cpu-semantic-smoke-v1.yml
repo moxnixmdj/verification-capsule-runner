@@ -144,3 +144,4 @@ PROMPT
             ${{ runner.temp }}/model_stderr.txt
           if-no-files-found: warn
           retention-days: 7
+# main-repaired-probe-trigger-20261004-v1
