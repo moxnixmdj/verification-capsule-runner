@@ -1,11 +1,17 @@
 name: Verify LiveBench Root1 SmolLM2 semantic core V1
 
 on:
-  pull_request:
+  push:
+    branches:
+      - verify/livebench-root1-smollm2-semantic-core-v1-direct-20261004
     paths:
       - "verify_livebench_root1_smollm2_semantic_core_v1.py"
       - ".github/workflows/verify-livebench-root1-smollm2-semantic-core-v1.yml"
   workflow_dispatch:
+
+concurrency:
+  group: verify-livebench-root1-smollm2-semantic-core-v1-direct
+  cancel-in-progress: false
 
 permissions:
   contents: read
