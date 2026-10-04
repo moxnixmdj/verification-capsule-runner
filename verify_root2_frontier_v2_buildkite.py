@@ -95,3 +95,51 @@ assert _v5root["current_acceptance"]["accepted_families"]==5
 assert _v5root["current_acceptance"]["proved_atomic"]==12
 assert _v5root["current_acceptance"]["unresolved_atomic"]==26
 print("ROOT2_V5_ACTIVATION_PROJECTION_PASS__SCHEDULING_ONLY__ZERO_CREDIT")
+
+
+# Root2 OSWorld methodology + Finance Agent v2 zero-cost boundary
+_os_path=pathlib.Path("subject/OSWORLD_OPUS55_METHODOLOGY_PUBLIC_CORROBORATION_20261004_V1.json")
+_fin_path=pathlib.Path("subject/FINANCE_AGENT_V2_ZERO_COST_TOOL_BOUNDARY_20261004_V1.json")
+assert git_blob_sha(str(_os_path))=="259a6fa8f7daf744e6e06902d43925419cdd4d9b"
+assert git_blob_sha(str(_fin_path))=="032caa374280983945321f0a5706c0c665c097a6"
+_os=json.loads(_os_path.read_text())
+_fin=json.loads(_fin_path.read_text())
+assert "EXACT_SEPTEMBER_10_ANTHROPIC_COMPONENT_SNAPSHOT_EQUALS_UPSTREAM_OSWORLD_V2_1_PINNED_COMPONENT_HASHES" in _os["still_open"]
+assert _os["fresh_reality_authority"] is False
+assert _fin["first_party_runner"]["public_question_file"]["public_question_count"]==27
+assert _fin["first_party_runner"]["agent_runtime"]["default_max_turns"] is None
+assert "OFFICIAL_HELDOUT_SUITE_SIZE_OR_EQUIVALENT_EXECUTION_BOUND" in _fin["preserve"]
+assert _fin["fresh_reality_authority"] is False
+
+_anth=fetch("https://www.anthropic.com/claude-opus-5-5")
+_anth_text=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",_anth))
+for token in ["OSWorld 2.1","81.8"]:
+    assert token.lower() in _anth_text.lower(), token
+
+_card=fetch("https://malob.github.io/ai-system-cards/anthropic/claude-opus-5-5/")
+_card_text=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",_card))
+for token in ["108 long-horizon computer use tasks","1080p resolution","500 action steps","Claude Opus 4.8","September 10, 2026","81.8%","48.7%"]:
+    assert token.lower() in _card_text.lower(), token
+
+_release=json.loads(fetch("https://api.github.com/repos/xlang-ai/OSWorld-V2/releases/tags/osworld-v2.1"))
+assert _release["tag_name"]=="osworld-v2.1"
+assert "All 108 task files" in _release["body"]
+assert "Task-Web/OSWorld-web@osworld-v2.1" in _release["body"]
+
+_public=fetch("https://raw.githubusercontent.com/vals-ai/finance-agent-v2/main/data/public.txt")
+assert len([x for x in _public.splitlines() if x.strip()])==27
+_agent=fetch("https://raw.githubusercontent.com/vals-ai/finance-agent-v2/main/finance_agent/get_agent.py")
+assert "MAX_TIME_SECONDS = 2 * 60 * 60" in _agent
+assert "max_turns: int | None = None" in _agent
+
+_tav=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",fetch("https://www.tavily.com/pricing")))
+for token in ["1,000 API credits","No credit card required","requests will stop"]:
+    assert token.lower() in _tav.lower(), token
+_sec=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",fetch("https://sec-api.io/pricing")))
+for token in ["first 100 API calls"]:
+    assert token.lower() in _sec.lower(), token
+_tiingo=re.sub(r"\s+"," ",re.sub(r"<[^>]+>"," ",fetch("https://www.tiingo.com/pricing")))
+for token in ["$0/month","Max Requests Per Hour","50","Max Requests Per Day","1000"]:
+    assert token.lower() in _tiingo.lower(), token
+
+print("ROOT2_OSWORLD_FINANCE_ZERO_REALITY_REDUCTION_PUBLIC_RUNNER_PASS__ZERO_CREDIT")
