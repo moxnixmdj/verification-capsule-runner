@@ -42,8 +42,10 @@ jobs:
           text=p.read_text()
           assert "create:" in text
           assert "workflow_dispatch" not in text
-          assert "ref: ${{ github.sha }}" in text
-          assert "ref: ${{ github.ref }}" not in text
+          immutable_sha_ref="ref: $"+"{{ github.sha }}"
+          mutable_branch_ref="ref: $"+"{{ github.ref }}"
+          assert immutable_sha_ref in text
+          assert mutable_branch_ref not in text
           assert "run: python -m canonical.runtime.unknown_domain_direct_production_once_v1" in text
           b=p.read_bytes()
           blob=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
