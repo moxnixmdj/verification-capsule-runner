@@ -1,0 +1,53 @@
+name: Verify Retrieval V17 Maven JSON lineage
+on:
+  push:
+    branches:
+      - verify/retrieval-v17-maven-json-lineage-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact subject blobs
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v17.py)" = "18ce57fa697eab157540747c612aa41c730a433c"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v17.py)" = "c2e727f48ab736abe4217d40845181cd7e4457d3"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v14.py)" = "fc0327ff562d855280617a6e73748d55146c5c8b"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v13.py)" = "d36f5f29060db6ad5db5f44b16751099f54873ca"
+          test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v11.py)" = "0e28128d3f67d33ce4058667609e4d513657af55"
+      - name: Run deterministic V17 tests
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_live_provider_arena_v17.py
+      - name: Run live V17 JSON lineage recovery
+        run: |
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v17.py > v17_live.json
+          python - <<'PY'
+          import json
+          x=json.load(open("v17_live.json",encoding="utf-8"))
+          assert x["answer_key_identity_used_for_query_generation"] is False
+          assert x["answer_key_identity_used_for_lineage_generation"] is False
+          assert x["target_hit"] is True
+          assert x["v14_plus_v17_union_hits"] == 29
+          assert x["v14_plus_v17_union_recall"] == 29/30
+          assert x["open_world_completeness_claim"] is False
+          print("V17_SUMMARY",json.dumps({
+            "episode":x["episode_id"],"target_hit":x["target_hit"],
+            "target_rank":x["target_rank"],
+            "repo_count":len(x["repository_candidates"]),
+            "direct_coordinates":x["direct_manifest_coordinates"],
+            "lineage_count":len(x["lineage_aliases"]),
+            "v14_plus_v17_hits":x["v14_plus_v17_union_hits"],
+            "v14_plus_v17_recall":x["v14_plus_v17_union_recall"],
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-v17-live-result
+          path: v17_live.json
+          if-no-files-found: error
