@@ -1,0 +1,19 @@
+name: Verify Root3 synthesis reconciliation v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "fixtures/root3_synth_recon_*.json"
+      - "verify_root3_synthesis_reconciliation_v1.py"
+      - ".github/workflows/verify-root3-synthesis-reconciliation-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root3_synthesis_reconciliation_v1.py
