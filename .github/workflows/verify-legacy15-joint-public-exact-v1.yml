@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    runs-on: macos-15-intel
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -59,8 +59,13 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors             "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet"             -o /tmp/instruction_following.parquet
-          test "$(stat -c %s /tmp/instruction_following.parquet)" = "537024"
-          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p = Path("/tmp/instruction_following.parquet")
+          assert p.stat().st_size == 537024, p.stat().st_size
+          assert hashlib.sha256(p.read_bytes()).hexdigest() == "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
+          PY
 
       - name: Execute repaired deterministic candidate on exact public Root1
         env:
