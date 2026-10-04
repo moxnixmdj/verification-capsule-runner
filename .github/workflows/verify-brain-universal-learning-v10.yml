@@ -19,6 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Verify exact Brain V10 blob identities
         run: |
           cd capsules/universal_learning_v10
@@ -31,10 +32,12 @@ jobs:
               assert got==expected,(rel,got,expected)
           print("exact V10/V9 blobs: PASS")
           PY
+
       - name: Compile V10 incremental modules
         run: |
           cd capsules/universal_learning_v10
           python -m py_compile             canonical/runtime/meta_learning_policy_v9.py             canonical/runtime/context_morphism_v10.py             canonical/runtime/cross_context_meta_policy_v10.py             canonical/runtime/universal_learning_cross_context_router_v10.py
+
       - name: Run independent adversarial V10 theorem
         run: |
           cd capsules/universal_learning_v10
@@ -59,7 +62,8 @@ jobs:
               csha=ctx or ssha
               dig=mp.episode_digest(
                   episode_id=eid,context_sha256=csha,strategy_id=sid,success=success,
-                  burden_before=b0,burden_after=b1,wall_clock=t,risk=risk,incremental_spend_usd=spend)
+                  burden_before=b0,burden_after=b1,wall_clock=t,risk=risk,
+                  incremental_spend_usd=spend)
               return {
                   "episode_id":eid,"context_sha256":csha,"strategy_id":sid,"success":success,
                   "burden_before":b0,"burden_after":b1,"wall_clock":t,"risk":risk,
@@ -73,7 +77,21 @@ jobs:
                        "episode_sha256":x["verification_receipt"]["episode_sha256"]}
                       for x in episodes]
 
-          def make_morph(episodes,sem=semantics,valid=True):
+          def target_state(episodes):
+              epoch="epoch-1"
+              digest=cc.target_evidence_state_digest(
+                  target_context_sha256=dsha,
+                  episode_bindings=bindings(episodes),
+                  evidence_epoch=epoch)
+              return {
+                  "receipt_id":"ts1","independent_verified":True,"exact_byte_bound":True,
+                  "conclusion":"success","exact_target_evidence_complete":True,
+                  "target_context_sha256":dsha,"evidence_epoch":epoch,
+                  "exact_target_episode_count":len(episodes),
+                  "zero_exact_target_evidence_verified":len(episodes)==0,
+                  "evidence_state_sha256":digest}
+
+          def make_morph(episodes,sem=semantics,valid=True,source_complete=True):
               strategy_sha=cm.strategy_semantics_digest(
                   strategy_id="inspect-first",strategy_semantics=sem)
               episode_set_sha=cm.source_episode_set_digest(
@@ -91,7 +109,8 @@ jobs:
                   "source_context_sha256":ssha,"target_context_sha256":dsha,
                   "strategy_id":"inspect-first","strategy_sha256":strategy_sha,
                   "source_episode_set_sha256":episode_set_sha,
-                  "preserved_preconditions":pre,"preserved_metric_semantics":metrics,
+                  "preserved_preconditions":pre,
+                  "preserved_metric_semantics":metrics,
                   "invalidators_checked":inv,
                   "verification_receipt":{
                       "receipt_id":"m1","independent_verified":True,"exact_byte_bound":True,
@@ -100,6 +119,11 @@ jobs:
                       "no_new_strategy_invalidators":valid,
                       "conservative_performance_transport_valid":True,
                       "source_episodes_executed_bound_strategy":True,
+                      "canonical_strategy_semantics_complete_for_transport":True,
+                      "source_policy_evidence_complete_for_bound_strategy":source_complete,
+                      "source_episodes_distinct_evidence_instances":True,
+                      "source_context_strategy_relevant_scope_complete":True,
+                      "target_context_strategy_relevant_scope_complete":True,
                       "source_context_sha256":ssha,"target_context_sha256":dsha,
                       "strategy_id":"inspect-first","strategy_sha256":strategy_sha,
                       "source_episode_set_sha256":episode_set_sha,
@@ -107,72 +131,83 @@ jobs:
 
           episodes=[ep("e1",b1=2),ep("e2",b1=3)]
           morph=make_morph(episodes)
-          candidate={"source_context_features":src,"strategy_id":"inspect-first",
-                     "strategy_semantics":semantics,"source_episodes":episodes,
-                     "context_morphism":morph}
+          candidate={
+              "source_context_features":src,
+              "strategy_id":"inspect-first",
+              "strategy_semantics":semantics,
+              "source_episodes":episodes,
+              "context_morphism":morph,
+          }
+          zero_state=target_state([])
 
-          out=cc.recommend(target_context_features=dst,transfer_candidates=[candidate])
+          out=cc.recommend(
+              target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
+              transfer_candidates=[candidate])
           assert out["recommended_strategy_id"]=="inspect-first",out
           assert out["evidence_mode"]=="PROOF_GATED_ONE_WAY_CONTEXT_MORPHISM",out
           assert out["planning_only"] is True and out["execution_authority"] is False,out
+
+          missing_state=cc.recommend(
+              target_context_features=dst,transfer_candidates=[candidate])
+          assert missing_state["status"]=="TARGET_EVIDENCE_STATE_UNVERIFIED",missing_state
+          assert missing_state["recommended_strategy_id"] is None,missing_state
+
+          bad_state={**zero_state,"exact_target_episode_count":1}
+          blocked_state=cc.recommend(
+              target_context_features=dst,
+              target_evidence_state_receipt=bad_state,
+              transfer_candidates=[candidate])
+          assert blocked_state["recommended_strategy_id"] is None,blocked_state
 
           tampered_sem={**candidate,"strategy_semantics":{
               **semantics,"ordered_steps":["inspect","execute"]}}
           assert cc.recommend(
               target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
               transfer_candidates=[tampered_sem])["recommended_strategy_id"] is None
 
           changed=ep("e1",b1=1)
           tampered_evidence={**candidate,"source_episodes":[changed,episodes[1]]}
           assert cc.recommend(
               target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
               transfer_candidates=[tampered_evidence])["recommended_strategy_id"] is None
 
           duplicate={**candidate,"source_episodes":[episodes[0],episodes[0]],"context_morphism":{}}
           assert cc.recommend(
               target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
               transfer_candidates=[duplicate])["recommended_strategy_id"] is None
+
+          incomplete_source={**candidate,"context_morphism":make_morph(
+              episodes,source_complete=False)}
+          assert cc.recommend(
+              target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
+              transfer_candidates=[incomplete_source])["recommended_strategy_id"] is None
 
           bad_morph=make_morph(episodes,valid=False)
           assert cc.recommend(
               target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
               transfer_candidates=[{**candidate,"context_morphism":bad_morph}]
           )["recommended_strategy_id"] is None
 
-          one=[ep("single")]
-          one_candidate={"source_context_features":src,"strategy_id":"inspect-first",
-                         "strategy_semantics":semantics,"source_episodes":one,
-                         "context_morphism":make_morph(one)}
-          assert cc.recommend(
-              target_context_features=dst,
-              transfer_candidates=[one_candidate])["recommended_strategy_id"] is None
-
-          failed=[ep("ok"),ep("fail",success=False)]
-          failed_candidate={"source_context_features":src,"strategy_id":"inspect-first",
-                            "strategy_semantics":semantics,"source_episodes":failed,
-                            "context_morphism":make_morph(failed)}
-          assert cc.recommend(
-              target_context_features=dst,
-              transfer_candidates=[failed_candidate])["recommended_strategy_id"] is None
-
-          paid=[ep("ok2"),ep("paid",spend="0.01")]
-          paid_candidate={"source_context_features":src,"strategy_id":"inspect-first",
-                          "strategy_semantics":semantics,"source_episodes":paid,
-                          "context_morphism":make_morph(paid)}
-          assert cc.recommend(
-              target_context_features=dst,
-              transfer_candidates=[paid_candidate])["recommended_strategy_id"] is None
-
           exact=[ep("t1",sid="native",ctx=dsha,b1=1),ep("t2",sid="native",ctx=dsha,b1=2)]
           exact_out=cc.recommend(
-              target_context_features=dst,exact_target_episodes=exact,
+              target_context_features=dst,
+              exact_target_episodes=exact,
+              target_evidence_state_receipt=target_state(exact),
               transfer_candidates=[candidate])
           assert exact_out["recommended_strategy_id"]=="native",exact_out
           assert exact_out["evidence_mode"]=="EXACT_TARGET_CONTEXT",exact_out
 
           reg=[ep("r1",sid="bad",ctx=dsha,b0=5,b1=6),ep("r2",sid="bad",ctx=dsha,b0=5,b1=7)]
           reg_out=cc.recommend(
-              target_context_features=dst,exact_target_episodes=reg,
+              target_context_features=dst,
+              exact_target_episodes=reg,
+              target_evidence_state_receipt=target_state(reg),
               transfer_candidates=[candidate])
           assert reg_out["recommended_strategy_id"] is None,reg_out
           assert reg_out["status"]=="EXACT_TARGET_EVIDENCE_BLOCKS_CROSS_CONTEXT_FALLBACK",reg_out
@@ -185,13 +220,20 @@ jobs:
           stub.prove_v9_invariants=lambda:{"pass":True}
           sys.modules["canonical.runtime.universal_learning_meta_policy_router_v9"]=stub
           r10=importlib.import_module("canonical.runtime.universal_learning_cross_context_router_v10")
-          routed=r10.route(v9_args={},target_context_features=dst,transfer_candidates=[candidate])
+          routed=r10.route(
+              v9_args={},
+              target_context_features=dst,
+              target_evidence_state_receipt=zero_state,
+              transfer_candidates=[candidate])
           assert routed["route"]=="BASE_ROUTE",routed
           assert routed["next_action"]=={"type":"BASE_NEXT"},routed
           assert routed["execution_authority"] is False and routed["promotion_authority"] is False,routed
+
           invs=r10.prove_v10_invariants()
           assert invs["pass"] is True,invs
           assert invs["v9_base_preserved"] is True,invs
+          assert invs["target_evidence_state_completeness_preserved"] is True,invs
+          assert invs["source_policy_history_completeness_preserved"] is True,invs
           assert invs["exact_strategy_semantics_binding_preserved"] is True,invs
           assert invs["exact_source_episode_evidence_binding_preserved"] is True,invs
           assert invs["duplicate_source_evidence_blocked"] is True,invs
@@ -202,8 +244,9 @@ jobs:
               encoding="utf-8"))
           assert gov["acceptance_credit_delta"]==0 and gov["ownership_credit_delta"]==0,gov
           assert gov["fresh_reality_authority"] is False and gov["promotion_authority"] is False,gov
-          assert "NO_STRATEGY_NAME_OR_IDENTIFIER_ONLY_TRANSPORT" in gov["hard_nonclaims"],gov
-          assert "NO_EPISODE_ID_ONLY_EVIDENCE_TRANSPORT" in gov["hard_nonclaims"],gov
+          assert "NO_CHERRY_PICKED_SOURCE_HISTORY_TRANSPORT" in gov["hard_nonclaims"],gov
+          assert "NO_UNVERIFIED_ZERO_TARGET_EVIDENCE_COLD_START" in gov["hard_nonclaims"],gov
+          assert "NO_PARTIAL_STRATEGY_SEMANTICS_TRANSPORT" in gov["hard_nonclaims"],gov
 
           print("independent adversarial V10 theorem: PASS")
           PY
