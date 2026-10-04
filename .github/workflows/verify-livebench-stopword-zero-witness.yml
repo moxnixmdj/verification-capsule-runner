@@ -1,5 +1,11 @@
 name: Verify LiveBench Stopword Zero Witness
 on:
+  push:
+    branches:
+      - verify/livebench-stopword-zero-20261004
+    paths:
+      - verify_livebench_stopword_zero_witness.py
+      - .github/workflows/verify-livebench-stopword-zero-witness.yml
   pull_request:
     branches:
       - main
