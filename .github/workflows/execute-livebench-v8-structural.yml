@@ -1,6 +1,14 @@
 name: Execute LiveBench V8 structural diagnostic
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - diag/livebench-v8-structural-20261004
+    paths:
+      - ".github/workflows/execute-livebench-v8-structural.yml"
+      - "livebench_v8_structural_classifier.py"
+      - "diagnose_livebench_replay72_v8_structural.py"
+      - "execute_livebench_if_replay72_v4_candidate.py"
 
 permissions:
   contents: write
