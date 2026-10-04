@@ -6,9 +6,9 @@ on:
       - diagnose/livebench-v8-structural-refinement-20261004
     paths:
       - ".github/workflows/execute-livebench-v9-static-replay72.yml"
-      - "subject/livebench_v9_preacquisition_retry1_activation.json"
+      - "subject/livebench_v9_preacquisition_retry2_activation.json"
       - "diagnose_livebench_replay72_v9_preacquisition.py"
-      - "launch_livebench_v9_preacquisition_retry1_atomic.py"
+      - "launch_livebench_v9_preacquisition_retry2_atomic.py"
       - "execute_livebench_if_replay72_v4_candidate.py"
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      LIVEBENCH_V9_RETRY1_ACTIVATION_BLOB: "1c529af946178adb123af531de9b7e9a6bade982"
+      LIVEBENCH_V9_RETRY2_ACTIVATION_BLOB: "424531d02dfc2e8098a81d57fb46140fc999db12"
       REPOSITORY_PRIVATE: "false"
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -39,13 +39,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object subject/livebench_v9_preacquisition_retry1_activation.json)" = "1c529af946178adb123af531de9b7e9a6bade982"
-          test "$(git hash-object diagnose_livebench_replay72_v9_preacquisition.py)" = "681d2d58560061633a5ee069013a4fb354df5fc4"
-          test "$(git hash-object launch_livebench_v9_preacquisition_retry1_atomic.py)" = "c7e1d0382a9b970fe18ae09b2acd93b246e96ac8"
+          test "$(git hash-object subject/livebench_v9_preacquisition_retry2_activation.json)" = "424531d02dfc2e8098a81d57fb46140fc999db12"
+          test "$(git hash-object diagnose_livebench_replay72_v9_preacquisition.py)" = "8542abc83acbec30c9c7f1d3bbdbaeee9e658008"
+          test "$(git hash-object launch_livebench_v9_preacquisition_retry2_atomic.py)" = "0a9db8623a87b39d86f82c0542c55c359c4e3855"
           test "$(git hash-object execute_livebench_if_replay72_v4_candidate.py)" = "2a57ce896ddbd6819246aab8b44d17a00f36b61e"
           python - <<'PY'
           import json
-          a=json.load(open("subject/livebench_v9_preacquisition_retry1_activation.json"))
+          a=json.load(open("subject/livebench_v9_preacquisition_retry2_activation.json"))
           assert a["scope"]["replay_prefix_limit"]==72
           assert a["scope"]["already_exposed_prefix_only"] is True
           assert a["scope"]["new_case_exposure"] is False
@@ -83,11 +83,10 @@ jobs:
           PY
 
       - name: Execute one-use V9 sanitized static replay
-        if: ${{ false }}
         shell: bash
         run: |
           set -euo pipefail
-          python launch_livebench_v9_preacquisition_retry1_atomic.py 2>&1 | tee /tmp/livebench-v9.log
+          python launch_livebench_v9_preacquisition_retry2_atomic.py 2>&1 | tee /tmp/livebench-v9.log
 
       - name: Build V9 sanitized receipt
         if: always()
@@ -98,13 +97,13 @@ jobs:
           log=pathlib.Path("/tmp/livebench-v9.log").read_text(errors="replace") if pathlib.Path("/tmp/livebench-v9.log").exists() else ""
           claim=None;result=None
           for line in log.splitlines():
-              if line.startswith("LIVEBENCH_V9_RETRY1_ATOMIC_CLAIM="):
+              if line.startswith("LIVEBENCH_V9_RETRY2_ATOMIC_CLAIM="):
                   claim=json.loads(line.split("=",1)[1])
               if line.startswith("LIVEBENCH_V9_STATIC_REFINEMENT="):
                   result=json.loads(line.split("=",1)[1])
           receipt={
-            "schema":"PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY1_EXECUTION_RECEIPT_V1",
-            "activation_blob_sha":"1c529af946178adb123af531de9b7e9a6bade982",
+            "schema":"PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY2_EXECUTION_RECEIPT_V1",
+            "activation_blob_sha":"424531d02dfc2e8098a81d57fb46140fc999db12",
             "workflow_run_id":os.environ.get("GITHUB_RUN_ID"),
             "workflow_sha":os.environ.get("GITHUB_SHA"),
             "claim":claim,
@@ -123,7 +122,7 @@ jobs:
               assert result.get("response_text_emitted") is False
               assert result.get("raw_exception_text_emitted") is False
           pathlib.Path("evidence").mkdir(exist_ok=True)
-          pathlib.Path("evidence/LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY1_EXECUTION_RECEIPT.json").write_text(
+          pathlib.Path("evidence/LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY2_EXECUTION_RECEIPT.json").write_text(
               json.dumps(receipt,indent=2,sort_keys=True)+"\n"
           )
           PY
@@ -131,8 +130,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: livebench-v9-retry1-static-replay72-receipt
-          path: evidence/LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY1_EXECUTION_RECEIPT.json
+          name: livebench-v9-retry2-static-replay72-receipt
+          path: evidence/LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY2_EXECUTION_RECEIPT.json
           if-no-files-found: error
 
       - name: Persist V9 sanitized receipt
@@ -142,7 +141,7 @@ jobs:
           set -euo pipefail
           git config user.name "Project Brain LiveBench V9"
           git config user.email "project-brain-livebench-v9@users.noreply.github.com"
-          git add evidence/LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY1_EXECUTION_RECEIPT.json
+          git add evidence/LIVEBENCH_V9_PREACQUISITION_STATIC_RETRY2_EXECUTION_RECEIPT.json
           if ! git diff --cached --quiet; then
             git commit -m "Persist repaired LiveBench V9 static replay72 receipt"
             git push origin HEAD:diagnose/livebench-v8-structural-refinement-20261004
