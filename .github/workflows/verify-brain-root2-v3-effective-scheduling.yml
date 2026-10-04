@@ -1,5 +1,7 @@
 name: Verify Brain Root2 V3 effective scheduling
 on:
+  push:
+    branches: [verify-r2v3-effective-20261004]
   pull_request:
     branches: [main]
     paths:
