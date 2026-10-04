@@ -1,0 +1,37 @@
+name: Verify LiveBench three-transform cut
+
+on:
+  push:
+    branches:
+      - verify/livebench-three-transform-cut-20261004-sol
+    paths:
+      - verify_livebench_three_transform_cut_v1.py
+      - .github/workflows/verify-livebench-three-transform-cut.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_three_transform_cut_v1.py
+      - .github/workflows/verify-livebench-three-transform-cut.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify three-transform minimum repair theorem
+        run: python verify_livebench_three_transform_cut_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-three-transform-cut-receipt
+          path: livebench_three_transform_cut_receipt.json
+          if-no-files-found: error
