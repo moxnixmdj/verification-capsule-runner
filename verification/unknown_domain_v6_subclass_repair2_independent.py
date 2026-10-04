@@ -24,11 +24,11 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py":"e52858b9fef2d795f72b45cd3ae82ad04344aa91",
- "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"60373126f3ee27368ae06e6d7d559f1b826d90d4",
+ "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"d3b5e7279ca1068d1532046f35e6752107e42e24",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
- "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
- "canonical/tests/test_unknown_domain_direct_v5.py":"5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
+ "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"1afe856f327d52c05c0be3b828b2602f0015f389",
+ "canonical/tests/test_unknown_domain_direct_v5.py":"e2ade4b713bb8103ae577de35a35b1caa03bc5a9",
 }
 
 def blob(p:Path)->str:
@@ -74,8 +74,44 @@ class EvilBytes(bytes):
     def __iter__(self):
         raise RuntimeError("EVIL_BYTES___ITER__")
 
+class FakeStrViaClassProperty:
+    @property
+    def __class__(self):
+        return str
+
+class FakeBytesViaClassProperty:
+    @property
+    def __class__(self):
+        return bytes
+
 got={p:blob(ROOT/p) for p in EXPECTED}
 assert got==EXPECTED,{"expected":EXPECTED,"got":got}
+
+# Reproduce the third-order class-spoof failure that invalidates isinstance
+# as a load-bearing type-domain gate, then require the runtime-type successor
+# to reject those same proxies before any built-in descriptor is invoked.
+fake_str=FakeStrViaClassProperty()
+fake_bytes=FakeBytesViaClassProperty()
+assert isinstance(fake_str,str) is True
+assert isinstance(fake_bytes,bytes) is True
+assert issubclass(type(fake_str),str) is False
+assert issubclass(type(fake_bytes),bytes) is False
+
+fake_str_rejected=False
+try:
+    g5._canonical_beacon(fake_str)
+except g1.UnknownDomainGeneratorError as e:
+    assert str(e)=="POST_FREEZE_BEACON_INVALID"
+    fake_str_rejected=True
+assert fake_str_rejected
+
+fake_bytes_rejected=False
+try:
+    g5._secret_bytes_total(fake_bytes)
+except g1.UnknownDomainGeneratorError as e:
+    assert str(e)=="EVALUATOR_SECRET_INVALID"
+    fake_bytes_rejected=True
+assert fake_bytes_rejected
 
 # Reproduce the exact second-order failure mode that invalidated repair 1.
 evil_bytes=EvilBytes(b"B"*32)
@@ -147,18 +183,18 @@ assert cases==81
 # independent adversarial attacks above have passed.
 theorem=proof.prove(ROOT)
 assert theorem["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
-assert theorem["string_interface_totality"]["isinstance_accepted_subclass_override_hooks_bypassed"] is True
+assert theorem["string_interface_totality"]["genuine_runtime_subclass_override_hooks_bypassed"] is True\nassert theorem["string_interface_totality"]["fake_class_proxy_spoof_rejected"] is True
 assert theorem["string_interface_totality"]["bytes_subclass_buffer_protocol_override_bypassed"] is True
 assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["accounting"]["acceptance_credit_delta"]==0
 
 receipt={
- "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
- "status":"PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
+ "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_RUNTIME_TYPE_REPAIR_INDEPENDENT_VERIFICATION_V1",
+ "status":"PASS__INDEPENDENT_CONTENT_BOUND_NON_SPOOFABLE_RUNTIME_TYPE_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
  "python":platform.python_version(),
  "exact_subject_blobs":EXPECTED,
  "attacks":{
-   "str_subclass_override_getattribute":True,
+   "fake_str_class_proxy_isinstance_spoof_reproduced":True,\n   "fake_str_class_proxy_rejected_by_actual_type_gate":fake_str_rejected,\n   "fake_bytes_class_proxy_isinstance_spoof_reproduced":True,\n   "fake_bytes_class_proxy_rejected_by_actual_type_gate":fake_bytes_rejected,\n   "str_subclass_override_getattribute":True,
    "str_subclass_override_strip":True,
    "str_subclass_override_encode":True,
    "str_subclass_override_len":True,
