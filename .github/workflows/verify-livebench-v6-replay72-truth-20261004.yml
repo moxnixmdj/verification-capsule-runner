@@ -1,0 +1,26 @@
+name: Verify LiveBench V6 Replay72 Truth
+
+on:
+  push:
+    branches:
+      - verify/livebench-v6-replay72-truth-20261004-0925
+    paths:
+      - .github/workflows/verify-livebench-v6-replay72-truth-20261004.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify replay truth against public Actions evidence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python verify_livebench_v6_replay72_truth_20261004.py
