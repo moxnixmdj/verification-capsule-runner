@@ -1,0 +1,46 @@
+name: Falsify sub-100MB FLAN-T5 semantic seed V1
+on:
+  push:
+    branches: [falsify-flan-t5-sub100mb-semantic-seed-v1]
+    paths:
+      - "experiments/flan_t5_sub100mb_semantic_seed_v1.mjs"
+      - ".github/workflows/falsify-flan-t5-sub100mb-semantic-seed-v1.yml"
+permissions:
+  contents: read
+jobs:
+  falsify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned local inference runtime
+        run: npm install --no-save --ignore-scripts @huggingface/transformers@4.3.0
+      - name: Materialize exact pinned model state
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="models/brain/flan-t5-small"
+          mkdir -p "$ROOT/onnx"
+          BASE="https://huggingface.co/onnx-community/flan-t5-small-ONNX/resolve/76988c16f73cadb2c2e13e2d7d85608944223105"
+          for f in config.json generation_config.json quantize_config.json special_tokens_map.json tokenizer.json tokenizer_config.json; do
+            curl --fail --location --retry 3 --silent --show-error "$BASE/$f" -o "$ROOT/$f"
+          done
+          curl --fail --location --retry 3 --silent --show-error "$BASE/onnx/encoder_model_int8.onnx" -o "$ROOT/onnx/encoder_model_int8.onnx"
+          curl --fail --location --retry 3 --silent --show-error "$BASE/onnx/decoder_model_merged_int8.onnx" -o "$ROOT/onnx/decoder_model_merged_int8.onnx"
+          echo "691c4b521a2aad8ff0d1a94e578f507bbfb7b3d939b5b4d233c4a8043a2388dc  $ROOT/onnx/encoder_model_int8.onnx" | sha256sum -c -
+          echo "a6904917c00588349f11ef2e3196788eb0f699f549889c295c90225f19977974  $ROOT/onnx/decoder_model_merged_int8.onnx" | sha256sum -c -
+          BYTES=$(du -sb "$ROOT" | cut -f1)
+          echo "learned_state_bytes=$BYTES"
+          test "$BYTES" -lt 100000000
+      - name: Run local-only semantic falsification
+        run: node experiments/flan_t5_sub100mb_semantic_seed_v1.mjs
+      - name: Upload falsification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flan-t5-sub100mb-semantic-seed-v1-receipt
+          path: flan_t5_sub100mb_semantic_seed_receipt.json
+          if-no-files-found: warn
