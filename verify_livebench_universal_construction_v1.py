@@ -28,7 +28,7 @@ SUBJECT_BLOBS = {
     "canonical/runtime/livebench_legacy15_contract_composer_v2.py":
         "d73ec366b32252996258eae6d10d67d4d6a5e042",
     "canonical/runtime/livebench_legacy15_lexical_slot_quotient_v1.py":
-        "5803c31e3972c6d40415f319e808c48420bc0388",
+        "09a5d7810fd46713aaf06cf1d204fe140d1d8045",
     "canonical/runtime/livebench_legacy15_numeric_quotient_v1.py":
         "72189bb8adb12ad36a52ee666a1f79fbb201b06b",
     "canonical/runtime/livebench_pointwise_minimum_cut_v1.py":
@@ -36,7 +36,7 @@ SUBJECT_BLOBS = {
     "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py":
         "7477f5ea5bdeac3595ee2784a38d078fe2f385b0",
     "canonical/runtime/livebench_legacy15_universal_construction_v1.py":
-        "a7a12bf7d5746a43c85ef8b99c78d9187e373e04",
+        "f649eb5f50698775a4f7595e67235f0bc919fc4d",
 }
 OLD_PLANNER = OLD / "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py"
 OLD_PLANNER_BLOB = "71e637c70edf1c582e28ea38b3b798965c803a06"
