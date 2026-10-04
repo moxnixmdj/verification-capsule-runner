@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12.14"
+          python-version: "3.12.10"
       - name: Install exact scorer dependencies
         run: |
           set -euo pipefail
