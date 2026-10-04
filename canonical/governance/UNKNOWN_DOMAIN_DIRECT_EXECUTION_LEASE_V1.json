@@ -60,7 +60,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "08a5358c5d977a39bb9c84bf408388c75f29dfa4",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937"
   },
@@ -100,7 +100,8 @@
     "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
     "ZERO_INCREMENTAL_SPEND",
     "TRANSITIVE_GENERATOR_V1_DEPENDENCY_MUST_BE_CONTENT_ADDRESSED",
-    "PRODUCTION_WORKTREE_MUST_CHECKOUT_IMMUTABLE_CREATE_EVENT_SHA_NOT_MUTABLE_BRANCH_REF"
+    "PRODUCTION_WORKTREE_MUST_CHECKOUT_IMMUTABLE_CREATE_EVENT_SHA_NOT_MUTABLE_BRANCH_REF",
+    "ATOMIC_CLAIM_RESPONSE_SHA_MUST_EQUAL_CREATE_EVENT_SHA"
   ],
   "entrypoint_repair": {
     "defect": "CREATE_TRIGGER_REACHED_RUNNER_BUT_PATH_EXECUTION_SET_SYS_PATH_TO_CANONICAL_RUNTIME_AND_FAILED_IMPORT_CANONICAL_BEFORE_ATOMIC_CLAIM",
@@ -140,7 +141,14 @@
       "repair": "CHECKOUT_GITHUB_SHA_FROM_THE_CREATE_EVENT_TO_PIN_THE_EXACT_CREATED_BRANCH_HEAD",
       "repaired_workflow_git_blob_sha": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
       "production_cases_consumed_before_repair": 0,
-      "independent_verification_required": true
+      "independent_verification_required": true,
+      "claim_response_binding_repair": {
+        "defect": "ATOMIC_CLAIM_CREATE_RESPONSE_ACCEPTED_ANY_40_CHARACTER_OBJECT_SHA_WITHOUT_REQUIRING_EQUALITY_TO_THE_IMMUTABLE_CREATE_EVENT_SHA",
+        "repair": "REQUIRE_CLAIM_RESPONSE_OBJECT_SHA_TO_EQUAL_GITHUB_SHA_BEFORE_BEACON_SECRET_OR_CASE_GENERATION",
+        "production_launcher_git_blob_sha": "08a5358c5d977a39bb9c84bf408388c75f29dfa4",
+        "production_cases_consumed_before_repair": 0,
+        "independent_verification_required": true
+      }
     }
   }
 }
