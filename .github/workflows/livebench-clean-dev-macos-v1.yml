@@ -1,5 +1,5 @@
 name: LiveBench clean equivalent macOS diagnostic V1
-# RETRIGGER_V2
+# RETRIGGER_V3_REBASE_SAFE
 # RETRIGGER_AFTER_WORKFLOW_INSTALL_V1
 
 on:
@@ -80,6 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           test -f livebench_clean_dev_v1_receipt.json || exit 0
+          git pull --rebase origin verify-livebench-clean-dev-v1-20261004-sol
           mkdir -p receipts
           cp livebench_clean_dev_v1_receipt.json receipts/livebench_clean_dev_macos_v1_receipt.json
           git config user.name "project-brain-verifier"
