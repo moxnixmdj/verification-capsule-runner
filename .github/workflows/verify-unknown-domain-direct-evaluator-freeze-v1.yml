@@ -1,0 +1,22 @@
+name: Verify Unknown-Domain direct evaluator freeze V1
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run copied scorer tests
+        run: python -m pytest -q canonical/tests/test_unknown_domain_direct_hidden_scorer_v1.py
+      - name: Verify exact freeze and fresh adversarial boundaries
+        run: python verify_unknown_domain_direct_evaluator_freeze_v1.py
