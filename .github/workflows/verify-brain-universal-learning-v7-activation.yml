@@ -106,7 +106,7 @@ jobs:
           v7a=root3["authority"]["universal_learning_v7_overlay"]
           assert v6a["activation_git_blob_sha"]=="d3093f6c624b3c5a0de588e2da5c8c7b49d07238",v6a
           assert v7a["activation_git_blob_sha"]=="58cbfecea60e7f4259c5b7c0218ebc15c4e33399",v7a
-          assert v7a["structural_residual_reduction_git_blob_sha"]=="eec64426584b54946dd4d6c8d2c749eabf2159f2",v7a
+          assert v7a["structural_residual_reduction_git_blob_sha"]=="26704949fa0d6b4db74a5701758a07569e8268c3",v7a
 
           assert cut["authority"]["root3_compression"]["git_blob_sha"]==root3_sha,cut["authority"]["root3_compression"]
           assert front["authority"]["root3_residual_compression"]["git_blob_sha"]==root3_sha,front["authority"]["root3_residual_compression"]
