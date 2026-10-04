@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
   "date": "2026-10-04",
-  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__ENTRYPOINT_REPAIR_CANDIDATE__INDEPENDENT_VERIFICATION_REQUIRED__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__ENTRYPOINT_AND_TRANSITIVE_DEPENDENCY_REPAIR_CANDIDATE__INDEPENDENT_VERIFICATION_REQUIRED__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
   "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
   "authorized_leaves": [
     "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
@@ -112,6 +112,11 @@
     "repair": "INVOKE_FROZEN_LAUNCHER_AS_PACKAGE_MODULE_FROM_REPOSITORY_ROOT",
     "repaired_workflow_git_blob_sha": "a4315a0ee28ae82145594b7a9abbd00bae61ceb9",
     "independent_verification_required": true,
-    "transitive_dependency_repair": "Generator V2 imports Generator V1; bind the exact Generator V1 blob into the immutable execution lease before any claim or production generation."
+    "transitive_dependency_repair": {
+      "defect": "GENERATOR_V2_IMPORTS_GENERATOR_V1_BUT_GENERATOR_V1_WAS_NOT_CONTENT_ADDRESSED_BY_THE_RUNNER_EXECUTION_LEASE",
+      "repair": "BIND_EXACT_GENERATOR_V1_GIT_BLOB_IN_EXECUTION_LEASE_SO_VALIDATE_LEASE_RECHECKS_THE_COMPLETE_LOAD_BEARING_GENERATOR_CLOSURE",
+      "generator_v1_git_blob_sha": "f974a4594c78e74693c7ba5a19f131dfa481b937",
+      "production_cases_consumed_before_repair": 0
+    }
   }
 }
