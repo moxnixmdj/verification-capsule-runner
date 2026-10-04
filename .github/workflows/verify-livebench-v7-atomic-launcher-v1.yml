@@ -1,4 +1,5 @@
 name: Verify LiveBench V7 atomic launcher V1
+# Exact launcher bytes are verified below; this workflow consumes zero terminal cases.
 on:
   pull_request:
     branches: [main]
