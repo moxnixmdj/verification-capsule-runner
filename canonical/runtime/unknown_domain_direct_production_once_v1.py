@@ -275,7 +275,10 @@ def main()->None:
     result["launch_ref"]="refs/heads/"+ref_name
     result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
     result["result_path"]=result_path
+    sealed_json=json.dumps(result,sort_keys=True,separators=(",",":"))
     RESULT_ARTIFACT_PATH.write_text(json.dumps(result,indent=2,sort_keys=True)+"\\n")
+    print("SEALED_PRODUCTION_RESULT_SHA256="+hashlib.sha256(sealed_json.encode()).hexdigest())
+    print("SEALED_PRODUCTION_RESULT_JSON="+sealed_json)
     status,response=put_result(repo,token,claim_branch,result_path,result)
     if status!=201:
         raise ProductionLaunchError("RESULT_COMMIT_NOT_201:"+str(status))
