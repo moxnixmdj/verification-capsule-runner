@@ -1,0 +1,30 @@
+name: Verify Root2 current state v4
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_current_state_v4/**"
+      - ".github/workflows/verify-root2-current-state-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact authority blobs
+        run: |
+          test "$(git hash-object capsules/root2_current_state_v4/ROOT3_RESIDUAL_COMPRESSION_V1.json)" = "22ee9392b19b63b50f8d94cba4d28147b9b15f2f"
+          test "$(git hash-object capsules/root2_current_state_v4/TERMINAL_ROOT_CAUSE_STATE_V1.json)" = "32bbdc6f1fb489f23669b42a3f1db93a1db7836e"
+          test "$(git hash-object capsules/root2_current_state_v4/ROOT2_FROZEN_COMPARATOR_VECTOR_V1.json)" = "f426f1aa136abdcc33a14716fe4edbc40003bf2a"
+          test "$(git hash-object capsules/root2_current_state_v4/ROOT2_PROOF_HYPERGRAPH_CURRENT_REBIND_V3.json)" = "244f4fcdc07ee149fc4370dc52f4de90cbd87db9"
+          test "$(git hash-object capsules/root2_current_state_v4/CURRENT_ZERO_REALITY_MINIMUM_CUT_V8.json)" = "62197933c4ee97f23a51662a5176f9a4c78e8803"
+          test "$(git hash-object capsules/root2_current_state_v4/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json)" = "e437bf5991f8e41369f016b1da959a013ea46ebb"
+          test "$(git hash-object capsules/root2_current_state_v4/CURRENT_TERMINAL_AUTHORITY_V1.json)" = "0243296ef28a4d0356aec1cde8d9bdf346aa754a"
+          test "$(git hash-object capsules/root2_current_state_v4/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json)" = "71495ebcf456119f4df694203631aeeb3048c81a"
+      - name: Verify Root2 v4 semantics
+        run: python capsules/root2_current_state_v4/verify.py
