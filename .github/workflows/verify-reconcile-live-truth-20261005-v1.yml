@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - verify/reconcile-live-truth-20261005-v1
+  pull_request:
+    paths:
+      - "canonical/**"
+      - ".github/workflows/verify-reconcile-live-truth-20261005-v1.yml"
 permissions:
   contents: read
 jobs:
