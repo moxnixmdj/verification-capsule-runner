@@ -13,11 +13,11 @@
     "canonical/runtime/compounding_probe_rank_v5.py": "e4c34aafc9dd1b4b66cd85754bcd8ac2e89b58c3",
     "canonical/runtime/universal_learning_recursive_abstraction_router_v5.py": "05b3df7996f2655417392db5404062255fa53bff",
     "canonical/runtime/mechanism_discovery_v6.py": "cbfc263d8248de3edc10ba6ac397ae13eab7ee58",
-    "canonical/runtime/safe_adaptive_experiment_synthesizer_v6.py": "0ddc58d4d7ff45731b23e24732d25bcde0503894",
+    "canonical/runtime/safe_adaptive_experiment_synthesizer_v6.py": "d4d5ce44896b8940dc3be28b76d67e1ba63dd9ca",
     "canonical/runtime/universal_learning_mechanism_router_v6.py": "c0780686cc6cd81f29042f7c3619a6f47acd18c4",
-    "canonical/tests/test_universal_learning_mechanism_v6.py": "46fc04a167d0dadc0232ef4d9361c30c9d4cae90",
+    "canonical/tests/test_universal_learning_mechanism_v6.py": "207ca935840ecbb5924bb4d650ad32e7327b924c",
     "canonical/tests/test_universal_learning_mechanism_binding_v6.py": "14783e7d314454643db58c93c5af91569148303b",
-    "canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6.json": "3654f6da31fc1a1f8a09cca39106407858b4896e",
+    "canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6.json": "b21b0f30e4f34c96fa0e29b4933df57f654508e6",
     "canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5.json": "bc738d672cfec7f488fe99c94bae3d5197954860",
     "canonical/verification/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "ff576ee1a06423037033707faabcabad1775fc99"
   }
