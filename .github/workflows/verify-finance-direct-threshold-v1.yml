@@ -1,0 +1,24 @@
+name: Verify Finance direct threshold V1
+on:
+  pull_request:
+    paths:
+      - "subject/FINANCE_INDEX_DIRECT_THRESHOLD_THEOREM_V1.json"
+      - "subject/finance_index_direct_threshold_v1.py"
+      - "subject/test_finance_index_direct_threshold_v1.py"
+      - "subject/FINANCE_INDEX_COMPONENTWISE_RESIDUAL_VECTOR_V1.json"
+      - "subject/FINANCE_ACCOUNTING_INDEX_IDENTITY_RECONCILIATION_V1.json"
+      - "subject/FINANCE_INDEX_MONOTONE_AGGREGATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+      - "verify_finance_direct_threshold_v1.py"
+      - ".github/workflows/verify-finance-direct-threshold-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_finance_direct_threshold_v1.py
