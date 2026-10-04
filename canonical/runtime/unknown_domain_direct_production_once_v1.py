@@ -64,7 +64,11 @@ def _json_request(method:str,url:str,token:str,payload:Mapping[str,Any]):
     try:
         with urllib.request.urlopen(req,timeout=30) as resp:
             body=resp.read()
-            return int(resp.status), json.loads(body or b"{}")
+            try:
+                parsed=json.loads(body or b"{}")
+            except Exception:
+                parsed={"_malformed_json_response":True}
+            return int(resp.status), parsed
     except urllib.error.HTTPError as exc:
         body=exc.read()
         try: parsed=json.loads(body or b"{}")
@@ -211,7 +215,35 @@ def claim_then_execute(
 ):
     claim_branch=CLAIM_PREFIX+digest
     claim_ref="refs/heads/"+claim_branch
-    status,response=create_ref_fn(repo,token,claim_ref,launch_sha)
+    try:
+        status,response=create_ref_fn(repo,token,claim_ref,launch_sha)
+    except Exception as exc:
+        return claim_branch,{
+            "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+            "status":"ATOMIC_CLAIM_TRANSPORT_EXCEPTION__OUTCOME_AMBIGUOUS__NO_EXECUTION__FAIL_CLOSED",
+            "target_predicate":TARGET,
+            "authority_claim_id":claim_ref,
+            "claim_create_http_status":None,
+            "claim_response_ref":"",
+            "claim_response_object_sha":"",
+            "claim_transport_exception_type":type(exc).__name__,
+            "claim_transport_exception_message":str(exc),
+            "posthoc_claim_ref_reconciliation_required":True,
+            "production_cases_generated":0,
+            "persistent_learned_bytes":0,
+            "external_frontier_model_calls":0,
+            "external_learned_capability_calls":0,
+            "incremental_spend_usd":0,
+            "replay_allowed":False,
+            "replacement_allowed":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0,
+            "promotion_authority":False,
+            "separate_independent_reduction_required":True,
+            "claim_uniqueness_source":"AMBIGUOUS_TRANSPORT__DETERMINISTIC_REF_POSTHOC_RECONCILIATION",
+        }
     if status!=201:
         raise ProductionLaunchError("ATOMIC_CLAIM_CREATE_NOT_201:"+str(status))
     response_ref=str(response.get("ref") or "")
@@ -308,7 +340,7 @@ def main()->None:
     print(json.dumps({
         "status":result["status"],
         "claim_ref":"refs/heads/"+claim_branch,
-        "claim_create_http_status":201,
+        "claim_create_http_status":result.get("claim_create_http_status"),
         "production_cases_generated":result.get("production_cases_generated"),
         "all_27_cases_pass":(result.get("aggregate") or {}).get("all_27_cases_pass"),
         "result_path":result_path,
