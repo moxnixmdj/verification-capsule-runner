@@ -25,7 +25,7 @@ jobs:
       - name: Verify exact V10 subjects
         run: |
           set -euo pipefail
-          python verify_livebench_v10_formal_routing.py
+          python verify_livebench_v10_execution_v2.py
       - name: Atomic claim and replay exposed prefix
         env:
           GH_TOKEN: ${{ github.token }}
