@@ -1,0 +1,32 @@
+name: Verify LiveBench zero-case resource fit
+
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_zero_case_resource_fit_20261004.py'
+      - 'subject/livebench_zero_case_resource_fit_20261004/**'
+      - '.github/workflows/verify-livebench-zero-case-resource-fit-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frozen declared packages plus explicit scorer dependency repair
+        run: |
+          python -m pip install --disable-pip-version-check \
+            nltk==3.10.3 \
+            emoji==2.16.0 \
+            syllapy==0.7.2 \
+            setuptools==80.9.0 \
+            spacy==3.8.16
+      - name: Install pinned spaCy English pipeline
+        run: |
+          python -m pip install --disable-pip-version-check \
+            https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+      - name: Run zero-case resource-fit verification
+        run: python verify_livebench_zero_case_resource_fit_20261004.py
