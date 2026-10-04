@@ -169,4 +169,8 @@ def main()->int:
     return 0 if not errors else 1
 
 if __name__=="__main__":
-    raise SystemExit(main())
+    rc=main()
+    if rc==0:
+        import verify_livebench_legacy_scorer_supplement_v1 as legacy_supplement
+        rc=legacy_supplement.main()
+    raise SystemExit(rc)
