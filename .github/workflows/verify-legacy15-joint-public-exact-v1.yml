@@ -1,6 +1,15 @@
 name: Verify deterministic legacy15 exact public Root1 V1
 
 on:
+  push:
+    branches: [verify-legacy15-direct-exact-20261004-v1]
+    paths:
+      - 'candidate_livebench_legacy_visible_constraint_compiler_v1.py'
+      - 'candidate_livebench_legacy_visible_constraint_compiler_v4.py'
+      - 'candidate_livebench_frozen_active_legacy15_v1.py'
+      - 'candidate_livebench_legacy15_joint_witness_v1.py'
+      - 'verify_legacy15_joint_public_exact_v1.py'
+      - '.github/workflows/verify-legacy15-joint-public-exact-v1.yml'
   pull_request:
     paths:
       - 'candidate_livebench_legacy_visible_constraint_compiler_v1.py'
