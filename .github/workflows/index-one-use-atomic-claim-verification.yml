@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ github.token }}
-      TARGET_SHA: "b7e45e064f88e23a19e25b5459d5cd6acf87fbb0"
+      TARGET_SHA: "e172d9f297a0c8375dcf6bfe2b2dc020a737b769"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
