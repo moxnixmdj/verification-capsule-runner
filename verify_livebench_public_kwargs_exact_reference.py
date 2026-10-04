@@ -85,7 +85,7 @@ def main() -> int:
         ref = kw.get("reference_text")
         pct = kw.get("percentage")
         assert isinstance(ref, str) and ref != ""
-        assert isinstance(pct, int)
+        assert isinstance(pct, (int, float)) and not isinstance(pct, bool)
         # Re-lookup by generic normalized visible prompt only; recover exact bytes.
         recovered = prompt_index[norm_ws(row["prompt"])]["kwargs"][i]["reference_text"]
         assert recovered == ref
