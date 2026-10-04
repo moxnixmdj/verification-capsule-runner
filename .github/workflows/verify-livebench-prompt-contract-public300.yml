@@ -1,0 +1,36 @@
+name: Verify LiveBench Prompt Contract Public300
+on:
+  push:
+    branches: [verify-livebench-prompt-contract-v1-20261004]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/livebench_prompt_contract_v1/**'
+      - '.github/workflows/verify-livebench-prompt-contract-public300.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact scorer dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --quiet \
+            nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 setuptools==80.9.0 \
+            spacy==3.8.16 langdetect==1.0.9 immutabledict==4.3.1
+          python -m pip install --disable-pip-version-check --quiet \
+            https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+      - name: Run exact pinned scorer over public 300
+        run: python subject/livebench_prompt_contract_v1/verify_public300.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-prompt-contract-public300-receipt
+          path: livebench_prompt_contract_public300_receipt.json
+          if-no-files-found: error
