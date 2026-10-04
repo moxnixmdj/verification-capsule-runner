@@ -1,0 +1,33 @@
+name: Verify Unknown-Domain V6 universal totality
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_unknown_domain_v6_universal_totality_20261005.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v2.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v2.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v4.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v5.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_execution_harness_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_v5.py'
+      - '.github/workflows/verify-unknown-domain-v6-universal-totality-20261005.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent universal proof verifier
+        run: python verify_unknown_domain_v6_universal_totality_20261005.py
+      - name: Run V5/V6 adversarial regression suite
+        run: python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
