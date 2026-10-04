@@ -85,6 +85,15 @@ evil_secret=EvilStr("S"*31+"\udfff")
 evil_bytes=EvilBytes(b"B"*32)
 assert isinstance(evil_beacon,str) and isinstance(evil_secret,str)
 assert isinstance(evil_bytes,bytes)
+memoryview_buffer_counterexample=False
+try:
+    memoryview(evil_bytes).tobytes()
+except RuntimeError as exc:
+    assert str(exc)=="OVERRIDDEN_BUFFER_MUST_NOT_RUN"
+    memoryview_buffer_counterexample=True
+assert memoryview_buffer_counterexample
+assert bytes.__getitem__(evil_bytes,slice(None))==b"B"*32
+assert type(bytes.__getitem__(evil_bytes,slice(None))) is bytes
 assert g5._canonical_beacon(evil_beacon).isascii()
 assert g5._secret_bytes_total(evil_secret)==str.encode(evil_secret,"utf-8","surrogatepass")
 assert g5._secret_bytes_total(evil_bytes)==b"B"*32
@@ -266,6 +275,8 @@ receipt={
  "bytes_subclass_full_27_case_execution_pass":True,
  "bytes_subclass_override_bypassed":True,
  "bytes_subclass_buffer_len_getitem_iter_overrides_bypassed":True,
+ "second_order_memoryview_buffer_counterexample_reproduced":memoryview_buffer_counterexample,
+ "base_bytes_descriptor_materializes_exact_plain_bytes":True,
  "forced_total_token_collision_survival":True,
  "v2_exact_float_counterexample":counterexample,
  "nonproduction_falsification":{"populations":populations,"cases":cases,"all_pass":True},
