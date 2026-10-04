@@ -14,9 +14,9 @@ EXPECTED = {
     "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
     "canonical/runtime/livebench_legacy15_contract_composer_v2.py": "d73ec366b32252996258eae6d10d67d4d6a5e042",
     "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py": "7477f5ea5bdeac3595ee2784a38d078fe2f385b0",
-    "canonical/runtime/livebench_legacy15_lexical_slot_quotient_v1.py": "5803c31e3972c6d40415f319e808c48420bc0388",
+    "canonical/runtime/livebench_legacy15_lexical_slot_quotient_v1.py": "09a5d7810fd46713aaf06cf1d204fe140d1d8045",
     "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py": "71e637c70edf1c582e28ea38b3b798965c803a06",
-    "canonical/runtime/livebench_pointwise_minimum_cut_v1.py": "0d4e563b618f8fd7f37396a88738cefb50979ff3",
+    "canonical/runtime/livebench_pointwise_minimum_cut_v1.py": "3552ceb0c9bdf80e8666460931f20f06f580a0f2",
     "canonical/runtime/livebench_legacy15_numeric_quotient_v1.py": "72189bb8adb12ad36a52ee666a1f79fbb201b06b",
 }
 
