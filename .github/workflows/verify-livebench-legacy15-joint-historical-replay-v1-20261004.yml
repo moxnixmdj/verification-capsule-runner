@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
+      - 'subject/livebench_legacy15_joint_historical_replay_v1_20261004/**'
+      - '.github/workflows/verify-livebench-legacy15-joint-historical-replay-v1-20261004.yml'
   pull_request:
     paths:
       - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
