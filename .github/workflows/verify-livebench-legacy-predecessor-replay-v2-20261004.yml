@@ -1,0 +1,32 @@
+name: Verify LiveBench legacy predecessor compiler V2
+
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_legacy_predecessor_replay_v2_20261004.py'
+      - 'subject/livebench_legacy_predecessor_replay_v2_20261004/**'
+      - '.github/workflows/verify-livebench-legacy-predecessor-replay-v2-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned parquet reader
+        run: python -m pip install --disable-pip-version-check --no-cache-dir pyarrow==17.0.0
+      - name: Download exact clean predecessor population
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-delay 2 --retry-all-errors \
+            'https://huggingface.co/datasets/livebench/instruction_following/resolve/4f7ab12f0d47848da31de92bd7cc3d7d4acfe695/data/test-00000-of-00001.parquet' \
+            -o livebench_instruction_following_predecessor.parquet
+          printf '%s  %s\n' \
+            '57cbc3a738f7a95b234125965929247e7781ce6c5216bdea1d18548f4b10e98c' \
+            livebench_instruction_following_predecessor.parquet | sha256sum -c -
+      - name: Replay compiler against hidden predecessor truth
+        run: python verify_livebench_legacy_predecessor_replay_v2_20261004.py
