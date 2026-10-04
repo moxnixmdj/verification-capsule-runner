@@ -39,7 +39,7 @@ LEAVES={
 }
 LAUNCH_PREFIX="unknown-domain-direct-launch/"
 CLAIM_PREFIX="unknown-domain-direct-claims/"
-RESULT_PREFIX="canonical/verification/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_"
+RESULT_PREFIX="canonical/verification/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_"\nRESULT_ARTIFACT_PATH=ROOT/"unknown_domain_direct_production_result.json"
 
 
 class ProductionLaunchError(RuntimeError):
@@ -86,14 +86,64 @@ def put_result(repo:str,token:str,branch:str,path:str,content:Mapping[str,Any]):
     return _json_request("PUT",f"https://api.github.com/repos/{repo}/contents/{path}",token,payload)
 
 
+def canonical_identity_from_lease(lease:Mapping[str,Any])->dict[str,Any]:
+    components=lease.get("exact_components")
+    source=lease.get("source_brain")
+    claim=lease.get("atomic_claim")
+    limits=lease.get("limits")
+    resources=lease.get("resources")
+    authority=lease.get("authority")
+    if not isinstance(components,Mapping) or not all(isinstance(x,Mapping) for x in (source,claim,limits,resources,authority)):
+        raise ProductionLaunchError("LEASE_IDENTITY_INPUT_INVALID")
+    return {
+        "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_IDENTITY_V2",
+        "target_predicate":str(lease.get("target_predicate") or ""),
+        "authorized_leaves":sorted(map(str,lease.get("authorized_leaves",[]))),
+        "activation_git_blob_sha":source.get("final_activation_blob"),
+        "qualification_receipt_git_blob_sha":source.get("qualification_receipt_blob"),
+        "production_precommit_git_blob_sha":source.get("production_precommit_blob"),
+        "exact_execution_subject":{
+            "candidate_v1":components.get("canonical/runtime/unknown_domain_direct_candidate_v1.py"),
+            "candidate_v2":components.get("canonical/runtime/unknown_domain_direct_candidate_v2.py"),
+            "generator_v1":components.get("canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"),
+            "generator_v2":components.get("canonical/runtime/unknown_domain_direct_hidden_generator_v2.py"),
+            "hidden_scorer":components.get("canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py"),
+            "execution_harness":components.get("canonical/runtime/unknown_domain_direct_execution_harness_v1.py"),
+        },
+        "claim_repository":claim.get("repository"),
+        "claim_namespace":claim.get("claim_ref_prefix"),
+        "production_budget":{
+            "production_populations_allowed":limits.get("production_populations"),
+            "production_cases_allowed":limits.get("production_cases"),
+            "max_transfer_probes_per_case":limits.get("max_transfer_probes_per_case"),
+            "replay_allowed":limits.get("replay_allowed"),
+            "replacement_allowed":limits.get("replacement_allowed"),
+            "post_result_tuning_allowed":limits.get("post_result_tuning_allowed"),
+        },
+        "resource_boundary":dict(resources),
+        "global_fresh_reality":authority.get("global_fresh_reality"),
+    }
+
+
 def lease_bytes_and_digest(path:Path=LEASE_PATH):
     raw=path.read_bytes()
-    return raw,hashlib.sha256(raw).hexdigest()
+    lease=json.loads(raw)
+    identity=canonical_identity_from_lease(lease)
+    canonical=json.dumps(identity,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+    return raw,hashlib.sha256(canonical).hexdigest()
 
 
 def validate_lease(lease:Mapping[str,Any],digest:str)->None:
     if lease.get("schema")!="PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1":
         raise ProductionLaunchError("LEASE_SCHEMA_INVALID")
+    derived_identity=canonical_identity_from_lease(lease)
+    if lease.get("lease_identity")!=derived_identity:
+        raise ProductionLaunchError("LEASE_IDENTITY_NOT_CANONICAL")
+    canonical=json.dumps(derived_identity,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+    if hashlib.sha256(canonical).hexdigest()!=digest:
+        raise ProductionLaunchError("LEASE_IDENTITY_DIGEST_MISMATCH")
+    if lease.get("atomic_claim",{}).get("claim_key_rule")!="SHA256_OF_CANONICAL_QUALIFIED_EXECUTION_TUPLE_V2":
+        raise ProductionLaunchError("LEASE_CLAIM_KEY_RULE_INVALID")
     if lease.get("target_predicate")!=TARGET:
         raise ProductionLaunchError("LEASE_TARGET_MISMATCH")
     if set(map(str,lease.get("authorized_leaves",[])))!=LEAVES:
@@ -228,12 +278,54 @@ def claim_then_execute(
     status,response=create_ref_fn(repo,token,claim_ref,launch_sha)
     if status!=201:
         raise ProductionLaunchError("ATOMIC_CLAIM_CREATE_NOT_201:"+str(status))
-    response_ref=str(response.get("ref") or "")
+    response_ref=str(response.get("ref") or "") if isinstance(response,Mapping) else ""
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
     if response_ref!=claim_ref or obj_sha!=launch_sha:
-        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH")
-    result=dict(execute_fn(claim_id=claim_ref))
+        result={
+            "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+            "status":"ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
+            "target_predicate":TARGET,
+            "authority_claim_id":claim_ref,
+            "production_cases_generated":0,
+            "persistent_learned_bytes":0,
+            "external_frontier_model_calls":0,
+            "external_learned_capability_calls":0,
+            "incremental_spend_usd":0,
+            "replay_allowed":False,
+            "replacement_allowed":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0,
+            "promotion_authority":False,
+            "separate_independent_reduction_required":True,
+        }
+    else:
+        try:
+            result=dict(execute_fn(claim_id=claim_ref))
+        except Exception as exc:
+            result={
+                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+                "status":"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED",
+                "target_predicate":TARGET,
+                "authority_claim_id":claim_ref,
+                "exception_type":type(exc).__name__,
+                "exception_message":str(exc),
+                "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
+                "persistent_learned_bytes":0,
+                "external_frontier_model_calls":0,
+                "external_learned_capability_calls":0,
+                "incremental_spend_usd":0,
+                "replay_allowed":False,
+                "replacement_allowed":False,
+                "acceptance_credit_delta":0,
+                "family_credit_delta":0,
+                "capability_credit_delta":0,
+                "ownership_credit_delta":0,
+                "promotion_authority":False,
+                "separate_independent_reduction_required":True,
+            }
     result["claim_create_http_status"]=201
     result["claim_response_ref"]=response_ref
     result["claim_response_object_sha"]=obj_sha
@@ -264,17 +356,23 @@ def main()->None:
     claim_branch,result=claim_then_execute(
         repo=repo,token=token,launch_sha=launch_sha,digest=digest
     )
-    result["execution_lease_sha256"]=digest
+    result["execution_identity_sha256"]=digest
+    result["execution_lease_raw_sha256"]=hashlib.sha256(raw).hexdigest()
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
     result["runtime_git_head"]=runtime_head
+    result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
+    result["result_path"]=result_path
     canonical_result=json.dumps(result,sort_keys=True,separators=(",",":"))
     print(json.dumps({
         "status":"PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD",
         "result_sha256":hashlib.sha256(canonical_result.encode()).hexdigest(),
         "result":result,
     },sort_keys=True,separators=(",",":")))
-    result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
+    try:
+        RESULT_ARTIFACT_PATH.write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+    except Exception as exc:
+        print("LOCAL_RESULT_WRITE_FAILED="+type(exc).__name__+":"+str(exc))
     status,response=put_result(repo,token,claim_branch,result_path,result)
     if status!=201:
         raise ProductionLaunchError("RESULT_COMMIT_NOT_201:"+str(status))
@@ -284,8 +382,8 @@ def main()->None:
         "status":result["status"],
         "claim_ref":"refs/heads/"+claim_branch,
         "claim_create_http_status":201,
-        "production_cases_generated":27,
-        "all_27_cases_pass":result["aggregate"].get("all_27_cases_pass"),
+        "production_cases_generated":result.get("production_cases_generated"),
+        "all_27_cases_pass":(result.get("aggregate") or {}).get("all_27_cases_pass"),
         "result_path":result_path,
         "result_commit_sha":commit_sha,
     },sort_keys=True))
