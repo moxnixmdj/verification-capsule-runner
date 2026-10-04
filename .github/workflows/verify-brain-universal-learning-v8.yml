@@ -1,0 +1,149 @@
+name: Verify Brain Universal Learning V8
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v8/**"
+      - ".github/workflows/verify-brain-universal-learning-v8.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact V8 Brain blob identities
+        run: |
+          cd capsules/universal_learning_v8
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in m["exact_v8_brain_blobs"].items():
+              data=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          pred=m["predecessor"]
+          exact={
+            "canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7.json":pred["v7_governance_sha"],
+            "canonical/verification/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json":pred["v7_verification_sha"],
+            "canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7_ACTIVATION_V1.json":pred["v7_activation_sha"],
+          }
+          for rel,expected in exact.items():
+              data=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          print("exact V8 and predecessor blobs: PASS")
+          PY
+
+      - name: Assemble verified V1 through V8 stack
+        run: |
+          rm -rf /tmp/brain-v8
+          mkdir -p /tmp/brain-v8
+          cp -R capsules/universal_learning_v6/canonical /tmp/brain-v8/canonical
+          cp -R capsules/universal_learning_v7/canonical/* /tmp/brain-v8/canonical/
+          cp -R capsules/universal_learning_v8/canonical/* /tmp/brain-v8/canonical/
+          python -m py_compile             /tmp/brain-v8/canonical/runtime/equivalence_compression_v8.py             /tmp/brain-v8/canonical/runtime/novelty_basis_v8.py             /tmp/brain-v8/canonical/runtime/residual_priority_v8.py             /tmp/brain-v8/canonical/runtime/universal_learning_equivalence_basis_router_v8.py
+
+      - name: Run V8 unit and binding tests
+        run: |
+          cd /tmp/brain-v8
+          export PYTHONPATH=.
+          python -m unittest             canonical.tests.test_universal_learning_equivalence_basis_v8             canonical.tests.test_universal_learning_equivalence_basis_binding_v8 -v
+
+      - name: Execute V8 invariant theorem
+        run: |
+          cd /tmp/brain-v8
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.universal_learning_equivalence_basis_router_v8 import prove_v8_invariants
+          out=prove_v8_invariants()
+          assert out["pass"] is True,out
+          assert out["v7_base_preserved"] is True,out
+          assert out["proof_gated_equivalence_compression"] is True,out
+          assert out["exact_finite_basis_optimality"] is True,out
+          assert out["decision_critical_residual_priority"] is True,out
+          assert out["semantic_success_rate_proved"] is False,out
+          assert out["unknown_domain_acceptance_proved"] is False,out
+          assert out["universal_novelty_basis_proved"] is False,out
+          assert out["acceptance_credit_delta"]==0,out
+          assert out["ownership_credit_delta"]==0,out
+          assert out["execution_authority"] is False,out
+          assert out["promotion_authority"] is False,out
+          print("V8 invariant theorem: PASS")
+          PY
+
+      - name: Run independent adversarial V8 boundaries
+        run: |
+          cd /tmp/brain-v8
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime import equivalence_compression_v8 as e
+          from canonical.runtime import novelty_basis_v8 as n
+          from canonical.runtime import residual_priority_v8 as r
+          from canonical.runtime import universal_learning_equivalence_basis_router_v8 as v8
+
+          def obj(i):
+              d=e.object_digest(object_id=i,behavior_signature=["same"],goal_scope="g")
+              return {"object_id":i,"behavior_signature":["same"],"goal_scope":"g",
+                      "verification_receipt":{"receipt_id":"o-"+i,"independent_verified":True,
+                      "exact_byte_bound":True,"conclusion":"success","object_id":i,"goal_scope":"g","object_sha256":d}}
+          a,b=obj("a"),obj("b")
+          try:
+              e.compress(objects=[a,b],mappings=[{"source_id":"b","representative_id":"a",
+                  "basis":"FORMAL_ISOMORPHISM","relation":"EXACT"}])
+              raise AssertionError("surface similarity admitted without proof")
+          except e.EquivalenceCompressionError:
+              pass
+
+          def p(i,atoms,cost):
+              d=n.primitive_digest(primitive_id=i,covers_atoms=atoms,description_cost=cost)
+              return {"primitive_id":i,"covers_atoms":atoms,"description_cost":cost,
+                      "verification_receipt":{"receipt_id":"p-"+i,"independent_verified":True,
+                      "exact_byte_bound":True,"conclusion":"success","primitive_id":i,"primitive_sha256":d}}
+          def t(i,atoms,complete=True):
+              d=n.target_digest(target_id=i,required_atoms=atoms)
+              return {"target_id":i,"required_atoms":atoms,
+                      "verification_receipt":{"receipt_id":"t-"+i,"independent_verified":True,
+                      "exact_byte_bound":True,"conclusion":"success","required_atom_set_complete":complete,
+                      "target_id":i,"target_sha256":d}}
+          out=n.exact_basis(primitives=[p("wide",["a","b"],5),p("a",["a"],1),p("b",["b"],1)],targets=[t("x",["a","b"])])
+          assert out["selected_primitive_ids"]==["a","b"],out
+          try:
+              n.exact_basis(primitives=[p("a",["a"],1)],targets=[t("x",["a"],False)])
+              raise AssertionError("incomplete target scope admitted")
+          except n.NoveltyBasisError:
+              pass
+
+          def rr(i,critical,mass,fals,transfer,cost):
+              d=r.residual_digest(residual_id=i,decision_critical=critical,residual_mass_ub=mass,
+                  falsification_value_lcb=fals,future_transfer_lcb=transfer,acquisition_cost_ub=cost)
+              return {"residual_id":i,"decision_critical":critical,"residual_mass_ub":mass,
+                  "falsification_value_lcb":fals,"future_transfer_lcb":transfer,"acquisition_cost_ub":cost,
+                  "verification_receipt":{"receipt_id":"r-"+i,"independent_verified":True,
+                  "exact_byte_bound":True,"conclusion":"success","residual_id":i,"residual_sha256":d}}
+          ranked=r.rank([rr("future",False,100,100,100,0),rr("critical",True,1,0,0,100)])
+          assert ranked["ranked"][0]["residual_id"]=="critical",ranked
+
+          original=v8.v7.route
+          try:
+              v8.v7.route=lambda **kwargs:{
+                  "route":"BASE_ROUTE","next_action":{"type":"BASE"},"trusted_execution_authorized":False,
+                  "empirical_information_action_authorized":True
+              }
+              routed=v8.route(v7_args={})
+              assert routed["route"]=="BASE_ROUTE",routed
+              assert routed["next_action"]=={"type":"BASE"},routed
+              assert routed["trusted_execution_authorized"] is False,routed
+              assert routed["execution_authority"] is False,routed
+          finally:
+              v8.v7.route=original
+          print("independent adversarial V8 boundaries: PASS")
+          PY
