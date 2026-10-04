@@ -1,0 +1,28 @@
+name: Verify LiveBench lexical quotient 74
+
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_lexical_quotient_74_20261005.py'
+      - 'subject/livebench_lexical_quotient_74_20261005/livebench_legacy15_lexical_collision_quotient_v1.py'
+      - '.github/workflows/verify-livebench-lexical-quotient-74-20261005.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Checkout exact frozen LiveBench source
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Verify exact reachable quotient independently
+        run: python verify_livebench_lexical_quotient_74_20261005.py
