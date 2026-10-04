@@ -3,11 +3,11 @@
   "brain_repository": "moxnixmdj/brain",
   "brain_ref": "feature/universal-learning-v10-cross-context-transfer-20261004",
   "exact_brain_blobs": {
-    "canonical/runtime/context_morphism_v10.py": "e0f546f0e7b53d5861adf8e531a6ae0fac5801a8",
-    "canonical/runtime/cross_context_meta_policy_v10.py": "cae4dd3d17f4a287788f0b038d1fc24950575133",
-    "canonical/runtime/universal_learning_cross_context_router_v10.py": "976cd65fe7f98084b1046307aaec12a0572c9db7",
-    "canonical/tests/test_universal_learning_cross_context_v10.py": "e635f30579a2a639ad022995c8747ee6d6a01973",
-    "canonical/governance/UNIVERSAL_LEARNING_CROSS_CONTEXT_TRANSFER_V10.json": "002a917e926b488a4cec29b30202458ff6d8bbdf",
+    "canonical/runtime/context_morphism_v10.py": "8ead7e2f81e0b7326612152303aeb92d3df1762d",
+    "canonical/runtime/cross_context_meta_policy_v10.py": "1aa31a8ee3d3926e3b86ed6dd008c61c721c4ba5",
+    "canonical/runtime/universal_learning_cross_context_router_v10.py": "d69bd419bc24d1e1f093de6c4203e8c204ff7e2b",
+    "canonical/tests/test_universal_learning_cross_context_v10.py": "48bd5c4b6f9fb1ab10b8afe61143bfeeeadadd40",
+    "canonical/governance/UNIVERSAL_LEARNING_CROSS_CONTEXT_TRANSFER_V10.json": "2df2e8d7469fd684aebf1cf9b9dc1d0a82371140",
     "canonical/governance/UNIVERSAL_LEARNING_META_POLICY_V9.json": "7b8ca47355f73b0f78e439e407cd632f1ad7d99d",
     "canonical/governance/UNIVERSAL_LEARNING_META_POLICY_V9_ACTIVATION_V1.json": "17fa19762b6f6970a918b32b7ec0fd30000b3ef2",
     "canonical/runtime/meta_learning_policy_v9.py": "0b65330f2b796e5484cd5183d0ef9bee448ec619"
