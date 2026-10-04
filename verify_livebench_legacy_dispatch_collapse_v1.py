@@ -6,7 +6,6 @@ import json
 import urllib.error
 import urllib.request
 import subprocess
-import subprocess
 from collections import Counter
 from pathlib import Path
 
@@ -56,7 +55,7 @@ def main() -> int:
     path = Path("/tmp/instruction_following.parquet")
     subprocess.run([
         "curl", "--fail", "--location", "--retry", "3", "--silent", "--show-error",
-        HF_URL, "-o", str(path)
+        HF_REVISION_URL, "-o", str(path)
     ], check=True)
     parquet_raw = path.read_bytes()
     assert len(parquet_raw) == HF_BYTES
