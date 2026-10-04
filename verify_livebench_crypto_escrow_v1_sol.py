@@ -52,7 +52,7 @@ with tempfile.TemporaryDirectory() as td:
     assert not any("private" in p.name.lower() for p in writer.iterdir())
 
     cert_sha=hashlib.sha256(cert.read_bytes()).hexdigest()
-    payload_a=b"A"
+    payload_a=b"PROJECT_BRAIN_ESCROW_PLAINTEXT_MARKER_7f91d6c2a83e4b5fa0d1c9e8"
     payload_b=(b"RESULT-B"*10000)
 
     out_a=writer/"a"
