@@ -81,7 +81,7 @@ class ProductionLauncherTests(unittest.TestCase):
     def test_claim_201_with_wrong_valid_object_sha_is_sealed_without_execution(self):
         called={"execute":False}
         def fake_create(repo,token,ref,sha):
-            return 201,{"ref":ref,"object":{"sha":sha}}
+            return 201,{"ref":ref,"object":{"sha":"c"*40}}
         def fake_execute(**kwargs):
             called["execute"]=True
             return {}
