@@ -1,154 +1,206 @@
 #!/usr/bin/env python3
-import json, struct, urllib.request, hashlib
+"""Remote-range reverse-LoRA spectrum probe for Smaug-Mini vs Qwen3.8-27B.
+
+Reads pinned index JSON, Safetensors headers, and bounded row ranges from a few
+language-trunk matrices. It never downloads a whole shard. The purpose is to
+measure whether the merged finetune delta has a sharply low-rank spectrum before
+spending tens of GB on full-checkpoint extraction.
+"""
+from __future__ import annotations
+import hashlib, json, math, os, re, struct
+from pathlib import Path
+from typing import Any
+
 import numpy as np
+import requests
 
 BASE_REPO="Qwen/Qwen3.8-27B"
 BASE_REV="1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0"
-SMAUG_REPO="abacusai/Smaug-Mini"
-SMAUG_REV="2750fd9f1e67e004111a53a6d9a39c15fbbd33ef"
-SHARD="model-00001-of-00018.safetensors"
-PREFERRED=[
- "model.language_model.layers.0.linear_attn.out_proj.weight",
- "model.language_model.layers.0.mlp.down_proj.weight",
- "model.language_model.layers.0.mlp.gate_proj.weight",
- "model.language_model.layers.0.mlp.up_proj.weight",
-]
-UNCHANGED_PROBE="model.language_model.layers.0.input_layernorm.weight"
+FT_REPO="abacusai/Smaug-Mini"
+FT_REV="2750fd9f1e67e004111a53a6d9a39c15fbbd33ef"
+ROW_SAMPLE=128
+MAX_TENSORS=7
+MAX_WEIGHT_BYTES=96_000_000
+TIMEOUT=120
 
-def url(repo,rev):
-    return f"https://huggingface.co/{repo}/resolve/{rev}/{SHARD}"
+def url(repo:str, rev:str, path:str)->str:
+    return f"https://huggingface.co/{repo}/resolve/{rev}/{path}?download=true"
 
-def get_range(u,start,end):
-    req=urllib.request.Request(u,headers={
-      "Range":f"bytes={start}-{end}",
-      "User-Agent":"project-brain-smaug-delta-probe/1"
-    })
-    with urllib.request.urlopen(req,timeout=120) as r:
-        data=r.read()
-        # Some intermediaries can ignore Range. Fail rather than accidentally
-        # download a multi-GB shard.
-        if len(data) != end-start+1:
-            raise RuntimeError(f"RANGE_NOT_HONORED wanted={end-start+1} got={len(data)}")
-        return data
+def get_json(u:str)->dict[str,Any]:
+    r=requests.get(u,timeout=TIMEOUT,headers={"User-Agent":"project-brain-range-probe/1"})
+    r.raise_for_status()
+    return r.json()
 
-def header(u):
-    first=get_range(u,0,7)
-    n=struct.unpack("<Q",first)[0]
-    if not 0 < n < 50_000_000:
-        raise RuntimeError(f"BAD_HEADER_LENGTH {n}")
-    raw=get_range(u,8,7+n)
-    return n,json.loads(raw.rstrip(b" \t\r\n\0").decode("utf-8"))
+def ranged(u:str,start:int,end:int)->bytes:
+    if end < start: raise ValueError("bad range")
+    r=requests.get(
+        u, headers={"Range":f"bytes={start}-{end}","User-Agent":"project-brain-range-probe/1"},
+        timeout=TIMEOUT, stream=True, allow_redirects=True,
+    )
+    # Fail closed instead of accidentally downloading a multi-GB shard.
+    if r.status_code != 206:
+        r.close()
+        raise RuntimeError(f"RANGE_NOT_HONORED:{r.status_code}:{u}")
+    cr=r.headers.get("Content-Range","")
+    if not cr.startswith(f"bytes {start}-{end}/"):
+        r.close()
+        raise RuntimeError(f"CONTENT_RANGE_MISMATCH:{cr}")
+    out=r.content
+    if len(out)!=(end-start+1):
+        raise RuntimeError(f"RANGE_LENGTH_MISMATCH:{len(out)}")
+    return out
 
-def tensor_bytes(u,hdr_len,meta):
-    a,b=meta["data_offsets"]
-    data0=8+hdr_len
-    return get_range(u,data0+a,data0+b-1)
+def header(repo:str,rev:str,shard:str)->tuple[int,dict[str,Any]]:
+    u=url(repo,rev,shard)
+    n=struct.unpack("<Q",ranged(u,0,7))[0]
+    if n<=0 or n>16_000_000:
+        raise RuntimeError(f"UNREASONABLE_HEADER:{shard}:{n}")
+    raw=ranged(u,8,7+n)
+    return n,json.loads(raw.decode("utf-8").rstrip())
 
-def bf16_to_f32(raw,shape):
-    u=np.frombuffer(raw,dtype="<u2")
-    bits=(u.astype(np.uint32)<<16)
-    return bits.view(np.float32).reshape(shape),u.reshape(shape)
+def layer_of(name:str)->int:
+    m=re.search(r"\.layers\.(\d+)\.",name)
+    return int(m.group(1)) if m else -1
 
-def analyze_matrix(name,bm,sm,bu,su,bh,sh):
-    if bm["dtype"]!="BF16" or sm["dtype"]!="BF16":
-        return {"name":name,"status":"SKIP_NON_BF16","base_dtype":bm["dtype"],"smaug_dtype":sm["dtype"]}
-    if bm["shape"]!=sm["shape"] or len(bm["shape"])!=2:
-        return {"name":name,"status":"SKIP_SHAPE_MISMATCH","base_shape":bm["shape"],"smaug_shape":sm["shape"]}
-    br=tensor_bytes(bu,bh,bm); sr=tensor_bytes(su,sh,sm)
-    B,Bbits=bf16_to_f32(br,bm["shape"]); S,Sbits=bf16_to_f32(sr,sm["shape"])
-    D=S-B
-    m,n=D.shape
-    # Deterministic evenly spread square sketch.  The rank of a submatrix cannot
-    # exceed the parent low-rank update rank before BF16 rounding; energy
-    # concentration remains a useful falsification/triage diagnostic after it.
-    k=min(384,m,n)
-    ri=np.linspace(0,m-1,k,dtype=np.int64)
-    ci=np.linspace(0,n-1,k,dtype=np.int64)
-    sketch=D[np.ix_(ri,ci)].astype(np.float64)
-    sv=np.linalg.svd(sketch,compute_uv=False)
-    e=sv*sv
-    total=float(e.sum())
-    def frac(r):
-        return float(e[:min(r,len(e))].sum()/total) if total else 1.0
-    changed=(Bbits!=Sbits)
-    absd=np.abs(D)
-    # theoretical factor bytes for BF16 rank-r factors, no exact residual.
-    factor_bytes={str(r):int(2*r*(m+n)) for r in (8,16,32,64,128)}
-    return {
-      "name":name,
-      "status":"PASS_DIAGNOSTIC",
-      "shape":[int(m),int(n)],
-      "tensor_bytes_each":len(br),
-      "bitwise_changed_fraction":float(changed.mean()),
-      "delta_abs_mean":float(absd.mean()),
-      "delta_abs_max":float(absd.max()),
-      "base_abs_mean":float(np.abs(B).mean()),
-      "sketch_size":k,
-      "sketch_top_energy_fraction":{
-        "8":frac(8),"16":frac(16),"32":frac(32),"64":frac(64),"128":frac(128)
-      },
-      "sketch_singular_value_ratio_s128_s1":float(sv[min(127,len(sv)-1)]/sv[0]) if sv[0] else 0.0,
-      "bf16_factor_storage_bytes_no_residual":factor_bytes,
-      "hard_nonclaim":"ENERGY_CONCENTRATION_IS_NOT_EXACT_PATCH_RECOVERY_OR_BENCHMARK_CAPABILITY_PROOF"
-    }
+def module_type(name:str)->str|None:
+    marks=("q_proj","k_proj","v_proj","o_proj","down_proj","up_proj","gate_proj",
+           "in_proj_qkvz","out_proj")
+    return next((m for m in marks if f".{m}.weight" in name),None)
+
+def choose(weight_map:dict[str,str])->list[str]:
+    groups:dict[str,list[str]]={}
+    for name in weight_map:
+        if "model.language_model.layers." not in name: continue
+        typ=module_type(name)
+        if typ: groups.setdefault(typ,[]).append(name)
+    chosen=[]
+    priority=("q_proj","o_proj","down_proj","up_proj","gate_proj","in_proj_qkvz","out_proj")
+    for typ in priority:
+        xs=sorted(groups.get(typ,[]),key=lambda n:(layer_of(n),n))
+        if xs:
+            chosen.append(xs[len(xs)//2])
+        if len(chosen)>=MAX_TENSORS: break
+    if not chosen:
+        raise RuntimeError("NO_LANGUAGE_MATRIX_CANDIDATES")
+    return chosen
+
+def decode(raw:bytes,dtype:str,shape:tuple[int,int])->np.ndarray:
+    if dtype=="BF16":
+        u=np.frombuffer(raw,dtype="<u2").astype(np.uint32)
+        return (u<<16).view(np.float32).reshape(shape)
+    if dtype=="F16":
+        return np.frombuffer(raw,dtype="<f2").astype(np.float32).reshape(shape)
+    if dtype=="F32":
+        return np.frombuffer(raw,dtype="<f4").astype(np.float32).reshape(shape)
+    raise RuntimeError(f"UNSUPPORTED_DTYPE:{dtype}")
+
+def item_bytes(dtype:str)->int:
+    return {"BF16":2,"F16":2,"F32":4}.get(dtype,0)
+
+def read_rows(repo:str,rev:str,shard:str,hdr_n:int,meta:dict[str,Any],row0:int,rows:int)->bytes:
+    shape=meta["shape"]; dtype=meta["dtype"]; b=item_bytes(dtype)
+    if len(shape)!=2 or b==0: raise RuntimeError("UNSUPPORTED_MATRIX")
+    cols=int(shape[1])
+    rel0=int(meta["data_offsets"][0])
+    data0=8+hdr_n+rel0
+    start=data0+row0*cols*b
+    end=start+rows*cols*b-1
+    return ranged(url(repo,rev,shard),start,end)
+
+def energy_rank(s:np.ndarray,p:float)->int:
+    e=np.square(s.astype(np.float64)); total=float(e.sum())
+    if total==0: return 0
+    return int(np.searchsorted(np.cumsum(e),p*total)+1)
 
 def main():
-    bu,su=url(BASE_REPO,BASE_REV),url(SMAUG_REPO,SMAUG_REV)
-    bh,bhobj=header(bu); sh,shobj=header(su)
-    base={k:v for k,v in bhobj.items() if k!="__metadata__"}
-    smaug={k:v for k,v in shobj.items() if k!="__metadata__"}
-    common=sorted(set(base)&set(smaug))
-    matrices=[]
-    for name in PREFERRED:
-        if name in base and name in smaug:
-            matrices.append(analyze_matrix(name,base[name],smaug[name],bu,su,bh,sh))
-    # Compare one nominally non-LoRA scalar/vector parameter as a control.
-    control=None
-    if UNCHANGED_PROBE in base and UNCHANGED_PROBE in smaug:
-        bm,sm=base[UNCHANGED_PROBE],smaug[UNCHANGED_PROBE]
-        br=tensor_bytes(bu,bh,bm); sr=tensor_bytes(su,sh,sm)
-        control={
-          "name":UNCHANGED_PROBE,
-          "shape":bm["shape"],
-          "bytes":len(br),
-          "bitwise_equal":br==sr,
-          "base_sha256":hashlib.sha256(br).hexdigest(),
-          "smaug_sha256":hashlib.sha256(sr).hexdigest(),
+    base_idx=get_json(url(BASE_REPO,BASE_REV,"model.safetensors.index.json"))
+    ft_idx=get_json(url(FT_REPO,FT_REV,"model.safetensors.index.json"))
+    bw=base_idx["weight_map"]; fw=ft_idx["weight_map"]
+    if set(bw)!=set(fw):
+        raise RuntimeError(f"WEIGHT_NAME_SET_MISMATCH:{len(set(bw)^set(fw))}")
+    selected=choose(bw)
+    cache={}
+    rows_out=[]; weight_bytes=0
+    for name in selected:
+        bs,bfs=bw[name],fw[name]
+        key=("b",bs)
+        if key not in cache: cache[key]=header(BASE_REPO,BASE_REV,bs)
+        key2=("f",bfs)
+        if key2 not in cache: cache[key2]=header(FT_REPO,FT_REV,bfs)
+        bhn,bh=cache[key]; fhn,fh=cache[key2]
+        if name not in bh or name not in fh: raise RuntimeError(f"TENSOR_HEADER_MISSING:{name}")
+        bm,fm=bh[name],fh[name]
+        if bm["shape"]!=fm["shape"] or bm["dtype"]!=fm["dtype"]:
+            raise RuntimeError(f"TENSOR_ABI_MISMATCH:{name}")
+        shape=tuple(map(int,bm["shape"]))
+        if len(shape)!=2: continue
+        rows=min(ROW_SAMPLE,shape[0])
+        row0=max(0,(shape[0]-rows)//2)
+        br=read_rows(BASE_REPO,BASE_REV,bs,bhn,bm,row0,rows)
+        fr=read_rows(FT_REPO,FT_REV,bfs,fhn,fm,row0,rows)
+        weight_bytes+=len(br)+len(fr)
+        if weight_bytes>MAX_WEIGHT_BYTES:
+            raise RuntimeError(f"WEIGHT_RANGE_BUDGET_EXCEEDED:{weight_bytes}")
+        b=decode(br,bm["dtype"],(rows,shape[1]))
+        f=decode(fr,fm["dtype"],(rows,shape[1]))
+        d=f-b
+        dn=float(np.linalg.norm(d))
+        bn=float(np.linalg.norm(b))
+        if dn==0:
+            s=np.zeros(1,dtype=np.float32)
+        else:
+            s=np.linalg.svd(d,full_matrices=False,compute_uv=False)
+        row={
+            "tensor":name,"module_type":module_type(name),"layer":layer_of(name),
+            "shape":list(shape),"dtype":bm["dtype"],"base_shard":bs,"finetune_shard":bfs,
+            "sample_row_start":row0,"sample_row_count":rows,
+            "sample_payload_bytes_pair":len(br)+len(fr),
+            "base_sample_sha256":hashlib.sha256(br).hexdigest(),
+            "finetune_sample_sha256":hashlib.sha256(fr).hexdigest(),
+            "delta_fro_norm":dn,"base_fro_norm":bn,
+            "relative_delta_fro":(dn/bn if bn else None),
+            "sample_exactly_identical":bool(np.array_equal(b,f)),
+            "rank_energy_90":energy_rank(s,0.90),
+            "rank_energy_95":energy_rank(s,0.95),
+            "rank_energy_99":energy_rank(s,0.99),
+            "rank_energy_999":energy_rank(s,0.999),
+            "top_singular_values":[float(x) for x in s[:12]],
         }
+        rows_out.append(row)
+    nonzero=[r for r in rows_out if not r["sample_exactly_identical"]]
     receipt={
-      "schema":"PROJECT_BRAIN_SMAUG_MINI_LORA_DELTA_RANGE_PROBE_V1",
-      "status":"PASS_DIAGNOSTIC" if matrices else "FAIL_NO_TARGET_MATRICES",
-      "sources":{
-        "base":{"repo":BASE_REPO,"revision":BASE_REV,"shard":SHARD},
-        "smaug":{"repo":SMAUG_REPO,"revision":SMAUG_REV,"shard":SHARD},
-      },
+      "schema":"PROJECT_BRAIN_SMAUG_MINI_REMOTE_RANGE_DELTA_SPECTRUM_V1",
+      "status":"PASS__BOUNDED_REMOTE_RANGE_DELTA_SPECTRUM_MEASURED",
+      "base":{"repo":BASE_REPO,"revision":BASE_REV},
+      "finetune":{"repo":FT_REPO,"revision":FT_REV},
       "method":{
-        "whole_shards_downloaded":False,
-        "http_range_only":True,
-        "shared_tensor_name_count":len(common),
-        "benchmark_cases_consumed":0,
-        "terminal_cases_consumed":0,
-        "incremental_spend_usd":0,
+        "safetensors_header_only_then_tensor_row_ranges":True,
+        "whole_shard_downloads":0,
+        "sample_rows_per_tensor_max":ROW_SAMPLE,
+        "sampled_tensor_count":len(rows_out),
+        "weight_payload_bytes_downloaded":weight_bytes,
+        "weight_payload_budget_bytes":MAX_WEIGHT_BYTES,
       },
-      "control":control,
-      "matrices":matrices,
-      "decision_rule":{
-        "strong_low_rank_signal":"TOP_64_SKETCH_ENERGY_CLOSE_TO_1_ACROSS_MULTIPLE_CHANGED_LINEAR_MATRICES",
-        "falsifier":"BROAD_SINGULAR_SPECTRUM_WITHOUT_MEANINGFUL_LOW_RANK_ENERGY_CONCENTRATION",
-        "next_if_positive":"DESIGN_TENSORWISE_LOW_RANK_PLUS_EXACT_RESIDUAL_PATCH_AND_MEASURE_TOTAL_PATCH_BYTES",
+      "results":rows_out,
+      "summary":{
+        "nonzero_sample_count":len(nonzero),
+        "max_rank99_across_nonzero_samples":max((r["rank_energy_99"] for r in nonzero),default=0),
+        "median_rank99_across_nonzero_samples":(
+          float(np.median([r["rank_energy_99"] for r in nonzero])) if nonzero else 0.0
+        ),
+        "low_rank_signal_candidate":bool(nonzero and max(r["rank_energy_99"] for r in nonzero)<=64),
       },
       "hard_nonclaims":[
-        "NO_CLAIM_ORIGINAL_LORA_RANK_IS_KNOWN",
-        "NO_CLAIM_SKETCH_RANK_EQUALS_FULL_TENSOR_RANK",
-        "NO_CLAIM_EXACT_BF16_RECONSTRUCTION",
-        "NO_LIVEBENCH_OR_AUTOMATIONBENCH_CREDIT",
-        "NO_ACCEPTANCE_OR_OWNERSHIP_CREDIT"
-      ]
+        "ROW_BLOCK_SPECTRA_DO_NOT_PROVE_GLOBAL_MATRIX_RANK",
+        "BF16_MERGE_ROUNDING_CAN_CREATE_FULL_NUMERICAL_RANK",
+        "LOW_RANK_SIGNAL_DOES_NOT_PROVE_A_RECOVERED_ADAPTER_PRESERVES_CAPABILITY",
+        "NO_LIVEBENCH_AUTOMATIONBENCH_ACCEPTANCE_OR_OWNERSHIP_CREDIT",
+        "NO_TERMINAL_CASE_CONTENT_READ",
+      ],
     }
-    open("smaug_lora_delta_range_probe_v1.json","w").write(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
-    print(json.dumps(receipt,sort_keys=True))
-    return 0 if receipt["status"]=="PASS_DIAGNOSTIC" else 1
+    Path("smaug_remote_range_delta_spectrum_v1.json").write_text(
+        json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    print(json.dumps(receipt,indent=2,sort_keys=True))
 
 if __name__=="__main__":
-    raise SystemExit(main())
-# synchronize trigger: relaunch range-only delta probe; semantics unchanged
+    main()
