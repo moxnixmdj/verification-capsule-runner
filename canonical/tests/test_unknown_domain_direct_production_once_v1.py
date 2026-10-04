@@ -24,7 +24,7 @@ class ProductionLauncherTests(unittest.TestCase):
     def test_claim_success_executes_once_and_binds_receipt(self):
         calls={"n":0}
         def fake_create(repo,token,ref,sha):
-            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+            return 201,{"ref":ref,"object":{"sha":sha}}
         def fake_execute(**kwargs):
             calls["n"]+=1
             return {"status":"X","authority_claim_id":kwargs["claim_id"]}
@@ -111,6 +111,64 @@ class ProductionLauncherTests(unittest.TestCase):
         altered["exact_components"]["canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"]="0"*40
         changed=prod.canonical_identity_from_lease(altered)
         self.assertNotEqual(original,changed)
+
+
+    def test_result_persistence_ambiguous_write_accepts_exact_readback_only(self):
+        content={"schema":"X","status":"PRODUCTION_PASS","case_results":[{"case_id":"c1","pass":True}]}
+        raw=prod._result_bytes(content)
+        def fake_put(repo,token,branch,path,doc):
+            return 0,{"message":"TimeoutError"}
+        def fake_get(repo,token,branch,path):
+            return 200,raw,prod._git_blob(raw)
+        receipt=prod.persist_result_durable(
+            repo="x/y",token="t",branch="claim",path="result.json",content=content,
+            attempts=1,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,
+        )
+        self.assertEqual(receipt["status"],"DURABLE_EXISTING_AND_READBACK_VERIFIED")
+        self.assertEqual(receipt["write_status"],0)
+        self.assertEqual(receipt["content_sha"],prod._git_blob(raw))
+
+    def test_result_persistence_201_requires_exact_readback(self):
+        content={"schema":"X","status":"PRODUCTION_PASS"}
+        raw=prod._result_bytes(content)
+        def fake_put(repo,token,branch,path,doc):
+            return 201,{"commit":{"sha":"c"*40}}
+        def fake_get(repo,token,branch,path):
+            return 200,raw,prod._git_blob(raw)
+        receipt=prod.persist_result_durable(
+            repo="x/y",token="t",branch="claim",path="result.json",content=content,
+            attempts=1,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,
+        )
+        self.assertEqual(receipt["status"],"DURABLE_CREATED_AND_READBACK_VERIFIED")
+        self.assertEqual(receipt["commit_sha"],"c"*40)
+
+    def test_result_persistence_wrong_remote_bytes_fail_closed(self):
+        content={"schema":"X","status":"PRODUCTION_PASS"}
+        puts={"n":0}
+        def fake_put(repo,token,branch,path,doc):
+            puts["n"]+=1
+            return 503,{"message":"temporary"}
+        def fake_get(repo,token,branch,path):
+            return 200,b"wrong-bytes",prod._git_blob(b"wrong-bytes")
+        with self.assertRaisesRegex(prod.ProductionLaunchError,"RESULT_DURABILITY_NOT_ESTABLISHED:503"):
+            prod.persist_result_durable(
+                repo="x/y",token="t",branch="claim",path="result.json",content=content,
+                attempts=3,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,
+            )
+        self.assertEqual(puts["n"],3)
+
+    def test_result_persistence_correct_bytes_wrong_git_blob_sha_fail_closed(self):
+        content={"schema":"X","status":"PRODUCTION_PASS"}
+        raw=prod._result_bytes(content)
+        def fake_put(repo,token,branch,path,doc):
+            return 201,{"commit":{"sha":"c"*40}}
+        def fake_get(repo,token,branch,path):
+            return 200,raw,"0"*40
+        with self.assertRaisesRegex(prod.ProductionLaunchError,"RESULT_DURABILITY_NOT_ESTABLISHED:201"):
+            prod.persist_result_durable(
+                repo="x/y",token="t",branch="claim",path="result.json",content=content,
+                attempts=1,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,
+            )
 
 
 if __name__=="__main__":
