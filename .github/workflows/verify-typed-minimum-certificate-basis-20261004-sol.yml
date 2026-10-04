@@ -1,0 +1,20 @@
+name: Verify typed minimum certificate basis
+
+on:
+  pull_request:
+    paths:
+      - 'verify_typed_minimum_certificate_basis_20261004_sol.py'
+      - 'subject/typed_minimum_certificate_basis_20261004_sol/**'
+      - '.github/workflows/verify-typed-minimum-certificate-basis-20261004-sol.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent verifier
+        run: python verify_typed_minimum_certificate_basis_20261004_sol.py
