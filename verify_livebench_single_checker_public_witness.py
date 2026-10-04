@@ -32,7 +32,8 @@ PUBLIC_FILES = {
 }
 SUBJECT_ROOT = Path(__file__).resolve().parent / "subjects" / "livebench_single_checker_v1"
 SUBJECT_SOLVER_BLOB = "b21e2a0946523e7aaa2d4a929676574ddc14c92b"
-SUBJECT_HELPER_BLOB = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"\nSUBJECT_REPEAT_BLOB = "332fbb1fac1cdee2632dc454b497376d319e2287"
+SUBJECT_HELPER_BLOB = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"
+SUBJECT_REPEAT_BLOB = "332fbb1fac1cdee2632dc454b497376d319e2287"
 RECEIPT = Path("livebench_single_checker_public_witness_receipt.json")
 
 
@@ -99,8 +100,10 @@ def main() -> int:
     sys.path.insert(0, str(SUBJECT_ROOT))
     solver_file = SUBJECT_ROOT / "canonical" / "runtime" / "livebench_if_single_checker_solver_v1.py"
     helper_file = SUBJECT_ROOT / "canonical" / "runtime" / "livebench_ngram_reference_free_v1.py"
+    repeat_file = SUBJECT_ROOT / "canonical" / "runtime" / "livebench_prompt_only_repeat_compiler_v1.py"
     assert local_blob(solver_file) == SUBJECT_SOLVER_BLOB
     assert local_blob(helper_file) == SUBJECT_HELPER_BLOB
+    assert local_blob(repeat_file) == SUBJECT_REPEAT_BLOB
 
     import nltk
     for resource in ("punkt", "punkt_tab", "stopwords", "averaged_perceptron_tagger", "averaged_perceptron_tagger_eng"):
@@ -195,7 +198,8 @@ def main() -> int:
         ),
         "subject": {
             "solver_git_blob_sha": SUBJECT_SOLVER_BLOB,
-            "ngram_helper_git_blob_sha": SUBJECT_HELPER_BLOB,\n            "repeat_compiler_git_blob_sha": SUBJECT_REPEAT_BLOB,
+            "ngram_helper_git_blob_sha": SUBJECT_HELPER_BLOB,
+            "repeat_compiler_git_blob_sha": SUBJECT_REPEAT_BLOB,
         },
         "public_sources": {
             "ifbench_test_git_blob_sha": git_blob_sha(raw),
