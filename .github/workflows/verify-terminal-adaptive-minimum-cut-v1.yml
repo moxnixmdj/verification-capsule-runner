@@ -1,0 +1,49 @@
+name: Verify terminal adaptive minimum cut v1
+
+on:
+  push:
+    branches:
+      - verify-terminal-adaptive-mincut-v1-20261004
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify frozen source bytes and derived claims
+        run: python verify_terminal_adaptive_minimum_cut_v1.py
+      - name: Run assertion test modules without third-party dependencies
+        run: |
+          python - <<'PY'
+          import importlib
+          for name in (
+              "canonical.tests.test_minimum_terminal_cut_solver_v2",
+              "canonical.tests.test_terminal_adaptive_supertransaction_v1",
+          ):
+              m=importlib.import_module(name)
+              tests=[getattr(m,k) for k in sorted(dir(m)) if k.startswith("test_") and callable(getattr(m,k))]
+              assert tests,(name,"NO_TESTS")
+              for fn in tests:
+                  fn()
+                  print("PASS",name,fn.__name__)
+          PY
+      - name: Execute current supertransaction compiler
+        run: |
+          python canonical/runtime/terminal_adaptive_supertransaction_v1.py > adaptive_result.json
+          python - <<'PY'
+          import json
+          x=json.load(open("adaptive_result.json"))
+          assert x["pass"] is True,x
+          assert x["causal_phase_upper_bound"]==2,x
+          assert x["automatic_finality"]["separate_manual_phase_required"] is False,x
+          assert x["terminal_state"]["unresolved_predicates"]==26,x
+          assert x["fresh_reality_authority"] is False,x
+          print("TERMINAL_ADAPTIVE_MINIMUM_CUT_PUBLIC_VERIFIER_PASS")
+          PY
