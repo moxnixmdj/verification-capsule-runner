@@ -12,6 +12,7 @@ import argparse
 from collections import Counter, defaultdict
 from itertools import product
 import json
+import re
 from pathlib import Path
 import sys
 
