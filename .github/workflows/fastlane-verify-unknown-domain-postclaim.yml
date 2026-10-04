@@ -1,0 +1,65 @@
+name: Fast-lane verify Unknown-Domain post-claim recovery
+on:
+  push:
+    branches:
+      - 'fastlane/verify-ud-postclaim-2049-v1'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify frozen lease and transitive closure
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Verify production launcher unit suite
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify post-claim recovery is load-bearing and fail-closed
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          root=Path(".")
+          lease_path=root/"canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json"
+          launcher_path=root/"canonical/runtime/unknown_domain_direct_production_once_v1.py"
+          workflow_path=root/".github/workflows/unknown-domain-direct-one-use-production.yml"
+
+          raw=lease_path.read_bytes()
+          lease=json.loads(raw)
+          def blob(path):
+              b=path.read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+
+          assert lease["schema"]=="PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1"
+          assert "POST_201_FAIL_CLOSED_RECOVERY_CANDIDATE" in lease["status"]
+          assert lease["entrypoint_repair"]["independent_verification_required"] is True
+          assert lease["hard_rules"][-1]=="POST_CLAIM_FAILURE_MUST_BE_SEALED_FAIL_CLOSED_WITHOUT_REPLAY"
+          assert blob(launcher_path)==lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"]
+          assert blob(workflow_path)==lease["exact_components"][".github/workflows/unknown-domain-direct-one-use-production.yml"]
+          rr=lease["entrypoint_repair"]["result_recovery"]
+          assert rr["replay_allowed"] is False
+          assert rr["raw_hidden_records_persisted"] is False
+          assert rr["raw_evaluator_secret_persisted"] is False
+          assert rr["raw_beacon_persisted"] is False
+          r201=rr["post_201_response_repair"]
+          assert r201["launcher_git_blob_sha"]==blob(launcher_path)
+          assert r201["production_cases_generated"]==0
+          assert r201["replay_allowed"] is False
+          assert lease["limits"]["production_populations"]==1
+          assert lease["limits"]["production_cases"]==27
+          assert lease["resources"]["persistent_learned_bytes"]==0
+          assert lease["resources"]["incremental_spend_usd"]==0
+          digest=hashlib.sha256(raw).hexdigest()
+          print("FASTLANE_UNKNOWN_DOMAIN_POSTCLAIM_PASS")
+          print("EXECUTION_LEASE_SHA256="+digest)
+          print("CLAIM_REF=refs/heads/unknown-domain-direct-claims/"+digest)
+          print("LAUNCHER_BLOB="+blob(launcher_path))
+          print("PRODUCTION_WORKFLOW_BLOB="+blob(workflow_path))
+          print("PRODUCTION_CASES_GENERATED=0")
+          PY
