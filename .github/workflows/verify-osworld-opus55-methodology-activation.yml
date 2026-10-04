@@ -1,0 +1,24 @@
+name: Verify OSWorld Opus55 methodology activation
+on:
+  push:
+    branches:
+      - verify/osworld-opus55-methodology-activation-20261004-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain inputs
+        run: |
+          test "$(git hash-object verification_inputs/osworld_methodology_activation.json)" = "51df4e1060a705ff98b85abf2afab9a4e564052c"
+          test "$(git hash-object verification_inputs/osworld_methodology_receipt.json)" = "b1d9b9fb008807415b1c2a0248380c005765d9e8"
+          test "$(git hash-object verification_inputs/osworld_methodology_candidate.json)" = "f4bc47440829387db14e37c900a269d11f77fdc1"
+          test "$(git hash-object verification_inputs/osworld_gitlab_sept10.json)" = "d03a0a6d85148017c073b79ee78895cc94870eb3"
+          test "$(git hash-object verification_inputs/osworld_gitlab_sept10_receipt.json)" = "ca58b9e09b2e0fa24d7c5781e93c55a6d46e2935"
+      - name: Verify methodology deletions and preserved identity residual
+        run: python verify_osworld_opus55_methodology_activation_v1.py
