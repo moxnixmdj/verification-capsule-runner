@@ -1,0 +1,31 @@
+name: Verify Brain chart visual primitives V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/chart_visual_primitives_v1/**"
+      - ".github/workflows/verify-brain-chart-visual-primitives-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned OpenCV package
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          candidate="$(apt-cache policy python3-opencv | awk '/Candidate:/ {print $2}')"
+          test "$candidate" = "4.6.0+dfsg-13.1ubuntu1"
+          sudo apt-get install -y -qq python3-opencv
+          test "$(/usr/bin/python3 -c 'import cv2; print(cv2.__version__)')" = "4.6.0"
+      - name: Verify exact candidate bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/chart_visual_primitives_v1/canonical/runtime/chart_visual_primitives_v1.py)" = "8f3a4df9facec40cafa2693f5f3972d43ce70ef4"
+          test "$(git hash-object capsules/chart_visual_primitives_v1/canonical/tests/test_chart_visual_primitives_v1.py)" = "b5b03445973971268541d3fe17b99d2b8c027ecd"
+      - name: Run synthetic primitive extraction tests
+        working-directory: capsules/chart_visual_primitives_v1
+        run: |
+          PYTHONPATH=. /usr/bin/python3 -m unittest canonical.tests.test_chart_visual_primitives_v1 -v
