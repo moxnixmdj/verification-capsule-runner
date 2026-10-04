@@ -117,3 +117,53 @@ cp=subprocess.run(
 print(cp.stdout)
 assert cp.returncode==0,cp.stdout
 print("PASS__FINANCE_AGENT_ZERO_SPEND_ADAPTER__EXACT_VALS_BOUNDARIES__RETRY_SAFE__UNIT_TESTS_PASS__ZERO_CREDIT")
+
+
+# Root2 Frontier V7 Finance Agent zero-spend compression
+V7=Path(__file__).with_name("v7.json")
+assert blob2(V7.name)=="35e8b578aca1290bcf469d6350ae085ba8a86c64"
+v7=json.loads(V7.read_text())
+assert v7["schema"]=="PROJECT_BRAIN_ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V7"
+assert v7["supersedes_for_scheduling_if_verified"]=="canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V6.json"
+assert v7["source_bindings"]["prior_frontier_v6"]["git_blob_sha"]=="fcbdb818b63b4986b026db29c400a47373a26fdb"
+assert v7["source_bindings"]["finance_agent_v2_zero_spend_runtime_guard"]["git_blob_sha"]=="278a3317564138088fd8af83a8734a84fe09b158"
+assert v7["source_bindings"]["finance_agent_v2_zero_spend_runtime_guard"]["verification_git_blob_sha"]=="342740561634a86d0c55876ee126e8122b21af0f"
+assert v7["source_bindings"]["finance_agent_v2_zero_spend_harness_adapter"]["git_blob_sha"]=="280fc9b41221f6b4fa58ac50b18a0a4d6fceb5ec"
+assert v7["source_bindings"]["finance_agent_v2_zero_spend_harness_adapter"]["verification_git_blob_sha"]=="31ed06c9469c9a915108ac970b4790a5f5f77e75"
+
+s=v7["exact_state"]
+assert (s["accepted_families"],s["open_families"],s["proved_atomic"],s["unresolved_atomic"])==(5,14,12,26)
+assert (s["root2_only_count"],s["root3_only_count"],s["root2_and_root3_count"],s["root2_touching_predicates"])==(16,7,3,19)
+
+delta=[d for d in v7["projection_deltas"] if d["target"]=="FINANCE_AGENT_V2_GE_58_59" and d["deletion"]=="A_PRIORI_WORST_CASE_PROVIDER_DEMAND_PROOFS_AS_EXECUTION_PRECONDITION"]
+assert len(delta)==1
+route=v7["finance_agent_v2_zero_spend_route"]
+assert route["scored_task_executions"]==1350
+assert route["provider_call_interception"]=="VERIFIED_RETRY_SAFE"
+assert route["a_priori_worst_case_provider_demand_proof_required"] is False
+for x in [
+ "VALS_PLATFORM_APPROVAL",
+ "EXACT_OFFICIAL_TEST_SUITE_ID",
+ "CURRENT_FREE_ONLY_ACCOUNT_SNAPSHOT_TAVILY",
+ "CURRENT_FREE_ONLY_ACCOUNT_SNAPSHOT_SEC_API",
+ "CURRENT_FREE_ONLY_ACCOUNT_SNAPSHOT_TIINGO",
+ "ZERO_COST_OUTCOME_TELEMETRY_BINDING",
+]:
+    assert x in route["remaining_zero_reality"],x
+for x in ["FULL_1350_EXECUTION_RUN","ZERO_GUARD_TRIPS","ZERO_OBSERVED_INCREMENTAL_SPEND","BRAIN_SCORE_GE_58_59"]:
+    assert x in route["future_empirical_gate_after_global_zero_reality_fixed_point"],x
+
+assert "FINANCE_AGENT_V2_1350_EXECUTION_TAVILY_SEC_API_TIINGO_FREE_USAGE_FEASIBILITY" not in v7["waiting_external_facts"]
+assert "FINANCE_AGENT_V2_TAVILY_SEC_API_TIINGO_FREE_ONLY_ACCOUNT_SNAPSHOTS_WITH_PAID_FALLBACK_OVERAGE_BILLING_DISABLED" in v7["waiting_external_facts"]
+assert "FINANCE_AGENT_V2_ZERO_COST_OUTCOME_TELEMETRY_BINDING" in v7["waiting_external_facts"]
+assert v7["execution_authority"] is False
+assert v7["promotion_authority"] is False
+assert v7["fresh_reality_authority"] is False
+assert v7["accounting"]["acceptance_credit_delta"]==0
+assert v7["accounting"]["terminal_cases_consumed"]==0
+
+guardv=json.loads(Path(__file__).with_name("guard_verification.json").read_text())
+adapterv=json.loads(Path(__file__).with_name("adapter_verification.json").read_text())
+assert guardv["independent_runner"]["conclusion"]=="success"
+assert adapterv["verifier"]["conclusion"]=="success"
+print("PASS__ROOT2_V7_FINANCE_ZERO_SPEND_COMPRESSION__COUNTS_STABLE__NO_FRESH_REALITY__ZERO_CREDIT")
