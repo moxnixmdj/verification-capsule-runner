@@ -1,0 +1,26 @@
+name: Verify LiveBench lexical signature V2
+
+on:
+  push:
+    branches:
+      - verify/livebench-lexical-signature-v2-20261005-sol
+    paths:
+      - "subject/livebench_lexical_signature_v2/**"
+      - "verify_livebench_lexical_signature_v2.py"
+      - ".github/workflows/verify-livebench-lexical-signature-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact quotient
+        run: python verify_livebench_lexical_signature_v2.py
