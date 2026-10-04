@@ -34,9 +34,9 @@ assert subject_vr["verified"]["fresh_reality_authority"] is False
 assert projection_vr["independent_runner"]["conclusion"]=="success"
 assert projection_vr["verified"]["exact_current_main_v3_projection"] is True
 assert projection_vr["verified"]["effective_scheduling_was_false_during_projection"] is True
-assert projection_vr["verified"]["zero_fresh_reality"] is True
-assert projection_vr["verified"]["zero_terminal_cases"] is True
-assert projection_vr["verified"]["zero_acceptance_credit"] is True
+assert projection_vr["verified"]["fresh_reality_authority"] is False
+assert projection_vr["verified"]["terminal_cases_consumed"]==0
+assert projection_vr["verified"]["acceptance_credit_delta"]==0
 
 assert act["subject"]["frontier_git_blob_sha"]=="681123ef6cff3506d66af6b31b61c8bc14a8a913"
 assert act["verification"]["git_blob_sha"]=="8436a9eb30312b959ba094394e60f26b4833a3a2"
