@@ -1,0 +1,20 @@
+name: Verify acceptance proof replacement v1
+
+on:
+  pull_request:
+    paths:
+      - 'verify_acceptance_proof_replacement_20261004.py'
+      - 'subject/proof_replacement_v1_20261004/**'
+      - '.github/workflows/verify-acceptance-proof-replacement-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent verifier
+        run: python verify_acceptance_proof_replacement_20261004.py
