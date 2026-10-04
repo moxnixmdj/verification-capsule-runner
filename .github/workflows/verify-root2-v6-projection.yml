@@ -1,0 +1,21 @@
+name: Verify Root2 V6 projection
+on:
+  pull_request:
+    paths:
+      - "subject/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V6.json"
+      - "subject/CURRENT_TERMINAL_AUTHORITY_V1.json"
+      - "subject/TERMINAL_ROOT_CAUSE_STATE_V1.json"
+      - "subject/ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1.json"
+      - "verify_root2_v6_projection.py"
+      - ".github/workflows/verify-root2-v6-projection.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_v6_projection.py
