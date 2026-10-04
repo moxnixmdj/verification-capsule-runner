@@ -1,0 +1,27 @@
+name: Verify Finance threshold current authority
+on:
+  pull_request:
+    paths:
+      - "subject/PROJECTED_CURRENT_TERMINAL_AUTHORITY_V1.json"
+      - "subject/PROJECTED_ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1.json"
+      - "subject/PROJECTED_TERMINAL_ROOT_CAUSE_STATE_V1.json"
+      - "subject/BASE_CURRENT_TERMINAL_AUTHORITY_V1.json"
+      - "subject/BASE_ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1.json"
+      - "subject/BASE_TERMINAL_ROOT_CAUSE_STATE_V1.json"
+      - "subject/FINANCE_INDEX_DIRECT_THRESHOLD_ACTIVATION_V1.json"
+      - "subject/FINANCE_INDEX_DIRECT_THRESHOLD_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json"
+      - "subject/FINANCE_INDEX_DIRECT_THRESHOLD_THEOREM_V1.json"
+      - "verify_finance_threshold_current_authority.py"
+      - ".github/workflows/verify-finance-threshold-current-authority.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_finance_threshold_current_authority.py
