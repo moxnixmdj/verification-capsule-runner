@@ -1,0 +1,17 @@
+{
+  "schema": "PROJECT_BRAIN_H100_EXPRESSION_TREE_V2_VERIFIER_INPUT_V1",
+  "date": "2026-10-05",
+  "status": "VERIFICATION_INPUT__ZERO_CREDIT",
+  "subject_repository": "moxnixmdj/brain",
+  "subject_branch": "breakthrough/mysterymechanism-expression-tree-v2-20261005-sol",
+  "subject_base_commit": "b847507d44d826d558196c8f5421944932cd6142",
+  "exact_blobs": {
+    "canonical/runtime/h100_zero_learned_mechanism_synthesizer_v1.py": "fa77c6a0f4edf214c4237cf1e204b640261622fe",
+    "canonical/runtime/h100_zero_learned_mechanism_synthesizer_v2.py": "95eceebcb970020661593cd88383fcda8b06f7c3",
+    "canonical/tests/test_h100_zero_learned_mechanism_synthesizer_v2.py": "0cc2e400294bae8f1987dfe45960db3348bd080b"
+  },
+  "purpose": "INDEPENDENTLY_FALSIFY_NESTED_EXPRESSION_TREE_MECHANISM_DISCOVERY_WITHOUT_HIDDEN_BENCHMARK_CREDIT",
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "ownership_credit_delta": 0
+}
