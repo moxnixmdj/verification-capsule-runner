@@ -1,13 +1,20 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_PRECLAIM_RETRY_TRIGGER_V1",
   "date": "2026-10-05",
-  "status": "TRIGGER_ONLY__ZERO_AUTHORITY__ZERO_CREDIT",
+  "status": "TRIGGER_ONLY__VERIFIED_REENTRY__ZERO_AUTHORITY__ZERO_CREDIT",
   "verified_retry_workflow_git_blob_sha": "d2b76185a76fc4584483c223deba085903589df4",
   "execution_lease_sha256": "76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9",
+  "independent_verification": {
+    "pull_request": 2034,
+    "merge_commit_sha": "f666b5b512e035fe4bcda30058644f606e231a45",
+    "workflow_run_id": 37240343308,
+    "workflow_job_id": 111547635658,
+    "conclusion": "success"
+  },
   "rule": "THIS PUSH ONLY CAUSES THE ALREADY_VERIFIED RETRY WORKFLOW TO REENTER THE SAME ATOMIC CLAIM GATE; IT DOES NOT AUTHORIZE OR COUNT PRODUCTION.",
   "accounting": {
     "incremental_spend_usd": 0,
-    "production_cases_consumed": 0,
+    "production_cases_consumed_by_trigger": 0,
     "acceptance_credit_delta": 0
   }
 }
