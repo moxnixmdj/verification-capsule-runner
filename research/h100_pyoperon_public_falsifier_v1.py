@@ -35,7 +35,7 @@ def fit_case(name,X,y,oracle,bounds,log_axes):
         initialization_max_length=12,
         initialization_max_depth=6,
         tournament_size=7,
-        model_selection_criterion="mean_squared_error",
+        model_selection_criterion="minimum_description_length",
         n_threads=2,
         max_time=300,
         random_state=0,
@@ -53,17 +53,42 @@ def fit_case(name,X,y,oracle,bounds,log_axes):
     train_pred=np.asarray(reg.predict(X),dtype=float)
     front=[]
     for row in reg.pareto_front_:
+        tree=row["tree"]
+        dense_pred=np.asarray(reg.evaluate_model(tree,grid),dtype=float)
+        train_candidate=np.asarray(reg.evaluate_model(tree,X),dtype=float)
         front.append({
             "model":row.get("model"),
             "length":row.get("length"),
             "complexity":row.get("complexity"),
             "mean_squared_error":row.get("mean_squared_error"),
+            "minimum_description_length":row.get("minimum_description_length"),
+            "bayesian_information_criterion":row.get("bayesian_information_criterion"),
+            "akaike_information_criterion":row.get("akaike_information_criterion"),
+            "train_nrmse":nrmse(ys,train_candidate),
+            "dense_oracle_nrmse":nrmse(truth,dense_pred),
         })
+    criterion_winners={}
+    for criterion in [
+        "mean_squared_error",
+        "minimum_description_length",
+        "bayesian_information_criterion",
+        "akaike_information_criterion",
+    ]:
+        winner=min(front,key=lambda row:float(row[criterion]))
+        criterion_winners[criterion]={
+            "model":winner["model"],
+            "complexity":winner["complexity"],
+            "train_nrmse":winner["train_nrmse"],
+            "dense_oracle_nrmse":winner["dense_oracle_nrmse"],
+            "criterion_value":winner[criterion],
+        }
     return {
         "name":name,
-        "model":next((row["model"] for row in front if row["mean_squared_error"]==min(r["mean_squared_error"] for r in front)),None) if front else None,
+        "selected_criterion":"minimum_description_length",
+        "selected_model":criterion_winners["minimum_description_length"],
         "train_nrmse":nrmse(ys,train_pred),
         "dense_oracle_nrmse":nrmse(truth,pred),
+        "criterion_winners":criterion_winners,
         "wall_s":wall,
         "stats":reg.stats_,
         "pareto_front":front,
