@@ -1,0 +1,63 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1",
+  "date": "2026-10-04",
+  "status": "ACTIVE_ZERO_CREDIT__OWNER_FANOUT_RECONCILED__CURSOR_CLOSED__LIVEBENCH_IF_SCORE_ONLY",
+  "merge_commit": "f545378d05c9d785995ea52a86129886fd783e9d",
+  "exact_blobs": {
+    "capsule": "b3c71b238c7358c607ebd2a01cb8601055d33c21",
+    "owner_fanout": "97e013061abd5b2ad3229aa856835369931404e0",
+    "adapter_registry": "afa021a25d2de53e293d10ab6759e55eaabaea21",
+    "external_task_entrypoint": "603beefe0db24102b86b7c965e5433bd880392af",
+    "generic_inference_seam_boundary": "831ac05e5d57c346a9cd77fc145c73f01d825e28",
+    "livebench_if_astra_inference_adapter": "7e3885fa7a6e56df656c066e0a8f17cfa21424e7",
+    "livebench_if_astra_cleanroom_verification": "05fe911b180e0edae890519670216c589b38e354",
+    "livebench_if_astra_public_runner_verification": "7343b20409c5df874bd35c45db46045477d29e08",
+    "livebench_if_comparator_route_reconciliation_v2": "7067a849585d9020f3d78aa374c0eeecb5078c8b"
+  },
+  "state": {
+    "owner_channels_started": 5,
+    "root2_fixed_bar_predicates_targeted": 9,
+    "generic_entrypoint_bound": true,
+    "inference_capable_adapter_count": 1,
+    "generic_inference_seam_boundary": "PARTIALLY_CLOSED_BY_INDEPENDENTLY_VERIFIED_LIVEBENCH_IF_ADAPTER__BROADER_SEAM_OPEN",
+    "inference_capable_adapter_candidate_count": 1,
+    "independently_verified_inference_adapter_count": 1,
+    "cleanroom_verified_inference_adapter_count": 1,
+    "livebench_if_inference_adapter": "INDEPENDENT_PASS__ROUTE_PREQUALIFIED__SCORE_ONLY",
+    "owner_channels_waiting": 4,
+    "owner_channels_closed": 1,
+    "cursor_owner_channel": "CLOSED_BY_DIRECT_OWNER_REPLY__STRONGER_PROOF_OR_POLICY_CHANGE_ONLY",
+    "livebench_if_route_state": {
+      "comparator_abi": "CLOSED",
+      "comparator_population_identity": "CLOSED",
+      "brain_adapter": "INDEPENDENT_PASS",
+      "scorer_runtime": "INDEPENDENT_PASS",
+      "checker_boundary_preflight": "INDEPENDENT_PASS",
+      "brain_score": "OPEN",
+      "fresh_reality_authorized": false
+    },
+    "root2_partition": "16_ROOT2_ONLY__3_MIXED__19_TOUCHING",
+    "zero_reality_frontier_bound": true
+  },
+  "next": "EXECUTE_ONLY_CURRENT_ROOT2_V5_ZERO_REALITY_FRONTIER__OBSERVE_ACCOUNT_FACTS_ONLY_WHEN_CONNECTED__BIND_OWNER_RECEIPTS_ON_ARRIVAL__RECOMPUTE_FIXED_POINT__NO_FRESH_SCORE_BEFORE_FIXED_POINT",
+  "incremental_spend_usd": 0,
+  "terminal_cases_consumed": 0,
+  "acceptance_credit_delta": 0,
+  "execution_authority": false,
+  "promotion_authority": false,
+  "fresh_reality_authority": false,
+  "root2_closure_controller_v2": {
+    "activation_path": "canonical/governance/ROOT2_CLOSURE_CONTROLLER_V2_ACTIVATION_V1.json",
+    "activation_git_blob_sha": "4cbc1b9f478654b2dc671a8b54f91b5c4b91c019",
+    "verification_path": "canonical/verification/ROOT2_CLOSURE_CONTROLLER_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+    "verification_git_blob_sha": "430b5918cb455304bf9227f4ada8dd686f615f78",
+    "frontier_path": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5.json",
+    "frontier_git_blob_sha": "e948022f0a4e8d91b949a5155d850d56aa137c87",
+    "status": "ACTIVE__ROOT2_FRONTIER_V5_INDEPENDENT_PROJECTION_PASS__CURRENT_AUTHORITY_BOUND__ZERO_CREDIT",
+    "frontier_verification_path": "canonical/verification/ROOT2_V5_PROJECTION_VERIFICATION_20261004_V1.json",
+    "frontier_verification_git_blob_sha": "2475a8583e2ed2889c3e9e0613ae3bcf269ffc82",
+    "effective_scheduling_authority": true,
+    "frontier_activation_path": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5_ACTIVATION_V1.json",
+    "frontier_activation_git_blob_sha": "2d15df0daab51c5cc61c4194197da7f7fcd5a1b0"
+  }
+}
