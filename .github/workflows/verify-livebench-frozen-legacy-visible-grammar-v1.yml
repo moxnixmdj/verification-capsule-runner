@@ -1,0 +1,29 @@
+name: Verify LiveBench frozen legacy visible grammar
+
+on:
+  push:
+    paths:
+      - "verify_livebench_frozen_legacy_visible_grammar_v1.py"
+      - ".github/workflows/verify-livebench-frozen-legacy-visible-grammar-v1.yml"
+  pull_request:
+    paths:
+      - "verify_livebench_frozen_legacy_visible_grammar_v1.py"
+      - ".github/workflows/verify-livebench-frozen-legacy-visible-grammar-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install aggregate-audit dependencies
+        run: python -m pip install --disable-pip-version-check --quiet pyarrow==19.0.1 absl-py langdetect nltk immutabledict
+      - name: Audit canonical visible grammar without emitting terminal content
+        run: python verify_livebench_frozen_legacy_visible_grammar_v1.py
