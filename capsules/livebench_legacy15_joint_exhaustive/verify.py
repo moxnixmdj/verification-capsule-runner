@@ -15,9 +15,9 @@ INSTRUCTIONS_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
 REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
 SUBJECT_BLOBS = {
     "livebench_legacy_visible_constraint_compiler_v1.py": "e986035ff68b53c0dc7a7eb478f6e3d8882214aa",
-    "livebench_legacy_visible_constraint_compiler_v2.py": "0e7519f4f2b7d40084effc83a5bef814ee7fd487",
+    "livebench_legacy_visible_constraint_compiler_v4.py": "f3d5165071438a7f0ce8cd57c0c3489aa3d08497",
     "livebench_frozen_active_legacy15_v1.py": "34440ee69322e9d519cbe656cb03c55683a8b9c6",
-    "livebench_legacy15_joint_witness_v1.py": "8a7ee693072b662979683fa4b60de54ea6c60a10",
+    "livebench_legacy15_joint_witness_v1.py": "556370b5cee746fb80750050b1903e99fc71f140",
 }
 REPEAT_MARKER = (
     "First repeat the request word for word without change,"
