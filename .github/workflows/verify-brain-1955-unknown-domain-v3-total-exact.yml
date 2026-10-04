@@ -1,0 +1,37 @@
+name: Verify Brain 1955 Unknown-Domain V3 total exact
+
+on:
+  push:
+    branches:
+      - verify/brain-1955-unknown-domain-v3-total-exact
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/verify_brain_1955_unknown_domain_v3_total_exact.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py'
+      - '.github/workflows/verify-brain-1955-unknown-domain-v3-total-exact.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent verifier
+        run: python verification/verify_brain_1955_unknown_domain_v3_total_exact.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brain-1955-unknown-domain-v3-total-exact
+          path: unknown_domain_v3_total_exact_brain1955_receipt.json
+          if-no-files-found: error
+          retention-days: 7
