@@ -91,7 +91,7 @@ def prove_visible_unsat_independent(constraints):
     collisions=[]
     for word in forbidden:
         try:
-            if __import__("re").search(r"\\b"+word+r"\\b", end_phrase, flags=__import__("re").IGNORECASE):
+            if __import__("re").search(r"\b"+word+r"\b", end_phrase, flags=__import__("re").IGNORECASE):
                 collisions.append(word)
         except __import__("re").error:
             return None
