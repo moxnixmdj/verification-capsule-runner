@@ -53,13 +53,18 @@ def main():
       "Reply with exactly TOKEN\nThen continue.",
     ]
     for goal in negative:
-        try:
-            m.compile_goal(goal,{},root)
-        except m.GoalCompilationFailure as e:
-            if e.code!="GOAL_COMPILATION_NO_VERIFIED_CAPABILITY_MATCH":
-                raise SystemExit("WRONG_FAIL_CODE:"+goal+":"+e.code)
-        else:
+        if m._compile_exact_literal_response_goal(goal) is not None:
             raise SystemExit("AMBIGUOUS_INPUT_NOT_REJECTED:"+goal)
+
+    # Also prove ordinary single-clause unknown goals still fail through the
+    # public compile boundary without requiring unrelated compound helpers.
+    try:
+        m.compile_goal("Reticulate a neutral lattice",{},root)
+    except m.GoalCompilationFailure as e:
+        if e.code!="GOAL_COMPILATION_NO_VERIFIED_CAPABILITY_MATCH":
+            raise SystemExit("WRONG_UNKNOWN_FAIL_CODE:"+e.code)
+    else:
+        raise SystemExit("UNKNOWN_SINGLE_CLAUSE_NOT_REJECTED")
 
     direct=m._compile_exact_literal_response_goal("Reply with exactly ALPHA_9.")
     if direct.get("finish_summary")!="ALPHA_9":
