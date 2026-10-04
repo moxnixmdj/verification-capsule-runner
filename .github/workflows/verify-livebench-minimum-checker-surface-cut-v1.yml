@@ -1,0 +1,20 @@
+name: Verify LiveBench minimum checker surface cut V1
+
+on:
+  push:
+    branches:
+      - verify/livebench-minimum-checker-cut-v1-20261004-sol
+  pull_request:
+    paths:
+      - 'verification_inputs/livebench_if_minimum_checker_surface_cut_v1.py'
+      - 'verification/verify_livebench_minimum_checker_surface_cut_v1.py'
+      - '.github/workflows/verify-livebench-minimum-checker-surface-cut-v1.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact cut against pinned public IFBench bytes
+        run: python verification/verify_livebench_minimum_checker_surface_cut_v1.py
