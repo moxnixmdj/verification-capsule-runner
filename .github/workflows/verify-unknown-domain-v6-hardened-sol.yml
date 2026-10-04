@@ -1,0 +1,34 @@
+name: Verify Unknown-Domain V6 hardened subclass route
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/unknown_domain_v6_20261005/**"
+      - "verify_unknown_domain_v6_total_exact.py"
+      - ".github/workflows/verify-unknown-domain-v6-hardened-sol.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Run hardened content-bound V6 verifier
+        run: python verify_unknown_domain_v6_total_exact.py
+      - name: Print receipt
+        if: always()
+        run: |
+          test ! -f unknown_domain_v6_total_exact_verification.json || cat unknown_domain_v6_total_exact_verification.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v6-hardened-receipt
+          path: unknown_domain_v6_total_exact_verification.json
+          if-no-files-found: error
