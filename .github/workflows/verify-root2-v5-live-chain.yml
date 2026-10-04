@@ -1,0 +1,22 @@
+name: Verify Root2 V5 live authority chain
+on:
+  pull_request:
+    paths:
+      - "subject/LIVE_TERMINAL_ROOT_CAUSE_STATE_V1.json"
+      - "subject/ROOT2_V5_ACTIVATION_V1.json"
+      - "subject/ROOT2_V5_FRONTIER.json"
+      - "subject/ROOT2_V5_PROJECTION_VERIFICATION.json"
+      - "verify_root2_v5_live_chain.py"
+      - ".github/workflows/verify-root2-v5-live-chain.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_v5_live_chain.py
