@@ -2,7 +2,9 @@ name: Verify Unknown-Domain V6 total exact
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - verification-isolation/ud-v6-subclass-safe-20261005
     paths:
       - "subject/unknown_domain_v6_20261005/**"
       - "verify_unknown_domain_v6_total_exact.py"
