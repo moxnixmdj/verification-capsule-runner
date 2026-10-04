@@ -1,0 +1,19 @@
+name: Verify Root2 frontier V3 CircleCI wake V2
+on:
+  pull_request:
+    paths:
+      - "subject/**"
+      - "verify_root2_frontier_v3_circleci_v2.py"
+      - ".github/workflows/verify-root2-frontier-v3-circleci-v2.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_frontier_v3_circleci_v2.py
