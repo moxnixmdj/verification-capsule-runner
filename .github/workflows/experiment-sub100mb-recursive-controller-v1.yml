@@ -1,0 +1,108 @@
+name: Experiment sub100MB recursive controller v1
+
+on:
+  pull_request:
+    paths:
+      - 'sub100mb_recursive_controller_smoke_v1.py'
+      - 'subject/sub100mb_recursive_controller_v1/**'
+      - '.github/workflows/experiment-sub100mb-recursive-controller-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build llama.cpp CPU server
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_NATIVE=OFF \
+            -DLLAMA_CURL=OFF
+          cmake --build /tmp/llama.cpp/build --config Release -j2 --target llama-server
+          test -x /tmp/llama.cpp/build/bin/llama-server
+
+      - name: Fetch and verify exact learned-state artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL="$RUNNER_TEMP/SmolLM2-135M-Instruct-Q3_K_M.gguf"
+          curl -L --fail --retry 3 \
+            'https://huggingface.co/tensorblock/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q3_K_M.gguf' \
+            -o "$MODEL"
+          BYTES="$(stat -c%s "$MODEL")"
+          SHA="$(sha256sum "$MODEL" | awk '{print $1}')"
+          test "$BYTES" = "93511232"
+          test "$SHA" = "61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4"
+          echo "MODEL=$MODEL" >> "$GITHUB_ENV"
+          echo "learned_bytes=$BYTES"
+          echo "remaining_bytes=$((100000000-BYTES))"
+
+      - name: Start fixed controller
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/llama.cpp/build/bin/llama-server \
+            --model "$MODEL" \
+            --host 127.0.0.1 \
+            --port 8080 \
+            --ctx-size 4096 \
+            --threads 2 \
+            --parallel 1 \
+            > "$RUNNER_TEMP/llama-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/llama-server.pid"
+          for i in $(seq 1 120); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then
+              exit 0
+            fi
+            if ! kill -0 "$(cat "$RUNNER_TEMP/llama-server.pid")" 2>/dev/null; then
+              cat "$RUNNER_TEMP/llama-server.log"
+              exit 1
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/llama-server.log"
+          exit 1
+
+      - name: Run recursive controller smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python sub100mb_recursive_controller_smoke_v1.py \
+            --endpoint http://127.0.0.1:8080 \
+            --out sub100mb_recursive_controller_smoke_result_v1.json
+          python - <<'PY'
+          import json
+          p='sub100mb_recursive_controller_smoke_result_v1.json'
+          x=json.load(open(p))
+          assert x['model']['learned_bytes'] == 93511232
+          assert x['model']['learned_bytes'] < x['model']['strict_budget_bytes_exclusive']
+          assert x['population']['task_count'] == 8
+          assert set(x['summaries']) == {'direct','schema','feedback','search4'}
+          print(json.dumps(x['architecture_signal'], indent=2))
+          PY
+
+      - name: Upload empirical result
+        uses: actions/upload-artifact@v4
+        with:
+          name: sub100mb-recursive-controller-smoke-v1
+          path: sub100mb_recursive_controller_smoke_result_v1.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Show server tail
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/llama-server.log" ]; then
+            tail -100 "$RUNNER_TEMP/llama-server.log" || true
+          fi
