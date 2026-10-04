@@ -18,6 +18,16 @@ def git_blob_sha(path):
 observed_runtime_closure={name:git_blob_sha(SUB/name) for name in EXPECTED_RUNTIME_CLOSURE}
 assert observed_runtime_closure==EXPECTED_RUNTIME_CLOSURE,(observed_runtime_closure,EXPECTED_RUNTIME_CLOSURE)
 
+EXPECTED_BOUND_CAPABILITIES={
+  "broad_objective_decompose.py":"3ded762075ed222228a14877af631f1e2e6d9e4c",
+  "plain_goal_bound_grounding.py":"46e8e7466479ea298c34e5fa682d49c374510ce9",
+}
+observed_bound_capabilities={
+  name:git_blob_sha(SUB/"bound_capabilities"/name)
+  for name in EXPECTED_BOUND_CAPABILITIES
+}
+assert observed_bound_capabilities==EXPECTED_BOUND_CAPABILITIES,(observed_bound_capabilities,EXPECTED_BOUND_CAPABILITIES)
+
 canonical=types.ModuleType("canonical")
 runtime=types.ModuleType("canonical.runtime")
 canonical.runtime=runtime
@@ -55,6 +65,7 @@ except Exception as exc:
       "terminal_cases_consumed":0,
       "paid_external_model_or_api_used":False,
       "runtime_closure_git_blob_shas":observed_runtime_closure,
+      "bound_capabilities_git_blob_shas":observed_bound_capabilities,
     }
 else:
     result={
