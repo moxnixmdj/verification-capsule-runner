@@ -1,0 +1,130 @@
+"""Load Hugging Face or local tasks as Inspect samples."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import yaml
+from inspect_ai.dataset import MemoryDataset, Sample
+from inspect_ai.model import ChatMessageUser, ContentImage, ContentText
+
+# Inspect changes the working directory during evaluation.
+IMAGE_CACHE_DIR = Path(__file__).resolve().parents[2] / "image_cache"
+
+
+def load_samples(
+    hf_repo: str | None = None,
+    split: str = "test",
+    task_pack: str | None = None,
+    limit: int | None = None,
+) -> MemoryDataset:
+    """Load samples from Hugging Face or a local task pack."""
+    if task_pack is not None:
+        samples = _samples_from_task_pack(Path(task_pack))
+        if limit is not None:
+            samples = samples[:limit]
+    elif hf_repo is not None:
+        samples = _samples_from_hf(hf_repo, split, limit)
+    else:
+        raise ValueError("provide either `hf_repo` or `task_pack`")
+    return MemoryDataset(samples=samples, name="chartography")
+
+
+def _make_sample(
+    task_id: str,
+    prompt: str,
+    chart: Path,
+    golden_answer: str,
+    metadata: dict | None = None,
+) -> Sample:
+    golden_answer = golden_answer.strip()
+    if not golden_answer:
+        raise ValueError(f"task {task_id} has no golden_answer")
+    content = [ContentText(text=prompt), ContentImage(image=str(chart))]
+    return Sample(
+        id=str(task_id),
+        input=[ChatMessageUser(content=content)],
+        target=golden_answer,
+        # The scorer reads the prompt from metadata.
+        metadata={
+            "prompt": prompt,
+            "golden_answer": golden_answer,
+            **(metadata or {}),
+        },
+    )
+
+
+def _samples_from_hf(
+    hf_repo: str,
+    split: str,
+    limit: int | None = None,
+) -> list[Sample]:
+    """Load a Hugging Face split, caching only the requested charts."""
+    from datasets import load_dataset
+    from huggingface_hub import hf_hub_download
+
+    rows = load_dataset(hf_repo, split=split)
+    if limit is not None:
+        rows = rows.select(range(min(limit, len(rows))))
+
+    samples: list[Sample] = []
+    for index, row in enumerate(rows):
+        task_id = str(row.get("task_id") or index)
+        chart_rel = row["chart_path"]
+        local_chart = Path(
+            hf_hub_download(
+                repo_id=hf_repo,
+                filename=chart_rel,
+                repo_type="dataset",
+                cache_dir=str(IMAGE_CACHE_DIR),
+            )
+        )
+        samples.append(
+            _make_sample(
+                task_id,
+                row["prompt"],
+                local_chart,
+                str(row["golden_answer"]),
+                {
+                    "chart_path": chart_rel,
+                    "domain_combined": row.get("domain_combined"),
+                    "source_type": row.get("source_type"),
+                    "source_url": row.get("source_url"),
+                    "source": hf_repo,
+                },
+            )
+        )
+    return samples
+
+
+def _samples_from_task_pack(root: Path) -> list[Sample]:
+    """Load YAML tasks with chart paths relative to `root`."""
+    root = Path(root)
+    manifest = yaml.safe_load((root / "manifest.yaml").read_text())
+    if not manifest or "tasks" not in manifest:
+        raise ValueError(f"task pack {root} has no `tasks` in manifest.yaml")
+
+    samples: list[Sample] = []
+    for rel in manifest["tasks"]:
+        spec = yaml.safe_load((root / rel).read_text())
+        task_id = str(spec["task_id"])
+        chart_rel = spec["chart_path"]
+        chart = root / chart_rel
+        if not chart.exists():
+            raise FileNotFoundError(f"missing chart {chart} for task {task_id}")
+        samples.append(
+            _make_sample(
+                task_id,
+                spec["prompt"],
+                chart,
+                str(spec.get("golden_answer") or ""),
+                {
+                    "chart_path": chart_rel,
+                    "domain_combined": spec.get("domain_combined"),
+                    "source_type": spec.get("source_type"),
+                    "source_url": spec.get("source_url"),
+                    "source": str(root),
+                },
+            )
+        )
+    return samples
