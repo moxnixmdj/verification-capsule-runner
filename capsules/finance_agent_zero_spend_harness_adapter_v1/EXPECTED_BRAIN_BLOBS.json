@@ -1,0 +1,28 @@
+{
+  "schema": "BRAIN_FINANCE_AGENT_ZERO_SPEND_HARNESS_ADAPTER_V1_VERIFIER_INPUT",
+  "brain_pr": 1569,
+  "candidate_ref": "feature/finance-agent-zero-spend-harness-adapter-v1-20261004",
+  "candidate_head_sha": "f3c33de0388ba8c84fe10d9c6fd075f7c3011d49",
+  "candidate_blobs": {
+    "canonical/runtime/finance_agent_v2_zero_spend_harness_adapter_v1.py": "fac39c42cc9da28481da12f479f81a848e041ab0",
+    "canonical/tests/test_finance_agent_v2_zero_spend_harness_adapter_v1.py": "c61a2f3b6632a004971492f01dd91376f7288110",
+    "canonical/governance/FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json": "c517dbe9905dfc7288145844cb0825c596ca9186",
+    "canonical/action_intents/2026-10-04_FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json": "99523accbbdce35c67a5671d76a84860bbbbcab1"
+  },
+  "dependency_blobs": {
+    "canonical/runtime/zero_spend_provider_guard_v1.py": "356af559fc74ac3eab5532b2d8fee9ddfb98f962",
+    "canonical/governance/FINANCE_AGENT_V2_ZERO_SPEND_RUNTIME_GUARD_V1.json": "278a3317564138088fd8af83a8734a84fe09b158",
+    "canonical/verification/FINANCE_AGENT_V2_ZERO_SPEND_RUNTIME_GUARD_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "342740561634a86d0c55876ee126e8122b21af0f",
+    "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V6.json": "fcbdb818b63b4986b026db29c400a47373a26fdb"
+  },
+  "vals_source": {
+    "repository": "vals-ai/finance-agent-v2",
+    "ref": "502aab6fdaa3fb9294905c7453f89882baa8d39b",
+    "tools_path": "finance_agent/tools.py",
+    "tools_git_blob_sha": "19b85ce4e110e39f410c52b2efa0e33f651fa6d1",
+    "get_agent_path": "finance_agent/get_agent.py",
+    "get_agent_git_blob_sha": "22c012241a430975266fb7f8d2fe7af8e9f1b8d4",
+    "run_agent_path": "finance_agent/run_agent.py",
+    "run_agent_git_blob_sha": "49d08c50990ef1ca296f4d690216fc4cc4c53c85"
+  }
+}
