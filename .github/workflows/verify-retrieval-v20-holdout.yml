@@ -2,7 +2,7 @@ name: Verify retrieval V20 fresh V4 holdout
 on:
   push:
     branches:
-      - verify/v20-holdout-20261004
+      - verify/v20-holdout-run-20261004
 permissions:
   contents: read
 jobs:
