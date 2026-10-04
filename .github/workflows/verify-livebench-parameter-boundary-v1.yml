@@ -25,10 +25,13 @@ jobs:
       - name: Materialize frozen checker
         run: |
           mkdir -p /tmp/LiveBench/livebench/if_runner/instruction_following_eval
+          mkdir -p /tmp/LiveBench/livebench/process_results/instruction_following
           base=https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091/livebench/if_runner/instruction_following_eval
-          for f in instructions.py instructions_registry.py instructions_util.py __init__.py; do
+          for f in instructions.py instructions_registry.py instructions_util.py evaluation_main.py __init__.py; do
             curl -fsSL "$base/$f" -o "/tmp/LiveBench/livebench/if_runner/instruction_following_eval/$f"
           done
+          curl -fsSL https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091/livebench/process_results/instruction_following/utils.py \
+            -o /tmp/LiveBench/livebench/process_results/instruction_following/utils.py
       - name: Run source-boundary audit
         working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
         env:
