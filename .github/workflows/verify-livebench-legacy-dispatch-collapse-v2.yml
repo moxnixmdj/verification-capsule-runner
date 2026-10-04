@@ -1,0 +1,39 @@
+name: Verify LiveBench legacy dispatch collapse v2
+
+on:
+  push:
+    branches:
+      - verify/livebench-legacy-dispatch-collapse-v2-20261004-sol
+    paths:
+      - verify_livebench_legacy_dispatch_collapse_v2.py
+      - .github/workflows/verify-livebench-legacy-dispatch-collapse-v2.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_legacy_dispatch_collapse_v2.py
+      - .github/workflows/verify-livebench-legacy-dispatch-collapse-v2.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install metadata reader
+        run: python -m pip install --quiet "pyarrow==21.0.0"
+      - name: Verify exact frozen population dispatch
+        run: python verify_livebench_legacy_dispatch_collapse_v2.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-dispatch-collapse-receipt-v2
+          path: livebench_legacy_dispatch_collapse_receipt_v2.json
+          if-no-files-found: error
