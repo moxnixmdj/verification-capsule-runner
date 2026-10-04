@@ -7,6 +7,10 @@ on:
       - '.github/workflows/mirror-qwen38-q2-exact-v1.yml'
   workflow_dispatch:
 
+concurrency:
+  group: mirror-qwen38-q2-exact-v1
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -47,7 +51,7 @@ jobs:
           Concatenating part01 through part06 in lexical order MUST reproduce the exact upstream bytes and SHA-256.
           This release grants zero benchmark, capability, ownership, or terminal credit by itself.
           EOF
-          gh release create "$TAG"             --repo "$GITHUB_REPOSITORY"             --target "$GITHUB_SHA"             --title "Project Brain exact Qwen3.8-27B Q2 capability-byte mirror V1"             --notes-file release-notes.txt
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"             --title "Project Brain exact Qwen3.8-27B Q2 capability-byte mirror V1"             --notes-file release-notes.txt
 
   upload-parts:
     needs: prepare-release
@@ -89,11 +93,11 @@ jobs:
         run: |
           set -euo pipefail
           asset="$SOURCE_FILE.part${{ matrix.part }}of06"
-          curl -fL             --retry 6             --retry-delay 2             --retry-all-errors             --connect-timeout 30             --range "${{ matrix.start }}-${{ matrix.end }}"             --max-filesize 2000000000             -o "$asset"             "$SOURCE_URL"
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors --connect-timeout 30             --range "${{ matrix.start }}-${{ matrix.end }}"             --max-filesize 2000000000             -o "$asset" "$SOURCE_URL"
           actual="$(stat -c '%s' "$asset")"
           test "$actual" = "${{ matrix.bytes }}"
           sha256sum "$asset" > "$asset.sha256"
-          gh release upload "$TAG" "$asset" "$asset.sha256"             --repo "$GITHUB_REPOSITORY"             --clobber
+          gh release upload "$TAG" "$asset" "$asset.sha256"             --repo "$GITHUB_REPOSITORY" --clobber
 
   verify-reassembly:
     needs: upload-parts
@@ -122,11 +126,7 @@ jobs:
               print(assets[name])
           PY
 
-          (
-            while IFS= read -r url; do
-              curl -fL                 --retry 6                 --retry-delay 2                 --retry-all-errors                 --connect-timeout 30                 "$url"
-            done < asset_urls.txt
-          ) | python3 - "$SOURCE_BYTES" "$SOURCE_SHA256" "$SOURCE_REV" "$SOURCE_FILE" <<'PY'
+          cat > stream_verify.py <<'PY'
           import hashlib, json, sys
           expected_bytes = int(sys.argv[1])
           expected_sha = sys.argv[2]
@@ -167,8 +167,14 @@ jobs:
           print(json.dumps(receipt, sort_keys=True))
           PY
 
+          (
+            while IFS= read -r url; do
+              curl -fL --retry 6 --retry-delay 2 --retry-all-errors                 --connect-timeout 30 "$url"
+            done < asset_urls.txt
+          ) | python3 stream_verify.py "$SOURCE_BYTES" "$SOURCE_SHA256" "$SOURCE_REV" "$SOURCE_FILE"
+
       - name: Attach verification receipt to release
         shell: bash
         run: |
           set -euo pipefail
-          gh release upload "$TAG" qwen38_q2_exact_release_mirror_receipt.json             --repo "$GITHUB_REPOSITORY"             --clobber
+          gh release upload "$TAG" qwen38_q2_exact_release_mirror_receipt.json             --repo "$GITHUB_REPOSITORY" --clobber
