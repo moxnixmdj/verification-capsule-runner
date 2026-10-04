@@ -9,6 +9,9 @@ SCHEMA="PROJECT_BRAIN_LIVEBENCH_LEGACY15_NUMERIC_QUOTIENT_V1"
 WORD_MIN,WORD_MAX=100,500
 SENT_MIN,SENT_MAX=1,20
 
+# With number_words already consuming one of <=5 instruction slots, only four
+# other active families can contribute tokens. Conservative constructor-local
+# maxima, ordered by largest possible contribution:
 FAMILY_WORD_BOUNDS={
     comp.SENTENCES:20, comp.SECTIONS:15, comp.END:8, comp.NTH:5,
     comp.BULLETS:5, comp.PARAGRAPHS:4, comp.POSTSCRIPT:3,
@@ -17,8 +20,10 @@ FAMILY_WORD_BOUNDS={
 }
 ANALYTIC_WORD_CEILING=sum(sorted(FAMILY_WORD_BOUNDS.values(),reverse=True)[:4])
 
+
 def C(iid:str,**slots:Any)->dict[str,Any]:
     return {"instruction_id":iid,"slots":slots}
+
 
 def maximal_profile(ids):
     out=[]
@@ -41,6 +46,7 @@ def maximal_profile(ids):
         else: raise AssertionError("UNKNOWN_ACTIVE15_ID:"+iid)
     return out
 
+
 def executable_word_ceiling():
     maximum=-1; maximizers=[]; examined=constructed=0
     for ids in arch.enumerate_compatible_sets():
@@ -54,6 +60,7 @@ def executable_word_ceiling():
         if wc>maximum: maximum,maximizers=wc,[list(ids)]
         elif wc==maximum: maximizers.append(list(ids))
     return {"examined":examined,"constructed":constructed,"maximum":maximum,"maximizers":maximizers}
+
 
 def verify():
     if ANALYTIC_WORD_CEILING!=48: raise AssertionError("ANALYTIC_WORD_CEILING_DRIFT")
@@ -86,6 +93,7 @@ def verify():
       "terminal_rows_read":0,"hidden_kwargs_read":0,"target_scores_read":0,
       "acceptance_credit":False,
     }
+
 
 def run(args=None,root=None): return verify()
 if __name__=="__main__":
