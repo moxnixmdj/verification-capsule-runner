@@ -1,0 +1,24 @@
+name: Verify Unknown-Domain V3 namespace-total universal proof
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-v3-universal-zero-reality-20261005'
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_v3_universal_proof_v2.py'
+      - 'verify_unknown_domain_v3_namespace_total_universal.py'
+      - '.github/workflows/verify-unknown-domain-v3-namespace-total-universal.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independent exact-byte theorem verification
+        run: python verify_unknown_domain_v3_namespace_total_universal.py
