@@ -1,0 +1,71 @@
+name: Verify Unknown-Domain sealed lease fast V1
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-sealed-fast-v1'
+    paths:
+      - '.github/workflows/verify-unknown-domain-sealed-fast-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert exact sealed subject blobs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          expected={
+            "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json":"8ecdd481f3c87729618ea9d17cfae33e8328ed94",
+            ".github/workflows/unknown-domain-direct-one-use-production.yml":"990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+            "verify_unknown_domain_execution_lease.py":"8b1a3253afacb369b063c37a7e122a49bbd1e623",
+          }
+          def blob(p):
+            b=Path(p).read_bytes()
+            return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          for p,e in expected.items():
+            g=blob(p)
+            assert g==e,(p,g,e)
+          raw=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
+          digest=hashlib.sha256(raw).hexdigest()
+          Path("unknown_domain_sealed_lease_fast_result.json").write_text(json.dumps({
+            "status":"EXACT_SEALED_SUBJECT_BYTES_PASS",
+            "lease_git_blob_sha":expected["canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json"],
+            "production_workflow_git_blob_sha":expected[".github/workflows/unknown-domain-direct-one-use-production.yml"],
+            "lease_sha256":digest,
+            "event_sha_checkout_required":True,
+            "production_cases_generated":0
+          },sort_keys=True,indent=2)+"\n")
+          print("lease_sha256="+digest)
+          PY
+      - name: Run independent lease verifier
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Run frozen production launcher tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Recheck immutable-event workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path(".github/workflows/unknown-domain-direct-one-use-production.yml").read_text()
+          assert "ref: ${{ github.sha }}" in p
+          assert "ref: ${{ github.ref }}" not in p
+          assert "python -m canonical.runtime.unknown_domain_direct_production_once_v1" in p
+          print("immutable event-SHA production workflow PASS")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-sealed-lease-fast-v1
+          path: unknown_domain_sealed_lease_fast_result.json
+          if-no-files-found: error
