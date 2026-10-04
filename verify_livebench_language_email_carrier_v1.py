@@ -208,7 +208,7 @@ def main():
       "terminal_rows_read":0,
       "hidden_kwargs_read":0,
       "target_scores_read":0,
-      "acceptance_credit":false,
+      "acceptance_credit":False,
       "hard_nonclaims":[
         "THIS_IS_NOT_YET_A_COMPLETE_UNION25_POINTWISE_OPTIMALITY_PROOF",
         "HIGHER_ORDER_COMPOSITIONS_NOT_EXPLICITLY_EXHAUSTED_HERE_STILL_REQUIRE_COMPOSITION_PROOF",
