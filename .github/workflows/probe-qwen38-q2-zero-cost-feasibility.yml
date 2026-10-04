@@ -1,0 +1,153 @@
+name: Probe Qwen3.8 27B Q2 zero-cost feasibility
+
+on:
+  push:
+    branches:
+      - probe/qwen38-q2-zero-cost-feasibility-20261004
+    paths:
+      - '.github/workflows/probe-qwen38-q2-zero-cost-feasibility.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Record exact carrier capacity
+        run: |
+          set -euo pipefail
+          free -h | tee RUNNER_MEMORY.txt
+          df -h / | tee RUNNER_DISK.txt
+          {
+            echo "utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+            echo "mem_available_kb=$(awk '/MemAvailable/ {print $2}' /proc/meminfo)"
+            echo "swap_total_kb=$(awk '/SwapTotal/ {print $2}' /proc/meminfo)"
+            echo "disk_available_bytes=$(df -B1 --output=avail / | tail -1 | tr -d ' ')"
+            echo "cpu_count=$(nproc)"
+          } | tee RUNNER_CAPACITY.txt
+
+      - name: Build pinned llama.cpp
+        run: |
+          set -euo pipefail
+          LLAMA_COMMIT=bec4772f6a2527d371557b5d2032641e5ff7619c
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_COMMIT"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_COMMIT"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-cli
+          cp llama.cpp/build/bin/llama-cli /tmp/llama-cli
+          strip /tmp/llama-cli || true
+          echo "$LLAMA_COMMIT" > LLAMA_COMMIT.txt
+          rm -rf llama.cpp
+          df -h /
+
+      - name: Materialize and verify exact current Q2 subject
+        run: |
+          set -euo pipefail
+          REPO='https://huggingface.co/unsloth/Qwen3.8-27B-GGUF'
+          FILE='Qwen3.8-27B-UD-Q2_K_XL.gguf'
+          EXPECTED_BYTES=9828981664
+          EXPECTED_SHA256='fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0'
+          REV="$(git ls-remote "$REPO" HEAD | awk '{print $1}')"
+          test -n "$REV"
+          URL="$REPO/resolve/$REV/$FILE?download=true"
+          START="$(date +%s)"
+          curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o "$FILE" "$URL"
+          END="$(date +%s)"
+          BYTES="$(stat -c '%s' "$FILE")"
+          SHA="$(sha256sum "$FILE" | awk '{print $1}')"
+          test "$BYTES" = "$EXPECTED_BYTES"
+          test "$SHA" = "$EXPECTED_SHA256"
+          {
+            echo "repo=unsloth/Qwen3.8-27B-GGUF"
+            echo "resolved_revision=$REV"
+            echo "file=$FILE"
+            echo "bytes=$BYTES"
+            echo "sha256=$SHA"
+            echo "download_seconds=$((END-START))"
+          } | tee QWEN38_Q2_SUBJECT.txt
+          df -h /
+
+      - name: Prove one-token local inference
+        run: |
+          set -euo pipefail
+          FILE='Qwen3.8-27B-UD-Q2_K_XL.gguf'
+          /usr/bin/time -v -o QWEN38_Q2_TIME.txt             timeout 900             /tmp/llama-cli               -m "$FILE"               -p 'Reply with one word: OK'               -n 1               -c 256               -t 4               --no-display-prompt               --no-warmup               > QWEN38_Q2_STDOUT.txt 2> QWEN38_Q2_STDERR.txt
+          test -s QWEN38_Q2_STDOUT.txt
+          tail -c 2000 QWEN38_Q2_STDOUT.txt
+          cat QWEN38_Q2_TIME.txt
+          free -h
+          df -h /
+
+      - name: Emit feasibility receipt
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee QWEN38_Q2_FEASIBILITY_RESULT.json
+          import json, pathlib, re
+          def kv(path):
+              out={}
+              for line in pathlib.Path(path).read_text().splitlines():
+                  if "=" in line:
+                      k,v=line.split("=",1); out[k]=v
+              return out
+          subject=kv("QWEN38_Q2_SUBJECT.txt")
+          cap=kv("RUNNER_CAPACITY.txt")
+          timing=pathlib.Path("QWEN38_Q2_TIME.txt").read_text()
+          def take(label):
+              m=re.search(r"^\s*"+re.escape(label)+r":\s*(.+)$",timing,re.M)
+              return m.group(1).strip() if m else None
+          print(json.dumps({
+              "schema":"PROJECT_BRAIN_QWEN38_Q2_ZERO_COST_FEASIBILITY_PROBE_V1",
+              "status":"PASS__EXACT_Q2_HASH_VERIFIED_AND_LOCAL_INFERENCE_COMPLETED",
+              "subject":{
+                  "repository":subject["repo"],
+                  "resolved_revision":subject["resolved_revision"],
+                  "file":subject["file"],
+                  "bytes":int(subject["bytes"]),
+                  "sha256":subject["sha256"],
+              },
+              "carrier":{
+                  "surface":"GITHUB_ACTIONS_PUBLIC_UBUNTU_24_04",
+                  "mem_total_kb":int(cap["mem_total_kb"]),
+                  "mem_available_kb_before":int(cap["mem_available_kb"]),
+                  "swap_total_kb":int(cap["swap_total_kb"]),
+                  "disk_available_bytes_before":int(cap["disk_available_bytes"]),
+                  "cpu_count":int(cap["cpu_count"]),
+              },
+              "inference":{
+                  "maximum_rss_kbytes":take("Maximum resident set size (kbytes)"),
+                  "elapsed_wall_clock":take("Elapsed (wall clock) time (h:mm:ss or m:ss)"),
+                  "exit_status":take("Exit status"),
+                  "stdout_tail":pathlib.Path("QWEN38_Q2_STDOUT.txt").read_text(errors="replace")[-500:],
+              },
+              "llama_cpp_commit":pathlib.Path("LLAMA_COMMIT.txt").read_text().strip(),
+              "terminal_case_exposure":0,
+              "incremental_spend_usd":0,
+              "capability_credit":False,
+              "hard_nonclaim":"LOAD_AND_ONE_TOKEN_INFERENCE_DO_NOT_PROVE_LIVEBENCH_OR_SEMANTIC_QUALITY"
+          },sort_keys=True))
+          PY
+
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-q2-zero-cost-feasibility
+          path: |
+            RUNNER_MEMORY.txt
+            RUNNER_DISK.txt
+            RUNNER_CAPACITY.txt
+            LLAMA_COMMIT.txt
+            QWEN38_Q2_SUBJECT.txt
+            QWEN38_Q2_TIME.txt
+            QWEN38_Q2_STDOUT.txt
+            QWEN38_Q2_STDERR.txt
+            QWEN38_Q2_FEASIBILITY_RESULT.json
+          if-no-files-found: warn
