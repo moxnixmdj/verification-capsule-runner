@@ -1,0 +1,20 @@
+name: Verify Root2 output-only threshold activation V1
+
+on:
+  pull_request:
+    paths:
+      - 'verify_root2_output_only_threshold_activation_v1_20261004.py'
+      - 'subject/root2_output_only_threshold_activation_v1_20261004/**'
+      - '.github/workflows/verify-root2-output-only-threshold-activation-v1-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent verifier
+        run: python verify_root2_output_only_threshold_activation_v1_20261004.py
