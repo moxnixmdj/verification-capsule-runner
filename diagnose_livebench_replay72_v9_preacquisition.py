@@ -46,7 +46,7 @@ compile_class="OTHER"
 acquisition_goal=goal
 try:
     astra_runtime._compile_plain_goal(goal)
-except Exception as exc:
+except BaseException as exc:
     err=str(exc)
     marker="GOAL_COMPILATION_FAILED:GOAL_COMPILATION_SUBGOAL_UNRESOLVED:"
     if "GOAL_COMPILATION_FAILED:GOAL_COMPILATION_NO_VERIFIED_CAPABILITY_MATCH" in err:
@@ -56,7 +56,7 @@ except Exception as exc:
         raw=err.split(marker,1)[1]
         try:
             acquisition_goal=str(json.loads(raw).get("subgoal") or "").strip() or goal
-        except Exception:
+        except BaseException:
             acquisition_goal=goal
     else:
         compile_class="OTHER"
@@ -65,7 +65,7 @@ else:
 
 try:
     gap=str(astra_runtime._classify_plain_goal_gap(acquisition_goal))
-except Exception:
+except BaseException:
     gap="GAP_CLASSIFICATION_FAILED"
 
 try:
@@ -96,7 +96,7 @@ try:
         grounding_shape="PARTIAL_GROUNDED"
     broad=grounding.get("broad_objective_decomposition")
     broad_class="DECOMPOSED" if isinstance(broad,dict) and broad.get("status")=="DECOMPOSED" else "NONE"
-except Exception:
+except BaseException:
     grounding_shape="GROUNDING_FAILED"
     unresolved_reason="GROUNDING_FAILED"
     broad_class="UNKNOWN"
