@@ -1,0 +1,19 @@
+name: Verify terminal causal-depth root projection
+on:
+  pull_request:
+    paths:
+      - 'subject/terminal_causal_depth_root_projection_20261004_sol/**'
+      - 'verify_terminal_causal_depth_root_projection.py'
+      - '.github/workflows/verify-terminal-causal-depth-root-projection.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_terminal_causal_depth_root_projection.py
