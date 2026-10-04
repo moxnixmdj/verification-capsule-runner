@@ -1,0 +1,16 @@
+name: verify-terminal-minimum-causal-depth-v1
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_terminal_minimum_causal_depth_v1.py
+      - run: python -m pytest -q canonical/tests/test_terminal_minimum_causal_depth_guard_v1.py
