@@ -1,0 +1,17 @@
+name: Verify LiveBench canonical-layout synthetic inference V2
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_public_inference_canonical_layout_v2_20261004_sol.py'
+      - '.github/workflows/verify-livebench-public-inference-canonical-layout-v2-20261004-sol.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_livebench_public_inference_canonical_layout_v2_20261004_sol.py
