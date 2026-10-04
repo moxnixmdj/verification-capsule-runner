@@ -47,6 +47,12 @@ assert "DURABLE_VERIFIED_EXISTING" in launcher
 assert "ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED" in launcher
 assert "PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED" in launcher
 assert "UNKNOWN_DOMAIN_RESULT_RECOVERY_B64_V1=" in launcher
+assert "obj_sha!=launch_sha" in launcher
+assert '"exception_message"' not in launcher
+assert "RECOVERY_BYTES_MUST_BE_EMITTED_BEFORE_FALLIBLE_POST_CLAIM_PERSISTENCE" in lease["hard_rules"]
+assert "ATOMIC_CLAIM_RESPONSE_OBJECT_SHA_MUST_EQUAL_IMMUTABLE_LAUNCH_SHA" in lease["hard_rules"]
+assert launcher.index('print("UNKNOWN_DOMAIN_RESULT_RECOVERY_B64_V1="') < launcher.index("RESULT_ARTIFACT_PATH.write_bytes")
+assert "emit_recovery=False" in launcher
 def blob(b): return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
 for rel,expected in lease["exact_components"].items():
  p=ROOT/rel
