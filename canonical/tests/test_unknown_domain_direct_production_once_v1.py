@@ -24,7 +24,7 @@ class ProductionLauncherTests(unittest.TestCase):
     def test_claim_success_executes_once_and_binds_receipt(self):
         calls={"n":0}
         def fake_create(repo,token,ref,sha):
-            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+            return 201,{"ref":ref,"object":{"sha":"a"*40}}
         def fake_execute(**kwargs):
             calls["n"]+=1
             return {"status":"X","authority_claim_id":kwargs["claim_id"]}
@@ -36,6 +36,22 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertEqual(branch,"unknown-domain-direct-claims/"+"b"*64)
         self.assertEqual(out["claim_create_http_status"],201)
         self.assertEqual(out["claim_uniqueness_source"],"ATOMIC_CREATE_RESPONSE")
+        self.assertEqual(out["claim_response_object_sha"],"a"*40)
+        self.assertEqual(out["launch_event_sha"],"a"*40)
+
+    def test_claim_response_sha_mismatch_aborts_before_execution(self):
+        called={"execute":False}
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+        def fake_execute(**kwargs):
+            called["execute"]=True
+            return {}
+        with self.assertRaisesRegex(prod.ProductionLaunchError,"ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH"):
+            prod.claim_then_execute(
+                repo="x/y",token="t",launch_sha="a"*40,digest="b"*64,
+                execute_fn=fake_execute,create_ref_fn=fake_create,
+            )
+        self.assertFalse(called["execute"])
 
     def test_qualification_packet_evaluation_is_sanitized(self):
         packet=generator.generate_qualification_fixture_population(beacon="LAUNCHER-VERIFY-0123456789")
