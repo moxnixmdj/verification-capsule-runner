@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+# verification trigger: 2026-10-05 IFBench58 route reconciliation
+
 import hashlib
 import importlib
 import importlib.metadata
