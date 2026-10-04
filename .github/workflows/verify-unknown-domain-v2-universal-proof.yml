@@ -1,0 +1,26 @@
+name: Verify Unknown-Domain V2 universal frozen-domain proof
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_unknown_domain_v2_universal_proof.py'
+      - 'canonical/runtime/unknown_domain_direct_v2_universal_proof_v1.py'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_V2_UNIVERSAL_PROOF_CANDIDATE_20261005_V1.json'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v2.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v2.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_execution_harness_v1.py'
+      - '.github/workflows/verify-unknown-domain-v2-universal-proof.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_unknown_domain_v2_universal_proof.py
