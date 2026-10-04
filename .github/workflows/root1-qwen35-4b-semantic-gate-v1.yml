@@ -1,0 +1,129 @@
+name: Root1 Qwen3.5 4B semantic gate
+
+on:
+  push:
+    branches:
+      - root1-qwen35-4b-semantic-gate-20261004-v1
+    paths:
+      - verification/root1_qwen35_4b_semantic_gate_v1.py
+      - .github/workflows/root1-qwen35-4b-semantic-gate-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      LLAMA_SHA: 7fe450e19305b828c199d602c23a8337aaa1f03b
+      MODEL_FILE: Qwen_Qwen3.5-4B-Q4_K_M.gguf
+      MODEL_BYTES: "3013027808"
+      MODEL_SHA256: 13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983
+      MODEL_URL: https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/ba06320255db2dbec194dad738d066be90dabf29/Qwen_Qwen3.5-4B-Q4_K_M.gguf?download=true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Preflight free runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "cpu_count=$(nproc)"
+          awk '/MemTotal/ {print "mem_total_kb="$2}' /proc/meminfo
+          df -B1 "$RUNNER_TEMP"
+          test "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -ge 12000000
+          test "$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1 | tr -d ' ')" -ge 6500000000
+
+      - name: Build exact pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/llama.cpp"
+          git init "$src"
+          git -C "$src" remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C "$src" fetch --depth 1 origin "$LLAMA_SHA"
+          git -C "$src" checkout --detach FETCH_HEAD
+          test "$(git -C "$src" rev-parse HEAD)" = "$LLAMA_SHA"
+          cmake -S "$src" -B "$src/build" -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$src/build" -j 2 --target llama-server
+          cp "$src/build/bin/llama-server" "$RUNNER_TEMP/llama-server"
+          rm -rf "$src"
+
+      - name: Download and hash exact existing 4B carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          model="$RUNNER_TEMP/$MODEL_FILE"
+          curl --fail --location --retry 4 --retry-delay 3 --output "$model" "$MODEL_URL"
+          test "$(stat -c '%s' "$model")" -eq "$MODEL_BYTES"
+          echo "$MODEL_SHA256  $model" | sha256sum -c -
+          printf '%s\n' "$MODEL_SHA256  $MODEL_FILE" > "$RUNNER_TEMP/model.sha256"
+
+      - name: Start exact local semantic carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          extra=()
+          if "$RUNNER_TEMP/llama-server" --help 2>&1 | grep -q -- '--reasoning'; then
+            extra+=(--reasoning off)
+          fi
+          nohup "$RUNNER_TEMP/llama-server"             -m "$RUNNER_TEMP/$MODEL_FILE"             --host 127.0.0.1 --port 8080             -c 4096 -t 4 --parallel 1 --no-webui "${extra[@]}"             > "$RUNNER_TEMP/llama-server.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/llama-server.pid"
+          ok=0
+          for i in $(seq 1 150); do
+            if curl -fsS http://127.0.0.1:8080/health > "$RUNNER_TEMP/health.json" 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Run meaning-sensitive nonterminal gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python verification/root1_qwen35_4b_semantic_gate_v1.py "$RUNNER_TEMP/semantic_gate.json"
+
+      - name: Emit execution receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, pathlib, platform
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])
+          gate=None
+          p=root/"semantic_gate.json"
+          if p.exists():
+              gate=json.loads(p.read_text(encoding="utf-8"))
+          doc={
+            "schema":"PROJECT_BRAIN_ROOT1_QWEN35_4B_SEMANTIC_GATE_EXECUTION_RECEIPT_V1",
+            "date":"2026-10-04",
+            "model_sha256":os.environ["MODEL_SHA256"],
+            "model_bytes":int(os.environ["MODEL_BYTES"]),
+            "llama_cpp_commit":os.environ["LLAMA_SHA"],
+            "gate":gate,
+            "terminal_case_content_used":False,
+            "incremental_spend_usd":0,
+            "cpu_count":os.cpu_count(),
+            "platform":platform.platform(),
+            "hard_nonclaim":"This receipt is a nonterminal semantic qualification filter only. It grants no LiveBench, Opus 5.5 parity, family, ownership, or terminal credit."
+          }
+          (root/"execution_receipt.json").write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+          print(json.dumps(doc,ensure_ascii=False))
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: root1-qwen35-4b-semantic-gate-v1
+          path: |
+            ${{ runner.temp }}/semantic_gate.json
+            ${{ runner.temp }}/execution_receipt.json
+            ${{ runner.temp }}/model.sha256
+            ${{ runner.temp }}/health.json
+            ${{ runner.temp }}/llama-server.log
+          if-no-files-found: warn
+          retention-days: 7
