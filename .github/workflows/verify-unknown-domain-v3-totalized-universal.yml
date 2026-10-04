@@ -34,7 +34,7 @@ jobs:
             "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
             "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
             "canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py":"33e97833f6bbe1c3c2a9c91090afdad3e55c134e",
-            "canonical/tests/test_unknown_domain_direct_v3_universal_proof_v1.py":"dd38751d1631efe58c297d157e4c278ca33b27b3",
+            "canonical/tests/test_unknown_domain_direct_v3_universal_proof_v1.py":"bfe9ac244418fe30bcc9a0e34644ecf22846bd9c",
           }
           def blob(path):
               data=Path(path).read_bytes()
