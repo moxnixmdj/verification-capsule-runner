@@ -28,15 +28,7 @@ jobs:
           python-version: '3.12'
       - name: Install source dependency
         run: python -m pip install 'nltk>=3.8,<4'
-      - name: Install Punkt data
-        run: |
-          python - <<'PY'
-          import nltk
-          assert nltk.download("punkt", quiet=True)
-          # NLTK >=3.9 may consult punkt_tab. Installing it is harmless on
-          # versions that do not require it.
-          nltk.download("punkt_tab", quiet=True)
-          print("nltk", nltk.__version__)
-          PY
+      - name: Report tokenizer version
+        run: python -c "import nltk; print('nltk', nltk.__version__)"
       - name: Run zero-terminal sentence geometry audit
         run: python verification/livebench_sentence_geometry_public_audit_v1.py
