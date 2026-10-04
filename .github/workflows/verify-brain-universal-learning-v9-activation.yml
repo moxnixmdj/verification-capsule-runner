@@ -1,0 +1,73 @@
+name: Verify Brain Universal Learning V9 Activation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v9_activation/**"
+      - ".github/workflows/verify-brain-universal-learning-v9-activation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact activation blob identities
+        run: |
+          cd capsules/universal_learning_v9_activation
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(rel).read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          print("exact activation blobs: PASS")
+          PY
+      - name: Verify V7-V9 activation semantics
+        run: |
+          cd capsules/universal_learning_v9_activation
+          python - <<'PY'
+          import json
+          def read(p): return json.load(open(p,encoding="utf-8"))
+          a=read("canonical/governance/UNIVERSAL_LEARNING_META_POLICY_V9_ACTIVATION_V1.json")
+          v7a=read("canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7_ACTIVATION_V1.json")
+          v7=read("canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7.json")
+          v8=read("canonical/governance/UNIVERSAL_LEARNING_EQUIVALENCE_BASIS_V8.json")
+          v9=read("canonical/governance/UNIVERSAL_LEARNING_META_POLICY_V9.json")
+          frozen=read("canonical/governance/UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1.json")
+
+          assert a["target_blocker"]=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",a
+          assert a["operative_v7_base"]["activation_git_blob_sha"]=="58cbfecea60e7f4259c5b7c0218ebc15c4e33399",a
+          assert a["operative_v7_base"]["governance_git_blob_sha"]=="e26c8f4d8614720c1a45f28bcd2703dbb36bd980",a
+          assert a["v8_successor"]["governance_git_blob_sha"]=="095dc93747a64a95feb001f1ecca4714ad666b72",a
+          assert a["v8_successor"]["independent_verifier_merge_commit"]=="c097af209497b00cf57664473ad44bdd71750eec",a
+          assert a["v9_successor"]["governance_git_blob_sha"]=="7b8ca47355f73b0f78e439e407cd632f1ad7d99d",a
+          assert a["v9_successor"]["independent_verifier_merge_commit"]=="b04e9b138366bb1cb4f13ae478275025ad2d64da",a
+          assert a["frozen_protocol"]["git_blob_sha"]=="fd586455d582c38c7062ffe735f86cb9f2e803ab",a
+
+          assert "V7_REMAINS_LOAD_BEARING_TRUST_EXECUTION_AND_EMPIRICAL_ACTION_AUTHORITY" in a["hard_rules"],a
+          assert "V8_AND_V9_ARE_SUCCESSOR_PLANNING_OVERLAYS_ONLY" in a["hard_rules"],a
+          assert "PRESERVE_TWO_FROZEN_UNKNOWN_DOMAIN_DIRECT_LEAVES_OPEN" in a["activation_effect"],a
+
+          for obj in (a,v8,v9):
+              assert obj["acceptance_credit_delta"]==0,obj.get("schema")
+              assert obj["family_credit_delta"]==0,obj.get("schema")
+              assert obj["capability_credit_delta"]==0,obj.get("schema")
+              assert obj["ownership_credit_delta"]==0,obj.get("schema")
+              assert obj["fresh_reality_authority"] is False,obj.get("schema")
+              assert obj["promotion_authority"] is False,obj.get("schema")
+
+          assert v7a["fresh_reality_authority"] is False,v7a
+          assert v7a["promotion_authority"] is False,v7a
+          assert frozen["predicate_id"]=="UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",frozen
+          assert len(frozen["direct_oracle_leaves"])==2,frozen["direct_oracle_leaves"]
+          print("V7-V9 activation semantics: PASS")
+          PY
