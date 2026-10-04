@@ -66,7 +66,7 @@ assert "no credit card required" in tav
 # SEC-API: official pricing page.
 sec=textify(fetch("https://sec-api.io/pricing"))
 assert re.search(r"first\s+100\s+api\s+calls",sec)
-assert "free" in sec
+assert ("free tier" in sec or " free " in sec)
 
 # Tiingo: first-party static blog gives the Starter limits without relying on dynamic pricing DOM.
 tii=textify(fetch("https://www.tiingo.com/blog/scaling-investment-processes-through-a-stock-api/"))
