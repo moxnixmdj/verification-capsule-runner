@@ -54,7 +54,36 @@ jobs:
           from pathlib import Path
           wf=Path(".github/workflows/unknown-domain-direct-one-use-production.yml").read_text()
           launcher=Path("canonical/runtime/unknown_domain_direct_production_once_v1.py").read_text()
-          assert 'ref: ${{ github.sha }}' in wf
+          assert ('ref: 
+          assert ('ref: 
+          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
+          assert 'current_git_head()' in launcher
+          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
+          assert 'result_sha256' in launcher
+          assert 'put_result(' in launcher
+          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
+          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
+          PY
+ + '{{ github.sha }}') in wf
+          assert 'ref: ${{ github.ref }}' not in wf
+          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
+          assert 'current_git_head()' in launcher
+          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
+          assert 'result_sha256' in launcher
+          assert 'put_result(' in launcher
+          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
+          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
+          PY
+ + '{{ github.ref }}') not in wf
+          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
+          assert 'current_git_head()' in launcher
+          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
+          assert 'result_sha256' in launcher
+          assert 'put_result(' in launcher
+          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
+          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
+          PY
+ + '{{ github.sha }}') in wf
           assert 'ref: ${{ github.ref }}' not in wf
           assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
           assert 'current_git_head()' in launcher
