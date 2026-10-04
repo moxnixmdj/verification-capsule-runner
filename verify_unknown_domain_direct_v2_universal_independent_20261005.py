@@ -145,7 +145,19 @@ for k in range(POPULATIONS):
             hidden_record=hidden,
         )
         result = executed["scorer_result"]
-        assert result["pass"] is True, (k, visible["case_id"], result)
+        if result["pass"] is not True:
+            raise AssertionError(json.dumps({
+                "population": k,
+                "case_id": visible["case_id"],
+                "primitive_family": hidden.get("primitive_family"),
+                "latent_program": hidden.get("latent_primitive_program"),
+                "hidden_mapping": hidden.get("domain_mapping"),
+                "gold_terminal_consequence": hidden.get("gold_terminal_consequence"),
+                "candidate_terminal_action": executed.get("candidate_terminal_action"),
+                "probe_count": executed.get("probe_count"),
+                "transcript": executed.get("transcript"),
+                "scorer_result": result,
+            }, sort_keys=True))
         results.append(result)
         pc = int(executed["probe_count"])
         probe_histogram[str(pc)] = probe_histogram.get(str(pc), 0) + 1
