@@ -82,14 +82,14 @@ for forbidden in ["ground_truth","reference_answer","expected_answer","semantic_
 assert "evaluation_lib.test_instruction_following_strict(inp, response)" in ifb_src
 assert "score_results(result.follow_all_instructions, result.follow_instruction_list)" in ifb_src
 for forbidden in ["ground_truth","reference_answer","expected_answer","semantic_score","relevance_score"]:
-    assert forbidden not in ifb_src
+    assert forbidden not in executable_tokens(ifb_node), forbidden
 
 # Legacy path is the same scalar reducer over strict checker booleans.
 assert 'results = results["strict"]' in legacy_proc_src
 assert "score_results(follow_all_instructions, follow_instruction_list)" in legacy_proc_src
 
 def verify_strict_evaluator(src: str, function_name: str, response_expr: str) -> dict:
-    _, body=fn_source(src,function_name)
+    fn, body=fn_source(src,function_name)
     required=[
         "instruction_list = inp.instruction_id_list",
         "instruction_cls = instructions_registry.INSTRUCTION_DICT[instruction_id]",
@@ -101,11 +101,12 @@ def verify_strict_evaluator(src: str, function_name: str, response_expr: str) ->
     ]
     for needle in required:
         assert needle in body,(function_name,needle)
+    tokens=executable_tokens(fn)
     for forbidden in [
         "ground_truth","reference_answer","expected_answer",
         "semantic_score","relevance_score","judge_model","llm_judge",
     ]:
-        assert forbidden not in body,(function_name,forbidden)
+        assert forbidden not in tokens,(function_name,forbidden)
     return {
         "function":function_name,
         "registered_checker_dispatch":True,
