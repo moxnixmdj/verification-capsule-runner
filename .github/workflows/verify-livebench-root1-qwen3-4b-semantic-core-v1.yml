@@ -1,0 +1,121 @@
+name: Verify LiveBench Root1 Qwen3 4B semantic core V1
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/verify-livebench-root1-qwen3-4b-semantic-core-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          git -C /tmp/llama.cpp checkout 0504396140d1c882f5f6ee34466a42db7ae90114
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/llama.cpp/build -j2 --target llama-cli
+          test "$(git -C /tmp/llama.cpp rev-parse HEAD)" = "0504396140d1c882f5f6ee34466a42db7ae90114"
+          /tmp/llama.cpp/build/bin/llama-cli --version
+
+      - name: Fetch and verify exact Qwen3-4B Q4 subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL=/tmp/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+          curl --fail --location --retry 3 --retry-delay 2 --output "$MODEL" \
+            "https://huggingface.co/DhruvalLabs/Qwen3-4B-Instruct-2507-GGUF/resolve/568b834d4fd38c293b6b458c27ad58fd8f82c4f9/Qwen3-4B-Instruct-2507-Q4_K_M.gguf?download=true"
+          echo "1571ec5115bcfed4b4327fc27b5f44ea284806caf5331eef89326191c9b031d6  $MODEL" | sha256sum -c -
+          SIZE="$(stat -c '%s' "$MODEL")"
+          test "$SIZE" -le 3000000000
+          printf 'model_bytes=%s\n' "$SIZE" | tee MODEL_BYTES.txt
+          sha256sum "$MODEL" | tee MODEL_SHA256.txt
+
+      - name: Reuse exact frozen eight-task semantic gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --output /tmp/frozen_gate.py \
+            "https://raw.githubusercontent.com/moxnixmdj/verification-capsule-runner/0c6a1cdbd19b0e0f6433e4131b477e52fba19efd/verify_livebench_root1_smollm2_semantic_core_v1.py"
+          test "$(git hash-object /tmp/frozen_gate.py)" = "2f7cf1f2c3934071ab37da655908c646d26f5945"
+          cp /tmp/frozen_gate.py /tmp/qwen_gate.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("/tmp/qwen_gate.py")
+          s=p.read_text()
+          repl={
+            'MODEL_SHA256 = "d766661c2e39c3da78d8eddf15287af263dce1eedc1c9c8093ed8e54eb067dbc"':
+              'MODEL_SHA256 = "1571ec5115bcfed4b4327fc27b5f44ea284806caf5331eef89326191c9b031d6"',
+            'MAX_LEARNED_BYTES = 100_000_000':
+              'MAX_LEARNED_BYTES = 3_000_000_000',
+            'PROJECT_BRAIN_LIVEBENCH_ROOT1_SMOLLM2_SEMANTIC_CORE_PUBLIC_PREFLIGHT_V1':
+              'PROJECT_BRAIN_LIVEBENCH_ROOT1_QWEN3_4B_SEMANTIC_CORE_PUBLIC_PREFLIGHT_V1',
+            'HuggingFaceTB/SmolLM2-135M-Instruct':
+              'Qwen/Qwen3-4B-Instruct-2507',
+            'bartowski/SmolLM2-135M-Instruct-GGUF/SmolLM2-135M-Instruct-IQ4_XS.gguf':
+              'DhruvalLabs/Qwen3-4B-Instruct-2507-GGUF/Qwen3-4B-Instruct-2507-Q4_K_M.gguf',
+          }
+          for old,new in repl.items():
+              assert old in s, old
+              s=s.replace(old,new)
+          p.write_text(s)
+          PY
+          diff -u /tmp/frozen_gate.py /tmp/qwen_gate.py || true
+
+      - name: Run frozen four-effect semantic preflight
+        id: semantic
+        continue-on-error: true
+        shell: bash
+        run: |
+          python /tmp/qwen_gate.py \
+            --llama-cli /tmp/llama.cpp/build/bin/llama-cli \
+            --model /tmp/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
+            --result qwen3-4b-semantic-core-result.json
+
+      - name: Verify gate provenance and result subject
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          r=json.load(open("qwen3-4b-semantic-core-result.json"))
+          assert r["candidate"]["upstream"]=="Qwen/Qwen3-4B-Instruct-2507"
+          assert r["candidate"]["sha256"]=="1571ec5115bcfed4b4327fc27b5f44ea284806caf5331eef89326191c9b031d6"
+          assert r["score"]["total"]==8
+          assert set(r["score"]["by_family"])=={"paraphrase","simplify","summarize","story"}
+          r["frozen_gate_source"]={
+            "commit":"0c6a1cdbd19b0e0f6433e4131b477e52fba19efd",
+            "git_blob_sha":"2f7cf1f2c3934071ab37da655908c646d26f5945",
+            "candidate_specific_changes":["MODEL_SHA256","MAX_LEARNED_BYTES","RESULT_SCHEMA","CANDIDATE_METADATA"]
+          }
+          r["incremental_spend_usd"]=0
+          r["terminal_cases_consumed"]=0
+          open("qwen3-4b-semantic-core-result.json","w").write(json.dumps(r,indent=2,sort_keys=True)+"\n")
+          PY
+
+      - name: Upload exact preflight result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: livebench-root1-qwen3-4b-semantic-core-v1
+          path: |
+            qwen3-4b-semantic-core-result.json
+            MODEL_BYTES.txt
+            MODEL_SHA256.txt
+          if-no-files-found: error
+
+      - name: Enforce candidate gate
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.semantic.outcome }}" = "success"
