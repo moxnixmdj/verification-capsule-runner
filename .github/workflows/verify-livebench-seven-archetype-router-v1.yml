@@ -53,7 +53,7 @@ jobs:
       - name: Run exact 7424-case constructive audit
         working-directory: subject/livebench_legacy15_exact_router_v1
         run: |
-          python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py \
+          python -m canonical.runtime.livebench_legacy15_end2end_exact_synthetic_audit_v2 \
             --livebench-root /tmp/livebench \
             --output livebench-seven-archetype-router-v1.json
       - name: Upload receipt
