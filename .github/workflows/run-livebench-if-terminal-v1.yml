@@ -1,0 +1,60 @@
+name: Run LiveBench IF terminal V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "livebench_if_terminal_runner_v1.py"
+      - ".github/workflows/run-livebench-if-terminal-v1.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: run-livebench-if-terminal-v1
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen scorer dependencies and transport-only parquet reader
+        run: |
+          python -m pip install --disable-pip-version-check -q             nltk==3.10.3 emoji==2.16.0 syllapy==0.7.2 setuptools==80.9.0             spacy==3.8.16 pyarrow==21.0.0
+          python -m pip install --disable-pip-version-check -q             https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+      - name: Bind exact NLTK data
+        run: |
+          git clone -q https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout -q 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          mkdir -p /tmp/nltk_data/tokenizers /tmp/nltk_data/corpora /tmp/nltk_data/taggers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/corpora/stopwords.zip -d /tmp/nltk_data/corpora
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger.zip -d /tmp/nltk_data/taggers
+          unzip -q /tmp/nltk_data_repo/packages/taggers/averaged_perceptron_tagger_eng.zip -d /tmp/nltk_data/taggers
+      - name: Run exact authorized 200-case route
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        run: python livebench_if_terminal_runner_v1.py
+      - name: Persist immutable receipt to a non-authority branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f livebench_terminal_receipt_v1/receipt.json
+          BRANCH="livebench-terminal-receipt-${GITHUB_RUN_ID}"
+          git config user.name "Project Brain LiveBench Receipt"
+          git config user.email "project-brain-livebench-receipt@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add livebench_terminal_receipt_v1/receipt.json livebench_terminal_receipt_v1/cases.jsonl.gz
+          git commit -m "Persist LiveBench IF terminal receipt ${GITHUB_RUN_ID}"
+          git push origin "HEAD:$BRANCH"
