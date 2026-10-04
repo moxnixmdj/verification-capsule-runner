@@ -1,0 +1,27 @@
+name: Verify Unknown-Domain atomic transaction V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_production_once_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_production_once_v1.py'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json'
+      - '.github/workflows/unknown-domain-direct-one-use-production.yml'
+      - 'verify_unknown_domain_execution_lease.py'
+      - '.github/workflows/verify-unknown-domain-atomic-transaction-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify atomic transaction launcher
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify exact lease and transaction invariants
+        run: python verify_unknown_domain_execution_lease.py
