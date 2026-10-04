@@ -1,0 +1,35 @@
+name: Verify Finance Agent zero-spend harness adapter V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/finance_agent_zero_spend_harness_adapter_v1/**"
+      - ".github/workflows/verify-finance-agent-zero-spend-harness-adapter-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile copied adapter
+        run: |
+          cd capsules/finance_agent_zero_spend_harness_adapter_v1
+          python -m py_compile canonical/runtime/zero_spend_provider_guard_v1.py canonical/runtime/finance_agent_v2_zero_spend_harness_adapter_v1.py
+      - name: Run copied adapter tests
+        run: |
+          cd capsules/finance_agent_zero_spend_harness_adapter_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_finance_agent_v2_zero_spend_harness_adapter_v1 -v
+      - name: Verify exact pinned Vals source topology
+        run: |
+          cd capsules/finance_agent_zero_spend_harness_adapter_v1
+          export PYTHONPATH=.
+          python verify_adapter.py
