@@ -1,0 +1,108 @@
+name: Execute LiveBench V8 structural replay72
+
+on:
+  push:
+    branches:
+      - diagnose/livebench-v8-structural-refinement-20261004
+    paths:
+      - ".github/workflows/execute-livebench-v8-structural-replay72.yml"
+      - "verify_livebench_v8_execution_binding.py"
+      - "subject/livebench_v8_structural_activation.json"
+      - "launch_livebench_v8_structural_atomic.py"
+      - "diagnose_livebench_replay72_v8_structural.py"
+      - "livebench_v8_structural_classifier.py"
+      - "execute_livebench_if_replay72_v4_candidate.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: livebench-v8-structural-replay72
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      LIVEBENCH_V8_ACTIVATION_BLOB: "27f7af154b419cc9961eb9f9882823a8dc9780ea"
+      REPOSITORY_PRIVATE: "false"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact activation and replay-only bindings
+        run: python verify_livebench_v8_execution_binding.py
+
+      - name: Execute one-use sanitized replay of already exposed 72 cases
+        id: replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python launch_livebench_v8_structural_atomic.py 2>&1 | tee /tmp/livebench-v8.log
+
+      - name: Build immutable sanitized receipt
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,pathlib,re,os
+          log=pathlib.Path("/tmp/livebench-v8.log").read_text(errors="replace") if pathlib.Path("/tmp/livebench-v8.log").exists() else ""
+          claim=None; result=None
+          for line in log.splitlines():
+              if line.startswith("LIVEBENCH_V8_ATOMIC_CLAIM="):
+                  claim=json.loads(line.split("=",1)[1])
+              if line.startswith("LIVEBENCH_V8_STRUCTURAL_REFINEMENT="):
+                  result=json.loads(line.split("=",1)[1])
+          receipt={
+            "schema":"PROJECT_BRAIN_LIVEBENCH_V8_STRUCTURAL_REFINEMENT_EXECUTION_RECEIPT_V1",
+            "activation_blob_sha":"27f7af154b419cc9961eb9f9882823a8dc9780ea",
+            "workflow_run_id":os.environ.get("GITHUB_RUN_ID"),
+            "workflow_sha":os.environ.get("GITHUB_SHA"),
+            "claim":claim,
+            "result":result,
+            "new_case_exposure":False,
+            "case_73_or_later":False,
+            "acceptance_credit_delta":0,
+            "promotion_authority":False,
+          }
+          if result is not None:
+              assert result.get("replay_prefix_limit")==72
+              assert result.get("replayed_already_exposed_cases")==72
+              assert result.get("new_case_exposure") is False
+              assert result.get("case_ids_emitted") is False
+              assert result.get("prompt_text_emitted") is False
+              assert result.get("response_text_emitted") is False
+              assert result.get("raw_exception_text_emitted") is False
+              assert result.get("raw_composition_detail_emitted") is False
+          pathlib.Path("evidence").mkdir(exist_ok=True)
+          pathlib.Path("evidence/LIVEBENCH_V8_STRUCTURAL_REFINEMENT_EXECUTION_RECEIPT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-v8-structural-replay72-receipt
+          path: evidence/LIVEBENCH_V8_STRUCTURAL_REFINEMENT_EXECUTION_RECEIPT.json
+          if-no-files-found: error
+
+      - name: Persist sanitized receipt on execution branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Project Brain LiveBench V8"
+          git config user.email "project-brain-livebench-v8@users.noreply.github.com"
+          git add evidence/LIVEBENCH_V8_STRUCTURAL_REFINEMENT_EXECUTION_RECEIPT.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Persist LiveBench V8 sanitized replay72 receipt"
+            git push origin HEAD:diagnose/livebench-v8-structural-refinement-20261004
+          fi
