@@ -62,7 +62,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "7359db5d59f92b3958391f8d000bcece1830fb7a",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "9de918a4faa87f31b3a93dc272f52508854c60a2",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/verification/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "36452412fb60ce38405f139111eba98b5cebc040",
@@ -152,13 +152,13 @@
       "claim_response_binding_repair": {
         "defect": "ATOMIC_CLAIM_CREATE_RESPONSE_ACCEPTED_ANY_40_CHARACTER_OBJECT_SHA_WITHOUT_REQUIRING_EQUALITY_TO_THE_IMMUTABLE_CREATE_EVENT_SHA",
         "repair": "REQUIRE_CLAIM_RESPONSE_OBJECT_SHA_TO_EQUAL_GITHUB_SHA_BEFORE_BEACON_SECRET_OR_CASE_GENERATION",
-        "production_launcher_git_blob_sha": "7359db5d59f92b3958391f8d000bcece1830fb7a",
+        "production_launcher_git_blob_sha": "9de918a4faa87f31b3a93dc272f52508854c60a2",
         "production_cases_consumed_before_repair": 0,
         "independent_verification_required": true
       },
       "runtime_head_binding": {
         "repair": "ASSERT_GIT_REV_PARSE_HEAD_EQUALS_GITHUB_SHA_BEFORE_ATOMIC_CLAIM",
-        "production_launcher_git_blob_sha": "7359db5d59f92b3958391f8d000bcece1830fb7a",
+        "production_launcher_git_blob_sha": "9de918a4faa87f31b3a93dc272f52508854c60a2",
         "production_cases_consumed_before_repair": 0,
         "independent_verification_required": true
       },
@@ -210,7 +210,7 @@
     "global_fresh_reality": false
   },
   "result_recovery": {
-    "launcher_git_blob_sha": "7359db5d59f92b3958391f8d000bcece1830fb7a",
+    "launcher_git_blob_sha": "9de918a4faa87f31b3a93dc272f52508854c60a2",
     "post_201_failures_sealed": true,
     "claim_response_mismatch_executes_cases": false,
     "execution_exception_replay_allowed": false,
