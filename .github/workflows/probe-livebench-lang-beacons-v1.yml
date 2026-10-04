@@ -1,11 +1,11 @@
 name: Probe LiveBench langdetect beacons
 on:
-  push:
-    branches:
-      - 'probe/livebench-lang-beacons-20261005-sol'
+  pull_request:
+    branches: [main]
     paths:
       - 'probe_livebench_lang_beacons_v1.py'
       - '.github/workflows/probe-livebench-lang-beacons-v1.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
