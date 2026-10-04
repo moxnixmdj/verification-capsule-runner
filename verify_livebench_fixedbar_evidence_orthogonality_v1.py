@@ -11,6 +11,7 @@ EXPECTED={
  "brain/LIVEBENCH_SCORE_ONLY_WITNESS_CAPABILITY_QUARANTINE_V1.json":"951586401fb9f4b5c30cd83c78bb6d41cc9cc0d5",
  "upstream/livebench_if_utils.py":"8ce01747887ec0792c8f024e1972e34ece781676",
  "upstream/livebench_if_evaluation_lib.py":"2c7bd1290031dbe4ae0f016c53255f4af0ec645b",
+ "upstream/livebench_legacy_evaluation_main.py":"4a341984936c4d609644a3b77f8c030ac5aa7269",
 }
 def blob(p):
  b=p.read_bytes()
@@ -54,7 +55,8 @@ assert "DO_NOT_COUNT_SCORE_ONLY_STRUCTURAL_OR_TRIGRAM_WITNESS_ROUTES_AS_ROOT1_CA
 
 utils=(BASE/"upstream/livebench_if_utils.py").read_text()
 evalsrc=(BASE/"upstream/livebench_if_evaluation_lib.py").read_text()
-utree=ast.parse(utils); etree=ast.parse(evalsrc)
+legacysrc=(BASE/"upstream/livebench_legacy_evaluation_main.py").read_text()
+utree=ast.parse(utils); etree=ast.parse(evalsrc); ltree=ast.parse(legacysrc)
 score_node=next(n for n in utree.body if isinstance(n,ast.FunctionDef) and n.name=="score_results")
 mod=ast.Module(body=[score_node],type_ignores=[])
 ast.fix_missing_locations(mod); ns={}
@@ -68,6 +70,7 @@ for n in range(1,6):
    assert score_results(all_ok,xs)==expected
 
 strict_node=next(n for n in etree.body if isinstance(n,ast.FunctionDef) and n.name=="test_instruction_following_strict")
+legacy_strict_node=next(n for n in ltree.body if isinstance(n,ast.FunctionDef) and n.name=="test_instruction_following_strict")
 calls=[]
 for n in ast.walk(strict_node):
  if isinstance(n,ast.Call):
@@ -77,6 +80,16 @@ assert "instruction.check_following" in calls,calls
 strict_text=ast.get_source_segment(evalsrc,strict_node)
 for forbidden in ("reference_answer","semantic_quality","model_judge","llm_judge"):
  assert forbidden not in strict_text.lower(),forbidden
+
+legacy_calls=[]
+for n in ast.walk(legacy_strict_node):
+ if isinstance(n,ast.Call):
+  try: legacy_calls.append(ast.unparse(n.func))
+  except Exception: pass
+assert "instruction.check_following" in legacy_calls,legacy_calls
+legacy_strict_text=ast.get_source_segment(legacysrc,legacy_strict_node)
+for forbidden in ("reference_answer","semantic_quality","model_judge","llm_judge","ground_truth"):
+ assert forbidden not in legacy_strict_text.lower(),forbidden
 score_text=ast.get_source_segment(utils,score_node)
 for forbidden in ("reference_answer","semantic_quality","model_judge","llm_judge","response"):
  assert forbidden not in score_text.lower(),forbidden
@@ -100,6 +113,7 @@ receipt={
   "whole_scope_behavioral_pass_is_separately_recorded":True,
   "p1_whole_scope_restoration_independently_passed":True,
   "strict_scorer_is_checker_boolean_only":True,
+  "active_legacy_strict_scorer_is_checker_boolean_only":True,
   "score_formula_recomputed_for_all_boolean_patterns_n1_to_n5":True,
   "score_only_helpers_remain_zero_capability_credit":True,
   "family_promotion_still_requires_all_three_predicates":True,
