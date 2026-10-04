@@ -58,10 +58,13 @@ jobs:
       - name: Execute 7424 zero-terminal synthetic exact-checker cases
         run: |
           mkdir -p receipts
+          set +e
           PYTHONPATH="$GITHUB_WORKSPACE" python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py \
             --livebench-root "$GITHUB_WORKSPACE/upstream-livebench" \
             --output receipts/livebench_legacy15_synthetic_v2.json \
             --max-failures 250
+          echo "AUDIT_RC=$?" >> "$GITHUB_ENV"
+          exit 0
 
       - name: Validate receipt boundary
         if: always()
@@ -77,8 +80,19 @@ jobs:
           assert s["terminal_prompts_read"] == 0
           assert s["terminal_scores_read"] == 0
           print(json.dumps({"status":o["status"], **o["results"]}, sort_keys=True))
+          print("BY_ARCHETYPE="+json.dumps(o["by_archetype"], sort_keys=True))
+          print("BY_PROFILE="+json.dumps(o["by_profile"], sort_keys=True))
+          print("BY_SIZE="+json.dumps(o["by_size"], sort_keys=True))
+          print("RUNTIME_ERRORS="+json.dumps(o["runtime_errors"], sort_keys=True))
+          print("FAILED_IDS="+json.dumps(o["exact_failed_instruction_ids"], sort_keys=True))
+          print("TOP_SHAPES="+json.dumps(o["failed_identity_shapes_top"], sort_keys=True))
           PY
           fi
+
+      - name: Enforce audit gate
+        if: always()
+        run: |
+          test "${AUDIT_RC:-1}" -eq 0
 
       - name: Upload receipt
         if: always()
