@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import hashlib, json, re, urllib.request
+# Public-only theorem verifier; no terminal benchmark content is fetched.
 
 DATA_URL = "https://raw.githubusercontent.com/google-research/google-research/e49bbfe381c9c0e564b937f1c4e163a2273c65cc/instruction_following_eval/data/input_data.jsonl"
 ACTIVE = [
