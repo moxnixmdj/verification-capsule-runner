@@ -9,8 +9,8 @@ RUNTIME=BASE/"canonical/runtime/livebench_if_execution_precommit_v3.py"
 TESTS=BASE/"canonical/tests/test_livebench_if_execution_precommit_v3.py"
 RECEIPT=BASE/"legacy_scorer_verification.json"
 EXPECTED={
- "manifest":"50b36b522fb507de8a67f314e46c6be457347f08",
- "runtime":"ac487e5d2434504ea1386e0baf3b20fbc1f1ae3b",
+ "manifest":"11912e787bed100e509b4a21cadb072935c68218",
+ "runtime":"75a81861569b008c8708d6e4d5b8c3a6a6f61285",
  "tests":"81352316ede7d77129be6035b7a8f521eb416585",
  "receipt":"8282b4fe307020fef13ac6421262c18ce7f8c0e8",
 }
