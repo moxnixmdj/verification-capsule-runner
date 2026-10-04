@@ -1,0 +1,27 @@
+name: Verify LiveBench Qwen Open Route V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_qwen_open_route_v1.py
+      - .github/workflows/verify-livebench-qwen-open-route-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify public open-weight acquisition evidence
+        run: python verify_livebench_qwen_open_route_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-qwen-open-route-v1-receipt
+          path: livebench_qwen_open_route_public_verification_v1.json
+          if-no-files-found: error
