@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import urllib.request
+import subprocess
 from collections import Counter
 from pathlib import Path
 
@@ -44,11 +45,18 @@ def main() -> int:
     assert "# IFBench format questions (old format never reaches play_a_match_gt)" in source
     assert "score = ifbench_process_results(question, llm_answer, debug)" in source
 
-    parquet_raw = fetch(HF_URL)
+    # urllib receives an intermittent Hugging Face 404 on the exact immutable
+    # resolve URL although curl against the same pinned object succeeds in the
+    # already-verified release-population capsule.  Use curl with redirects and
+    # retries, then bind bytes by size+SHA256 before any parquet read.
+    path = Path("/tmp/instruction_following.parquet")
+    subprocess.run([
+        "curl", "--fail", "--location", "--retry", "3", "--silent", "--show-error",
+        HF_URL, "-o", str(path)
+    ], check=True)
+    parquet_raw = path.read_bytes()
     assert len(parquet_raw) == HF_BYTES
     assert hashlib.sha256(parquet_raw).hexdigest() == HF_SHA256
-    path = Path("/tmp/instruction_following.parquet")
-    path.write_bytes(parquet_raw)
 
     columns = ["question_id", "task", "category", "livebench_release_date", "livebench_removal_date"]
     rows = pq.read_table(path, columns=columns).to_pylist()
