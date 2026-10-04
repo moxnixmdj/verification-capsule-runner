@@ -63,19 +63,23 @@ py_seed=int.from_bytes(seed_digest[4:8],"big")
 np.random.seed(np_seed)
 random.seed(py_seed)
 
-active=set(ACTIVE_IDS)
-selected=[]
-drawn=0
-while len(selected)<200:
-    raw=live_data.add_instructions_to_registry(200,max_instructions=5)
-    deconf=live_data.check_for_conflitcs(raw)
-    drawn+=len(deconf)
-    for ids in deconf:
-        if ids and set(ids)<=active:
-            selected.append(tuple(ids))
-            if len(selected)==200:
-                break
-    assert drawn<20000,"ACTIVE15_CONDITIONAL_SAMPLING_DID_NOT_CONVERGE"
+# The published LiveBench appendix marks these exact 15 families as the
+# selected real-world/verifiable support (despite an internally inconsistent
+# caption saying 16). The terminal support commitment independently opens to
+# the same exact 15 identities. Reuse the historical generator's mechanics:
+# draw cardinality uniformly from 2..5, draw identities uniformly without
+# replacement, then apply its conflict-removal procedure.
+active_list=list(ACTIVE_IDS)
+samples_to_draw=np.random.randint(2,6,200)
+raw=[
+    np.random.choice(active_list,int(draw),replace=False).tolist()
+    for draw in samples_to_draw
+]
+deconf=live_data.check_for_conflitcs(raw)
+selected=[tuple(ids) for ids in deconf]
+assert len(selected)==200
+assert all(ids and set(ids)<=set(ACTIVE_IDS) for ids in selected)
+drawn=200
 
 BASE=(
     "The following are the beginning sentences of a news article from the Guardian.\n"
@@ -155,8 +159,8 @@ receipt={
   "python_seed":py_seed,
   "population":{
     "rows":len(selected),
-    "historical_generator_draws_before_conditioning":drawn,
-    "conditioning":"DECONFLICTED_ID_SET_NONEMPTY_AND_SUBSET_OF_FROZEN_ACTIVE15",
+    "historical_generator_draw_count":drawn,
+    "sampling_law":"CARDINALITY_UNIFORM_2_TO_5__IDENTITIES_UNIFORM_WITHOUT_REPLACEMENT_FROM_FROZEN_ACTIVE15__HISTORICAL_CONFLICT_REMOVAL",
     "max_instructions":5
   },
   "results":{
@@ -185,8 +189,8 @@ receipt={
     "ownership":False
   },
   "hard_nonclaims":[
-    "THIS_IS_A_FRESH_ACTIVE15_CONDITIONAL_EQUIVALENT_SAMPLE_NOT_THE_QUARANTINED_TERMINAL_200",
-    "DISTRIBUTIONAL_EQUIVALENCE_MUST_BE_INDEPENDENTLY_JUSTIFIED_BEFORE_ACCEPTANCE_PROMOTION",
+    "THIS_IS_A_FRESH_ACTIVE15_SELECTED_SUPPORT_SAMPLE_NOT_THE_QUARANTINED_TERMINAL_200",
+    "ROW_LEVEL_GENERATION_LAW_EQUIVALENCE_MUST_BE_INDEPENDENTLY_JUSTIFIED_BEFORE_ACCEPTANCE_PROMOTION",
     "PASS_THRESHOLD_ALONE_DOES_NOT_PROMOTE_LIVEBENCH"
   ]
 }
