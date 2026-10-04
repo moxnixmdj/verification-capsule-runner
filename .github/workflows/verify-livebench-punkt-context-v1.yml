@@ -20,9 +20,17 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12.10"
-      - name: Install exact import dependencies
-        run: python -m pip install --disable-pip-version-check nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
-      - name: Checkout pinned LiveBench and Punkt data
+      - name: Materialize exact NLTK wheel
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/nltk_wheel
+          mkdir -p /tmp/nltk_wheel
+          python -m pip download --disable-pip-version-check --only-binary=:all: --no-deps nltk==3.10.3 -d /tmp/nltk_wheel
+          test "$(find /tmp/nltk_wheel -maxdepth 1 -name 'nltk-3.10.3-*.whl' | wc -l | tr -d ' ')" = "1"
+          WHEEL="$(find /tmp/nltk_wheel -maxdepth 1 -name 'nltk-3.10.3-*.whl')"
+          echo "ff9598a8e20518ee0d557745890cc4435b9578489e2dcbc69c4f81fa060caf7c  $WHEEL" | shasum -a 256 -c -
+          python -m pip install --disable-pip-version-check "$WHEEL" langdetect==1.0.9 immutabledict==4.2.2
+      - name: Checkout pinned LiveBench and exact Punkt data
         run: |
           set -euo pipefail
           rm -rf /tmp/LiveBenchPunkt /tmp/nltk_data_repo /tmp/nltk_data
@@ -30,14 +38,25 @@ jobs:
           git -C /tmp/LiveBenchPunkt remote add origin https://github.com/LiveBench/LiveBench.git
           git -C /tmp/LiveBenchPunkt fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
           git -C /tmp/LiveBenchPunkt checkout --detach FETCH_HEAD
-          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
-          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+
+          git init /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo remote add origin https://github.com/nltk/nltk_data.git
+          git -C /tmp/nltk_data_repo fetch --depth 1 origin 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          git -C /tmp/nltk_data_repo checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/nltk_data_repo rev-parse HEAD)" = "550b6625bcef1f2abff2ff770a5a0d272c9c6b2a"
+
+          test "$(git hash-object /tmp/nltk_data_repo/packages/tokenizers/punkt.zip)" = "da7ffbd1e6fd6cc5c2f6879c2d4da23c7691944c"
+          test "$(git hash-object /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip)" = "5e5ff6137d5ee6025e400d1c3a7b21914c48b635"
+
           mkdir -p /tmp/nltk_data/tokenizers
-          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
-          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+          cp /tmp/nltk_data_repo/packages/tokenizers/punkt.zip /tmp/nltk_data/tokenizers/
+          cp /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip /tmp/nltk_data/tokenizers/
+          unzip -q /tmp/nltk_data/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
       - name: Run exact Punkt context quotient
         env:
           NLTK_DATA: /tmp/nltk_data
+          NLTK_WHEEL: /tmp/nltk_wheel/nltk-3.10.3-py3-none-any.whl
         run: python verify_livebench_punkt_context_v1.py
       - name: Print receipt
         if: always()
