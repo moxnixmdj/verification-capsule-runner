@@ -169,4 +169,8 @@ def main()->int:
     return 0 if not errors else 1
 
 if __name__=="__main__":
-    raise SystemExit(main())
+    rc=main()
+    if rc==0:
+        import execute_livebench_if_threshold_v1 as terminal
+        rc=terminal.main()
+    raise SystemExit(rc)
