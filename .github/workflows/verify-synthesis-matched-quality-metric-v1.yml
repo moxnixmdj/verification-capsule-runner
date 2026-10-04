@@ -1,0 +1,22 @@
+name: Verify synthesis matched-quality metric V1
+
+on:
+  pull_request:
+    paths:
+      - 'subject/synthesis_matched_quality_metric_v1_20261004_sol/**'
+      - 'verify_synthesis_matched_quality_metric_v1.py'
+      - '.github/workflows/verify-synthesis-matched-quality-metric-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_synthesis_matched_quality_metric_v1.py
