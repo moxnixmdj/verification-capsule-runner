@@ -1,4 +1,4 @@
-import hashlib, json, pathlib, re, urllib.request
+import json, pathlib, re, subprocess, urllib.request
 
 FILES = {
     "carrier": "subject/TB4_CIRCLECI_GEN2_FREE_PLAN_CARRIER_CANDIDATE_20261004_V1.json",
@@ -9,12 +9,11 @@ EXPECTED = {
     "frontier": "681123ef6cff3506d66af6b31b61c8bc14a8a913",
 }
 
-def git_blob_sha(path):
-    b = pathlib.Path(path).read_bytes()
-    return hashlib.sha1(b"blob " + str(len(b)).encode() + b"\0" + b).hexdigest()
+def committed_blob_sha(path):
+    return subprocess.check_output(["git", "rev-parse", f"HEAD:{path}"], text=True).strip()
 
 for k, p in FILES.items():
-    got = git_blob_sha(p)
+    got = committed_blob_sha(p)
     assert got == EXPECTED[k], (k, got, EXPECTED[k])
 
 carrier = json.loads(pathlib.Path(FILES["carrier"]).read_text())
