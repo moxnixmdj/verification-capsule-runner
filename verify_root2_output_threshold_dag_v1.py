@@ -14,7 +14,7 @@ MANIFEST = SUBJECT / "canonical" / "governance" / "ROOT2_OUTPUT_ONLY_THRESHOLD_C
 EXPECTED = {
     RUNTIME: "7a0c715d931dbba05bc9e5ae344e1ead787ea5b8",
     TESTS: "f960b7d75fd5fa597d0dc115705a5fd9211d96ae",
-    MANIFEST: "1fba51d15bcfdf6accd90948155517f7c9b98bbb",
+    MANIFEST: "4575def9c08567d5c2b88ae5c8cf0996d9cc27c5",
 }
 
 EXPECTED_IDS = {
@@ -62,8 +62,13 @@ if manifest.get("fresh_reality_authority") is not False:
     fail("FRESH_REALITY_AUTHORITY_MUST_BE_FALSE")
 if manifest.get("accounting", {}).get("acceptance_credit_delta") != 0:
     fail("NONZERO_ACCEPTANCE_CREDIT")
-if manifest.get("exact_state", {}).get("root2_touching") != 19:
+state = manifest.get("exact_state", {})
+if state.get("root2_touching") != 19:
     fail("ROOT2_TOUCHING_COUNT")
+if state.get("proved_atomic") != 13 or state.get("unresolved_atomic") != 25:
+    fail("CURRENT_ATOMIC_COUNTS:" + repr(state))
+if state.get("root2_only") != 16 or state.get("root3_only") != 6 or state.get("root2_and_root3") != 3:
+    fail("CURRENT_ROOT_PARTITION:" + repr(state))
 if manifest.get("runtime", {}).get("git_blob_sha") != EXPECTED[RUNTIME]:
     fail("MANIFEST_RUNTIME_BINDING")
 if manifest.get("tests", {}).get("git_blob_sha") != EXPECTED[TESTS]:
