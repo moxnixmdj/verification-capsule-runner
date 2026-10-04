@@ -45,9 +45,10 @@ if not all(checks): raise SystemExit("FAIL_CLOSED:ACTIVATION_SEMANTICS")
 text=LAUNCHER.read_text(encoding="utf-8")
 if 'ACTIVATION_FILENAME = "LIVEBENCH_V10_REPLAY72_ACTIVATION_V1.json"' not in text:
     raise SystemExit("FAIL_CLOSED:ACTIVATION_FILENAME")
-if "verify_exact_activation()" not in text or not text.index("verify_exact_activation()") < text.index("atomic_claim()"):
+main_text=text[text.index("def main():"):]
+if "verify_exact_activation()" not in main_text or not main_text.index("verify_exact_activation()") < main_text.index("atomic_claim()"):
     raise SystemExit("FAIL_CLOSED:ACTIVATION_BEFORE_CLAIM_ORDER")
-if not text.index("atomic_claim()") < text.index("import diagnose_livebench_replay72_v10_formal_routing as diagnostic"):
+if not main_text.index("atomic_claim()") < main_text.index("import diagnose_livebench_replay72_v10_formal_routing as diagnostic"):
     raise SystemExit("FAIL_CLOSED:CLAIM_BEFORE_REPLAY_ORDER")
 if 'if exc.code == 422:' not in text:
     raise SystemExit("FAIL_CLOSED:DUPLICATE_NOT_FAIL_CLOSED")
