@@ -1,0 +1,119 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_IF_STAGE_A_PRECOMMIT_V1",
+  "date": "2026-10-04",
+  "status": "PREEXPOSURE_COMMITMENT_CANDIDATE__ZERO_CASES__ZERO_CREDIT",
+  "target_predicate": "LIVEBENCH_IF_GE_65_7",
+  "candidate": {
+    "public_capsule_root": "capsules/root2_livebench_astra_adapter_v1",
+    "exact_blobs": {
+      "canonical/runtime/astra_runtime.py": "7f5d16b1db69cb620954bc778e0ba6e15e687b75",
+      "canonical/runtime/root2_external_task_entrypoint_v1.py": "603beefe0db24102b86b7c965e5433bd880392af",
+      "canonical/runtime/root2_livebench_if_astra_inference_adapter_v1.py": "7e3885fa7a6e56df656c066e0a8f17cfa21424e7",
+      "canonical/governance/ROOT2_EXTERNAL_TASK_ADAPTER_REGISTRY_V1.json": "afa021a25d2de53e293d10ab6759e55eaabaea21",
+      "canonical/verification/ROOT2_LIVEBENCH_IF_ASTRA_ADAPTER_CLEANROOM_VERIFICATION_20261004_V1.json": "05fe911b180e0edae890519670216c589b38e354"
+    },
+    "response_adapter_path": "canonical/runtime/livebench_if_response_adapter.py",
+    "response_adapter_blob_sha": "eb497ae5585f4f22b06b8088609b6d17714ebc53",
+    "cognition_requirement": "MODEL_INDEPENDENT",
+    "external_tools_allowed": []
+  },
+  "harness": {
+    "benchmark_id": "LIVEBENCH_IF_2026_06_25",
+    "release": "2026-06-25",
+    "upstream_repository": "LiveBench/LiveBench",
+    "upstream_commit": "8f8e5c381a16e3f24257776edd53471fe86f8091",
+    "dataset_repository": "livebench/instruction_following",
+    "dataset_revision": "0868379c4b5cf62aeacaf8be4f08fced815c81bb",
+    "dataset_artifact_sha256": "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25",
+    "dataset_artifact_bytes": 537024,
+    "active_population_counts": {
+      "paraphrase": 50,
+      "simplify": 50,
+      "story_generation": 50,
+      "summarize": 50,
+      "total": 200
+    },
+    "terminal_case_content_included_in_stage_a": false,
+    "dataset_download_allowed_in_stage_a": false
+  },
+  "scorer": {
+    "upstream_commit": "8f8e5c381a16e3f24257776edd53471fe86f8091",
+    "source_blobs": {
+      "livebench/if_runner/ifbench/evaluation_lib.py": "2c7bd1290031dbe4ae0f016c53255f4af0ec645b",
+      "livebench/if_runner/ifbench/instructions.py": "02b2dfeb50f036b89bec3df34522c73f756d8f44",
+      "livebench/if_runner/ifbench/instructions_registry.py": "adfed4832877566e62970257b50c6fa32c302fb2",
+      "livebench/if_runner/ifbench/instructions_util.py": "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342"
+    },
+    "response_adapter_blob_sha": "eb497ae5585f4f22b06b8088609b6d17714ebc53",
+    "checker_count": 58,
+    "deterministic": true,
+    "external_model_judge": false,
+    "metric": "STRICT_IFBENCH_AVERAGED_SCORE",
+    "acceptance_threshold_percent": 65.7
+  },
+  "environment": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "repository_visibility": "public",
+    "runner": "ubuntu-24.04",
+    "runner_class": "STANDARD_GITHUB_HOSTED",
+    "python_version": "3.12.14",
+    "paid_or_larger_runner_allowed": false,
+    "pinned_wheels_sha256": {
+      "nltk-3.10.3-py3-none-any.whl": "ff9598a8e20518ee0d557745890cc4435b9578489e2dcbc69c4f81fa060caf7c",
+      "emoji-2.16.0-py3-none-any.whl": "c4230d80640def9071599ff56b1b5950fe13a2a94c0da98c5deab12431b24330",
+      "syllapy-0.7.2-py3-none-any.whl": "198a7413033c32d7b31e21962efb3f284bcea80d3346e954b938ca1ebe6bee20",
+      "setuptools-80.9.0-py3-none-any.whl": "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"
+    },
+    "nltk_data_commit": "550b6625bcef1f2abff2ff770a5a0d272c9c6b2a",
+    "nltk_data_blobs": {
+      "packages/tokenizers/punkt.zip": "da7ffbd1e6fd6cc5c2f6879c2d4da23c7691944c",
+      "packages/tokenizers/punkt_tab.zip": "5e5ff6137d5ee6025e400d1c3a7b21914c48b635",
+      "packages/corpora/stopwords.zip": "56d35b5d204d64480f71edc0f5f82aebce6730b6",
+      "packages/taggers/averaged_perceptron_tagger.zip": "d5bfb6852aa5d288c8f33b3f0ef0fde343afa405",
+      "packages/taggers/averaged_perceptron_tagger_eng.zip": "b792e19546a5711218a05f4029ef17c8d62cd839"
+    }
+  },
+  "policy": {
+    "optional_model_planner_allowed": false,
+    "required_cognition_dependency_class": "MODEL_INDEPENDENT",
+    "external_model_or_learned_capability_provider_allowed": false,
+    "external_tools_allowed": [],
+    "case_reveal_before_precommit_forbidden": true,
+    "adaptive_case_selection": false,
+    "case_replacement": false,
+    "tuning_replay": false,
+    "retry_after_scored_failure": false,
+    "committed_component_mutation_after_case_reveal": false,
+    "result_feedback_to_committed_components": false,
+    "unrelated_work_mutation_of_committed_components": false,
+    "results_bound_to_commitment_required": true,
+    "result_escrow_until_full_wave_finalization": true,
+    "explicit_fresh_reality_authority_required": true,
+    "fresh_reality_authority": false,
+    "execution_authority": false,
+    "promotion_authority": false
+  },
+  "stage_a": {
+    "actions": [
+      "VERIFY_EXACT_PUBLIC_ASTRA_CAPSULE_BLOBS",
+      "RUN_SYNTHETIC_ASTRA_ADAPTER_PROVENANCE_PREFLIGHT",
+      "VERIFY_EXACT_SCORER_SOURCE_BLOBS",
+      "VERIFY_PINNED_WHEEL_AND_NLTK_DATA_IDENTITIES",
+      "RUN_ALL_58_SYNTHETIC_CHECKER_MUTATIONS",
+      "EMIT_CANONICAL_SHA256_FOR_CANDIDATE_HARNESS_SCORER_ENVIRONMENT_POLICY_AND_COMMITMENT"
+    ],
+    "terminal_case_content_read": false,
+    "terminal_dataset_download": false,
+    "terminal_cases_consumed": 0,
+    "new_reality_units_consumed": 0
+  },
+  "hard_nonclaims": [
+    "NO_LIVEBENCH_SCORE",
+    "NO_TERMINAL_CASE_CONTENT_READ",
+    "NO_GENERIC_ISOLATION_INSTANTIATION_RECEIPT_FOR_FUTURE_SCORED_EXECUTION",
+    "NO_RESOURCE_FIT_CLAIM_FOR_ALL_TERMINAL_CASES",
+    "NO_FRESH_REALITY_AUTHORITY",
+    "NO_EXECUTION_OR_PROMOTION_AUTHORITY",
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT"
+  ]
+}
