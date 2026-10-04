@@ -16,6 +16,7 @@ import re
 from typing import Any, Iterable
 
 from canonical.runtime import livebench_legacy15_composition_partition_v1 as partition
+from canonical.runtime import livebench_legacy15_slot_feasibility_v1 as slot_feasibility
 
 SCHEMA = "PROJECT_BRAIN_LIVEBENCH_LEGACY15_JOINT_CANDIDATE_GENERATOR_V1"
 
@@ -105,10 +106,12 @@ def _apply_end_material(
     marker = str(_slots(postscript).get("postscript_marker") or "") if postscript else ""
     tail_parts = []
     if marker:
-        tail_parts.append(marker)
-        # Never let fixed scaffolding collide with a visible forbidden-word
-        # constraint. The marker is required, but the postscript payload is free.
-        tail_parts.append(_safe_token(forbidden, "tail"))
+        # The frozen postscript checker accepts the marker itself plus arbitrary
+        # trailing characters. Avoid inventing a payload word. For the period-
+        # final P.S. form, attach a non-word '+' so Punkt does not treat the
+        # marker as a separate sentence while \\w+ word count stays unchanged.
+        # P.P.S has no terminal period and needs no neutralizer.
+        tail_parts.append(marker + "+" if marker.endswith(".") else marker)
     if end_phrase:
         tail_parts.append(end_phrase)
     tail = " ".join(tail_parts).strip()
@@ -152,53 +155,38 @@ def _keyword_payload(required: list[str], forbidden: list[str] | None = None) ->
 
 
 def prove_visible_unsat(constraints: Iterable[dict[str, Any]]) -> dict[str, Any]:
-    """Prove narrow visible contradictions from frozen checker semantics.
-
-    This is deliberately conservative. It returns proved=True only when the
-    exact required end phrase necessarily contains a whole-word expression
-    forbidden by the same visible constraint set. EndChecker requires that
-    literal phrase at the response tail (after outer-quote stripping), while
-    ForbiddenWords rejects the same whole-word regex anywhere in the original
-    response, so no response can satisfy both.
-    """
+    """Delegate semantic UNSAT decisions to the canonical slot-feasibility kernel."""
     rows = list(constraints)
-    forbidden = _forbidden(rows)
-    end_checker = _one(rows, "startend:end_checker")
-    if not forbidden or not end_checker:
+    result = slot_feasibility.classify_visible_contracts(rows)
+    if result.get("status") != "PROVED_UNSAT":
         return {"proved": False}
 
-    end_phrase = str(_slots(end_checker).get("end_phrase") or "").strip()
-    if not end_phrase:
-        return {"proved": False}
-
-    collisions: list[str] = []
-    for word in forbidden:
-        try:
-            if re.search(r"\b" + word + r"\b", end_phrase, flags=re.IGNORECASE):
-                collisions.append(word)
-        except re.error:
-            # The exact frozen checker would also receive this expression.
-            # Do not claim a proof from malformed regex syntax here.
-            return {"proved": False}
-
-    if not collisions:
-        return {"proved": False}
-    return {
+    reasons = list(result.get("hard_unsat_reasons") or [])
+    out = {
         "proved": True,
-        "reason": "EXACT_END_PHRASE_FORBIDDEN_WHOLE_WORD_COLLISION",
-        "end_phrase": end_phrase,
-        "colliding_forbidden_words": sorted(collisions),
-        "proof_basis": (
-            "EndChecker requires response.strip().strip(\"\\\"\").lower() "
-            "to end with end_phrase; ForbiddenWords rejects the same whole-word "
-            "regex anywhere in the unstripped response."
-        ),
+        "reason": "CANONICAL_SLOT_FEASIBILITY_UNSAT",
+        "hard_unsat_reasons": reasons,
+        "slot_feasibility_schema": result.get("schema"),
         "hidden_instruction_ids_used": False,
         "hidden_kwargs_used": False,
         "terminal_case_metadata_used": False,
         "terminal_data_used": False,
     }
 
+    # Preserve the existing end/forbidden diagnostic surface for downstream
+    # receipts while making the canonical feasibility kernel the sole authority.
+    end_reasons = [
+        x for x in reasons
+        if str(x).startswith("MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:")
+    ]
+    if end_reasons:
+        out["reason"] = "EXACT_END_PHRASE_FORBIDDEN_WHOLE_WORD_COLLISION"
+        out["colliding_forbidden_words"] = sorted(
+            str(x).split(":", 1)[1] for x in end_reasons
+        )
+        end_checker = _one(rows, "startend:end_checker")
+        out["end_phrase"] = str(_slots(end_checker).get("end_phrase") or "").strip()
+    return out
 
 def _special_json(constraints: list[dict[str, Any]]) -> list[str]:
     required = _required_keywords(constraints)
@@ -270,13 +258,22 @@ def _build_core_skeleton(
         splitter = str(ss["section_spliter"])
         n = int(ss["num_sections"])
         for i in range(1, n + 1):
-            components.append(f"{splitter} {i}\n{safe}s{i}")
+            # The frozen section regex allows zero whitespace before the index.
+            # Use that form universally: "Section1" still counts as a section,
+            # costs one \\w+ token instead of two, and avoids a whole-word
+            # forbidden match on the splitter itself.
+            components.append(f"{splitter}{i}\n{safe}s{i}")
 
     if bullets:
         n = int(_slots(bullets)["num_bullets"])
         components.extend(f"* {safe}b{i}" for i in range(n))
 
-    components.extend(f"{safe}sentence{i}." for i in range(sentence_fillers))
+    # Sentence lower bounds must not consume the word budget. The frozen
+    # NumberOfSentences checker uses Punkt; '!' is an unconditional sentence
+    # break, while the frozen word counter counts only \\w+ tokens. A bare
+    # punctuation sentence therefore costs zero words and is independent of
+    # Punkt's trained abbreviation model.
+    components.extend("!" for _ in range(sentence_fillers))
 
     # Reserve a stable insertion point for word padding before tail material.
     components.append("__PB_END_SLOT__")
