@@ -1,0 +1,30 @@
+name: Verify Brain Root1 current blocker classification seal
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root1_current_blocker_seal_v1/**"
+      - ".github/workflows/verify-brain-root1-current-blocker-seal-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile subject
+        run: |
+          python -m py_compile capsules/root1_current_blocker_seal_v1/subject/canonical/runtime/root1_current_blocker_classification_seal_v1.py
+      - name: Run subject tests
+        run: |
+          cd capsules/root1_current_blocker_seal_v1/subject
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_root1_current_blocker_classification_seal_v1 -v
+      - name: Recompute live theorem and adversarial counterexamples
+        run: |
+          cd capsules/root1_current_blocker_seal_v1
+          python verify_live_seal.py

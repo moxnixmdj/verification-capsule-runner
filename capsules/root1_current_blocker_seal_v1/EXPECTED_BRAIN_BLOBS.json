@@ -1,0 +1,16 @@
+{
+  "schema": "BRAIN_ROOT1_CURRENT_BLOCKER_SEAL_V1_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pull_request": 1508,
+  "brain_candidate_ref": "feature/root1-current-blocker-seal-v1-20261004-sol",
+  "exact_blobs": {
+    "canonical/runtime/root1_current_blocker_classification_seal_v1.py": "bfb171deb7a7ca8347397710006dd05a27cf2499",
+    "canonical/tests/test_root1_current_blocker_classification_seal_v1.py": "02ce8e87af12b00642c51c8be02c22cf2b9f411a",
+    "canonical/governance/ROOT1_CURRENT_BLOCKER_CLASSIFICATION_SEAL_V1.json": "d8346fec4326ee3fed32f08dcd29782bbc3647d2",
+    "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json": "661a57f839101fbf54c7e4edc76166c65ce9327d",
+    "canonical/governance/TERMINAL_CLOSURE_MANIFEST_V1.json": "fae1bc5338993911f1078680996aa48e677d7a15",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "bc420c6d1a6caaab7a6d5c257640d3f5797170f5",
+    "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json": "8b8721e0f9b65ab86f193fcf7d19b8a8d286b0a4"
+  }
+}
