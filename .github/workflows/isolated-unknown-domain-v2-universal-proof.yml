@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: isolated-unknown-domain-v2-universal-proof-20261005
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   verify:
@@ -27,22 +27,45 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run exact content-bound verifier
+        id: exact_verify
+        continue-on-error: true
         run: python3 verification/unknown_domain_v2_universal_proof_isolated_v1.py
-      - name: Seal success receipt into isolated branch
+      - name: Seal independent outcome receipt
+        if: always()
+        env:
+          VERIFY_OUTCOME: ${{ steps.exact_verify.outcome }}
+          VERIFY_CONCLUSION: ${{ steps.exact_verify.conclusion }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          JOB_ID: ${{ github.job }}
         run: |
           mkdir -p receipts
-          cp unknown_domain_v2_universal_proof_receipt.json receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json
           python3 - <<'PY'
-          import json, pathlib
-          p=pathlib.Path("receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json")
-          d=json.loads(p.read_text())
+          import json, os, pathlib
+          src=pathlib.Path("unknown_domain_v2_universal_proof_receipt.json")
+          if src.exists():
+              d=json.loads(src.read_text())
+          else:
+              d={
+                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_EXECUTION_V1",
+                "status":"VERIFIER_DID_NOT_EMIT_SUCCESS_RECEIPT"
+              }
           d["isolated_runner_branch"]="exec/unknown-domain-v2-universal-proof-isolated-20261005"
           d["isolated_runner_workflow"]="isolated-unknown-domain-v2-universal-proof.yml"
+          d["isolated_runner_source_sha"]=os.environ["SOURCE_SHA"]
+          d["isolated_runner_run_id"]=os.environ["RUN_ID"]
+          d["isolated_runner_job_id"]=os.environ["JOB_ID"]
+          d["verifier_step_outcome"]=os.environ["VERIFY_OUTCOME"]
+          d["verifier_step_conclusion"]=os.environ["VERIFY_CONCLUSION"]
           d["isolated_runner_commit_receipt"]=True
+          p=pathlib.Path("receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json")
           p.write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
           PY
           git config user.name "project-brain-verifier"
           git config user.email "project-brain-verifier@users.noreply.github.com"
           git add receipts/UNKNOWN_DOMAIN_V2_UNIVERSAL_PROOF_ISOLATED_20261005.json
-          git commit -m "Seal isolated Unknown-Domain universal proof receipt"
+          git commit -m "Seal isolated Unknown-Domain universal proof outcome" || true
           git push origin HEAD:exec/unknown-domain-v2-universal-proof-isolated-20261005
+      - name: Enforce verifier pass
+        if: steps.exact_verify.outcome != 'success'
+        run: exit 1
