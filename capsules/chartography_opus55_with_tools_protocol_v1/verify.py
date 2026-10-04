@@ -11,7 +11,7 @@ FILES={
   "adapter_verification":ROOT/"brain_adapter_verification.json",
 }
 EXPECTED={
-  "candidate":"ef67dc84dc02f2216f9e1d0123dbf5d40b6ed173",
+  "candidate":"7d61b7d53c5e902dcaf6c7a6bfde1f5cf4ea8d51",
   "envelope":"661a57f839101fbf54c7e4edc76166c65ce9327d",
   "registry":"562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
   "adapter_governance":"f0352c187eb921d6e736608825005df887449488",
