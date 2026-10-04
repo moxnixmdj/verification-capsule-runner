@@ -1,0 +1,34 @@
+name: Verify LiveBench sentence geometry V1
+on:
+  push:
+    branches:
+      - 'verify/livebench-sentence-budget-20261005-sol'
+    paths:
+      - 'verification/livebench_sentence_geometry_public_audit_v1.py'
+      - '.github/workflows/verify-livebench-sentence-geometry-v1.yml'
+      - 'verification/LIVEBENCH_SENTENCE_GEOMETRY_TRIGGER_20261005.txt'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'verification/livebench_sentence_geometry_public_audit_v1.py'
+      - '.github/workflows/verify-livebench-sentence-geometry-v1.yml'
+      - 'verification/LIVEBENCH_SENTENCE_GEOMETRY_TRIGGER_20261005.txt'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install source dependency
+        run: python -m pip install 'nltk>=3.8,<4'
+      - name: Report tokenizer version
+        run: python -c "import nltk; print('nltk', nltk.__version__)"
+      - name: Run zero-terminal sentence geometry audit
+        run: python verification/livebench_sentence_geometry_public_audit_v1.py
