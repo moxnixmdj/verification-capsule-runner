@@ -1,0 +1,8 @@
+name: OSWorld selfhost preflight
+on: workflow_dispatch
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash capsules/osworld_v21_selfhost_zero_case/run.sh
