@@ -1,0 +1,62 @@
+name: Generate LiveBench escrow recipient v1
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/generate-livebench-escrow-recipient-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Generate isolated production escrow recipient
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/livebench-escrow"
+          cd "$RUNNER_TEMP/livebench-escrow"
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out private.pem 2>/dev/null
+          openssl req -new -x509 -sha256 -key private.pem -subj "/CN=Project Brain LiveBench Escrow Run $GITHUB_RUN_ID" -days 90 -out recipient.crt
+          openssl x509 -in recipient.crt -pubkey -noout > public.pem
+          PUB_SHA256="$(sha256sum public.pem | awk '{print $1}')"
+          CERT_SHA256="$(sha256sum recipient.crt | awk '{print $1}')"
+          PRIV_SHA256="$(sha256sum private.pem | awk '{print $1}')"
+          cat > receipt.json <<EOF
+          {
+            "schema":"PROJECT_BRAIN_LIVEBENCH_ESCROW_KEYGEN_RECEIPT_V1",
+            "run_id":"$GITHUB_RUN_ID",
+            "repository":"$GITHUB_REPOSITORY",
+            "artifact_name":"livebench-escrow-private-$GITHUB_RUN_ID",
+            "public_key_sha256":"$PUB_SHA256",
+            "certificate_sha256":"$CERT_SHA256",
+            "private_key_sha256":"$PRIV_SHA256",
+            "private_key_printed":false,
+            "private_key_committed":false,
+            "candidate_access_to_private_key":false,
+            "planner_job_access_to_private_key":false
+          }
+          EOF
+          echo "PUBLIC_CERT_BEGIN"
+          cat recipient.crt
+          echo "PUBLIC_CERT_END"
+          echo "PUBLIC_KEY_BEGIN"
+          cat public.pem
+          echo "PUBLIC_KEY_END"
+          echo "ESCROW_RECEIPT_BEGIN"
+          cat receipt.json
+          echo "ESCROW_RECEIPT_END"
+      - name: Upload private decryption material to isolated Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-escrow-private-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/livebench-escrow/private.pem
+            ${{ runner.temp }}/livebench-escrow/receipt.json
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
