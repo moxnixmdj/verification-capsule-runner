@@ -1,0 +1,33 @@
+name: Diagnose LiveBench generic goal zero-case
+on:
+  push:
+    branches:
+      - "execute/livebench-if-threshold-v2-20261004"
+    paths:
+      - "RUN_LIVEBENCH_GENERIC_ZERO_DIAGNOSTIC"
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    env:
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "execute/livebench-if-threshold-v2-20261004"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Run non-terminal generic-goal diagnostic
+        shell: bash
+        run: python diagnose_livebench_generic_goal_v1.py | tee LIVEBENCH_GENERIC_ZERO_DIAGNOSTIC_V1.json
+      - name: Persist diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add LIVEBENCH_GENERIC_ZERO_DIAGNOSTIC_V1.json
+          git diff --cached --quiet || git commit -m "Record LiveBench generic-goal zero-case diagnostic"
+          git push origin HEAD:"execute/livebench-if-threshold-v2-20261004"
