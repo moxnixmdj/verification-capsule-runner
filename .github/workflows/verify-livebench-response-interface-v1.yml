@@ -1,0 +1,16 @@
+name: Verify LiveBench response interface v1
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_response_interface_v1.py'
+      - '.github/workflows/verify-livebench-response-interface-v1.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_livebench_response_interface_v1.py
