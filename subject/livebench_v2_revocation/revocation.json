@@ -1,0 +1,58 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V2_DIRECT_AUTHORITY_REVOCATION_V1",
+  "date": "2026-10-04",
+  "status": "ACTIVE_REVOCATION__V2_EXECUTION_EPOCH_INVALID_FOR_ANY_FURTHER_LIVEBENCH_RUN__ZERO_CREDIT",
+  "target_predicate": "LIVEBENCH_IF_GE_65_7",
+  "revoked_authority": {
+    "path": "canonical/governance/LIVEBENCH_CURRENT_PREDICATE_LOCAL_DIRECT_AUTHORITY_ACTIVATION_V2.json",
+    "git_blob_sha": "d410d6952cb34f2fd3fb4dc48bf2a613d11c57d1",
+    "prior_active": true
+  },
+  "constructive_falsifier": {
+    "path": "canonical/verification/LIVEBENCH_FIRST_DIRECT_ATTEMPT_TRUTH_RECEIPT_20261004_V1.json",
+    "git_blob_sha": "0ddffd52cd05b880964cf034527aabddb255baef",
+    "fact": "FIRST_DIRECT_ATTEMPT_LOADED_FROZEN_200_CASE_POPULATION_BUT_FAILED_BEFORE_ANY_BRAIN_INFERENCE_OR_SCORE_ON_UNKNOWN_INSTRUCTION_IDS",
+    "cause": "V2_EXECUTION_DRIVER_APPLIED_CURRENT_IFBENCH_REGISTRY_TO_THE_FULL_MIXED_LEGACY_PLUS_CURRENT_POPULATION"
+  },
+  "repair_evidence": {
+    "path": "canonical/verification/LIVEBENCH_LEGACY_SCORER_SUPPLEMENT_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+    "git_blob_sha": "8282b4fe307020fef13ac6421262c18ce7f8c0e8",
+    "fact": "PINNED_UPSTREAM_CONTROL_FLOW_REQUIRES_LEGACY_IFEVAL_BEFORE_2025_11_25_AND_CURRENT_IFBENCH_AT_OR_AFTER_2025_11_25"
+  },
+  "effect": {
+    "v2_execution_authority": false,
+    "v2_predicate_local_fresh_reality_authority": false,
+    "global_fresh_reality_authority": false,
+    "acceptance_credit_delta": 0,
+    "required_successor": "NEW_INDEPENDENTLY_VERIFIED_EXECUTION_EPOCH_WITH_EXACT_DUAL_SCORER_AND_FROZEN_RUNTIME_CLOSURE__REPLAY_ALREADY_EXPOSED_72_CASE_PREFIX_BEFORE_ANY_NEW_CASE_EXPOSURE"
+  },
+  "hard_rules": [
+    "DO_NOT_REUSE_V2_ACTIVATION_FOR_ANY_FURTHER_TERMINAL_CASE_EXECUTION",
+    "DO_NOT_MUTATE_THE_FROZEN_BRAIN_CANDIDATE_TO_REPAIR_PUBLIC_SCORER_DISPATCH",
+    "DO_NOT_TREAT_PRIOR_POPULATION_LOAD_AS_A_SCORE_OR_BRAIN_INFERENCE",
+    "DO_NOT_REBASE_THRESHOLD_CASE_POPULATION_OR_CASE_ORDER",
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT_FROM_REVOCATION",
+    "NO_NEW_TERMINAL_CASE_EXPOSURE_BEFORE_VALID_REPLAY_OF_ALREADY_EXPOSED_72_CASE_PREFIX"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  },
+  "execution_authority": false,
+  "promotion_authority": false,
+  "fresh_reality_authority": false,
+  "second_constructive_falsifier": {
+    "path": "canonical/governance/LIVEBENCH_SECOND_DIRECT_ATTEMPT_TRUTH_RECEIPT_20261004_V1.json",
+    "git_blob_sha": "e5e1aa48046c2f6a95413a0a9f804e36a5cf2f9e",
+    "terminal_cases_consumed": 72,
+    "successful_candidate_responses": 0,
+    "predicate_failure_admissible": false,
+    "fact": "SCORER_REPAIR_SUCCEEDED_BUT_72_ALREADY_EXPOSED_CASES_ALL_FAILED_BEFORE_VALID_CANDIDATE_RESPONSE_DUE_TO_INCOMPLETE_RUNTIME_CLOSURE",
+    "consequence": "V2_AUTHORITY_CANNOT_BE_REUSED_FOR_ANY_RETRY__NEXT_EPOCH_MUST_BIND_INDEPENDENTLY_VERIFIED_EXACT_FROZEN_RUNTIME_CLOSURE_AND_REPLAY_ONLY_ALREADY_EXPOSED_PREFIX_FIRST"
+  }
+}
