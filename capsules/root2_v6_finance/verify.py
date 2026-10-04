@@ -217,9 +217,10 @@ def live(url):
     with urllib.request.urlopen(req,timeout=30) as rr:
         return re.sub(r"\\s+"," ",re.sub(r"<[^>]+>"," ",rr.read().decode("utf-8","ignore")))
 
-cap=live("https://artificialanalysis.ai/methodology/capability-indices")
-for token in ["Finance & Accounting Index","Business Knowledge","Agentic Knowledge Work","Reasoning","Agentic Tool Use","Long-Context","Non-Hallucination","30%","20%","10%","5%"]:
-    assert token.lower() in cap.lower(),token
+cap=live("https://artificialanalysis.ai/models/capabilities/finance-and-accounting")
+cap_norm=cap.lower().replace("-"," ")
+for token in ["weighted average","business knowledge","agentic knowledge work","reasoning","agentic tool use","long context","non hallucination","30%","20%","10%","5%"]:
+    assert token in cap_norm,token
 
 intel=live("https://artificialanalysis.ai/methodology/intelligence-benchmarking")
 for token in [
