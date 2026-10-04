@@ -20,7 +20,7 @@ jobs:
           python-version: '3.12'
       - name: Install exact dependencies
         run: |
-          python -m pip install --disable-pip-version-check --no-cache-dir nltk==3.9.2 langdetect==1.0.9 immutabledict==4.2.1
+          python -m pip install --disable-pip-version-check --no-cache-dir nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.1
           python - <<'PY'
           import nltk
           for name in ["punkt", "punkt_tab"]:
