@@ -255,13 +255,44 @@ def direct_prompt(task: dict[str, Any]) -> str:
 def schema_prompt(task: dict[str, Any]) -> str:
     return f"{SCHEMA}\nObservations:\n{task['observations']}"
 
+def nonoracle_feedback(errors: list[str]) -> list[str]:
+    """Return failure classes without leaking hidden expected values.
+
+    The scored expected object is never shown to the controller. It may re-read the
+    original visible observations and schema, exactly as a real source-grounded repair
+    loop would. Ground-truth values exist only inside the scorer.
+    """
+    out: list[str] = []
+    for e in errors[:20]:
+        if e.startswith("parse:"):
+            out.append("output_is_not_valid_json")
+            continue
+        path = e.split(":", 1)[0]
+        if ":missing_keys=" in e:
+            out.append(path + ":required_schema_keys_missing")
+        elif ":extra_keys=" in e:
+            out.append(path + ":schema_contains_unrequested_keys")
+        elif ":expected_object" in e:
+            out.append(path + ":wrong_type_expected_object")
+        elif ":expected_list" in e:
+            out.append(path + ":wrong_type_expected_list")
+        elif ":length=" in e:
+            out.append(path + ":wrong_list_length")
+        elif ":value=" in e:
+            out.append(path + ":value_conflicts_with_visible_observations")
+        else:
+            out.append(path + ":deterministic_validation_failed")
+    return out
+
+
 def repair_prompt(task: dict[str, Any], previous: str, errors: list[str]) -> str:
-    err = "\n".join("- " + e for e in errors[:20])
+    err = "\n".join("- " + e for e in nonoracle_feedback(errors))
     return (
         f"{SCHEMA}\nObservations:\n{task['observations']}\n\n"
-        "The previous candidate failed deterministic validation. Repair it. "
+        "The previous candidate failed deterministic validation. Repair it using ONLY "
+        "the visible observations and schema. Hidden expected values are not available. "
         "Do not merely explain the errors. Return a complete corrected JSON object only.\n"
-        f"Validation errors:\n{err}\nPrevious candidate:\n{previous}"
+        f"Non-oracular validation feedback:\n{err}\nPrevious candidate:\n{previous}"
     )
 
 def wilson(successes: int, n: int, z: float = 1.959963984540054) -> list[float]:
