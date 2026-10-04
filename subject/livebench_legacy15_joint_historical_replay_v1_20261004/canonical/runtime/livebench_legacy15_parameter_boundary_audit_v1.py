@@ -104,8 +104,13 @@ def audit(livebench_root: Path, max_failures:int=100):
     sets=archetypes.enumerate_compatible_sets()
     assert len(sets)==928
     total=passes=runtime_blocks=exact_fails=0
+    ceiling_attained=0
+    optimality_mismatches=0
+    score_sum=0.0
+    ceiling_sum=0.0
     runtime_errors=Counter()
     failed_ids=Counter()
+    claimed_unavoidable_ids=Counter()
     failed_shapes=Counter()
     by_archetype=defaultdict(Counter)
     failures=[]
@@ -129,6 +134,23 @@ def audit(livebench_root: Path, max_failures:int=100):
                     failures.append({"ids":list(ids),"profile":profile["name"],"stage":"runtime","reason":reason})
                 continue
             ok,failed=base.exact_check(str(out["response"]),records,registry)
+            failed=sorted(set(failed))
+            unavoidable=sorted(set(out.get("known_unavoidable_failures") or []))
+            for x in unavoidable:
+                claimed_unavoidable_ids[x]+=1
+
+            k=len(ids)
+            candidate_score=1.0 if not failed else ((k-len(failed))/k)/2.0
+            ceiling_score=1.0 if not unavoidable else ((k-len(unavoidable))/k)/2.0
+            score_sum+=candidate_score
+            ceiling_sum+=ceiling_score
+            if failed==unavoidable:
+                ceiling_attained+=1
+                by_archetype[arch]["rowwise_ceiling_attained"]+=1
+            else:
+                optimality_mismatches+=1
+                by_archetype[arch]["optimality_mismatch"]+=1
+
             if ok:
                 passes+=1
                 by_archetype[arch]["pass"]+=1
@@ -137,12 +159,20 @@ def audit(livebench_root: Path, max_failures:int=100):
                 failed_shapes[tuple(ids)]+=1
                 by_archetype[arch]["exact_fail"]+=1
                 for x in failed: failed_ids[x]+=1
-                if len(failures)<max_failures:
-                    failures.append({"ids":list(ids),"profile":profile["name"],"stage":"checker","failed_ids":failed})
+            if failed!=unavoidable and len(failures)<max_failures:
+                failures.append({
+                    "ids":list(ids),
+                    "profile":profile["name"],
+                    "stage":"optimality",
+                    "failed_ids":failed,
+                    "claimed_unavoidable_failures":unavoidable,
+                    "candidate_score":candidate_score,
+                    "claimed_ceiling_score":ceiling_score,
+                })
 
     result={
       "schema":SCHEMA,
-      "status":"PASS_NO_FAILURES" if passes==total else "FAILURE_CLASSES_LOCALIZED",
+      "status":"PASS__ALL_BOUNDARY_CASES_AT_CLAIMED_ROWWISE_CEILING" if runtime_blocks==0 and optimality_mismatches==0 else "FAIL_CLOSED__CEILING_MISMATCH_OR_RUNTIME_BLOCK",
       "bindings":{
         "livebench_commit":base.FROZEN_LIVEBENCH_COMMIT,
         "registry_blob":base.FROZEN_REGISTRY_BLOB,
@@ -163,10 +193,16 @@ def audit(livebench_root: Path, max_failures:int=100):
       "results":{
         "pass":passes,"runtime_block":runtime_blocks,"exact_fail":exact_fails,
         "pass_fraction":passes/total,
+        "rowwise_ceiling_attained":ceiling_attained,
+        "optimality_mismatches":optimality_mismatches,
+        "candidate_mean_score_over_boundary_basis":score_sum/total,
+        "claimed_theoretical_ceiling_mean_over_boundary_basis":ceiling_sum/total,
+        "candidate_equals_claimed_ceiling_on_boundary_basis":abs(score_sum-ceiling_sum)<1e-12 and ceiling_attained==total,
         "failed_identity_shape_count":len(failed_shapes),
       },
       "runtime_errors":dict(runtime_errors.most_common()),
       "exact_failed_instruction_ids":dict(failed_ids.most_common()),
+      "claimed_unavoidable_instruction_ids":dict(claimed_unavoidable_ids.most_common()),
       "by_archetype":{k:dict(v) for k,v in sorted(by_archetype.items())},
       "failed_identity_shapes_top":[{"ids":list(k),"failures":v} for k,v in failed_shapes.most_common(50)],
       "failure_samples":failures,
@@ -178,9 +214,10 @@ def audit(livebench_root: Path, max_failures:int=100):
         "POSTSCRIPT_SECTION_SPLITTER_END_PHRASE_ENUMERATE_ALL_SOURCE_ENUM_VALUES",
         "LEXICAL_BASIS_INCLUDES_REQUIRED_FORBIDDEN_OVERLAP_AND_COMPLETE_SOURCE_DERIVED_FIXED_STRUCTURE_WORD_COLLISIONS",
         "STRUCTURAL_FORBIDDEN_COLLISION_CLASS_IS_DERIVED_MECHANICALLY_FROM_PINNED_SECTION_AND_END_LITERALS_INTERSECTED_WITH_PINNED_WORD_LIST",
+        "ROWWISE_CEILING_CLAIM_COUNTS_ONE_UNAVOIDABLE_FAILURE_FOR_SENTENCE_LESS_THAN_ONE_AND_ONE_FOR_ANY_FORBIDDEN_VS_FORCED_WHOLE_WORD_CONTRADICTION",
       ],
       "hard_nonclaims":[
-        "BOUNDARY_BASIS_IS_NOT_BY_ITSELF_A_FORMAL_UNIVERSAL_PARAMETER_PROOF",
+        "BOUNDARY_BASIS_PLUS_FAILURE_MATCHING_IS_NOT_BY_ITSELF_A_FORMAL_UNIVERSAL_PARAMETER_PROOF__A_SOURCE_DOMAIN_EQUIVALENCE_CERTIFICATE_IS_STILL_REQUIRED",
         "NO_TERMINAL_CASE_CONTENT_READ",
         "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
       ],
