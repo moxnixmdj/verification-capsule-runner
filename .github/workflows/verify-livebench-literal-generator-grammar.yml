@@ -1,0 +1,31 @@
+name: Verify LiveBench Literal Generator Grammar
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_literal_generator_grammar.py
+      - .github/workflows/verify-livebench-literal-generator-grammar.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: >-
+          python -m pip install --disable-pip-version-check --quiet
+          pyarrow==19.0.1
+          langdetect==1.0.9
+          immutabledict==4.2.1
+          nltk==3.9.1
+      - run: python verify_livebench_literal_generator_grammar.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-literal-generator-grammar-receipt
+          path: livebench_literal_generator_grammar_receipt.json
+          if-no-files-found: error
