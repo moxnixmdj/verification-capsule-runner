@@ -1,6 +1,12 @@
 name: Verify LiveBench language decorator neutrality
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "subject/livebench_language_decorator_20261005/**"
+      - "verify_livebench_language_decorator_neutrality_v1.py"
+      - ".github/workflows/verify-livebench-language-decorator-neutrality-v1.yml"
   pull_request:
     branches: [main]
     paths:
