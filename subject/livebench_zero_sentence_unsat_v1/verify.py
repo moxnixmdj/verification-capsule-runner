@@ -55,7 +55,7 @@ def main() -> int:
     from instruction_following_eval import instructions_util  # type: ignore
     import nltk
 
-    assert nltk.__version__ == "3.9.2", nltk.__version__
+    assert nltk.__version__ == "3.10.3", nltk.__version__
 
     slices_src = inspect.getsource(nltk.tokenize.punkt.PunktSentenceTokenizer._slices_from_text)
     realign_src = inspect.getsource(nltk.tokenize.punkt.PunktSentenceTokenizer._realign_boundaries)
