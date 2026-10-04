@@ -1,0 +1,103 @@
+{
+  "challenge": {
+    "all_pass": false,
+    "public_nonterminal_synthetic_tasks": 4,
+    "results": [
+      {
+        "checks": {
+          "has_aster": true,
+          "has_bronze": true,
+          "has_compass": true,
+          "has_nilo": true,
+          "has_storm": true,
+          "has_tuesday": true,
+          "not_verbatim": true,
+          "sentence_shape": true,
+          "temporal_after": true,
+          "transfer_relation": true
+        },
+        "output": "On Tuesday, once the storm had subsided, Aster dispatched the bronze compass to Nilo.",
+        "passed": true,
+        "task_id": "PARAPHRASE_FACT_PRESERVATION",
+        "word_count": 14
+      },
+      {
+        "checks": {
+          "bounded": true,
+          "calibration": true,
+          "causal": true,
+          "delay": true,
+          "generator": true,
+          "observatory": true,
+          "outage": true,
+          "technicians": true,
+          "unstable": true,
+          "working": true
+        },
+        "output": "The observatory kept working during the power outage. Technicians delayed the calibration because the backup generator was unstable.",
+        "passed": true,
+        "task_id": "SIMPLIFY_CAUSAL_PRESERVATION",
+        "word_count": 18
+      },
+      {
+        "checks": {
+          "18_gb": true,
+          "aurora": true,
+          "landing_delay": true,
+          "lunar_orbit": true,
+          "one_day": true,
+          "sensor_failure": true,
+          "word_limit": true
+        },
+        "output": "Aurora entered lunar orbit, but one sensor failed. The healthy sensor returned 18 gigabytes of data, and landing was delayed by one day to inspect the failure.",
+        "passed": true,
+        "task_id": "SUMMARIZE_KEY_FACTS",
+        "word_count": 27
+      },
+      {
+        "checks": {
+          "all_markers": true,
+          "event_order": true,
+          "locked": true,
+          "sleeping": true,
+          "story_length": true,
+          "unharmed": false
+        },
+        "output": "Mira knelt in the dirt, her fingers brushing against a small, red key half-buried in the soil. She held it up, catching the light, before turning to Ivo. \"Here,\" she said, pressing it into his palm. Ivo nodded, walking to the heavy iron door of the locked greenhouse. With a satisfying click, he turned the key and pushed the door open. Inside, curled among the ferns, lay a sleeping fox. They exchanged a glance, stepped back, and quietly closed the door behind them, leaving the creature undisturbed.",
+        "passed": false,
+        "task_id": "STORY_INSTRUCTION_GROUNDED",
+        "word_count": 87
+      }
+    ],
+    "tasks_passed": 3,
+    "terminal_cases_consumed": 0,
+    "terminal_prompts_consumed": 0
+  },
+  "hard_nonclaims": [
+    "THIS_FINITE_PUBLIC_SYNTHETIC_CHALLENGE_IS_NOT_OPUS_5_5_EQUIVALENCE",
+    "THIS_DOES_NOT_INHERIT_THE_FULL_PRECISION_QWEN3_8_27B_LIVEBENCH_SCORE",
+    "THIS_DOES_NOT_ESTABLISH_LIVEBENCH_65_7_FOR_THE_QUANTIZED_SUBJECT",
+    "THIS_DOES_NOT_BY_ITSELF_ESTABLISH_DURABLE_BRAIN_OWNERSHIP",
+    "NO_TERMINAL_ACCEPTANCE_OR_FAMILY_CREDIT"
+  ],
+  "runner": {
+    "cpu_count": 4,
+    "disk_free_kb_before_acquisition": 90182108,
+    "external_general_reasoning_calls": 0,
+    "gpu_used": false,
+    "incremental_spend_usd": 0,
+    "mem_kb": 16373452
+  },
+  "schema": "QWEN38_27B_UD_Q2_K_XL_SEMANTIC_SEED_PUBLIC_NONTERMINAL_VERIFICATION_V1",
+  "status": "FAIL",
+  "subject": {
+    "base_model": "Qwen/Qwen3.8-27B",
+    "llama_cpp_commit": "7e4c0a96880dae4fc4268ad441f8a6446bd5460a",
+    "quant_bytes": 9828981664,
+    "quant_file": "Qwen3.8-27B-UD-Q2_K_XL.gguf",
+    "quant_repository": "unsloth/Qwen3.8-27B-GGUF",
+    "quant_revision": "4ca720788d1e01f1bff70c033e0d0028fd02e502",
+    "quant_sha256": "fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0",
+    "quantization": "UD-Q2_K_XL"
+  }
+}
