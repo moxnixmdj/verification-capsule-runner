@@ -1,0 +1,33 @@
+{
+  "schema": "PROJECT_BRAIN_SUB100MB_RECURSIVE_CONTROLLER_EXPERIMENT_V1",
+  "date": "2026-10-04",
+  "status": "PUBLIC_RUNNER_EXPERIMENT_CANDIDATE__ZERO_CREDIT",
+  "hypothesis": "WITH_FIXED_LEARNED_BYTES_BELOW_100MB__DETERMINISTIC_SCHEMA_VERIFICATION_REPAIR_AND_SEARCH_CAN_RAISE_THE_PROBABILITY_OF_A_VALID_TYPED_TRANSFORMATION_OVER_DIRECT_SINGLE_SHOT",
+  "model": {
+    "artifact": "SmolLM2-135M-Instruct-Q3_K_M.gguf",
+    "url": "https://huggingface.co/tensorblock/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q3_K_M.gguf",
+    "sha256": "61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4",
+    "exact_bytes": 93511232,
+    "strict_budget_bytes_exclusive": 100000000,
+    "remaining_bytes": 6488768
+  },
+  "conditions": [
+    "DIRECT_SINGLE_SHOT",
+    "SCHEMA_CONSTRAINED_SINGLE_SHOT",
+    "DETERMINISTIC_VALIDATOR_FEEDBACK_UP_TO_4_PROPOSALS",
+    "FOUR_INDEPENDENT_CANDIDATES_PLUS_DETERMINISTIC_SELECTION"
+  ],
+  "task_scope": "SYNTHETIC_NONTERMINAL_TEXT_SURROGATES_FOR_ENGINEERING_DRAWING_PRIMITIVES_TO_PARTSPECLITE",
+  "task_count": 8,
+  "fresh_terminal_reality_authority": false,
+  "external_general_reasoning_provider": false,
+  "success_interpretation": "ONLY_EVIDENCE_THAT_NONLEARNED_SCAFFOLDING_CAN_OR_CANNOT_IMPROVE_A_FIXED_TINY_CONTROLLER_ON_THIS_NARROW_TRANSFORM",
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
