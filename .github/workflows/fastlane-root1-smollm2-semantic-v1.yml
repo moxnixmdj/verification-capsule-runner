@@ -1,0 +1,37 @@
+name: Fastlane Root1 SmolLM2 semantic V1
+on:
+  push:
+    branches:
+      - 'fastlane/root1-smollm2-semantic-v1'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          git -C /tmp/llama.cpp checkout 0504396140d1c882f5f6ee34466a42db7ae90114
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF -DLLAMA_CURL=OFF
+          cmake --build /tmp/llama.cpp/build --config Release -j2 --target llama-cli
+      - name: Fetch exact frozen sub-100MB artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --output /tmp/model.gguf 'https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/a8a1f0e5962e87caf134245b7796b15cd4563d6f/SmolLM2-135M-Instruct-IQ4_XS.gguf?download=true'
+          echo 'd766661c2e39c3da78d8eddf15287af263dce1eedc1c9c8093ed8e54eb067dbc  /tmp/model.gguf' | sha256sum -c -
+          test "$(stat -c '%s' /tmp/model.gguf)" -le 100000000
+      - name: Run unchanged frozen semantic gate
+        shell: bash
+        run: |
+          python verify_livebench_root1_smollm2_semantic_core_v1.py --llama-cli /tmp/llama.cpp/build/bin/llama-cli --model /tmp/model.gguf --result semantic-core-result.json
+      - name: Publish receipt inline
+        if: always()
+        shell: bash
+        run: |
+          test -f semantic-core-result.json
+          cat semantic-core-result.json
