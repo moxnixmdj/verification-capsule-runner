@@ -1,0 +1,27 @@
+name: Verify Root2 output-only threshold proof DAG V1
+
+on:
+  pull_request:
+    paths:
+      - 'subject/root2_output_threshold_dag_v1/**'
+      - 'verify_root2_output_threshold_dag_v1.py'
+      - '.github/workflows/verify-root2-output-threshold-dag-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run exact copied Brain subject tests
+        env:
+          PYTHONPATH: subject/root2_output_threshold_dag_v1
+        run: python -m unittest canonical.tests.test_threshold_proof_dag_v1 -v
+      - name: Run independent semantic and adversarial verifier
+        run: python verify_root2_output_threshold_dag_v1.py
