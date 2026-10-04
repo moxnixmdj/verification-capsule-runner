@@ -25,7 +25,7 @@ EXPECTED_SUBJECT_BLOBS = {
     "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py":
         "71e637c70edf1c582e28ea38b3b798965c803a06",
 }
-PRECOMMIT_COMMIT = "4c9201075e0b39a4cbcc978718205f0f3d1c4bc5"
+# Frozen before any runner outcome; touching this file also starts both carrier races.\nPRECOMMIT_COMMIT = "4c9201075e0b39a4cbcc978718205f0f3d1c4bc5"
 PARAMETRIC_REDUCTION_BLOB = "a9ab9064b447ed669d2404a7a65f6c429c51ae85"
 NUMERIC_QUOTIENT_BLOB = "72189bb8adb12ad36a52ee666a1f79fbb201b06b"
 POINTWISE_MINCUT_BLOB = "0d4e563b618f8fd7f37396a88738cefb50979ff3"
