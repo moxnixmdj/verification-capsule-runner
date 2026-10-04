@@ -168,4 +168,21 @@ def main():
       "failed":dict(sorted(instruction_failed.items()))
     },sort_keys=True))
 if __name__=="__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        import traceback
+        diag={
+          "schema":"PROJECT_BRAIN_LIVEBENCH_CLEAN_DEV_V1_DIAGNOSTIC",
+          "status":"DEVELOPMENT_HARNESS_EXCEPTION",
+          "exception_type":type(exc).__name__,
+          "exception":str(exc),
+          "traceback":traceback.format_exc(),
+          "target_dataset_rows_used":0,
+          "acceptance_credit":False,
+        }
+        Path("livebench_clean_dev_v1_receipt.json").write_text(
+          json.dumps(diag,indent=2,sort_keys=True)+"\\n"
+        )
+        print(json.dumps(diag,sort_keys=True))
+        raise
