@@ -16,8 +16,10 @@ import base64
 import hashlib
 import json
 import os
+import platform
 import secrets
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -64,7 +66,11 @@ def _json_request(method:str,url:str,token:str,payload:Mapping[str,Any]):
     try:
         with urllib.request.urlopen(req,timeout=30) as resp:
             body=resp.read()
-            return int(resp.status), json.loads(body or b"{}")
+            try:
+                parsed=json.loads(body or b"{}")
+            except Exception:
+                parsed={"_malformed_json_response":True}
+            return int(resp.status), parsed
     except urllib.error.HTTPError as exc:
         body=exc.read()
         try: parsed=json.loads(body or b"{}")
@@ -122,6 +128,15 @@ def validate_lease(lease:Mapping[str,Any],digest:str)->None:
 def validate_event_sha_binding(launch_sha:str,runtime_head:str)->None:
     if runtime_head!=launch_sha:
         raise ProductionLaunchError("RUNTIME_HEAD_EVENT_SHA_MISMATCH")
+
+
+def validate_runtime_environment(*,version_info=None,machine=None)->None:
+    version=tuple(version_info or sys.version_info[:3])
+    arch=str(machine or platform.machine()).lower()
+    if version!=(3,12,15):
+        raise ProductionLaunchError("PYTHON_RUNTIME_VERSION_MISMATCH:"+str(version))
+    if arch not in {"x86_64","amd64"}:
+        raise ProductionLaunchError("PYTHON_RUNTIME_ARCH_MISMATCH:"+arch)
 
 
 def current_git_head()->str:
@@ -225,15 +240,97 @@ def claim_then_execute(
 ):
     claim_branch=CLAIM_PREFIX+digest
     claim_ref="refs/heads/"+claim_branch
-    status,response=create_ref_fn(repo,token,claim_ref,launch_sha)
+    try:
+        status,response=create_ref_fn(repo,token,claim_ref,launch_sha)
+    except Exception as exc:
+        return claim_branch,{
+            "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+            "status":"ATOMIC_CLAIM_TRANSPORT_EXCEPTION__OUTCOME_AMBIGUOUS__NO_EXECUTION__FAIL_CLOSED",
+            "target_predicate":TARGET,
+            "authority_claim_id":claim_ref,
+            "claim_create_http_status":None,
+            "claim_response_ref":"",
+            "claim_response_object_sha":"",
+            "launch_event_sha":launch_sha,
+            "claim_transport_exception_type":type(exc).__name__,
+            "claim_transport_exception_message_sha256":hashlib.sha256(str(exc).encode()).hexdigest(),
+            "posthoc_claim_ref_reconciliation_required":True,
+            "production_cases_generated":0,
+            "persistent_learned_bytes":0,
+            "external_frontier_model_calls":0,
+            "external_learned_capability_calls":0,
+            "incremental_spend_usd":0,
+            "replay_allowed":False,
+            "replacement_allowed":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0,
+            "promotion_authority":False,
+            "separate_independent_reduction_required":True,
+            "claim_uniqueness_source":"AMBIGUOUS_TRANSPORT__DETERMINISTIC_REF_POSTHOC_RECONCILIATION",
+        }
     if status!=201:
         raise ProductionLaunchError("ATOMIC_CLAIM_CREATE_NOT_201:"+str(status))
     response_ref=str(response.get("ref") or "")
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
     if response_ref!=claim_ref or obj_sha!=launch_sha:
-        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH")
-    result=dict(execute_fn(claim_id=claim_ref))
+        result={
+            "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+            "status":"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
+            "target_predicate":TARGET,
+            "authority_claim_id":claim_ref,
+            "claim_create_http_status":201,
+            "claim_response_ref":response_ref,
+            "claim_response_object_sha":obj_sha,
+            "launch_event_sha":launch_sha,
+            "production_cases_generated":0,
+            "persistent_learned_bytes":0,
+            "external_frontier_model_calls":0,
+            "external_learned_capability_calls":0,
+            "incremental_spend_usd":0,
+            "replay_allowed":False,
+            "replacement_allowed":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0,
+            "promotion_authority":False,
+            "separate_independent_reduction_required":True,
+            "claim_uniqueness_source":"ATOMIC_CREATE_RESPONSE",
+        }
+        return claim_branch,result
+    try:
+        result=dict(execute_fn(claim_id=claim_ref))
+    except Exception as exc:
+        result={
+            "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+            "status":"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED",
+            "target_predicate":TARGET,
+            "authority_claim_id":claim_ref,
+            "claim_create_http_status":201,
+            "claim_response_ref":response_ref,
+            "claim_response_object_sha":obj_sha,
+            "launch_event_sha":launch_sha,
+            "exception_type":type(exc).__name__,
+            "exception_message_sha256":hashlib.sha256(str(exc).encode()).hexdigest(),
+            "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
+            "persistent_learned_bytes":0,
+            "external_frontier_model_calls":0,
+            "external_learned_capability_calls":0,
+            "incremental_spend_usd":0,
+            "replay_allowed":False,
+            "replacement_allowed":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0,
+            "promotion_authority":False,
+            "separate_independent_reduction_required":True,
+            "claim_uniqueness_source":"ATOMIC_CREATE_RESPONSE",
+        }
+        return claim_branch,result
     result["claim_create_http_status"]=201
     result["claim_response_ref"]=response_ref
     result["claim_response_object_sha"]=obj_sha
@@ -251,6 +348,7 @@ def main()->None:
         raise ProductionLaunchError("GITHUB_CONTEXT_INVALID")
     runtime_head=current_git_head()
     validate_event_sha_binding(launch_sha,runtime_head)
+    validate_runtime_environment()
     if not ref_name.startswith(LAUNCH_PREFIX):
         raise ProductionLaunchError("LAUNCH_REF_PREFIX_INVALID")
     suffix=ref_name[len(LAUNCH_PREFIX):]
@@ -283,9 +381,9 @@ def main()->None:
     print(json.dumps({
         "status":result["status"],
         "claim_ref":"refs/heads/"+claim_branch,
-        "claim_create_http_status":201,
-        "production_cases_generated":27,
-        "all_27_cases_pass":result["aggregate"].get("all_27_cases_pass"),
+        "claim_create_http_status":result.get("claim_create_http_status"),
+        "production_cases_generated":result.get("production_cases_generated"),
+        "all_27_cases_pass":(result.get("aggregate") or {}).get("all_27_cases_pass"),
         "result_path":result_path,
         "result_commit_sha":commit_sha,
     },sort_keys=True))

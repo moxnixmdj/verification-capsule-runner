@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
   "date": "2026-10-04",
-  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__ENTRYPOINT_TRANSITIVE_INDEPENDENT_PASS__EVENT_SHA_REPAIR_PENDING_INDEPENDENT_VERIFICATION__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__IMMUTABLE_EVENT_SHA__AMBIGUOUS_CLAIM_FAIL_CLOSED__SANITIZED_EXCEPTION_RECEIPTS__EXACT_RUNTIME_PIN__INDEPENDENT_VERIFICATION_REQUIRED__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
   "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
   "authorized_leaves": [
     "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
@@ -60,8 +60,8 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
-    ".github/workflows/unknown-domain-direct-one-use-production.yml": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "a1cf2772c53647c569d4aeeeff9b5b154931242a",
+    ".github/workflows/unknown-domain-direct-one-use-production.yml": "162637be8b5dfb8645021b6e89fe915fdd473de3",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937"
   },
   "limits": {
@@ -103,7 +103,13 @@
     "PRODUCTION_WORKTREE_MUST_CHECKOUT_IMMUTABLE_CREATE_EVENT_SHA_NOT_MUTABLE_BRANCH_REF",
     "ATOMIC_CLAIM_RESPONSE_SHA_MUST_EQUAL_CREATE_EVENT_SHA",
     "RUNTIME_GIT_HEAD_MUST_EQUAL_IMMUTABLE_CREATE_EVENT_SHA",
-    "SANITIZED_PRODUCTION_RESULT_MUST_BE_WRITE_AHEAD_LOGGED_BEFORE_GITHUB_RESULT_COMMIT"
+    "SANITIZED_PRODUCTION_RESULT_MUST_BE_WRITE_AHEAD_LOGGED_BEFORE_GITHUB_RESULT_COMMIT",
+    "AMBIGUOUS_CLAIM_CREATE_TRANSPORT_MUST_NOT_EXECUTE_AND_REQUIRES_POSTHOC_CLAIM_REF_RECONCILIATION",
+    "CLAIM_201_RESPONSE_OBJECT_SHA_MUST_EQUAL_CREATE_EVENT_SHA",
+    "FAIL_CLOSED_EXCEPTION_RECEIPTS_MUST_NOT_PERSIST_RAW_EXCEPTION_MESSAGES",
+    "PRODUCTION_PYTHON_MUST_BE_EXACT_3_12_15_X64",
+    "CHECKOUT_AND_SETUP_PYTHON_ACTIONS_MUST_BE_COMMIT_PINNED",
+    "RUNNER_IMAGE_FINGERPRINT_MUST_BE_EMITTED_BEFORE_ATOMIC_CLAIM"
   ],
   "entrypoint_repair": {
     "defect": "CREATE_TRIGGER_REACHED_RUNNER_BUT_PATH_EXECUTION_SET_SYS_PATH_TO_CANONICAL_RUNTIME_AND_FAILED_IMPORT_CANONICAL_BEFORE_ATOMIC_CLAIM",
@@ -114,7 +120,7 @@
     "beacon_generated": false,
     "production_cases_generated": 0,
     "repair": "INVOKE_FROZEN_LAUNCHER_AS_PACKAGE_MODULE_FROM_REPOSITORY_ROOT",
-    "repaired_workflow_git_blob_sha": "a4315a0ee28ae82145594b7a9abbd00bae61ceb9",
+    "repaired_workflow_git_blob_sha": "162637be8b5dfb8645021b6e89fe915fdd473de3",
     "independent_verification_required": false,
     "transitive_dependency_repair": {
       "defect": "GENERATOR_V2_IMPORTS_GENERATOR_V1_BUT_GENERATOR_V1_WAS_NOT_CONTENT_ADDRESSED_BY_THE_RUNNER_EXECUTION_LEASE",
@@ -141,19 +147,19 @@
     "event_sha_checkout_repair": {
       "defect": "PRODUCTION_WORKFLOW_CHECKED_OUT_GITHUB_REF_SO_A_QUEUED_CREATE_EVENT_COULD_OBSERVE_LATER_BRANCH_MUTATIONS",
       "repair": "CHECKOUT_GITHUB_SHA_FROM_THE_CREATE_EVENT_TO_PIN_THE_EXACT_CREATED_BRANCH_HEAD",
-      "repaired_workflow_git_blob_sha": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+      "repaired_workflow_git_blob_sha": "162637be8b5dfb8645021b6e89fe915fdd473de3",
       "production_cases_consumed_before_repair": 0,
       "independent_verification_required": true,
       "claim_response_binding_repair": {
         "defect": "ATOMIC_CLAIM_CREATE_RESPONSE_ACCEPTED_ANY_40_CHARACTER_OBJECT_SHA_WITHOUT_REQUIRING_EQUALITY_TO_THE_IMMUTABLE_CREATE_EVENT_SHA",
         "repair": "REQUIRE_CLAIM_RESPONSE_OBJECT_SHA_TO_EQUAL_GITHUB_SHA_BEFORE_BEACON_SECRET_OR_CASE_GENERATION",
-        "production_launcher_git_blob_sha": "08a5358c5d977a39bb9c84bf408388c75f29dfa4",
+        "production_launcher_git_blob_sha": "a1cf2772c53647c569d4aeeeff9b5b154931242a",
         "production_cases_consumed_before_repair": 0,
         "independent_verification_required": true
       },
       "runtime_head_binding": {
         "repair": "ASSERT_GIT_REV_PARSE_HEAD_EQUALS_GITHUB_SHA_BEFORE_ATOMIC_CLAIM",
-        "production_launcher_git_blob_sha": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
+        "production_launcher_git_blob_sha": "a1cf2772c53647c569d4aeeeff9b5b154931242a",
         "production_cases_consumed_before_repair": 0,
         "independent_verification_required": true
       },
@@ -164,8 +170,46 @@
         "raw_evaluator_secret_logged": false,
         "raw_beacon_logged": false,
         "production_cases_consumed_before_repair": 0,
-        "independent_verification_required": true
+        "independent_verification_required": true,
+        "production_launcher_git_blob_sha": "a1cf2772c53647c569d4aeeeff9b5b154931242a"
       }
+    },
+    "one_use_irreversibility_hardening": {
+      "production_launcher_git_blob_sha": "a1cf2772c53647c569d4aeeeff9b5b154931242a",
+      "production_workflow_git_blob_sha": "162637be8b5dfb8645021b6e89fe915fdd473de3",
+      "claim_transport_ambiguity": {
+        "behavior": "ZERO_EXECUTION_FAIL_CLOSED__NO_BEACON_OR_CASES__POSTHOC_DETERMINISTIC_CLAIM_REF_RECONCILIATION_REQUIRED",
+        "raw_exception_message_persisted": false,
+        "replay_allowed": false
+      },
+      "malformed_201_metadata": {
+        "behavior": "CLAIM_CONSUMED__ZERO_EXECUTION_FAIL_CLOSED",
+        "replay_allowed": false
+      },
+      "post_claim_execution_exception": {
+        "behavior": "SEALED_FAIL_CLOSED_RESULT__WRITE_AHEAD_BEFORE_REMOTE_RESULT_COMMIT",
+        "raw_exception_message_persisted": false,
+        "persisted_exception_fields": [
+          "exception_type",
+          "exception_message_sha256"
+        ],
+        "replay_allowed": false
+      },
+      "uncatchable_process_loss": {
+        "durable_tombstone": "DETERMINISTIC_CLAIM_REF",
+        "reconciliation_rule": "CLAIM_REF_PRESENT_MEANS_ONE_USE_ATTEMPT_CONSUMED__NO_REPLAY__NO_ACCEPTANCE_WITHOUT_SEALED_RESULT",
+        "acceptance_credit_without_result": false
+      },
+      "production_cases_consumed_before_hardening": 0
     }
+  },
+  "runtime_environment": {
+    "runner_label": "ubuntu-24.04",
+    "python_version": "3.12.15",
+    "python_architecture": "x64",
+    "checkout_action_commit": "11d5960a326750d5838078e36cf38b85af677262",
+    "setup_python_action_commit": "a26af69be951a213d495a4c3e4e4022e16d87065",
+    "runner_image_fingerprint_emitted_before_claim": true,
+    "hosted_runner_image_policy": "RECORDED_BEFORE_CLAIM__NOT_CLAIMED_CONTENT_ADDRESSED"
   }
 }
