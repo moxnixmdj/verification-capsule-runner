@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import json, os, re, sys, urllib.request
+import json, os, urllib.request, urllib.error
 
 REPO="moxnixmdj/verification-capsule-runner"
 RUN_ID=37191977679
@@ -9,15 +9,38 @@ TRIGGER_SHA="556c4deeeb3f659f8ad48a214da6c207de72a134"
 EXPECTED_RECEIPTS_SHA256="3e1ba75095ebcd84847c663b87866e4535ba9efe9f9d9974ca65a75b7c8a8366"
 EMPTY_SHA="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
-def api(url: str) -> bytes:
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+def headers():
     token=os.environ.get("GITHUB_TOKEN","")
-    req=urllib.request.Request(url,headers={
+    return {
         "Accept":"application/vnd.github+json",
         "X-GitHub-Api-Version":"2022-11-28",
         **({"Authorization":"Bearer "+token} if token else {})
-    })
+    }
+
+def api(url: str) -> bytes:
+    req=urllib.request.Request(url,headers=headers())
     with urllib.request.urlopen(req,timeout=60) as r:
         return r.read()
+
+def job_log(url: str) -> bytes:
+    opener=urllib.request.build_opener(NoRedirect)
+    req=urllib.request.Request(url,headers=headers())
+    try:
+        with opener.open(req,timeout=60) as r:
+            return r.read()
+    except urllib.error.HTTPError as e:
+        if e.code not in (301,302,303,307,308):
+            raise
+        location=e.headers.get("Location")
+        assert location and location.startswith("https://"), location
+        # Signed storage URL is already authenticated; never forward GitHub credentials cross-host.
+        clean=urllib.request.Request(location,headers={"User-Agent":"project-brain-independent-verifier"})
+        with urllib.request.urlopen(clean,timeout=60) as r:
+            return r.read()
 
 def main() -> int:
     run=json.loads(api(f"https://api.github.com/repos/{REPO}/actions/runs/{RUN_ID}"))
@@ -31,10 +54,8 @@ def main() -> int:
     assert len(job)==1
     assert job[0]["conclusion"]=="success"
 
-    log=api(f"https://api.github.com/repos/{REPO}/actions/jobs/{JOB_ID}/logs").decode("utf-8","replace")
-    pre=[]
-    recs=[]
-    terms=[]
+    log=job_log(f"https://api.github.com/repos/{REPO}/actions/jobs/{JOB_ID}/logs").decode("utf-8","replace")
+    pre=[]; recs=[]; terms=[]
     for line in log.splitlines():
         if "LIVEBENCH_V6_PRELAUNCH=" in line:
             pre.append(json.loads(line.split("LIVEBENCH_V6_PRELAUNCH=",1)[1]))
@@ -88,20 +109,12 @@ def main() -> int:
     out={
       "schema":"PROJECT_BRAIN_LIVEBENCH_REPLAY72_V6_PUBLIC_RESULT_VERIFICATION_20261004_V1",
       "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__EXACT_PUBLIC_RUN_AND_LOG_RECOMPUTATION__43_POLICY_BLOCK__29_UNLOCALIZED_EXIT__ZERO_VALID_RESPONSES__ZERO_CREDIT",
-      "run_id":RUN_ID,
-      "job_id":JOB_ID,
-      "trigger_sha":TRIGGER_SHA,
-      "terminal_cases_replayed":72,
-      "new_cases_exposed":0,
-      "valid_candidate_responses":0,
+      "run_id":RUN_ID,"job_id":JOB_ID,"trigger_sha":TRIGGER_SHA,
+      "terminal_cases_replayed":72,"new_cases_exposed":0,"valid_candidate_responses":0,
       "policy_blocked_post_prompt_capability_acquisition":43,
-      "inference_exit_1":29,
-      "unique_exit_hashes":29,
-      "score_mass":0.0,
-      "raw_executor_fail_forced":True,
-      "receipts_sha256":EXPECTED_RECEIPTS_SHA256,
-      "capability_fail_adjudicated":False,
-      "root1_reopen_adjudicated":False,
+      "inference_exit_1":29,"unique_exit_hashes":29,"score_mass":0.0,
+      "raw_executor_fail_forced":True,"receipts_sha256":EXPECTED_RECEIPTS_SHA256,
+      "capability_fail_adjudicated":False,"root1_reopen_adjudicated":False,
       "acceptance_credit_delta":0
     }
     print(json.dumps(out,sort_keys=True))
