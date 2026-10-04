@@ -1,0 +1,106 @@
+name: Verify Unknown-Domain event-SHA fastlane
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-event-sha-v2-macos-20261005'
+    paths:
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json'
+      - 'canonical/runtime/unknown_domain_direct_production_once_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_production_once_v1.py'
+      - '.github/workflows/unknown-domain-direct-one-use-production.yml'
+      - 'verify_unknown_domain_execution_lease.py'
+      - '.github/workflows/verify-unknown-domain-event-sha-fastlane.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Verify exact repaired subject and immutable transport
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          expected={
+            'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json':'f72c6711d7a13f6f07630bb696e89bedc9c6bf1c',
+            'canonical/runtime/unknown_domain_direct_production_once_v1.py':'08a5358c5d977a39bb9c84bf408388c75f29dfa4',
+            'canonical/tests/test_unknown_domain_direct_production_once_v1.py':'7db079a9d974e329863e59be406af4b571e9cc35',
+            '.github/workflows/unknown-domain-direct-one-use-production.yml':'990b4fe712ca509f3e01c8e632c75416a3cd0b98',
+            'verify_unknown_domain_execution_lease.py':'8b1a3253afacb369b063c37a7e122a49bbd1e623',
+          }
+          def blob(p):
+            b=Path(p).read_bytes()
+            return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          observed={p:blob(p) for p in expected}
+          assert observed==expected,(observed,expected)
+          workflow=Path('.github/workflows/unknown-domain-direct-one-use-production.yml').read_text()
+          assert 'ref: ${{ github.sha }}' in workflow
+          assert 'ref: ${{ github.ref }}' not in workflow
+          launcher=Path('canonical/runtime/unknown_domain_direct_production_once_v1.py').read_text()
+          assert 'obj_sha!=launch_sha' in launcher
+          assert 'ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH' in launcher
+          lease=json.loads(Path('canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json').read_text())
+          assert lease['exact_components']['.github/workflows/unknown-domain-direct-one-use-production.yml']==expected['.github/workflows/unknown-domain-direct-one-use-production.yml']
+          assert lease['exact_components']['canonical/runtime/unknown_domain_direct_production_once_v1.py']==expected['canonical/runtime/unknown_domain_direct_production_once_v1.py']
+          print('exact repaired subject PASS')
+          PY
+      - name: Verify complete lease dependency closure
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Run frozen production launcher tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify package import
+        run: python -c "import canonical.runtime.unknown_domain_direct_production_once_v1; print('package import PASS')"
+      - name: Commit independent fastlane receipt
+        env:
+          SUBJECT_SHA: b2aa5640b9a816f90c39e9f64df2703c70c1b6d0
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,platform,sys
+          from pathlib import Path
+          paths=[
+            'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json',
+            'canonical/runtime/unknown_domain_direct_production_once_v1.py',
+            'canonical/tests/test_unknown_domain_direct_production_once_v1.py',
+            '.github/workflows/unknown-domain-direct-one-use-production.yml',
+            'verify_unknown_domain_execution_lease.py',
+          ]
+          def blob(p):
+            b=Path(p).read_bytes()
+            return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+          receipt={
+            'schema':'PROJECT_BRAIN_UNKNOWN_DOMAIN_EVENT_SHA_FASTLANE_VERIFICATION_V1',
+            'status':'INDEPENDENT_EVENT_SHA_AND_CLAIM_BINDING_PASS',
+            'subject_pull_request':2075,
+            'subject_head_sha':os.environ['SUBJECT_SHA'],
+            'verification_commit_sha':os.environ['GITHUB_SHA'],
+            'runner_os':platform.platform(),
+            'python_version':sys.version,
+            'exact_subject_blobs':{p:blob(p) for p in paths},
+            'verified':[
+              'IMMUTABLE_CREATE_EVENT_SHA_CHECKOUT',
+              'MUTABLE_GITHUB_REF_CHECKOUT_ABSENT',
+              'ATOMIC_CLAIM_RESPONSE_SHA_EQUALS_LAUNCH_EVENT_SHA',
+              'FULL_LOCAL_RUNTIME_DEPENDENCY_CLOSURE_VERIFIER_PASS',
+              'PRODUCTION_LAUNCHER_UNIT_TESTS_PASS',
+              'PACKAGE_MODULE_IMPORT_PASS'
+            ],
+            'production_cases_consumed':0,
+            'acceptance_credit_delta':0,
+            'production_authority':False
+          }
+          out=Path('canonical/verification/UNKNOWN_DOMAIN_EVENT_SHA_FASTLANE_VERIFICATION_20261005_V1.json')
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          PY
+          git config user.name 'brain-verifier'
+          git config user.email 'brain-verifier@users.noreply.github.com'
+          git add canonical/verification/UNKNOWN_DOMAIN_EVENT_SHA_FASTLANE_VERIFICATION_20261005_V1.json
+          git commit -m 'Seal independent Unknown-Domain event-SHA fastlane pass'
+          git push origin HEAD:refs/heads/verify/unknown-domain-event-sha-v2-macos-20261005
