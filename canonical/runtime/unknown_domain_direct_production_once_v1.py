@@ -338,7 +338,7 @@ def claim_then_execute(
     response_ref=str(response.get("ref") or "") if isinstance(response,Mapping) else ""
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
-    if response_ref!=claim_ref or len(obj_sha)!=40:
+    if response_ref!=claim_ref or obj_sha!=launch_sha:
         result={
             "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
             "status":"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
