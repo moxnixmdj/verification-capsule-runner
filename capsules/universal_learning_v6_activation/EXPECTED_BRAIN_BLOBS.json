@@ -1,0 +1,17 @@
+{
+  "schema": "BRAIN_UNIVERSAL_LEARNING_V6_ACTIVATION_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "activate/universal-learning-v6-20261004-r3",
+  "exact_brain_blobs": {
+    "canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6_ACTIVATION_V1.json": "7b50c418265deb93b54e6934093cb184901c17b0",
+    "canonical/governance/UNKNOWN_DOMAIN_V6_STRUCTURAL_RESIDUAL_REDUCTION_V1.json": "fc82f7040f6d3c184f74cc55360f3f04aca833af",
+    "canonical/governance/ROOT3_RESIDUAL_COMPRESSION_V1.json": "dc559795cae54c2c496e7a56758c3529a986333f",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V8.json": "62f3f4cdbf802e0b212be868d6dbce4e1ac2fca6",
+    "canonical/governance/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json": "f1a3f5e1b545a89d5e37feff74c31d48500f338d",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "c5fd68f9bf41f3423f4dc62b020bf9118e79acb8",
+    "canonical/governance/UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1.json": "fd586455d582c38c7062ffe735f86cb9f2e803ab",
+    "canonical/governance/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6.json": "65e291e3afebbf3547771ee580104361d1920788",
+    "canonical/verification/UNIVERSAL_LEARNING_MECHANISM_DISCOVERY_V6_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "ff590a8f40b891d3c53bb2c50cd679bb0dd42c72",
+    "canonical/governance/UNIVERSAL_LEARNING_RECURSIVE_ABSTRACTION_V5_ACTIVATION_V1.json": "ee5d7e2a989df687e19f6be95c7d25600d1a32ec"
+  }
+}
