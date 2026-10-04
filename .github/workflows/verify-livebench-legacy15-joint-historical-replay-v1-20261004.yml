@@ -1,17 +1,24 @@
-name: Verify LiveBench legacy15 joint historical replay V1
+name: Verify LiveBench legacy15 universal exact V2
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
   pull_request:
     paths:
-      - 'verify_livebench_legacy15_joint_historical_replay_v1_20261004.py'
+      - 'verify_livebench_legacy15_universal_exact_v2_20261004.py'
       - 'subject/livebench_legacy15_joint_historical_replay_v1_20261004/**'
       - '.github/workflows/verify-livebench-legacy15-joint-historical-replay-v1-20261004.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,7 +26,7 @@ jobs:
           python-version: '3.12'
       - name: Install exact scorer dependencies
         run: |
-          python -m pip install --disable-pip-version-check --no-cache-dir pyarrow==17.0.0 langdetect==1.0.9 nltk==3.9.1 immutabledict==4.2.1
+          python -m pip install --disable-pip-version-check --no-cache-dir langdetect==1.0.9 nltk==3.9.2 immutabledict==4.2.1
           python - <<'PY'
           import nltk
           for name in ["punkt","punkt_tab"]:
@@ -29,14 +36,5 @@ jobs:
         run: |
           git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
           git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
-      - name: Download exact clean historical predecessor population
-        run: |
-          set -euo pipefail
-          curl -fL --retry 5 --retry-delay 2 --retry-all-errors \
-            'https://huggingface.co/datasets/livebench/instruction_following/resolve/4f7ab12f0d47848da31de92bd7cc3d7d4acfe695/data/test-00000-of-00001.parquet' \
-            -o livebench_instruction_following_predecessor.parquet
-          printf '%s  %s\n' \
-            '57cbc3a738f7a95b234125965929247e7781ce6c5216bdea1d18548f4b10e98c' \
-            livebench_instruction_following_predecessor.parquet | sha256sum -c -
-      - name: Falsify joint witness candidates against exact frozen checkers
-        run: python verify_livebench_legacy15_joint_historical_replay_v1_20261004.py
+      - name: Run 7424-case zero-terminal universal exact audit
+        run: python verify_livebench_legacy15_universal_exact_v2_20261004.py
