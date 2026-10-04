@@ -1,0 +1,17 @@
+name: verify-root1-meaning-sensitive-ownership-gate-v1
+on:
+  push:
+    branches:
+      - verify/root1-meaning-sensitive-ownership-gate-v1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_root1_meaning_sensitive_ownership_gate_v1.py
