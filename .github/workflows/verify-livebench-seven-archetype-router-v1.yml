@@ -50,6 +50,42 @@ jobs:
               assert got==expected,(p,got,expected)
           print("subject blobs verified")
           PY
+      - name: Reduce nth-paragraph failure to one exact synthetic case
+        working-directory: subject/livebench_legacy15_exact_router_v1
+        run: |
+          python - <<'PY'
+          import json, re, sys
+          from pathlib import Path
+          from canonical.runtime import livebench_legacy15_end2end_exact_synthetic_audit_v2 as audit
+          from canonical.runtime import livebench_legacy15_joint_witness_v1 as witness
+          sys.path.insert(0, "/tmp/livebench/livebench/if_runner")
+          from instruction_following_eval import instructions_registry as registry
+          ids=("length_constraints:nth_paragraph_first_word",)
+          profile=audit.PROFILES[0]
+          prompt,records=audit.render_prompt(ids,profile,registry,False)
+          out=witness.solve(prompt)
+          compiled=witness.compiler.compile_visible_constraints(prompt)
+          response=str(out.get("response") or "")
+          inst=registry.INSTRUCTION_DICT[ids[0]](ids[0])
+          inst.build_description(**records[0]["kwargs"])
+          paragraphs=re.split(r"\n\n",response)
+          nonempty=[p for p in paragraphs if p.strip()]
+          checker=bool(inst.check_following(response))
+          print(json.dumps({
+            "profile":profile["name"],
+            "oracle":records,
+            "compiled":compiled,
+            "runtime_status":out.get("status"),
+            "runtime_route":out.get("route"),
+            "response_repr":repr(response),
+            "raw_paragraphs":paragraphs,
+            "nonempty_count":len(nonempty),
+            "oracle_check":checker,
+            "expected_num":getattr(inst,"_num_paragraphs",None),
+            "expected_nth":getattr(inst,"_nth_paragraph",None),
+            "expected_first":getattr(inst,"_first_word",None),
+          },ensure_ascii=False,sort_keys=True))
+          PY
       - name: Run exact 7424-case constructive audit
         working-directory: subject/livebench_legacy15_exact_router_v1
         run: |
