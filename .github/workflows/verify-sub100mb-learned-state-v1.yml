@@ -1,0 +1,19 @@
+name: Verify sub100MB learned state v1
+
+on:
+  pull_request:
+    paths:
+      - 'verify_sub100mb_learned_state_v1.py'
+      - 'subject/sub100mb_learned_state_v1/**'
+      - '.github/workflows/verify-sub100mb-learned-state-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_sub100mb_learned_state_v1.py
