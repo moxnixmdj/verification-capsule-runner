@@ -42,18 +42,19 @@ assert v6["accounting"]==v5["accounting"]=={
  "incremental_spend_usd":0,"new_reality_units_consumed":0,"terminal_cases_consumed":0,
  "acceptance_credit_delta":0,"family_credit_delta":0,"capability_credit_delta":0,"ownership_credit_delta":0
 }
-for obj in (v6,fia,fiv,fam,fav):
+for obj in (v6,fiv,fam,fav):
     assert obj["execution_authority"] is False
     assert obj["promotion_authority"] is False
     assert obj["fresh_reality_authority"] is False
+assert fia["authority"]["execution_authority"] is False
+assert fia["authority"]["promotion_authority"] is False
+assert fia["authority"]["fresh_reality_authority"] is False
 
-# V5 deltas must be preserved exactly in V6.
 v5d={(x["target"],x["deletion"]):x for x in v5["projection_deltas"]}
 v6d={(x["target"],x["deletion"]):x for x in v6["projection_deltas"]}
 for k,x in v5d.items():
     assert k in v6d and v6d[k]==x, k
 
-# Exactly two new finance deltas are admitted.
 extra=[x for x in v6["projection_deltas"] if (x["target"],x["deletion"]) not in v5d]
 assert len(extra)==2, extra
 keys={(x["target"],x["deletion"]) for x in extra}
@@ -62,7 +63,6 @@ assert keys=={
  ("FINANCE_AGENT_V2_GE_58_59","OFFICIAL_HELDOUT_SUITE_SIZE_UNKNOWN"),
 }
 
-# Finance index theorem semantics.
 s=fia["scheduling_effect"]
 assert s["new_primary_route"]=="MINIMIZE_VERIFIED_WEIGHTED_BRAIN_COMPONENT_LOWER_BOUND_DEFICIT_TO_61"
 assert s["exact_rule"]=="SUM_i(w_i*VERIFIED_BRAIN_LOWER_BOUND_i)>=61"
@@ -75,7 +75,6 @@ assert fiv["verified"]["accepted_families"]==5
 assert fiv["verified"]["proved_atomic"]==12
 assert fiv["verified"]["unresolved_atomic"]==26
 
-# Finance Agent execution mass semantics.
 assert fam["derived"]["heldout_questions_per_run"]==450
 assert fam["derived"]["runs_per_model"]==3
 assert fam["derived"]["scored_task_executions"]==1350
@@ -91,7 +90,6 @@ assert fav["verified"]["runs_per_model"]==3
 assert fav["verified"]["scored_task_executions"]==1350
 assert fav["verified"]["official_heldout_suite_size_unknown_deleted"] is True
 
-# V6 must still prohibit score execution until the remaining zero-cost gates bind.
 assert "FINANCE_AGENT_V2_1350_EXECUTION_TAVILY_SEC_API_TIINGO_FREE_USAGE_FEASIBILITY" in v6["waiting_external_facts"]
 assert "VALS_PLATFORM_FINANCE_AGENT_V2_APPROVAL_AND_EXACT_SUITE_ID" in v6["waiting_external_facts"]
 assert "NO_FINANCE_AGENT_V2_SCORE_EXECUTION_BEFORE_EXACT_SUITE_AND_ZERO_COST_TOOL_DEPENDENCIES_ARE_BOUND" in v6["hard_rules"]
