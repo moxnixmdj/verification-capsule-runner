@@ -101,16 +101,60 @@
         "activation_git_blob_sha": "4cbc1b9f478654b2dc671a8b54f91b5c4b91c019",
         "verification_path": "canonical/verification/ROOT2_CLOSURE_CONTROLLER_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
         "verification_git_blob_sha": "430b5918cb455304bf9227f4ada8dd686f615f78",
-        "current_frontier_path": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V8.json",
-        "current_frontier_git_blob_sha": "2eaeb74fe306ee2507145e26eb731f69f46e6153",
-        "status": "CANDIDATE__ROOT2_FRONTIER_V8_INDEPENDENT_SUBJECT_PASS__POINTER_PROJECTION_REVERIFY_PENDING__ZERO_CREDIT",
+        "current_frontier_path": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V10.json",
+        "current_frontier_git_blob_sha": "2012926814d0d06405da56da64e589b06fef1756",
+        "status": "ACTIVE__ROOT2_FRONTIER_V10_COMPOSITION_PASS__POINTER_PROJECTION_PASS__V10_ACQUISITION_ROUTING_PASS__ZERO_CREDIT",
         "current_partition": "16_ROOT2_ONLY__3_ROOT2_AND_ROOT3__19_TOUCHING_ROOT2",
         "fresh_reality_authority": false,
-        "current_frontier_verification_path": "canonical/verification/ROOT2_V8_FINANCE_DUAL_ROUTE_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
-        "current_frontier_verification_git_blob_sha": "7e2d71144853c41fadab55f4074d484edf46e651",
-        "effective_scheduling_authority": false,
-        "current_frontier_activation_path": "canonical/governance/ROOT2_FRONTIER_V8_ACTIVATION_V1.json",
-        "current_frontier_activation_git_blob_sha": "0ab521eae842f65bcf17b62ec15f40bdc00ccfcb"
+        "current_frontier_verification_path": "canonical/verification/ROOT2_V10_COMPOSITION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+        "current_frontier_verification_git_blob_sha": "226832c5e9d5f4121f26d93bd645ed51dce474fe",
+        "effective_scheduling_authority": true,
+        "current_frontier_activation_path": "canonical/governance/ROOT2_FRONTIER_V10_FINAL_ACTIVATION_V1.json",
+        "current_frontier_activation_git_blob_sha": "f5eda02fcc104bc8a5e13a82bfc8ec3d9515dcb2",
+        "external_fact_acquisition_overlay": {
+          "activation_path": "canonical/governance/ROOT2_EXTERNAL_FACT_ACQUISITION_OVERLAY_V2_ACTIVATION_V1.json",
+          "activation_git_blob_sha": "400cf1fa6516d384b8781201841c3359851b070b",
+          "verification_path": "canonical/verification/ROOT2_V10_ACTIVATION_ROUTING_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+          "verification_git_blob_sha": "5e5bf1082a8d7ce5b1fcd2c7b16a4d9d8acdc76d",
+          "status": "ACTIVE__INDEPENDENT_PUBLIC_RUNNER_PASS__V10_18_FACT_ROUTING__ANTI_WISHFUL_OUTREACH__SCHEDULING_ONLY__ZERO_CREDIT",
+          "self_service_fact_count": 9,
+          "owner_exclusive_fact_count": 6,
+          "owner_or_direct_platform_receipt_count": 1,
+          "dormant_fact_count": 2,
+          "low_value_support_waits": 0,
+          "fresh_reality_authority": false
+        },
+        "primary_source_search_deletions": {
+          "activation_path": "canonical/governance/ROOT2_EXTERNAL_PRIMARY_SOURCE_REFRESH_ACTIVATION_V1.json",
+          "activation_git_blob_sha": "8a5eca1f9426ac015ad38c4c61bcbf8dc7eac5cb",
+          "activation_verification_path": "canonical/verification/ROOT2_EXTERNAL_PRIMARY_SOURCE_REFRESH_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+          "activation_verification_git_blob_sha": "0105aba61eb58ea2ac069f563999031cabf469fc",
+          "source_refresh_path": "canonical/governance/ROOT2_EXTERNAL_PRIMARY_SOURCE_REFRESH_20261004_V1.json",
+          "source_refresh_git_blob_sha": "85f2a5de5885d158e08db6cceebf0e30cf5d5bb0",
+          "source_verification_path": "canonical/verification/ROOT2_EXTERNAL_PRIMARY_SOURCE_REFRESH_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+          "source_verification_git_blob_sha": "a0f46fe3b577c91686b1b8cc5b2436b35556a708",
+          "status": "ACTIVE__INDEPENDENT_PUBLIC_RUNNER_PASS__SCHEDULING_DELETIONS_ONLY__ZERO_CREDIT",
+          "scheduler_deletion_count": 6,
+          "deleted": [
+            "HLE_EXISTENCE_AND_GENERIC_GATING_SEARCH",
+            "CHARTOGRAPHY_GENERIC_FREE_TIER_AND_JUDGE_IDENTITY_SEARCH",
+            "OSWORLD_V21_RELEASE_IDENTITY_108_TASK_AND_SELF_HOST_REQUIREMENT_SEARCH",
+            "BUILDKITE_LARGE_AS_DURABLE_FREE_PLAN_CARRIER",
+            "AUTOMATIONBENCH_PUBLIC600_PRIVATE_EQUIVALENCE_REPEAT_SEARCH",
+            "CURSORBENCH_COMPARATOR_DRIFT_SEARCH_WHILE_CURRENT_OWNER_PAGE_REMAINS_57_8"
+          ],
+          "fresh_reality_authority": false
+        },
+        "finance_index_public_transform_saturation": {
+          "subject_path": "canonical/governance/FINANCE_INDEX_PUBLIC_TRANSFORM_ROUTE_SATURATION_20261004_V1.json",
+          "subject_git_blob_sha": "2a831b8632b18fe9e10ed423f131b6ae93d99b77",
+          "verification_path": "canonical/verification/FINANCE_INDEX_PUBLIC_TRANSFORM_ROUTE_SATURATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+          "verification_git_blob_sha": "8aea6757479980c9f2e2538a4f2651ad23653c10",
+          "activation_path": "canonical/governance/FINANCE_INDEX_PUBLIC_TRANSFORM_ROUTE_SATURATION_ACTIVATION_V1.json",
+          "activation_git_blob_sha": "d286b55e361194a77acd21def918d12e07227964",
+          "status": "CANDIDATE__INDEPENDENT_SUBJECT_PASS__POINTER_PROJECTION_REVERIFY_PENDING__ZERO_CREDIT",
+          "effective_scheduling_authority": false
+        }
       }
     },
     "root_3_scope_completeness": {
@@ -140,8 +184,14 @@
     "no_credit_from_classification_itself": true,
     "root1_currently_active": false,
     "root2_active_controller": "ROOT2_CLOSURE_CONTROLLER_V2",
-    "root2_current_frontier": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V8.json",
-    "root2_effective_scheduling_authority": false
+    "root2_current_frontier": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V10.json",
+    "root2_effective_scheduling_authority": true,
+    "root2_external_fact_acquisition_overlay": "canonical/governance/ROOT2_EXTERNAL_FACT_ACQUISITION_OVERLAY_V2_ACTIVATION_V1.json",
+    "low_value_free_tier_trial_quota_support_outreach_forbidden": true,
+    "self_service_facts_are_owner_waits": false,
+    "root2_primary_source_search_deletions": "canonical/governance/ROOT2_EXTERNAL_PRIMARY_SOURCE_REFRESH_ACTIVATION_V1.json",
+    "repeat_search_for_deleted_primary_source_classes_forbidden": true,
+    "finance_index_public_transform_saturation_effective": false
   },
   "accounting": {
     "acceptance_credit_delta": 0,
