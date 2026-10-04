@@ -1,0 +1,38 @@
+{
+  "acceptance_credit": false,
+  "brain_candidate_head": "f116ee3366f9e550165287fcb4255602a5613cb9",
+  "brain_pr": 1900,
+  "candidate_status": "PASS__GENERATOR_SUPPORT_UNIVERSAL_THRESHOLD_ROUTE_FALSIFIED",
+  "counterexample_word": "rock",
+  "maximum_counterexample_score": "1/4",
+  "public_source_bindings": {
+    "historical_generator_blob": "6ff390d6885cf90f88d9d36959735cb327613edc",
+    "historical_generator_commit": "686be1e78a0ba8036d7e355bc406e1a265da5292",
+    "instructions_blob": "4997bab885a676d92545fd91a9a20b48d234a2b2",
+    "instructions_util_blob": "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b",
+    "livebench_commit": "8f8e5c381a16e3f24257776edd53471fe86f8091",
+    "registry_blob": "903ed738398648c7cfac61d5ffa478c22f1f0891",
+    "score_process_blob": "8ce01747887ec0792c8f024e1972e34ece781676"
+  },
+  "public_source_facts": {
+    "alpha_in_word_list": false,
+    "both_lexical_slots_use_generate_keywords": true,
+    "frozen_score_formula_present": true,
+    "historical_generator_contains_both_ids": true,
+    "historical_generator_samples_without_replacement": true,
+    "rock_in_word_list": true,
+    "word_list_count": 1525
+  },
+  "schema": "PROJECT_BRAIN_LIVEBENCH_THRESHOLD_ROUTE_1900_FASTLANE_VERIFICATION_V1",
+  "status": "PASS__INDEPENDENT_FASTLANE_SOURCE_AND_RUNTIME_VERIFICATION",
+  "subject_blob_shas": {
+    "livebench_generator_support_threshold_route_falsifier_v2.py": "33be56766f6d81bc17441c0d6bdfc4af6af6358e",
+    "livebench_if_score_bound_v1.py": "f8e4f2bb0d537bfd4646c4037cf74238f7b0d4df",
+    "livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
+    "livebench_legacy15_slot_feasibility_v1.py": "9502f2237af47b422376f2babcd3b7ca3e47eda1",
+    "test_livebench_generator_support_threshold_route_falsifier_v2.py": "69ee7350e55b361fe75082c5a0c3fd70db972506"
+  },
+  "target_predicate_floor": "657/1000",
+  "terminal_row_metadata_read": 0,
+  "terminal_rows_read": 0
+}
