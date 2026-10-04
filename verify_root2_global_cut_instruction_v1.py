@@ -13,7 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SUB = ROOT / "subject" / "root2_global_cut_instruction_v1"
 EXPECTED = {
     "root2_global_information_cut_v1.py": "2c2d8ff476f076fc38caf81d3b53f7a2054b83ef",
-    "instruction_constraint_compiler_v1.py": "8bdf2c4221f15b5e5cef4b0862e628d896e68d8f",
+    "instruction_constraint_compiler_v1.py": "1d83dffb7024666cc2202f88a0dca6819165f35a",
     "test_root2_global_information_cut_v1.py": "69721a937d4de682bee407ab62ab3a79f5a72648",
     "test_instruction_constraint_compiler_v1.py": "199bbd8071f338f6390932ea42de184f05199c39",
 }
