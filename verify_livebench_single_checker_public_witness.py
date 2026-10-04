@@ -34,6 +34,7 @@ SUBJECT_ROOT = Path(__file__).resolve().parent / "subjects" / "livebench_single_
 SUBJECT_SOLVER_BLOB = "b74d986fae033ac94827c5f1eb2db655a99ae4cc"
 SUBJECT_HELPER_BLOB = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"
 RECEIPT = Path("livebench_single_checker_public_witness_receipt.json")
+VERIFICATION_TRIGGER = "POST_BOOTSTRAP_RUN_20261004_A"
 
 
 def fetch(url: str) -> bytes:
