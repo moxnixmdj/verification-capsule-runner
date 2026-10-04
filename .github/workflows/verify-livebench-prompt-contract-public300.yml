@@ -1,5 +1,7 @@
 name: Verify LiveBench Prompt Contract Public300
 on:
+  push:
+    branches: [verify-livebench-prompt-contract-v1-20261004]
   pull_request:
     branches: [main]
     paths:
