@@ -1,0 +1,22 @@
+name: Verify adaptive V2 final pointer
+
+on:
+  pull_request:
+    paths:
+      - 'subject/adaptive_v2_final_pointer_20261004_sol/**'
+      - 'verify_adaptive_v2_final_pointer.py'
+      - '.github/workflows/verify-adaptive-v2-final-pointer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_adaptive_v2_final_pointer.py
