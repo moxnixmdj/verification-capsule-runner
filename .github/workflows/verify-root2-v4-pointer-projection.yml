@@ -1,0 +1,20 @@
+name: Verify Root2 V4 pointer projection
+on:
+  pull_request:
+    paths:
+      - "subject/CURRENT_TERMINAL_AUTHORITY_V1.json"
+      - "subject/ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1.json"
+      - "subject/TERMINAL_ROOT_CAUSE_STATE_V1.json"
+      - "verify_root2_v4_pointer_projection.py"
+      - ".github/workflows/verify-root2-v4-pointer-projection.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_v4_pointer_projection.py
