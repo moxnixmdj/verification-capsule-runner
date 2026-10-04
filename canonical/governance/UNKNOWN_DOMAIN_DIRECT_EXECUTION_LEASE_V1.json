@@ -60,7 +60,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "08a5358c5d977a39bb9c84bf408388c75f29dfa4",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937"
   },
@@ -101,7 +101,9 @@
     "ZERO_INCREMENTAL_SPEND",
     "TRANSITIVE_GENERATOR_V1_DEPENDENCY_MUST_BE_CONTENT_ADDRESSED",
     "PRODUCTION_WORKTREE_MUST_CHECKOUT_IMMUTABLE_CREATE_EVENT_SHA_NOT_MUTABLE_BRANCH_REF",
-    "ATOMIC_CLAIM_RESPONSE_SHA_MUST_EQUAL_CREATE_EVENT_SHA"
+    "ATOMIC_CLAIM_RESPONSE_SHA_MUST_EQUAL_CREATE_EVENT_SHA",
+    "RUNTIME_GIT_HEAD_MUST_EQUAL_IMMUTABLE_CREATE_EVENT_SHA",
+    "SANITIZED_PRODUCTION_RESULT_MUST_BE_WRITE_AHEAD_LOGGED_BEFORE_GITHUB_RESULT_COMMIT"
   ],
   "entrypoint_repair": {
     "defect": "CREATE_TRIGGER_REACHED_RUNNER_BUT_PATH_EXECUTION_SET_SYS_PATH_TO_CANONICAL_RUNTIME_AND_FAILED_IMPORT_CANONICAL_BEFORE_ATOMIC_CLAIM",
@@ -146,6 +148,21 @@
         "defect": "ATOMIC_CLAIM_CREATE_RESPONSE_ACCEPTED_ANY_40_CHARACTER_OBJECT_SHA_WITHOUT_REQUIRING_EQUALITY_TO_THE_IMMUTABLE_CREATE_EVENT_SHA",
         "repair": "REQUIRE_CLAIM_RESPONSE_OBJECT_SHA_TO_EQUAL_GITHUB_SHA_BEFORE_BEACON_SECRET_OR_CASE_GENERATION",
         "production_launcher_git_blob_sha": "08a5358c5d977a39bb9c84bf408388c75f29dfa4",
+        "production_cases_consumed_before_repair": 0,
+        "independent_verification_required": true
+      },
+      "runtime_head_binding": {
+        "repair": "ASSERT_GIT_REV_PARSE_HEAD_EQUALS_GITHUB_SHA_BEFORE_ATOMIC_CLAIM",
+        "production_launcher_git_blob_sha": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
+        "production_cases_consumed_before_repair": 0,
+        "independent_verification_required": true
+      },
+      "result_recoverability": {
+        "defect": "A_POST_EVALUATION_RESULT_COMMIT_FAILURE_COULD_SPEND_THE_ONE_USE_CLAIM_WITHOUT_A_DURABLE_SANITIZED_OUTCOME",
+        "repair": "EMIT_FULL_SANITIZED_CASE_LEVEL_RESULT_AND_CANONICAL_RESULT_SHA256_TO_WORKFLOW_LOG_BEFORE_GITHUB_CONTENTS_COMMIT",
+        "raw_hidden_records_logged": false,
+        "raw_evaluator_secret_logged": false,
+        "raw_beacon_logged": false,
         "production_cases_consumed_before_repair": 0,
         "independent_verification_required": true
       }
