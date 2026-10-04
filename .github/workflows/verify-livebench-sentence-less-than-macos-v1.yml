@@ -1,4 +1,5 @@
 name: Verify LiveBench sentence-less-than closure macOS
+# exact zero-terminal falsification
 on:
   pull_request:
     paths:
