@@ -1,0 +1,77 @@
+name: Verify H100 zero-learned stress V1
+
+on:
+  pull_request:
+    paths:
+      - 'subject/h100_zero_learned_stress_v1/**'
+      - '.github/workflows/verify-h100-zero-learned-stress-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact subject blobs
+        shell: bash
+        run: |
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/governance/H100_ZERO_LEARNED_NOVELTY_STRESS_PREEXPOSURE_V1.json)" = "d5fe85f82a40b3eef2231167c6fbe8bed248bb1d"
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/governance/H100_ZERO_LEARNED_NOVELTY_STRESS_CANDIDATE_V1.json)" = "479d3a3edd0c6cc437c2175aec50220a67113564"
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/runtime/h100_zero_learned_novelty_stress_v1.py)" = "21f54300b9c2cffe95dd3ff8e845e87b0ce19831"
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/runtime/h100_zero_learned_novelty_cell_v1.py)" = "5fde0a0fe93de0bab368ae972e17d191682538a4"
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/tests/test_h100_zero_learned_novelty_stress_v1.py)" = "c07529006ad6c67678c201ccc8ef4fac1a63516b"
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/runtime/h100_zero_learned_mechanism_synthesizer_v1.py)" = "fa77c6a0f4edf214c4237cf1e204b640261622fe"
+          test "$(git hash-object subject/h100_zero_learned_stress_v1/canonical/runtime/h100_expression_tree_symbolic_regression_v1.py)" = "14e8f11c73e5fc0439016dbcd5b5a5a8d2c46490"
+      - name: Run frozen integrity tests
+        env:
+          PYTHONPATH: subject/h100_zero_learned_stress_v1
+        run: python -m unittest canonical.tests.test_h100_zero_learned_novelty_stress_v1 -v
+
+  task:
+    name: task-${{ matrix.task }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - AFFINE_2D
+          - POWER_RATIO
+          - RECIPROCAL_AFFINE
+          - NESTED_SATURATION
+          - LINEAR_PLUS_SATURATION
+          - CROSS_STABLE_RATIO
+          - DOUBLE_CROSS_STABLE_RATIO
+          - LOG1P_ABS
+          - RATIONAL_QUADRATIC
+          - PERIODIC_SINE
+          - EXPONENTIAL
+          - SIGN_STEP
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Try all frozen routes
+        env:
+          PYTHONPATH: subject/h100_zero_learned_stress_v1
+        shell: bash
+        run: |
+          set +e
+          python subject/h100_zero_learned_stress_v1/canonical/runtime/h100_zero_learned_novelty_cell_v1.py --task "${{ matrix.task }}" --route ZERO_LEARNED_MONOMIAL_V1 --require-useful
+          A=$?
+          python subject/h100_zero_learned_stress_v1/canonical/runtime/h100_zero_learned_novelty_cell_v1.py --task "${{ matrix.task }}" --route EXPRESSION_TREE_D2_W16 --require-useful
+          B=$?
+          python subject/h100_zero_learned_stress_v1/canonical/runtime/h100_zero_learned_novelty_cell_v1.py --task "${{ matrix.task }}" --route EXPRESSION_TREE_D4_W32 --require-useful
+          C=$?
+          set -e
+          if [ "$A" = "0" ] || [ "$B" = "0" ] || [ "$C" = "0" ]; then
+            exit 0
+          fi
+          exit 3
