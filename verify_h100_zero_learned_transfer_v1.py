@@ -58,3 +58,5 @@ if __name__=="__main__":
         } for f in out["families"]],
     }
     print(json.dumps(compact,indent=2,sort_keys=True))
+
+# exact replay trigger; no semantic change
