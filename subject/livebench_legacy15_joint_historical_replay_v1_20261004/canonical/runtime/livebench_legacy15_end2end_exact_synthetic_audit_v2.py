@@ -273,6 +273,9 @@ def audit(livebench_root: Path, max_failures: int) -> dict[str, Any]:
                             "order": tag,
                             "stage": "exact_checker",
                             "failed_ids": failed,
+                            "prompt": prompt,
+                            "records": records,
+                            "response": str(out["response"]),
                         })
 
     all_pass = exact_full_pass == total
