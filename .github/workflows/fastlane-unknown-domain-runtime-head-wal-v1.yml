@@ -1,0 +1,66 @@
+name: Fastlane Unknown-Domain runtime-head WAL V1
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-runtime-head-wal-fast-v1'
+    paths:
+      - 'fastlane/unknown-domain-runtime-head-wal-v1/trigger.json'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 54fbefb803caf79400d847c6fabf44e14ec56c26
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact candidate bytes
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          expected={
+            "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json":"c6d268559a59ee7e33cafef793dd04db4710d7e3",
+            ".github/workflows/unknown-domain-direct-one-use-production.yml":"990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+            "canonical/runtime/unknown_domain_direct_production_once_v1.py":"7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
+            "verify_unknown_domain_execution_lease.py":"8b1a3253afacb369b063c37a7e122a49bbd1e623",
+            "canonical/tests/test_unknown_domain_direct_production_once_v1.py":"05be8a2f59b26f1deaa9fa4e790ef9d4d80b1788",
+          }
+          def blob(p):
+            b=Path(p).read_bytes()
+            return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          for p,e in expected.items():
+            g=blob(p)
+            assert g==e,(p,g,e)
+          raw=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
+          lease=json.loads(raw)
+          assert lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"]==expected["canonical/runtime/unknown_domain_direct_production_once_v1.py"]
+          assert lease["exact_components"][".github/workflows/unknown-domain-direct-one-use-production.yml"]==expected[".github/workflows/unknown-domain-direct-one-use-production.yml"]
+          assert lease["exact_components"]["canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"]=="f974a4594c78e74693c7ba5a19f131dfa481b937"
+          print("lease_sha256="+hashlib.sha256(raw).hexdigest())
+          PY
+      - name: Run independent lease verifier
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Run frozen launcher unit tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify immutable transport and recoverability invariants
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          wf=Path(".github/workflows/unknown-domain-direct-one-use-production.yml").read_text()
+          launcher=Path("canonical/runtime/unknown_domain_direct_production_once_v1.py").read_text()
+          assert 'ref: ${{ github.sha }}' in wf
+          assert 'ref: ${{ github.ref }}' not in wf
+          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
+          assert 'current_git_head()' in launcher
+          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
+          assert 'result_sha256' in launcher
+          assert 'put_result(' in launcher
+          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
+          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
+          PY
