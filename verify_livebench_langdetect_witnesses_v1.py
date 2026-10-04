@@ -166,3 +166,5 @@ def main():
 
 if __name__=="__main__":
     raise SystemExit(main())
+
+# Execution trigger only; verifier semantics frozen on main.
