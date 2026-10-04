@@ -1,0 +1,33 @@
+name: Verify legacy IFEval single-checker witnesses V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/legacy_ifeval_single_v1/**"
+      - "verify_legacy_ifeval_single_checker_v1.py"
+      - ".github/workflows/verify-legacy-ifeval-single-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check "langdetect==1.0.9" "immutabledict==4.2.1" "nltk==3.9.1"
+      - run: |
+          python - <<'PY'
+          import nltk
+          nltk.download("punkt", quiet=True)
+          nltk.download("punkt_tab", quiet=True)
+          PY
+      - run: python verify_legacy_ifeval_single_checker_v1.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-ifeval-single-checker-v1-receipt
+          path: legacy_ifeval_single_checker_v1_receipt.json
+          if-no-files-found: error
