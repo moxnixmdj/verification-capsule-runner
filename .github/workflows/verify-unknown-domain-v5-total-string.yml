@@ -1,0 +1,48 @@
+name: Verify Unknown-Domain V5 total string
+
+on:
+  push:
+    branches:
+      - 'research/unknown-domain-v5-total-python-string-domain-20261005'
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v4.py'
+      - 'canonical/runtime/unknown_domain_direct_v5_universal_proof_v1.py'
+      - 'canonical/tests/test_unknown_domain_v4_total_string_domain_v1.py'
+      - 'verification/unknown_domain_v5_total_string_independent.py'
+      - '.github/workflows/verify-unknown-domain-v5-total-string.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind immutable verification subject
+        run: |
+          python - <<'PY'
+          import os,subprocess
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          assert head==os.environ["GITHUB_SHA"],(head,os.environ["GITHUB_SHA"])
+          print("immutable V5 subject",head)
+          PY
+      - name: Run focused Unicode totality regression
+        run: python -m unittest canonical.tests.test_unknown_domain_v4_total_string_domain_v1 -v
+      - name: Run independent total-string verifier
+        run: python verification/unknown_domain_v5_total_string_independent.py
+      - name: Seal independent receipt on verifier branch
+        run: |
+          mkdir -p canonical/verification
+          cp unknown_domain_v5_total_string_receipt.json canonical/verification/UNKNOWN_DOMAIN_V5_TOTAL_STRING_INDEPENDENT_VERIFICATION_20261005_V1.json
+          git config user.name 'brain-verifier'
+          git config user.email 'brain-verifier@users.noreply.github.com'
+          git add canonical/verification/UNKNOWN_DOMAIN_V5_TOTAL_STRING_INDEPENDENT_VERIFICATION_20261005_V1.json
+          git commit -m 'Seal independent Unknown-Domain V5 total-string verification'
+          git push origin HEAD:refs/heads/research/unknown-domain-v5-total-python-string-domain-20261005
