@@ -33,12 +33,26 @@ assert lease["verification_chain"]["production_launcher"]["conclusion"]=="succes
 assert lease["atomic_claim"]["required_first_claim_create_http_status"]==201
 assert lease["atomic_claim"]["claim_uniqueness_source"]=="ATOMIC_CREATE_RESPONSE"
 assert lease["authority"]=={"global_fresh_reality":False,"promotion":False,"acceptance_credit":False}
+
+# Verification is deliberately external to the lease. Writing the verification
+# receipt back into these bytes would change the lease digest and invalidate the
+# receipt. The frozen candidate must therefore continue to declare that an
+# independent receipt is required; the receipt lives outside this file.
+repair=lease["entrypoint_repair"]
+assert repair["independent_verification_required"] is True
+assert "INDEPENDENT_VERIFICATION_REQUIRED" in lease["status"]
+assert repair["repair"]=="INVOKE_FROZEN_LAUNCHER_AS_PACKAGE_MODULE_FROM_REPOSITORY_ROOT"
+assert repair["repaired_workflow_git_blob_sha"]=="a4315a0ee28ae82145594b7a9abbd00bae61ceb9"
+assert repair["transitive_dependency_repair"]["generator_v1_git_blob_sha"]=="f974a4594c78e74693c7ba5a19f131dfa481b937"
+assert "canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json" not in lease["exact_components"]
+
 def blob(b): return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
 for rel,expected in lease["exact_components"].items():
  p=ROOT/rel
  assert p.is_file(),rel
  got=blob(p.read_bytes())
  assert got==expected,(rel,got,expected)
+
 # Close the local runtime dependency graph, not just the top-level component list.
 # Any canonical.runtime module imported by an exact production component must
 # itself be content-addressed in the same lease.
@@ -65,6 +79,7 @@ for rel in sorted(components):
     if dep not in components:
      missing_local_dependencies.append((rel,dep))
 assert not missing_local_dependencies,missing_local_dependencies
+
 digest=hashlib.sha256(raw).hexdigest()
 lease_blob=blob(raw)
 print(json.dumps({
@@ -73,6 +88,8 @@ print(json.dumps({
  "execution_lease_sha256":digest,
  "exact_component_count":len(lease["exact_components"]),
  "checked_local_dependency_edges":checked_local_dependency_edges,
+ "verification_receipt_location":"EXTERNAL_TO_LEASE",
+ "lease_bytes_mutated_for_receipt":False,
  "production_cases_allowed":27,
  "persistent_learned_bytes":0,
  "global_fresh_reality":False
