@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import json
 from pathlib import Path
+import signal
 import sys
 from typing import Any
 
@@ -30,6 +31,27 @@ def same_grid(a: Any, b: Any) -> bool:
         return False
 
 
+CALL_BUDGET_SECONDS = 0.1
+
+
+class CandidateTimeout(TimeoutError):
+    pass
+
+
+def _timeout_handler(_signum, _frame):
+    raise CandidateTimeout("CANDIDATE_CALL_BUDGET_EXCEEDED")
+
+
+def bounded_call(fn, arg):
+    previous = signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.setitimer(signal.ITIMER_REAL, CALL_BUDGET_SECONDS)
+    try:
+        return fn(arg)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)
+
+
 def solver_functions():
     rows = []
     for name in sorted(dir(solvers)):
@@ -49,7 +71,7 @@ def solver_functions():
 def fits_training(fn, task: dict[str, Any]) -> bool:
     try:
         for pair in task["train"]:
-            pred = fn(freeze_grid(pair["input"]))
+            pred = bounded_call(fn, freeze_grid(pair["input"]))
             if not same_grid(pred, pair["output"]):
                 return False
         return True
@@ -60,7 +82,7 @@ def fits_training(fn, task: dict[str, Any]) -> bool:
 def solves_test(fn, task: dict[str, Any]) -> bool:
     try:
         return all(
-            same_grid(fn(freeze_grid(pair["input"])), pair["output"])
+            same_grid(bounded_call(fn, freeze_grid(pair["input"])), pair["output"])
             for pair in task["test"]
         )
     except Exception:
@@ -106,6 +128,7 @@ def main() -> int:
         ),
         "persistent_learned_state_bytes": 0,
         "frontier_model_calls": 0,
+        "per_solver_call_budget_seconds": CALL_BUDGET_SECONDS,
         "rows": rows,
         "hard_nonclaims": [
             "ORACLE_DIAGNOSTIC_IS_NOT_A_VALID_SELECTION_SCORE",
