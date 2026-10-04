@@ -1,0 +1,30 @@
+name: Verify FLAN-T5 Small INT8 Semantic Core
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_flan_t5_small_int8_semantic_core.py
+      - .github/workflows/verify-flan-t5-small-int8-semantic-core.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned inference dependencies
+        run: python -m pip install --disable-pip-version-check onnxruntime==1.23.2 sentencepiece==0.2.1
+      - name: Verify exact bytes and run four semantic probes
+        run: python verify_flan_t5_small_int8_semantic_core.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flan-t5-small-int8-semantic-core-receipt
+          path: flan_t5_small_int8_semantic_core_receipt.json
+          if-no-files-found: warn
