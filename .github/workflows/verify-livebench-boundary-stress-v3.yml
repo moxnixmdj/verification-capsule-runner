@@ -1,4 +1,5 @@
 name: Diagnose LiveBench active15 boundary stress V3
+# second push intentionally triggers branch-local workflow after installation
 on:
   push:
     branches: [verify-livebench-synthetic7424-20261004-v1]
