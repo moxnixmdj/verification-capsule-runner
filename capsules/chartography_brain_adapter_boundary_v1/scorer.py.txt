@@ -1,0 +1,252 @@
+"""Score responses against golden answers with a judge model."""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from typing import Any, TypedDict
+
+from inspect_ai.model import GenerateConfig, Model, ResponseSchema, get_model
+from inspect_ai.scorer import Score, Scorer, Target, mean, scorer
+from inspect_ai.solver import TaskState
+from inspect_ai.util import JSONSchema
+
+MAX_RETRIES = 4
+
+JUDGE_PROMPT_TEMPLATE = """Read the following prompt and response pair and evaluate it against the golden answer.
+
+Prompt: {{ rubric.response_generation_prompt }}
+Response: {{ rubric.response_to_grade }}
+Golden answer: {{ rubric.all_criteria }}
+
+Return a JSON object according to the specified format. The score must be either 0 or 1. Use "1" if the response matches all parts of the golden answer (see below for more detail). Use "0" if any part of the response does not match the golden answer.  Do not use any other values or decimals.
+
+STEP 1: EXTRACT THE MODEL'S FINAL ANSWER
+- Identify the answer the model is actually committing to. The answer may appear at the start or end of the response.
+- If the model states one answer and later revises to a different one, use its LAST/final stated answer.
+- Ignore all reasoning, explanation, hedging, and formatting. Grade only the substantive answer.
+
+STEP 2: COMPARE TO THE GOLDEN ANSWER
+Apply the rule that matches the answer type:
+
+Numerical answer:
+- If an acceptable range is given, the model is CORRECT if its value falls within that range (inclusive), INCORRECT otherwise.
+- If no range is given (the value is exact/printed), the model is CORRECT only if it matches the golden value (allow trivial rounding and equivalent notation, e.g., "$4.2M" = "4.2 million" = "4,200,000"; "31 percentage points" = "31 pp").
+- Do not give credit for being "close" if the value is outside the range. Do not penalize a more precise value that still falls inside the range (e.g., 3.850 is correct for an acceptable range of "3.8 to 3.9").
+- Do not penalize models for different formatting, as long as the actual answer is the same
+
+Categorical answer (one or more categories, e.g., a single item or a top-N list):
+- CORRECT only if the model identifies exactly the right set: every required category is present and no extra/incorrect ones are added. Order does not matter unless the prompt asked for a ranking (e.g., "Give me the top 3 in order"). If the prompt does ask for an answer in a specific order / ranking, then the order should be an exact match. Accept minor wording/label variants that clearly refer to the same item.
+- Do not penalize models for different formatting, as long as the actual answer is the same
+
+Multi-part answer:
+- Every part must be correct (all-or-nothing). If any part is wrong, missing, or outside its range, the whole answer is INCORRECT.
+- Do not penalize models for different formatting, as long as the actual answer is the same
+
+"Cannot be determined" answers:
+- If the golden answer is a value/category but the model says the prompt is unanswerable or refuses, that is INCORRECT.
+- If the golden answer is itself "cannot be determined from the chart," the model is CORRECT only if it reaches that same conclusion.
+
+STEP 3: OUTPUT
+Return a JSON object with a 'scores' array. Each entry has a 'criterion_id', an 'extracted_answer', a 'score', and a 'rationale'.
+- 'criterion_id': use "criterion_n" where n is an integer in order of appearance ("criterion_1", "criterion_2", ...).
+- 'extracted_answer': the model's final answer, verbatim or lightly normalized.
+- 'score': must be either 1 or 0. Use 1 if the response matches all parts of the golden answer (CORRECT per the rules above). Use 0 if any part of the response does not match the golden answer (INCORRECT per the rules above). Do not use any other values or decimals.
+- 'rationale': one or two sentences explaining the comparison and which rule applied.
+
+Be strict and literal about the substantive value, but lenient about formatting, units, phrasing, extra explanation, and equivalent notation. When the golden answer and the model's answer refer to the same value/category within the allowed tolerance, mark it correct."""
+
+# Structured-output schema for the judge's verdict.
+RESPONSE_SCHEMA = ResponseSchema(
+    name="golden_answer_score",
+    json_schema=JSONSchema(
+        type="object",
+        required=["scores"],
+        properties={
+            "scores": JSONSchema(
+                type="array",
+                description="One entry per criterion in the golden answer",
+                items=JSONSchema(
+                    type="object",
+                    required=["criterion_id", "extracted_answer", "score", "rationale"],
+                    properties={
+                        "criterion_id": JSONSchema(
+                            type="string",
+                            description=(
+                                "'criterion_n' where n is the criterion's 1-based "
+                                "order of appearance in the golden answer"
+                            ),
+                        ),
+                        "extracted_answer": JSONSchema(
+                            type="string",
+                            description=(
+                                "The model's final answer, verbatim or lightly "
+                                "normalized"
+                            ),
+                        ),
+                        "score": JSONSchema(
+                            type="integer",
+                            enum=[0, 1],
+                            description=(
+                                "1 if the response matches the golden answer, "
+                                "0 if it does not"
+                            ),
+                        ),
+                        "rationale": JSONSchema(
+                            type="string",
+                            description=(
+                                "One or two sentences explaining the comparison "
+                                "and which rule applied"
+                            ),
+                        ),
+                    },
+                    additionalProperties=False,
+                ),
+            ),
+        },
+        additionalProperties=False,
+    ),
+)
+
+# Inspect excludes NaN values from metric aggregation.
+_EXCLUDED = float("nan")
+
+
+class ParseError(ValueError):
+    """Raised when judge output is invalid."""
+
+
+class CriterionVerdict(TypedDict):
+    criterion_id: str
+    extracted_answer: str
+    score: Decimal
+    rationale: str
+
+
+@scorer(metrics={"accuracy": [mean()]})
+def golden_answer_scorer(judge_model: str) -> Scorer:
+    # Allow the judge to use separate provider credentials.
+    grader = get_model(
+        judge_model,
+        base_url=os.environ.get("JUDGE_BASE_URL"),
+        api_key=os.environ.get("JUDGE_API_KEY"),
+    )
+
+    async def score(state: TaskState, target: Target) -> Score:
+        answer = state.output.completion
+        verdicts = await _score_response(
+            grader,
+            question=state.metadata["prompt"],
+            golden_answer=target.text,
+            response_text=answer,
+        )
+        if verdicts is None:
+            return Score(
+                value={"accuracy": _EXCLUDED},
+                answer=answer,
+                explanation="unscored: judge output failed to parse",
+                metadata={"result": "unscored"},
+            )
+        passed = all(_verdict_passes(v["score"]) for v in verdicts)
+        return Score(
+            value={"accuracy": 1.0 if passed else 0.0},
+            answer=answer,
+            explanation="\n".join(
+                f"[{v['criterion_id']}] {v['rationale']}" for v in verdicts
+            ),
+            metadata={
+                "result": "pass" if passed else "fail",
+                "scores": [
+                    {
+                        "criterion_id": v["criterion_id"],
+                        "extracted_answer": v["extracted_answer"],
+                        "score": str(v["score"]),
+                        "rationale": v["rationale"],
+                    }
+                    for v in verdicts
+                ],
+            },
+        )
+
+    return score
+
+
+async def _score_response(
+    grader: Model, question: str, golden_answer: str, response_text: str
+) -> list[CriterionVerdict] | None:
+    """Judge a response, retrying invalid output."""
+    prompt = _judge_prompt(question, golden_answer, response_text)
+    for _ in range(MAX_RETRIES + 1):
+        result = await grader.generate(
+            prompt, config=GenerateConfig(response_schema=RESPONSE_SCHEMA)
+        )
+        try:
+            return _parse_verdict(result.completion)
+        except ParseError:
+            continue
+    return None
+
+
+def _judge_prompt(question: str, golden_answer: str, response_text: str) -> str:
+    return (
+        JUDGE_PROMPT_TEMPLATE.replace(
+            "{{ rubric.response_generation_prompt }}", question
+        )
+        .replace("{{ rubric.response_to_grade }}", response_text)
+        .replace("{{ rubric.all_criteria }}", golden_answer)
+    )
+
+
+def _parse_verdict(raw_text: str) -> list[CriterionVerdict]:
+    """Parse and validate judge output."""
+    cleaned = raw_text.strip()
+    cleaned = re.sub(r"\A```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```\Z", "", cleaned)
+    try:
+        payload = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        raise ParseError(f"Invalid JSON: {e}") from e
+
+    if not isinstance(payload, dict):
+        raise ParseError("Judge output must be a JSON object")
+    entries = payload.get("scores")
+    if not isinstance(entries, list) or not entries:
+        raise ParseError("Judge output must contain a non-empty 'scores' array")
+    return [_parse_criterion(entry) for entry in entries]
+
+
+def _parse_criterion(entry: Any) -> CriterionVerdict:
+    if not isinstance(entry, dict):
+        raise ParseError("Each 'scores' entry must be a JSON object")
+    missing = {"criterion_id", "extracted_answer", "score", "rationale"} - entry.keys()
+    if missing:
+        raise ParseError(f"'scores' entry missing {sorted(missing)}")
+    raw_score: Any = entry["score"]
+    if isinstance(raw_score, bool) or not isinstance(raw_score, (int, float, str)):
+        raise ParseError("'score' must be a number or string")
+    if not isinstance(entry["rationale"], str):
+        raise ParseError("'rationale' must be a string")
+    try:
+        score = Decimal(str(raw_score).strip())
+    except InvalidOperation as e:
+        raise ParseError(f"'score' is not a valid decimal: {raw_score!r}") from e
+
+    return CriterionVerdict(
+        criterion_id=_scalar_str(entry["criterion_id"], "criterion_id"),
+        extracted_answer=_scalar_str(entry["extracted_answer"], "extracted_answer"),
+        score=score,
+        rationale=entry["rationale"],
+    )
+
+
+def _scalar_str(value: Any, field: str) -> str:
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        raise ParseError(f"'{field}' must be a string or number")
+    return str(value)
+
+
+def _verdict_passes(score: Decimal) -> bool:
+    """Round to four decimals before checking for a perfect score."""
+    return score.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) >= 1
