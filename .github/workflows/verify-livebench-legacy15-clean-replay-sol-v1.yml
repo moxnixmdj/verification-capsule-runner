@@ -1,8 +1,15 @@
 name: Verify LiveBench legacy15 clean replay SOL V1
 on:
-  push:
-    branches:
-      - 'verify/livebench-legacy15-clean-replay-sol-v1'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_livebench_legacy15_joint_predecessor_v1.py'
+      - 'canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py'
+      - 'canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py'
+      - 'canonical/runtime/livebench_frozen_active_legacy15_v1.py'
+      - 'canonical/runtime/livebench_legacy15_composition_partition_v1.py'
+      - 'canonical/runtime/livebench_legacy15_joint_candidate_generator_v1.py'
+      - '.github/workflows/verify-livebench-legacy15-clean-replay-sol-v1.yml'
 
 permissions:
   contents: read
