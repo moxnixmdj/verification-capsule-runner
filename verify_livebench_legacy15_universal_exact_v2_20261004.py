@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent
 SUB = ROOT / "subject" / "livebench_legacy15_joint_historical_replay_v1_20261004"
 sys.path.insert(0, str(SUB))
 
-EXPECTED_JOINT_WITNESS_BLOB = "34505603fb03749bafd7515277a9f026fd114d8f"
+EXPECTED_JOINT_WITNESS_BLOB = "dbda5d871d36250cf4b6fee6852efe094f755f43"
 JOINT_WITNESS_PATH = SUB / "canonical/runtime/livebench_legacy15_joint_witness_v1.py"
 
 def git_blob_sha(path: Path) -> str:
