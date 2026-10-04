@@ -121,7 +121,7 @@ print("PASS__FINANCE_AGENT_ZERO_SPEND_ADAPTER__EXACT_VALS_BOUNDARIES__RETRY_SAFE
 
 # Root2 Frontier V7 Finance Agent zero-spend compression
 V7=Path(__file__).with_name("v7.json")
-assert blob(V7.name)=="35e8b578aca1290bcf469d6350ae085ba8a86c64"
+assert blob2(V7.name)=="35e8b578aca1290bcf469d6350ae085ba8a86c64"
 v7=json.loads(V7.read_text())
 assert v7["schema"]=="PROJECT_BRAIN_ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V7"
 assert v7["supersedes_for_scheduling_if_verified"]=="canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V6.json"
