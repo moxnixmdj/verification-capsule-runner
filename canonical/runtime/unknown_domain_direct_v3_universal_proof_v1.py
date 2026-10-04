@@ -74,38 +74,61 @@ def _transfer_theorem()->dict[str,Any]:
  assert harness.MAX_TRANSFER_PROBES==2
  assert c1.MAPPING_BASIS=="STRUCTURAL_EQUIVALENCE"
 
- d0=Fraction(19,4)
- d1=Fraction(25,4)
+ # Every public target row makes distractors exact role mimics, so public rows
+ # alone cannot identify support.  On requested probes, frozen _surface_row adds
+ # delta=4.75+1.5*i+0.25*probe_variant to each distractor.
+ d0=Fraction(19,4)  # first distractor minimum shift
+ d1=Fraction(25,4)  # second distractor minimum shift
  min_mag=Fraction(1,4)
  max_mag=Fraction(7,2)
 
+ # AFFINE_POS. gain >= 3/5, therefore any shifted wrong unary support misses
+ # target output by at least 57/20 = 2.85.
  affine_gap=Fraction(3,5)*d0
  assert affine_gap==Fraction(57,20)
+
+ # COMPLEMENT has slope -1.
  complement_gap=d0
+
+ # SAT_MONO. f(x)=x/(1+|x|) is strictly increasing. All true/shifted values are
+ # inside [-3.5,10]. f' >= 1/121 there and gain>=7/10.
  sat_gap=Fraction(7,10)*d0/Fraction(121,1)
+ # Candidate _close tolerance is <=4.5e-9 because |bias|<1.5, gain<3 and
+ # |x/(1+|x|)|<1.
  assert float(sat_gap)>4.5e-9
 
+ # SIGN indices are 1 and 7. First requested target row is generator row j=3.
+ # True r0 is negative, while even the worst shifted distractor is positive.
  for index in (1,7):
   assert (3+index)%2==0
  sign_shifted_min=-max_mag+d0
  assert sign_shifted_min==Fraction(5,4)>0
 
+ # STEP indices are 5 and 11. The first requested row j=3 is above threshold;
+ # the second j=4 is below by <=2.2. Its first-distractor shift is actually 5.0
+ # (probe_variant=1), while 4.75 is already a sufficient conservative bound.
  step_wrong_side_margin=d0-Fraction(11,5)
  assert step_wrong_side_margin==Fraction(51,20)>0
 
+ # ADD2 indices are 4 and 10. First requested row j=3 has both true roles
+ # positive in [0.25,3.5]. All five wrong support sets therefore have a strict
+ # output gap, so the true two-feature support is unique after that one probe.
  for index in (4,10):
   assert (3+index)%2==1
   assert (3+index+1)%3!=0
  add2_wrong_support_gaps=(
-  d0-(max_mag-min_mag),
-  d1,
-  d0,
-  d1-(max_mag-min_mag),
-  d0+d1,
+  d0-(max_mag-min_mag),  # {r0,d0}
+  d1,                    # {r0,d1}
+  d0,                    # {r1,d0}
+  d1-(max_mag-min_mag),  # {r1,d1}
+  d0+d1,                 # {d0,d1}
  )
  add2_min_gap=min(add2_wrong_support_gaps)
  assert add2_min_gap==Fraction(3,2)
 
+ # The remaining ADD2 ambiguity is only role orientation on the correct support.
+ # Unlike V2, V3 does not treat mathematical symmetry as exact-float symmetry.
+ # Frozen generator V2 has a public, nonzero sign invariant on rows j=0..2.
  signatures={}
  for index in (4,10):
   r0=tuple(-1 if (j+index)%2==0 else 1 for j in range(3))
@@ -114,6 +137,10 @@ def _transfer_theorem()->dict[str,Any]:
   assert r1==c3.ADD2_R1_SIG==(1,-1,1)
   assert r0!=r1
   signatures[str(index)]={"r0":list(r0),"r1":list(r1)}
+ # Magnitudes are generated in [0.25,3.5], so no visible signature entry is 0.
+ # Thus exactly one r0/r1 permutation passes _orient_add2. V3 then invokes the
+ # same c1._program_eval operation order as g1._eval on the true hidden roles,
+ # making the scorer's exact float equality hold.
 
  return {
   "all_six_families_universal":True,
