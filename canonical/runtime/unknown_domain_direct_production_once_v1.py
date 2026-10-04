@@ -356,7 +356,8 @@ def main()->None:
     claim_branch,result=claim_then_execute(
         repo=repo,token=token,launch_sha=launch_sha,digest=digest
     )
-    result["execution_lease_sha256"]=digest
+    result["execution_identity_sha256"]=digest
+    result["execution_lease_raw_sha256"]=hashlib.sha256(raw).hexdigest()
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
     result["runtime_git_head"]=runtime_head
