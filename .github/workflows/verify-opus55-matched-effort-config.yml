@@ -1,0 +1,19 @@
+name: Verify Opus55 matched comparator effort configuration
+on:
+  pull_request:
+    paths:
+      - "subject/**"
+      - "verify_opus55_matched_effort_config.py"
+      - ".github/workflows/verify-opus55-matched-effort-config.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_opus55_matched_effort_config.py
