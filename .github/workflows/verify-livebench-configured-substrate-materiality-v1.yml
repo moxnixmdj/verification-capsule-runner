@@ -1,0 +1,77 @@
+name: Verify LiveBench Configured Substrate Materiality V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/livebench_configured_substrate_v1/**"
+      - ".github/workflows/verify-livebench-configured-substrate-materiality-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact copied Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="capsules/livebench_configured_substrate_v1/brain"
+          test "$(git hash-object "$ROOT/canonical/runtime/livebench_configured_substrate_kernel_v1.py")" = "06d45ec19d0a09abd56102b6d6835a91f43a62a2"
+          test "$(git hash-object "$ROOT/canonical/runtime/livebench_configured_substrate_materiality_v1.py")" = "d38d405546ebe6a52882d3af667c412e1dd895da"
+          test "$(git hash-object "$ROOT/canonical/runtime/seed_preserving_instruction_postprocessor_v2.py")" = "b766cefd5e7f23d2533ff49d1c259eb83a0a53f0"
+          test "$(git hash-object "$ROOT/canonical/runtime/seed_preserving_instruction_postprocessor_v1.py")" = "8cdb308941dbd6711279cbd1d505aca6aabdd376"
+          test "$(git hash-object "$ROOT/canonical/runtime/instruction_constraint_compiler_v1.py")" = "a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"
+          test "$(git hash-object "$ROOT/canonical/capabilities/internalized/instruction_following/livebench_configured_substrate_v1/COMPOSED_CONFIGURATION_V1.json")" = "6424384ef0bbe83d44d04655770eec39d10d91da"
+      - name: Recompute same-proposal materiality counterfactual
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="capsules/livebench_configured_substrate_v1/brain"
+          PYTHONPATH="$ROOT" python "$ROOT/canonical/runtime/livebench_configured_substrate_materiality_v1.py" > livebench_configured_substrate_materiality_receipt.json
+          cat livebench_configured_substrate_materiality_receipt.json
+          python - <<'PY'
+          import json
+          x=json.load(open("livebench_configured_substrate_materiality_receipt.json"))
+          assert x["status"]=="PASS", x
+          assert x["same_proposal_stream"] is True
+          assert x["model_quality_compared"] is False
+          assert x["benchmark_case_content_consumed"] is False
+          assert x["terminal_cases_consumed"]==0
+          assert x["material_pass_cases"]==x["material_case_count"]==3
+          assert x["lossy_transform_blocked"] is True
+          c=x["conclusions"]
+          assert c["configuration_material_control_proven_on_scope"] is True
+          assert c["semantic_seed_verbatim_preservation_proven_on_passes"] is True
+          assert c["unsafe_lossy_rewrite_fails_closed"] is True
+          PY
+      - name: Verify frozen capability package pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="capsules/livebench_configured_substrate_v1/brain"
+          python - <<'PY'
+          import json
+          p="capsules/livebench_configured_substrate_v1/brain/canonical/capabilities/internalized/instruction_following/livebench_configured_substrate_v1/COMPOSED_CONFIGURATION_V1.json"
+          x=json.load(open(p))
+          assert x["capability_candidate_id"]=="LIVEBENCH_IF_CONFIGURED_GENERAL_SUBSTRATE_V1"
+          assert x["substrate_contract"]["role"]=="GENERAL_COGNITION_SUBSTRATE"
+          assert x["substrate_contract"]["model_dependency_count"]==1
+          assert x["materiality_theorem_candidate"]["same_proposal_stream"] is True
+          assert x["accounting"]["terminal_cases_consumed"]==0
+          assert x["accounting"]["incremental_spend_usd"]==0
+          PY
+      - name: Upload materiality receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-configured-substrate-materiality-v1
+          path: livebench_configured_substrate_materiality_receipt.json
+          if-no-files-found: error
