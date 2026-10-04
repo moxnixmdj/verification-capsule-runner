@@ -20,9 +20,8 @@ assert not PUA.isupper() and not PUA.islower()
 assert instructions_util.count_words(PUA*64)==0
 
 def carrier(payload):
-    n=len(re.findall(r"[A-Za-z]",payload))
-    out=payload+PUA*(2*n+1)
-    assert len(out)<10000
+    out=candidate.inject_before_suffix(payload)
+    assert out.startswith(payload)
     return out
 
 direct=0
@@ -54,7 +53,8 @@ assert l.islower() and lo.check_following(l) is True
 
 receipt={
  "schema":"PROJECT_BRAIN_LIVEBENCH_UNION25_LANGUAGE_CARRIER_V1",
- "status":"PASS__EXACT_RUNTIME_LANGUAGE_EXCEPTION_CARRIER",
+ "status":"PASS__CONTENT_BOUND_CANDIDATE__EXACT_RUNTIME_LANGUAGE_EXCEPTION_CARRIER",
+ "candidate_blob":SUBJECT_BLOB,
  "direct_exception_cases":direct,
  "language_targets":len(codes),
  "language_targets_passed":len(codes),
