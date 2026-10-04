@@ -1,0 +1,23 @@
+name: Verify Root2 global cut and instruction compiler v1
+on:
+  pull_request:
+    paths:
+      - 'subject/root2_global_cut_instruction_v1/**'
+      - 'verify_root2_global_cut_instruction_v1.py'
+      - '.github/workflows/verify-root2-global-cut-instruction-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independent exact-byte and adversarial verification
+        run: python verify_root2_global_cut_instruction_v1.py
