@@ -8,7 +8,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject" / "unknown_domain_v6_20261005"
-BRAIN_SUBJECT_COMMIT = "704a60674e30de927bafaacecaf8a840d4632dbd"
+BRAIN_SUBJECT_COMMIT = "HARDENED_REPAIR_GATE_63f8a508ee42fd45721f1b94f0adeb2ed43a0a81"
 
 EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
@@ -17,11 +17,11 @@ EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "e52858b9fef2d795f72b45cd3ae82ad04344aa91",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "a97459fe407ea4852f57f12f504fbc0121db9824",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "60373126f3ee27368ae06e6d7d559f1b826d90d4",
     "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
     "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
-    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58410966e17c1bc546db8cab039891f3ab2bf8a8",
-    "canonical/tests/test_unknown_domain_direct_v5.py": "81cd6ecabec51029175f6036a13eac7667fccd03",
+    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
+    "canonical/tests/test_unknown_domain_direct_v5.py": "5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
 }
 
 def git_blob_sha(path: pathlib.Path) -> str:
@@ -60,6 +60,39 @@ def main() -> int:
     else:
         raise AssertionError("EXPECTED_V4_STRICT_UTF8_COUNTEREXAMPLE")
 
+    class AdversarialStr(str):
+        def strip(self, *args, **kwargs):
+            raise RuntimeError("OVERRIDDEN_STRIP_MUST_NOT_RUN")
+        def encode(self, *args, **kwargs):
+            raise RuntimeError("OVERRIDDEN_ENCODE_MUST_NOT_RUN")
+
+    class AdversarialBytes(bytes):
+        def __bytes__(self):
+            raise RuntimeError("OVERRIDDEN_BYTES_MUST_NOT_RUN")
+        def __buffer__(self, *args, **kwargs):
+            raise RuntimeError("OVERRIDDEN_BUFFER_MUST_NOT_RUN")
+        def __len__(self):
+            raise RuntimeError("OVERRIDDEN_LEN_MUST_NOT_RUN")
+        def __getitem__(self, *args, **kwargs):
+            raise RuntimeError("OVERRIDDEN_GETITEM_MUST_NOT_RUN")
+        def __iter__(self):
+            raise RuntimeError("OVERRIDDEN_ITER_MUST_NOT_RUN")
+
+    subclass_packet = g5._generate(
+        beacon=AdversarialStr("A" * 16 + "\ud800"),
+        evaluator_secret=AdversarialStr("S" * 31 + "\udfff"),
+        namespace="VERIFY-SUBCLASS-STR",
+    )
+    subclass_rows = []
+    for visible, hidden in zip(subclass_packet["visible_cases"], subclass_packet["hidden_records"], strict=True):
+        out = harness.execute_case(candidate_step=c3.step, case_visible=visible, hidden_record=hidden)
+        assert out["scorer_result"]["pass"] is True, (visible["case_id"], out)
+        subclass_rows.append(out["scorer_result"])
+    assert scorer.aggregate(subclass_rows)["all_27_cases_pass"] is True
+
+    subclass_secret = AdversarialBytes(b"B" * 32)
+    assert g5._secret_bytes_total(subclass_secret) == b"B" * 32
+
     beacons = ["A" * 16 + "\ud800", "\udfff" + "B" * 16, "Ω" * 16, "\x00" + "C" * 16]
     secrets = [b"S" * 32, "T" * 31 + "\ud800", "\udfff" + "U" * 31, "λ" * 32]
     populations = 0
@@ -91,7 +124,7 @@ def main() -> int:
         "all_three_abstention_classes_universal": True,
         "v4_string_domain_counterexample_reproduced": v4_counterexample,
         "nonproduction_falsification": {"populations": populations, "cases": cases, "all_pass": True},
-        "production_or_terminal_cases_generated": 0,
+        "adversarial_str_and_bytes_subclass_dispatch": "PASS",\n        "production_or_terminal_cases_generated": 0,
         "acceptance_credit_delta": 0,
         "family_credit_delta": 0,
         "capability_credit_delta": 0,
