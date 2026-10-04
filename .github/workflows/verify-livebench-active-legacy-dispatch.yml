@@ -1,0 +1,29 @@
+name: Verify LiveBench Active Legacy Dispatch
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_active_legacy_dispatch.py
+      - .github/workflows/verify-livebench-active-legacy-dispatch.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned parquet reader
+        run: python -m pip install --quiet "pyarrow==21.0.0"
+      - name: Verify exact active dispatch
+        run: python verify_livebench_active_legacy_dispatch.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active-legacy-dispatch-receipt
+          path: livebench_active_legacy_dispatch_receipt.json
+          if-no-files-found: error
