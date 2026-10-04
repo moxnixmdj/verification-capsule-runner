@@ -97,7 +97,7 @@ for i in range(populations):
  results=[]
  for visible,hidden in zip(packet["visible_cases"],packet["hidden_records"]):
   out=harness.execute_case(candidate_step=candidate.step,case_visible=visible,hidden_record=hidden)
-  assert out["scorer_result"]["pass"] is True,(i,visible["case_id"],out)
+  assert out["scorer_result"]["pass"] is True,(i,visible["case_id"],hidden,out)
   results.append(out["scorer_result"])
   cases+=1
   if hidden["leaf_id"]==g1.TRANSFER:
