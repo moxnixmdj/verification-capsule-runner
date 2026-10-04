@@ -31,11 +31,20 @@ def _safe_json_tail(tail: str):
     return obj if isinstance(obj, dict) else None
 
 
-def _first_source_code(text: str, source_codes):
-    for token in re.findall(r"[A-Z][A-Z0-9_]{2,160}", str(text or "")):
-        if token in source_codes:
-            return token
-    return None
+COMPOSITION_WRAPPERS = {
+    "GROUNDED_EXECUTABLE_COMPOSITION_FAILED",
+    "GROUNDED_EXECUTABLE_COMPOSITION_VERIFY_FAILED",
+}
+
+def _deepest_source_code(text: str, source_codes):
+    valid = [
+        token for token in re.findall(r"[A-Z][A-Z0-9_]{2,160}", str(text or ""))
+        if token in source_codes
+    ]
+    if not valid:
+        return None
+    nonwrapper = [token for token in valid if token not in COMPOSITION_WRAPPERS]
+    return nonwrapper[-1] if nonwrapper else valid[-1]
 
 
 def classify_exception(exc, source_codes):
@@ -68,7 +77,7 @@ def classify_exception(exc, source_codes):
         obj = _safe_json_tail(detail)
         if obj is None:
             return {"kind": "UNCLASSIFIED_RUNTIME", "code": "COMPOSITION_DETAIL_INVALID"}
-        nested = _first_source_code(obj.get("composition_error"), source_codes)
+        nested = _deepest_source_code(obj.get("composition_error"), source_codes)
         if nested is None:
             return {"kind": "UNCLASSIFIED_RUNTIME", "code": "COMPOSITION_SUBCODE_UNCLASSIFIED"}
         return {"kind": "COMPOSITION_SUBBLOCKER", "code": nested}
