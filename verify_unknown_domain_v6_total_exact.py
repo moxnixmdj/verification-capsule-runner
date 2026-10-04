@@ -8,7 +8,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject" / "unknown_domain_v6_20261005"
-BRAIN_SUBJECT_REF = "breakthrough/unknown-domain-v6-subclass-revocation-20261005"
+BRAIN_SUBJECT_REF = "486b44073e4b7250025302c55682c476a434a321"
 
 EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
@@ -17,11 +17,11 @@ EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "e52858b9fef2d795f72b45cd3ae82ad04344aa91",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "d087601a62a0b8ec9ab264487fb0b27a6246b977",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "60373126f3ee27368ae06e6d7d559f1b826d90d4",
     "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
     "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
-    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "4a3e72b365ffa7e163abc63d197fcd386bdd104d",
-    "canonical/tests/test_unknown_domain_direct_v5.py": "c98733407d594c3fa5713de5742022325463f390",
+    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
+    "canonical/tests/test_unknown_domain_direct_v5.py": "5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
 }
 
 def git_blob_sha(path: pathlib.Path) -> str:
@@ -37,6 +37,8 @@ class HostileStr(str):
         raise RuntimeError("INSTANCE_STR_MUST_NOT_RUN")
     def __len__(self):
         raise RuntimeError("INSTANCE_LEN_MUST_NOT_RUN")
+    def __getattribute__(self, name):
+        raise RuntimeError("INSTANCE_GETATTRIBUTE_MUST_NOT_RUN:" + name)
 
 class HostileBytes(bytes):
     def __bytes__(self):
@@ -45,6 +47,8 @@ class HostileBytes(bytes):
         raise RuntimeError("INSTANCE_LEN_MUST_NOT_RUN")
     def __getitem__(self, key):
         raise RuntimeError("INSTANCE_GETITEM_MUST_NOT_RUN")
+    def __iter__(self):
+        raise RuntimeError("INSTANCE_ITER_MUST_NOT_RUN")
     def __buffer__(self, flags):
         raise RuntimeError("INSTANCE_BUFFER_MUST_NOT_RUN")
     def __release_buffer__(self, view):
@@ -116,8 +120,16 @@ def main() -> int:
     assert isinstance(text_bytes, bytes) and len(text_bytes) >= 32
 
     hostile_secret_bytes = HostileBytes(b"B" * 32)
+    try:
+        memoryview(hostile_secret_bytes).tobytes()
+    except RuntimeError as exc:
+        assert "BUFFER" in str(exc)
+        old_buffer_dispatch_failure_reproduced = True
+    else:
+        raise AssertionError("PYTHON312_BUFFER_OVERRIDE_COUNTEREXAMPLE_NOT_REPRODUCED")
     raw_bytes = g5._secret_bytes_total(hostile_secret_bytes)
     assert type(raw_bytes) is bytes and raw_bytes == b"B" * 32
+    assert bytes.__getitem__(hostile_secret_bytes, slice(None)) == b"B" * 32
 
     # A subclass shorter than the public gate must still reject deterministically
     # without invoking its hostile instance methods.
@@ -171,7 +183,7 @@ def main() -> int:
 
     receipt = {
         "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
-        "status": "PASS__CONTENT_BOUND_SUBCLASS_TOTALITY_REPAIR__OLD_FALSIFIER_REPRODUCED_AND_BYPASSED__EXACT_486_CASE_FALSIFICATION__ZERO_CREDIT",
+        "status": "PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
         "brain_subject_ref": BRAIN_SUBJECT_REF,
         "subject_blobs": observed,
         "universal_theorem_status": result["status"],
@@ -181,6 +193,15 @@ def main() -> int:
         "python312_buffer_hook_adversary_included": True,
         "old_instance_strip_failure_reproduced": old_instance_strip_fails,
         "old_instance_encode_failure_reproduced": old_instance_encode_fails,
+        "old_python312_buffer_dispatch_failure_reproduced": old_buffer_dispatch_failure_reproduced,
+        "str_subclass_override_getattribute_attacked": True,
+        "str_subclass_override_len_attacked": True,
+        "bytes_subclass_override_bytes_attacked": True,
+        "bytes_subclass_override_buffer_attacked": True,
+        "bytes_subclass_override_len_attacked": True,
+        "bytes_subclass_override_getitem_attacked": True,
+        "bytes_subclass_override_iter_attacked": True,
+        "base_bytes_getitem_full_slice_bypass_verified": True,
         "hostile_subclass_exact_scorer_cases": subclass_cases,
         "structural_identifier_totality": True,
         "exact_add2_float_order_repaired": True,
