@@ -1,4 +1,4 @@
-name: Verify retrieval V20 fresh V4 holdout
+name: Verify retrieval V21 recovery regression
 on:
   push:
     branches:
@@ -15,5 +15,7 @@ jobs:
           python-version: "3.12"
       - run: test "$(git hash-object canonical/runtime/retrieval_fresh_v4_holdout_v20.py)" = "dcd6099f491a6ed9e8bfb0261b64caa5ea0b6f5d"
       - run: test "$(git hash-object canonical/tests/test_retrieval_fresh_v4_holdout_v20.py)" = "4dd712fb239a9f4a09a40536f49cfe5327c965cb"
+      - run: test "$(git hash-object canonical/runtime/retrieval_query_variant_executor_v21.py)" = "077de09672fc1fdb9f5730ab9296457726664df7"
+      - run: test "$(git hash-object canonical/runtime/retrieval_v21_recovery_regression.py)" = "b07239e9a1aee6db9d4aa41bbf31f52ad819c819"
       - run: PYTHONPATH=. python canonical/tests/test_retrieval_fresh_v4_holdout_v20.py
-      - run: PYTHONPATH=. python canonical/runtime/retrieval_fresh_v4_holdout_v20.py
+      - run: PYTHONPATH=. python canonical/runtime/retrieval_v21_recovery_regression.py
