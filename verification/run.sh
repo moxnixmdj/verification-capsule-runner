@@ -19,8 +19,19 @@ PY
 
 # Adaptive terminal minimum-cut V1 independent capsule.
 python verify_terminal_adaptive_minimum_cut_v1.py
-python -m pytest -q canonical/tests/test_minimum_terminal_cut_solver_v2.py
-python -m pytest -q canonical/tests/test_terminal_adaptive_supertransaction_v1.py
+python - <<'PY'
+import importlib
+for name in (
+    "canonical.tests.test_minimum_terminal_cut_solver_v2",
+    "canonical.tests.test_terminal_adaptive_supertransaction_v1",
+):
+    m=importlib.import_module(name)
+    tests=[getattr(m,k) for k in sorted(dir(m)) if k.startswith("test_") and callable(getattr(m,k))]
+    assert tests,(name,"NO_TESTS")
+    for fn in tests:
+        fn()
+        print("PASS",name,fn.__name__)
+PY
 python canonical/runtime/terminal_adaptive_supertransaction_v1.py > /tmp/terminal_adaptive_result.json
 python - <<'PY'
 import json
