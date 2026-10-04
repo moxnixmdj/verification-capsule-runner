@@ -11,9 +11,9 @@ RUNTIME = SUBJECT / "sub100mb_learned_state_guard_v1.py"
 TESTS = SUBJECT / "test_sub100mb_learned_state_guard_v1.py"
 CONTRACT = SUBJECT / "SUB100MB_LEARNED_CORE_EXPERIMENT_CONTRACT_V1.json"
 
-EXPECTED_RUNTIME_GIT_BLOB = "0e6279ddbaf6c23856d37869fa9e39c1b25fa82c"
-EXPECTED_TESTS_GIT_BLOB = "e1d621c1528b3c33828eefd506ecf9aa185666ae"
-EXPECTED_CONTRACT_GIT_BLOB = "34a7d9f2629712ffdc4082ceea92324ed6e76112"
+EXPECTED_RUNTIME_GIT_BLOB = "7663016998fbfd4cd6b848fd18fd515308fa5baa"
+EXPECTED_TESTS_GIT_BLOB = "9803461d7ee76173132d4565002fec1ded9bcaa5"
+EXPECTED_CONTRACT_GIT_BLOB = "94b74f1e2f4b5663d0ff490cd4d2b23363299a5e"
 
 
 def git_blob_sha(path: Path) -> str:
@@ -64,6 +64,12 @@ def base() -> dict:
                 "path": "artifacts/kernel.bin",
                 "bytes": 80_000_000,
                 "sha256": "a" * 64,
+                "byte_count_verified": True,
+                "independent": True,
+                "verification_receipt": {
+                    "path": "canonical/verification/kernel-byte-count.json",
+                    "git_blob_sha": "b" * 40,
+                },
             }
         ],
         "runtime_dependencies": [
@@ -105,6 +111,13 @@ out = mod.audit(d)
 assert out["pass"] is False
 assert out["status"] == "CANDIDATE_REJECTED"
 assert out["budget_pass"] is False
+
+# Self-reported learned byte counts are not load-bearing.
+d = base()
+d["learned_artifacts"][0]["byte_count_verified"] = False
+out = mod.audit(d)
+assert out["status"] == "FAIL_CLOSED"
+assert "LEARNED_ARTIFACT_BYTE_COUNT_NOT_INDEPENDENTLY_VERIFIED:kernel" in out["errors"]
 
 # Hiding learned capability behind a remote frontier provider must fail.
 d = base()
