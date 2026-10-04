@@ -1,0 +1,28 @@
+name: Verify LiveBench active 200 legacy route
+on:
+  push:
+    branches:
+      - verify/livebench-active200-legacy-route-20261004
+    paths:
+      - verify_livebench_active200_legacy_route.py
+      - .github/workflows/verify-livebench-active200-legacy-route.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute exact active route from pinned bytes and metadata only
+        run: python verify_livebench_active200_legacy_route.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active200-legacy-route-receipt
+          path: livebench_active200_legacy_route_receipt.json
+          if-no-files-found: error
