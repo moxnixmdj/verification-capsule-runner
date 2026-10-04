@@ -65,7 +65,7 @@
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
     "canonical/verification/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "36452412fb60ce38405f139111eba98b5cebc040",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PRECOMMIT_V1.json": "ddf55f3e54ef6af89a95395075441742cb124258",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "19eaa60c6cd543971c4ab0917e8ea938b0dc78fc",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "190ac379f5cf2b2b2005b6f537f43643a80ff24e"
   },
   "limits": {
