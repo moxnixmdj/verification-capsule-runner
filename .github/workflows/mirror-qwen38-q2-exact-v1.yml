@@ -1,0 +1,174 @@
+name: Mirror exact Qwen3.8 Q2 capability bytes V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mirror-qwen38-q2-exact-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  TAG: brain-capability-qwen38-q2-exact-v1
+  SOURCE_REPO: unsloth/Qwen3.8-27B-GGUF
+  SOURCE_REV: 4ca720788d1e01f1bff70c033e0d0028fd02e502
+  SOURCE_FILE: Qwen3.8-27B-UD-Q2_K_XL.gguf
+  SOURCE_BYTES: '9828981664'
+  SOURCE_SHA256: fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0
+  SOURCE_URL: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-UD-Q2_K_XL.gguf
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Recreate exact-byte mirror release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          fi
+          cat > release-notes.txt <<EOF
+          Project Brain exact capability-byte mirror.
+
+          Upstream repository: https://huggingface.co/$SOURCE_REPO
+          Pinned upstream revision: $SOURCE_REV
+          Exact upstream file: $SOURCE_FILE
+          Exact byte count: $SOURCE_BYTES
+          Exact whole-file SHA-256: $SOURCE_SHA256
+          Upstream declared license: Apache-2.0
+
+          The source file is split only because GitHub release assets must each be under 2 GiB.
+          Concatenating part01 through part06 in lexical order MUST reproduce the exact upstream bytes and SHA-256.
+          This release grants zero benchmark, capability, ownership, or terminal credit by itself.
+          EOF
+          gh release create "$TAG"             --repo "$GITHUB_REPOSITORY"             --target "$GITHUB_SHA"             --title "Project Brain exact Qwen3.8-27B Q2 capability-byte mirror V1"             --notes-file release-notes.txt
+
+  upload-parts:
+    needs: prepare-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - part: '01'
+            start: 0
+            end: 1899999999
+            bytes: 1900000000
+          - part: '02'
+            start: 1900000000
+            end: 3799999999
+            bytes: 1900000000
+          - part: '03'
+            start: 3800000000
+            end: 5699999999
+            bytes: 1900000000
+          - part: '04'
+            start: 5700000000
+            end: 7599999999
+            bytes: 1900000000
+          - part: '05'
+            start: 7600000000
+            end: 9499999999
+            bytes: 1900000000
+          - part: '06'
+            start: 9500000000
+            end: 9828981663
+            bytes: 328981664
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download exact pinned byte range
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="$SOURCE_FILE.part${{ matrix.part }}of06"
+          curl -fL             --retry 6             --retry-delay 2             --retry-all-errors             --connect-timeout 30             --range "${{ matrix.start }}-${{ matrix.end }}"             --max-filesize 2000000000             -o "$asset"             "$SOURCE_URL"
+          actual="$(stat -c '%s' "$asset")"
+          test "$actual" = "${{ matrix.bytes }}"
+          sha256sum "$asset" > "$asset.sha256"
+          gh release upload "$TAG" "$asset" "$asset.sha256"             --repo "$GITHUB_REPOSITORY"             --clobber
+
+  verify-reassembly:
+    needs: upload-parts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Stream release assets and verify whole-file identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_json="$(mktemp)"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > "$release_json"
+
+          python3 - "$release_json" "$SOURCE_FILE" <<'PY' > asset_urls.txt
+          import json, sys
+          release = json.load(open(sys.argv[1], encoding="utf-8"))
+          stem = sys.argv[2]
+          assets = {a["name"]: a["browser_download_url"] for a in release["assets"]}
+          expected = [f"{stem}.part{i:02d}of06" for i in range(1, 7)]
+          missing = [name for name in expected if name not in assets]
+          if missing:
+              raise SystemExit("MISSING_RELEASE_ASSETS:" + ",".join(missing))
+          for name in expected:
+              print(assets[name])
+          PY
+
+          (
+            while IFS= read -r url; do
+              curl -fL                 --retry 6                 --retry-delay 2                 --retry-all-errors                 --connect-timeout 30                 "$url"
+            done < asset_urls.txt
+          ) | python3 - "$SOURCE_BYTES" "$SOURCE_SHA256" "$SOURCE_REV" "$SOURCE_FILE" <<'PY'
+          import hashlib, json, sys
+          expected_bytes = int(sys.argv[1])
+          expected_sha = sys.argv[2]
+          source_rev = sys.argv[3]
+          source_file = sys.argv[4]
+          h = hashlib.sha256()
+          total = 0
+          while True:
+              block = sys.stdin.buffer.read(8 * 1024 * 1024)
+              if not block:
+                  break
+              total += len(block)
+              h.update(block)
+          actual_sha = h.hexdigest()
+          if total != expected_bytes:
+              raise SystemExit(f"WHOLE_BYTE_COUNT_MISMATCH:{total}:{expected_bytes}")
+          if actual_sha != expected_sha:
+              raise SystemExit(f"WHOLE_SHA256_MISMATCH:{actual_sha}:{expected_sha}")
+          receipt = {
+              "schema": "PROJECT_BRAIN_QWEN38_Q2_EXACT_RELEASE_MIRROR_RECEIPT_V1",
+              "status": "PASS",
+              "source_revision": source_rev,
+              "source_file": source_file,
+              "whole_bytes": total,
+              "whole_sha256": actual_sha,
+              "release_asset_parts": 6,
+              "reassembly_verified_without_full_file_materialization": True,
+              "incremental_spend_usd": 0,
+              "terminal_cases_consumed": 0,
+              "capability_credit_delta": 0,
+              "acceptance_credit_delta": 0,
+              "ownership_credit_delta": 0,
+              "hard_nonclaim": "EXACT_BYTE_MIRROR_PROVES_DURABLE_CONTENT_IDENTITY_ONLY__NOT_EXECUTION_FIT_OR_BENCHMARK_CAPABILITY"
+          }
+          open("qwen38_q2_exact_release_mirror_receipt.json", "w", encoding="utf-8").write(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+          )
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+
+      - name: Attach verification receipt to release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" qwen38_q2_exact_release_mirror_receipt.json             --repo "$GITHUB_REPOSITORY"             --clobber
