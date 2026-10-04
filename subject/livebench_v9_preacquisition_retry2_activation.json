@@ -1,0 +1,30 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_ACTIVATION_RETRY2_V1",
+  "date": "2026-10-04",
+  "status": "RUNNER_LOCAL_ACTIVATION_RETRY2__REPLAY72_ONLY__ZERO_NEW_EXPOSURE__ZERO_CREDIT",
+  "target_predicate": "LIVEBENCH_IF_GE_65_7",
+  "prior_v9_retry1_workflow_run_id": 37195176743,
+  "repair_scope": "DIAGNOSTIC_REGEX_IMPORT_ONLY__NO_BRAIN_RUNTIME_MUTATION",
+  "diagnostic_git_blob_sha": "8542abc83acbec30c9c7f1d3bbdbaeee9e658008",
+  "base_executor_git_blob_sha": "2a57ce896ddbd6819246aab8b44d17a00f36b61e",
+  "epoch_digest_sha256": "a2c7b719fa717f476426d92cc0bc1828ebfc13800734a4ec84043287c79132cd",
+  "claim_ref": "refs/heads/livebench-v9-retry2-claims/a2c7b719fa717f476426d92cc0bc1828ebfc13800734a4ec84043287c79132cd",
+  "scope": {
+    "replay_prefix_limit": 72,
+    "already_exposed_prefix_only": true,
+    "new_case_exposure": false,
+    "case_73_or_later": false,
+    "aggregate_static_labels_only": true,
+    "prompt_text_output_forbidden": true,
+    "response_text_output_forbidden": true,
+    "case_id_output_forbidden": true,
+    "raw_exception_output_forbidden": true
+  },
+  "authority": {
+    "execution": true,
+    "replay_existing_prefix": true,
+    "new_case_exposure": false,
+    "promotion": false,
+    "acceptance_credit": false
+  }
+}
