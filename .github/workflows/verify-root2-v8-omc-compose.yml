@@ -1,0 +1,53 @@
+name: Verify Root2 V8 OMC composition
+on:
+  push:
+    branches:
+      - verify/root2-v8-omc-compose-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact subject blobs
+        run: |
+          test "$(git hash-object verification_inputs/root2_v8_composed.json)" = "1f86fe713ed22d46d8ed339857e77de339567df8"
+          test "$(git hash-object verification_inputs/root2_v7_parent.json)" = "35e8b578aca1290bcf469d6350ae085ba8a86c64"
+          test "$(git hash-object verification_inputs/omc_activation.json)" = "a0e6d98e11decb237a3230dfe1c85d2929a4126d"
+          test "$(git hash-object verification_inputs/omc_receipt.json)" = "54c540c64e4615b02839122fb6a87136746ac322"
+      - name: Verify truth-preserving composed projection
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          load=lambda p: json.loads(Path(p).read_text())
+          v8=load("verification_inputs/root2_v8_composed.json")
+          v7=load("verification_inputs/root2_v7_parent.json")
+          act=load("verification_inputs/omc_activation.json")
+          rec=load("verification_inputs/omc_receipt.json")
+          assert v8["exact_state"]==v7["exact_state"]
+          assert act["status"].startswith("ACTIVE_DOCUMENTARY_CANDIDATE__INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert rec["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert rec["independent_runner"]["workflow_run_id"]==37171937929
+          assert rec["independent_runner"]["workflow_job_id"]==111346488525
+          assert rec["independent_runner"]["conclusion"]=="success"
+          deltas=v8["projection_deltas"]
+          assert any(d.get("target")=="FINANCE_AGENT_V2_GE_58_59" and "CUSTOM_FUNCTION" in str(d.get("to","")) for d in deltas)
+          assert any(d.get("target")=="CODING_TB4_GE_66_4" and "OMC_CLOUD" in str(d.get("to","")) for d in deltas)
+          providers={x["provider"] for x in v8["tb4_carrier_portfolio"]["candidates"]}
+          assert {"Buildkite","OMC Cloud"} <= providers
+          deleted={x["provider"] for x in v8["tb4_carrier_portfolio"]["deleted"]}
+          assert "CircleCI" in deleted
+          assert "TB4_OMC_CLOUD_ACCOUNT_RUNTIME_AND_ZERO_CASE_PREFLIGHT_WHEN_TRIAL_ACCESS_IS_AVAILABLE" in v8["runnable_zero_reality"]
+          assert v8["accounting"]==v7["accounting"]
+          assert v8["execution_authority"] is False
+          assert v8["promotion_authority"] is False
+          assert v8["fresh_reality_authority"] is False
+          assert v8["independent_verification_required"] is True
+          assert "NOMINAL_16GB_DOES_NOT_PROVE_FROZEN_16384MB_USABLE_MEMORY_REQUIREMENT" in v8["hard_rules"]
+          print("ROOT2_V8_OMC_COMPOSITION: PASS")
+          PY
