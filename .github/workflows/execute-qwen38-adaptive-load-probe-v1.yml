@@ -1,0 +1,20 @@
+name: Execute Qwen3.8 adaptive load probe V1
+
+on:
+  pull_request:
+    paths:
+      - 'run_qwen38_adaptive_load_probe_v1.sh'
+      - '.github/workflows/execute-qwen38-adaptive-load-probe-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  load-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Select one quant, verify exact bytes, build pinned llama.cpp, load and generate
+        shell: bash
+        run: bash run_qwen38_adaptive_load_probe_v1.sh
