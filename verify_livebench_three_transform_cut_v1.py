@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Independent arithmetic verifier; no terminal-case content is read.
 from __future__ import annotations
 
 import hashlib
