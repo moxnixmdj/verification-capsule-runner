@@ -1,0 +1,23 @@
+name: Verify LiveBench V10 controls
+on:
+  pull_request:
+    paths:
+      - 'diagnose_livebench_replay72_v10_formal_routing.py'
+      - 'launch_livebench_v10_formal_routing_atomic.py'
+      - 'verify_livebench_v10_controls.py'
+      - 'canonical/runtime/instruction_constraint_compiler_v1.py'
+      - '.github/workflows/verify-livebench-v10-controls.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify V10 exact wrapper and launcher
+        run: python verify_livebench_v10_controls.py
