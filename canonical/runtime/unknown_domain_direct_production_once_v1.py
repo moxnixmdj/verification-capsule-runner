@@ -216,12 +216,13 @@ def claim_then_execute(
     response_ref=str(response.get("ref") or "")
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
-    if response_ref!=claim_ref or len(obj_sha)!=40:
-        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_INVALID")
+    if response_ref!=claim_ref or obj_sha!=launch_sha:
+        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH")
     result=dict(execute_fn(claim_id=claim_ref))
     result["claim_create_http_status"]=201
     result["claim_response_ref"]=response_ref
     result["claim_response_object_sha"]=obj_sha
+    result["launch_event_sha"]=launch_sha
     result["claim_uniqueness_source"]="ATOMIC_CREATE_RESPONSE"
     return claim_branch,result
 
