@@ -7,11 +7,15 @@ SUB=ROOT/"subject"/"livebench_crypto_escrow_v1_sol"
 RUNTIME=SUB/"shadow_cryptographic_escrow_v1.py"
 TEST=SUB/"test_shadow_cryptographic_escrow_v1.py"
 GOV=SUB/"SHADOW_CRYPTOGRAPHIC_ESCROW_IMPLEMENTATION_V1.json"
+CERT=SUB/"livebench_shadow_escrow_v1_public.crt"
+RECIPIENT=SUB/"LIVEBENCH_SHADOW_ESCROW_RECIPIENT_BINDING_V1.json"
 
 EXPECTED={
  RUNTIME:"63a87e2d715b3ceb4355f84196bcb1fa58fdf673",
  TEST:"2719951d54e88fe9c126556a179f3b0150adf69e",
  GOV:"792eda7aab475bfff27b4e9943aae48610b48973",
+ CERT:"99dea0cf31467df8051ba745d74d8768c7d218a4",
+ RECIPIENT:"75b90e595e759b55659063201fd5aa18c60efd01",
 }
 
 def blob(path):
@@ -105,6 +109,32 @@ with tempfile.TemporaryDirectory() as td:
     except escrow.EscrowError as e:
         assert str(e)=="ESCROW_OBJECT_ALREADY_EXISTS"
 
+cert_sha=hashlib.sha256(CERT.read_bytes()).hexdigest()
+assert cert_sha=="f11521c6e83d3394a79df41963992c01507121787c503989cc503c1b31dfb2a5"
+pub_der=subprocess.check_output(
+  "openssl x509 -in "+str(CERT)+" -pubkey -noout | openssl pkey -pubin -outform DER",
+  shell=True,
+)
+assert hashlib.sha256(pub_der).hexdigest()=="aec0a39931a202874626bf40b9fe5d86dee4920a2ed2de7ef2bde4f647fcf666"
+subprocess.run(["openssl","verify","-CAfile",str(CERT),str(CERT)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+subprocess.run(["openssl","x509","-in",str(CERT),"-checkend","0","-noout"],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+subject=subprocess.check_output(["openssl","x509","-in",str(CERT),"-noout","-subject"],text=True)
+assert "Project Brain LiveBench Shadow Escrow V1" in subject
+assert b"BEGIN PRIVATE KEY" not in CERT.read_bytes()
+assert b"BEGIN RSA PRIVATE KEY" not in CERT.read_bytes()
+
+recipient=json.loads(RECIPIENT.read_text())
+assert recipient["recipient"]["certificate_sha256"]==cert_sha
+assert recipient["recipient"]["public_key_der_sha256"]=="aec0a39931a202874626bf40b9fe5d86dee4920a2ed2de7ef2bde4f647fcf666"
+assert recipient["recipient"]["production_recipient_bound"] is True
+assert recipient["recipient"]["private_key_in_github"] is False
+assert recipient["recipient"]["evaluation_runner_private_key_access"] is False
+assert recipient["private_key_custody"]["outside_github"] is True
+assert recipient["accounting"]["terminal_cases_consumed"]==0
+assert recipient["execution_authority"] is False
+assert recipient["promotion_authority"] is False
+assert recipient["fresh_reality_authority"] is False
+
 gov=json.loads(GOV.read_text())
 assert gov["implementation"]["production_recipient_bound"] is False
 assert gov["accounting"]["terminal_cases_consumed"]==0
@@ -122,7 +152,9 @@ print(json.dumps({
  "plaintext_disk_write":False,
  "duplicate_write_fail_closed":True,
  "separate_private_key_recovery":True,
- "production_recipient_bound":False,
+ "production_recipient_bound":True,
+ "recipient_certificate_sha256":cert_sha,
+ "recipient_self_signature_verified":True,
  "terminal_cases_consumed":0,
  "incremental_spend_usd":0
 },sort_keys=True))
