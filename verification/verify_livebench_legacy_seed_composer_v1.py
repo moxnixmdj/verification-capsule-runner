@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Verification trigger: workflow pre-existed this commit.
 from __future__ import annotations
 
 import hashlib
