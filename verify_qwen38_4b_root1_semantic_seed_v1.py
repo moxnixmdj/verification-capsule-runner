@@ -168,7 +168,7 @@ def main() -> int:
         for i, case in enumerate(CASES):
             user = case["instruction"]
             if case.get("source"):
-                user += "\n\nText:\n" + case["source"]
+                user += "\n\nTEXT:\n" + case["source"]
             payload = {
                 "model": "local",
                 "messages": [{"role": "user", "content": user}],
@@ -176,7 +176,7 @@ def main() -> int:
                 "top_p": 0.95,
                 "seed": 424200 + i,
                 "max_tokens": 192,
-                "stream": False,
+                "stream": False,\n                "chat_template_kwargs": {"enable_thinking": False},
             }
             raw = request_json(f"http://127.0.0.1:{PORT}/v1/chat/completions", payload)
             message = raw["choices"][0]["message"]
