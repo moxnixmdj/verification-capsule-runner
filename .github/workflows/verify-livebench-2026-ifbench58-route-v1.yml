@@ -1,9 +1,12 @@
-name: Verify LiveBench 2026 IFBench58 scorer route V1
-# explicit post-install dispatch trigger
+name: Verify LiveBench 2026 route variable truth V2
 
 on:
   push:
     branches: [main]
+    paths:
+      - "verify_livebench_2026_ifbench58_route_v1.py"
+      - ".github/workflows/verify-livebench-2026-ifbench58-route-v1.yml"
+  pull_request:
     paths:
       - "verify_livebench_2026_ifbench58_route_v1.py"
       - ".github/workflows/verify-livebench-2026-ifbench58-route-v1.yml"
@@ -21,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install exact metadata reader
+        run: python -m pip install --disable-pip-version-check --quiet pyarrow==19.0.1
       - name: Checkout exact pinned LiveBench
         shell: bash
         run: |
@@ -30,18 +35,18 @@ jobs:
           git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
           git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
           git -C /tmp/LiveBench checkout --detach FETCH_HEAD
-      - name: Prove scorer dispatch without terminal content
+      - name: Recompute exact frozen 200-row scorer route
         run: python verify_livebench_2026_ifbench58_route_v1.py
       - name: Print receipt
         if: always()
         run: |
-          if test -f livebench_2026_ifbench58_route_v1_receipt.json; then
-            cat livebench_2026_ifbench58_route_v1_receipt.json
+          if test -f livebench_2026_route_variable_truth_v2_receipt.json; then
+            cat livebench_2026_route_variable_truth_v2_receipt.json
           fi
       - name: Upload receipt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: livebench-2026-ifbench58-route-v1
-          path: livebench_2026_ifbench58_route_v1_receipt.json
+          name: livebench-2026-route-variable-truth-v2
+          path: livebench_2026_route_variable_truth_v2_receipt.json
           if-no-files-found: error
