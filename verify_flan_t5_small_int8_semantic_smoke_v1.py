@@ -95,6 +95,75 @@ def assert_no_external_tensor_data(model_path: pathlib.Path) -> dict:
     return {"initializer_count": len(flat), "external_initializer_count": 0}
 
 
+def tensor_payload_fingerprints(model_path: pathlib.Path) -> dict:
+    import collections
+    import onnx
+    from onnx import numpy_helper
+
+    model = onnx.load_model(str(model_path), load_external_data=False)
+    counts = collections.Counter()
+    bytes_by_fp = {}
+    rows = []
+    for tensor in model.graph.initializer:
+        arr = numpy_helper.to_array(tensor)
+        payload = arr.tobytes(order="C")
+        h = hashlib.sha256()
+        h.update(str(arr.dtype).encode("utf-8"))
+        h.update(b"\\0")
+        h.update(json.dumps(list(arr.shape)).encode("utf-8"))
+        h.update(b"\\0")
+        h.update(payload)
+        fp = h.hexdigest()
+        counts[fp] += 1
+        bytes_by_fp[fp] = len(payload)
+        rows.append({
+            "name": tensor.name,
+            "fingerprint": fp,
+            "payload_bytes": len(payload),
+            "shape": list(arr.shape),
+            "dtype": str(arr.dtype),
+        })
+    return {
+        "initializer_payload_bytes": sum(x["payload_bytes"] for x in rows),
+        "fingerprint_counts": dict(counts),
+        "bytes_by_fingerprint": bytes_by_fp,
+        "initializers": rows,
+    }
+
+
+def cross_model_dedup_diagnostic(encoder_path: pathlib.Path, decoder_path: pathlib.Path) -> dict:
+    enc = tensor_payload_fingerprints(encoder_path)
+    dec = tensor_payload_fingerprints(decoder_path)
+    shared = []
+    shared_bytes = 0
+    for fp in sorted(set(enc["fingerprint_counts"]) & set(dec["fingerprint_counts"])):
+        copies = min(enc["fingerprint_counts"][fp], dec["fingerprint_counts"][fp])
+        payload_bytes = enc["bytes_by_fingerprint"][fp]
+        saving = copies * payload_bytes
+        shared_bytes += saving
+        shared.append({
+            "fingerprint": fp,
+            "payload_bytes_each": payload_bytes,
+            "cross_model_duplicate_copies": copies,
+            "potential_saving_bytes": saving,
+        })
+    total_payload = enc["initializer_payload_bytes"] + dec["initializer_payload_bytes"]
+    return {
+        "encoder_initializer_payload_bytes": enc["initializer_payload_bytes"],
+        "decoder_initializer_payload_bytes": dec["initializer_payload_bytes"],
+        "combined_initializer_payload_bytes": total_payload,
+        "cross_model_identical_tensor_groups": len(shared),
+        "cross_model_duplicate_payload_bytes": shared_bytes,
+        "unique_payload_lower_bound_bytes": total_payload - shared_bytes,
+        "shared_groups": shared,
+        "interpretation": (
+            "Diagnostic only. Nonzero duplicate payload proves byte-identical tensors exist "
+            "across the split encoder/decoder artifacts and may be physically deduplicated "
+            "only after a separately verified runtime preserves exact semantics."
+        ),
+    }
+
+
 def _sp_encode(sp, text: str) -> list[int]:
     ids = list(sp.encode(text, out_type=int))
     if not ids or ids[-1] != 1:
@@ -122,6 +191,11 @@ def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
         "encoder": assert_no_external_tensor_data(root / "encoder_model_int8.onnx"),
         "decoder": assert_no_external_tensor_data(root / "decoder_model_int8.onnx"),
     }
+
+    dedup = cross_model_dedup_diagnostic(
+        root / "encoder_model_int8.onnx",
+        root / "decoder_model_int8.onnx",
+    )
 
     sp = sentencepiece.SentencePieceProcessor(model_file=str(root / "spiece.model"))
     if sp.get_piece_size() != 32000:
@@ -264,6 +338,7 @@ def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
         "headroom_bytes": MAX_LEARNED_BYTES - total,
         "artifacts": verified,
         "onnx_external_data": ext,
+        "cross_model_tensor_dedup_diagnostic": dedup,
         "abi": {
             "encoder_inputs": encoder_inputs,
             "encoder_outputs": encoder_outputs,
@@ -286,6 +361,7 @@ def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
             "FOUR_SYNTHETIC_FAIL_FAST_PROBES_ARE_NOT_OPUS_5_5_PARITY_PROOF",
             "PASS_ONLY_MEANS_THE_SUB100MB_CANDIDATE_SURVIVED_A_MINIMUM_SEMANTIC_SMOKE_GATE",
             "NO_OPUS_5_5_EQUIVALENCE_CLAIM",
+            "DEDUP_DIAGNOSTIC_DOES_NOT_AUTHORIZE_A_DEDUPLICATED_RUNTIME_OR_REDUCED_H100_ACCOUNTING",
             "NO_LIVEBENCH_THRESHOLD_CLAIM",
             "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
         ],
