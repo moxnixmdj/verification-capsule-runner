@@ -26,11 +26,11 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
  "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py":"e52858b9fef2d795f72b45cd3ae82ad04344aa91",
- "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"d087601a62a0b8ec9ab264487fb0b27a6246b977",
+ "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py":"60373126f3ee27368ae06e6d7d559f1b826d90d4",
  "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
  "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
- "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"4a3e72b365ffa7e163abc63d197fcd386bdd104d",
- "canonical/tests/test_unknown_domain_direct_v5.py":"c98733407d594c3fa5713de5742022325463f390",
+ "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py":"58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
+ "canonical/tests/test_unknown_domain_direct_v5.py":"5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
 }
 
 def blob(path:Path)->str:
@@ -50,7 +50,7 @@ assert 'str.encode(text,"utf-8","surrogatepass")' in beacon_src
 assert '.hex()' in beacon_src
 assert 'return"UDIRV5-BEACON-HEX|"+raw.hex()' in beacon_src
 assert 'str.encode(secret,"utf-8","surrogatepass")' in secret_src
-assert 'memoryview(secret).tobytes()' in secret_src
+assert 'bytes.__getitem__(secret,slice(None))' in secret_src
 
 # Exhaust every Python Unicode scalar/code-point slot including D800-DFFF
 # through the exact V5 functions. Decode roundtrip establishes byte-level
@@ -84,6 +84,14 @@ class EvilStr(str):
 class EvilBytes(bytes):
     def __bytes__(self):
         raise RuntimeError("OVERRIDDEN_BYTES_MUST_NOT_RUN")
+    def __buffer__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_BUFFER_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("OVERRIDDEN_LEN_MUST_NOT_RUN")
+    def __getitem__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_GETITEM_MUST_NOT_RUN")
+    def __iter__(self):
+        raise RuntimeError("OVERRIDDEN_ITER_MUST_NOT_RUN")
 
 evil_beacon=EvilStr("A"*16+"\ud800")
 evil_secret=EvilStr("S"*31+"\udfff")
@@ -217,6 +225,7 @@ theorem=proposed.prove(ROOT)
 assert theorem["status"]=="PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
 assert theorem["string_interface_totality"]["legacy_strict_utf8_partiality_removed"] is True
 assert theorem["string_interface_totality"]["isinstance_accepted_subclass_override_hooks_bypassed"] is True
+assert theorem["string_interface_totality"]["bytes_subclass_buffer_protocol_override_bypassed"] is True
 assert theorem["identifier_totality_proof"]["token_collision_resistance_required_for_semantic_distinctness"] is False
 assert theorem["identifier_totality_proof"]["forced_total_token_collision_survives_construction"] is True
 assert theorem["transfer_proof"]["add2_exact_float_order_repaired"] is True
@@ -232,6 +241,8 @@ receipt={
  "surrogate_codepoints_exhausted":surrogate_codepoints,
  "adversarial_str_subclass_totality_pass":True,
  "adversarial_bytes_subclass_totality_pass":True,
+ "adversarial_bytes_hooks_overridden":["__bytes__","__buffer__","__len__","__getitem__","__iter__"],
+ "base_bytes_descriptor_full_slice_verified":True,
  "subclass_nonproduction_cases_exact_scorer_pass":27,
  "v4_strict_utf8_counterexample_preserved":v4_surrogate_counterexample,
  "forced_total_token_collision_survival":True,
