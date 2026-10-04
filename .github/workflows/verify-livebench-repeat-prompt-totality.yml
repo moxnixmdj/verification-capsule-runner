@@ -1,0 +1,39 @@
+name: Verify LiveBench repeat-prompt totality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - verify/livebench-repeat-prompt-totality-20261005-sol
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch exact public LiveBench source
+        shell: bash
+        run: |
+          rm -rf pinned-livebench
+          git init pinned-livebench
+          git -C pinned-livebench fetch --depth=1 https://github.com/LiveBench/LiveBench.git 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C pinned-livebench checkout --detach FETCH_HEAD
+          test "$(git -C pinned-livebench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+      - name: Run independent repeat-prompt verifier
+        run: PYTHONPATH=. python verification/livebench_repeat_prompt_totality_independent.py pinned-livebench
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-repeat-prompt-totality-receipt
+          path: livebench_repeat_prompt_totality_receipt.json
+          if-no-files-found: error
+          retention-days: 7
