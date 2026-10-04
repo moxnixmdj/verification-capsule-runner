@@ -354,7 +354,9 @@ def run(endpoint: str) -> dict[str, Any]:
             prompt = repair_prompt(task, previous, errors)
         results["feedback"].append({"task_id": task["id"], "passed": passed, "proposals": proposals})
 
-        # Four independent candidates, deterministic selector chooses any exact pass.
+        # Four independent candidates. Hidden scorer measures whether support contains
+        # a valid answer; this is an empirical discovery upper bound, NOT a deployable
+        # selector and its pass/fail signal is never returned to the controller.
         proposals = []
         for attempt, temp in enumerate([0.0, 0.2, 0.5, 0.8], start=1):
             text = call(endpoint, schema_prompt(task), temp, 4000 + ti * 10 + attempt)
@@ -389,7 +391,7 @@ def run(endpoint: str) -> dict[str, Any]:
             "feedback_task_success_rate": feedback_task,
             "search4_task_success_rate": search_task,
             "feedback_improves_task_success_over_direct": feedback_task > summaries["direct"]["task_success_rate"],
-            "search_improves_task_success_over_direct": search_task > summaries["direct"]["task_success_rate"],
+            "search_support_upper_bound_exceeds_direct": search_task > summaries["direct"]["task_success_rate"],
         },
         "records": results,
         "hard_nonclaims": [
@@ -398,6 +400,7 @@ def run(endpoint: str) -> dict[str, Any]:
             "NO_OPUS55_ACCEPTANCE_OR_OWNERSHIP_CREDIT",
             "NO_OPEN_WORLD_GENERALIZATION_CLAIM",
             "NO_CLAIM_SYNTHETIC_TASKS_ESTIMATE_TERMINAL_SUCCESS_PROBABILITY",
+            "SEARCH4_HIDDEN_SCORER_IS_MEASUREMENT_ONLY_NOT_A_DEPLOYABLE_SELECTOR",
         ],
     }
 
