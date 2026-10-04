@@ -1,0 +1,30 @@
+name: Verify LiveBench Stopword Zero Witness
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_stopword_zero_witness.py
+      - .github/workflows/verify-livebench-stopword-zero-witness.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact scorer dependencies
+        run: python -m pip install --disable-pip-version-check nltk==3.10.3 spacy==3.8.16 emoji==2.16.0 syllapy==0.7.2
+      - name: Verify parameter-free zero-stopword witness
+        run: python verify_livebench_stopword_zero_witness.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-stopword-zero-witness-receipt
+          path: livebench_stopword_zero_witness_receipt.json
+          if-no-files-found: error
