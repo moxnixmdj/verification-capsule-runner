@@ -1,0 +1,127 @@
+name: Verify deterministic legacy15 exact public Root1 V1
+# RETRIGGER_PYTHON_312_SELECTOR_V2
+# PEP668_REPAIRED_PUSH_TRIGGER_V1
+# QUEUE_ISOLATED_PUSH_TRIGGER_V2
+
+on:
+  push:
+    branches: [verify-legacy15-direct-exact-20261004-v1]
+    paths:
+      - 'candidate_livebench_legacy_visible_constraint_compiler_v1.py'
+      - 'candidate_livebench_legacy_visible_constraint_compiler_v4.py'
+      - 'candidate_livebench_frozen_active_legacy15_v1.py'
+      - 'candidate_livebench_legacy15_joint_witness_v1.py'
+      - 'verify_legacy15_joint_public_exact_v1.py'
+      - '.github/workflows/verify-legacy15-joint-public-exact-v1.yml'
+  pull_request:
+    paths:
+      - 'candidate_livebench_legacy_visible_constraint_compiler_v1.py'
+      - 'candidate_livebench_legacy_visible_constraint_compiler_v4.py'
+      - 'candidate_livebench_frozen_active_legacy15_v1.py'
+      - 'candidate_livebench_legacy15_joint_witness_v1.py'
+      - 'verify_legacy15_joint_public_exact_v1.py'
+      - '.github/workflows/verify-legacy15-joint-public-exact-v1.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: verify-legacy15-direct-exact-20261004-v1
+
+      - name: Set up wheel-compatible Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12.10'
+          architecture: 'x64'
+
+      - name: Install exact scorer dependencies in isolated venv
+        run: |
+          set -euo pipefail
+          python -m venv .venv
+          .venv/bin/python -m pip install --disable-pip-version-check --only-binary=:all: pyarrow==21.0.0
+          .venv/bin/python -m pip install --disable-pip-version-check \
+            nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+
+      - name: Checkout exact frozen legacy scorer and NLTK assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench /tmp/nltk_data_repo /tmp/nltk_data
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_util.py)" = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+
+          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- \
+            packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+
+      - name: Download exact public 200-case population
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors \
+            "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet" \
+            -o /tmp/instruction_following.parquet
+          .venv/bin/python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p = Path("/tmp/instruction_following.parquet")
+          assert p.stat().st_size == 537024, p.stat().st_size
+          assert hashlib.sha256(p.read_bytes()).hexdigest() == "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
+          PY
+
+      - name: Execute repaired deterministic candidate on exact public Root1
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        shell: bash
+        run: |
+          set -euo pipefail
+          .venv/bin/python verify_legacy15_joint_public_exact_v1.py
+
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f legacy15_joint_public_exact_receipt.json; then
+            cat legacy15_joint_public_exact_receipt.json
+          fi
+
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy15-joint-public-exact-v1
+          path: legacy15_joint_public_exact_receipt.json
+          if-no-files-found: warn
+
+      - name: Commit receipt to verifier branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test ! -f legacy15_joint_public_exact_receipt.json; then
+            exit 0
+          fi
+          mkdir -p receipts
+          cp legacy15_joint_public_exact_receipt.json receipts/legacy15_joint_public_exact_v1.json
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add receipts/legacy15_joint_public_exact_v1.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Record deterministic exact-200 Root1 receipt"
+          git push origin HEAD:verify-legacy15-direct-exact-20261004-v1
