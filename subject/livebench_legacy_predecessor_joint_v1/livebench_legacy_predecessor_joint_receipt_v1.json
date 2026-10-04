@@ -1,0 +1,65 @@
+{
+  "accounting": {
+    "acceptance_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "incremental_spend_usd": 0,
+    "new_terminal_cases_consumed": 0,
+    "ownership_credit_delta": 0
+  },
+  "bindings": {
+    "active15_commitment": "af4eeddebf27394eb689d2049f2f8104ae081ebafe237258bdc1a992e96f598d",
+    "compiler_v4_blob": "f3d5165071438a7f0ce8cd57c0c3489aa3d08497",
+    "dataset_bytes": 277319,
+    "dataset_revision": "4f7ab12f0d47848da31de92bd7cc3d7d4acfe695",
+    "dataset_sha256": "57cbc3a738f7a95b234125965929247e7781ce6c5216bdea1d18548f4b10e98c",
+    "expected_rows": 200,
+    "instructions_blob": "4997bab885a676d92545fd91a9a20b48d234a2b2",
+    "instructions_util_blob": "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b",
+    "joint_witness_blob": "30b13de760f8117ebe433fa3820d6dfdea46c05b",
+    "livebench_commit": "8f8e5c381a16e3f24257776edd53471fe86f8091",
+    "registry_blob": "903ed738398648c7cfac61d5ffa478c22f1f0891"
+  },
+  "contamination_firewall": {
+    "active_2024_11_25_terminal_rows_read": 0,
+    "predecessor_prompt_text_emitted": false,
+    "response_text_emitted": false,
+    "runtime_hidden_labels_used": false,
+    "terminal_prompt_text_emitted": false,
+    "verifier_predecessor_labels_used": true
+  },
+  "diagnostics": {
+    "failing_checker_id_counts": {},
+    "failure_reason_counts": {
+      "VISIBLE_COMPILER_NOT_COMPLETE": 200
+    },
+    "outside_active15_id_row_counts": {
+      "detectable_format:constrained_response": 7
+    }
+  },
+  "hard_nonclaims": [
+    "PUBLIC_REMOVED_PREDECESSOR_REPLAY_ONLY",
+    "PREDECESSOR_COVERAGE_IS_NOT_ACTIVE_TERMINAL_CASE_FREQUENCY",
+    "NO_ACTIVE_2024_11_25_PROMPT_KWARG_RESPONSE_OR_SCORE_READ",
+    "NO_LIVEBENCH_TERMINAL_PASS_OR_ACCEPTANCE_CREDIT",
+    "NO_SEMANTIC_CAPABILITY_OR_OWNERSHIP_CREDIT",
+    "ACTIVE15_COMMITMENT_OPENING_REMAINS_A_SEPARATE_PROOF_OBLIGATION"
+  ],
+  "population": {
+    "active15_only_rows": 193,
+    "outside_active15_rows": 7,
+    "release_histogram": {},
+    "rows": 200
+  },
+  "replay": {
+    "active15_compiler_pass_rows": 193,
+    "active15_joint_candidate_rows": 0,
+    "active15_strict_full_pass_fraction": 0.0,
+    "active15_strict_full_pass_rows": 0,
+    "compiler_pass_rows": 200,
+    "joint_candidate_rows": 0,
+    "route_counts": {},
+    "strict_full_pass_rows": 0
+  },
+  "schema": "PROJECT_BRAIN_LIVEBENCH_LEGACY_PREDECESSOR_JOINT_RECEIPT_V1",
+  "status": "MEASURED__PARTIAL_ACTIVE15_PREDECESSOR_COVERAGE"
+}
