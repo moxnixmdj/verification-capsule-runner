@@ -37,6 +37,24 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertEqual(out["claim_create_http_status"],201)
         self.assertEqual(out["claim_uniqueness_source"],"ATOMIC_CREATE_RESPONSE")
 
+    def test_claim_201_with_invalid_response_is_sealed_without_execution(self):
+        called={"execute":False}
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":"refs/heads/wrong","object":{"sha":"short"}}
+        def fake_execute(**kwargs):
+            called["execute"]=True
+            return {}
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="a"*40,digest="e"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertFalse(called["execute"])
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"e"*64)
+        self.assertEqual(out["claim_create_http_status"],201)
+        self.assertEqual(out["status"],"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED")
+        self.assertEqual(out["production_cases_generated"],0)
+        self.assertFalse(out["replay_allowed"])
+
     def test_post_claim_execution_exception_is_sealed_fail_closed(self):
         def fake_create(repo,token,ref,sha):
             return 201,{"ref":ref,"object":{"sha":"c"*40}}
