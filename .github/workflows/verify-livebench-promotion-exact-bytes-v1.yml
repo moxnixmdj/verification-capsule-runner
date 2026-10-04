@@ -1,0 +1,52 @@
+name: Verify LiveBench promotion exact bytes V1
+
+on:
+  push:
+    branches: [verify-livebench-promotion-exact-bytes-20261004-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch independently bound receipts
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/moxnixmdj/brain/343c144596d117708fddec49a1735a5be88a139d/canonical/verification/LIVEBENCH_IF_EXACT_PUBLIC_THRESHOLD_RECEIPT_20261004_V1.json" -o brain.json
+          curl -fsSL "https://raw.githubusercontent.com/moxnixmdj/verification-capsule-runner/da386e81a634397a3051361ba2736279c9cc8c48/receipts/legacy15_joint_public_exact_v1.json" -o verifier.json
+
+      - name: Verify exact byte identity and Git blob identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp --silent brain.json verifier.json
+          test "$(git hash-object brain.json)" = "165192ffa20e052f094371c04d15da6c9147a146"
+          test "$(git hash-object verifier.json)" = "165192ffa20e052f094371c04d15da6c9147a146"
+
+      - name: Verify frozen acceptance facts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, math
+          with open("brain.json","r",encoding="utf-8") as f:
+              r=json.load(f)
+          assert r["status"] == "PASS"
+          assert r["target_predicate"] == "LIVEBENCH_IF_GE_65_7"
+          assert r["public_population"]["count"] == 200
+          assert r["public_population"]["terminal_or_hidden_case_count"] == 0
+          assert r["candidate"]["model_dependency_count"] == 0
+          assert r["candidate"]["hidden_ids_or_kwargs_used_by_candidate"] is False
+          score=r["results"]["exact_four_task_mean_percent"]
+          floor=r["results"]["opus_5_5_public_equal_task_mean_floor_percent"]
+          assert math.isclose(score,84.40416666666667,rel_tol=0,abs_tol=1e-12)
+          assert math.isclose(floor,65.73775,rel_tol=0,abs_tol=1e-12)
+          assert score >= floor
+          assert r["public_population"]["parquet_sha256"] == "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
+          assert r["scorer"]["livebench_commit"] == "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          print(json.dumps({"status":"PASS","exact_byte_identity":True,"git_blob_sha":"165192ffa20e052f094371c04d15da6c9147a146","predicate":"LIVEBENCH_IF_GE_65_7","score":score,"floor":floor,"margin":score-floor},sort_keys=True))
+          PY
