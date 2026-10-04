@@ -1,0 +1,59 @@
+name: Execute LiveBench IF threshold V2
+on:
+  push:
+    branches:
+      - "execute/livebench-if-threshold-v2-20261004"
+    paths:
+      - "EXECUTE_LIVEBENCH_IF_THRESHOLD_V2_20261004"
+permissions:
+  contents: write
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: "execute/livebench-if-threshold-v2-20261004"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Syntax and zero-case authority gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile execute_livebench_if_threshold_v2.py
+      - name: Execute minimum LiveBench threshold reality cut
+        id: execute
+        shell: bash
+        run: |
+          set -o pipefail
+          python execute_livebench_if_threshold_v2.py 2>&1 | tee LIVEBENCH_IF_THRESHOLD_RUN_V2.log
+          code=${PIPESTATUS[0]}
+          echo "${code}" > LIVEBENCH_IF_THRESHOLD_EXIT_CODE_V2
+          exit "${code}"
+      - name: Persist immutable execution evidence on execution branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f LIVEBENCH_IF_THRESHOLD_EXIT_CODE_V2 || echo "workflow_failed_before_execution_exit_capture" > LIVEBENCH_IF_THRESHOLD_EXIT_CODE_V2
+          git config user.name "project-brain-verifier"
+          git config user.email "project-brain-verifier@users.noreply.github.com"
+          git add LIVEBENCH_IF_THRESHOLD_EXIT_CODE_V2
+          test ! -f LIVEBENCH_IF_THRESHOLD_RUN_V2.log || git add LIVEBENCH_IF_THRESHOLD_RUN_V2.log
+          test ! -f LIVEBENCH_IF_THRESHOLD_RESULT_V2.json || git add LIVEBENCH_IF_THRESHOLD_RESULT_V2.json
+          git diff --cached --quiet || git commit -m "Record LiveBench IF threshold V2 execution evidence"
+          git push origin HEAD:"execute/livebench-if-threshold-v2-20261004"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-if-threshold-v2-evidence
+          path: |
+            LIVEBENCH_IF_THRESHOLD_EXIT_CODE_V2
+            LIVEBENCH_IF_THRESHOLD_RUN_V2.log
+            LIVEBENCH_IF_THRESHOLD_RESULT_V2.json
+          if-no-files-found: warn
+          retention-days: 90
