@@ -75,10 +75,10 @@ def blob3(p):
     return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
 
 EXPECTED_ADAPTER={
- "canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py":"c90d2e693621ae0a268e3c4f96bbdbfdcc827ec2",
+ "canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py":"a5ba517904d0511444bbeff443e0fdbcdb1b50f6",
  "canonical/runtime/zero_spend_provider_guard_v1.py":"356af559fc74ac3eab5532b2d8fee9ddfb98f962",
- "canonical/tests/test_finance_agent_v2_zero_spend_adapter_v1.py":"81d49edb2e7d265a14d2780eb8cad7b6adcb6435",
- "FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json":"280fc9b41221f6b4fa58ac50b18a0a4d6fceb5ec",
+ "canonical/tests/test_finance_agent_v2_zero_spend_adapter_v1.py":"a0ea700811dce8fb78a3013174ad541ccab91e18",
+ "FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json":"b1aa61f22a208e879ee17d3fe9ddb19104f04c69",
  "upstream/tools.py":"19b85ce4e110e39f410c52b2efa0e33f651fa6d1",
  "upstream/get_agent.py":"22c012241a430975266fb7f8d2fe7af8e9f1b8d4",
 }
@@ -101,6 +101,11 @@ gov=json.loads((A/"FINANCE_AGENT_V2_ZERO_SPEND_HARNESS_ADAPTER_V1.json").read_te
 assert gov["brain_subject"]["adapter_runtime"]["git_blob_sha"]==EXPECTED_ADAPTER["canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py"]
 assert gov["exact_upstream_source"]["tools_py_git_blob_sha"]==EXPECTED_ADAPTER["upstream/tools.py"]
 assert gov["exact_upstream_source"]["get_agent_py_git_blob_sha"]==EXPECTED_ADAPTER["upstream/get_agent.py"]
+assert gov["exact_upstream_source"]["commit_sha"]=="502aab6fdaa3fb9294905c7453f89882baa8d39b"
+assert gov["exact_upstream_source"]["tavily_python_version"]=="0.7.23"
+assert "POST_RESPONSE_GUARD_FAILURE_EXITS_ALREADY_ENTERED_HTTP_CONTEXT_BEFORE_PROPAGATION" in gov["proof_obligation"]
+adapter_src=(A/"canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py").read_text()
+assert "await self._inner.__aexit__(*exc)" in adapter_src
 assert gov["fresh_reality_authority"] is False
 assert gov["accounting"]["acceptance_credit_delta"]==0
 
@@ -116,4 +121,21 @@ cp=subprocess.run(
 )
 print(cp.stdout)
 assert cp.returncode==0,cp.stdout
-print("PASS__FINANCE_AGENT_ZERO_SPEND_ADAPTER__EXACT_VALS_BOUNDARIES__RETRY_SAFE__UNIT_TESTS_PASS__ZERO_CREDIT")
+
+# The first-party lock pins tavily-python 0.7.23. Prove the real client
+# instance permits the exact instance-level search replacement used by the adapter,
+# without making a provider request.
+import importlib.metadata
+assert importlib.metadata.version("tavily-python")=="0.7.23"
+from tavily import AsyncTavilyClient
+_real_client=AsyncTavilyClient(api_key="verifier-dummy-key")
+_real_original=_real_client.search
+async def _verifier_stub(*args,**kwargs):
+    return {"results":[]}
+_real_client.search=_verifier_stub
+assert _real_client.search is _verifier_stub
+_real_client.search=_real_original
+
+assert "HOST_SUFFIX_SPOOF_CANNOT_BE_RECLASSIFIED_AS_SEC_API_OR_TIINGO" in gov["proof_obligation"]
+assert "PINNED_TAVILY_0_7_23_ASYNC_CLIENT_SEARCH_IS_RUNTIME_PATCHABLE_WITHOUT_PROVIDER_NETWORK_CALL" in gov["proof_obligation"]
+print("PASS__FINANCE_AGENT_ZERO_SPEND_ADAPTER_HARDENED__EXACT_VALS_BOUNDARIES__REAL_TAVILY_PATCHABLE__ABORT_CONTEXT_CLEANUP__HOST_ISOLATION__ZERO_CREDIT")
