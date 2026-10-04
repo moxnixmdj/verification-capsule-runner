@@ -1,0 +1,30 @@
+name: Verify LiveBench slot feasibility truth repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_slot_feasibility_20261005/**"
+      - "verify_livebench_slot_feasibility.py"
+      - ".github/workflows/verify-livebench-slot-feasibility.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact-byte subject and pinned checker semantics
+        run: python verify_livebench_slot_feasibility.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-slot-feasibility-verification
+          path: livebench_slot_feasibility_verification.json
+          if-no-files-found: error
