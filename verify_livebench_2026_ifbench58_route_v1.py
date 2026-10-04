@@ -31,7 +31,7 @@ VALID_RELEASES = {
 
 EXPECTED_SOURCE_BLOBS = {
     "livebench/gen_ground_truth_judgment.py": "b36561da5b54380c724c507462d0ee65feefeac8",
-    "livebench/common.py": "bd31e4d7775f77e1e34f5f78ee06b74d1cd6e122",
+    "livebench/common.py": "95373cc6a82bc935013e2c23d2a183022f802f5c",
     "livebench/process_results/instruction_following/utils.py": "8ce01747887ec0792c8f024e1972e34ece781676",
 }
 
