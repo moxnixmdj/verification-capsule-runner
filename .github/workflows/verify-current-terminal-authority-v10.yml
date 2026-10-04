@@ -1,0 +1,28 @@
+name: Verify current terminal authority V10 coherence
+on:
+  push:
+    branches:
+      - verify/current-terminal-authority-v10-20261004-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          test "$(git hash-object verification_inputs/current_terminal_v10.json)" = "c4be50a693f5c02fae06eaf9e5c4dc6c02fb9516"
+          test "$(git hash-object verification_inputs/current_root_v10.json)" = "59711b491e5f4c94661f78401e66ea1f546f96c7"
+          test "$(git hash-object verification_inputs/current_bridge_v10.json)" = "5a574a2ff4cc4fd97fedd3cdf5f4241b2f3714b8"
+          test "$(git hash-object verification_inputs/v10_final_activation.json)" = "f5eda02fcc104bc8a5e13a82bfc8ec3d9515dcb2"
+          test "$(git hash-object verification_inputs/v10_frontier.json)" = "2012926814d0d06405da56da64e589b06fef1756"
+          test "$(git hash-object verification_inputs/v10_composition_receipt.json)" = "226832c5e9d5f4121f26d93bd645ed51dce474fe"
+          test "$(git hash-object verification_inputs/v10_routing_receipt.json)" = "5e5bf1082a8d7ce5b1fcd2c7b16a4d9d8acdc76d"
+          test "$(git hash-object verification_inputs/primary_source_deletions_receipt.json)" = "80c9767429671e72c58d000c8c2b3c5650d9b3ce"
+          test "$(git hash-object verification_inputs/v10_final_terminal_receipt.json)" = "fb2f686772d6252cd7630da08b490dcd10f99ef1"
+      - name: Verify exact active V10 authority coherence
+        run: python verify_current_terminal_authority_v10.py
