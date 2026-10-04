@@ -1,0 +1,26 @@
+name: Verify public description inverter V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/public_description_inverter_v1/**"
+      - "verify_public_description_inverter_v1.py"
+      - ".github/workflows/verify-public-description-inverter-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_public_description_inverter_v1.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-description-inverter-v1-receipt
+          path: public_description_inverter_v1_receipt.json
+          if-no-files-found: error
