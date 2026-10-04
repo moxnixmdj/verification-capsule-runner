@@ -19,6 +19,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - name: Verify exact zero-reality carrier path
         run: python verify_livebench_zero_spend_carrier_v1.py

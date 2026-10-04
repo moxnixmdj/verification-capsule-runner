@@ -29,6 +29,8 @@ def memory_mb()->int|None:
 
 def main()->int:
     errors=[]
+    if sys.version_info[:2] != (3,12):
+        errors.append("PYTHON_VERSION_MISMATCH:"+sys.version.split()[0])
     actual={}
     for key,(rel,expected) in EXPECTED.items():
         p=ROOT/rel
