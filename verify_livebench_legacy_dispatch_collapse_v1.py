@@ -11,7 +11,8 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-HF_REVISION = "0868379c4b5cf62aeacaf8be4f08fced815c81bb"\nHF_URL = f"https://huggingface.co/datasets/livebench/instruction_following/resolve/{HF_REVISION}/data/test-00000-of-00001.parquet"
+HF_REVISION = "0868379c4b5cf62aeacaf8be4f08fced815c81bb"
+HF_URL = f"https://huggingface.co/datasets/livebench/instruction_following/resolve/{HF_REVISION}/data/test-00000-of-00001.parquet"
 HF_SHA256 = "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
 HF_BYTES = 537024
 LB_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
@@ -92,7 +93,9 @@ def main() -> int:
         "pinned_inputs": {
             "livebench_commit": LB_COMMIT,
             "gen_ground_truth_judgment_git_blob_sha": JUDGMENT_GIT_BLOB,
-            "hf_revision": HF_REVISION,\n            "hf_transport_ref": HF_REVISION,\n            "hf_transport_safety": "IMMUTABLE_REVISION_URL_PLUS_EXACT_SHA256_AND_BYTE_LENGTH",
+            "hf_revision": HF_REVISION,
+            "hf_transport_ref": HF_REVISION,
+            "hf_transport_safety": "IMMUTABLE_REVISION_URL_PLUS_EXACT_SHA256_AND_BYTE_LENGTH",
             "hf_parquet_sha256": HF_SHA256,
             "hf_parquet_bytes": HF_BYTES,
         },
