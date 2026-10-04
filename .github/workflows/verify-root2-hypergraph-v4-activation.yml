@@ -1,0 +1,27 @@
+name: Verify Root2 hypergraph V4 activation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_hypergraph_v4_activation/**"
+      - ".github/workflows/verify-root2-hypergraph-v4-activation.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact activation blobs
+        run: |
+          test "$(git hash-object capsules/root2_hypergraph_v4_activation/ROOT2_PROOF_HYPERGRAPH_CURRENT_REBIND_V4.json)" = "8d3f20c8b8379b282f9b03fc73ba82f6f8946fa5"
+          test "$(git hash-object capsules/root2_hypergraph_v4_activation/ROOT2_PROOF_HYPERGRAPH_CURRENT_REBIND_V4_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json)" = "b0449e7ba797a0084f6a3c74aa12a29c42f32c2d"
+          test "$(git hash-object capsules/root2_hypergraph_v4_activation/ROOT2_PROOF_HYPERGRAPH_CURRENT_REBIND_V4_ACTIVATION_V1.json)" = "9d4b5605db644ab5c0a5fe4a3be27fb16bcd995c"
+          test "$(git hash-object capsules/root2_hypergraph_v4_activation/CURRENT_TERMINAL_AUTHORITY_V1.json)" = "3d12bc96030289c7a355bc18eaa73253281ae40a"
+          test "$(git hash-object capsules/root2_hypergraph_v4_activation/ROOT2_ROOT3_MINIMUM_EXECUTION_FRONTIER_V1.json)" = "0dad8a9142e69a314ca98f0eea9f8bda75200287"
+      - name: Verify activation semantics
+        run: python capsules/root2_hypergraph_v4_activation/verify.py
