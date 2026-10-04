@@ -2,8 +2,17 @@ name: Verify Tool Discovery APT complete interface instance
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'canonical/runtime/tool_discovery_apt_complete_interface_instance_v1.py'
+      - 'canonical/tests/test_tool_discovery_apt_complete_interface_instance_v1.py'
+      - '.github/workflows/verify-tool-discovery-apt-interface.yml'
   push:
     branches: [main]
+    paths:
+      - 'canonical/runtime/tool_discovery_apt_complete_interface_instance_v1.py'
+      - 'canonical/tests/test_tool_discovery_apt_complete_interface_instance_v1.py'
+      - '.github/workflows/verify-tool-discovery-apt-interface.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -43,5 +52,3 @@ jobs:
           name: tool-discovery-apt-interface-instance-v1
           path: tool-discovery-apt-interface-instance.json
           if-no-files-found: error
-
-# trigger: live-interface-qualification-20261003
