@@ -11,8 +11,9 @@ from collections import Counter
 from itertools import cycle
 
 ARCH_BLOB = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
-FEAS_BLOB = "a0885303a9c7088c4eb6f0510963069e35750f02"
+FEAS_BLOB = "7477f5ea5bdeac3595ee2784a38d078fe2f385b0"
 COMPOSER_BLOB = "d73ec366b32252996258eae6d10d67d4d6a5e042"
+PLANNER_BLOB = "71e637c70edf1c582e28ea38b3b798965c803a06"
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 INSTRUCTIONS_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
 REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
@@ -23,6 +24,7 @@ SUBJECT = ROOT / "subject/livebench_composer_v2_20261005"
 ARCH = SUBJECT / "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py"
 FEAS = SUBJECT / "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py"
 COMPOSER = SUBJECT / "canonical/runtime/livebench_legacy15_contract_composer_v2.py"
+PLANNER = SUBJECT / "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py"
 
 
 def run(cmd, **kw):
@@ -41,6 +43,7 @@ def main() -> int:
     assert hash_object(ARCH) == ARCH_BLOB
     assert hash_object(FEAS) == FEAS_BLOB
     assert hash_object(COMPOSER) == COMPOSER_BLOB
+    assert hash_object(PLANNER) == PLANNER_BLOB
 
     live = pathlib.Path("/tmp/LiveBench")
     assert run(["git", "-C", str(live), "rev-parse", "HEAD"], capture_output=True).stdout.strip() == LIVEBENCH_COMMIT
@@ -57,6 +60,7 @@ def main() -> int:
     sys.path.insert(0, str(live / "livebench/if_runner"))
     from canonical.runtime import livebench_legacy15_composition_archetypes_v1 as arch
     from canonical.runtime import livebench_legacy15_contract_composer_v2 as comp
+    from canonical.runtime import livebench_legacy15_pointwise_optimal_v1 as opt
     from instruction_following_eval import instructions_registry, instructions_util
 
     words = list(instructions_util.WORD_LIST)
@@ -199,9 +203,32 @@ def main() -> int:
                 "MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:anything",
                 "MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:can",
                 "MANDATORY_END_PHRASE_CONTAINS_FORBIDDEN_WORD:help",
+                "STRICT_NONEMPTY_RESPONSE_IMPLIES_AT_LEAST_ONE_PUNKT_SENTENCE",
             }
             if not reasons or not reasons <= allowed:
                 failures.append({"name": name, "kind": "unknown_unsat_reason", "got": out})
+
+        plan = opt.solve_contracts(contracts)
+        receipt_counts["pointwise_cases"] += 1
+        if plan.get("status") != "CANDIDATE_POINTWISE_OPTIMAL":
+            failures.append({"name": name, "kind": "pointwise_fail_closed", "got": plan})
+            return
+        plan_flags = exact_all(contracts, str(plan["response"]))
+        exact_pass = sum(plan_flags)
+        theoretical = int(plan["theoretical_max_pass_count"])
+        if exact_pass != theoretical:
+            failures.append({
+                "name": name,
+                "kind": "pointwise_exact_max_mismatch",
+                "ids": [cc["instruction_id"] for cc in contracts],
+                "followed": plan_flags,
+                "exact_pass_count": exact_pass,
+                "theoretical_max_pass_count": theoretical,
+                "sacrificed_instruction_ids": plan.get("sacrificed_instruction_ids"),
+                "response": plan.get("response"),
+            })
+        else:
+            receipt_counts["pointwise_exact_optimum_match"] += 1
 
     # Exhaust every conflict-compatible structural identity set at cardinality 1..5
     # under four independently selected slot profiles.
@@ -312,13 +339,15 @@ def main() -> int:
             ],
             "CANDIDATE_WITNESS",
         )
-    out = comp.compose_contracts([
-        contract(comp.SENTENCES, num_sentences=1, relation="less than"),
-        contract(comp.FORBIDDEN, forbidden_words=wc_forbidden),
-    ])
-    assert out["status"] == "FAIL_CLOSED"
-    assert out["error"] == "LESS_THAN_ONE_SENTENCE_STRICT_FEASIBILITY_UNRESOLVED"
-    receipt_counts["sentence_less_than_one_fail_closed"] = 1
+    check_case(
+        "numeric:sentences:lessthan:1",
+        [
+            contract(comp.SENTENCES, num_sentences=1, relation="less than"),
+            contract(comp.FORBIDDEN, forbidden_words=wc_forbidden),
+        ],
+        "PROVED_UNSAT",
+    )
+    receipt_counts["sentence_less_than_one_proved_unsat"] = 1
 
     # Exact paragraph/bullet/section discrete domains.
     for p in range(1, 6):
@@ -364,7 +393,7 @@ def main() -> int:
     if failures:
         pathlib.Path("livebench_composer_v2_verification.json").write_text(
             json.dumps({
-                "schema": "PROJECT_BRAIN_LIVEBENCH_COMPOSER_V2_INDEPENDENT_VERIFICATION_V1",
+                "schema": "PROJECT_BRAIN_LIVEBENCH_POINTWISE_ENVELOPE_INDEPENDENT_VERIFICATION_V1",
                 "status": "FAIL",
                 "counts": dict(receipt_counts),
                 "failure_count": len(failures),
@@ -375,12 +404,13 @@ def main() -> int:
         raise SystemExit("VERIFICATION_FAILURES:" + str(len(failures)))
 
     receipt = {
-        "schema": "PROJECT_BRAIN_LIVEBENCH_COMPOSER_V2_INDEPENDENT_VERIFICATION_V1",
-        "status": "PASS__EXACT_PINNED_CHECKERS__ZERO_TERMINAL_ROWS",
+        "schema": "PROJECT_BRAIN_LIVEBENCH_POINTWISE_ENVELOPE_INDEPENDENT_VERIFICATION_V1",
+        "status": "PASS__POINTWISE_EXACT_MAX_MATCH__EXACT_PINNED_CHECKERS__ZERO_TERMINAL_ROWS",
         "subject_blobs": {
             "archetypes": ARCH_BLOB,
             "slot_feasibility": FEAS_BLOB,
             "composer": COMPOSER_BLOB,
+            "pointwise_planner": PLANNER_BLOB,
         },
         "pinned_livebench": {
             "commit": LIVEBENCH_COMMIT,
@@ -397,7 +427,7 @@ def main() -> int:
         "scope_statement": (
             "EXHAUSTIVE_928_STRUCTURAL_ID_SET_POSTVALIDATION_OVER_FOUR_SLOT_PROFILES__"
             "EXHAUSTIVE_1525_WORD_LEXICAL_COLLISION_SWEEPS__ALL_PUBLIC_WORD_THRESHOLDS__"
-            "ALL_SENTENCE_THRESHOLDS_EXCEPT_EXPLICIT_FAIL_CLOSED_LT1__DISCRETE_PARAGRAPH_"
+            "ALL_SENTENCE_THRESHOLDS_INCLUDING_STRICT_LT1_UNSAT__DISCRETE_PARAGRAPH_"
             "BULLET_SECTION_CROSS_PRODUCT__ALL_NTH_LOCATIONS_WITH_BOTH_END_AND_POSTSCRIPT_VARIANTS"
         ),
         "terminal_rows_read": 0,
@@ -409,7 +439,7 @@ def main() -> int:
         "capability_credit_delta": 0,
         "hard_nonclaims": [
             "THIS_IS_NOT_YET_A_FORMAL_PROOF_OF_THE_FULL_SLOT_CARTESIAN_PRODUCT",
-            "LESS_THAN_ONE_SENTENCE_REMAINS_FAIL_CLOSED",
+            "POINTWISE_MAXIMALITY_IS_VERIFIED_ONLY_OVER_THIS_FINITE_ENVELOPE_NOT_YET_THE_FULL_SLOT_CARTESIAN_PRODUCT",
             "NO_LIVEBENCH_ACCEPTANCE_CREDIT_FROM_THIS_RECEIPT_ALONE",
         ],
     }
