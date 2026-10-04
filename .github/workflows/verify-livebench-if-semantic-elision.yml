@@ -1,0 +1,28 @@
+name: Verify LiveBench IF semantic elision
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_if_semantic_elision.py
+      - subject/livebench_if_semantic_elision_v1/**
+      - .github/workflows/verify-livebench-if-semantic-elision.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify theorem and fail-closed bridge
+        run: python verify_livebench_if_semantic_elision.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-if-semantic-elision-receipt
+          path: livebench_if_semantic_elision_verification_receipt.json
+          if-no-files-found: error
