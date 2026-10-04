@@ -1,0 +1,29 @@
+name: Verify Root2 current 19 projection
+on:
+  push:
+    branches:
+      - "verify/root2-current-19-projection-20261004-sol"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_current_19_projection/**"
+      - "verify_root2_current_19_projection.py"
+      - ".github/workflows/verify-root2-current-19-projection.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_current_19_projection.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root2-current-19-projection
+          path: root2_current_19_projection_verification_receipt.json
+          if-no-files-found: error
