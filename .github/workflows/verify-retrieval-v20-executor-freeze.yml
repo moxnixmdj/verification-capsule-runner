@@ -1,0 +1,21 @@
+name: Verify Retrieval V20 frozen executor
+on:
+  push:
+    branches:
+      - verify/retrieval-v20-executor-freeze-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact executor bytes
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_verified_route_executor_v1.py)" = "dd1b4dfb8f2412867650c8a546285e38f3b1b9ee"
+          test "$(git hash-object canonical/tests/test_retrieval_verified_route_executor_v1.py)" = "9c404c7ff29ed9989f19472e3d0b641a3468e842"
+      - run: PYTHONPATH=. python canonical/tests/test_retrieval_verified_route_executor_v1.py
+      - run: PYTHONPATH=. python canonical/runtime/retrieval_verified_route_executor_v1.py
