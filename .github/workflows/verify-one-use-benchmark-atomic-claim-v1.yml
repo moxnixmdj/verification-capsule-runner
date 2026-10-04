@@ -1,5 +1,8 @@
 name: Verify one-use benchmark atomic claim V1
 on:
+  push:
+    branches:
+      - "verify/one-use-benchmark-atomic-claim-v1-20261004"
   pull_request:
     branches: [main]
     paths:
