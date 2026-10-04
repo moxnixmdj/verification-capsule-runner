@@ -7,7 +7,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SUB = ROOT / "subject" / "livebench_legacy15_joint_historical_replay_v1_20261004"
+# Critical-path subject: parameter-aware exact router, not the superseded
+# historical-replay snapshot.
+SUB = ROOT / "subject" / "livebench_legacy15_exact_router_v1"
 sys.path.insert(0, str(SUB))
 
 from canonical.runtime.livebench_legacy15_end2end_exact_synthetic_audit_v2 import audit
