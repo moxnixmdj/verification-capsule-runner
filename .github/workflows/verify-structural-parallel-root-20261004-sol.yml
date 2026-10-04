@@ -1,0 +1,19 @@
+name: Verify structural parallel root
+
+on:
+  pull_request:
+    paths:
+      - 'verify_structural_parallel_root_20261004_sol.py'
+      - 'subject/structural_parallel_root_20261004_sol/**'
+      - '.github/workflows/verify-structural-parallel-root-20261004-sol.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_structural_parallel_root_20261004_sol.py
