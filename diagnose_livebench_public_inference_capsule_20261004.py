@@ -38,6 +38,7 @@ EXPECTED_ACQUISITION_CLOSURE={
   "capability_discovery.py":"b9e7423ab24bf2da98869b02d782e791a779892a",
   "cli_contract_inference.py":"009c3c45040178844d84eaa15b0d47ca2e1f259f",
   "npm_package_utils.py":"05fd0591083034df48c3ee426d6b3e11e0183555",
+  "semantic_authorities.py":"1d74b9c2cdc0e387ab1d64f04c8f38f414f2d80e",
 }
 observed_acquisition_closure={
   name:git_blob_sha(SUB/name) for name in EXPECTED_ACQUISITION_CLOSURE
