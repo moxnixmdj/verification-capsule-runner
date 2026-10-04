@@ -28,6 +28,11 @@ jobs:
           PYTHONPATH: .
         run: |
           python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py --livebench-root /tmp/LiveBench --output livebench_legacy15_synthetic7424_receipt_v1.json
+      - name: Print receipt
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        run: |
+          test -f livebench_legacy15_synthetic7424_receipt_v1.json && cat livebench_legacy15_synthetic7424_receipt_v1.json || true
       - if: always()
         uses: actions/upload-artifact@v4
         with:
