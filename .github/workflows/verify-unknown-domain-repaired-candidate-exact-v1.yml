@@ -1,0 +1,24 @@
+name: Verify repaired Unknown-Domain candidate exact bytes
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_unknown_domain_repaired_candidate_exact_v1_20261005.py'
+      - '.github/workflows/verify-unknown-domain-repaired-candidate-exact-v1.yml'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json'
+      - 'canonical/runtime/**'
+      - '.github/workflows/unknown-domain-direct-one-use-production.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact repaired candidate and transitive closure
+        run: python verify_unknown_domain_repaired_candidate_exact_v1_20261005.py
