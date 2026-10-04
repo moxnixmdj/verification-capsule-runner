@@ -1,0 +1,29 @@
+name: Verify Root1 contrastive semantic gate
+
+on:
+  push:
+    branches:
+      - verify/root1-contrastive-semantic-gate-v1-sol
+    paths:
+      - "capsules/root1_contrastive_semantic_gate_v1/**"
+      - ".github/workflows/verify-root1-contrastive-semantic-gate-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root1_contrastive_semantic_gate_v1/**"
+      - ".github/workflows/verify-root1-contrastive-semantic-gate-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain gate bytes and adversarial behavior
+        run: python capsules/root1_contrastive_semantic_gate_v1/verify.py
