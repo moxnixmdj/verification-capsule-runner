@@ -5,5 +5,6 @@
   "launcher_git_blob_sha": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
   "production_workflow_git_blob_sha": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
   "production_authority": false,
-  "production_cases_generated": 0
+  "production_cases_generated": 0,
+  "reverify_reason": "FIX_VERIFIER_EXPRESSION_QUOTING_ONLY__SUBJECT_BYTES_UNCHANGED"
 }
