@@ -120,7 +120,7 @@ _SPECS: tuple[
     tuple[str, re.Pattern[str], Callable[[dict[str, str]], dict[str, Any]]], ...
 ] = (
     ("keywords:existence",
-     re.compile(r"Include keywords (?P<keywords>\[[^\]]*\]) in the response\.", re.I),
+     re.compile(r"(?<!not )Include keywords (?P<keywords>\[[^\]]*\]) in the response\.", re.I),
      _keywords),
     ("keywords:frequency",
      re.compile(r"In your response, the word (?P<keyword>.+?) should appear (?P<relation>less than|at least) (?P<frequency>\d+) times\.", re.I),
