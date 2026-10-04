@@ -1,0 +1,38 @@
+name: Unknown-Domain direct preclaim retry
+on:
+  push:
+    branches:
+      - 'unknown-domain-direct-launch/**'
+
+permissions:
+  contents: write
+
+jobs:
+  production-retry:
+    if: github.ref_type == 'branch' && github.ref_name == 'unknown-domain-direct-launch/76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recheck exact frozen retry subject
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          lease=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
+          assert hashlib.sha256(lease).hexdigest()=="76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9"
+          def blob(p):
+              b=Path(p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          assert blob("canonical/runtime/unknown_domain_direct_production_once_v1.py")=="4218195d0cf49252ac6733c0bd80b673826ef95a"
+          assert blob(".github/workflows/unknown-domain-direct-one-use-production.yml")=="190ac379f5cf2b2b2005b6f537f43643a80ff24e"
+          print("exact preclaim retry subject PASS")
+          PY
+      - name: Atomic claim then exactly one production population
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m canonical.runtime.unknown_domain_direct_production_once_v1
