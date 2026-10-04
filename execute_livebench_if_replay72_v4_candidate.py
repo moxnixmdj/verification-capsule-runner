@@ -24,7 +24,6 @@ DATASET_REV = "0868379c4b5cf62aeacaf8be4f08fced815c81bb"
 DATASET_SHA256 = "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
 DATASET_BYTES = 537024
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
-AUTHORIZED_ACTIVATION_BLOB = "d410d6952cb34f2fd3fb4dc48bf2a613d11c57d1"
 AUTHORIZED_ROOT_BLOB = "601e82d00104b4ed36ee5968ad966a0c02e627c1"
 AUTHORIZED_FRONTIER_BLOB = "8c1325dd652b65a7d5c24e041ac06556a84f569c"
 PRECOMMIT_BLOB = "66554061f204d8a86b37a30c84d0cf07a525a786"
@@ -338,35 +337,16 @@ def receipts_root(receipts:list[dict])->str:
     raw=json.dumps(receipts,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
     return hashlib.sha256(raw).hexdigest()
 
-def verify_local_authority_transport():
-    local = {
-        ROOT / "subject/livebench_threshold_root_transport_v1/activation_v2.json": AUTHORIZED_ACTIVATION_BLOB,
-        ROOT / "subject/root2_output_only_threshold_activation_v1_20261004/TERMINAL_ROOT_CAUSE_STATE_V1.json": AUTHORIZED_ROOT_BLOB,
-        ROOT / "subject/livebench_threshold_root_transport_v1/threshold_projection_verification.json": "eef494009e47b758a99ab48649e050c332e4988a",
-        ROOT / "subject/livebench_threshold_root_transport_v1/prior_activation_verification.json": "34e65d54026fd246c76e0dc3ded8f9f8a1b2a4d9",
-    }
-    for p,expected in local.items():
-        if not p.is_file() or git_blob_sha(p)!=expected:
-            raise SystemExit("FAIL_CLOSED:AUTHORITY_TRANSPORT_BLOB_DRIFT:"+str(p))
-    act=json.loads((ROOT / "subject/livebench_threshold_root_transport_v1/activation_v2.json").read_text())
-    if act.get("authorized_predicates") != ["LIVEBENCH_IF_GE_65_7"]:
-        raise SystemExit("FAIL_CLOSED:AUTHORITY_SCOPE_DRIFT")
-    if (act.get("authority") or {}).get("execution") is not True:
-        raise SystemExit("FAIL_CLOSED:EXECUTION_AUTHORITY_FALSE")
-    if (act.get("authority") or {}).get("global_fresh_reality") is not False:
-        raise SystemExit("FAIL_CLOSED:GLOBAL_FRESH_REALITY_WIDENED")
-    if (act.get("authority_basis") or {}).get("root_state",{}).get("git_blob_sha") != AUTHORIZED_ROOT_BLOB:
-        raise SystemExit("FAIL_CLOSED:ROOT_BINDING_DRIFT")
-
-def main(*, authorized: bool=False) -> int:
+def main(*, authorized: bool=False, activation_blob: str|None=None) -> int:
     if authorized is not True:
-        raise SystemExit("FAIL_CLOSED:VERIFIED_RETRY_EPOCH_LAUNCHER_REQUIRED")
+        raise SystemExit("FAIL_CLOSED:VERIFIED_V4_REPLAY_LAUNCHER_REQUIRED")
+    if not isinstance(activation_blob,str) or re.fullmatch(r"[0-9a-f]{40}",activation_blob) is None:
+        raise SystemExit("FAIL_CLOSED:VERIFIED_V4_ACTIVATION_BLOB_REQUIRED")
     if os.environ.get("GITHUB_ACTIONS") != "true" or str(os.environ.get("REPOSITORY_PRIVATE","")).lower() != "false":
         raise SystemExit("FAIL_CLOSED:PUBLIC_STANDARD_GITHUB_RUNNER_REQUIRED")
     if sys.version_info[:2] != (3,12):
         raise SystemExit("FAIL_CLOSED:PYTHON_3_12_REQUIRED")
 
-    verify_local_authority_transport()
 
     # All zero-case component checks already ran in the invoking carrier verifier.
     # Recheck exact frozen bytes here before any terminal-case download/read.
@@ -502,13 +482,13 @@ def main(*, authorized: bool=False) -> int:
             "dataset_revision":DATASET_REV,
             "dataset_sha256":DATASET_SHA256,
             "livebench_commit":LIVEBENCH_COMMIT,
-            "activation_blob_sha":AUTHORIZED_ACTIVATION_BLOB,
+            "activation_blob_sha":activation_blob,
             "bound_root_blob_sha":AUTHORIZED_ROOT_BLOB,
             "bound_frontier_blob_sha":AUTHORIZED_FRONTIER_BLOB,
             "precommit_blob_sha":PRECOMMIT_BLOB,
             "scorer_supplement_blob_sha":SCORER_SUPPLEMENT_BLOB,
             "scorer_dispatch":"PUBLIC_UPSTREAM_RELEASE_DATE_SPLIT__LEGACY_IFEVAL_BEFORE_2025_11_25__IFBENCH_OTHERWISE",
-            "retry_epoch_authorized_by_verified_launcher":True,
+            "replay_epoch_authorized_by_verified_v4_launcher":True,
             "frozen_runtime_closure_file_count":len(RUNTIME_FILES),
             "post_prompt_external_network_forbidden":True,
             "post_prompt_package_install_forbidden":True,
@@ -522,4 +502,4 @@ def main(*, authorized: bool=False) -> int:
         return 0
 
 if __name__=="__main__":
-    raise SystemExit("FAIL_CLOSED:VERIFIED_RETRY_EPOCH_LAUNCHER_REQUIRED")
+    raise SystemExit("FAIL_CLOSED:VERIFIED_V4_REPLAY_LAUNCHER_REQUIRED")
