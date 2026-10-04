@@ -23,6 +23,6 @@ jobs:
         shell: bash
         run: |
           test "$(git hash-object terminal_adaptive_minimum_action_policy_v1_candidate.py)" = "bfffe6dff32f5445a0c52657f7d9ec8d544b1f79"
-          test "$(git hash-object TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V1.json)" = "95668b28dd6b544b275944bc6ecae7a876b58ac7"
+          test "$(git hash-object TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V1.json)" = "40c27f71cd7ca27cc2330e8a8130bf49795c5315"
       - name: Verify semantics
         run: python verify_terminal_adaptive_minimum_action_policy_v1.py
