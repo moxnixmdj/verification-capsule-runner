@@ -19,10 +19,21 @@ jobs:
           python-version: "3.12"
       - name: Verify frozen source bytes and derived claims
         run: python verify_terminal_adaptive_minimum_cut_v1.py
-      - name: Test exact adaptive cut solver
-        run: python -m pytest -q canonical/tests/test_minimum_terminal_cut_solver_v2.py
-      - name: Test current supertransaction compiler
-        run: python -m pytest -q canonical/tests/test_terminal_adaptive_supertransaction_v1.py
+      - name: Run assertion test modules without third-party dependencies
+        run: |
+          python - <<'PY'
+          import importlib
+          for name in (
+              "canonical.tests.test_minimum_terminal_cut_solver_v2",
+              "canonical.tests.test_terminal_adaptive_supertransaction_v1",
+          ):
+              m=importlib.import_module(name)
+              tests=[getattr(m,k) for k in sorted(dir(m)) if k.startswith("test_") and callable(getattr(m,k))]
+              assert tests,(name,"NO_TESTS")
+              for fn in tests:
+                  fn()
+                  print("PASS",name,fn.__name__)
+          PY
       - name: Execute current supertransaction compiler
         run: |
           python canonical/runtime/terminal_adaptive_supertransaction_v1.py > adaptive_result.json
