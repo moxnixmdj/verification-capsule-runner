@@ -47,7 +47,7 @@ jobs:
           curl -L --fail --retry 4 --retry-all-errors --connect-timeout 30 \
             -o "$MODEL" \
             'https://huggingface.co/Chungulus/Qwen3.8-27B-Q2_K-GGUF/resolve/main/Qwen3.8-27B-Q2_K.gguf?download=true'
-          test "$(stat -c%s "$MODEL")" = 10865000000
+          echo MODEL_BYTES=$(stat -c%s "$MODEL")
           echo '185bc2aa1f15a34ef9d2b14f51f9edda69f4e43b5ee9e39e3c2ae8c439ddd1a5  '"$MODEL" | sha256sum -c -
           df -B1 /
       - name: Execute zero-terminal-case load and generation fit
