@@ -1,0 +1,21 @@
+name: Verify isolated Unknown-Domain V3 exact-float theorem
+on:
+  pull_request:
+    branches:
+      - 'verify-sink/unknown-domain-v3-exact-float-20261005'
+    paths:
+      - 'verify_unknown_domain_v3_exact_float_universal_20261005.py'
+      - '.github/workflows/verify-unknown-domain-v3-isolated-exact-float-20261005.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce V2 failure and verify V3 universal theorem
+        run: python verify_unknown_domain_v3_exact_float_universal_20261005.py
