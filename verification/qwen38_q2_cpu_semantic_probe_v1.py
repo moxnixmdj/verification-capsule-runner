@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Trigger independent execution receipt after verifier installation.
 from __future__ import annotations
 import json
 import re
