@@ -3,3 +3,4 @@ mode: output-only threshold early-stop
 root_blob: 601e82d00104b4ed36ee5968ad966a0c02e627c1
 activation_blob: d410d6952cb34f2fd3fb4dc48bf2a613d11c57d1
 diagnostic_rerun: instruction-id metadata only
+rerun: exact official legacy/new scorer dispatch
