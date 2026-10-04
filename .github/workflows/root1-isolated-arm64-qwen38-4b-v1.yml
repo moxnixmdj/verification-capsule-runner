@@ -1,0 +1,124 @@
+name: Root1 isolated ARM64 Qwen3.8-4B semantic seed V1
+
+on:
+  push:
+    branches:
+      - root1-isolated-arm64-20261004
+    paths:
+      - '.github/workflows/root1-isolated-arm64-qwen38-4b-v1.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: root1-isolated-arm64-qwen38-4b-v1
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  MODEL_REPO: empero-ai/Qwen3.8-4B-Distill-GGUF
+  MODEL_REV: 391fc7d103e3942a408def3e4f51c2f85d464417
+  MODEL_FILE: Qwen3.8-4B-Q4_K_M.gguf
+  MODEL_BYTES: '2783446304'
+  MODEL_SHA256: dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790
+  LLAMA_COMMIT: 0504396140d1c882f5f6ee34466a42db7ae90114
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prove isolated public-runner envelope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" = "false"
+          uname -a
+          nproc
+          free -h
+          df -h .
+          echo "incremental_spend_usd=0"
+
+      - name: Acquire exact frozen subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://huggingface.co/$MODEL_REPO/resolve/$MODEL_REV/$MODEL_FILE?download=true"
+          curl -fL --retry 8 --retry-all-errors --retry-delay 3 --connect-timeout 30             -o "$MODEL_FILE" "$url"
+          test "$(stat -c '%s' "$MODEL_FILE")" = "$MODEL_BYTES"
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_FILE" | sha256sum -c -
+
+      - name: Build exact frozen llama.cpp runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_COMMIT"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_COMMIT"
+          cmake -S llama.cpp -B llama.cpp/build             -DCMAKE_BUILD_TYPE=Release             -DGGML_NATIVE=OFF             -DLLAMA_CURL=OFF
+          cmake --build llama.cpp/build --config Release -j 4 --target llama-server
+
+      - name: Start exact local subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./llama.cpp/build/bin/llama-server             -m "$MODEL_FILE"             -c 4096             -t 4             -np 1             --host 127.0.0.1             --port 8080             > llama_server.log 2>&1 &
+          echo "$!" > llama_server.pid
+
+          ready=0
+          for _ in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat llama_server.pid)" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if test "$ready" != "1"; then
+            cat llama_server.log
+            exit 1
+          fi
+          curl -fsS http://127.0.0.1:8080/health
+          grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat llama_server.pid)/status" || true
+
+      - name: Execute strict frozen eight-case semantic-seed suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verify_qwen38_4b_root1_semantic_seed_v1.py
+
+      - name: Emit evidence
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          echo "=== RECEIPT ==="
+          cat qwen38_4b_root1_semantic_seed_receipt.json 2>/dev/null
+          echo "=== SERVER MEMORY ==="
+          if test -f llama_server.pid && kill -0 "$(cat llama_server.pid)" 2>/dev/null; then
+            grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat llama_server.pid)/status" || true
+          fi
+          echo "=== SERVER LOG TAIL ==="
+          tail -n 200 llama_server.log 2>/dev/null
+          if test -f llama_server.pid; then
+            kill "$(cat llama_server.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload bounded qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root1-isolated-arm64-qwen38-4b-v1
+          path: |
+            qwen38_4b_root1_semantic_seed_receipt.json
+            llama_server.log
+          if-no-files-found: warn
+          retention-days: 7
