@@ -12,7 +12,7 @@ import json
 import nltk
 
 PINNED_LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
-PINNED_INSTRUCTIONS_UTIL_BLOB = "3f6bbac96ef3d0e936f523069b50be8c31d67f59"
+PINNED_INSTRUCTIONS_UTIL_BLOB = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
 ENDINGS = (None, "Any other questions?", "Is there anything else I can help with?")
 POSTS = (None, "P.S.", "P.P.S")
 
