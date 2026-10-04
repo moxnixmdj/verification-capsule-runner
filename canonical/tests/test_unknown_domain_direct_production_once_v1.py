@@ -47,32 +47,102 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertNotIn("evaluator_secret",raw)
 
 
-    def test_lease_does_not_require_impossible_self_digest(self):
-        with tempfile.TemporaryDirectory() as d:
-            root=Path(d)
-            payload=b"component-bytes"
-            (root/"component.bin").write_bytes(payload)
-            lease={
-                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
-                "target_predicate":prod.TARGET,
-                "authorized_leaves":sorted(prod.LEAVES),
-                "limits":{"production_populations":1,"production_cases":27,"replay_allowed":False,"replacement_allowed":False},
-                "resources":{"persistent_learned_bytes":0,"external_frontier_model_calls":0,"external_learned_capability_calls":0,"incremental_spend_usd":0},
-                "exact_components":{"component.bin":prod._git_blob(payload)},
-            }
-            old=prod.ROOT
-            try:
-                prod.ROOT=root
-                prod.validate_lease(lease,"f"*64)
-            finally:
-                prod.ROOT=old
+    def test_actual_lease_validates_with_closed_transitive_components(self):
+        lease=json.loads(prod.LEASE_PATH.read_text())
+        raw,digest=prod.lease_bytes_and_digest()
+        self.assertIn("canonical/runtime/unknown_domain_direct_hidden_generator_v1.py",lease["exact_components"])
+        prod.validate_lease(lease,digest)
+        self.assertEqual(prod.canonical_identity_from_lease(lease),lease["lease_identity"])
 
-    def test_lease_digest_is_raw_file_sha256(self):
+    def test_claim_identity_ignores_incidental_metadata(self):
+        lease=json.loads(prod.LEASE_PATH.read_text())
         with tempfile.TemporaryDirectory() as d:
-            p=Path(d)/"lease.json"; p.write_bytes(b'{"x":1}\n')
-            raw,digest=prod.lease_bytes_and_digest(p)
-            import hashlib
-            self.assertEqual(digest,hashlib.sha256(raw).hexdigest())
+            p1=Path(d)/"a.json"
+            p2=Path(d)/"b.json"
+            a=json.loads(json.dumps(lease))
+            b=json.loads(json.dumps(lease))
+            b["date"]="2099-12-31"
+            b["status"]="INCIDENTAL_METADATA_CHANGED"
+            p1.write_text(json.dumps(a,sort_keys=True))
+            p2.write_text(json.dumps(b,sort_keys=True))
+            _,d1=prod.lease_bytes_and_digest(p1)
+            _,d2=prod.lease_bytes_and_digest(p2)
+            self.assertEqual(d1,d2)
+
+    def test_claim_identity_changes_on_load_bearing_subject_mutation(self):
+        lease=json.loads(prod.LEASE_PATH.read_text())
+        original=prod.canonical_identity_from_lease(lease)
+        altered=json.loads(json.dumps(lease))
+        altered["exact_components"]["canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"]="0"*40
+        changed=prod.canonical_identity_from_lease(altered)
+        self.assertNotEqual(original,changed)
+
+
+    def test_claim_201_with_invalid_response_is_sealed_without_execution(self):
+        called={"execute":False}
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":"refs/heads/wrong","object":{"sha":"short"}}
+        def fake_execute(**kwargs):
+            called["execute"]=True
+            return {}
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="a"*40,digest="e"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertFalse(called["execute"])
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"e"*64)
+        self.assertEqual(out["claim_create_http_status"],201)
+        self.assertEqual(out["status"],"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED")
+        self.assertEqual(out["production_cases_generated"],0)
+        self.assertFalse(out["replay_allowed"])
+
+    def test_post_claim_execution_exception_is_sealed_fail_closed(self):
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":ref,"object":{"sha":"c"*40}}
+        def fake_execute(**kwargs):
+            raise RuntimeError("synthetic-post-claim-failure")
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="a"*40,digest="d"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"d"*64)
+        self.assertEqual(out["claim_create_http_status"],201)
+        self.assertEqual(out["status"],"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED")
+        self.assertEqual(out["exception_type"],"RuntimeError")
+        self.assertFalse(out["replay_allowed"])
+        self.assertFalse(out["replacement_allowed"])
+
+    def test_result_persistence_recovers_exact_existing_bytes_after_ambiguous_write(self):
+        content={"schema":"X","status":"PRODUCTION_PASS","case_results":[{"case_id":"c1","pass":True}]}
+        raw=prod._result_bytes(content)
+        puts={"n":0}
+        def fake_put(repo,token,branch,path,doc):
+            puts["n"]+=1
+            return 0,{"message":"TimeoutError"}
+        def fake_get(repo,token,branch,path):
+            return 200,raw,"d"*40
+        receipt=prod.persist_result_durable(
+            repo="x/y",token="t",branch="claim",path="result.json",content=content,
+            attempts=1,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,emit_recovery=False,
+        )
+        self.assertEqual(puts["n"],1)
+        self.assertEqual(receipt["status"],"DURABLE_VERIFIED_EXISTING")
+        self.assertEqual(receipt["content_sha"],"d"*40)
+
+    def test_result_persistence_retries_and_fails_closed_without_exact_remote_bytes(self):
+        content={"schema":"X","status":"PRODUCTION_PASS"}
+        puts={"n":0}
+        def fake_put(repo,token,branch,path,doc):
+            puts["n"]+=1
+            return 503,{"message":"temporary"}
+        def fake_get(repo,token,branch,path):
+            return 200,b"wrong-bytes","e"*40
+        with self.assertRaisesRegex(prod.ProductionLaunchError,"RESULT_DURABILITY_NOT_ESTABLISHED:503"):
+            prod.persist_result_durable(
+                repo="x/y",token="t",branch="claim",path="result.json",content=content,
+                attempts=3,put_fn=fake_put,get_fn=fake_get,sleep_fn=lambda _:None,emit_recovery=False,
+            )
+        self.assertEqual(puts["n"],3)
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
