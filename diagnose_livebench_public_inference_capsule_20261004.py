@@ -1,9 +1,16 @@
 from __future__ import annotations
-import importlib.util, json, sys, types
+import hashlib, importlib.util, json, sys, types
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 SUB=ROOT/"subject"/"livebench_zero_case_resource_fit_20261004"
+EXPECTED_GOAL_COMPILER_BLOB="4b61fe911471854ec15c7900816f61e9e55f602e"
+
+def git_blob_sha(path: Path) -> str:
+    raw=path.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(raw)).encode("ascii")+b"\\0"+raw).hexdigest()
+
+assert git_blob_sha(SUB/"goal_compiler.py")==EXPECTED_GOAL_COMPILER_BLOB
 
 canonical=types.ModuleType("canonical")
 runtime=types.ModuleType("canonical.runtime")
