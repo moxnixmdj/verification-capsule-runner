@@ -1,0 +1,263 @@
+{
+  "schema": "PROJECT_BRAIN_TERMINAL_ROOT_CAUSE_STATE_V1",
+  "date": "2026-10-03",
+  "status": "ACTIVE_FAIL_CLOSED__THREE_ROOT_MODEL__TOOL_DISCOVERY_PROMOTED__ROOT1_CURRENTLY_INACTIVE",
+  "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
+  "current_acceptance": {
+    "accepted_families": 5,
+    "open_families": 14,
+    "proved_atomic": 12,
+    "unresolved_atomic": 26,
+    "total_families": 19,
+    "total_atomic": 38,
+    "terminal": false
+  },
+  "roots": {
+    "root_1_capability_missing": {
+      "status": "CURRENTLY_INACTIVE__ZERO_POSITIVELY_ESTABLISHED_CAPABILITY_GAPS__REOPEN_ONLY_ON_CONSTRUCTIVE_EVIDENCE",
+      "verified_learning_control": {
+        "path": "canonical/verification/UNIVERSAL_LEARNING_CONTRACT_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+        "git_blob_sha": "2bff1082b81755ff5f8e8f0e97587090cc873283",
+        "proved": "ALL_UNVERIFIED_ENVIRONMENTS_ENTER_FAIL_CLOSED_LEARNING_CONTROL__VERIFICATION_PRECEDES_TRUST__ENVIRONMENT_CHANGE_INVALIDATES_TO_UNKNOWN",
+        "not_proved": "UNIVERSAL_SEMANTIC_LEARNING_SUCCESS"
+      },
+      "classification_rule": "UNKNOWN_OR_UNPROVED_CAPABILITY_MUST_NOT_BE_CLASSIFIED_AS_MISSING__ROOT1_REQUIRES_POSITIVE_EVIDENCE_OF_AN_OPERATIVE_CAPABILITY_GAP_AFTER_AVAILABLE_ACQUISITION_ROUTES_ARE_ACCOUNTED_FOR",
+      "current_positive_root1_blockers": [],
+      "reclassified_prior_candidates": [
+        "FINANCE_UNCOVERED_SCOPE_AUDIT__ROOT3_DIRECT_SCOPE_EVIDENCE_RESIDUAL__OPERATIVE_SOURCE_ADMITTED",
+        "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT__ROOT3_DIRECT_SCOPE_EVIDENCE_RESIDUAL__OPERATIVE_SOURCE_ADMITTED"
+      ],
+      "reconciliation": {
+        "path": "canonical/governance/POST_SOURCE_GATE_ROOT1_RECLASSIFICATION_V1.json",
+        "rule": "SOURCE_ADMISSION_REMOVES_THE_ONLY_CURRENT_POSITIVE_OPERATIVE_SOURCE_MISSING_PREMISES__DIRECT_ORACLE_LEAVES_REMAIN_OPEN_AS_SCOPE_EVIDENCE"
+      },
+      "active_acquisition_control": {
+        "path": "canonical/governance/ROOT1_ACQUISITION_CLOSURE_CONTROLLER_V3_ACTIVATION_V1.json",
+        "git_blob_sha": "d48cb0f608675256cdd57402288f1a045f8414e6",
+        "status": "ACTIVE__INDEPENDENT_PUBLIC_RUNNER_PASS__ROOT1_INACTIVE__ZERO_CREDIT",
+        "operative_runtime": "canonical/runtime/root1_acquisition_closure_controller_v3.py",
+        "operative_runtime_git_blob_sha": "7c9ba29c6ba32df782d5d0322dc06b53ea447391",
+        "controller_governance": "canonical/governance/ROOT1_ACQUISITION_CLOSURE_CONTROLLER_V3.json",
+        "controller_governance_git_blob_sha": "e74c994a01e7b8cf93eb4f463beb6e33cda56e94",
+        "envelope_audit": "canonical/governance/ROOT1_TERMINAL_FAMILY_ENVELOPE_AUDIT_V1.json",
+        "envelope_audit_git_blob_sha": "1318af58b44ea733421aded33b56144875e0a3e3",
+        "independent_core_verification": "canonical/verification/ROOT1_ACQUISITION_CLOSURE_CONTROLLER_V3_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+        "independent_core_verification_git_blob_sha": "060788a84f33ff3474c62151f415688f1297ea4f",
+        "final_activation_verification": {
+          "path": "canonical/verification/ROOT1_ACQUISITION_CLOSURE_V3_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+          "git_blob_sha": "48a51ae641b382442383766fff4ba513118f4c46",
+          "verifier_repository": "moxnixmdj/verification-capsule-runner",
+          "verifier_pull_request": 1532,
+          "verifier_merge_commit": "fca746fe40c408da2cf0b9ffd745a7a4477efaa8",
+          "workflow_run_id": 37165391009,
+          "workflow_job_id": 111327124430,
+          "conclusion": "success"
+        },
+        "current_envelope_sealed": false,
+        "current_declared_family_partition": "5_VERIFIED_OWNED__14_ROUTE_COVERAGE_UNPROVED_NOT_MISSING",
+        "previous_control": {
+          "path": "canonical/governance/ROOT1_ACQUISITION_CLOSURE_CONTROLLER_V2_ACTIVATION_V1.json",
+          "status": "HISTORICAL_SUPERSEDED_BY_V3__VERIFIED_FALLBACK_RETAINED"
+        }
+      },
+      "current_blocker_classification_seal": {
+        "path": "canonical/governance/ROOT1_CURRENT_BLOCKER_CLASSIFICATION_SEAL_V1.json",
+        "git_blob_sha": "d8346fec4326ee3fed32f08dcd29782bbc3647d2",
+        "status": "MERGED_CURRENT_MAIN__LIVE_RECOMPUTATION_PASS__ZERO_ROOT1_RESIDUAL__ZERO_CREDIT",
+        "theorem": "CURRENT_UNRESOLVED_26_EQUALS_16_ROOT2_ONLY_PLUS_7_ROOT3_ONLY_PLUS_3_MIXED__DISJOINT__ROOT1_RESIDUAL_ZERO",
+        "independent_verifier": {
+          "repository": "moxnixmdj/verification-capsule-runner",
+          "pull_request": 1540,
+          "head_sha": "a8789e318ddd4549438d1022b8215b9623bdeaf0",
+          "workflow_run_id": 37166028401,
+          "conclusion": "success"
+        },
+        "current_main_live_recomputation": {
+          "target_families": 19,
+          "atomic_predicates": 38,
+          "proved_predicates": 12,
+          "unresolved_predicates": 26,
+          "root2_only": 16,
+          "root3_only": 7,
+          "root2_and_root3": 3,
+          "root1_positive_gaps": 0,
+          "root1_current_residual": 0
+        },
+        "hard_nonclaim": "DOES_NOT_SEAL_FUTURE_ROOT1_IMPOSSIBILITY_OR_14_FAMILY_ROUTE_COVERAGE"
+      }
+    },
+    "root_2_measurement_or_comparator": {
+      "status": "OPEN",
+      "rule": "WHEN_CAPABILITY_MAY_EXIST_BUT_EQUAL_OR_BETTER_STRENGTH_CANNOT_BE_VALIDLY_ESTABLISHED__CLASSIFY_ROOT2",
+      "preferred_discharge_order": [
+        "OBJECTIVE_CEILING_OR_FLOOR",
+        "FORMAL_DOMINANCE_OR_EQUIVALENCE",
+        "EXISTING_CONTENT_ADDRESSED_COMPARATOR_EVIDENCE",
+        "MATCHED_EMPIRICAL_COMPARISON",
+        "NEW_REALITY_ONLY_IF_IRREDUCIBLE"
+      ],
+      "active_closure_controller": {
+        "activation_path": "canonical/governance/ROOT2_CLOSURE_CONTROLLER_V2_ACTIVATION_V1.json",
+        "activation_git_blob_sha": "4cbc1b9f478654b2dc671a8b54f91b5c4b91c019",
+        "verification_path": "canonical/verification/ROOT2_CLOSURE_CONTROLLER_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+        "verification_git_blob_sha": "430b5918cb455304bf9227f4ada8dd686f615f78",
+        "current_frontier_path": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3.json",
+        "current_frontier_git_blob_sha": "681123ef6cff3506d66af6b31b61c8bc14a8a913",
+        "status": "CANDIDATE__ROOT2_FRONTIER_V3_SUBJECT_VERIFIED__POINTER_PROJECTION_REVERIFY_PENDING__ZERO_CREDIT",
+        "current_partition": "16_ROOT2_ONLY__3_ROOT2_AND_ROOT3__19_TOUCHING_ROOT2",
+        "fresh_reality_authority": false,
+        "current_frontier_activation_path": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3_ACTIVATION_V1.json",
+        "current_frontier_activation_git_blob_sha": "76d36bc34947e726502d0c8fc1dbb961d6442c88",
+        "current_frontier_verification_path": "canonical/verification/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+        "current_frontier_verification_git_blob_sha": "8436a9eb30312b959ba094394e60f26b4833a3a2"
+      }
+    },
+    "root_3_scope_completeness": {
+      "status": "OPEN",
+      "rule": "WHEN_EVIDENCE_PROVES_ONLY_A_SUBSET_OF_THE_CLAIMED_SCOPE__CLASSIFY_ROOT3",
+      "preferred_discharge_order": [
+        "UNIVERSAL_FORMAL_SCOPE_PROOF",
+        "GENUINELY_EXHAUSTIVE_FINITE_UNIVERSE",
+        "SCOPE_SAFE_STRONGER_PROOF",
+        "ADDITIONAL_ADMISSIBLE_EVIDENCE_ONLY_FOR_IRREDUCIBLE_RESIDUAL"
+      ],
+      "hard_rule": "FINITE_SAMPLE_SUCCESS_NEVER_IMPLIES_OPEN_WORLD_SCOPE_COMPLETENESS"
+    }
+  },
+  "tool_discovery_case": {
+    "acceptance_status": "CLOSED__5TH_ACCEPTED_FAMILY",
+    "predicate_status": "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR__PROVED",
+    "proof_kind": "ABSOLUTE_CEILING_WITH_UNIVERSAL_FORMAL_SCOPE_COMPLETENESS",
+    "implication": "THIS_CLOSES_TOOL_DISCOVERY_ACCEPTANCE_AND_DEMONSTRATES_THAT_A_PRIOR_APPARENT_EMPIRICAL_LEARNING_BLOCKER_CAN_COLLAPSE_INTO_FORMAL_ROOT2_ROOT3_REASONING__IT_DOES_NOT_PROVE_UNIVERSAL_CAPABILITY_ACQUISITION"
+  },
+  "scheduler_policy": {
+    "before_any_work": "CLASSIFY_EACH_CURRENT_UNRESOLVED_TARGET_AS_ROOT2_OR_ROOT3_UNLESS_NEW_POSITIVE_CONTENT_ADDRESSED_EVIDENCE_REOPENS_ROOT1",
+    "unknown_is_not_missing": true,
+    "stale_scheduler_execution_forbidden": true,
+    "recompute_fixed_point_after_each_verified_delta": true,
+    "fresh_reality_before_zero_reality_fixed_point": false,
+    "no_credit_from_classification_itself": true,
+    "root1_currently_active": false,
+    "root2_active_controller": "ROOT2_CLOSURE_CONTROLLER_V2",
+    "root2_current_frontier": "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3.json"
+  },
+  "accounting": {
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0,
+    "new_reality_units_consumed": 0,
+    "incremental_spend_usd": 0
+  },
+  "current_residual_root_partition": {
+    "registry": {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json",
+      "git_blob_sha": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+    },
+    "evidence": {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json",
+      "git_blob_sha": "bc420c6d1a6caaab7a6d5c257640d3f5797170f5",
+      "pointer_reconciliation": {
+        "status": "RECONCILED_TO_CURRENT_12_PROVED_26_UNRESOLVED_LEDGER",
+        "previous_stale_git_blob_sha": "f99b00e6dca735ffa7a790a414155b4f69856cf0",
+        "acceptance_credit_delta": 0
+      }
+    },
+    "unresolved_total": 26,
+    "root1_positive_gap_count": 0,
+    "root2_only_count": 16,
+    "root3_only_count": 7,
+    "root2_and_root3_count": 3,
+    "root2_only": [
+      "CODING_TB4_GE_66_4",
+      "CODING_FRONTIERCODE_GE_54_4",
+      "CODING_CURSORBENCH_GE_57_8",
+      "PROWORK_GDPVAL_GE_1846",
+      "PROWORK_AA_BRIEFCASE_GE_1822",
+      "AUTOMATIONBENCH_GE_40",
+      "HLE_TOOLS_GE_67_7",
+      "TB_SCIENCE_GE_58_7",
+      "CHARTOGRAPHY_TOOLS_GE_89",
+      "OSWORLD_2_1_PARTIAL_GE_81_8",
+      "FINANCE_ACCOUNTING_INDEX_GE_61",
+      "FINANCE_AGENT_V2_GE_58_59",
+      "LIVEBENCH_IF_GE_65_7",
+      "ARTIFACT_AA_BRIEFCASE_GE_1822",
+      "MYSTERYMECHANISM_GE_49_55",
+      "SYNTHESIS_MATCHED_QUALITY_COVERAGE_NONINFERIOR"
+    ],
+    "root3_only": [
+      "AGENCY_SCOPE_SAFETY_NO_MATERIAL_REGRESSION",
+      "VISION_DENSE_NONCHART_SCOPE",
+      "FINANCE_UNCOVERED_SCOPE_AUDIT",
+      "IF_ZERO_CRITICAL_AUTHORITY_VIOLATIONS",
+      "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+      "COMPOSITION_COMPONENT_SCOPED_PROOFS",
+      "COMPOSITION_ZERO_CRITICAL_INVARIANT_FAILURES"
+    ],
+    "root2_and_root3": [
+      "AGENCY_MATCHED_SUCCESS_NONINFERIOR",
+      "IF_SCOPE_BOUNDARY_NONINFERIOR",
+      "COMPOSITION_TERMINAL_SUCCESS_NONINFERIOR"
+    ],
+    "derivation_rule": "PUBLIC_FIXED_BAR=>ROOT2__DIRECT_OR_MATCHED_SCOPE_AUDIT_OR_DEPENDENCY_PROOF=>ROOT3__MATCHED_NONINFERIORITY=>ROOT2_AND_ROOT3_UNLESS_A_STRONGER_SCOPE_COMPLETE_PROOF_COLLAPSES_SCOPE_SIDE__SYNTHESIS_SCOPE_SIDE_NOW_CLOSED",
+    "accounting": "CLASSIFICATION_ONLY__ZERO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
+    "synthesis_scope_reclassification": {
+      "activation_path": "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_V1.json",
+      "activation_git_blob_sha": "60d845cf2370854bfd171154cf94946436be2c16",
+      "certificate_path": "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_V1.json",
+      "certificate_git_blob_sha": "dea9028f92f111ee3c8be71615fa4b02e8a8bfb6",
+      "verification_path": "canonical/verification/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "verification_git_blob_sha": "1528485a15c98e89c9fb4dc50d691b6682e08542",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__ROOT2_AND_ROOT3_TO_ROOT2_ONLY__ZERO_CREDIT"
+    }
+  },
+  "root3_current_execution_state": {
+    "path": "canonical/governance/ROOT3_MINIMUM_ACTION_CUT_V1.json",
+    "git_blob_sha": "10a28a403dae6df94f8fe58b1d9d3f9e0b60c11b",
+    "verification_path": "canonical/verification/ROOT3_MINIMUM_ACTION_CUT_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+    "verification_git_blob_sha": "e24058eab431a1643dae340a8ff564490f992097",
+    "status": "BASE_MINIMUM_CUT_PLUS_VERIFIED_SYNTHESIS_SCOPE_OVERLAY__10_LIVE_ROOT3_PREDICATES__3_EVENT_CLASSES__ZERO_CURRENT_RUNNABLE_ACTIONS__ZERO_CREDIT",
+    "live_root3_predicates": 10,
+    "event_class_count": 3,
+    "currently_runnable_event_count": 0,
+    "fresh_reality_authority": false,
+    "synthesis_scope_overlay": {
+      "activation_path": "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_V1.json",
+      "activation_git_blob_sha": "60d845cf2370854bfd171154cf94946436be2c16",
+      "certificate_path": "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_V1.json",
+      "certificate_git_blob_sha": "dea9028f92f111ee3c8be71615fa4b02e8a8bfb6",
+      "verification_path": "canonical/verification/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "verification_git_blob_sha": "1528485a15c98e89c9fb4dc50d691b6682e08542",
+      "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__ROOT2_AND_ROOT3_TO_ROOT2_ONLY__ZERO_CREDIT"
+    }
+  },
+  "root3_scope_certificate_admissibility_refinement": {
+    "path": "canonical/governance/ROOT3_SCOPE_CERTIFICATE_ADMISSIBILITY_REFINEMENT_ACTIVATION_V1.json",
+    "git_blob_sha": "8eb97e997c117e102fd115d03cce5793c416a482",
+    "status": "ACTIVE__ZERO_CREDIT__NO_ROOT3_COUNT_CHANGE",
+    "rule": "ACCOUNTING_LABEL_CARDINALITY_OR_SINGLETON_FAMILY_TO_CONTRACT_MAPPING_NEVER_PROVES_SCOPE_COMPLETENESS_WITHOUT_EXPLICIT_INDEPENDENT_LOSSLESS_OR_EXHAUSTIVE_DECOMPOSITION"
+  },
+  "synthesis_scope_reclassification": {
+    "activation_path": "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_V1.json",
+    "activation_git_blob_sha": "60d845cf2370854bfd171154cf94946436be2c16",
+    "certificate_path": "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_V1.json",
+    "certificate_git_blob_sha": "dea9028f92f111ee3c8be71615fa4b02e8a8bfb6",
+    "verification_path": "canonical/verification/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+    "verification_git_blob_sha": "1528485a15c98e89c9fb4dc50d691b6682e08542",
+    "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__ROOT2_AND_ROOT3_TO_ROOT2_ONLY__ZERO_CREDIT",
+    "before": "ROOT2_AND_ROOT3",
+    "after": "ROOT2_ONLY",
+    "remaining_root2_residuals": [
+      "metric:matched_quality",
+      "matched_quality_noninferiority"
+    ],
+    "acceptance_credit_delta": 0,
+    "required_claim_coverage_reduction": {
+      "state": "PROVED_BY_VERIFIED_FRONTIER_V2",
+      "evidence": "canonical/governance/OPUS55_SYNTHESIS_REQUIRED_CLAIM_COVERAGE_CEILING_LIFT_V2.json",
+      "frontier_verification": "canonical/verification/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json",
+      "acceptance_credit_delta": 0
+    }
+  }
+}
