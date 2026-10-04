@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
-  "date": "2026-10-04",
-  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
+  "date": "2026-10-05",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__IMPORT_INVOCATION_REPAIRED_AFTER_ZERO_CASE_FAILURE__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
   "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
   "authorized_leaves": [
     "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
@@ -39,6 +39,21 @@
       "run_id": 37239607102,
       "job_id": 111545469095,
       "conclusion": "success"
+    },
+    "first_launch_zero_case_failure": {
+      "run_id": 37239903215,
+      "job_id": 111546358270,
+      "conclusion": "failure",
+      "failure": "PYTHON_SCRIPT_PATH_IMPORT_ROOT__MODULE_NOT_FOUND_CANONICAL",
+      "atomic_claim_created": false,
+      "production_beacon_generated": false,
+      "production_cases_consumed": 0,
+      "semantic_effect": "RUNNER_INVOCATION_DEFECT_ONLY__NO_CANDIDATE_OR_EVALUATOR_EVIDENCE"
+    },
+    "production_launcher_repair": {
+      "status": "PENDING_INDEPENDENT_PULL_REQUEST_VERIFICATION",
+      "change": "INVOKE_FROZEN_LAUNCHER_AS_PYTHON_MODULE_FROM_REPOSITORY_ROOT",
+      "candidate_or_evaluator_bytes_changed": false
     }
   },
   "atomic_claim": {
@@ -61,7 +76,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
     "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4218195d0cf49252ac6733c0bd80b673826ef95a",
-    ".github/workflows/unknown-domain-direct-one-use-production.yml": "190ac379f5cf2b2b2005b6f537f43643a80ff24e"
+    ".github/workflows/unknown-domain-direct-one-use-production.yml": "a4315a0ee28ae82145594b7a9abbd00bae61ceb9"
   },
   "limits": {
     "production_populations": 1,
@@ -97,6 +112,7 @@
     "BEACON_AND_EVALUATOR_SECRET_MUST_NOT_EXIST_BEFORE_CLAIM_201",
     "EXACTLY_ONE_27_CASE_PRODUCTION_POPULATION",
     "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
-    "ZERO_INCREMENTAL_SPEND"
+    "ZERO_INCREMENTAL_SPEND",
+    "LAUNCHER_MUST_RUN_AS_REPOSITORY_ROOT_MODULE_TO_PRESERVE_CANONICAL_PACKAGE_IMPORTS"
   ]
 }
