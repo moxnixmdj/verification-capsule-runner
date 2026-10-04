@@ -1,0 +1,28 @@
+name: Verify LiveBench exact literal routing V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_exact_literal_routing_v1/**"
+      - "verify_livebench_exact_literal_routing_v1.py"
+      - ".github/workflows/verify-livebench-exact-literal-routing-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Replay exact preexposed synthetic zero case
+        run: python verify_livebench_exact_literal_routing_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-exact-literal-routing-v1-receipt
+          path: livebench_exact_literal_routing_v1_receipt.json
+          if-no-files-found: error
