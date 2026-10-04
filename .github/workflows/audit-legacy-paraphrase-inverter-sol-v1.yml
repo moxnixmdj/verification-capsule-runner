@@ -1,8 +1,7 @@
 name: Audit legacy paraphrase inverter Sol v1
 on:
-  push:
-    branches:
-      - verify/legacy-paraphrase-inverter-sol-20261004-v1
+  pull_request:
+    branches: [main]
     paths:
       - "verification/verify_legacy_paraphrase_inverter_public_v1.py"
       - "verification/subjects/livebench_legacy_paraphrase_inverter_v1__brain_3bfedacc.py"
