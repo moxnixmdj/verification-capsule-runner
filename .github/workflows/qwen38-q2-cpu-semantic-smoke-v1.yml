@@ -1,0 +1,144 @@
+name: Qwen3.8 Q2 CPU semantic smoke
+
+on:
+  push:
+    branches:
+      - verify/qwen38-q2-cpu-semantic-probe-20261004-sol
+    paths:
+      - verification/qwen38_q2_cpu_semantic_probe_v1.py
+      - .github/workflows/qwen38-q2-cpu-semantic-smoke-v1.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verification/qwen38_q2_cpu_semantic_probe_v1.py
+      - .github/workflows/qwen38-q2-cpu-semantic-smoke-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 120
+    env:
+      LLAMA_SHA: 5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
+      MODEL_REV: 27af057ecb382ddfea5d12837360a8980560e3ed
+      MODEL_FILE: Qwen3.8-27B-UD-Q2_K_XL.gguf
+      MODEL_BYTES: "9828981664"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preflight exact free-runner envelope
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "cpu_count=$(nproc)"
+          awk '/MemTotal/ {print "mem_total_kb="$2}' /proc/meminfo
+          df -B1 "$RUNNER_TEMP"
+          mem_kb="$(awk '/MemTotal/ {print $2}' /proc/meminfo)"
+          disk_b="$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1 | tr -d ' ')"
+          test "$mem_kb" -ge 14500000
+          test "$disk_b" -ge 11000000000
+
+      - name: Build pinned llama.cpp CPU runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/llama.cpp"
+          git init "$src"
+          git -C "$src" remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C "$src" fetch --depth 1 origin "$LLAMA_SHA"
+          git -C "$src" checkout --detach FETCH_HEAD
+          cmake -S "$src" -B "$src/build"             -DCMAKE_BUILD_TYPE=Release             -DBUILD_SHARED_LIBS=OFF             -DLLAMA_CURL=OFF             -DGGML_NATIVE=ON
+          cmake --build "$src/build" --config Release -j 4 --target llama-cli
+          cp "$src/build/bin/llama-cli" "$RUNNER_TEMP/llama-cli"
+          "$RUNNER_TEMP/llama-cli" --version
+          rm -rf "$src"
+
+      - name: Download exact pinned 9.83 GB Q2 execution subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          model="$RUNNER_TEMP/$MODEL_FILE"
+          url="https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/$MODEL_REV/$MODEL_FILE?download=true"
+          curl --fail --location --retry 5 --retry-delay 5 --output "$model" "$url"
+          size="$(stat -c '%s' "$model")"
+          sha="$(sha256sum "$model" | awk '{print $1}')"
+          echo "model_bytes=$size"
+          echo "model_sha256=$sha"
+          test "$size" -eq "$MODEL_BYTES"
+          printf '%s  %s\n' "$sha" "$MODEL_FILE" > "$RUNNER_TEMP/model.sha256"
+          df -B1 "$RUNNER_TEMP"
+          free -b
+
+      - name: Run four-surface synthetic semantic probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          prompt="$RUNNER_TEMP/prompt.txt"
+          raw="$RUNNER_TEMP/model_output.txt"
+          err="$RUNNER_TEMP/model_stderr.txt"
+          cat > "$prompt" <<'PROMPT'
+Do not show reasoning. Follow the requested output format exactly. Output only four lines beginning with the four labels below.
+
+PARAPHRASE: Paraphrase this sentence while preserving all facts, names, numbers, and locations: "On Tuesday, Mira moved 12 blue crates from Dock A to Dock B because the east gate was closed."
+
+SIMPLIFY: Rewrite this for a 10-year-old in one short sentence: "Through photosynthesis, plants convert light energy into chemical energy stored in sugars."
+
+SUMMARY: Summarize in one sentence: "Orion Labs received $3 million in funding on Monday. The company said the money will expand its battery recycling pilot. It plans to double the pilot's processing capacity by December."
+
+STORY: Write a compact 40-80 word story about a fox named Rill who finds a broken compass beside a bridge, repairs it, and returns it to its owner.
+PROMPT
+          start="$(date +%s)"
+          "$RUNNER_TEMP/llama-cli"             -m "$RUNNER_TEMP/$MODEL_FILE"             -f "$prompt"             -n 260             -c 2048             -t 4             --temp 0             --no-display-prompt             >"$raw" 2>"$err"
+          end="$(date +%s)"
+          echo "inference_wall_seconds=$((end-start))"
+          cat "$raw"
+          python verification/qwen38_q2_cpu_semantic_probe_v1.py "$raw" "$RUNNER_TEMP/verdict.json"
+
+      - name: Emit exact receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, pathlib, platform
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])
+          def read(name):
+              p=root/name
+              return p.read_text(encoding="utf-8",errors="replace") if p.exists() else None
+          doc={
+            "schema":"PROJECT_BRAIN_QWEN38_Q2_PUBLIC_RUNNER_RECEIPT_V1",
+            "terminal_case_content_used":False,
+            "synthetic_nonterminal_only":True,
+            "llama_cpp_commit":os.environ["LLAMA_SHA"],
+            "model_repository":"unsloth/Qwen3.8-27B-GGUF",
+            "model_revision":os.environ["MODEL_REV"],
+            "model_file":os.environ["MODEL_FILE"],
+            "expected_model_bytes":int(os.environ["MODEL_BYTES"]),
+            "model_sha256_line":read("model.sha256"),
+            "verdict":json.loads(read("verdict.json")) if read("verdict.json") else None,
+            "stderr_tail":(read("model_stderr.txt") or "")[-4000:],
+            "platform":platform.platform(),
+            "cpu_count":os.cpu_count(),
+            "incremental_spend_usd":0,
+            "hard_nonclaim":"A passing smoke probe proves only that this exact quantized execution subject can run on this public CPU runner and satisfy the synthetic checks. It grants zero LiveBench, family, ownership, or terminal credit."
+          }
+          (root/"receipt.json").write_text(json.dumps(doc,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+          print(json.dumps(doc,indent=2,ensure_ascii=False))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qwen38-q2-cpu-semantic-smoke-v1
+          path: |
+            ${{ runner.temp }}/receipt.json
+            ${{ runner.temp }}/verdict.json
+            ${{ runner.temp }}/model.sha256
+            ${{ runner.temp }}/model_output.txt
+            ${{ runner.temp }}/model_stderr.txt
+          if-no-files-found: warn
+          retention-days: 7
