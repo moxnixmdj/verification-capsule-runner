@@ -1,0 +1,29 @@
+name: Verify LiveBench Public Row ID Binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_public_row_id_binding.py"
+      - ".github/workflows/verify-livebench-public-row-id-binding.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned parquet reader
+        run: python -m pip install --quiet "pyarrow==21.0.0"
+      - name: Audit metadata-only row identity
+        run: python verify_livebench_public_row_id_binding.py
+      - name: Upload audit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-public-row-id-binding-audit
+          path: livebench_public_row_id_binding_audit_receipt.json
+          if-no-files-found: error
