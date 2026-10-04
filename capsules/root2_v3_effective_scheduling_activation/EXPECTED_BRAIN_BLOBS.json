@@ -1,0 +1,17 @@
+{
+  "schema": "BRAIN_ROOT2_V3_EFFECTIVE_SCHEDULING_ACTIVATION_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 1531,
+  "brain_ref": "root2/v3-effective-scheduling-activation-20261004",
+  "brain_head_sha": "3526c18ac7391a424b3fe903feaab1c097215cea",
+  "exact_brain_blobs": {
+    "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3.json": "681123ef6cff3506d66af6b31b61c8bc14a8a913",
+    "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3_ACTIVATION_V1.json": "76d36bc34947e726502d0c8fc1dbb961d6442c88",
+    "canonical/verification/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "8436a9eb30312b959ba094394e60f26b4833a3a2",
+    "canonical/governance/ROOT2_CLOSURE_CONTROLLER_V2_ACTIVATION_V1.json": "4cbc1b9f478654b2dc671a8b54f91b5c4b91c019",
+    "canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V3_EFFECTIVE_SCHEDULING_ACTIVATION_V1.json": "a4fb8cfcb49411a0d4b0d14b4a2064a0ba80c810",
+    "canonical/governance/ROOT2_MEASUREMENT_BRIDGE_CURRENT_V1.json": "e172aad9552135261f019dcb83c9fa5fe01404d2",
+    "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json": "145b93bea944ad0c9d6d7270681f1f58bfac4b1a",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "d52b8394c1e87020d0d58832c26d92f2e9216ed4"
+  }
+}
