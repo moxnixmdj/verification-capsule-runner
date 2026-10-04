@@ -1,0 +1,17 @@
+{
+  "schema": "PROJECT_BRAIN_THRESHOLD_PROOF_DAG_INPUT_V1",
+  "allow_fresh_reality": false,
+  "target": {
+    "id": "LIVEBENCH_IF_GE_65_7",
+    "receipt": {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json",
+      "git_blob_sha": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+    },
+    "metric_kind": "ADDITIVE_THRESHOLD",
+    "total_mass": "200",
+    "threshold_mass": "131.4",
+    "current_lower_mass": "0",
+    "current_upper_mass": "200"
+  },
+  "actions": []
+}
