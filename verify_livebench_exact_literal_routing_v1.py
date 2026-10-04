@@ -12,7 +12,7 @@ import tempfile
 ROOT=pathlib.Path(__file__).resolve().parent
 FROZEN=ROOT/"subject"/"livebench_frozen_runtime_closure_v1"
 CANDIDATE=ROOT/"subject"/"livebench_exact_literal_routing_v1"/"goal_compiler.py"
-EXPECTED_CANDIDATE_BLOB="bf0dd1cdb2869a0e7834c04978369998fd724fb8"
+EXPECTED_CANDIDATE_BLOB="6d8835303955d3d6e68a46509c9bac65bbf0d17b"
 
 def git_blob_sha(path: pathlib.Path) -> str:
     data=path.read_bytes()
