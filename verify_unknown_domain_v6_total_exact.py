@@ -6,10 +6,11 @@ import hashlib
 import json
 import pathlib
 import sys
+from unittest.mock import Mock
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject" / "unknown_domain_v6_20261005"
-BRAIN_SUBJECT_REF = "486b44073e4b7250025302c55682c476a434a321"
+BRAIN_SUBJECT_REF = "8d102f573621ec34a2e08a43bab3831dc906b6c0"
 
 EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
@@ -18,11 +19,12 @@ EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "e52858b9fef2d795f72b45cd3ae82ad04344aa91",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "60373126f3ee27368ae06e6d7d559f1b826d90d4",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "20161e6e183fe276a2ff1cea0f61798d8a8dc93b",
     "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
     "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
-    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
-    "canonical/tests/test_unknown_domain_direct_v5.py": "5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
+    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "629b624aa434d9701393e8c3c74fd7ab4422152e",
+    "canonical/tests/test_unknown_domain_direct_v5.py": "81cd6ecabec51029175f6036a13eac7667fccd03",
+    "canonical/tests/test_unknown_domain_direct_v6_type_gate.py": "3d164cbdf27ce979866d8c2569acd630d7cf3c20",
 }
 
 def git_blob_sha(path: pathlib.Path) -> str:
@@ -87,7 +89,8 @@ def main() -> int:
     assert result["status"] == "PASS__UNIVERSAL_TOTAL_STRING_STRUCTURAL_ID_AND_EXACT_FLOAT_BOUND_EVALUATOR"
     assert result["scope"]["terminal_or_production_cases_generated"] == 0
     assert result["string_interface_totality"]["surrogate_codepoints_exhausted"] == 2048
-    assert result["string_interface_totality"]["isinstance_accepted_subclass_override_hooks_bypassed"] is True
+    assert result["string_interface_totality"]["actual_runtime_type_hierarchy_gate"] is True
+    assert result["string_interface_totality"]["instance_class_reporting_proxy_rejected_by_bound_regression"] is True
     assert result["identifier_totality_proof"]["forced_total_token_collision_survives_construction"] is True
     assert result["transfer_proof"]["all_six_families_universal"] is True
     assert result["transfer_proof"]["add2_exact_float_order_repaired"] is True
@@ -183,14 +186,16 @@ def main() -> int:
     assert cases == 432
 
     receipt = {
-        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
-        "status": "PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
+        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_GENUINE_TYPE_INDEPENDENT_VERIFICATION_V1",
+        "status": "PASS__CONTENT_BOUND_GENUINE_TYPE_GATE_PROXY_REJECTION_AND_BOUND_EVALUATOR_PROOF__ZERO_CREDIT",
         "brain_subject_ref": BRAIN_SUBJECT_REF,
         "subject_blobs": observed,
         "universal_theorem_status": result["status"],
         "surrogate_codepoints_exhausted": 2048,
-        "isinstance_str_subclass_override_hooks_bypassed": True,
-        "isinstance_bytes_subclass_override_hooks_bypassed": True,
+        "actual_runtime_type_hierarchy_gate": True,
+        "genuine_str_subclass_override_hooks_bypassed": True,
+        "genuine_bytes_subclass_override_hooks_bypassed": True,
+        "instance_class_reporting_proxy_rejected": True,
         "python312_buffer_hook_adversary_included": True,
         "old_instance_strip_failure_reproduced": old_instance_strip_fails,
         "old_instance_encode_failure_reproduced": old_instance_encode_fails,
