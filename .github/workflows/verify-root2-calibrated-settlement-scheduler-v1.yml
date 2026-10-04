@@ -5,6 +5,9 @@ on:
     paths:
       - "subject/root2_calibrated_settlement_scheduler_v1/**"
       - ".github/workflows/verify-root2-calibrated-settlement-scheduler-v1.yml"
+  push:
+    branches:
+      - "verify/root2-calibrated-settlement-scheduler-v1-20261004"
 permissions:
   contents: read
 jobs:
