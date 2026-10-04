@@ -36,5 +36,6 @@ jobs:
           blob=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
           lease=json.loads(Path('canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json').read_text())
           assert lease["exact_components"][".github/workflows/unknown-domain-direct-one-use-production.yml"]==blob
+          assert lease["exact_components"]["canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"]=="f974a4594c78e74693c7ba5a19f131dfa481b937"
           print("launcher workflow firewall PASS",blob)
           PY
