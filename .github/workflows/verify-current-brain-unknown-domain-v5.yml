@@ -1,0 +1,40 @@
+name: Verify exact current Brain Unknown-Domain V5
+
+on:
+  push:
+    branches:
+      - verify/brain-current-unknown-domain-v5-20261005-sol
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - name: Checkout exact verifier branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Set up Python 3.12.10
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.10"
+      - name: Run exact current Brain V5 falsification suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python -m pytest -q canonical/tests/test_unknown_domain_current_brain_v5_universal_v1.py
+      - name: Run content-bound universal reduction
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python canonical/runtime/unknown_domain_direct_v5_current_brain_universal_proof_v1.py > /tmp/current-v5-proof.json
+          python - <<'PY'
+          import json
+          p="/tmp/current-v5-proof.json"
+          row=json.load(open(p,encoding="utf-8"))
+          assert row["status"]=="PASS__CURRENT_BRAIN_V5_TOTAL_STRING_TOTAL_IDENTIFIER_EXACT_FLOAT_UNIVERSAL_REDUCTION"
+          assert row["identifier_totality"]["total_hmac_collision_survives"] is True
+          assert row["string_interface_totality"]["surrogate_codepoints_exhausted"]==2048
+          assert row["scope"]["production_or_terminal_cases_generated"]==0
+          print(json.dumps(row,sort_keys=True))
+          PY
