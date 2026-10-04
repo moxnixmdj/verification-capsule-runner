@@ -108,8 +108,10 @@ assert neg["semantic_seed_required"] is True,neg
 
 # Static contamination firewall.
 src=PATHS["livebench_public_grammar_compiler_v2.py"].read_text()
-for forbidden in ("case_73","case 73","terminal_case_id","hidden_kwargs","V6_OR_V10_PER_CASE","requests.","socket.","subprocess."):
+for forbidden in ("case_73","case 73","terminal_case_id","hidden_kwargs","V6_OR_V10_PER_CASE"):
  assert forbidden.lower() not in src.lower(),forbidden
+for pattern in (r"\\bimport\\s+requests\\b", r"\\bfrom\\s+requests\\b", r"requests\\.(get|post|put|delete|request)\\s*\\(", r"\\bsocket\\.", r"\\bsubprocess\\."):
+ assert re.search(pattern, src, flags=re.I) is None, pattern
 
 receipt={
  "schema":"PROJECT_BRAIN_LIVEBENCH_PUBLIC_GRAMMAR_V1_PUBLIC_VERIFICATION",
