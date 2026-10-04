@@ -1,0 +1,29 @@
+name: Verify Unknown-Domain V3 successor independently macOS
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_unknown_domain_v3_successor_independent_20261005.py'
+      - 'subject/unknown_domain_v3_successor_20261005/**'
+      - '.github/workflows/verify-unknown-domain-v3-successor-independent-20261005.yml'
+      - '.github/workflows/verify-unknown-domain-v3-successor-independent-macos-20261005.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_unknown_domain_v3_successor_independent_20261005.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v3-independent-successor-verification-macos
+          path: unknown_domain_v3_independent_successor_verification_v1.json
+          if-no-files-found: error
