@@ -17,6 +17,7 @@ import hashlib
 import json
 import os
 import secrets
+import subprocess
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -168,6 +169,20 @@ def validate_lease(lease:Mapping[str,Any],digest:str)->None:
         if got!=expected_sha:
             raise ProductionLaunchError("LEASE_COMPONENT_BLOB_MISMATCH:"+str(rel))
 
+
+
+def validate_event_sha_binding(launch_sha:str,runtime_head:str)->None:
+    if runtime_head!=launch_sha:
+        raise ProductionLaunchError("RUNTIME_HEAD_EVENT_SHA_MISMATCH")
+
+
+def current_git_head()->str:
+    try:
+        return subprocess.check_output(
+            ["git","rev-parse","HEAD"],cwd=ROOT,text=True,stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception as exc:
+        raise ProductionLaunchError("RUNTIME_HEAD_UNAVAILABLE") from exc
 
 def validate_point_of_use()->Mapping[str,Any]:
     doc=json.loads(PREFLIGHT_INPUT_PATH.read_text())
@@ -335,6 +350,8 @@ def main()->None:
     launch_sha=os.environ.get("GITHUB_SHA","")
     if not repo or not token or len(launch_sha)!=40:
         raise ProductionLaunchError("GITHUB_CONTEXT_INVALID")
+    runtime_head=current_git_head()
+    validate_event_sha_binding(launch_sha,runtime_head)
     if not ref_name.startswith(LAUNCH_PREFIX):
         raise ProductionLaunchError("LAUNCH_REF_PREFIX_INVALID")
     suffix=ref_name[len(LAUNCH_PREFIX):]
@@ -352,6 +369,7 @@ def main()->None:
     result["execution_lease_sha256"]=digest
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
+    result["runtime_git_head"]=runtime_head
     result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
     result["result_path"]=result_path
     sealed_json=json.dumps(result,sort_keys=True,separators=(",",":"))
