@@ -31,7 +31,7 @@ jobs:
           print("immutable V4 total exact fastlane subject PASS",head)
           PY
       - name: Run independent total+exact verifier
-        run: python verification/unknown_domain_v4_total_exact_independent.py
+        run: PYTHONPATH=. python verification/unknown_domain_v4_total_exact_independent.py
       - name: Upload verification receipt
         if: always()
         uses: actions/upload-artifact@v4
