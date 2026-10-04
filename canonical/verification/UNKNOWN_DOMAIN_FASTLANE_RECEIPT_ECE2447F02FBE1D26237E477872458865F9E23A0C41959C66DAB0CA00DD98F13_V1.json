@@ -1,0 +1,18 @@
+{
+  "acceptance_credit_delta": 0,
+  "actions_run_id": 37242639474,
+  "claim_response_sha_binding_required": true,
+  "exact_component_count": 12,
+  "execution_lease_git_blob_sha": "64348f6a20b71553c6074e81522b2ba7fb823d3d",
+  "execution_lease_sha256": "ece2447f02fbe1d26237e477872458865f9e23a0c41959c66dab0ca00dd98f13",
+  "fastlane_verifier_git_blob_sha": "a54214faaacb8ff1345bc60a6bdb31ed01398407",
+  "production_cases_generated": 0,
+  "production_launcher_git_blob_sha": "a1cf2772c53647c569d4aeeeff9b5b154931242a",
+  "production_workflow_git_blob_sha": "162637be8b5dfb8645021b6e89fe915fdd473de3",
+  "repository": "moxnixmdj/verification-capsule-runner",
+  "runtime_head_event_sha_binding_required": true,
+  "sanitized_result_write_ahead_required": true,
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_FASTLANE_PUBLIC_RECEIPT_V1",
+  "status": "PASS",
+  "verified_event_sha": "f7fed06fef078328d26e2cf6a221e599e71d4808"
+}
