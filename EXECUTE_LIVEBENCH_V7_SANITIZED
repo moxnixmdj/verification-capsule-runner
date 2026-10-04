@@ -1,0 +1,10 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V7_SANITIZED_EXECUTION_TRIGGER_V1",
+  "root_git_blob_sha": "3f678ff5f419abaaa00cca84d392b685d8332bfd",
+  "activation_receipt_git_blob_sha": "e394a1bf48de226c184617980e513e98137ca9ff",
+  "workflow_install_commit": "4ea76629b470837b2b0dca1bc746127179f15d0f",
+  "epoch_digest_sha256": "5ea710ae6d8b64c9ae990da5bd3ae747806e12843b8c2566bbb1be83d09ab53d",
+  "scope": "ALREADY_EXPOSED_CASES_1_TO_72_ONLY",
+  "case_73_or_later": false,
+  "acceptance_credit": false
+}
