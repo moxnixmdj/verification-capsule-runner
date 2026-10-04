@@ -61,7 +61,7 @@ bkp = get("https://www.buildkite.com/pricing/")
 must(bkp, "30-day all-access trial", "No credit card", "Small only", "Small, Medium, Large")
 
 auto = get("https://raw.githubusercontent.com/zapier/AutomationBench/main/README.md")
-must(auto, "600-task public benchmark", "separate, held-out private task set", "purposely harder", "may not match the official leaderboard 1:1")
+must(auto, "Pass rates on the 600-task", "separate, held-out private task set", "purposely harder", "may not match the official leaderboard 1:1")
 
 cursor = get("https://cursor.com/evals")
 must(cursor, "CursorBench 4.0", "57.8%")
