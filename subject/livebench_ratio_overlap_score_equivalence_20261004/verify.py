@@ -159,3 +159,4 @@ receipt = {
     ],
 }
 print(json.dumps(receipt, ensure_ascii=False, indent=2))
+# CI trigger after workflow registration; no semantic change.\n
