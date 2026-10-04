@@ -1,4 +1,5 @@
 name: Independent LiveBench Legacy Predecessor Replay
+# trigger-v2: subject blobs unchanged
 on:
   push:
     branches:
