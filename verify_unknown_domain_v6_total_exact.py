@@ -8,7 +8,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject" / "unknown_domain_v6_20261005"
-BRAIN_SUBJECT_COMMIT = "429419c7f7e3f206563f9ffbd98a7f30334b9a30"
+BRAIN_SUBJECT_COMMIT = "486b44073e4b7250025302c55682c476a434a321"
 
 EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
@@ -17,11 +17,11 @@ EXPECTED_BLOBS = {
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py": "e52858b9fef2d795f72b45cd3ae82ad04344aa91",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "a31184eceb3e90cae8c84ef46726232729fa6347",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "60373126f3ee27368ae06e6d7d559f1b826d90d4",
     "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
     "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
-    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "54e1f0dd91b49901fb2b165f92e61683753444c9",
-    "canonical/tests/test_unknown_domain_direct_v5.py": "a512a9ae421ce1f726bf4129a4266790c2111896",
+    "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "58d3a61f5e2cb24b4387ddd817b64f897f62fe06",
+    "canonical/tests/test_unknown_domain_direct_v5.py": "5bc00ff6f7671ad43acb04a6fe4c3b6d1893c380",
 }
 
 def git_blob_sha(path: pathlib.Path) -> str:
@@ -55,18 +55,30 @@ def main() -> int:
     assert result["string_interface_totality"]["hostile_bytes_subclass_virtual_dispatch_bypassed"] is True
 
     class HostileStr(str):
+        def __getattribute__(self,name):
+            if name != "__class__":
+                raise RuntimeError("HOSTILE_STR_GETATTRIBUTE_DISPATCH")
+            return str.__getattribute__(self,name)
         def strip(self,*args,**kwargs):
             raise RuntimeError("HOSTILE_STRIP_DISPATCH")
         def encode(self,*args,**kwargs):
             raise RuntimeError("HOSTILE_ENCODE_DISPATCH")
+        def __len__(self):
+            raise RuntimeError("HOSTILE_STR_LEN_DISPATCH")
         def __str__(self):
             raise RuntimeError("HOSTILE_STR_DISPATCH")
 
     class HostileBytes(bytes):
         def __bytes__(self):
             raise RuntimeError("HOSTILE_BYTES_DISPATCH")
+        def __buffer__(self,*args,**kwargs):
+            raise RuntimeError("HOSTILE_BUFFER_DISPATCH")
         def __len__(self):
-            raise RuntimeError("HOSTILE_LEN_DISPATCH")
+            raise RuntimeError("HOSTILE_BYTES_LEN_DISPATCH")
+        def __getitem__(self,*args,**kwargs):
+            raise RuntimeError("HOSTILE_GETITEM_DISPATCH")
+        def __iter__(self):
+            raise RuntimeError("HOSTILE_ITER_DISPATCH")
 
     hostile_beacon = HostileStr("H" * 16 + "\\ud800")
     hostile_secret = HostileStr("S" * 31 + "\\udfff")
@@ -113,8 +125,8 @@ def main() -> int:
     assert cases == 432
 
     receipt = {
-        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_SAFE_INDEPENDENT_VERIFICATION_V2",
-        "status": "PASS__INDEPENDENT_CONTENT_BOUND_SUBCLASS_SAFE_TOTAL_STRING_STRUCTURAL_ID_EXACT_FLOAT_AND_FALSIFICATION__ZERO_CREDIT",
+        "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
+        "status": "PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
         "brain_subject_commit": BRAIN_SUBJECT_COMMIT,
         "subject_blobs": observed,
         "universal_theorem_status": result["status"],
@@ -126,6 +138,24 @@ def main() -> int:
         "v4_string_domain_counterexample_reproduced": v4_counterexample,
         "hostile_str_subclass_pass": True,
         "hostile_bytes_subclass_pass": True,
+        "required_subclass_attack_properties": {
+            "STR_SUBCLASS_OVERRIDE_STRIP_IS_EXPLICITLY_ATTACKED": True,
+            "STR_SUBCLASS_OVERRIDE_ENCODE_IS_EXPLICITLY_ATTACKED": True,
+            "STR_SUBCLASS_OVERRIDE_GETATTRIBUTE_IS_EXPLICITLY_ATTACKED": True,
+            "STR_SUBCLASS_OVERRIDE_LEN_IS_EXPLICITLY_ATTACKED": True,
+            "BYTES_SUBCLASS_OVERRIDE_BYTES_IS_EXPLICITLY_ATTACKED": True,
+            "BYTES_SUBCLASS_OVERRIDE_BUFFER_IS_EXPLICITLY_ATTACKED": True,
+            "BYTES_SUBCLASS_OVERRIDE_LEN_IS_EXPLICITLY_ATTACKED": True,
+            "BYTES_SUBCLASS_OVERRIDE_GETITEM_IS_EXPLICITLY_ATTACKED": True,
+            "BYTES_SUBCLASS_OVERRIDE_ITER_IS_EXPLICITLY_ATTACKED": True,
+            "ADVERSARIAL_STR_BEACON_AND_STR_SECRET_EXECUTE_ALL_27_CASES_THROUGH_EXACT_HARNESS_AND_SCORER": True,
+            "ADVERSARIAL_BYTES_SECRET_MATERIALIZATION_MATCHES_INHERITED_PAYLOAD": True,
+            "ALL_2048_SURROGATE_CODEPOINTS_ARE_RECHECKED": True,
+            "FORCED_TOTAL_TOKEN_COLLISION_REGRESSION_IS_RECHECKED": True,
+            "NONPRODUCTION_ORDINARY_EDGE_MATRIX_IS_RECHECKED": True,
+            "ZERO_PRODUCTION_OR_TERMINAL_CASES_ARE_GENERATED_READ_OR_CONSUMED": True,
+            "VERIFIER_RECEIPT_CLAIMS_ZERO_ACCEPTANCE_FAMILY_CAPABILITY_AND_OWNERSHIP_CREDIT": True
+        },
         "nonproduction_falsification": {"populations": populations, "cases": cases, "all_pass": True},
         "production_or_terminal_cases_generated": 0,
         "acceptance_credit_delta": 0,
