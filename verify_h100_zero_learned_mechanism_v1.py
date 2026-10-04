@@ -13,9 +13,9 @@ RUNTIME=SUBJECT/"canonical"/"runtime"/"h100_zero_learned_mechanism_synthesizer_v
 TESTS=SUBJECT/"canonical"/"tests"/"test_h100_zero_learned_mechanism_synthesizer_v1.py"
 GOV=SUBJECT/"canonical"/"governance"/"H100_ZERO_LEARNED_MECHANISM_CANDIDATE_V1.json"
 
-EXPECTED_RUNTIME="7d6fd66436ade8cec974e01dbe909865f6c3129f"
-EXPECTED_TESTS="fbb66814d73e5e43559c56f669ac7d92caeab39a"
-EXPECTED_GOV="7b020403b37d424a353eb85e1a0ac4bc9d3a30d2"
+EXPECTED_RUNTIME="fa77c6a0f4edf214c4237cf1e204b640261622fe"
+EXPECTED_TESTS="0e5e7ab361d495cb76e6e8644cf2cdd46c733ed8"
+EXPECTED_GOV="253715727a8cdbaa5bde6d84a2196debbe96e183"
 
 def git_blob_sha(path:Path)->str:
     data=path.read_bytes()
@@ -95,7 +95,32 @@ rows_sqrt=[{"x":x,"out":4*math.sqrt(x)+1} for x in [1,4,9,16,25,36,49,64]]
 ds=mod.discover(rows_sqrt,target="out")
 assert ds["candidates"][0]["feature_expression"]=="x^0.5",ds["candidates"][0]
 
-# 5. Surface renaming must not destroy structural transfer signature.
+# 5. Continuous real-exponent recovery on the public MysteryMechanism stream-power shape.
+rows_public=[
+    {"x1":25.5646,"x2":0.1859,"out":0.0012396},
+    {"x1":0.1108,"x2":0.0187,"out":-0.0000064},
+    {"x1":100,"x2":0.05,"out":0.0008841},
+    {"x1":10000,"x2":0.05,"out":0.0082336},
+    {"x1":100,"x2":0.5,"out":0.0049850},
+    {"x1":10000,"x2":0.5,"out":0.0454408},
+    {"x1":1000,"x2":0.2,"out":0.0078693},
+]
+dp=mod.discover(rows_public,target="out")
+bp=dp["candidates"][0]
+assert bp["family"]=="log_power",bp
+assert abs(bp["exponents"][0]-0.4822)<0.01,bp
+assert abs(bp["exponents"][1]-0.7478)<0.01,bp
+assert bp["nrmse"]<0.03,bp
+
+# 6. Public task budget shape: d=2 -> four bound corners plus center, exactly 2d+1 probes.
+design=mod.design_initial_probes({"x1":[0.1,10000],"x2":[0.001,0.5]})
+assert design["budget"]==5,design
+assert len(design["points"])==5,design
+assert design["points"][0]=={"x1":0.1,"x2":0.001},design
+assert design["points"][3]=={"x1":10000.0,"x2":0.5},design
+assert design["learned_parameter_bytes"]==0
+
+# 7. Surface renaming must not destroy structural transfer signature.
 rows_rename=[
     {"u":x,"v":z,"res":2*x*x/z-4}
     for x in [2,3,5,7] for z in [1,3,6]
@@ -105,7 +130,7 @@ match=mod.structural_match(br,br2)
 assert match["match"] is True,match
 assert match["surface_variable_names_ignored"] is True
 
-# 6. An irrelevant variable must not beat the exact simpler relation.
+# 8. An irrelevant variable must not beat the exact simpler relation.
 rows_noise=[
     {"x":x,"noise":((-1)**i)*(i+3),"out":7*x*x+1}
     for i,x in enumerate(range(1,13))
@@ -113,14 +138,14 @@ rows_noise=[
 dn=mod.discover(rows_noise,target="out")
 assert dn["candidates"][0]["feature_expression"]=="x^2",dn["candidates"][0]
 
-# 7. Out-of-grammar relation must expand, not force a false law.
+# 9. Out-of-grammar relation must expand, not force a false law.
 rows_sine=[{"x":x/3,"out":math.sin(x/3)} for x in range(1,25)]
 do=mod.discover(rows_sine,target="out")
 jo=mod.judge(do,rows_sine)
 assert jo["status"]=="EXPAND_MECHANISM_LANGUAGE",jo
 assert jo["candidate"] is None
 
-# 8. Distinct plausible candidates generate an informative probe.
+# 10. Distinct plausible candidates generate an informative probe.
 c1={"family":"monomial","variables":["x"],"exponents":[1],"intercept":0,"scale":1,
     "target_transform":"identity","target_sign":1,"structural_signature":"identity|monomial|1"}
 c2={"family":"monomial","variables":["x"],"exponents":[2],"intercept":0,"scale":1,
@@ -129,7 +154,7 @@ probe=mod.propose_discriminator([c1,c2],[{"x":1},{"x":2},{"x":3},{"x":4},{"x":5}
 assert probe["status"]=="DISCRIMINATOR_FOUND",probe
 assert probe["disagreement"]>0
 
-# 9. Non-finite evidence fails closed.
+# 11. Non-finite evidence fails closed.
 bad=[{"x":i,"out":float(i)} for i in range(1,6)]
 bad[2]["x"]=math.inf
 try:
@@ -140,7 +165,7 @@ except mod.MechanismSynthesisError:
 
 print("PASS: exact H100 zero-learned candidate blobs verified")
 print("PASS: runtime import/escape-hatch audit is deterministic standard-library only")
-print("PASS: power, ratio, affine, fractional-power mechanism recovery")
-print("PASS: surface-name invariant structure and irrelevant-distractor rejection")
+print("PASS: power, ratio, affine, fractional and continuous-power mechanism recovery")
+print("PASS: public 2d+1 bound-probe design, surface invariance, distractor rejection")
 print("PASS: out-of-grammar fail-closed expansion and disagreement probe generation")
 print("PASS: zero learned bytes and zero terminal credit preserved")
