@@ -1,0 +1,116 @@
+name: Verify Qwen3.8-4B Root1 semantic seed V2 exact
+on:
+  push:
+    branches: ["verify/qwen38-4b-semantic-seed-v2-sol-20261004"]
+    paths:
+      - "capsules/qwen38_4b_semantic_seed_v2/**"
+      - ".github/workflows/verify-qwen38-4b-semantic-seed-v2-sol.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/qwen38_4b_semantic_seed_v2/**"
+      - ".github/workflows/verify-qwen38-4b-semantic-seed-v2-sol.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qwen38-4b-root1-semantic-seed-v2-sol
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      MODEL_FILE: Qwen3.8-4B-Q4_K_M.gguf
+      MODEL_BYTES: "2783446304"
+      MODEL_SHA256: dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790
+      MODEL_REV: 391fc7d103e3942a408def3e4f51c2f85d464417
+      LLAMA_CPP_REV: 0504396140d1c882f5f6ee34466a42db7ae90114
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain V2 precommit and verifier bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=capsules/qwen38_4b_semantic_seed_v2
+          test "$(git hash-object "$C/LIVEBENCH_ROOT1_QWEN38_4B_SEMANTIC_SEED_PRECOMMIT_V2.json")" = "e7b78710ac25b6bf1161b139db3b65f906786e66"
+          test "$(git hash-object "$C/verify_semantic_seed_v2.py")" = "91e91a8ed38bd4e8621d4fbddc7b58583d1af23a"
+          python - <<'PY'
+          import json
+          p="capsules/qwen38_4b_semantic_seed_v2/LIVEBENCH_ROOT1_QWEN38_4B_SEMANTIC_SEED_PRECOMMIT_V2.json"
+          x=json.load(open(p,encoding="utf-8"))
+          assert x["status"].startswith("PRECOMMITTED_V2__")
+          assert x["prompt_construction"]["system_message"] is None
+          assert x["prompt_construction"]["source_separator_literal"] == r"\n\nTEXT:\n"
+          assert x["generation_policy"]["case_seed_schedule"] == {
+              "PARA_1":424200,"PARA_2":424201,"SIMPLE_1":424202,"SIMPLE_2":424203,
+              "SUM_1":424204,"SUM_2":424205,"STORY_1":424206,"STORY_2":424207,
+          }
+          assert len(x["frozen_nonterminal_suite"]) == 8
+          PY
+
+      - name: Build exact pinned llama.cpp CPU runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Acquire and hash exact Qwen3.8-4B subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          curl -L --fail --retry 5 --retry-all-errors --connect-timeout 30 --silent --show-error             -o "models/$MODEL_FILE"             "https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF/resolve/$MODEL_REV/$MODEL_FILE?download=true"
+          test "$(stat -c '%s' "models/$MODEL_FILE")" = "$MODEL_BYTES"
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+      - name: Start exact localhost-only inference subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup llama.cpp/build/bin/llama-server             -m "models/$MODEL_FILE"             --alias local             --host 127.0.0.1 --port 8080             -c 4096 -t 4 --parallel 1             --jinja --no-webui             > QWEN38_4B_V2_SERVER.log 2>&1 &
+          echo $! > QWEN38_4B_V2_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > QWEN38_4B_V2_HEALTH.json 2>/dev/null; then
+              ok=1
+              break
+            fi
+            if ! kill -0 "$(cat QWEN38_4B_V2_SERVER.pid)" 2>/dev/null; then
+              cat QWEN38_4B_V2_SERVER.log
+              exit 1
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute frozen exact V2 semantic suite once
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/qwen38_4b_semantic_seed_v2"
+          python "$C/verify_semantic_seed_v2.py" | tee "$GITHUB_WORKSPACE/QWEN38_4B_SEMANTIC_V2_RECEIPT.json"
+
+      - name: Preserve exact V2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-4b-root1-semantic-seed-v2-sol
+          path: |
+            QWEN38_4B_V2_HEALTH.json
+            QWEN38_4B_V2_SERVER.log
+            QWEN38_4B_SEMANTIC_V2_RECEIPT.json
+          if-no-files-found: warn
