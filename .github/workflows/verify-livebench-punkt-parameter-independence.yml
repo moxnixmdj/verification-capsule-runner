@@ -1,0 +1,32 @@
+name: Verify LiveBench Punkt parameter independence
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_punkt_parameter_independence_v1/**"
+      - "verify_livebench_punkt_parameter_independence.py"
+      - ".github/workflows/verify-livebench-punkt-parameter-independence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact tokenizer runtime
+        run: python -m pip install --disable-pip-version-check --no-cache-dir "nltk==3.10.3"
+      - name: Independently verify parameter-independent sentence construction
+        run: python verify_livebench_punkt_parameter_independence.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-punkt-parameter-independence-verification
+          path: livebench_punkt_parameter_independence_verification.json
+          if-no-files-found: error
