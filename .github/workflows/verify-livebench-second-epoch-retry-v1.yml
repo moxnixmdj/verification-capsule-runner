@@ -1,5 +1,12 @@
 name: Verify LiveBench second epoch retry v1
 on:
+  push:
+    branches:
+      - "verify-livebench-second-epoch-retry-v1"
+    paths:
+      - "subject/livebench_second_epoch_retry_v1/**"
+      - "verify_livebench_second_epoch_retry_v1.py"
+      - ".github/workflows/verify-livebench-second-epoch-retry-v1.yml"
   pull_request:
     paths:
       - "subject/livebench_second_epoch_retry_v1/**"
