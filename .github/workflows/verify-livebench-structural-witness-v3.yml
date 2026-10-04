@@ -1,0 +1,23 @@
+name: Verify LiveBench structural witness V3
+on:
+  pull_request:
+    paths:
+      - 'subject/livebench_structural_witness_v3/**'
+      - 'verify_livebench_structural_witness_v3.py'
+      - '.github/workflows/verify-livebench-structural-witness-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.14'
+      - name: Verify exact V3 bytes and zero-terminal-case synthetic routes
+        run: python verify_livebench_structural_witness_v3.py
