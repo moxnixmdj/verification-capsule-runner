@@ -90,6 +90,6 @@ if __name__=="__main__":
       "exact_blob_count":3,
       "generated_cases":0,
       "candidate_bound":False,
-      "fresh_adversarial":"PASS",
+      "copied_tests_passed":len(copied),\n      "fresh_adversarial":"PASS",
       "acceptance_credit_delta":0
     },sort_keys=True))
