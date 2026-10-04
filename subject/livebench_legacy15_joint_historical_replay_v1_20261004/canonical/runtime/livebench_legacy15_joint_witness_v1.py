@@ -117,7 +117,10 @@ def _special_json(constraints: list[dict[str, Any]]) -> str:
     required = _required_fragments(_required(constraints), forbidden)
     filler = _safe_token(forbidden)
     payload = " ".join([filler, *required]).strip()
-    response = json.dumps({"response": payload}, ensure_ascii=False)
+    # Use the already-forbidden-safe filler as the JSON key. The previous
+    # literal key "response" is itself in the frozen WORD_LIST and could be
+    # generated as a forbidden word even though JSON validity does not require it.
+    response = json.dumps({filler: payload}, ensure_ascii=False)
     for w in forbidden:
         if re.search(r"\b" + re.escape(w) + r"\b", response, re.I):
             raise JointWitnessError("JSON_FORBIDDEN_COLLISION")
