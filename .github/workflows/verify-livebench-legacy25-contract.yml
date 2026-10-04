@@ -24,7 +24,15 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check --quiet \
             nltk==3.10.3 langdetect==1.0.9 immutabledict==4.3.1
-      - name: Verify source-generated 25-of-25 inversion
+          python - <<'PY'
+          import nltk
+          assert nltk.download("punkt", quiet=True)
+          try:
+              nltk.download("punkt_tab", quiet=True)
+          except Exception:
+              pass
+          PY
+      - name: Verify source-generated 25-of-25 inversion and witnesses
         run: python verify_livebench_legacy25_contract.py
       - if: always()
         uses: actions/upload-artifact@v4
