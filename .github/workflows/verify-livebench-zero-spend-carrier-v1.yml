@@ -1,4 +1,5 @@
 name: Verify LiveBench zero-spend carrier v1
+# trigger after push event installation
 on:
   push:
     branches: [execute-livebench-if-threshold-v1-20261004]
