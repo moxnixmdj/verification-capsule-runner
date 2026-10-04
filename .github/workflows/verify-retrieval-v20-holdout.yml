@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: test "$(git hash-object canonical/runtime/retrieval_fresh_v4_holdout_v20.py)" = "2e0522323d245114914ae82c2b28b0a95f473a19"
+      - run: test "$(git hash-object canonical/runtime/retrieval_fresh_v4_holdout_v20.py)" = "dcd6099f491a6ed9e8bfb0261b64caa5ea0b6f5d"
       - run: test "$(git hash-object canonical/tests/test_retrieval_fresh_v4_holdout_v20.py)" = "4dd712fb239a9f4a09a40536f49cfe5327c965cb"
       - run: PYTHONPATH=. python canonical/tests/test_retrieval_fresh_v4_holdout_v20.py
       - run: PYTHONPATH=. python canonical/runtime/retrieval_fresh_v4_holdout_v20.py
