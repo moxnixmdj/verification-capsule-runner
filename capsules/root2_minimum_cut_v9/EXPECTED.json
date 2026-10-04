@@ -1,0 +1,13 @@
+{
+  "schema":"BRAIN_ROOT2_MINIMUM_CUT_V9_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository":"moxnixmdj/brain",
+  "brain_pr":1488,
+  "brain_head_sha":"8c2e7c75c4ddd4cdc85f19ff14a2fbc140187515",
+  "exact_blobs":{
+    "canonical/governance/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json":"270830e140a76359ce40e4e9827424cf009fa16b",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V9.json":"cc48a06def0200777734035527bcaf4e065af0a1",
+    "canonical/governance/CHARTOGRAPHY_ZERO_SPEND_GUARD_ACTIVATION_V1.json":"40a25b0e007936b09066f5b7e7bac8ad58b8ae2e",
+    "canonical/verification/CHARTOGRAPHY_ZERO_SPEND_GUARD_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json":"2cfd88c8597bcdc8a0f6507e4d1355cef800be12",
+    "canonical/verification/OSWORLD_V21_GITLAB_PROTOCOL_THEOREM_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json":"12fa87058ba2d7a599f8f410ba99598efd1dff8e"
+  }
+}
