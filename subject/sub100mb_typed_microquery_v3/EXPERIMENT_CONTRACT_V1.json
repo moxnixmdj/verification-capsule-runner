@@ -1,0 +1,97 @@
+{
+  "schema": "PROJECT_BRAIN_SUB100MB_TYPED_MICROQUERY_EXPERIMENT_V3",
+  "date": "2026-10-04",
+  "status": "PRECOMMITTED_CAUSAL_ABLATION__ZERO_CREDIT",
+  "objective": "ISOLATE_WHETHER_V2_FAILURE_WAS_PRIMARILY_OUTPUT_CHANNEL_NONCOMPLIANCE_OR_SEMANTIC_FIELD_SELECTION_FAILURE_BY_HOLDING_MODEL_TASKS_ATOMIC_QUESTIONS_RUNTIME_AND_SCORING_FIXED_WHILE_ENFORCING_JSON_SCHEMA_DECODING",
+  "baseline_v2": {
+    "verified_summary_schema": "PROJECT_BRAIN_SUB100MB_TYPED_MICROQUERY_V2_VERIFIED_SUMMARY",
+    "model_artifact": "SmolLM2-135M-Instruct-Q3_K_M.gguf",
+    "model_sha256": "61c69fc5ce91982e26c625d43be5c3c7f0f774da22f4fa4e45c37a80a22ddad4",
+    "learned_bytes": 93511232,
+    "tasks_solved": 0,
+    "tasks": 8,
+    "atomic_model_queries": 121,
+    "observed_failure_classes": [
+      "ATOMIC_OUTPUT_INSTRUCTION_IGNORED__PROSE_GENERATED_INSTEAD_OF_SINGLE_VALUE",
+      "SHORT_OUTPUT_BUDGET_TRUNCATED_PROSE_BEFORE_VALUE_ON_MULTIPLE_QUERIES",
+      "CATEGORY_MISCLASSIFICATION_ON_SOME_GEOMETRY_AND_UNIT_QUERIES",
+      "WRONG_NUMERIC_ASSOCIATION_ON_SOME_FIELDS"
+    ],
+    "precommitted_next_ablation": "FAIL_CLOSED_GRAMMAR_CONSTRAINED_ATOMIC_DECODING_TO_SEPARATE_OUTPUT_CHANNEL_FAILURE_FROM_SEMANTIC_SELECTION_FAILURE"
+  },
+  "v3_subject": {
+    "script_path": "sub100mb_typed_microquery_smoke_v3.py",
+    "script_git_blob_sha": "939bbd0b5aed550c222f13d022a7ec520ab7f474",
+    "task_population": "IDENTICAL_8_V1_SYNTHETIC_NONTERMINAL_PARTSPECLITE_TEXT_SURROGATES",
+    "same_hidden_expected_objects": true,
+    "hidden_expected_feedback_during_build": false,
+    "first_attempt_seed_namespace_preserved": true,
+    "v2_retry_path_removed": true
+  },
+  "single_primary_intervention": {
+    "decoder": "LLAMA_CPP_JSON_SCHEMA_CONSTRAINED_OUTPUT",
+    "choice_shape": {
+      "value": "ENUM_OF_ALLOWED_CHOICES"
+    },
+    "number_shape": {
+      "value": "FINITE_JSON_NUMBER"
+    },
+    "purpose": "MAKE_OUTPUT_CHANNEL_ERRORS_IMPOSSIBLE_OR_EXPLICIT_DECODER_ERRORS_WITHOUT_SUPPLYING_HIDDEN_SEMANTIC_ANSWERS"
+  },
+  "constants_held_fixed": {
+    "model": true,
+    "learned_state_bytes": true,
+    "quantization": true,
+    "llama_cpp_commit": "11fe02151f79c41d0d4af7da708755d73b9c0da6",
+    "context_size": 2048,
+    "cpu_threads": 2,
+    "parallel_slots": 1,
+    "temperature": 0,
+    "tasks": true,
+    "questions": true,
+    "deterministic_assembly": true,
+    "final_exact_scoring": true,
+    "incremental_spend_usd": 0
+  },
+  "infrastructure_validity_gate": {
+    "decoder_errors_required": 0,
+    "model_bytes_required": 93511232,
+    "strict_learned_budget_bytes_exclusive": 100000000,
+    "task_count_required": 8,
+    "rule": "ANY_DECODER_ERROR_INVALIDATES_THE_CAUSAL_RESULT_RATHER_THAN_COUNTING_AS_SEMANTIC_FAILURE"
+  },
+  "precommitted_interpretation": [
+    {
+      "tasks_solved": 0,
+      "disposition": "GRAMMAR_CONSTRAINT_NOT_SUFFICIENT__SEMANTIC_SELECTION_OR_DECOMPOSITION_REMAINS_DOMINANT"
+    },
+    {
+      "tasks_solved": "1-2",
+      "disposition": "LOCAL_OUTPUT_CHANNEL_GAIN__STILL_STRONGLY_INSUFFICIENT"
+    },
+    {
+      "tasks_solved": "3-7",
+      "disposition": "MATERIAL_OUTPUT_CHANNEL_CAUSAL_CONTRIBUTION__SEMANTIC_RESIDUAL_REMAINS"
+    },
+    {
+      "tasks_solved": 8,
+      "disposition": "THIS_SURROGATE_POPULATION_CLOSED_BY_CONSTRAINED_ATOMIC_DECODING__NO_OPEN_WORLD_OR_FRONTIER_INFERENCE"
+    }
+  ],
+  "hard_nonclaims": [
+    "NO_FRONTIER_CAPABILITY_CLAIM",
+    "NO_IMAGE_PERCEPTION_CLAIM",
+    "NO_OPEN_WORLD_GENERALIZATION_CLAIM",
+    "NO_MINIMUM_LEARNED_STATE_CLAIM",
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
+    "NO_TERMINAL_CASES_CONSUMED"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
