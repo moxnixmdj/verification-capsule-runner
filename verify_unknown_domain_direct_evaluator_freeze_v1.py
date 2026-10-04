@@ -1,5 +1,5 @@
 from __future__ import annotations
-import hashlib, json
+import hashlib, importlib, json
 from pathlib import Path
 
 from canonical.runtime.unknown_domain_direct_hidden_scorer_v1 import (
@@ -27,12 +27,19 @@ def family_freeze():
     assert d["accounting"]["terminal_cases_consumed"]==0
     assert d["scoring"]["aggregation"].startswith("ALL_CASES")
     counts={x["leaf_id"]:x["case_count"] for x in d["leaves"]}
-    assert counts[TRANSFER]==12
-    assert counts[ABSTAIN]==15
+    assert counts[TRANSFER]==12 and counts[ABSTAIN]==15
     balance=next(x for x in d["leaves"] if x["leaf_id"]==ABSTAIN)["class_balance"]
     assert balance=={"IDENTIFIABLE":5,"NONIDENTIFIABLE":5,"UNDERSPECIFIED":5}
     assert "NO_ACTUAL_CASES_EXIST_IN_THIS_FREEZE" in d["hard_rules"]
     assert "NO_CANDIDATE_BYTES_BOUND_IN_THIS_FREEZE" in d["hard_rules"]
+
+def run_copied_tests():
+    mod=importlib.import_module("canonical.tests.test_unknown_domain_direct_hidden_scorer_v1")
+    names=sorted(n for n in dir(mod) if n.startswith("test_") and callable(getattr(mod,n)))
+    assert names
+    for name in names:
+        getattr(mod,name)()
+    return names
 
 def good_transfer():
     h={
@@ -40,8 +47,7 @@ def good_transfer():
       "domain_a_earned_receipt_ids":["R1"],"full_rediscovery_probe_floor":3,
       "latent_primitive_fingerprint":"prim:x",
       "domain_a_receipt_primitive_bindings":{"R1":"prim:x"},
-      "surface_label_permutation_verified":True,
-      "domain_vocabularies_disjoint":True,
+      "surface_label_permutation_verified":True,"domain_vocabularies_disjoint":True,
       "transfer_relevant_feature_ids":["F1"],"distractor_feature_ids":["D1","D2"],
     }
     t={
@@ -64,32 +70,18 @@ def fresh_adversarial():
     t2=dict(t);t2["transferred_primitive_fingerprint"]="prim:wrong"
     assert score_case(h,t2)["pass"] is False
     h2=dict(h);h2["surface_label_permutation_verified"]=False
-    try:
-        score_case(h2,t)
-        raise AssertionError("missing fail closed surface randomization")
-    except UnknownDomainScorerError:
-        pass
+    try: score_case(h2,t); raise AssertionError("surface randomization not enforced")
+    except UnknownDomainScorerError: pass
     h3=dict(h);h3["domain_a_receipt_primitive_bindings"]={"R1":"prim:other"}
     assert score_case(h3,t)["pass"] is False
-
-    # Aggregator must refuse a 15-case abstention portfolio with wrong class balance.
-    transfer_results=[{"leaf_id":TRANSFER,"case_id":f"T{i}","pass":True} for i in range(12)]
-    abstain_results=[]
-    for i in range(15):
-        abstain_results.append({"leaf_id":ABSTAIN,"case_id":f"A{i}","case_class":"IDENTIFIABLE","pass":True})
-    try:
-        aggregate(transfer_results+abstain_results)
-        raise AssertionError("class balance not enforced")
-    except UnknownDomainScorerError:
-        pass
+    trs=[{"leaf_id":TRANSFER,"case_id":f"T{i}","pass":True} for i in range(12)]
+    absrows=[{"leaf_id":ABSTAIN,"case_id":f"A{i}","case_class":"IDENTIFIABLE","pass":True} for i in range(15)]
+    try: aggregate(trs+absrows); raise AssertionError("class balance not enforced")
+    except UnknownDomainScorerError: pass
 
 if __name__=="__main__":
-    exact_bytes();family_freeze();fresh_adversarial()
+    exact_bytes(); family_freeze(); copied=run_copied_tests(); fresh_adversarial()
     print(json.dumps({
-      "status":"PASS",
-      "exact_blob_count":3,
-      "generated_cases":0,
-      "candidate_bound":False,
-      "copied_tests_passed":len(copied),\n      "fresh_adversarial":"PASS",
-      "acceptance_credit_delta":0
+      "status":"PASS","exact_blob_count":3,"generated_cases":0,"candidate_bound":False,
+      "copied_tests_passed":len(copied),"fresh_adversarial":"PASS","acceptance_credit_delta":0
     },sort_keys=True))
