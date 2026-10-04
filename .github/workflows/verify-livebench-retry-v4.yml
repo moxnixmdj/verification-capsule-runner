@@ -1,0 +1,24 @@
+name: Verify LiveBench retry epoch V4
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "execute_livebench_replay72_v4.py"
+      - "verify_livebench_retry_epoch_v4.py"
+      - "subject/livebench_retry_v4_20261004/**"
+      - ".github/workflows/verify-livebench-retry-v4.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify retry-only executor with zero terminal cases
+        run: python verify_livebench_retry_epoch_v4.py
