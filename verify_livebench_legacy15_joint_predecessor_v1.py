@@ -10,6 +10,8 @@ import urllib.request
 
 import pyarrow.parquet as pq
 
+# Trigger-only independent rerun after repaired Brain blobs were pinned on the base branch.
+
 from canonical.runtime import livebench_frozen_active_legacy15_v1 as active15
 from canonical.runtime import livebench_legacy_visible_constraint_compiler_v4 as compiler
 from canonical.runtime import livebench_legacy15_joint_candidate_generator_v1 as generator
