@@ -302,3 +302,6 @@ print(json.dumps({
     "promotion_authority": False,
     "fresh_reality_authority": False,
 }, sort_keys=True))
+
+# Additive predicate-local verifier; import executes its fail-closed checks.
+import verify_livebench_if_acceptance_reduction_20261004
