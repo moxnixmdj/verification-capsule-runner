@@ -95,3 +95,53 @@ assert _v5root["current_acceptance"]["accepted_families"]==5
 assert _v5root["current_acceptance"]["proved_atomic"]==12
 assert _v5root["current_acceptance"]["unresolved_atomic"]==26
 print("ROOT2_V5_ACTIVATION_PROJECTION_PASS__SCHEDULING_ONLY__ZERO_CREDIT")
+
+
+# Root2 Frontier V6 finance compression projection
+_V6_BASE=pathlib.Path("capsules/root2_v6_finance")
+_V6_EXPECTED={
+ "v5.json":"e948022f0a4e8d91b949a5155d850d56aa137c87",
+ "v6.json":"fcbdb818b63b4986b026db29c400a47373a26fdb",
+ "finance_threshold_activation.json":"9b9d4a41d19a5e58e8967027e1d1837790287dc2",
+ "finance_mass.json":"ec36936e92a6111aed6b1813a45225fb4ca867dc",
+ "finance_mass_verification.json":"cbdc6b3e773e86a1e57e119a6dd2c690ee1c6b11",
+}
+for _n,_sha in _V6_EXPECTED.items():
+    assert git_blob_sha(str(_V6_BASE/_n))==_sha,(_n,git_blob_sha(str(_V6_BASE/_n)),_sha)
+
+_v5=json.loads((_V6_BASE/"v5.json").read_text())
+_v6=json.loads((_V6_BASE/"v6.json").read_text())
+_thr=json.loads((_V6_BASE/"finance_threshold_activation.json").read_text())
+_mass=json.loads((_V6_BASE/"finance_mass.json").read_text())
+_massv=json.loads((_V6_BASE/"finance_mass_verification.json").read_text())
+
+assert _v6["supersedes_for_scheduling_if_verified"]=="canonical/governance/ROOT2_CLOSURE_V2_CURRENT_FRONTIER_V5.json"
+assert _v6["source_bindings"]["prior_frontier_v5"]["git_blob_sha"]==_V6_EXPECTED["v5.json"]
+assert _v6["source_bindings"]["finance_index_direct_threshold_activation"]["git_blob_sha"]==_V6_EXPECTED["finance_threshold_activation.json"]
+assert _v6["source_bindings"]["finance_agent_v2_heldout_mass"]["git_blob_sha"]==_V6_EXPECTED["finance_mass.json"]
+assert _v6["source_bindings"]["finance_agent_v2_heldout_mass"]["verification_git_blob_sha"]==_V6_EXPECTED["finance_mass_verification.json"]
+
+for k in ["accepted_families","open_families","proved_atomic","unresolved_atomic","root1_positive_gap_count","root2_only_count","root3_only_count","root2_and_root3_count","root2_touching_predicates"]:
+    assert _v6["exact_state"][k]==_v5["exact_state"][k],k
+assert _v6["exact_state"]["accepted_families"]==5
+assert _v6["exact_state"]["proved_atomic"]==12
+assert _v6["exact_state"]["unresolved_atomic"]==26
+assert _v6["exact_state"]["root2_touching_predicates"]==19
+
+deltas={d["target"]+":"+d["deletion"] for d in _v6["projection_deltas"]}
+assert "FINANCE_ACCOUNTING_INDEX_GE_61:COMPONENTWISE_OPUS_NONINFERIORITY_AS_MANDATORY_ROUTE" in deltas
+assert "FINANCE_AGENT_V2_GE_58_59:OFFICIAL_HELDOUT_SUITE_SIZE_UNKNOWN" in deltas
+assert _massv["independent_runner"]["conclusion"]=="success"
+assert _mass["derived"]["heldout_questions_per_run"]==450
+assert _mass["derived"]["runs_per_model"]==3
+assert _mass["derived"]["scored_task_executions"]==1350
+assert _thr["scheduling_effect"]["componentwise_opus_noninferiority"]=="SUFFICIENT_BUT_NOT_NECESSARY"
+
+assert _v6["execution_authority"] is False
+assert _v6["promotion_authority"] is False
+assert _v6["fresh_reality_authority"] is False
+assert _v6["accounting"]["acceptance_credit_delta"]==0
+assert _v6["accounting"]["new_reality_units_consumed"]==0
+assert _v6["accounting"]["terminal_cases_consumed"]==0
+
+print("ROOT2_FRONTIER_V6_FINANCE_COMPRESSION_PROJECTION_PASS__ZERO_CREDIT__NO_FRESH_REALITY")
