@@ -3,6 +3,11 @@ on:
   pull_request:
   push:
     branches: [main]
+
+concurrency:
+  group: execution-guard-regression-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 jobs:
