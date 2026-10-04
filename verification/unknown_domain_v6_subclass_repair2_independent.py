@@ -184,3 +184,5 @@ receipt={
 }
 OUT.write_text(json.dumps(receipt,indent=2,sort_keys=True,ensure_ascii=True)+"\n",encoding="utf-8")
 print(json.dumps(receipt,sort_keys=True,ensure_ascii=True))
+
+# Immutable post-merge execution trigger; semantics unchanged.
