@@ -34,8 +34,8 @@ jobs:
             b=Path(p).read_bytes()
             return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
           for p,e in expected.items():
-            g=blob(p)
-            assert g==e,(p,g,e)
+            got=blob(p)
+            assert got==e,(p,got,e)
           raw=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
           lease=json.loads(raw)
           assert lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"]==expected["canonical/runtime/unknown_domain_direct_production_once_v1.py"]
@@ -54,42 +54,16 @@ jobs:
           from pathlib import Path
           wf=Path(".github/workflows/unknown-domain-direct-one-use-production.yml").read_text()
           launcher=Path("canonical/runtime/unknown_domain_direct_production_once_v1.py").read_text()
-          assert ('ref: 
-          assert ('ref: 
+          event_sha_literal='ref: ' + '$' + '{{ github.sha }}'
+          mutable_ref_literal='ref: ' + '$' + '{{ github.ref }}'
+          assert event_sha_literal in wf
+          assert mutable_ref_literal not in wf
           assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
           assert 'current_git_head()' in launcher
           assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
           assert 'result_sha256' in launcher
-          assert 'put_result(' in launcher
-          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
-          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
-          PY
- + '{{ github.sha }}') in wf
-          assert 'ref: ${{ github.ref }}' not in wf
-          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
-          assert 'current_git_head()' in launcher
-          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
-          assert 'result_sha256' in launcher
-          assert 'put_result(' in launcher
-          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
-          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
-          PY
- + '{{ github.ref }}') not in wf
-          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
-          assert 'current_git_head()' in launcher
-          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
-          assert 'result_sha256' in launcher
-          assert 'put_result(' in launcher
-          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
-          print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
-          PY
- + '{{ github.sha }}') in wf
-          assert 'ref: ${{ github.ref }}' not in wf
-          assert 'validate_event_sha_binding(launch_sha,runtime_head)' in launcher
-          assert 'current_git_head()' in launcher
-          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
-          assert 'result_sha256' in launcher
-          assert 'put_result(' in launcher
-          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.rindex('put_result(')
+          call='status,response=put_result('
+          assert call in launcher
+          assert launcher.index('PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD') < launcher.index(call)
           print("immutable event SHA + runtime HEAD + write-ahead result invariants PASS")
           PY
