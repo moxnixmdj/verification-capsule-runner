@@ -18,7 +18,7 @@ jobs:
       - name: Verify exact subject blobs
         run: |
           test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v15.py)" = "e32b955fa2355a61e6ae585b435a75143dc1bce8"
-          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v15.py)" = "990e49098fea2013bf9e2eead5a66874a44e6f34"
+          test "$(git hash-object canonical/tests/test_retrieval_live_provider_arena_v15.py)" = "ef4a88cbfa1efe08a2437962ea7fc164a1ef94aa"
           test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v14.py)" = "fc0327ff562d855280617a6e73748d55146c5c8b"
           test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v13.py)" = "d36f5f29060db6ad5db5f44b16751099f54873ca"
           test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v11.py)" = "0e28128d3f67d33ce4058667609e4d513657af55"
