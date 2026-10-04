@@ -1,0 +1,36 @@
+name: Verify FLAN T5 small INT8 semantic smoke V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_flan_t5_small_int8_semantic_smoke_v1.py
+      - .github/workflows/verify-flan-t5-small-int8-semantic-smoke-v1.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deterministic execution dependencies
+        run: python -m pip install --disable-pip-version-check "onnxruntime==1.30.0" "onnx==1.23.0" "sentencepiece==0.2.2"
+      - name: Prefetch and content-address learned artifacts
+        run: python verify_flan_t5_small_int8_semantic_smoke_v1.py prepare --root "$RUNNER_TEMP/flan_t5_small_int8"
+      - name: Execute with network namespace disabled
+        run: |
+          sudo unshare --net -- \
+            "$(command -v python)" verify_flan_t5_small_int8_semantic_smoke_v1.py offline \
+            --root "$RUNNER_TEMP/flan_t5_small_int8" \
+            --receipt flan_t5_small_int8_semantic_smoke_receipt.json
+      - name: Preserve receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flan-t5-small-int8-semantic-smoke-v1
+          path: flan_t5_small_int8_semantic_smoke_receipt.json
+          if-no-files-found: error
