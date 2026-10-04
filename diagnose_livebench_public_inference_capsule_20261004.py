@@ -28,6 +28,22 @@ observed_bound_capabilities={
 }
 assert observed_bound_capabilities==EXPECTED_BOUND_CAPABILITIES,(observed_bound_capabilities,EXPECTED_BOUND_CAPABILITIES)
 
+EXPECTED_ACQUISITION_CLOSURE={
+  "auto_capability_acquisition.py":"fc80ede8225cc51dac77be6d41aa2a1c757c6ee8",
+  "auto_apt_cli_acquisition.py":"0b7c67a2680a3aaa1aa5cf1a8bc8d41d69eee271",
+  "auto_pypi_library_acquisition.py":"6387bd7b8f1dba8bb9f66240e3ebb2627085dd2f",
+  "auto_npm_library_acquisition.py":"b74cdf34a96fc2d591b902e1d582e0381a8a8d08",
+  "auto_python_source_codec_acquisition.py":"65453b2eed5e678def3f0ab1c4d44182fb0b9a78",
+  "apt_cli_probe.py":"3f3a8f6a0154e1ed3f87fc97b99840598297b119",
+  "capability_discovery.py":"b9e7423ab24bf2da98869b02d782e791a779892a",
+  "cli_contract_inference.py":"009c3c45040178844d84eaa15b0d47ca2e1f259f",
+  "npm_package_utils.py":"05fd0591083034df48c3ee426d6b3e11e0183555",
+}
+observed_acquisition_closure={
+  name:git_blob_sha(SUB/name) for name in EXPECTED_ACQUISITION_CLOSURE
+}
+assert observed_acquisition_closure==EXPECTED_ACQUISITION_CLOSURE,(observed_acquisition_closure,EXPECTED_ACQUISITION_CLOSURE)
+
 canonical=types.ModuleType("canonical")
 runtime=types.ModuleType("canonical.runtime")
 canonical.runtime=runtime
@@ -66,6 +82,7 @@ except Exception as exc:
       "paid_external_model_or_api_used":False,
       "runtime_closure_git_blob_shas":observed_runtime_closure,
       "bound_capabilities_git_blob_shas":observed_bound_capabilities,
+      "acquisition_closure_git_blob_shas":observed_acquisition_closure,
     }
 else:
     result={
