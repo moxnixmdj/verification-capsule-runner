@@ -1,0 +1,51 @@
+name: Verify Unknown-Domain preclaim retry
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRECLAIM_RETRY_V1.json'
+      - '.github/workflows/unknown-domain-direct-preclaim-retry.yml'
+      - '.github/workflows/verify-unknown-domain-preclaim-retry.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify preclaim failure and retry firewall
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          d="76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9"
+          g=json.loads(Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRECLAIM_RETRY_V1.json").read_text())
+          assert g["failed_attempt"]["workflow_run_id"]==37239903215
+          assert g["failed_attempt"]["workflow_job_id"]==111546358270
+          assert g["failed_attempt"]["failure_phase"]=="PYTHON_MODULE_IMPORT_BEFORE_MAIN"
+          assert g["nonconsumption_proof"]["production_cases_consumed"]==0
+          assert g["retry_binding"]["execution_lease_sha256"]==d
+          assert g["retry_binding"]["corrected_invocation"]=="python -m canonical.runtime.unknown_domain_direct_production_once_v1"
+          lease=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
+          assert hashlib.sha256(lease).hexdigest()==d
+          def blob(p):
+              b=Path(p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          assert blob("canonical/runtime/unknown_domain_direct_production_once_v1.py")=="4218195d0cf49252ac6733c0bd80b673826ef95a"
+          retry=Path(".github/workflows/unknown-domain-direct-preclaim-retry.yml").read_text()
+          assert "workflow_dispatch" not in retry
+          assert "python -m canonical.runtime.unknown_domain_direct_production_once_v1" in retry
+          assert "contents: write" in retry
+          assert "unknown-domain-direct-launch/"+d in retry
+          assert "unknown-domain-direct-claims/" not in retry
+          print("preclaim retry firewall PASS")
+          PY
+      - name: Verify corrected package import
+        run: python -c "import canonical.runtime.unknown_domain_direct_production_once_v1; print('module import PASS')"
+      - name: Re-run frozen launcher unit tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
