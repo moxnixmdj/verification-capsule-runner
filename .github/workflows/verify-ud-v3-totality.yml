@@ -7,6 +7,12 @@ on:
     paths:
       - 'subject/ud_v3_totality/**'
       - '.github/workflows/verify-ud-v3-totality.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'subject/ud_v3_totality/**'
+      - '.github/workflows/verify-ud-v3-totality.yml'
 
 permissions:
   contents: read
