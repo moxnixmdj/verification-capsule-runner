@@ -8,7 +8,8 @@ import pathlib
 import subprocess
 
 ROOT = pathlib.Path("/tmp/LiveBench")
-# Workflow exists before this trigger commit; receipt remains outcome-blind.\nPINNED_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+# Workflow exists before this trigger commit; receipt remains outcome-blind.
+PINNED_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 RELEASE = "2026-06-25"
 CUTOFF = "2025-11-25"
 EXPECTED = {
