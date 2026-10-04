@@ -68,12 +68,16 @@ jobs:
                       "receipt_id":"r-"+eid,"independent_verified":True,"exact_byte_bound":True,
                       "conclusion":"success","episode_id":eid,"episode_sha256":dig}}
 
+          def bindings(episodes):
+              return [{"episode_id":x["episode_id"],
+                       "episode_sha256":x["verification_receipt"]["episode_sha256"]}
+                      for x in episodes]
+
           def make_morph(episodes,sem=semantics,valid=True):
               strategy_sha=cm.strategy_semantics_digest(
                   strategy_id="inspect-first",strategy_semantics=sem)
               episode_set_sha=cm.source_episode_set_digest(
-                  strategy_sha256=strategy_sha,
-                  episode_ids=[x["episode_id"] for x in episodes])
+                  strategy_sha256=strategy_sha,episode_bindings=bindings(episodes))
               pre=["source-inspectable"]
               metrics=["BURDEN_REDUCTION","WALL_CLOCK","RISK"]
               inv=["source-unavailable"]
@@ -114,42 +118,50 @@ jobs:
 
           tampered_sem={**candidate,"strategy_semantics":{
               **semantics,"ordered_steps":["inspect","execute"]}}
-          blocked_sem=cc.recommend(target_context_features=dst,transfer_candidates=[tampered_sem])
-          assert blocked_sem["recommended_strategy_id"] is None,blocked_sem
+          assert cc.recommend(
+              target_context_features=dst,
+              transfer_candidates=[tampered_sem])["recommended_strategy_id"] is None
 
-          tampered_eps={**candidate,"source_episodes":[ep("e1",b1=2),ep("e3",b1=3)]}
-          blocked_eps=cc.recommend(target_context_features=dst,transfer_candidates=[tampered_eps])
-          assert blocked_eps["recommended_strategy_id"] is None,blocked_eps
+          changed=ep("e1",b1=1)
+          tampered_evidence={**candidate,"source_episodes":[changed,episodes[1]]}
+          assert cc.recommend(
+              target_context_features=dst,
+              transfer_candidates=[tampered_evidence])["recommended_strategy_id"] is None
+
+          duplicate={**candidate,"source_episodes":[episodes[0],episodes[0]],"context_morphism":{}}
+          assert cc.recommend(
+              target_context_features=dst,
+              transfer_candidates=[duplicate])["recommended_strategy_id"] is None
 
           bad_morph=make_morph(episodes,valid=False)
-          blocked=cc.recommend(
+          assert cc.recommend(
               target_context_features=dst,
-              transfer_candidates=[{**candidate,"context_morphism":bad_morph}])
-          assert blocked["recommended_strategy_id"] is None,blocked
+              transfer_candidates=[{**candidate,"context_morphism":bad_morph}]
+          )["recommended_strategy_id"] is None
 
           one=[ep("single")]
-          one_out=cc.recommend(
+          one_candidate={"source_context_features":src,"strategy_id":"inspect-first",
+                         "strategy_semantics":semantics,"source_episodes":one,
+                         "context_morphism":make_morph(one)}
+          assert cc.recommend(
               target_context_features=dst,
-              transfer_candidates=[{"source_context_features":src,"strategy_id":"inspect-first",
-                  "strategy_semantics":semantics,"source_episodes":one,
-                  "context_morphism":make_morph(one)}])
-          assert one_out["recommended_strategy_id"] is None,one_out
+              transfer_candidates=[one_candidate])["recommended_strategy_id"] is None
 
           failed=[ep("ok"),ep("fail",success=False)]
-          failed_out=cc.recommend(
+          failed_candidate={"source_context_features":src,"strategy_id":"inspect-first",
+                            "strategy_semantics":semantics,"source_episodes":failed,
+                            "context_morphism":make_morph(failed)}
+          assert cc.recommend(
               target_context_features=dst,
-              transfer_candidates=[{"source_context_features":src,"strategy_id":"inspect-first",
-                  "strategy_semantics":semantics,"source_episodes":failed,
-                  "context_morphism":make_morph(failed)}])
-          assert failed_out["recommended_strategy_id"] is None,failed_out
+              transfer_candidates=[failed_candidate])["recommended_strategy_id"] is None
 
           paid=[ep("ok2"),ep("paid",spend="0.01")]
-          paid_out=cc.recommend(
+          paid_candidate={"source_context_features":src,"strategy_id":"inspect-first",
+                          "strategy_semantics":semantics,"source_episodes":paid,
+                          "context_morphism":make_morph(paid)}
+          assert cc.recommend(
               target_context_features=dst,
-              transfer_candidates=[{"source_context_features":src,"strategy_id":"inspect-first",
-                  "strategy_semantics":semantics,"source_episodes":paid,
-                  "context_morphism":make_morph(paid)}])
-          assert paid_out["recommended_strategy_id"] is None,paid_out
+              transfer_candidates=[paid_candidate])["recommended_strategy_id"] is None
 
           exact=[ep("t1",sid="native",ctx=dsha,b1=1),ep("t2",sid="native",ctx=dsha,b1=2)]
           exact_out=cc.recommend(
@@ -181,6 +193,8 @@ jobs:
           assert invs["pass"] is True,invs
           assert invs["v9_base_preserved"] is True,invs
           assert invs["exact_strategy_semantics_binding_preserved"] is True,invs
+          assert invs["exact_source_episode_evidence_binding_preserved"] is True,invs
+          assert invs["duplicate_source_evidence_blocked"] is True,invs
           assert invs["unknown_domain_acceptance_proved"] is False,invs
 
           gov=json.load(open(
@@ -189,6 +203,7 @@ jobs:
           assert gov["acceptance_credit_delta"]==0 and gov["ownership_credit_delta"]==0,gov
           assert gov["fresh_reality_authority"] is False and gov["promotion_authority"] is False,gov
           assert "NO_STRATEGY_NAME_OR_IDENTIFIER_ONLY_TRANSPORT" in gov["hard_nonclaims"],gov
+          assert "NO_EPISODE_ID_ONLY_EVIDENCE_TRANSPORT" in gov["hard_nonclaims"],gov
 
           print("independent adversarial V10 theorem: PASS")
           PY
