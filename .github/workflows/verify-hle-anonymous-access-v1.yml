@@ -1,0 +1,73 @@
+name: Verify HLE anonymous dataset access V1
+
+on:
+  push:
+    branches: [verify-hle-anonymous-access-20261004-v1]
+    paths:
+      - '.github/workflows/verify-hle-anonymous-access-v1.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/verify-hle-anonymous-access-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify anonymous HLE metadata and data access
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${HF_TOKEN:-}"
+          test -z "${HUGGING_FACE_HUB_TOKEN:-}"
+          curl --fail --silent --show-error --location \
+            https://huggingface.co/api/datasets/cais/hle \
+            -o /tmp/hle_meta.json
+          python3 - <<'PY'
+          import json, pathlib
+          meta=json.loads(pathlib.Path('/tmp/hle_meta.json').read_text())
+          siblings=[x.get('rfilename') for x in meta.get('siblings',[]) if x.get('rfilename')]
+          data=[x for x in siblings if x.endswith(('.parquet','.json','.jsonl'))]
+          assert data, siblings[:20]
+          gated=meta.get('gated', False)
+          assert gated in (False, None), gated
+          p=data[0]
+          pathlib.Path('/tmp/hle_path.txt').write_text(p)
+          print(json.dumps({'dataset':'cais/hle','gated':gated,'first_data_path':p,'sibling_count':len(siblings)},sort_keys=True))
+          PY
+          path="$(cat /tmp/hle_path.txt)"
+          curl --fail --silent --show-error --location --range 0-1023 \
+            "https://huggingface.co/datasets/cais/hle/resolve/main/${path}" \
+            -o /tmp/hle_probe.bin
+          test -s /tmp/hle_probe.bin
+          python3 - <<'PY'
+          import json, hashlib, pathlib
+          meta=json.loads(pathlib.Path('/tmp/hle_meta.json').read_text())
+          p=pathlib.Path('/tmp/hle_path.txt').read_text()
+          b=pathlib.Path('/tmp/hle_probe.bin').read_bytes()
+          receipt={
+            'schema':'PROJECT_BRAIN_HLE_ANONYMOUS_ACCESS_RECEIPT_V1',
+            'dataset':'cais/hle',
+            'authenticated':False,
+            'metadata_http_access':True,
+            'gated':meta.get('gated',False),
+            'data_path':p,
+            'anonymous_data_probe_bytes':len(b),
+            'probe_sha256':hashlib.sha256(b).hexdigest(),
+            'conclusion':'HUGGING_FACE_HLE_ACCOUNT_ACCESS_NOT_REQUIRED_FOR_DATASET_RETRIEVAL'
+          }
+          pathlib.Path('hle_anonymous_access_receipt_v1.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(receipt,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-anonymous-access-v1
+          path: hle_anonymous_access_receipt_v1.json
+          if-no-files-found: error
