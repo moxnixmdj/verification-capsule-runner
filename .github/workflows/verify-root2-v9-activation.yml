@@ -1,0 +1,19 @@
+name: Verify Root2 V9 activation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_v9_activation/**"
+      - ".github/workflows/verify-root2-v9-activation.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/root2_v9_activation/verify.py
