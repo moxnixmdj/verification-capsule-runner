@@ -6,6 +6,10 @@ on:
       - verify/brain-current-unknown-domain-v5-20261005-sol
   workflow_dispatch:
 
+concurrency:
+  group: exact-current-brain-v5-verification
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
