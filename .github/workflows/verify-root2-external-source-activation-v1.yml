@@ -1,0 +1,22 @@
+name: Verify Root2 external-source activation
+on:
+  push:
+    branches:
+      - verify/root2-external-source-activation-20261004-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          test "$(git hash-object verification_inputs/root2_external_source_activation_v1.json)" = "8a5eca1f9426ac015ad38c4c61bcbf8dc7eac5cb"
+          test "$(git hash-object verification_inputs/root2_active_v8_parent.json)" = "2eaeb74fe306ee2507145e26eb731f69f46e6153"
+          test "$(git hash-object verification_inputs/root2_external_source_receipt_v1.json)" = "a0f46fe3b577c91686b1b8cc5b2436b35556a708"
+      - name: Verify projection invariants
+        run: python verify_root2_external_source_activation_v1.py
