@@ -1,0 +1,42 @@
+name: Verify Finance Agent v2 450x3 boundary
+on:
+  push:
+    branches: [verify-finagent-450x3-20261004]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify candidate and pinned runner facts
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=capsules/finance_agent_v2_450x3/FINANCE_AGENT_V2_TEST_POPULATION_AND_QUOTA_RECONCILIATION_20261004_V1.json
+          test "$(git hash-object "$C")" = "35f68c483c43ec3a66fa6dbcbbb79c25f0ae0c1c"
+          BASE=https://raw.githubusercontent.com/vals-ai/finance-agent-v2/502aab6fdaa3fb9294905c7453f89882baa8d39b
+          curl -fsSL "$BASE/README.md" -o /tmp/readme
+          curl -fsSL "$BASE/finance_agent/get_agent.py" -o /tmp/get_agent
+          curl -fsSL "$BASE/finance_agent/tools.py" -o /tmp/tools
+          test "$(git hash-object /tmp/readme)" = "6e18ea1e7149ba696e59c80e52890878aca8f096"
+          test "$(git hash-object /tmp/get_agent)" = "22c012241a430975266fb7f8d2fe7af8e9f1b8d4"
+          test "$(git hash-object /tmp/tools)" = "19b85ce4e110e39f410c52b2efa0e33f651fa6d1"
+          grep -Fq "Access to the Vals platform is gated and requires approval" /tmp/readme
+          grep -Fq "provided to you via email" /tmp/readme
+          grep -Fq "max_turns: int | None = None" /tmp/get_agent
+          grep -Fq "MAX_TIME_SECONDS = 2 * 60 * 60" /tmp/get_agent
+          grep -Fq "@retry_http_errors(429, 503, max_tries=8)" /tmp/tools
+          grep -Fq "@retry_with_policy({429: 20, 503: 20})" /tmp/tools
+          grep -Fq "@retry_with_policy({429: 4, 503: 4})" /tmp/tools
+      - name: Verify current first-party methodology
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL -A 'Mozilla/5.0' https://www.vals.ai/benchmarks/fabv2 -o /tmp/fab
+          grep -Eqi 'Public.{0,80}27.{0,80}open-source' /tmp/fab
+          grep -Eqi 'Private Validation.{0,80}450' /tmp/fab
+          grep -Eqi 'Test.{0,80}450' /tmp/fab
+          grep -Eqi 'Every model.{0,80}run three times' /tmp/fab
+          grep -Eqi 'based solely on the Test set' /tmp/fab
+          echo PASS_FINANCE_AGENT_V2_450_X3_1350_ZERO_CREDIT
