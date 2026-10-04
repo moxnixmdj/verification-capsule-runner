@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - verify/local-semantic-core-v1-20261004
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
