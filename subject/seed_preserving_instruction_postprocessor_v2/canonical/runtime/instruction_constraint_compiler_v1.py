@@ -50,8 +50,10 @@ def compile_constraints(instruction: str) -> ConstraintSet:
 
     exact = _quoted(r'(?:respond|reply|answer|output|write|say)\s+(?:with\s+)?exactly\s+{Q}', text)
     if exact is None:
+        # Safe unquoted exact-literal route: one atom only. Sentence-final
+        # punctuation is syntax, not part of the requested response.
         m = re.fullmatch(
-            r'(?:respond|reply|answer|output|write|say)\s+(?:with\s+)?exactly\s+([A-Za-z0-9_][A-Za-z0-9_:-]{0,255})[.!]?',
+            r'(?:respond|reply|answer|output|write|say)\s+(?:with\s+)?exactly\s+([A-Za-z0-9_][A-Za-z0-9_:-]{0,255})[.!?]?',
             text,
             flags=re.I,
         )
@@ -166,6 +168,7 @@ _FILLER = (
 def synthesize_formal_only(instruction: str) -> dict:
     c = compile_constraints(instruction)
 
+    # Exact response is a true zero-semantic-dependency route.
     if c.exact_response is not None:
         candidate = c.exact_response
         if c.lowercase_only:
@@ -183,6 +186,8 @@ def synthesize_formal_only(instruction: str) -> dict:
             "model_dependency_count": 0,
         }
 
+    # For non-exact prompts, only synthesize when every requested feature is structural.
+    # This deliberately does NOT pretend to answer an open semantic/content request.
     structural_signal = any([
         c.prefix, c.suffix, c.min_words is not None, c.max_words is not None,
         c.min_unique_words is not None, c.exact_numbers is not None,
