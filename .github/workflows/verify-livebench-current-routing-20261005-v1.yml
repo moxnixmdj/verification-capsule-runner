@@ -1,0 +1,23 @@
+name: Verify LiveBench current general routing 2026-10-05
+on:
+  pull_request:
+    paths:
+      - "verify_livebench_current_routing_20261005_v1.py"
+      - "subject/livebench_current_routing_20261005_v1/**"
+      - ".github/workflows/verify-livebench-current-routing-20261005-v1.yml"
+  push:
+    branches:
+      - verify/livebench-current-routing-20261005-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify current generic router against the frozen LiveBench zero case
+        run: python verify_livebench_current_routing_20261005_v1.py
