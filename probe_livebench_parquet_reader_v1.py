@@ -2,10 +2,15 @@
 import hashlib, importlib.util, pathlib, subprocess, sys
 
 print("PYTHON", sys.version)
+def available(name):
+    try:
+        return importlib.util.find_spec(name) is not None
+    except ModuleNotFoundError:
+        return False
+
 for name in ("pyarrow", "pyarrow.parquet", "pandas"):
-    spec=importlib.util.find_spec(name)
-    print("AVAILABLE", name, bool(spec))
-if importlib.util.find_spec("pyarrow") is not None:
+    print("AVAILABLE", name, available(name))
+if available("pyarrow"):
     import pyarrow
     print("PYARROW_VERSION", pyarrow.__version__)
 else:
