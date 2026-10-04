@@ -1,0 +1,37 @@
+name: Verify Root2 decision-only evaluation V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/root2_decision_only_evaluation_v1/**"
+      - ".github/workflows/verify-root2-decision-only-evaluation-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Assemble exact generic verification capsule
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object subject/root2_decision_only_evaluation_v1/canonical/runtime/root2_decision_only_evaluation_v1.py)" = "bb70267e0bb44830a0c73708e3d4a07daecfdfa0"
+          test "$(git hash-object subject/root2_decision_only_evaluation_v1/canonical/tests/test_root2_decision_only_evaluation_v1.py)" = "d2bfc3e49d1276a35e6351eda7ecb39945af71f3"
+          test "$(git hash-object subject/root2_blind_threshold_receipt_v1_20261004/canonical/runtime/blind_threshold_receipt_v1.py)" = "324e9c236fed50d150082ebcca6078a2921ed65a"
+          test "$(git hash-object subject/root2_output_threshold_dag_v1/canonical/runtime/threshold_proof_dag_v1.py)" = "7a0c715d931dbba05bc9e5ae344e1ead787ea5b8"
+          rm -rf /tmp/root2-decision-only
+          mkdir -p /tmp/root2-decision-only/canonical/runtime /tmp/root2-decision-only/canonical/tests
+          touch /tmp/root2-decision-only/canonical/__init__.py /tmp/root2-decision-only/canonical/runtime/__init__.py /tmp/root2-decision-only/canonical/tests/__init__.py
+          cp subject/root2_decision_only_evaluation_v1/canonical/runtime/root2_decision_only_evaluation_v1.py /tmp/root2-decision-only/canonical/runtime/
+          cp subject/root2_decision_only_evaluation_v1/canonical/tests/test_root2_decision_only_evaluation_v1.py /tmp/root2-decision-only/canonical/tests/
+          cp subject/root2_blind_threshold_receipt_v1_20261004/canonical/runtime/blind_threshold_receipt_v1.py /tmp/root2-decision-only/canonical/runtime/
+          cp subject/root2_output_threshold_dag_v1/canonical/runtime/threshold_proof_dag_v1.py /tmp/root2-decision-only/canonical/runtime/
+      - name: Run exact decision-only tests
+        shell: bash
+        run: |
+          cd /tmp/root2-decision-only
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_root2_decision_only_evaluation_v1
