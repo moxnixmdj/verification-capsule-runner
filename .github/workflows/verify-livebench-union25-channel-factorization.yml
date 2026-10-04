@@ -1,0 +1,28 @@
+name: Verify LiveBench union25 channel factorization
+on:
+  pull_request:
+    paths:
+      - "verify_livebench_union25_channel_factorization.py"
+      - "subject/**"
+      - ".github/workflows/verify-livebench-union25-channel-factorization.yml"
+  push:
+    branches:
+      - verify/livebench-union25-channel-factorization-20261005-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_livebench_union25_channel_factorization.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-union25-channel-factorization
+          path: livebench_union25_channel_factorization_verification.json
+          if-no-files-found: error
