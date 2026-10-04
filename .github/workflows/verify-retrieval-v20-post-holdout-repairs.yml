@@ -1,0 +1,31 @@
+name: Verify Retrieval V20 post-holdout repairs
+on:
+  push:
+    branches:
+      - verify/retrieval-v20-post-holdout-repair-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact repair bytes
+        run: |
+          test "$(git hash-object canonical/runtime/retrieval_progressive_query_relaxation_v1.py)" = "3e545259955a8bc9dc4bd66df34fa37a59c28c93"
+          test "$(git hash-object canonical/tests/test_retrieval_progressive_query_relaxation_v1.py)" = "8c98b683e57c495edb6c859b6369f597d382953f"
+          test "$(git hash-object canonical/runtime/retrieval_repository_manifest_bridge_v1.py)" = "1ac07f68e153f43190b005ecc75f2d22dcb4fc47"
+          test "$(git hash-object canonical/tests/test_retrieval_repository_manifest_bridge_v1.py)" = "30210a4e0dccb990c26ccc6f7d2f2da7aec97aa8"
+          test "$(git hash-object canonical/runtime/retrieval_v20_miss_recovery_v1.py)" = "ca3327256c72c45df7d9bdf45dd23b4f2d392ebd"
+          test "$(git hash-object canonical/verification/RETRIEVAL_V20_FRESH_HOLDOUT_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json)" = "6897c0e37cb239af42135fb506dc6206d4fab79e"
+      - name: Test semantic relaxation
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_progressive_query_relaxation_v1.py
+      - name: Test manifest bridge
+        run: PYTHONPATH=. python canonical/tests/test_retrieval_repository_manifest_bridge_v1.py
+      - name: Replay four frozen misses with generic repairs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: PYTHONPATH=. python verify_retrieval_v20_post_holdout_repair.py
