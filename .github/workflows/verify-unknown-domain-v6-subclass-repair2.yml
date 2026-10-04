@@ -1,4 +1,4 @@
-name: Verify Unknown-Domain V6 subclass repair 2
+name: Verify Unknown-Domain V6 runtime-type repair V3
 
 on:
   pull_request:
@@ -9,6 +9,15 @@ on:
       - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
       - "canonical/tests/test_unknown_domain_direct_v5.py"
       - "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py"
+  push:
+    branches: [main]
+    paths:
+      - "verification/unknown_domain_v6_subclass_repair2_independent.py"
+      - ".github/workflows/verify-unknown-domain-v6-subclass-repair2.yml"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
+      - "canonical/tests/test_unknown_domain_direct_v5.py"
+      - "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,7 +35,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-      - name: Run repaired subclass adversarial verifier
+      - name: Run runtime-type adversarial verifier
         run: PYTHONPATH=. python verification/unknown_domain_v6_subclass_repair2_independent.py
       - name: Run repaired regression suite
         run: PYTHONPATH=. python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
@@ -34,6 +43,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: unknown-domain-v6-subclass-repair2-${{ matrix.python }}
+          name: unknown-domain-v6-runtime-type-repair-v3-${{ matrix.python }}
           path: unknown_domain_v6_subclass_repair2_receipt.json
           if-no-files-found: error
