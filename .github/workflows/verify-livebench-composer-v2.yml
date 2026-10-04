@@ -53,3 +53,4 @@ jobs:
           name: livebench-composer-v2-verification
           path: livebench_composer_v2_verification.json
           if-no-files-found: error
+\n      - if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: livebench-semantic-factorization-v1-from-composer-workflow\n          path: livebench_semantic_factorization_v1_verification.json\n          if-no-files-found: error\n
