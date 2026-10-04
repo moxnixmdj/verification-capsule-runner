@@ -9,6 +9,7 @@ import pathlib
 import re
 import string
 import sys
+import types
 import urllib.request
 
 import nltk
@@ -17,7 +18,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SUBJECT_DIR = ROOT / "subject"
 COMPILER = SUBJECT_DIR / "livebench_public_witness_compiler_v1.py"
 DETECTOR = SUBJECT_DIR / "livebench_public_description_detector_v1.py"
-EXPECTED_COMPILER_BLOB = "f381c46d011c03b25ada9e8780308463fbf6c290"
+EXPECTED_COMPILER_BLOB = "385ea9480eec6189d6061eef3c860d6cacf5af0c"
 EXPECTED_DETECTOR_BLOB = "ffe3569f0cf0c6dedc4fc5714ae435fd5c5691d9"
 PIN = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 
@@ -25,11 +26,13 @@ LEGACY_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/liveb
 MODERN_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/ifbench/instructions.py"
 LEGACY_REGISTRY_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/instruction_following_eval/instructions_registry.py"
 MODERN_REGISTRY_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/ifbench/instructions_registry.py"
+MODERN_UTIL_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/ifbench/instructions_util.py"
 
 LEGACY_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
 MODERN_BLOB = "02b2dfeb50f036b89bec3df34522c73f756d8f44"
 LEGACY_REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
 MODERN_REGISTRY_BLOB = "adfed4832877566e62970257b50c6fa32c302fb2"
+MODERN_UTIL_BLOB = "21b13c7fcfc2c2de01e80c9e7dd222b9bca81342"
 
 
 def git_blob(data: bytes) -> str:
@@ -123,13 +126,13 @@ class Instruction:
     pass
 
 
-def exact_class(source: str, name: str, legacy_comparison_relation=None):
+def exact_class(source: str, name: str, legacy_comparison_relation=None, util_obj=Util):
     tree = ast.parse(source)
     node = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == name)
     module = ast.Module(body=[node], type_ignores=[])
     ns = {
         "Instruction": Instruction,
-        "instructions_util": Util,
+        "instructions_util": util_obj,
         "re": re,
         "json": json,
         "string": string,
@@ -151,15 +154,20 @@ def main() -> int:
     modern_raw = fetch(MODERN_URL)
     legacy_registry_raw = fetch(LEGACY_REGISTRY_URL)
     modern_registry_raw = fetch(MODERN_REGISTRY_URL)
+    modern_util_raw = fetch(MODERN_UTIL_URL)
     assert git_blob(legacy_raw) == LEGACY_BLOB
     assert git_blob(modern_raw) == MODERN_BLOB
     assert git_blob(legacy_registry_raw) == LEGACY_REGISTRY_BLOB
     assert git_blob(modern_registry_raw) == MODERN_REGISTRY_BLOB
+    assert git_blob(modern_util_raw) == MODERN_UTIL_BLOB
 
     legacy = legacy_raw.decode("utf-8")
     modern = modern_raw.decode("utf-8")
     legacy_registry = legacy_registry_raw.decode("utf-8")
     modern_registry = modern_registry_raw.decode("utf-8")
+    modern_util_source = modern_util_raw.decode("utf-8")
+    modern_util = types.ModuleType("pinned_modern_instructions_util")
+    exec(compile(modern_util_source, "<pinned:modern_instructions_util>", "exec"), modern_util.__dict__)
 
     sys.path.insert(0, str(SUBJECT_DIR))
     detector = load_subject("livebench_public_description_detector_v1", DETECTOR)
@@ -231,6 +239,23 @@ def main() -> int:
          {"_num_highlights": 3}),
         ("Task. At the end of your response, please explicitly add a postscript starting with P.S.", "legacy:PostscriptChecker", legacy, "PostscriptChecker",
          {"_postscript_marker": "P.S."}),
+        ('Task. The response must include keyword "signal" in the 3-th sentence.', "modern:IncludeKeywordChecker", modern, "IncludeKeywordChecker",
+         {"_keyword": "signal", "_keyword_position": 3}),
+        ("Task. Ensure each word in your response has at least one consonant cluster (two or more consonants together).", "modern:ConsonantClusterChecker", modern, "ConsonantClusterChecker", {}),
+        ("Task. Your response must include newline-separated bullet points denoted by * and at least one sub-bullet point denoted by - for each bullet point.", "modern:SubBulletPointsChecker", modern, "SubBulletPointsChecker", {}),
+        ("Task. Ensure that stop words constitute no more than 25% of the total words in your response.", "modern:StopWordPercentageChecker", modern, "StopWordPercentageChecker",
+         {"_percentage": 25}),
+        ("Task. Your response must contain at most three different vowels.", "modern:ThreeVowelChecker", modern, "ThreeVowelChecker", {}),
+        ("Task. Use at least 7 unique words in the response.", "modern:UniqueWordCountChecker", modern, "UniqueWordCountChecker",
+         {"_num_unique_words": 7}),
+        ("Task. Create stairs by incrementally indenting each new line.", "modern:IndentStairsChecker", modern, "IndentStairsChecker", {}),
+        ("Task. Each section must begin with a thesis statement in italics, use HTML to indicate the italics.", "modern:ItalicsThesisChecker", modern, "ItalicsThesisChecker", {}),
+        ("Task. Your answer must contain at least two sentences ending in a period followed by at least two newline-separated bullet points denoted by *.", "modern:SomeBulletPointsChecker", modern, "SomeBulletPointsChecker", {}),
+        ("Task. Nest parentheses (and [brackets {and braces}]) at least 5 levels deep.", "modern:NestedParenthesesChecker", modern, "NestedParenthesesChecker", {}),
+        ("Task. Include quotes within quotes within quotes, at least 3 levels deep, alternating between double quotes and single quotes.", "modern:NestedQuotesChecker", modern, "NestedQuotesChecker", {}),
+        ("Task. The response should include at least 4 personal pronouns.", "modern:PronounCountChecker", modern, "PronounCountChecker",
+         {"_num_pronouns": 4}),
+        ("Task. No two consecutive words can share the same first letter.", "modern:NoConsecutiveFirstLetterChecker", modern, "NoConsecutiveFirstLetterChecker", {}),
     ]
 
     verified = []
@@ -249,6 +274,7 @@ def main() -> int:
             source,
             class_name,
             comparison_relation if source is legacy else None,
+            modern_util if source is modern else Util,
         )
         checker = cls()
         for key, value in attrs.items():
@@ -261,11 +287,11 @@ def main() -> int:
         verified.append(expected_route)
 
     unsupported = compiler.compile_witness(
-        "Task. Use at least 7 unique words in the response."
+        "Task. Use at least 2 different coordinating conjunctions in the response."
     )
     assert unsupported["status"] == "BLOCKED", unsupported
     assert unsupported["reason"] == "UNSUPPORTED_PUBLIC_CHECKER_DETECTED", unsupported
-    assert "UniqueWordCountChecker" in unsupported["detected_unsupported_checkers"]
+    assert "ConjunctionCountChecker" in unsupported["detected_unsupported_checkers"]
 
     conjunction = compiler.compile_witness(
         "Task. Answer with at least 5 words. Wrap your entire response with double quotation marks."
@@ -274,7 +300,7 @@ def main() -> int:
     assert conjunction["reason"] == "MULTI_CHECKER_COMBINATION_NOT_PROVED", conjunction
 
     verdict = {
-        "schema": "PROJECT_BRAIN_LIVEBENCH_PUBLIC_WITNESS_COMPILER_INDEPENDENT_VERIFICATION_V2",
+        "schema": "PROJECT_BRAIN_LIVEBENCH_PUBLIC_WITNESS_COMPILER_INDEPENDENT_VERIFICATION_V3",
         "status": "PASS",
         "brain_compiler_blob": EXPECTED_COMPILER_BLOB,
         "brain_detector_blob": EXPECTED_DETECTOR_BLOB,
@@ -284,6 +310,7 @@ def main() -> int:
             "modern_instructions": MODERN_BLOB,
             "legacy_registry": LEGACY_REGISTRY_BLOB,
             "modern_registry": MODERN_REGISTRY_BLOB,
+            "modern_instructions_util": MODERN_UTIL_BLOB,
         },
         "active_registry_checker_count": 83,
         "exact_description_pattern_count": pattern_count,
