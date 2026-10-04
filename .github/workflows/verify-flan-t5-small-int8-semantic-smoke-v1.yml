@@ -1,0 +1,41 @@
+name: Verify FLAN-T5-small INT8 offline semantic smoke
+
+on:
+  push:
+    branches:
+      - verify/flan-t5-small-int8-semantic-smoke-20261004-sol
+    paths:
+      - verify_flan_t5_small_int8_semantic_smoke_v1.py
+      - .github/workflows/verify-flan-t5-small-int8-semantic-smoke-v1.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_flan_t5_small_int8_semantic_smoke_v1.py
+      - .github/workflows/verify-flan-t5-small-int8-semantic-smoke-v1.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned local inference runtime
+        run: |
+          python -m pip install --disable-pip-version-check --quiet \
+            "numpy==2.2.6" "onnxruntime==1.22.1" "sentencepiece==0.2.1"
+      - name: Verify exact bytes and execute offline semantic smoke
+        run: python verify_flan_t5_small_int8_semantic_smoke_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flan-t5-small-int8-offline-execution-smoke-receipt
+          path: flan_t5_small_int8_offline_execution_smoke_receipt.json
+          if-no-files-found: warn
