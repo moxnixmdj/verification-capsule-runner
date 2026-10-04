@@ -39,6 +39,7 @@ LEAVES={
 LAUNCH_PREFIX="unknown-domain-direct-launch/"
 CLAIM_PREFIX="unknown-domain-direct-claims/"
 RESULT_PREFIX="canonical/verification/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_"
+RESULT_ARTIFACT_PATH=ROOT/"unknown_domain_direct_production_result.json"
 
 
 class ProductionLaunchError(RuntimeError):
@@ -263,12 +264,56 @@ def claim_then_execute(
     status,response=create_ref_fn(repo,token,claim_ref,launch_sha)
     if status!=201:
         raise ProductionLaunchError("ATOMIC_CLAIM_CREATE_NOT_201:"+str(status))
-    response_ref=str(response.get("ref") or "")
+    response_ref=str(response.get("ref") or "") if isinstance(response,Mapping) else ""
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
     if response_ref!=claim_ref or len(obj_sha)!=40:
-        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_INVALID")
-    result=dict(execute_fn(claim_id=claim_ref))
+        result={
+            "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+            "status":"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
+            "target_predicate":TARGET,
+            "authority_claim_id":claim_ref,
+            "claim_response_ref":response_ref,
+            "claim_response_object_sha":obj_sha,
+            "production_cases_generated":0,
+            "persistent_learned_bytes":0,
+            "external_frontier_model_calls":0,
+            "external_learned_capability_calls":0,
+            "incremental_spend_usd":0,
+            "replay_allowed":False,
+            "replacement_allowed":False,
+            "acceptance_credit_delta":0,
+            "family_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0,
+            "promotion_authority":False,
+            "separate_independent_reduction_required":True,
+        }
+    else:
+        try:
+            result=dict(execute_fn(claim_id=claim_ref))
+        except Exception as exc:
+            result={
+                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+                "status":"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED",
+                "target_predicate":TARGET,
+                "authority_claim_id":claim_ref,
+                "exception_type":type(exc).__name__,
+                "exception_message":str(exc),
+                "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
+                "persistent_learned_bytes":0,
+                "external_frontier_model_calls":0,
+                "external_learned_capability_calls":0,
+                "incremental_spend_usd":0,
+                "replay_allowed":False,
+                "replacement_allowed":False,
+                "acceptance_credit_delta":0,
+                "family_credit_delta":0,
+                "capability_credit_delta":0,
+                "ownership_credit_delta":0,
+                "promotion_authority":False,
+                "separate_independent_reduction_required":True,
+            }
     result["claim_create_http_status"]=201
     result["claim_response_ref"]=response_ref
     result["claim_response_object_sha"]=obj_sha
@@ -300,6 +345,14 @@ def main()->None:
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
     result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
+    result["result_path"]=result_path
+    sealed_json=json.dumps(result,sort_keys=True,separators=(",",":"))
+    print("SEALED_PRODUCTION_RESULT_SHA256="+hashlib.sha256(sealed_json.encode()).hexdigest())
+    print("SEALED_PRODUCTION_RESULT_JSON="+sealed_json)
+    try:
+        RESULT_ARTIFACT_PATH.write_text(json.dumps(result,indent=2,sort_keys=True)+"\\n")
+    except Exception as exc:
+        print("LOCAL_RESULT_WRITE_FAILED="+type(exc).__name__+":"+str(exc))
     status,response=put_result(repo,token,claim_branch,result_path,result)
     if status!=201:
         raise ProductionLaunchError("RESULT_COMMIT_NOT_201:"+str(status))
@@ -309,8 +362,8 @@ def main()->None:
         "status":result["status"],
         "claim_ref":"refs/heads/"+claim_branch,
         "claim_create_http_status":201,
-        "production_cases_generated":27,
-        "all_27_cases_pass":result["aggregate"].get("all_27_cases_pass"),
+        "production_cases_generated":result.get("production_cases_generated"),
+        "all_27_cases_pass":(result.get("aggregate") or {}).get("all_27_cases_pass"),
         "result_path":result_path,
         "result_commit_sha":commit_sha,
     },sort_keys=True))
