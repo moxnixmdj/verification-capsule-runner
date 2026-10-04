@@ -137,7 +137,7 @@ class Micro:
             parsed, raw = constrained_call(
                 self.endpoint,
                 prompt,
-                seed=70_000 + self.task_index * 100 + self.n,
+                seed=50_000 + self.task_index * 100 + self.n,
                 kind=kind,
                 options=options,
             )
@@ -303,6 +303,7 @@ def main():
         })
 
     solved=sum(r["passed"] for r in records)
+    decoder_errors=sum(1 for r in records for q in r["trace"] if q.get("decoder_error"))
     result={
         "schema":"PROJECT_BRAIN_SUB100MB_TYPED_MICROQUERY_RESULT_V3",
         "status":"EMPIRICAL_RESEARCH_RESULT__ZERO_TERMINAL_CREDIT",
@@ -322,6 +323,8 @@ def main():
             "task_success_wilson95":wilson(solved,len(TASKS)),
             "atomic_model_queries":total_queries,
             "mean_atomic_queries_per_task":total_queries/len(TASKS),
+            "decoder_errors":decoder_errors,
+            "decoder_error_rate":decoder_errors/total_queries if total_queries else 0.0,
         },
         "records":records,
         "hard_nonclaims":[
@@ -330,7 +333,7 @@ def main():
             "NO_TERMINAL_ACCEPTANCE_OR_OWNERSHIP_CREDIT",
             "NO_OPEN_WORLD_GENERALIZATION_CLAIM",
             "HIDDEN_EXPECTED_OBJECT_USED_ONLY_AFTER_FINAL_ASSEMBLY_FOR_SCORING_NOT_FOR_BUILDER_FEEDBACK",
-            "ONLY_CAUSAL_CHANGE_FROM_V2_IS_GRAMMAR_CONSTRAINED_OUTPUT_CHANNEL_AND_ASSOCIATED_SEED_NAMESPACE",
+            "PRIMARY_CAUSAL_CHANGE_FROM_V2_IS_GRAMMAR_CONSTRAINED_OUTPUT_CHANNEL; FIRST_ATTEMPT_SEED_NAMESPACE_IS_PRESERVED; V2_PARSE_RETRY_PATH_IS_REMOVED_BECAUSE_THE_DECODER_ENFORCES_PARSEABLE_SCHEMA_OUTPUT",
         ],
     }
     Path(args.out).write_text(json.dumps(result,indent=2,sort_keys=True))
