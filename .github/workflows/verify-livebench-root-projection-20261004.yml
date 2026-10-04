@@ -1,0 +1,19 @@
+name: Verify LiveBench root partition projection
+on:
+  push:
+    branches:
+      - 'verify/livebench-local-root1-20261004'
+    paths:
+      - 'VERIFY_LIVEBENCH_ROOT_PROJECTION'
+      - 'verify_livebench_root_partition_projection_v1.py'
+      - 'subject/livebench_local_root1_20261004/projection.json'
+      - '.github/workflows/verify-livebench-root-projection-20261004.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_livebench_root_partition_projection_v1.py
