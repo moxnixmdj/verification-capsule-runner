@@ -23,17 +23,15 @@ def blob(p:pathlib.Path)->str:
 def run(cmd,**kw):
     return subprocess.run(cmd,check=True,text=True,**kw)
 
+FAILED_LOG=ROOT/"subject/livebench_scorer_repair_admissibility_v1/failed_job_111394777574.log"
+FAILED_LOG_BLOB="57943d43760836398cde13cafbb6e81901c620da"
+
 def get_job_log()->str:
-    url=f"https://api.github.com/repos/moxnixmdj/verification-capsule-runner/actions/jobs/{FAILED_JOB}/logs"
-    headers={"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}
-    token=os.environ.get("GITHUB_TOKEN","")
-    if token:
-        headers["Authorization"]="Bearer "+token
-    req=urllib.request.Request(url,headers=headers)
-    with urllib.request.urlopen(req,timeout=30) as r:
-        raw=r.read()
-    # GitHub's job-log endpoint redirects to a UTF-8 text log for this public job.
-    return raw.decode("utf-8","replace")
+    if not FAILED_LOG.is_file():
+        raise AssertionError("FAILED_JOB_LOG_MISSING")
+    got=blob(FAILED_LOG)
+    assert got==FAILED_LOG_BLOB,(got,FAILED_LOG_BLOB)
+    return FAILED_LOG.read_text(encoding="utf-8")
 
 def get_failed_driver()->str:
     with tempfile.TemporaryDirectory(prefix="lb-repair-admit-") as td:
