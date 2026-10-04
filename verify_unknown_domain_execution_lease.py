@@ -44,6 +44,7 @@ for rel,expected in lease["exact_components"].items():
 # itself be content-addressed in the same lease.
 components=set(lease["exact_components"])
 missing_local_dependencies=[]
+checked_local_dependency_edges=0
 for rel in sorted(components):
  if not (rel.startswith("canonical/runtime/") and rel.endswith(".py")):
   continue
@@ -59,15 +60,19 @@ for rel in sorted(components):
    modules.extend(a.name for a in node.names if a.name.startswith("canonical.runtime."))
   for module in modules:
    dep=module.replace(".","/")+".py"
-   if (ROOT/dep).is_file() and dep not in components:
-    missing_local_dependencies.append((rel,dep))
+   if (ROOT/dep).is_file():
+    checked_local_dependency_edges+=1
+    if dep not in components:
+     missing_local_dependencies.append((rel,dep))
 assert not missing_local_dependencies,missing_local_dependencies
 digest=hashlib.sha256(raw).hexdigest()
+lease_blob=blob(raw)
 print(json.dumps({
  "status":"INDEPENDENT_EXECUTION_LEASE_PASS",
- "execution_lease_git_blob_sha":"26f98012ecf01c6a3f20e855bdebf60cf70d1c1f",
+ "execution_lease_git_blob_sha":lease_blob,
  "execution_lease_sha256":digest,
  "exact_component_count":len(lease["exact_components"]),
+ "checked_local_dependency_edges":checked_local_dependency_edges,
  "production_cases_allowed":27,
  "persistent_learned_bytes":0,
  "global_fresh_reality":False
