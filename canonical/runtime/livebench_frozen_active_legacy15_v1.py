@@ -1,0 +1,17 @@
+ACTIVE_IDS = (
+    "keywords:existence",
+    "keywords:forbidden_words",
+    "length_constraints:number_paragraphs",
+    "length_constraints:number_words",
+    "length_constraints:number_sentences",
+    "length_constraints:nth_paragraph_first_word",
+    "detectable_content:postscript",
+    "detectable_format:number_bullet_lists",
+    "detectable_format:title",
+    "detectable_format:multiple_sections",
+    "detectable_format:json_format",
+    "combination:repeat_prompt",
+    "combination:two_responses",
+    "startend:end_checker",
+    "startend:quotation",
+)
