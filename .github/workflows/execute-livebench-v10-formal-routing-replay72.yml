@@ -1,0 +1,117 @@
+name: Execute LiveBench V10 formal-routing replay72
+
+on:
+  push:
+    branches:
+      - execute/livebench-v10-formal-routing-20261004
+    paths:
+      - ".github/workflows/execute-livebench-v10-formal-routing-replay72.yml"
+      - "verify_livebench_v10_execution_binding.py"
+      - "subject/livebench_v10_formal_routing_activation.json"
+      - "launch_livebench_v10_formal_routing_atomic.py"
+      - "diagnose_livebench_replay72_v10_formal_routing.py"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: livebench-v10-formal-routing-replay72
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      LIVEBENCH_V10_ACTIVATION_BLOB: "38296a76cc45f3c01d1794b24b167afe1a324c80"
+      REPOSITORY_PRIVATE: "false"
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact activation and replay-only bindings
+        run: python verify_livebench_v10_execution_binding.py
+
+      - name: Execute one-use sanitized replay of already exposed 72 cases
+        id: replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python launch_livebench_v10_formal_routing_atomic.py 2>&1 | tee /tmp/livebench-v10.log
+
+      - name: Build immutable sanitized V10 receipt
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib, os
+          log_path=pathlib.Path("/tmp/livebench-v10.log")
+          log=log_path.read_text(errors="replace") if log_path.exists() else ""
+          claim=None
+          result=None
+          for line in log.splitlines():
+              if line.startswith("LIVEBENCH_V10_ATOMIC_CLAIM="):
+                  claim=json.loads(line.split("=",1)[1])
+              if line.startswith("LIVEBENCH_V8_STRUCTURAL_REFINEMENT="):
+                  result=json.loads(line.split("=",1)[1])
+          receipt={
+            "schema":"PROJECT_BRAIN_LIVEBENCH_V10_FORMAL_ROUTING_REPLAY72_EXECUTION_RECEIPT_V1",
+            "activation_blob_sha":"38296a76cc45f3c01d1794b24b167afe1a324c80",
+            "epoch_digest_sha256":"a71f24f79df6b6be6e910efb1299776ac9fede9e78539577695d6e386fc2eb52",
+            "workflow_run_id":os.environ.get("GITHUB_RUN_ID"),
+            "workflow_sha":os.environ.get("GITHUB_SHA"),
+            "claim":claim,
+            "result":result,
+            "replayed_already_exposed_prefix_only":True,
+            "new_case_exposure":False,
+            "case_73_or_later":False,
+            "acceptance_credit_delta":0,
+            "promotion_authority":False
+          }
+          if claim is not None:
+              assert claim.get("create_http_status")==201
+              assert claim.get("reference_created") is True
+              assert claim.get("epoch_digest_sha256")==receipt["epoch_digest_sha256"]
+              assert claim.get("terminal_dataset_read_before_claim") is False
+              assert claim.get("execution_started_before_claim") is False
+          if result is not None:
+              assert result.get("replay_prefix_limit")==72
+              assert result.get("replayed_already_exposed_cases")==72
+              assert result.get("new_case_exposure") is False
+              assert result.get("case_ids_emitted") is False
+              assert result.get("prompt_text_emitted") is False
+              assert result.get("response_text_emitted") is False
+              assert result.get("raw_exception_text_emitted") is False
+              assert result.get("raw_composition_detail_emitted") is False
+          pathlib.Path("evidence").mkdir(exist_ok=True)
+          pathlib.Path("evidence/LIVEBENCH_V10_FORMAL_ROUTING_REPLAY72_EXECUTION_RECEIPT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-v10-formal-routing-replay72-receipt
+          path: evidence/LIVEBENCH_V10_FORMAL_ROUTING_REPLAY72_EXECUTION_RECEIPT.json
+          if-no-files-found: error
+
+      - name: Persist sanitized receipt on execution branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Project Brain LiveBench V10"
+          git config user.email "project-brain-livebench-v10@users.noreply.github.com"
+          git add evidence/LIVEBENCH_V10_FORMAL_ROUTING_REPLAY72_EXECUTION_RECEIPT.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Persist LiveBench V10 sanitized replay72 receipt"
+            git push origin HEAD:execute/livebench-v10-formal-routing-20261004
+          fi
