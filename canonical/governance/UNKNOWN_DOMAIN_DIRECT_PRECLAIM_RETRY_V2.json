@@ -1,0 +1,50 @@
+{
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRECLAIM_RETRY_V2",
+  "date": "2026-10-05",
+  "status": "FROZEN_PRECLAIM_TRANSPORT_RETRY__CLOSED_DEPENDENCY_LEASE__ZERO_CASES_CONSUMED_BEFORE_RETRY__ZERO_CREDIT",
+  "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+  "execution_lease": {
+    "sha256": "9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb",
+    "git_blob_sha": "049997c1d8ebdb4c07017a2864055109f7238876",
+    "launch_ref": "refs/heads/unknown-domain-direct-launch/9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb"
+  },
+  "transport_reason": {
+    "create_ref_succeeded": true,
+    "create_event_workflow_observed": false,
+    "claim_created": false,
+    "beacon_generated": false,
+    "production_cases_generated": 0,
+    "repair": "USE_PUSH_TRIGGER_ON_THE_SAME_EXACT_LAUNCH_REF; ATOMIC_CLAIM_REMAINS_THE_ONLY_EXECUTION_LINEARIZATION_POINT"
+  },
+  "exact_load_bearing_blobs": {
+    "production_launcher": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+    "repaired_create_workflow": "a4315a0ee28ae82145594b7a9abbd00bae61ceb9",
+    "generator_v1": "f974a4594c78e74693c7ba5a19f131dfa481b937"
+  },
+  "hard_rules": [
+    "NO_CLAIM_ABSENCE_PRECHECK",
+    "NO_NEW_EXECUTION_LEASE",
+    "NO_NEW_CLAIM_KEY",
+    "ONLY_THE_EXACT_9DD08AAB_LAUNCH_REF_IS_ELIGIBLE",
+    "RECHECK_EXACT_LEASE_SHA256_AND_LOAD_BEARING_BLOBS_BEFORE_RETRY",
+    "ONLY_ATOMIC_CLAIM_CREATE_HTTP_201_MAY_ADVANCE",
+    "ANY_NON_201_CLAIM_CREATE_ABORTS_BEFORE_BEACON_OR_CASE_GENERATION",
+    "EXACTLY_ONE_27_CASE_PRODUCTION_POPULATION_MAXIMUM",
+    "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
+    "ZERO_INCREMENTAL_SPEND"
+  ],
+  "authority": {
+    "preclaim_transport_retry": true,
+    "fresh_reality": false,
+    "acceptance_credit": false,
+    "promotion": false
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed_before_retry": 0,
+    "terminal_cases_consumed_before_retry": 0,
+    "acceptance_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
