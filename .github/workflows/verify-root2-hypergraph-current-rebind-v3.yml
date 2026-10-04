@@ -1,0 +1,28 @@
+name: Verify Root2 hypergraph current rebind v3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_hypergraph_current_rebind_v3/**"
+      - ".github/workflows/verify-root2-hypergraph-current-rebind-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact candidate blobs
+        run: |
+          test "$(git hash-object capsules/root2_hypergraph_current_rebind_v3/ROOT2_FROZEN_COMPARATOR_VECTOR_V1.json)" = "350efbbce8e47b39fec52329e5b0770f9439fadd"
+          test "$(git hash-object capsules/root2_hypergraph_current_rebind_v3/ROOT2_PROOF_HYPERGRAPH_CURRENT_REBIND_V2.json)" = "7ce94620c892f79da2ed570c76b84a054680293e"
+          test "$(git hash-object capsules/root2_hypergraph_current_rebind_v3/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json)" = "71495ebcf456119f4df694203631aeeb3048c81a"
+      - name: Verify current rebind semantics
+        run: python capsules/root2_hypergraph_current_rebind_v3/verify.py
