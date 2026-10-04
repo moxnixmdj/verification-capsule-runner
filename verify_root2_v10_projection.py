@@ -10,9 +10,9 @@ P={
 H={
  "frontier":"2012926814d0d06405da56da64e589b06fef1756",
  "activation":"dc2605176a10982d4d700faea951f8e11d043a1f",
- "terminal":"07d8305663ffe80c610e1255e5901614fb387f01",
- "root":"842c8e14a07bcd95d7f59c3f139908b260323a89",
- "bridge":"a34b095f81ee7b459a30bfb4b43769c016322ca3",
+ "terminal":"163e3f0f932ff69b111f90648e5865cc460797e8",
+ "root":"680725c06555fb394d0539bf1bbecc390fd15453",
+ "bridge":"212cd88d752b13deef5eb04c32c4170b000bf7fa",
 }
 def blob(p):
     return subprocess.check_output(["git","rev-parse",f"HEAD:{p}"],text=True).strip()
@@ -78,4 +78,4 @@ assert b["execution_authority"] is False
 assert b["promotion_authority"] is False
 assert b["fresh_reality_authority"] is False
 
-print("ROOT2_V10_PROJECTION_PASS__POINTER_COHERENT__OUTREACH_OVERLAY_PRESERVED__EFFECTIVE_SCHEDULING_FALSE__ZERO_CREDIT")
+print("ROOT2_V10_PROJECTION_PASS__POINTER_COHERENT__OUTREACH_AND_SOURCE_DELETIONS_PRESERVED__EFFECTIVE_SCHEDULING_FALSE__ZERO_CREDIT")
