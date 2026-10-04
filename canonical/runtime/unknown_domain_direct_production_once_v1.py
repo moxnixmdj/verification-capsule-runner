@@ -218,18 +218,14 @@ def claim_then_execute(
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
     if response_ref!=claim_ref or len(obj_sha)!=40:
-        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_INVALID")
-    try:
-        result=dict(execute_fn(claim_id=claim_ref))
-    except Exception as exc:
         result={
             "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
-            "status":"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED",
+            "status":"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED",
             "target_predicate":TARGET,
             "authority_claim_id":claim_ref,
-            "exception_type":type(exc).__name__,
-            "exception_message":str(exc),
-            "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
+            "claim_response_ref":response_ref,
+            "claim_response_object_sha":obj_sha,
+            "production_cases_generated":0,
             "persistent_learned_bytes":0,
             "external_frontier_model_calls":0,
             "external_learned_capability_calls":0,
@@ -243,6 +239,31 @@ def claim_then_execute(
             "promotion_authority":False,
             "separate_independent_reduction_required":True,
         }
+    else:
+        try:
+            result=dict(execute_fn(claim_id=claim_ref))
+        except Exception as exc:
+            result={
+                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRODUCTION_RESULT_V1",
+                "status":"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED",
+                "target_predicate":TARGET,
+                "authority_claim_id":claim_ref,
+                "exception_type":type(exc).__name__,
+                "exception_message":str(exc),
+                "production_cases_generated":"UNKNOWN_AFTER_CLAIM_EXCEPTION",
+                "persistent_learned_bytes":0,
+                "external_frontier_model_calls":0,
+                "external_learned_capability_calls":0,
+                "incremental_spend_usd":0,
+                "replay_allowed":False,
+                "replacement_allowed":False,
+                "acceptance_credit_delta":0,
+                "family_credit_delta":0,
+                "capability_credit_delta":0,
+                "ownership_credit_delta":0,
+                "promotion_authority":False,
+                "separate_independent_reduction_required":True,
+            }
     result["claim_create_http_status"]=201
     result["claim_response_ref"]=response_ref
     result["claim_response_object_sha"]=obj_sha
