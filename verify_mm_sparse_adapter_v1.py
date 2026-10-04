@@ -71,7 +71,7 @@ def main() -> int:
         "all_nrmse": d["best_candidate"]["all_nrmse"],
     }
 
-    plan = mm.plan_experiments({"a":[0.05,0.70],"b":[0.05,30.0]})
+    # Verifier-only separable law: different coefficients, boundary orientation,\n    # power and ranges from the Brain-authored public-development case.\n    def sep_truth(x,z):\n        f=x/(1+x)**1.5\n        g=1/(1+abs(z)**(2/3))\n        return 0.8+4.2*f-1.4*g+2.6*f*g\n    sep_points=[\n        (0.18,0.7),(1.3,3.4),\n        (0.1,0.2),(2.0,0.2),(0.1,8.0),(2.0,8.0),\n        (1.05,1.2649110641),\n    ]\n    sep_rows=[{"x":x,"z":z,"out":sep_truth(x,z)} for x,z in sep_points]\n    sep_out=sep.discover(sep_rows,bounds={"x":[0.1,2.0],"z":[0.2,8.0]},target="out")\n    assert sep_out["status"]=="SEPARABLE_CANDIDATE_FOUND__PUBLIC_OR_SYNTHETIC_ONLY", sep_out\n    assert sep_out["candidate"]["fit_nrmse"] < 1e-7, sep_out["candidate"]\n    assert sep_out["candidate"]["reserved_validation_nrmse"] < 1e-7, sep_out["candidate"]\n    for x,z in ((0.25,0.4),(0.7,1.7),(1.55,5.0)):\n        assert abs(sep.predict(sep_out["candidate"],{"x":x,"z":z})-sep_truth(x,z)) < 1e-6\n    fresh["separable_fresh"]={"pass":True,"fit_nrmse":sep_out["candidate"]["fit_nrmse"],"validation_nrmse":sep_out["candidate"]["reserved_validation_nrmse"]}\n\n    plan = mm.plan_experiments({"a":[0.05,0.70],"b":[0.05,30.0]})
     assert plan["active_budget"] == 5
     assert len(plan["initial_experiments"]) == 4
     assert plan["reserved_count"] == 1
