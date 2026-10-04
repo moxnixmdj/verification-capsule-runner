@@ -1,0 +1,19 @@
+name: Verify Unknown-Domain execution lease
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json'
+      - 'verify_unknown_domain_execution_lease.py'
+      - '.github/workflows/verify-unknown-domain-execution-lease.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_unknown_domain_execution_lease.py
