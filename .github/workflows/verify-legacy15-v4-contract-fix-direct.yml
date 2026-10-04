@@ -1,0 +1,39 @@
+name: Verify Legacy15 V4 Contract Fix Direct
+on:
+  push:
+    branches:
+      - 'verify/legacy15-v4-contract-fix-20261004-sol'
+    paths:
+      - 'subject/canonical/runtime/livebench_legacy15_joint_witness_v1.py'
+      - 'subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py'
+      - 'subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py'
+      - 'subject/canonical/runtime/livebench_frozen_active_legacy15_v1.py'
+      - 'subject/canonical/tests/test_livebench_legacy15_joint_witness_v1.py'
+      - 'verification_trigger_legacy15_v4_contract_fix.txt'
+      - '.github/workflows/verify-legacy15-v4-contract-fix-direct.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain subject blobs
+        run: |
+          test "$(git hash-object subject/canonical/runtime/livebench_legacy15_joint_witness_v1.py)" = "f98c9bef0349efc990bcd11d1c48deca401f234f"
+          test "$(git hash-object subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py)" = "e986035ff68b53c0dc7a7eb478f6e3d8882214aa"
+          test "$(git hash-object subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py)" = "f3d5165071438a7f0ce8cd57c0c3489aa3d08497"
+          test "$(git hash-object subject/canonical/runtime/livebench_frozen_active_legacy15_v1.py)" = "34440ee69322e9d519cbe656cb03c55683a8b9c6"
+          test "$(git hash-object subject/canonical/tests/test_livebench_legacy15_joint_witness_v1.py)" = "f68cd15818e3522e542534920b98b5a3a429098f"
+      - name: Install test runner
+        run: python -m pip install --disable-pip-version-check pytest==8.4.2
+      - name: Run V4 contract regression suite
+        env:
+          PYTHONPATH: subject
+        run: python -m pytest -q subject/canonical/tests/test_livebench_legacy15_joint_witness_v1.py
