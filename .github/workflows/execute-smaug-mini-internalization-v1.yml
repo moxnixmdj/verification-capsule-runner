@@ -1,0 +1,39 @@
+name: Execute Smaug Mini internalization V1
+
+on:
+  push:
+    branches:
+      - execute/smaug-mini-internalization-20261004-v1
+    paths:
+      - execute_smaug_mini_internalization_v1.py
+      - .github/workflows/execute-smaug-mini-internalization-v1.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: project-brain-smaug-mini-2750fd9-v1
+  cancel-in-progress: false
+
+jobs:
+  internalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify GitHub CLI
+        run: gh --version
+      - name: Stream exact pinned Smaug-Mini learned state into draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python execute_smaug_mini_internalization_v1.py
+      - name: Upload producer receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smaug-mini-internalization-producer-receipt
+          path: project-brain-smaug-mini-2750fd9-producer-receipt-v1.json
+          if-no-files-found: warn
