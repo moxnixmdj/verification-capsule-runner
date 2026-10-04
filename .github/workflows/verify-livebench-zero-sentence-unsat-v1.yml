@@ -1,0 +1,46 @@
+name: Verify LiveBench strict sentence<1 UNSAT
+
+on:
+  push:
+    branches:
+      - 'verify/livebench-zero-sentence-unsat-20261005-sol'
+    paths:
+      - 'subject/livebench_zero_sentence_unsat_v1/**'
+      - '.github/workflows/verify-livebench-zero-sentence-unsat-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.1
+          python - <<'PY'
+          import nltk
+          for name in ["punkt", "punkt_tab"]:
+              nltk.download(name, quiet=True)
+          print(nltk.__version__)
+          PY
+      - name: Checkout frozen LiveBench source
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+          test "$(git -C /tmp/livebench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+      - name: Verify strict-evaluator zero-sentence theorem
+        run: |
+          python subject/livebench_zero_sentence_unsat_v1/verify.py \
+            --livebench-root /tmp/livebench \
+            --output subject/livebench_zero_sentence_unsat_v1/receipt.json
+      - name: Upload exact receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-zero-sentence-unsat-v1
+          path: subject/livebench_zero_sentence_unsat_v1/receipt.json
+          if-no-files-found: error
