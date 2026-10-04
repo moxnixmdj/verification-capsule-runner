@@ -1,0 +1,22 @@
+name: Verify relative Crowd-BT public bridge saturation V1
+on:
+  push:
+    branches:
+      - 'verify/relative-crowdbt-public-bridge-saturation-20261005-sol'
+    paths:
+      - 'verify_relative_crowdbt_public_bridge_saturation_v1.py'
+      - '.github/workflows/verify-relative-crowdbt-public-bridge-saturation-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify official public methodology and identifiability boundary
+        run: python verify_relative_crowdbt_public_bridge_saturation_v1.py
