@@ -3,7 +3,7 @@ import importlib.util, json, sys, types
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
-SUB=ROOT/"subject"/"livebench_zero_case_resource_fit_20261004"
+SUB=ROOT/"subject"/"livebench_frozen_runtime_closure_v1"/"canonical"/"runtime"
 
 canonical=types.ModuleType("canonical")
 runtime=types.ModuleType("canonical.runtime")
@@ -44,7 +44,7 @@ except Exception as exc:
     }
 else:
     result={
-      "schema":"PROJECT_BRAIN_LIVEBENCH_PUBLIC_INFERENCE_CAPSULE_DIAGNOSTIC_V1",
+      "schema":"PROJECT_BRAIN_LIVEBENCH_SUCCESSOR_ZERO_CASE_INTEGRATION_V1",
       "status":"PASS",
       "adapter_status":out.get("status"),
       "answer":out.get("answer"),
@@ -53,6 +53,15 @@ else:
       "terminal_case_content_read":False,
       "terminal_cases_consumed":0,
       "paid_external_model_or_api_used":False,
+      "goal_compiler_git_blob_sha":"43abde3a26acbbab7d50804f431ea448a170d722",
     }
 
 print(json.dumps(result,sort_keys=True))
+if result.get("status")!="PASS":
+    raise SystemExit(1)
+if result.get("answer")!="SYNTHETIC_OK":
+    raise SystemExit("SYNTHETIC_ANSWER_MISMATCH")
+if result.get("cognition_dependency_class")!="MODEL_INDEPENDENT":
+    raise SystemExit("SYNTHETIC_NOT_MODEL_INDEPENDENT")
+if int(result.get("model_dependency_count") or 0)!=0:
+    raise SystemExit("SYNTHETIC_MODEL_DEPENDENCY_NONZERO")
