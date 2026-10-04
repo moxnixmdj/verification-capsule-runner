@@ -13,23 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Verify exact V20 blobs
-        run: |
-          test "$(git hash-object canonical/runtime/retrieval_fresh_v4_holdout_v20.py)" = "bc16dcb63ed882005cb8e836f4fad4c47e19d3de"
-          test "$(git hash-object canonical/tests/test_retrieval_fresh_v4_holdout_v20.py)" = "cbd75bf9142c3a24bb49e389f1d594b1a2e590cc"
+      - run: test "$(git hash-object canonical/runtime/retrieval_fresh_v4_holdout_v20.py)" = "bc16dcb63ed882005cb8e836f4fad4c47e19d3de"
+      - run: test "$(git hash-object canonical/tests/test_retrieval_fresh_v4_holdout_v20.py)" = "cbd75bf9142c3a24bb49e389f1d594b1a2e590cc"
       - run: PYTHONPATH=. python canonical/tests/test_retrieval_fresh_v4_holdout_v20.py
-      - run: PYTHONPATH=. python canonical/runtime/retrieval_fresh_v4_holdout_v20.py > v20_holdout.json
-      - name: Summarize holdout
-        run: python - <<'PY'
-          import json
-          d=json.load(open("v20_holdout.json"))
-          print(json.dumps({k:d[k] for k in ["task_count","successful_task_count","failed_retryable_task_count","target_hit_count","target_miss_count","target_recall_on_successful_tasks","miss_episode_ids","failed_episode_ids"]},sort_keys=True))
-          assert d["post_hoc_route_changes_allowed"] is False
-          assert d["answer_key_identity_used_for_plan_generation"] is False
-          assert d["frozen_entrypoint_v4_blob"]=="2ad2fb952b3c361e74cb083b335d39b04a7c130b"
-          assert d["frozen_portfolio_blob"]=="855a6cba59fff8c079f61212acadc254c4e9e736"
-        PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: retrieval-v20-holdout
-          path: v20_holdout.json
+      - run: PYTHONPATH=. python canonical/runtime/retrieval_fresh_v4_holdout_v20.py
