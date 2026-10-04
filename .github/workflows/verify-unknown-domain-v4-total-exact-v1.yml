@@ -1,0 +1,30 @@
+name: Verify Unknown-Domain V4 total exact conjunction
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v4_universal_proof_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_v4_universal_proof_v1.py'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_V4_TOTAL_UNIVERSAL_PROOF_CANDIDATE_20261005_V1.json'
+      - 'verify_unknown_domain_v4_total_exact_v1.py'
+      - '.github/workflows/verify-unknown-domain-v4-total-exact-v1.yml'
+permissions:
+  contents: read
+concurrency:
+  group: unknown-domain-v4-total-exact
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact Brain regression suite
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_v4_universal_proof_v1 -v
+      - name: Independent totality exactness and semantic falsification
+        run: python verify_unknown_domain_v4_total_exact_v1.py
