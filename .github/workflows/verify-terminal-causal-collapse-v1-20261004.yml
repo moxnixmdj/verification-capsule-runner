@@ -1,0 +1,20 @@
+name: Verify terminal causal collapse v1
+
+on:
+  pull_request:
+    paths:
+      - 'verify_terminal_causal_collapse_v1_20261004.py'
+      - 'subject/terminal_causal_collapse_v1_20261004/**'
+      - '.github/workflows/verify-terminal-causal-collapse-v1-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent verifier
+        run: python verify_terminal_causal_collapse_v1_20261004.py
