@@ -16,4 +16,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install pinned Tavily client for adapter compatibility check
+        run: python -m pip install --disable-pip-version-check tavily-python==0.7.23
       - run: python capsules/root2_v6_finance/verify.py
