@@ -1,0 +1,59 @@
+name: Verify Unknown-Domain V3 totalized universal proof
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py'
+      - 'canonical/tests/test_unknown_domain_direct_v3_universal_proof_v1.py'
+      - '.github/workflows/verify-unknown-domain-v3-totalized-universal.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact content bindings
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/unknown_domain_direct_candidate_v1.py":"a2a77269a8175ce315b466035049da0f761b8734",
+            "canonical/runtime/unknown_domain_direct_candidate_v2.py":"4470716f95a559a700e461262df909ae19a41651",
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py":"f974a4594c78e74693c7ba5a19f131dfa481b937",
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py":"d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v3.py":"8b855851b8a0fec3a0811c5033cc4ea6d2436954",
+            "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py":"e8cf5d1b5d311644725a751c15e6235958fb587d",
+            "canonical/runtime/unknown_domain_direct_execution_harness_v1.py":"04fe06f4eed081c4cb6197b12f2d92bd396aeafd",
+            "canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py":"33e97833f6bbe1c3c2a9c91090afdad3e55c134e",
+            "canonical/tests/test_unknown_domain_direct_v3_universal_proof_v1.py":"dd38751d1631efe58c297d157e4c278ca33b27b3",
+          }
+          def blob(path):
+              data=Path(path).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+          got={p:blob(p) for p in expected}
+          assert got==expected,(got,expected)
+          print("exact Brain V3 subject bindings PASS")
+          PY
+      - name: Run exact mirrored theorem and regression tests
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_v3_universal_proof_v1 -v
+      - name: Verify theorem output remains zero-reality and zero-credit
+        run: |
+          python -m canonical.runtime.unknown_domain_direct_v3_universal_proof_v1 > /tmp/v3.json
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/v3.json"))
+          assert d["status"]=="PASS__UNIVERSAL_OVER_EXACT_COLLISION_TOTALIZED_V3_GENERATOR_DOMAIN"
+          assert d["scope"]["terminal_or_production_cases_generated"]==0
+          assert d["identifier_totality_proof"]["uniqueness_depends_on_hash_collision_resistance"] is False
+          assert d["accounting"]["acceptance_credit_delta"]==0
+          print("independent V3 theorem output PASS")
+          PY
