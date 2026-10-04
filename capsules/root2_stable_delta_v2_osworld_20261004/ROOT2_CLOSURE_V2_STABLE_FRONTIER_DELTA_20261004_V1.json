@@ -13,7 +13,10 @@
       "id": "SYNTHESIS_REQUIRED_CLAIM_COVERAGE_DELETE",
       "target": "SYNTHESIS_MATCHED_QUALITY_COVERAGE_NONINFERIOR",
       "delete_residual": "required_claim_coverage_noninferiority",
-      "remaining_exact_residuals": ["metric:matched_quality","matched_quality_noninferiority"],
+      "remaining_exact_residuals": [
+        "metric:matched_quality",
+        "matched_quality_noninferiority"
+      ],
       "proof": {
         "candidate_path": "canonical/governance/OPUS55_SYNTHESIS_REQUIRED_CLAIM_COVERAGE_CEILING_LIFT_V2.json",
         "candidate_git_blob_sha": "f2ef80facb39264b1e12b81e451eb4499a3b987f",
