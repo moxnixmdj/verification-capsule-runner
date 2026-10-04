@@ -1,0 +1,35 @@
+name: Verify LiveBench pointwise core fastlane
+on:
+  push:
+    branches:
+      - fastlane/verify-livebench-pointwise-core-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check --quiet pytest==8.4.2
+      - name: Checkout exact frozen LiveBench source
+        run: |
+          git clone --quiet --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench fetch --quiet --depth=1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/livebench checkout --quiet --detach 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Run exact vendored unit tests
+        run: |
+          python -m pytest -q             canonical/tests/test_livebench_pointwise_optimality_certificate_v1.py             canonical/tests/test_livebench_legacy15_slot_feasibility_v1.py             canonical/tests/test_livebench_legacy15_pointwise_certificate_v1.py
+      - name: Independently bind public scorer semantics
+        run: |
+          mkdir -p receipt
+          python verify_livebench_pointwise_core_fastlane_v1.py             --root . --livebench-root /tmp/livebench             --output receipt/livebench-pointwise-core-v1.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livebench-pointwise-core-v1
+          path: receipt/
+          if-no-files-found: error
