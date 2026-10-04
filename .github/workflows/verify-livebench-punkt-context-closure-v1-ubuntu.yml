@@ -1,0 +1,81 @@
+name: Verify LiveBench Punkt context closure V1 Ubuntu
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "verify_livebench_punkt_context_closure_v1.py"
+      - "subject/livebench_composer_v2_20261005/**"
+      - ".github/workflows/verify-livebench-punkt-context-closure-v1-ubuntu.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+
+      - name: Bind exact NLTK wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/nltk_wheel
+          mkdir -p /tmp/nltk_wheel
+          python -m pip download --disable-pip-version-check --no-deps --only-binary=:all: --dest /tmp/nltk_wheel nltk==3.10.3
+          WHEEL="$(find /tmp/nltk_wheel -maxdepth 1 -name 'nltk-3.10.3-*.whl' -print -quit)"
+          test -n "$WHEEL"
+          echo "PINNED_NLTK_WHEEL=$WHEEL" >> "$GITHUB_ENV"
+          python -m pip install --disable-pip-version-check "$WHEEL" langdetect==1.0.9 immutabledict==4.2.2
+
+      - name: Checkout exact frozen LiveBench source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+
+      - name: Checkout exact Punkt data
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/nltk_data_repo /tmp/nltk_data
+          git init /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo remote add origin https://github.com/nltk/nltk_data.git
+          git -C /tmp/nltk_data_repo config core.sparseCheckout true
+          mkdir -p /tmp/nltk_data_repo/.git/info
+          printf 'packages/tokenizers/punkt.zip\npackages/tokenizers/punkt_tab.zip\n' > /tmp/nltk_data_repo/.git/info/sparse-checkout
+          git -C /tmp/nltk_data_repo fetch --depth 1 --filter=blob:none origin 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a
+          git -C /tmp/nltk_data_repo checkout --detach FETCH_HEAD
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+
+      - name: Execute outcome-blind Punkt context closure
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        run: python verify_livebench_punkt_context_closure_v1.py
+
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_punkt_context_closure_v1.json; then
+            cat livebench_punkt_context_closure_v1.json
+          fi
+
+      - name: Upload immutable receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-punkt-context-closure-v1-ubuntu
+          path: livebench_punkt_context_closure_v1.json
+          if-no-files-found: error
