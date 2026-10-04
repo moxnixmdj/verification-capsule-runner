@@ -1,0 +1,24 @@
+name: Analyze IFBench public prompt surface v1
+on:
+  push:
+    branches:
+      - 'verify/livebench-structural-successor-v1-20261004'
+    paths:
+      - 'analyze_ifbench_public_prompt_surface_v1.py'
+      - '.github/workflows/analyze-ifbench-public-prompt-surface-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recover hidden public instruction IDs from visible prompt templates
+        run: python analyze_ifbench_public_prompt_surface_v1.py
