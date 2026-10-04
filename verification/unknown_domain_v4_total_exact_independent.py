@@ -5,6 +5,8 @@ import hashlib
 import inspect
 import itertools
 import json
+import sys
+import traceback
 from fractions import Fraction
 from pathlib import Path
 
@@ -32,6 +34,24 @@ EXPECTED={
  "canonical/runtime/unknown_domain_direct_v4_universal_proof_v1.py":"72bbed393ac1bcaccb4cf33cd37835662c421f6c",
 }
 
+DIAG_PATH=Path("unknown_domain_v4_total_exact_receipt.json")
+DIAG={"schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V4_DIAGNOSTIC_V1","status":"RUNNING","checkpoint":"START"}
+
+def checkpoint(name:str, **extra):
+ DIAG["checkpoint"]=name
+ DIAG.update(extra)
+ DIAG_PATH.write_text(json.dumps(DIAG,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+
+def _diagnostic_excepthook(exc_type, exc, tb):
+ DIAG["status"]="FAIL"
+ DIAG["exception_type"]=getattr(exc_type,"__name__",str(exc_type))
+ DIAG["exception"]=str(exc)
+ DIAG["traceback"]="".join(traceback.format_exception(exc_type,exc,tb))
+ DIAG_PATH.write_text(json.dumps(DIAG,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+ sys.__excepthook__(exc_type,exc,tb)
+
+sys.excepthook=_diagnostic_excepthook
+checkpoint("START")
 
 def blob(path:Path)->str:
  b=path.read_bytes()
@@ -41,6 +61,7 @@ def blob(path:Path)->str:
 # 1. Content-bind every load-bearing byte.
 got={rel:blob(ROOT/rel) for rel in EXPECTED}
 assert got==EXPECTED, {"expected":EXPECTED,"got":got}
+checkpoint("CONTENT_BIND_PASS")
 
 
 # 2. Independently prove the permutation construction does not rely on digest
@@ -65,6 +86,7 @@ for n in range(1,8):
   assert set(p)==set(range(n))
   exhaustive_paths+=1
 assert exhaustive_paths==5913, exhaustive_paths
+checkpoint("FISHER_YATES_ABSTRACT_PASS", exhaustive_paths=exhaustive_paths)
 
 # Actual implementation on every semantic size, adversarial digest/secret values.
 for n in (2,3,4,12,15):
@@ -72,6 +94,7 @@ for n in (2,3,4,12,15):
   for beacon in ("B"*16,"TOTALITY-EDGE-00000001","TOTALITY-EDGE-99999999"):
    p=g3._perm(secret,beacon,f"independent|n={n}",n)
    assert len(p)==n and set(p)==set(range(n))
+checkpoint("IDENTIFIER_IMPLEMENTATION_PASS")
 
 
 # 3. Independently derive strict transfer margins.
@@ -94,6 +117,7 @@ add2_gaps=(
 )
 assert min(add2_gaps)==Fraction(3,2)
 assert harness.MAX_TRANSFER_PROBES==2
+checkpoint("TRANSFER_MARGIN_PASS")
 
 
 # 4. Independently bind the exact-float repair. ADD2 indices 4/10 have visible
@@ -111,6 +135,7 @@ gen_src="".join(inspect.getsource(g1._eval).split())
 cand_src="".join(inspect.getsource(c1._program_eval).split())
 assert 'returnfloat(p["bias"])+float(role_values["r0"])+float(role_values["r1"])' in gen_src
 assert 'return_finite(params["bias"],"bias")+_finite(role_values["r0"],"r0")+_finite(role_values["r1"],"r1")' in cand_src
+checkpoint("EXACT_FLOAT_BIND_PASS")
 
 
 # 5. Find an exact V2 one-ulp failure under the structurally-total generator,
@@ -137,6 +162,7 @@ for k in range(1024):
  if counterexample:
   break
 assert counterexample is not None, "EXPECTED_V2_EXACT_FLOAT_COUNTEREXAMPLE_NOT_FOUND"
+checkpoint("V2_COUNTEREXAMPLE_V3_REPAIR_PASS", counterexample=counterexample)
 
 
 # 6. Large deterministic nonproduction falsification sweep through the exact
@@ -161,6 +187,7 @@ for i in range(populations):
   cases+=1
  assert scorer.aggregate(rows)["all_27_cases_pass"] is True
 assert cases==6912
+checkpoint("FALSIFICATION_6912_PASS", populations=populations, cases=cases)
 
 
 # 7. Only after independent derivations/falsification, compare proposed theorem.
@@ -171,6 +198,7 @@ assert theorem["identifier_totality_proof"]["accepted_secret_or_beacon_rejected_
 assert theorem["transfer_proof"]["add2_exact_float_order_repaired"] is True
 assert theorem["scope"]["terminal_or_production_cases_generated"]==0
 assert theorem["accounting"]["acceptance_credit_delta"]==0
+checkpoint("PROPOSED_THEOREM_PASS")
 
 receipt={
  "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_V4_TOTAL_EXACT_INDEPENDENT_VERIFICATION_V1",
