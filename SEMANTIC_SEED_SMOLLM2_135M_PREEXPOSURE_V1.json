@@ -1,0 +1,122 @@
+{
+  "schema": "PROJECT_BRAIN_SEMANTIC_SEED_SMOLLM2_135M_PREEXPOSURE_V1",
+  "date": "2026-10-04",
+  "status": "FROZEN_BEFORE_MODEL_OUTPUTS__PUBLIC_SYNTHETIC_NONTERMINAL__ZERO_CREDIT",
+  "objective": "FALSIFY_OR_SUPPORT_A_TINY_LOCAL_LEARNED_SEMANTIC_SEED_FOR_PARAPHRASE_SIMPLIFY_SUMMARIZE_AND_STORY_GENERATION_WITHOUT_USING_ANY_TERMINAL_CASE",
+  "candidate": {
+    "model": "SmolLM2-135M-Instruct",
+    "quantization": "Q4_0_GGUF",
+    "source_url": "https://huggingface.co/QuantFactory/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q4_0.gguf?download=true",
+    "sha256": "f68203bfb98b1b1e8c64fac75fab10c4e36acac081609573b4df0fcc19c90dd9",
+    "reported_file_size_mb": 91.7,
+    "license": "Apache-2.0",
+    "runtime": {
+      "engine": "llama.cpp",
+      "tag": "b11379",
+      "expected_commit_short": "1537a0a"
+    }
+  },
+  "generation": {
+    "temperature": 0,
+    "max_tokens": 160,
+    "system_prompt": "You are a concise semantic text transformation engine. Follow the requested transformation faithfully. Preserve required facts. Return only the transformed text."
+  },
+  "tasks": [
+    {
+      "id": "PARAPHRASE_BICYCLE",
+      "family": "paraphrase",
+      "instruction": "Paraphrase this sentence while preserving every fact and wording it differently: The red bicycle was left beside the old library after the rain stopped.",
+      "source": "The red bicycle was left beside the old library after the rain stopped.",
+      "required_groups": [["red"], ["bicycle", "bike"], ["library"], ["rain"], ["stopped", "ended", "ceased"]],
+      "min_words": 8,
+      "max_words": 28,
+      "max_source_4gram_recall": 0.75
+    },
+    {
+      "id": "PARAPHRASE_SOLAR",
+      "family": "paraphrase",
+      "instruction": "Rewrite this without changing the meaning: The solar array produced less power because dust covered several panels during the storm.",
+      "source": "The solar array produced less power because dust covered several panels during the storm.",
+      "required_groups": [["solar"], ["power"], ["dust"], ["panels"], ["storm"]],
+      "min_words": 8,
+      "max_words": 30,
+      "max_source_4gram_recall": 0.75
+    },
+    {
+      "id": "SIMPLIFY_COMMITTEE",
+      "family": "simplify",
+      "instruction": "Make this sentence simpler for a 12-year-old while keeping all important facts: Although the committee had deliberated for several hours, it ultimately postponed the vote because two members requested additional evidence.",
+      "source": "Although the committee had deliberated for several hours, it ultimately postponed the vote because two members requested additional evidence.",
+      "required_groups": [["committee"], ["hours"], ["postponed", "delayed"], ["vote"], ["two", "2"], ["members"], ["evidence", "proof", "information"]],
+      "min_words": 10,
+      "max_words": 30
+    },
+    {
+      "id": "SIMPLIFY_VACCINE",
+      "family": "simplify",
+      "instruction": "Explain this more simply without losing the facts: The researchers repeated the experiment after a calibration error caused the first temperature measurements to be unreliable.",
+      "source": "The researchers repeated the experiment after a calibration error caused the first temperature measurements to be unreliable.",
+      "required_groups": [["researchers", "scientists"], ["repeated", "did again", "ran again"], ["experiment", "test"], ["calibration"], ["temperature"], ["unreliable", "wrong", "inaccurate"]],
+      "min_words": 9,
+      "max_words": 30
+    },
+    {
+      "id": "SUMMARIZE_MARS",
+      "family": "summarize",
+      "instruction": "Summarize in no more than 38 words: Mars is the fourth planet from the Sun. A Martian day lasts about 24.6 hours. Mars has two small moons, Phobos and Deimos. Its atmosphere is thin and dominated by carbon dioxide. A museum in Paris owns a nineteenth-century brass telescope.",
+      "source": "Mars is the fourth planet from the Sun. A Martian day lasts about 24.6 hours. Mars has two small moons, Phobos and Deimos. Its atmosphere is thin and dominated by carbon dioxide. A museum in Paris owns a nineteenth-century brass telescope.",
+      "required_groups": [["Mars"], ["fourth"], ["24.6"], ["two"], ["Phobos"], ["Deimos"], ["thin"], ["carbon dioxide", "CO2"]],
+      "forbidden_groups": [["museum"], ["Paris"], ["telescope"]],
+      "min_words": 12,
+      "max_words": 38
+    },
+    {
+      "id": "SUMMARIZE_BATTERY",
+      "family": "summarize",
+      "instruction": "Summarize the operational facts in no more than 35 words: The prototype battery reached 80 percent charge in 18 minutes. After 500 cycles it retained 91 percent of its original capacity. Testing was performed at 25 degrees Celsius. The lab walls were painted blue last year.",
+      "source": "The prototype battery reached 80 percent charge in 18 minutes. After 500 cycles it retained 91 percent of its original capacity. Testing was performed at 25 degrees Celsius. The lab walls were painted blue last year.",
+      "required_groups": [["80"], ["18"], ["500"], ["91"], ["25"], ["Celsius", "degrees"]],
+      "forbidden_groups": [["walls"], ["painted"], ["blue"]],
+      "min_words": 10,
+      "max_words": 35
+    },
+    {
+      "id": "STORY_OBSERVATORY",
+      "family": "story",
+      "instruction": "Write a short coherent story of 45 to 90 words. It must include Mira, an observatory, a lost key, and the event must finish before sunrise.",
+      "required_groups": [["Mira"], ["observatory"], ["lost"], ["key"], ["sunrise"]],
+      "min_words": 45,
+      "max_words": 90
+    },
+    {
+      "id": "STORY_ROBOT_GARDEN",
+      "family": "story",
+      "instruction": "Write a short coherent story of 45 to 90 words about a small robot repairing a garden pump during a thunderstorm. Include a neighbor named Omar and end with the water flowing again.",
+      "required_groups": [["robot"], ["garden"], ["pump"], ["thunderstorm", "storm"], ["Omar"], ["water"], ["flowing", "flowed", "runs", "running"]],
+      "min_words": 45,
+      "max_words": 90
+    }
+  ],
+  "decision_rule": {
+    "minimum_total_passes": 6,
+    "minimum_passes_per_family": 1,
+    "families": ["paraphrase", "simplify", "summarize", "story"],
+    "pass_label": "MINIMUM_SEMANTIC_SEED_SUPPORTED",
+    "fail_label": "SEMANTIC_SEED_RUNG_NOT_SUPPORTED"
+  },
+  "hard_nonclaims": [
+    "PASS_DOES_NOT_ESTABLISH_OPUS_5_5_LEVEL_QUALITY",
+    "PASS_DOES_NOT_ESTABLISH_OPEN_WORLD_SEMANTICS",
+    "PASS_DOES_NOT_GRANT_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
+    "MODEL_DOWNLOAD_DURING_THIS_PUBLIC_NONTERMINAL_VERIFICATION_IS_CANDIDATE_ACQUISITION_NOT_SCORED_RUNTIME_INTERNALIZATION",
+    "NO_TERMINAL_LIVEBENCH_CASES_ARE_USED"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
