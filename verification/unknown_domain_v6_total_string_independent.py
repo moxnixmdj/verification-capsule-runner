@@ -205,3 +205,5 @@ Path("unknown_domain_v6_total_string_receipt.json").write_text(
     json.dumps(receipt,indent=2,sort_keys=True,ensure_ascii=True)+"\n",encoding="utf-8"
 )
 print(json.dumps(receipt,sort_keys=True,ensure_ascii=True))
+
+# PR synchronize trigger: verifier semantics unchanged.
