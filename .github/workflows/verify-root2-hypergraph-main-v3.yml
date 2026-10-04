@@ -1,0 +1,28 @@
+name: Verify current main Root2 hypergraph V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_hypergraph_main_v3/**"
+      - ".github/workflows/verify-root2-hypergraph-main-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain candidate blobs
+        run: |
+          test "$(git hash-object capsules/root2_hypergraph_main_v3/ROOT2_FIXED_BAR_ROUTE_INVENTORY_V1.json)" = "71495ebcf456119f4df694203631aeeb3048c81a"
+          test "$(git hash-object capsules/root2_hypergraph_main_v3/ROOT2_FROZEN_COMPARATOR_VECTOR_V1.json)" = "f426f1aa136abdcc33a14716fe4edbc40003bf2a"
+          test "$(git hash-object capsules/root2_hypergraph_main_v3/ROOT2_PROOF_HYPERGRAPH_CURRENT_REBIND_V3.json)" = "244f4fcdc07ee149fc4370dc52f4de90cbd87db9"
+      - name: Verify V3 rebind semantics
+        run: python capsules/root2_hypergraph_main_v3/verify.py
