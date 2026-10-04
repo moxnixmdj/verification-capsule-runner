@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import pathlib
+import sys
+import urllib.request
+
+ARTIFACTS = {
+    "encoder_model_int8.onnx": {
+        "url": "https://huggingface.co/onnx-community/flan-t5-small-ONNX/resolve/76988c16f73cadb2c2e13e2d7d85608944223105/onnx/encoder_model_int8.onnx?download=true",
+        "bytes": 35720521,
+        "sha256": "691c4b521a2aad8ff0d1a94e578f507bbfb7b3d939b5b4d233c4a8043a2388dc",
+    },
+    "decoder_model_int8.onnx": {
+        "url": "https://huggingface.co/onnx-community/flan-t5-small-ONNX/resolve/76988c16f73cadb2c2e13e2d7d85608944223105/onnx/decoder_model_int8.onnx?download=true",
+        "bytes": 58862707,
+        "sha256": "54e7e2e606115068b979fe83cd64f23ee48b7cfde750f3ca9c48ea493bee5c86",
+    },
+    "spiece.model": {
+        "url": "https://huggingface.co/google/flan-t5-small/resolve/e48659520aaf0069046c3413e9835d214fefa83c/spiece.model?download=true",
+        "bytes": 791656,
+        "sha256": "d60acb128cf7b7f2536e8f38a5b18a05535c9e14c7a355904270e15b0945ea86",
+    },
+}
+EXPECTED_TOTAL = 95_374_884
+EXPECTED_HEADROOM = 4_625_116
+MAX_LEARNED_BYTES = 100_000_000
+
+
+def sha256_file(path: pathlib.Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def verify_one(path: pathlib.Path, spec: dict) -> dict:
+    size = path.stat().st_size
+    digest = sha256_file(path)
+    if size != spec["bytes"]:
+        raise RuntimeError(f"SIZE_MISMATCH:{path.name}:{size}!={spec['bytes']}")
+    if digest != spec["sha256"]:
+        raise RuntimeError(f"SHA256_MISMATCH:{path.name}:{digest}!={spec['sha256']}")
+    return {"bytes": size, "sha256": digest}
+
+
+def prepare(root: pathlib.Path) -> dict:
+    root.mkdir(parents=True, exist_ok=True)
+    verified = {}
+    for name, spec in ARTIFACTS.items():
+        path = root / name
+        if not path.exists():
+            req = urllib.request.Request(spec["url"], headers={"User-Agent": "project-brain-verifier/1"})
+            with urllib.request.urlopen(req, timeout=180) as src, path.open("wb") as dst:
+                while True:
+                    chunk = src.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    dst.write(chunk)
+        verified[name] = verify_one(path, spec)
+    total = sum(row["bytes"] for row in verified.values())
+    if total != EXPECTED_TOTAL:
+        raise RuntimeError(f"LEARNED_TOTAL_MISMATCH:{total}")
+    return {
+        "prepared": True,
+        "learned_bytes_total": total,
+        "headroom_bytes": MAX_LEARNED_BYTES - total,
+        "artifacts": verified,
+    }
+
+
+def assert_no_external_tensor_data(model_path: pathlib.Path) -> dict:
+    import onnx
+
+    model = onnx.load_model(str(model_path), load_external_data=False)
+    external = []
+    tensors = list(model.graph.initializer)
+    tensors.extend(x.values for x in model.graph.sparse_initializer)
+    flat = []
+    for t in tensors:
+        if isinstance(t, (list, tuple)):
+            flat.extend(t)
+        else:
+            flat.append(t)
+    for tensor in flat:
+        if getattr(tensor, "data_location", 0) == onnx.TensorProto.EXTERNAL or len(getattr(tensor, "external_data", [])):
+            external.append(getattr(tensor, "name", "<unnamed>"))
+    if external:
+        raise RuntimeError("EXTERNAL_TENSOR_DATA:" + ",".join(external[:20]))
+    return {"initializer_count": len(flat), "external_initializer_count": 0}
+
+
+def _sp_encode(sp, text: str) -> list[int]:
+    ids = list(sp.encode(text, out_type=int))
+    if not ids or ids[-1] != 1:
+        ids.append(1)
+    return ids
+
+
+def _sp_decode(sp, ids: list[int]) -> str:
+    clean = [int(x) for x in ids if int(x) not in (0, 1) and int(x) < sp.get_piece_size()]
+    return sp.decode(clean).strip()
+
+
+def offline_smoke(root: pathlib.Path, receipt_path: pathlib.Path) -> dict:
+    import numpy as np
+    import onnx
+    import onnxruntime as ort
+    import sentencepiece as sentencepiece
+
+    verified = {name: verify_one(root / name, spec) for name, spec in ARTIFACTS.items()}
+    total = sum(row["bytes"] for row in verified.values())
+    if total != EXPECTED_TOTAL or MAX_LEARNED_BYTES - total != EXPECTED_HEADROOM:
+        raise RuntimeError("H100_ARITHMETIC_MISMATCH")
+
+    ext = {
+        "encoder": assert_no_external_tensor_data(root / "encoder_model_int8.onnx"),
+        "decoder": assert_no_external_tensor_data(root / "decoder_model_int8.onnx"),
+    }
+
+    sp = sentencepiece.SentencePieceProcessor(model_file=str(root / "spiece.model"))
+    if sp.get_piece_size() != 32000:
+        raise RuntimeError(f"UNEXPECTED_SENTENCEPIECE_SIZE:{sp.get_piece_size()}")
+
+    so = ort.SessionOptions()
+    so.intra_op_num_threads = 2
+    so.inter_op_num_threads = 1
+    encoder = ort.InferenceSession(str(root / "encoder_model_int8.onnx"), sess_options=so, providers=["CPUExecutionProvider"])
+    decoder = ort.InferenceSession(str(root / "decoder_model_int8.onnx"), sess_options=so, providers=["CPUExecutionProvider"])
+
+    encoder_inputs = [x.name for x in encoder.get_inputs()]
+    encoder_outputs = [x.name for x in encoder.get_outputs()]
+    decoder_inputs = [x.name for x in decoder.get_inputs()]
+    decoder_outputs = [x.name for x in decoder.get_outputs()]
+
+    if "input_ids" not in encoder_inputs:
+        raise RuntimeError(f"ENCODER_INPUT_ABI_UNEXPECTED:{encoder_inputs}")
+    if "input_ids" not in decoder_inputs or "encoder_hidden_states" not in decoder_inputs:
+        raise RuntimeError(f"DECODER_INPUT_ABI_UNEXPECTED:{decoder_inputs}")
+
+    def generate(prompt: str, max_new_tokens: int = 64) -> dict:
+        enc_ids = np.asarray([_sp_encode(sp, prompt)], dtype=np.int64)
+        enc_mask = np.ones_like(enc_ids, dtype=np.int64)
+        enc_feed = {}
+        for name in encoder_inputs:
+            if name == "input_ids":
+                enc_feed[name] = enc_ids
+            elif name == "attention_mask":
+                enc_feed[name] = enc_mask
+            else:
+                raise RuntimeError(f"UNHANDLED_ENCODER_INPUT:{name}")
+        enc_hidden = encoder.run(None, enc_feed)[0]
+
+        generated = [0]
+        for _ in range(max_new_tokens):
+            dec_ids = np.asarray([generated], dtype=np.int64)
+            dec_feed = {}
+            for name in decoder_inputs:
+                if name == "input_ids":
+                    dec_feed[name] = dec_ids
+                elif name == "encoder_hidden_states":
+                    dec_feed[name] = enc_hidden
+                elif name in ("encoder_attention_mask", "attention_mask"):
+                    dec_feed[name] = enc_mask
+                else:
+                    raise RuntimeError(f"UNHANDLED_DECODER_INPUT:{name}")
+            outs = decoder.run(None, dec_feed)
+            logits = outs[0]
+            if logits.ndim != 3 or logits.shape[0] != 1:
+                raise RuntimeError(f"LOGITS_SHAPE_UNEXPECTED:{tuple(logits.shape)}")
+            token = int(np.argmax(logits[0, -1]))
+            generated.append(token)
+            if token == 1:
+                break
+        text = _sp_decode(sp, generated)
+        if not text:
+            raise RuntimeError("EMPTY_GENERATION")
+        return {
+            "prompt": prompt,
+            "output": text,
+            "generated_ids": generated,
+            "new_token_count": len(generated) - 1,
+        }
+
+    probes = {
+        "paraphrase": generate("Paraphrase the following sentence while preserving its meaning: The scientist carefully checked every result before publishing it.", 48),
+        "simplify": generate("Rewrite this so a child can understand it: Although the weather deteriorated rapidly, the expedition continued because the team had prepared for severe conditions.", 48),
+        "summarize": generate("Summarize: Solar panels convert sunlight into electricity. Their output changes with sunlight intensity, panel angle, temperature, and shading. Batteries can store excess daytime electricity for later use.", 48),
+        "story_generation": generate("Write a short story about a child who finds a clock that runs backward.", 80),
+    }
+
+    for name, row in probes.items():
+        if not row["output"].strip():
+            raise RuntimeError(f"EMPTY_PROBE:{name}")
+
+    receipt = {
+        "schema": "PROJECT_BRAIN_FLAN_T5_SMALL_INT8_SEMANTIC_SMOKE_V1",
+        "status": "PASS__RESOURCE_AND_END_TO_END_EXECUTION_SMOKE_ONLY__SEMANTIC_QUALITY_UNADJUDICATED",
+        "network_phase": "ARTIFACT_PREFETCH_COMPLETED_BEFORE_OFFLINE_EXECUTION",
+        "offline_execution_required": True,
+        "learned_bytes_total": total,
+        "h100_max_bytes": MAX_LEARNED_BYTES,
+        "headroom_bytes": MAX_LEARNED_BYTES - total,
+        "artifacts": verified,
+        "onnx_external_data": ext,
+        "abi": {
+            "encoder_inputs": encoder_inputs,
+            "encoder_outputs": encoder_outputs,
+            "decoder_inputs": decoder_inputs,
+            "decoder_outputs": decoder_outputs,
+            "sentencepiece_piece_count": sp.get_piece_size(),
+            "decoder_start_token_id": 0,
+            "eos_token_id": 1,
+        },
+        "runtime_versions": {
+            "python": sys.version.split()[0],
+            "numpy": np.__version__,
+            "onnx": onnx.__version__,
+            "onnxruntime": ort.__version__,
+            "sentencepiece": getattr(sentencepiece, "__version__", "unknown"),
+        },
+        "public_nonterminal_smoke_probes": probes,
+        "hard_nonclaims": [
+            "NONEMPTY_GENERATION_IS_NOT_SEMANTIC_QUALITY_PROOF",
+            "NO_OPUS_5_5_EQUIVALENCE_CLAIM",
+            "NO_LIVEBENCH_THRESHOLD_CLAIM",
+            "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT",
+        ],
+    }
+    receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(receipt, indent=2, sort_keys=True))
+    return receipt
+
+
+def main() -> None:
+    p = argparse.ArgumentParser()
+    p.add_argument("mode", choices=["prepare", "offline"])
+    p.add_argument("--root", required=True)
+    p.add_argument("--receipt", default="flan_t5_small_int8_semantic_smoke_receipt.json")
+    args = p.parse_args()
+    root = pathlib.Path(args.root)
+    if args.mode == "prepare":
+        print(json.dumps(prepare(root), indent=2, sort_keys=True))
+    else:
+        offline_smoke(root, pathlib.Path(args.receipt))
+
+
+if __name__ == "__main__":
+    main()
