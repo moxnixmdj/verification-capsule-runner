@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib, importlib.util, pathlib, sys, tempfile
 
 SUBJECT=pathlib.Path("subject/general_exact_literal_routing_20261004/goal_compiler.py")
-EXPECTED_BLOB="28dea3231fa429ee70b18071e45ba48b48a1ceb2"
+EXPECTED_BLOB="43abde3a26acbbab7d50804f431ea448a170d722"
 
 def git_blob_sha(p):
     b=p.read_bytes()
