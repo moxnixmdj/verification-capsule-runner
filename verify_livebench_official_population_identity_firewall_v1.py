@@ -12,11 +12,21 @@ RUNTIME = SUBJECT_DIR / "livebench_official_population_identity_firewall_v1.py"
 GOVERNANCE = SUBJECT_DIR / "LIVEBENCH_OFFICIAL_POPULATION_IDENTITY_TRUTH_REPAIR_V1.json"
 PROXY_RECEIPT = SUBJECT_DIR / "LIVEBENCH_ACTIVE_SCORER_FAMILY_INDEPENDENT_VERIFICATION_20261004_V1.json"
 HISTORICAL_POPULATION_VERIFIER = SUBJECT_DIR / "verify-livebench-if-release-population-v2.yml"
+ROOT_PRECEDENCE_RUNTIME = SUBJECT_DIR / "livebench_root_identity_precedence_v1.py"
+ROOT_PRECEDENCE_GOVERNANCE = SUBJECT_DIR / "LIVEBENCH_ROOT_IDENTITY_PRECEDENCE_TRUTH_REPAIR_V1.json"
+V6_RECONCILIATION = SUBJECT_DIR / "v6_reconciliation.json"
+V6_EXECUTION_LOG = SUBJECT_DIR / "v6_execution.log"
+V6_HISTORICAL_VERIFIER = SUBJECT_DIR / "verify_livebench_v6_forced_fail_20261004.py"
 
 EXPECTED_RUNTIME_BLOB = "7b134265f7513292248a49edeb3313acab51c665"
 EXPECTED_GOVERNANCE_BLOB = "786bfb0373743702394180ba3d7f325f468edc0b"
 EXPECTED_PROXY_RECEIPT_BLOB = "fd05652cda4f5b4d1f69617a5488f9bfeae4c225"
 EXPECTED_HISTORICAL_POPULATION_VERIFIER_BLOB = "043e9b8339fca0effc921cb1d721567e5e0d0358"
+EXPECTED_ROOT_PRECEDENCE_RUNTIME_BLOB = "1b709f4c542720d8ccddb7a807b4977df8be1eba"
+EXPECTED_ROOT_PRECEDENCE_GOVERNANCE_BLOB = "e50a34646baeefce79077dc19cafa209a98e5966"
+EXPECTED_V6_RECONCILIATION_BLOB = "b1e14f11d97673a499f2d9a5e2c708d9aba969fb"
+EXPECTED_V6_EXECUTION_LOG_BLOB = "6c9c89cd2f7e977405017cb5ddfa8033126f4bf2"
+EXPECTED_V6_HISTORICAL_VERIFIER_BLOB = "bae0957c258d1211249bdc7be94244487d223cbc"
 
 UPSTREAM_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 README_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{UPSTREAM_COMMIT}/README.md"
@@ -52,13 +62,17 @@ def fetch_pinned(url: str, expected_blob: str) -> str:
     return raw.decode("utf-8")
 
 
-def load_runtime():
-    assert_blob(RUNTIME, EXPECTED_RUNTIME_BLOB)
-    spec = importlib.util.spec_from_file_location("identity_firewall", RUNTIME)
+def load_module(path: pathlib.Path, expected_blob: str, name: str):
+    assert_blob(path, expected_blob)
+    spec = importlib.util.spec_from_file_location(name, path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def load_runtime():
+    return load_module(RUNTIME, EXPECTED_RUNTIME_BLOB, "identity_firewall")
 
 
 def same_counts_do_not_imply_identity() -> None:
@@ -74,7 +88,22 @@ def same_counts_do_not_imply_identity() -> None:
 
 def main() -> int:
     runtime = load_runtime()
+    root_precedence = load_module(
+        ROOT_PRECEDENCE_RUNTIME,
+        EXPECTED_ROOT_PRECEDENCE_RUNTIME_BLOB,
+        "root_identity_precedence",
+    )
     gov = json.loads(assert_blob(GOVERNANCE, EXPECTED_GOVERNANCE_BLOB))
+    root_gov = json.loads(assert_blob(
+        ROOT_PRECEDENCE_GOVERNANCE,
+        EXPECTED_ROOT_PRECEDENCE_GOVERNANCE_BLOB,
+    ))
+    v6_rec = json.loads(assert_blob(V6_RECONCILIATION, EXPECTED_V6_RECONCILIATION_BLOB))
+    v6_log = assert_blob(V6_EXECUTION_LOG, EXPECTED_V6_EXECUTION_LOG_BLOB).decode("utf-8")
+    historical_v6_verifier = assert_blob(
+        V6_HISTORICAL_VERIFIER,
+        EXPECTED_V6_HISTORICAL_VERIFIER_BLOB,
+    ).decode("utf-8")
     proxy = json.loads(assert_blob(PROXY_RECEIPT, EXPECTED_PROXY_RECEIPT_BLOB))
     historical_verifier = assert_blob(
         HISTORICAL_POPULATION_VERIFIER,
@@ -187,13 +216,68 @@ def main() -> int:
         "VERIFY_SUCCESSOR_COVERAGE_FOR_BOTH_LEGACY_IFEVAL_AND_MODERN_IFBENCH"
     )
 
+    # Preserve the exact V6 failure, but prove it is scoped to the bound proxy.
+    cases = []
+    terminal = None
+    for line in v6_log.splitlines():
+        if line.startswith("LIVEBENCH_CASE_RECEIPT="):
+            cases.append(json.loads(line.split("=", 1)[1]))
+        elif line.startswith("LIVEBENCH_TERMINAL_RESULT="):
+            terminal = json.loads(line.split("=", 1)[1])
+    assert len(cases) == 72
+    assert len({x["question_id"] for x in cases}) == 72
+    assert all(float(x["score"]) == 0.0 for x in cases)
+    assert all(x.get("scoring_error") is None for x in cases)
+    assert terminal is not None
+    assert terminal["dataset_revision"] == "0868379c4b5cf62aeacaf8be4f08fced815c81bb"
+    assert terminal["dataset_sha256"] == "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
+    assert int(terminal["population_count"]) == 200
+    assert float(terminal["conservative_full_population_upper_percent"]) == 64.0
+    assert terminal["status"] == "FAIL_FORCED"
+    assert v6_rec["threshold_proof"]["conservative_full_population_upper_percent"] == 64
+    assert 'assert len(cases)==72' in historical_v6_verifier
+    assert 'assert all(float(x["score"])==0.0 for x in cases)' in historical_v6_verifier
+    assert 'assert all(x.get("scoring_error") is None for x in cases)' in historical_v6_verifier
+
+    # Upstream identity has precedence over downstream exact proxy score.
+    quarantined = root_precedence.adjudicate({
+        "proxy_v6_exact_fail": True,
+        "official_population_identity_bound": False,
+    })
+    assert quarantined["status"] == "PROXY_EXACT_FAIL_QUARANTINED_FROM_OFFICIAL_ROOT_CLASSIFICATION"
+    assert quarantined["terminal_predicate_root"] == "ROOT2_ONLY"
+    assert quarantined["proxy_failure_preserved"] is True
+    assert quarantined["root1_authorized"] is False
+
+    promotable = root_precedence.adjudicate({
+        "proxy_v6_exact_fail": True,
+        "official_population_identity_bound": True,
+    })
+    assert promotable["status"] == "PROXY_EXACT_FAIL_PROMOTABLE_BY_PROVED_POPULATION_IDENTITY"
+    assert promotable["terminal_predicate_root"] == "ROOT1_POSITIVE_OPERATIVE_GAP"
+    assert promotable["root1_authorized"] is True
+
+    direct_fail = root_precedence.adjudicate({"official_exact_fail": True})
+    assert direct_fail["terminal_predicate_root"] == "ROOT1_POSITIVE_OPERATIVE_GAP"
+    direct_pass = root_precedence.adjudicate({"official_exact_pass": True})
+    assert direct_pass["terminal_predicate_root"] == "CLOSED_PASS"
+
+    assert root_gov["precedence_theorem"]["statement"].startswith(
+        "ROOT_CLASSIFICATION_FOR_THE_OFFICIAL_TERMINAL_PREDICATE"
+    )
+
     receipt = {
         "schema":"PROJECT_BRAIN_LIVEBENCH_OFFICIAL_POPULATION_IDENTITY_FIREWALL_INDEPENDENT_VERIFICATION_V1",
-        "status":"PASS__PROXY_ONLY_LEGACY_COLLAPSE_FAILS_CLOSED__DUAL_FAMILY_ESCAPE_VERIFIED",
+        "status":"PASS__POPULATION_IDENTITY_FIREWALL_AND_ROOT_PRECEDENCE__V6_PROXY_FAILURE_PRESERVED",
         "brain_runtime_git_blob_sha":EXPECTED_RUNTIME_BLOB,
         "brain_governance_git_blob_sha":EXPECTED_GOVERNANCE_BLOB,
         "historical_proxy_receipt_git_blob_sha":EXPECTED_PROXY_RECEIPT_BLOB,
         "historical_population_verifier_git_blob_sha":EXPECTED_HISTORICAL_POPULATION_VERIFIER_BLOB,
+        "root_precedence_runtime_git_blob_sha":EXPECTED_ROOT_PRECEDENCE_RUNTIME_BLOB,
+        "root_precedence_governance_git_blob_sha":EXPECTED_ROOT_PRECEDENCE_GOVERNANCE_BLOB,
+        "v6_reconciliation_git_blob_sha":EXPECTED_V6_RECONCILIATION_BLOB,
+        "v6_execution_log_git_blob_sha":EXPECTED_V6_EXECUTION_LOG_BLOB,
+        "v6_historical_verifier_git_blob_sha":EXPECTED_V6_HISTORICAL_VERIFIER_BLOB,
         "upstream_livebench_commit":UPSTREAM_COMMIT,
         "upstream_readme_git_blob_sha":EXPECTED_README_BLOB,
         "upstream_changelog_git_blob_sha":EXPECTED_CHANGELOG_BLOB,
@@ -205,6 +289,8 @@ def main() -> int:
             "HISTORICAL_POPULATION_VERIFIER_HAS_NO_LEADERBOARD_SIDE_QUESTION_ID_SET_OR_ROW_ID_JOIN",
             "PROXY_CARDINALITY_DOES_NOT_BIND_OFFICIAL_2026_ROW_IDENTITY",
             "PROXY_ONLY_SINGLE_FAMILY_COLLAPSE_FAILS_CLOSED",
+            "V6_PROXY_EXACT_FAILURE_72_OF_72_ZERO_SCORES_IS_PRESERVED",
+            "PROXY_EXACT_FAILURE_CANNOT_RECLASSIFY_OFFICIAL_PREDICATE_WITHOUT_POPULATION_IDENTITY",
             "DUAL_FAMILY_VERIFIED_COVERAGE_CAN_DELETE_IDENTITY_DEPENDENCY",
         ],
         "not_proved":[
