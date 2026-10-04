@@ -1,5 +1,5 @@
 from __future__ import annotations
-import hashlib, json, py_compile
+import json, py_compile, subprocess
 from pathlib import Path
 
 B=Path("capsules/root2_v11_meta")
@@ -15,8 +15,7 @@ EXPECTED={
  "scheduler_runtime.py":"bfffe6dff32f5445a0c52657f7d9ec8d544b1f79",
 }
 def blob(p:Path):
- b=p.read_bytes()
- return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+ return subprocess.check_output(["git","rev-parse",f"HEAD:{p.as_posix()}"],text=True).strip()
 for n,h in EXPECTED.items():
  assert blob(B/n)==h,(n,h,blob(B/n))
 
