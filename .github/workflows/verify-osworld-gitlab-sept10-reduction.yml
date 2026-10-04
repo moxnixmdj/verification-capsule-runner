@@ -1,0 +1,19 @@
+name: Verify OSWorld GitLab Sept10 reduction
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/osworld_gitlab_sept10/**"
+      - ".github/workflows/verify-osworld-gitlab-sept10-reduction.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/osworld_gitlab_sept10/verify.py
