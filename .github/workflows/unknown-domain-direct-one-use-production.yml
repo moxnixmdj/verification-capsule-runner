@@ -1,0 +1,22 @@
+name: Unknown-Domain direct one-use production
+on:
+  create:
+
+permissions:
+  contents: write
+
+jobs:
+  production:
+    if: github.ref_type == 'branch' && startsWith(github.ref_name, 'unknown-domain-direct-launch/')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Atomic claim then exactly one production population
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python canonical/runtime/unknown_domain_direct_production_once_v1.py
