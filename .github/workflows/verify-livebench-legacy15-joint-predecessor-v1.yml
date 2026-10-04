@@ -9,7 +9,10 @@ on:
       - canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py
       - canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py
       - canonical/runtime/livebench_frozen_active_legacy15_v1.py
-      - canonical/runtime/livebench_legacy15_joint_witness_v1.py
+      - canonical/runtime/livebench_legacy15_composition_partition_v1.py
+      - canonical/runtime/livebench_legacy15_composition_archetypes_v1.py
+      - canonical/runtime/livebench_legacy15_slot_feasibility_v1.py
+      - canonical/runtime/livebench_legacy15_joint_candidate_generator_v1.py
       - .github/workflows/verify-livebench-legacy15-joint-predecessor-v1.yml
 
 jobs:
