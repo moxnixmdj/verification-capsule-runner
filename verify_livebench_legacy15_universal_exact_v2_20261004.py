@@ -15,7 +15,7 @@ EXPECTED_BLOBS = {
     "canonical/runtime/livebench_legacy15_general_composer_v1.py": "ced56b94e472a615f70180a4797fda178358e7fe",
     "canonical/runtime/livebench_legacy15_joint_witness_v1.py": "6b83d32be3840f815cb04afb51e473069dc17fe2",
     "canonical/runtime/livebench_legacy15_joint_router_v2.py": "e133432996a927e0f8fc3ed9a3cddf1479feba7f",
-    "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "91f8c41db734f06eece06df0fdbf0c90a05d018f",
+    "canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "7ea615d11c0ceea95b4fb7a2143d37887bc3b80a",
 }
 
 def git_blob_sha(path: Path) -> str:
