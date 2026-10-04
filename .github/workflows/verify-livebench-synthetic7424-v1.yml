@@ -14,7 +14,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+      - run: |
+          python -m pip install nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+          python - <<'PY'
+          import nltk
+          nltk.download('punkt', quiet=True)
+          nltk.download('punkt_tab', quiet=True)
+          PY
       - name: Materialize pinned scorer files
         run: |
           mkdir -p /tmp/LiveBench/livebench/if_runner/instruction_following_eval
