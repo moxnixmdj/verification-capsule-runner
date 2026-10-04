@@ -232,7 +232,7 @@ def _build_dynamic(iid: str, prompt: str) -> str | None:
         return "quantum zebra"
 
     if iid == "count:conjunctions":
-        n = _int(r"(\d+)\s+different coordinating conjunctions", prompt)
+        n = _int(r"(\d+)(?:\.0+)?\s+different coordinating conjunctions", prompt)
         if n is None or not (1 <= n <= 7):
             return None
         conj = ["and","but","or","so","for","nor","yet"][:n]
@@ -248,14 +248,10 @@ def _build_dynamic(iid: str, prompt: str) -> str | None:
         return " ".join(_NAMES[:n])
 
     if iid == "ratio:overlap":
-        p = _int(r"trigram overlap of\s+(\d+(?:\.\d+)?)%", prompt)
-        if p is None:
-            m = re.search(r"trigram overlap of\s+(\d+(?:\.\d+)?)%", prompt, re.I)
-            if not m:
-                return None
-            pct = float(m.group(1))
-        else:
-            pct = float(p)
+        m = re.search(r"trigram overlap of\s+(\d+(?:\.\d+)?)%", prompt, re.I)
+        if not m:
+            return None
+        pct = float(m.group(1))
         base = ngram_free.extract_pinned_public_ifbench_base(prompt)
         out = ngram_free.construct(base, pct)
         return str(out.get("response")) if out.get("status") == "PASS_UNDER_CONTRACT" else None
