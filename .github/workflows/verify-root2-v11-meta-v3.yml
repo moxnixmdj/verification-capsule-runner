@@ -1,8 +1,8 @@
-name: Fast verify Root2 V11 adaptive V3 package
+name: Fast verify Root2 V11 adaptive V3 package Windows
 on:
   push:
     branches:
-      - fast-clean-root2-v11-meta-v3-20261004-sol
+      - fast-clean-root2-v11-meta-v3-windows-20261004-sol
     paths:
       - "capsules/root2_v11_meta/**"
       - ".github/workflows/verify-root2-v11-meta-v3.yml"
@@ -10,7 +10,7 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    runs-on: windows-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
