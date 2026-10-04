@@ -1,0 +1,44 @@
+name: Unknown-Domain direct preclaim retry V2 macOS
+on:
+  push:
+    branches:
+      - 'unknown-domain-direct-launch/9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb'
+
+permissions:
+  contents: write
+
+jobs:
+  production-retry-macos:
+    if: github.ref_type == 'branch' && github.ref_name == 'unknown-domain-direct-launch/9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recheck exact closed-dependency lease
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          d="9dd08aab9d79e6bbf2552d15c405b8de526478c3a505e2397455150d372164cb"
+          lease_path=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json")
+          lease_raw=lease_path.read_bytes()
+          assert hashlib.sha256(lease_raw).hexdigest()==d
+          lease=json.loads(lease_raw)
+          def blob(p):
+              b=Path(p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          assert blob("canonical/runtime/unknown_domain_direct_production_once_v1.py")=="4218195d0cf49252ac6733c0bd80b673826ef95a"
+          assert blob(".github/workflows/unknown-domain-direct-one-use-production.yml")=="a4315a0ee28ae82145594b7a9abbd00bae61ceb9"
+          assert blob("canonical/runtime/unknown_domain_direct_hidden_generator_v1.py")=="f974a4594c78e74693c7ba5a19f131dfa481b937"
+          for p,expected in lease["exact_components"].items():
+              assert blob(p)==expected,(p,blob(p),expected)
+          print("exact closed-dependency macOS retry subject PASS")
+          PY
+      - name: Atomic claim then exactly one production population
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python -m canonical.runtime.unknown_domain_direct_production_once_v1
