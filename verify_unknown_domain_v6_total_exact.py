@@ -1,3 +1,4 @@
+# V2 frozen-gate deterministic workflow trigger: 2026-10-05
 #!/usr/bin/env python3
 from __future__ import annotations
 
