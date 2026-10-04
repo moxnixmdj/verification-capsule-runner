@@ -1,0 +1,26 @@
+name: Verify Brain Root3 post-synthesis V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root3_post_synthesis_v2/**"
+      - ".github/workflows/verify-brain-root3-post-synthesis-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify Root3 post-synthesis state
+        run: |
+          cd capsules/root3_post_synthesis_v2
+          python independent_verify.py | tee verdict.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: root3-post-synthesis-v2-verdict
+          path: capsules/root3_post_synthesis_v2/verdict.json
+          if-no-files-found: error
