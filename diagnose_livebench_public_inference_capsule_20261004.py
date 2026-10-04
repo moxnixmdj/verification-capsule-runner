@@ -13,7 +13,7 @@ EXPECTED_RUNTIME_CLOSURE={
 
 def git_blob_sha(path):
     data=path.read_bytes()
-    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\\0"+data).hexdigest()
+    return hashlib.sha1(b"blob "+str(len(data)).encode()+b"\x00"+data).hexdigest()
 
 observed_runtime_closure={name:git_blob_sha(SUB/name) for name in EXPECTED_RUNTIME_CLOSURE}
 assert observed_runtime_closure==EXPECTED_RUNTIME_CLOSURE,(observed_runtime_closure,EXPECTED_RUNTIME_CLOSURE)
