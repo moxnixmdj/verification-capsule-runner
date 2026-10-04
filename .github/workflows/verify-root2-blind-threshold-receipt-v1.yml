@@ -1,0 +1,19 @@
+name: Verify Root2 blind threshold receipt V1
+on:
+  pull_request:
+    paths:
+      - "subject/root2_blind_threshold_receipt_v1_20261004/**"
+      - "verify_root2_blind_threshold_receipt_v1.py"
+      - ".github/workflows/verify-root2-blind-threshold-receipt-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+      - name: Verify exact one-bit threshold certificate primitive
+        run: python verify_root2_blind_threshold_receipt_v1.py
