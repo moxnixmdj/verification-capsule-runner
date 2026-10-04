@@ -1,0 +1,19 @@
+name: Verify Root2 Closure Controller V2 Reconciled
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/ROOT2_CLOSURE_CONTROLLER_V2.json"
+      - "verify_root2_closure_controller_v2_reconciled.py"
+      - ".github/workflows/verify-root2-closure-controller-v2-reconciled.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_root2_closure_controller_v2_reconciled.py
