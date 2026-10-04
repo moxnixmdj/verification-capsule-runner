@@ -27,5 +27,6 @@ jobs:
           assert 'workflow_dispatch' not in p
           assert "unknown-domain-direct-launch/" in p
           assert "contents: write" in p
+          assert "python -m canonical.runtime.unknown_domain_direct_production_once_v1" in p
           print("launcher workflow firewall PASS")
           PY
