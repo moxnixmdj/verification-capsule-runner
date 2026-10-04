@@ -1,0 +1,26 @@
+name: Verify exact Unknown-Domain atomic transaction 37dc776
+on:
+  push:
+    branches:
+      - 'verify/unknown-domain-exact-push-37dc776'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 37dc776e9810e932a75befeb0566d078554d35cd
+      - name: Prove exact checked commit
+        run: |
+          test "$(git rev-parse HEAD)" = "37dc776e9810e932a75befeb0566d078554d35cd"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify atomic transaction launcher
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify exact lease and transaction invariants
+        run: python verify_unknown_domain_execution_lease.py
