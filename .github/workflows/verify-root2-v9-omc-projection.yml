@@ -1,0 +1,52 @@
+name: Verify Root2 V9 OMC projection
+on:
+  push:
+    branches:
+      - verify/root2-v9-omc-projection-20261004
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs
+        run: |
+          test "$(git hash-object verification_inputs/root2_v9.json)" = "5894eb38bdb72e922bed2d1e54f16a38a7adec11"
+          test "$(git hash-object verification_inputs/root2_v8_parent.json)" = "2eaeb74fe306ee2507145e26eb731f69f46e6153"
+          test "$(git hash-object verification_inputs/omc_activation_v9.json)" = "a0e6d98e11decb237a3230dfe1c85d2929a4126d"
+          test "$(git hash-object verification_inputs/omc_receipt_v9.json)" = "54c540c64e4615b02839122fb6a87136746ac322"
+      - name: Verify exact single-delta projection
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          load=lambda p: json.loads(Path(p).read_text())
+          v9=load("verification_inputs/root2_v9.json")
+          v8=load("verification_inputs/root2_v8_parent.json")
+          act=load("verification_inputs/omc_activation_v9.json")
+          rec=load("verification_inputs/omc_receipt_v9.json")
+          assert v9["exact_state"]==v8["exact_state"]
+          assert len(v9["projection_deltas"])==len(v8["projection_deltas"])+1
+          assert v9["projection_deltas"][:-1]==v8["projection_deltas"]
+          d=v9["projection_deltas"][-1]
+          assert d["target"]=="CODING_TB4_GE_66_4"
+          assert "OMC_CLOUD" in d["to"]
+          assert d["deletion"]=="NO_PREDICATE_OR_ATTAINABILITY_CREDIT"
+          assert v9["source_bindings"]["active_parent_v8"]["git_blob_sha"]=="2eaeb74fe306ee2507145e26eb731f69f46e6153"
+          assert v9["source_bindings"]["tb4_omc_documentary_carrier"]["activation_git_blob_sha"]=="a0e6d98e11decb237a3230dfe1c85d2929a4126d"
+          assert v9["source_bindings"]["tb4_omc_documentary_carrier"]["verification_git_blob_sha"]=="54c540c64e4615b02839122fb6a87136746ac322"
+          providers={x["provider"] for x in v9["tb4_carrier_portfolio"]["candidates"]}
+          assert {"Buildkite","OMC Cloud"} <= providers
+          assert any(x["provider"]=="CircleCI" for x in v9["tb4_carrier_portfolio"]["deleted"])
+          assert act["fresh_reality_authority"] is False
+          assert rec["fresh_reality_authority"] is False
+          assert v9["execution_authority"] is False
+          assert v9["promotion_authority"] is False
+          assert v9["fresh_reality_authority"] is False
+          assert v9["accounting"]==v8["accounting"]
+          print("ROOT2_V9_OMC_PROJECTION: PASS")
+          PY
