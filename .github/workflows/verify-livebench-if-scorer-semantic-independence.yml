@@ -1,0 +1,27 @@
+name: Verify LiveBench IF Scorer Semantic Independence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_if_scorer_semantic_independence.py
+      - .github/workflows/verify-livebench-if-scorer-semantic-independence.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify pinned frozen scorer semantics
+        run: python verify_livebench_if_scorer_semantic_independence.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-if-scorer-semantic-independence-receipt
+          path: livebench_if_scorer_semantic_independence_receipt.json
+          if-no-files-found: error
