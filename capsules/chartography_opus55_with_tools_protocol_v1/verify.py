@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import hashlib, html, json, re, urllib.request
+import hashlib, html, io, json, re, unicodedata, urllib.request
+from pypdf import PdfReader
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
@@ -19,7 +20,7 @@ EXPECTED={
 }
 URLS={
   "launch":"https://www.anthropic.com/claude-opus-5-5",
-  "system_card":"https://www.anthropic.com/claude-opus-5-5-system-card",
+  "system_card_pdf":"https://www-cdn.anthropic.com/fc1b44717c85dc068bc6ba5024219938094694bd/Claude%20Opus%205.5%20System%20Card.pdf",
   "surge_readme":"https://raw.githubusercontent.com/surge-ai/chartography/3f1bf837232d3918c2cc35c6e2418c9e70d2a57b/README.md",
 }
 
@@ -72,14 +73,19 @@ assert av["verified"]["tests_failed"]==0
 assert av["verified"]["tools_forbidden"] is True
 
 launch=fetch(URLS["launch"])
-card=fetch(URLS["system_card"])
+req=urllib.request.Request(URLS["system_card_pdf"],headers={"User-Agent":"Mozilla/5.0 ProjectBrainVerifier/1.0"})
+with urllib.request.urlopen(req,timeout=60) as r:
+    pdf=r.read(30_000_000)
+assert hashlib.sha256(pdf).hexdigest()==cand["primary_source_protocol"]["anthropic_system_card_pdf_sha256"]
+card=unicodedata.normalize("NFKC"," ".join((page.extract_text() or "") for page in PdfReader(io.BytesIO(pdf)).pages))
+card=" ".join(card.split())
 surge=fetch(URLS["surge_readme"],2_000_000)
 
 assert "Chartography" in launch and "89.0%" in launch and "with tools" in launch.lower()
+assert "adaptive thinking" in launch.lower()
+assert "max effort" in launch.lower()
 for phrase in [
   "Chartography",
-  "adaptive thinking",
-  "max effort",
   "evaluated with and without tools",
   "provided with a container",
   "image file and standard libraries installed",
