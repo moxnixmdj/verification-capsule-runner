@@ -1,0 +1,28 @@
+name: Verify LiveBench union25 kernel factorization V1
+
+on:
+  pull_request:
+    paths:
+      - "verify_livebench_union25_kernel_factorization_v1.py"
+      - ".github/workflows/verify-livebench-union25-kernel-factorization-v1.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone exact pinned LiveBench
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+          test "$(git -C /tmp/livebench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact checker import dependencies
+        run: python -m pip install --disable-pip-version-check --quiet immutabledict==4.2.1 langdetect==1.0.9 nltk==3.9.1
+      - name: Verify factorization against exact registry
+        run: python verify_livebench_union25_kernel_factorization_v1.py /tmp/livebench
