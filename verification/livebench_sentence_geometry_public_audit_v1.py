@@ -10,6 +10,9 @@ from __future__ import annotations
 import itertools
 import json
 import nltk
+from nltk.tokenize.punkt import PunktSentenceTokenizer
+
+_WORST_CASE_TOKENIZER = PunktSentenceTokenizer()
 
 PINNED_LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 PINNED_INSTRUCTIONS_UTIL_BLOB = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
@@ -18,8 +21,11 @@ POSTS = (None, "P.S.", "P.P.S")
 
 
 def sentence_count(text: str) -> int:
-    tokenizer = nltk.data.load("nltk:tokenizers/punkt/english.pickle")
-    return len(tokenizer.tokenize(text))
+    # Deliberately use empty Punkt parameters. The construction avoids every
+    # token-final period except the explicit sentence-ending punctuation, so
+    # abbreviation/collocation tables are non-load-bearing. Empty parameters
+    # are therefore a conservative boundary audit and need no downloaded model.
+    return len(_WORST_CASE_TOKENIZER.tokenize(text))
 
 
 def wrap_quote(text: str, quote: bool) -> str:
@@ -141,7 +147,7 @@ def main() -> None:
         "schema": "PROJECT_BRAIN_LIVEBENCH_SENTENCE_GEOMETRY_PUBLIC_AUDIT_V1",
         "livebench_commit": PINNED_LIVEBENCH_COMMIT,
         "instructions_util_blob": PINNED_INSTRUCTIONS_UTIL_BLOB,
-        "nltk_version": nltk.__version__,\n        "postscript_boundary_strategy": "MARKER_STITCHED_TO_ALPHABETIC_CONTINUATION",
+        "nltk_version": nltk.__version__,\n        "postscript_boundary_strategy": "MARKER_STITCHED_TO_ALPHABETIC_CONTINUATION",\n        "punkt_parameters": "EMPTY__CONSERVATIVE_BOUNDARY_AUDIT",
         "matrix_rows": len(rows),
         "max_sentence_count": maxima,
         "distribution": dist,
