@@ -1,0 +1,23 @@
+name: Verify LiveBench second epoch retry v1
+on:
+  pull_request:
+    paths:
+      - "subject/livebench_second_epoch_retry_v1/**"
+      - "verify_livebench_second_epoch_retry_v1.py"
+      - ".github/workflows/verify-livebench-second-epoch-retry-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact retry eligibility and activation scope
+        run: python verify_livebench_second_epoch_retry_v1.py
