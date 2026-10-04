@@ -6,6 +6,8 @@ on:
     paths:
       - "capsules/universal_learning_v6/**"
       - ".github/workflows/verify-brain-universal-learning-v6.yml"
+  push:
+    branches: ["verify/universal-learning-v6-mechanism-discovery-20261004"]
 
 permissions:
   contents: read
