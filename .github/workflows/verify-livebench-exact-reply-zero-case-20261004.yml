@@ -1,0 +1,27 @@
+name: Verify LiveBench exact reply zero-case
+
+on:
+  pull_request:
+    paths:
+      - 'verify_livebench_exact_reply_zero_case_20261004.py'
+      - '.github/workflows/verify-livebench-exact-reply-zero-case-20261004.yml'
+      - 'capsules/root2_livebench_astra_adapter_v1/**'
+      - 'canonical/runtime/goal_compiler.py'
+      - 'canonical/runtime/capability_planner.py'
+      - 'canonical/runtime/capability_proposal_generators.py'
+      - 'canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run exact reply zero-case probe
+        run: python verify_livebench_exact_reply_zero_case_20261004.py
