@@ -1,0 +1,23 @@
+name: Verify LiveBench legacy predecessor V2 replay
+on:
+  push:
+    branches:
+      - verify/livebench-legacy-predecessor-replay-v1
+  pull_request:
+    paths:
+      - verify_livebench_legacy_predecessor_v2_replay.py
+      - canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py
+      - canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py
+      - .github/workflows/verify-livebench-legacy-predecessor-v2-replay.yml
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check pyarrow==19.0.1
+      - run: python verify_livebench_legacy_predecessor_v2_replay.py
