@@ -1,0 +1,56 @@
+name: Verify LiveBench parameter boundary V1
+on:
+  push:
+    branches: [verify-livebench-synthetic7424-20261004-v1]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install checker dependencies
+        run: |
+          python -m pip install nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+          python - <<'PY'
+          import nltk
+          nltk.download('punkt', quiet=True)
+          nltk.download('punkt_tab', quiet=True)
+          PY
+      - name: Materialize frozen checker
+        run: |
+          mkdir -p /tmp/LiveBench/livebench/if_runner/instruction_following_eval
+          base=https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091/livebench/if_runner/instruction_following_eval
+          for f in instructions.py instructions_registry.py instructions_util.py __init__.py; do
+            curl -fsSL "$base/$f" -o "/tmp/LiveBench/livebench/if_runner/instruction_following_eval/$f"
+          done
+      - name: Run source-boundary audit
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/runtime/livebench_legacy15_parameter_boundary_audit_v1.py \
+            --livebench-root /tmp/LiveBench \
+            --output livebench_legacy15_parameter_boundary_receipt_v1.json
+      - name: Print compact receipt
+        if: always()
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('livebench_legacy15_parameter_boundary_receipt_v1.json')
+          if p.exists():
+              r=json.loads(p.read_text())
+              print(json.dumps({k:r.get(k) for k in ['status','scope','results','runtime_errors','exact_failed_instruction_ids','failed_identity_shapes_top']},indent=2,sort_keys=True))
+          PY
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-parameter-boundary-v1
+          path: subject/livebench_legacy15_joint_historical_replay_v1_20261004/livebench_legacy15_parameter_boundary_receipt_v1.json
+          if-no-files-found: warn
