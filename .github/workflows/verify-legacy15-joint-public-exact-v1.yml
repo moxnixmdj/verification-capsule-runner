@@ -1,5 +1,6 @@
 name: Verify deterministic legacy15 exact public Root1 V1
 # PEP668_REPAIRED_PUSH_TRIGGER_V1
+# QUEUE_ISOLATED_PUSH_TRIGGER_V2
 
 on:
   push:
