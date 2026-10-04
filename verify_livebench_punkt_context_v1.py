@@ -137,6 +137,90 @@ def verify_hermetic_nltk() -> dict:
     }
 
 
+def sha256_file(path: pathlib.Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def safe_member(name: str) -> pathlib.Path:
+    rel = pathlib.Path(name)
+    assert not rel.is_absolute() and ".." not in rel.parts, ("unsafe archive member", name)
+    return rel
+
+
+def verify_hermetic_nltk() -> dict:
+    assert tuple(sys.version_info[:3]) == PINNED_PYTHON, sys.version_info
+    assert importlib.metadata.version("nltk") == PINNED_NLTK_VERSION
+
+    wheel = pathlib.Path(os.environ["NLTK_WHEEL"]).resolve()
+    assert wheel.is_file(), wheel
+    assert sha256_file(wheel) == PINNED_NLTK_WHEEL_SHA256
+
+    import nltk
+
+    package_root = pathlib.Path(nltk.__file__).resolve().parent
+    site_root = package_root.parent
+    package_files = 0
+    with zipfile.ZipFile(wheel) as zf:
+        names = [
+            name for name in zf.namelist()
+            if name.startswith("nltk/") and not name.endswith("/")
+        ]
+        assert names
+        for name in names:
+            rel = safe_member(name)
+            installed = site_root / rel
+            assert installed.is_file(), ("missing installed nltk file", rel)
+            assert installed.read_bytes() == zf.read(name), ("installed nltk drift", rel)
+            package_files += 1
+
+    data_repo = pathlib.Path("/tmp/nltk_data_repo")
+    data_commit = run(
+        ["git", "-C", str(data_repo), "rev-parse", "HEAD"],
+        capture_output=True,
+    ).stdout.strip()
+    assert data_commit == PINNED_NLTK_DATA_COMMIT
+
+    data_root = pathlib.Path(os.environ["NLTK_DATA"]).resolve()
+    extracted_files = 0
+    archive_blobs = {}
+    for archive_name, expected_blob in PINNED_DATA_ARCHIVES.items():
+        archive = data_root / "tokenizers" / archive_name
+        assert archive.is_file(), archive
+        observed_blob = hash_object(archive)
+        assert observed_blob == expected_blob, (archive_name, observed_blob, expected_blob)
+        archive_blobs["tokenizers/" + archive_name] = observed_blob
+        with zipfile.ZipFile(archive) as zf:
+            for info in zf.infolist():
+                if info.is_dir():
+                    continue
+                rel = safe_member(info.filename)
+                extracted = data_root / "tokenizers" / rel
+                assert extracted.is_file(), ("missing extracted punkt file", extracted)
+                assert extracted.read_bytes() == zf.read(info.filename), (
+                    "extracted punkt drift",
+                    extracted,
+                )
+                extracted_files += 1
+
+    nltk.data.path[:] = [str(data_root)]
+    nltk.data.load("nltk:tokenizers/punkt/english.pickle")
+
+    return {
+        "python": ".".join(map(str, PINNED_PYTHON)),
+        "nltk_version": PINNED_NLTK_VERSION,
+        "nltk_wheel_sha256": PINNED_NLTK_WHEEL_SHA256,
+        "nltk_data_commit": PINNED_NLTK_DATA_COMMIT,
+        "nltk_data_archive_git_blobs": archive_blobs,
+        "verified_installed_nltk_package_file_count": package_files,
+        "verified_extracted_nltk_data_file_count": extracted_files,
+        "network_used_during_proof_step": False,
+    }
+
+
 def main() -> int:
     assert hash_object(ARCH) == ARCH_BLOB
     assert hash_object(FEAS) == FEAS_BLOB
