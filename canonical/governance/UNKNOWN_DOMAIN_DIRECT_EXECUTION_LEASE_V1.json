@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
   "date": "2026-10-04",
-  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__ENTRYPOINT_AND_TRANSITIVE_DEPENDENCY_REPAIR_INDEPENDENT_PASS__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__ENTRYPOINT_TRANSITIVE_INDEPENDENT_PASS__EVENT_SHA_REPAIR_PENDING_INDEPENDENT_VERIFICATION__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
   "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
   "authorized_leaves": [
     "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
@@ -61,7 +61,7 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
     "canonical/runtime/unknown_domain_direct_production_once_v1.py": "4218195d0cf49252ac6733c0bd80b673826ef95a",
-    ".github/workflows/unknown-domain-direct-one-use-production.yml": "a4315a0ee28ae82145594b7a9abbd00bae61ceb9",
+    ".github/workflows/unknown-domain-direct-one-use-production.yml": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
     "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937"
   },
   "limits": {
@@ -99,7 +99,8 @@
     "EXACTLY_ONE_27_CASE_PRODUCTION_POPULATION",
     "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
     "ZERO_INCREMENTAL_SPEND",
-    "TRANSITIVE_GENERATOR_V1_DEPENDENCY_MUST_BE_CONTENT_ADDRESSED"
+    "TRANSITIVE_GENERATOR_V1_DEPENDENCY_MUST_BE_CONTENT_ADDRESSED",
+    "PRODUCTION_WORKTREE_MUST_CHECKOUT_IMMUTABLE_CREATE_EVENT_SHA_NOT_MUTABLE_BRANCH_REF"
   ],
   "entrypoint_repair": {
     "defect": "CREATE_TRIGGER_REACHED_RUNNER_BUT_PATH_EXECUTION_SET_SYS_PATH_TO_CANONICAL_RUNTIME_AND_FAILED_IMPORT_CANONICAL_BEFORE_ATOMIC_CLAIM",
@@ -133,6 +134,13 @@
       "package_module_import": "PASS",
       "conclusion": "INDEPENDENT_EXECUTION_SURFACE_PASS",
       "postseal_exact_verification_required_before_launch": true
+    },
+    "event_sha_checkout_repair": {
+      "defect": "PRODUCTION_WORKFLOW_CHECKED_OUT_GITHUB_REF_SO_A_QUEUED_CREATE_EVENT_COULD_OBSERVE_LATER_BRANCH_MUTATIONS",
+      "repair": "CHECKOUT_GITHUB_SHA_FROM_THE_CREATE_EVENT_TO_PIN_THE_EXACT_CREATED_BRANCH_HEAD",
+      "repaired_workflow_git_blob_sha": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
+      "production_cases_consumed_before_repair": 0,
+      "independent_verification_required": true
     }
   }
 }
