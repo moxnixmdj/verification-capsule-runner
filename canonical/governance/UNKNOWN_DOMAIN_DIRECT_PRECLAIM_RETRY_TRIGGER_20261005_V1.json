@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRECLAIM_RETRY_TRIGGER_V1",
+  "date": "2026-10-05",
+  "status": "BRANCH_LOCAL_PUSH_TRIGGER_ONLY__ZERO_CASES__ZERO_CREDIT",
+  "execution_lease_sha256": "76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9",
+  "semantic_effect": "TRIGGER_THE_INDEPENDENTLY_VERIFIED_SAME_LEASE_PRECLAIM_RETRY_WORKFLOW_WITHOUT_CHANGING_LEASE_CANDIDATE_GENERATOR_SCORER_HARNESS_OR_CLAIM_KEY",
+  "authority": {
+    "fresh_reality": false,
+    "promotion": false,
+    "acceptance_credit": false
+  },
+  "accounting": {
+    "production_cases_generated": 0,
+    "incremental_spend_usd": 0
+  }
+}
