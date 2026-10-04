@@ -196,6 +196,7 @@ def main() -> int:
             "max_tokens": 1536,
             "fixed_seed_base": BASE_SEED,
             "adaptive_retry": False,
+            "reasoning_mode": "OFF_AT_SERVER_CHAT_TEMPLATE",
         },
         "scorer": {
             "livebench_repository_commit": LIVEBENCH_COMMIT,
