@@ -45,6 +45,10 @@ class HostileBytes(bytes):
         raise RuntimeError("INSTANCE_LEN_MUST_NOT_RUN")
     def __getitem__(self, key):
         raise RuntimeError("INSTANCE_GETITEM_MUST_NOT_RUN")
+    def __buffer__(self, flags):
+        raise RuntimeError("INSTANCE_BUFFER_MUST_NOT_RUN")
+    def __release_buffer__(self, view):
+        raise RuntimeError("INSTANCE_RELEASE_BUFFER_MUST_NOT_RUN")
 
 def exact_run(packet, c3, harness, scorer):
     rows = []
@@ -174,6 +178,7 @@ def main() -> int:
         "surrogate_codepoints_exhausted": 2048,
         "isinstance_str_subclass_override_hooks_bypassed": True,
         "isinstance_bytes_subclass_override_hooks_bypassed": True,
+        "python312_buffer_hook_adversary_included": True,
         "old_instance_strip_failure_reproduced": old_instance_strip_fails,
         "old_instance_encode_failure_reproduced": old_instance_encode_fails,
         "hostile_subclass_exact_scorer_cases": subclass_cases,
