@@ -82,7 +82,14 @@ jobs:
               print("V9_SYNTH_CHILD_STDOUT_JSON="+str(bool((cp.stdout or "").lstrip().startswith("{"))).lower())
           PY
 
+      - name: Verify generic control IR candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python verify_livebench_generic_control_ir_v1.py
+
       - name: Execute one-use V9 sanitized static replay
+        if: ${{ false }}
         shell: bash
         run: |
           set -euo pipefail
