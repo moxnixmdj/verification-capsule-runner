@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import itertools
+import importlib.util
 import json
 import pathlib
 import re
@@ -14,14 +15,26 @@ from collections import Counter
 LIVEBENCH_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
 REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
 ACTIVE15_BLOB = "0dbef76a6189a3cdc21ce3dae97ef6921e333b34"
+MANDATORY_LOSS_BLOB = "0f7f22e3ac694d1181e7956ed6552cee376c9d21"
+MANDATORY_FOOTPRINT_BLOB = "4e0c036e18265ad89206ab9c47ba8420ecee6069"
 ROOT = pathlib.Path(__file__).resolve().parent
 ACTIVE15_PATH = ROOT / "subject/livebench_composer_v2_20261005/canonical/runtime/livebench_legacy15_composition_archetypes_v1.py"
+SEMANTIC_ROOT = ROOT / "subject/livebench_union25_semantic_cut_20261005/canonical/runtime"
+MANDATORY_LOSS_PATH = SEMANTIC_ROOT / "livebench_union25_mandatory_loss_v1.py"
+MANDATORY_FOOTPRINT_PATH = SEMANTIC_ROOT / "livebench_union25_mandatory_footprint_v1.py"
 
 def run(cmd, **kw):
     return subprocess.run(cmd, check=True, text=True, **kw)
 
 def git_blob(path: pathlib.Path) -> str:
     return run(["git","hash-object",str(path)],capture_output=True).stdout.strip()
+
+def load_module(name: str, path: pathlib.Path):
+    spec=importlib.util.spec_from_file_location(name,path)
+    assert spec is not None and spec.loader is not None
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 def compatible(group, conflicts):
     s=set(group)
@@ -40,6 +53,10 @@ def enum_compatible(universe, conflicts, max_size=5, min_size=1):
 
 def main():
     assert git_blob(ACTIVE15_PATH) == ACTIVE15_BLOB
+    assert git_blob(MANDATORY_LOSS_PATH) == MANDATORY_LOSS_BLOB
+    assert git_blob(MANDATORY_FOOTPRINT_PATH) == MANDATORY_FOOTPRINT_BLOB
+    mandatory_loss=load_module("union25_mandatory_loss_subject",MANDATORY_LOSS_PATH)
+    mandatory_footprint=load_module("union25_mandatory_footprint_subject",MANDATORY_FOOTPRINT_PATH)
     sys.path.insert(0,str(ACTIVE15_PATH.parents[3]))
     from canonical.runtime import livebench_legacy15_composition_archetypes_v1 as active15
 
@@ -221,6 +238,58 @@ def main():
     semantic_loss_rules.append("CAPITAL_WORD_UPPER_BOUND_VS_UPPERCASE_SECTION_FLOOR")
     assert len(set(semantic_loss_rules))==4
 
+    # Execute the exact canonical Brain semantic-cut subjects against known
+    # source-derived boundary cases.
+    def contract(iid, **slots):
+        return {"instruction_id":iid,"slots":slots}
+
+    out=mandatory_loss.derive(
+        [contract("combination:repeat_prompt"),contract("punctuation:no_comma")],
+        prompt_to_repeat="alpha, beta",
+    )
+    assert {x["rule_id"] for x in out["mandatory_loss_rules"]}=={"REPEAT_PREFIX_COMMA_VS_NO_COMMA"}
+
+    out=mandatory_loss.derive([
+        contract("detectable_format:multiple_sections",section_spliter="Section",num_sections=2),
+        contract("change_case:english_capital"),
+    ])
+    assert {x["rule_id"] for x in out["mandatory_loss_rules"]}=={"UPPERCASE_ENGLISH_VS_MIXED_CASE_SECTION_HEADING"}
+
+    out=mandatory_loss.derive([
+        contract("detectable_format:multiple_sections",section_spliter="SECTION",num_sections=2),
+        contract("change_case:english_lowercase"),
+    ])
+    assert {x["rule_id"] for x in out["mandatory_loss_rules"]}=={"LOWERCASE_ENGLISH_VS_SECTION_HEADING_CASE"}
+
+    fp_cases=[
+      (
+        [
+          contract("keywords:frequency",keyword="help",relation="less than",frequency=1),
+          contract("startend:end_checker",end_phrase="Is there anything else I can help with?"),
+        ],
+        "KEYWORD_FREQUENCY_STRICT_UPPER_BOUND_BELOW_MANDATORY_LITERAL_FLOOR",
+      ),
+      (
+        [
+          contract("keywords:letter_frequency",letter="p",let_relation="less than",let_frequency=2),
+          contract("detectable_content:postscript",postscript_marker="P.P.S"),
+        ],
+        "LETTER_FREQUENCY_STRICT_UPPER_BOUND_BELOW_MANDATORY_LITERAL_FLOOR",
+      ),
+      (
+        [
+          contract("change_case:capital_word_frequency",capital_relation="less than",capital_frequency=4),
+          contract("detectable_format:multiple_sections",section_spliter="SECTION",num_sections=4),
+        ],
+        "CAPITAL_WORD_STRICT_UPPER_BOUND_BELOW_MANDATORY_SECTION_FLOOR",
+      ),
+    ]
+    footprint_rule_ids=[]
+    for contracts,expected_rule in fp_cases:
+        losses=mandatory_footprint.proved_upper_bound_losses(contracts)
+        assert len(losses)==1 and losses[0]["rule_id"]==expected_rule
+        footprint_rule_ids.append(expected_rule)
+
     receipt={
       "schema":"PROJECT_BRAIN_LIVEBENCH_UNION25_DELTA10_STRUCTURAL_FACTORIZATION_INDEPENDENT_VERIFICATION_V1",
       "status":"PASS__REGISTRY25_EXACTLY_FACTORS_AS_ACTIVE15_928_PLUS_DELTA10_156_EXTENSION_KERNELS__13631_EXPANDED_NEW_SETS",
@@ -239,6 +308,9 @@ def main():
         "zero_lexical_footprint_placeholder_atoms":placeholder_atoms,
         "zero_lexical_footprint_highlight_atoms":highlight_atoms,
         "new_sound_mandatory_loss_rule_ids":semantic_loss_rules,
+        "canonical_mandatory_loss_blob":MANDATORY_LOSS_BLOB,
+        "canonical_mandatory_footprint_blob":MANDATORY_FOOTPRINT_BLOB,
+        "canonical_mandatory_footprint_boundary_rule_ids":footprint_rule_ids,
         "mandatory_loss_rule_count":len(semantic_loss_rules),
         "complete_union25_loss_map":False
       },
