@@ -1,19 +1,19 @@
-name: Verify LiveBench composer V2
+name: Verify LiveBench semantic factorization V1
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - "subject/livebench_composer_v2_20261005/**"
-      - "verify_livebench_composer_v2.py"
-      - ".github/workflows/verify-livebench-composer-v2.yml"
+      - "subject/livebench_semantic_factorization_v1_20261005/**"
+      - "verify_livebench_semantic_factorization_v1.py"
+      - ".github/workflows/verify-livebench-semantic-factorization-v1.yml"
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -37,20 +37,19 @@ jobs:
           mkdir -p /tmp/nltk_data/tokenizers
           unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
           unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
-      - name: Run exact checker verification
+      - name: Run semantic-factorization closure
         env:
           NLTK_DATA: /tmp/nltk_data
-        run: python verify_livebench_composer_v2.py
+        run: python verify_livebench_semantic_factorization_v1.py
       - name: Print receipt
         if: always()
         run: |
-          if test -f livebench_composer_v2_verification.json; then
-            cat livebench_composer_v2_verification.json
+          if test -f livebench_semantic_factorization_v1_verification.json; then
+            cat livebench_semantic_factorization_v1_verification.json
           fi
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: livebench-composer-v2-verification
-          path: livebench_composer_v2_verification.json
+          name: livebench-semantic-factorization-v1
+          path: livebench_semantic_factorization_v1_verification.json
           if-no-files-found: error
-\n      - if: always()\n        uses: actions/upload-artifact@v4\n        with:\n          name: livebench-semantic-factorization-v1-from-composer-workflow\n          path: livebench_semantic_factorization_v1_verification.json\n          if-no-files-found: error\n
