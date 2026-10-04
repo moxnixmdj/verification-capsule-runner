@@ -1,0 +1,21 @@
+name: Verify Brain live-truth reconciliation 2026-10-05
+on:
+  push:
+    branches:
+      - verify/reconcile-live-truth-20261005-v1
+  pull_request:
+    paths:
+      - "canonical/**"
+      - ".github/workflows/verify-reconcile-live-truth-20261005-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify exact mirrored Brain blobs and reconciliation
+        run: python canonical/runtime/verify_reconcile_live_truth_20261005_v1.py

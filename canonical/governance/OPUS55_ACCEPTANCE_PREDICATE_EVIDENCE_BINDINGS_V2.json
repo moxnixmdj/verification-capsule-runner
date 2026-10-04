@@ -1,17 +1,17 @@
 {
   "schema": "PROJECT_BRAIN_OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2",
   "date": "2026-10-02",
-  "status": "AUTHORITY_RECONCILED__11_PROVED__4_BOUND_BLOCKERS__23_OTHER_UNRESOLVED__27_TOTAL_UNRESOLVED__ZERO_DIRECT_ACCEPTANCE_CASE_ACTIONS_READY",
+  "status": "AUTHORITY_RECONCILED__12_PROVED__26_UNRESOLVED__LIVEBENCH_DIRTY_TARGET_REPLAY_QUARANTINED__ROOT1_INACTIVE",
   "objective": "Bind only content-addressed atomic acceptance evidence. Until saturation is complete, benchmark and matched-case execution remains forbidden.",
   "saturation": {
-    "status": "RECOMPUTED_AFTER_INDEPENDENT_RECOVERY_SCOPE_COMPLETE_STRONGER_PROOF",
-    "source_snapshot_sha": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
-    "receipt": "canonical/verification/RECOVERY_OPUS55_ZERO_REALITY_PUBLIC_RUNNER_VERIFICATION_20261003_V2.json",
-    "proved_predicate_count": 11,
-    "bound_blocker_count": 4,
-    "unresolved_predicate_count": 27,
+    "status": "CURRENT_ZERO_REALITY_RECEIPT_RECONCILIATION__12_PROVED__26_UNRESOLVED__LIVEBENCH_EXACT200_CREDIT_REVOKED",
+    "source_snapshot_sha": "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+    "receipt": "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+    "proved_predicate_count": 12,
+    "bound_blocker_count": 3,
+    "unresolved_predicate_count": 26,
     "new_reality_units_consumed": 0,
-    "rule": "RECOVERY_THREE_PREDICATES_DISCHARGED_BY_HARDENED_INDEPENDENT_SCOPE_COMPLETE_STRONGER_PROOF__HISTORICAL_OBSERVED_BOUNDS_NON_LOAD_BEARING__ZERO_NEW_REALITY"
+    "rule": "LIVEBENCH_EXACT200_NUMERICAL_PASS_PRESERVED_AS_DIAGNOSTIC__ACTIVE_CONTAMINATION_AND_PREQUALIFICATION_PARTITION_RULES_MAKE_IT_DIRTY_EVIDENCE__FAIL_CLOSED_NOT_PROVEN"
   },
   "claims": [
     {
@@ -145,12 +145,26 @@
     {
       "predicate_id": "COMPOSITION_COMPONENT_SCOPED_PROOFS",
       "state": "EXTERNAL_BLOCKED",
-      "blocker": "INTERNAL_DEPENDENCY_GRAPH_INCOMPLETE",
-      "blocker_class": "INTERNAL_DEPENDENCY",
-      "discharge_condition": "ALL_ISOLATED_COMPONENTS_USED_BY_THE_FROZEN_MULTI_CAPABILITY_COMPOSITION_CLAIM_HAVE_SCOPE_COMPLETE_ACCEPTANCE_PROOF",
-      "basis": "ZERO_REALITY_DEPENDENCY_REDUCTION_EXECUTED__CURRENT_COMPONENT_ACCEPTANCE_GRAPH_CONTAINS_OPEN_OR_BLOCKED_COMPONENTS",
-      "source_path": "canonical/governance/OPUS55_DIRECT_SCOPE_AUDIT_RESIDUAL_DECOMPOSITION_V1.json",
-      "source_sha": "3ad720497287591fda2ebe9af17ee9d55ecd184e"
+      "blocker": "CURRENT_COMPONENT_SCOPE_GRAPH_INCOMPLETE__4_OF_12_SCOPED_PROVED__8_OPEN",
+      "blocker_class": "ROOT3_SCOPE_DEPENDENCY_RESIDUAL",
+      "discharge_condition": "CLOSE_THE_8_REMAINING_FROZEN_COMPONENT_INTERFACES_WITH_CURRENT_SCOPE_COMPLETE_ACCEPTANCE_RECEIPTS",
+      "basis": "INDEPENDENT_COMPOSITION_V6_CURRENT_AUTHORITY_PROVES_MEMORY_RECOVERY_DELEGATION_TOOL_DISCOVERY_SCOPED__PARENT_REMAINS_OPEN",
+      "source_path": "canonical/governance/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V6.json",
+      "source_sha": "5bb089582a5bc2ee4a44143c8d3a11e919fecdff",
+      "supporting_sources": [
+        {
+          "path": "canonical/verification/COMPOSITION_COMPONENT_PROOF_CURRENT_AUTHORITY_V6_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+          "sha": "28c5fe9e456cc6bd5171bb74ab291b043d7e85e4"
+        }
+      ],
+      "current_scoped_components": [
+        "memory",
+        "recovery",
+        "delegation",
+        "tool discovery"
+      ],
+      "open_component_count": 8,
+      "root_class": "ROOT3"
     },
     {
       "predicate_id": "ARTIFACT_UNCOVERED_FORMAT_SCOPE_AUDIT",
@@ -166,33 +180,59 @@
     {
       "predicate_id": "FINANCE_UNCOVERED_SCOPE_AUDIT",
       "state": "EXTERNAL_BLOCKED",
-      "blocker": "NO_VERIFIED_BRAIN_OWNED_OR_CONFIGURED_OPERATIVE_FINANCE_JUDGMENT_ROUTE_FOR_SUPERVISORY_COMPLIANCE_AND_DOCUMENT_INTERPRETATION_LEAVES",
-      "blocker_class": "INTERNAL_OPERATIVE_SOURCE_MISSING",
-      "discharge_condition": "ADMIT_A_BRAIN_OWNED_OR_PERMISSIVELY_INTERNALIZED_LOAD_BEARING_CONFIGURATION_THROUGH_SOURCE_GATE_V2__THEN_RUN_ONLY_THE_TWO_FROZEN_DIRECT_ORACLE_LEAVES",
-      "source_path": "canonical/governance/OPUS55_DIRECT_JUDGMENT_SOURCE_BLOCKERS_V1.json",
-      "source_sha": "a76ee612853c01a8605d2029387d407fb75571c5",
-      "family": "FINANCIAL_ANALYSIS"
+      "blocker": "VERIFIED_FINANCE_OPERATIVE_SOURCE_ADMITTED__TWO_FROZEN_DIRECT_ORACLE_LEAVES_REMAIN_UNEXECUTED",
+      "blocker_class": "ROOT3_DIRECT_SCOPE_EVIDENCE_RESIDUAL",
+      "discharge_condition": "RUN_AND_INDEPENDENTLY_VERIFY_ONLY_THE_TWO_FROZEN_FINANCE_DIRECT_ORACLE_LEAVES__NO_SOURCE_ADMISSION_WORK_REMAINS",
+      "source_path": "canonical/governance/POST_SOURCE_GATE_ROOT1_RECLASSIFICATION_V1.json",
+      "source_sha": "963127da19fae1f6dd7478d43076d8d9bd026c9a",
+      "family": "FINANCIAL_ANALYSIS",
+      "supporting_sources": [
+        {
+          "path": "canonical/verification/DUAL_JUDGMENT_SOURCE_GATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+          "sha": "6ec5f6d808c88bf9ea728fb7f259edc3b4ae5a51"
+        }
+      ],
+      "root_class": "ROOT3"
     },
     {
       "predicate_id": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
       "state": "EXTERNAL_BLOCKED",
-      "blocker": "NO_VERIFIED_BRAIN_OWNED_OR_CONFIGURED_OPERATIVE_UNKNOWN_DOMAIN_JUDGMENT_ROUTE_FOR_CROSS_DOMAIN_TRANSFER_AND_CALIBRATED_ABSTENTION",
-      "blocker_class": "INTERNAL_OPERATIVE_SOURCE_MISSING",
-      "discharge_condition": "INTERNALIZE_OR_BIND_A_LOAD_BEARING_BRAIN_CONFIGURATION__PASS_SOURCE_GATE_V2__THEN_RUN_ONLY_THE_TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES",
-      "source_path": "canonical/governance/OPUS55_DIRECT_JUDGMENT_SOURCE_BLOCKERS_V1.json",
-      "source_sha": "a76ee612853c01a8605d2029387d407fb75571c5",
-      "family": "UNKNOWN_DOMAIN_ADAPTATION"
+      "blocker": "VERIFIED_UNKNOWN_DOMAIN_OPERATIVE_SOURCE_ADMITTED__TWO_FROZEN_INFORMATION_SAFE_DIRECT_ORACLE_LEAVES_REMAIN_UNEXECUTED",
+      "blocker_class": "ROOT3_DIRECT_SCOPE_EVIDENCE_RESIDUAL",
+      "discharge_condition": "RUN_AND_INDEPENDENTLY_VERIFY_ONLY_THE_TWO_FROZEN_UNKNOWN_DOMAIN_DIRECT_ORACLE_LEAVES__NO_SOURCE_ADMISSION_WORK_REMAINS",
+      "source_path": "canonical/governance/POST_SOURCE_GATE_ROOT1_RECLASSIFICATION_V1.json",
+      "source_sha": "963127da19fae1f6dd7478d43076d8d9bd026c9a",
+      "family": "UNKNOWN_DOMAIN_ADAPTATION",
+      "supporting_sources": [
+        {
+          "path": "canonical/verification/DUAL_JUDGMENT_SOURCE_GATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+          "sha": "6ec5f6d808c88bf9ea728fb7f259edc3b4ae5a51"
+        }
+      ],
+      "root_class": "ROOT3"
     },
     {
       "predicate_id": "TOOL_LEARNING_SUCCESS_ROUTE_NONINFERIOR",
-      "state": "EXTERNAL_BLOCKED",
-      "blocker": "ABSOLUTE_SCOPE_COMPLETENESS_MISSING",
-      "blocker_class": "SCOPE_COMPLETENESS",
-      "discharge_condition": "PROVIDE_INDEPENDENTLY_VERIFIED_EXACT_COMPLETE_TARGET_CASE_UNIVERSE__EXHAUSTIVE_FINITE_SUPERSET__OR_UNIVERSAL_FORMAL_SCOPE_PROOF_FOR_THE_CLAIMED_PROTOCOL_POPULATION",
-      "source_path": "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json",
-      "source_sha": "ec2d931860e7cd7d9f73a658706f8c33fca3a10d",
+      "state": "PROVED",
+      "proof_kind": "ABSOLUTE_CEILING_WITH_UNIVERSAL_FORMAL_SCOPE_COMPLETENESS",
+      "source_path": "canonical/verification/TOOL_DISCOVERY_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+      "source_sha": "913d171b3c855000d322e183b142b3200eeaf0a9",
       "family": "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
-      "basis": "INDEPENDENT_SCOPE_FIREWALL_REVOKES_FINITE_SAMPLE_ABSOLUTE_DOMINANCE_AS_WHOLE_PROTOCOL_PROOF__RAW_FROZEN_SAMPLE_RESULT_REMAINS_VALID_BUT_SCOPE_INCOMPLETE",
+      "basis": "INDEPENDENT_PUBLIC_RUNNER_VERIFIED_BRAIN_AT_OBJECTIVE_CEILING_1_WITH_UNIVERSAL_FORMAL_SCOPE_COMPLETENESS__FINITE_180_OF_180_SAMPLE_PRESERVED_AS_NON_LOAD_BEARING_SAMPLE_EVIDENCE",
+      "independent_or_objective": true,
+      "scope_complete": true,
+      "objective_ceiling": true,
+      "brain_value": 1,
+      "objective_ceiling_value": 1,
+      "scope_completeness": {
+        "basis": "UNIVERSAL_FORMAL_SCOPE_PROOF",
+        "receipt": "canonical/verification/TOOL_DISCOVERY_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+        "receipt_sha": "f44e2378cf00f86a59159cb9d8edb35f0a7c27f4",
+        "formal_completeness": true,
+        "open_internet_tool_identity_completeness_claimed": false,
+        "all_admissible_target_inputs_proved": true,
+        "verification_interpretation": "INDEPENDENT_UNIVERSAL_SCOPE_PROVED_FOR_THE_FROZEN_HIDDEN_TOOL_PROTOCOL__COMPILED_AS_ALL_ADMISSIBLE_TARGET_INPUTS_PROVED_FOR_THIS_PREDICATE_SCOPE"
+      },
       "prior_sample_evidence": {
         "prior_state": "PROVED",
         "prior_proof_kind": "ABSOLUTE_CEILING",
@@ -202,12 +242,10 @@
         "prior_objective_ceiling_value": 1,
         "preserved_as_sample_evidence_only": true
       },
-      "reopened_by": {
+      "historical_reopen": {
         "path": "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json",
         "reason": "FINITE_PERFECT_SAMPLE_IS_NOT_PROTOCOL_WIDE_ABSOLUTE_BOUND_WITHOUT_SCOPE_COMPLETENESS"
-      },
-      "scope_complete": false,
-      "objective_ceiling": false
+      }
     },
     {
       "predicate_id": "DELEGATION_TERMINAL_SUCCESS_NONINFERIOR",
@@ -240,6 +278,15 @@
       "reopened_by": {
         "path": "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json",
         "reason": "FINITE_PERFECT_SAMPLE_IS_NOT_PROTOCOL_WIDE_ABSOLUTE_BOUND_WITHOUT_SCOPE_COMPLETENESS"
+      },
+      "independent_or_objective": true,
+      "independence_basis": {
+        "source_receipt": "canonical/verification/DELEGATION_ACCEPTANCE_REDUCTION_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+        "source_receipt_sha": "d04f2a8c5594d261158835db1cae3822411b6b23",
+        "source_receipt_status": "INDEPENDENT_PUBLIC_RUNNER_PASS__DELEGATION_ONLY_NEW_FAMILY_CLOSURE_ELIGIBLE__3_OF_19_COMPILED__ZERO_CREDIT_FROM_VERIFIER",
+        "universal_scope_receipt": "canonical/verification/DELEGATION_V4_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+        "universal_scope_receipt_sha": "955ac8f4bd0db2527bfbb465fc8252df6d916156",
+        "universal_scope_receipt_status": "INDEPENDENT_PUBLIC_RUNNER_PASS__CUMULATIVE_HISTORY_REPAIR_AND_UNIVERSAL_FORMAL_SCOPE_PROOF__ZERO_CREDIT_PENDING_ACCEPTANCE_REDUCTION"
       }
     },
     {
@@ -271,6 +318,33 @@
       "independent_or_objective": true,
       "scope_complete": true,
       "basis": "HARDENED_INDEPENDENT_ZERO_REALITY_RECOVERY_REDUCER_PROVES_EXACT_FROZEN_SCOPE_AT_OBJECTIVE_CEILING_OR_FLOOR_USING_UNIVERSAL_P1_THEOREM_AND_WHOLE_SCOPE_RESTORATION__HISTORICAL_RELATION_OBSERVED_BOUNDS_AND_QUARANTINED_TERMINAL_RUN_NON_LOAD_BEARING"
+    },
+    {
+      "predicate_id": "LIVEBENCH_IF_GE_65_7",
+      "state": "QUARANTINED_DIRTY_EVIDENCE__NOT_PROVED",
+      "proof_kind": "DIAGNOSTIC_EXACT_PUBLIC_TARGET_REPLAY",
+      "source_path": "canonical/verification/LIVEBENCH_EXACT200_DETERMINISTIC_PUBLIC_QUALIFICATION_20261004_V1.json",
+      "source_sha": "22ac08ad456b440ddfb9b40dd38781aa70ea2579",
+      "independent_or_objective": true,
+      "scope_complete": false,
+      "basis": "EXACT_84_40416666666667_PERCENT_SCORE_PRESERVED__BUT_TARGET_EXPOSURE_AND_PROTOCOL_PARTITION_RULE_UNDISCHARGED__CANNOT_SUPPLY_CLEAN_GENERALIZATION_CREDIT",
+      "supporting_sources": [
+        {
+          "repository": "moxnixmdj/verification-capsule-runner",
+          "pull_request": 2023,
+          "verified_checkout_sha": "da386e81a634397a3051361ba2736279c9cc8c48",
+          "workflow_run_id": 37238529382,
+          "workflow_job_id": 111542376760,
+          "receipt_path": "receipts/legacy15_joint_public_exact_v1.json",
+          "receipt_git_blob_sha": "165192ffa20e052f094371c04d15da6c9147a146"
+        }
+      ],
+      "scope_limit": "ROOT2_ONLY_OPEN_UNTIL_CLEAN_CASE_INDEPENDENT_STRONGER_PROOF_OR_PRECOMMITTED_CLEAN_EQUIVALENT_EVALUATION",
+      "credit_revoked_by": "canonical/governance/LIVEBENCH_EXACT200_CONTAMINATION_CREDIT_REVOCATION_20261004_V1.json",
+      "promotion_verification_path": "canonical/verification/LIVEBENCH_IF_EXACT_PUBLIC_THRESHOLD_PROMOTION_EXACT_BYTE_VERIFICATION_20261004_V1.json",
+      "promotion_verification_sha": "8b2071fb31f359b2f990d8c7da1fe6feeabfcb31",
+      "promotion_verification_run_id": 37239021521,
+      "promotion_verification_job_id": 111543787531
     }
   ],
   "rules": [
