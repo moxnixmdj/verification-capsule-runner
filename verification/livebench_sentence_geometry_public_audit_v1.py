@@ -45,7 +45,7 @@ def nth_candidate(
     if keyword_carriers:
         common.append("alphax betax gammax deltax epsilonx")
     if post:
-        common.append(post + " zxqv")
+        common.append(post + "zxqv")
     if common:
         ps[-1] += "\n" + "\n".join(common)
 
@@ -71,7 +71,7 @@ def plain_candidate(
     if keyword_carriers:
         lines.append("alphax betax gammax deltax epsilonx")
     if post:
-        lines.append(post + " zxqv")
+        lines.append(post + "zxqv")
     if not lines:
         lines.append("zxqv")
     prefix = "\n".join(lines)
@@ -141,7 +141,7 @@ def main() -> None:
         "schema": "PROJECT_BRAIN_LIVEBENCH_SENTENCE_GEOMETRY_PUBLIC_AUDIT_V1",
         "livebench_commit": PINNED_LIVEBENCH_COMMIT,
         "instructions_util_blob": PINNED_INSTRUCTIONS_UTIL_BLOB,
-        "nltk_version": nltk.__version__,
+        "nltk_version": nltk.__version__,\n        "postscript_boundary_strategy": "MARKER_STITCHED_TO_ALPHABETIC_CONTINUATION",
         "matrix_rows": len(rows),
         "max_sentence_count": maxima,
         "distribution": dist,
