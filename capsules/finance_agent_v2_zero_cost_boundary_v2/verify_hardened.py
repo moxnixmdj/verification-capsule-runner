@@ -1,4 +1,4 @@
-import base64, json, pathlib, re, subprocess, urllib.request
+import base64, json, pathlib, re, subprocess, urllib.request, shutil, tempfile, time
 
 SUBJECT="capsules/finance_agent_v2_zero_cost_boundary_v2/subject.json"
 EXPECTED="2e9406243e3ef8b0b1d4c00889c1f93ccf1b7e2a"
@@ -38,10 +38,23 @@ assert "two-hour time limit" in vals
 assert "weighted checks" in vals and "dealbreakers" in vals
 
 tavily=txt(fetch("https://www.tavily.com/pricing"))
-sec=txt(fetch("https://sec-api.io/pricing"))
 tiingo=txt(fetch("https://www.tiingo.com/pricing"))
 assert "1,000 api credits" in tavily and "no credit card required" in tavily and "requests will stop" in tavily
-assert re.search(r"100\s+api\s+calls",sec) and "free" in sec
+
+# sec-api pricing is client-rendered for GitHub-hosted raw HTTP. Verify the exact
+# first-party text in a real browser rather than weakening the 100-call claim.
+chrome=shutil.which("google-chrome") or shutil.which("chromium") or shutil.which("chromium-browser")
+assert chrome, "CHROMIUM_NOT_AVAILABLE"
+with tempfile.TemporaryDirectory() as td:
+    out=pathlib.Path(td)/"page.txt"
+    js=pathlib.Path(td)/"dump.html"
+    cmd=[chrome,"--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
+         "--virtual-time-budget=8000","--dump-dom","https://sec-api.io/pricing"]
+    proc=subprocess.run(cmd,text=True,capture_output=True,timeout=45)
+    assert proc.returncode==0,proc.stderr[-1000:]
+    sec=txt(proc.stdout)
+assert re.search(r"(first\s+)?100\s+api\s+calls",sec) and "free" in sec
+assert "free trial api key" in sec and re.search(r"100\s+calls\s+total",sec)
 assert "starter" in tiingo and ("$0/month" in tiingo or "$0 / month" in tiingo)
 assert "500" in tiingo and "50" in tiingo and "1000" in tiingo and "1 gb" in tiingo
 
