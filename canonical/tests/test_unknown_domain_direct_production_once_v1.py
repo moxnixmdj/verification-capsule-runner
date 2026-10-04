@@ -37,6 +37,41 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertEqual(out["claim_create_http_status"],201)
         self.assertEqual(out["claim_uniqueness_source"],"ATOMIC_CREATE_RESPONSE")
 
+    def test_claim_201_wrong_object_sha_seals_without_execution(self):
+        called={"execute":False}
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":ref,"object":{"sha":"d"*40}}
+        def fake_execute(**kwargs):
+            called["execute"]=True
+            return {}
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="c"*40,digest="e"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertFalse(called["execute"])
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"e"*64)
+        self.assertEqual(out["status"],"ATOMIC_CLAIM_RESPONSE_INVALID__ONE_USE_CLAIM_CONSUMED__NO_EXECUTION__FAIL_CLOSED")
+        self.assertEqual(out["production_cases_generated"],0)
+        self.assertFalse(out["replay_allowed"])
+
+    def test_post_claim_exception_is_hashed_not_persisted(self):
+        secret_text="synthetic-hidden-secret"
+        def fake_create(repo,token,ref,sha):
+            return 201,{"ref":ref,"object":{"sha":sha}}
+        def fake_execute(**kwargs):
+            raise RuntimeError(secret_text)
+        branch,out=prod.claim_then_execute(
+            repo="x/y",token="t",launch_sha="c"*40,digest="d"*64,
+            execute_fn=fake_execute,create_ref_fn=fake_create,
+        )
+        self.assertEqual(branch,"unknown-domain-direct-claims/"+"d"*64)
+        self.assertEqual(out["status"],"PRODUCTION_EXECUTION_EXCEPTION__ONE_USE_CLAIM_CONSUMED__FAIL_CLOSED")
+        self.assertEqual(out["exception_type"],"RuntimeError")
+        self.assertFalse(out["exception_message_persisted"])
+        self.assertNotIn(secret_text,json.dumps(out))
+        self.assertEqual(len(out["exception_message_sha256"]),64)
+        self.assertFalse(out["replay_allowed"])
+
     def test_qualification_packet_evaluation_is_sanitized(self):
         packet=generator.generate_qualification_fixture_population(beacon="LAUNCHER-VERIFY-0123456789")
         out=prod.evaluate_packet(packet)
@@ -47,32 +82,36 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertNotIn("evaluator_secret",raw)
 
 
-    def test_lease_does_not_require_impossible_self_digest(self):
-        with tempfile.TemporaryDirectory() as d:
-            root=Path(d)
-            payload=b"component-bytes"
-            (root/"component.bin").write_bytes(payload)
-            lease={
-                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
-                "target_predicate":prod.TARGET,
-                "authorized_leaves":sorted(prod.LEAVES),
-                "limits":{"production_populations":1,"production_cases":27,"replay_allowed":False,"replacement_allowed":False},
-                "resources":{"persistent_learned_bytes":0,"external_frontier_model_calls":0,"external_learned_capability_calls":0,"incremental_spend_usd":0},
-                "exact_components":{"component.bin":prod._git_blob(payload)},
-            }
-            old=prod.ROOT
-            try:
-                prod.ROOT=root
-                prod.validate_lease(lease,"f"*64)
-            finally:
-                prod.ROOT=old
+    def test_actual_lease_validates_with_closed_transitive_components(self):
+        lease=json.loads(prod.LEASE_PATH.read_text())
+        raw,digest=prod.lease_bytes_and_digest()
+        self.assertIn("canonical/runtime/unknown_domain_direct_hidden_generator_v1.py",lease["exact_components"])
+        prod.validate_lease(lease,digest)
+        self.assertEqual(prod.canonical_identity_from_lease(lease),lease["lease_identity"])
 
-    def test_lease_digest_is_raw_file_sha256(self):
+    def test_claim_identity_ignores_incidental_metadata(self):
+        lease=json.loads(prod.LEASE_PATH.read_text())
         with tempfile.TemporaryDirectory() as d:
-            p=Path(d)/"lease.json"; p.write_bytes(b'{"x":1}\n')
-            raw,digest=prod.lease_bytes_and_digest(p)
-            import hashlib
-            self.assertEqual(digest,hashlib.sha256(raw).hexdigest())
+            p1=Path(d)/"a.json"
+            p2=Path(d)/"b.json"
+            a=json.loads(json.dumps(lease))
+            b=json.loads(json.dumps(lease))
+            b["date"]="2099-12-31"
+            b["status"]="INCIDENTAL_METADATA_CHANGED"
+            p1.write_text(json.dumps(a,sort_keys=True))
+            p2.write_text(json.dumps(b,sort_keys=True))
+            _,d1=prod.lease_bytes_and_digest(p1)
+            _,d2=prod.lease_bytes_and_digest(p2)
+            self.assertEqual(d1,d2)
+
+    def test_claim_identity_changes_on_load_bearing_subject_mutation(self):
+        lease=json.loads(prod.LEASE_PATH.read_text())
+        original=prod.canonical_identity_from_lease(lease)
+        altered=json.loads(json.dumps(lease))
+        altered["exact_components"]["canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"]="0"*40
+        changed=prod.canonical_identity_from_lease(altered)
+        self.assertNotEqual(original,changed)
+
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
