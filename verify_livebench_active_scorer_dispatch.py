@@ -35,11 +35,14 @@ def main()->int:
     for x in required:
         assert x in gen, x
 
-    data=fetch(HF_URL)
+    p=Path("/tmp/livebench_if.parquet")
+    subprocess.run([
+        "curl","--fail","--location","--retry","3","--silent","--show-error",
+        HF_URL,"-o",str(p)
+    ],check=True)
+    data=p.read_bytes()
     assert len(data)==PARQUET_BYTES,(len(data),PARQUET_BYTES)
     assert hashlib.sha256(data).hexdigest()==PARQUET_SHA256
-    p=Path("/tmp/livebench_if.parquet")
-    p.write_bytes(data)
 
     # Deliberately metadata-only: no turns, prompt, kwargs, or instruction IDs.
     cols=["question_id","task","livebench_release_date","livebench_removal_date"]
