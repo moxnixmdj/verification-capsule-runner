@@ -1,0 +1,36 @@
+name: Verify LiveBench synthetic 7424 V1
+on:
+  push:
+    branches: [verify-livebench-synthetic7424-20261004-v1]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+      - name: Materialize pinned scorer files
+        run: |
+          mkdir -p /tmp/LiveBench/livebench/if_runner/instruction_following_eval
+          base=https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091/livebench/if_runner/instruction_following_eval
+          for f in instructions.py instructions_registry.py instructions_util.py __init__.py; do
+            curl -fsSL "$base/$f" -o "/tmp/LiveBench/livebench/if_runner/instruction_following_eval/$f"
+          done
+      - name: Run audit
+        working-directory: subject/livebench_legacy15_joint_historical_replay_v1_20261004
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/runtime/livebench_legacy15_end2end_exact_synthetic_audit_v2.py --livebench-root /tmp/LiveBench --output livebench_legacy15_synthetic7424_receipt_v1.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-synthetic7424-v1
+          path: subject/livebench_legacy15_joint_historical_replay_v1_20261004/livebench_legacy15_synthetic7424_receipt_v1.json
+          if-no-files-found: warn
