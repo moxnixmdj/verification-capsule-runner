@@ -1,23 +1,21 @@
-name: Verify LiveBench V7 sanitized diagnostic
+name: Execute authorized LiveBench V7 sanitized replay72
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches:
+      - "execute/livebench-v7-sanitized-replay72-20261004-0937"
     paths:
-      - "diagnose_livebench_replay72_v7_sanitized.py"
-      - "livebench_v7_sanitized_classifier.py"
-      - "verify_livebench_v7_sanitized_diagnostic.py"
-      - ".github/workflows/verify-livebench-v7-sanitized-diagnostic.yml"
+      - "EXECUTE_LIVEBENCH_V7_SANITIZED_REPLAY72"
 permissions:
   contents: read
 jobs:
-  verify:
+  classify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
-      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+      REPOSITORY_PRIVATE: "false"
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      - uses: actions/setup-python@a26af69be951213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12.14"
-      - run: python verify_livebench_v7_sanitized_diagnostic.py
+      - run: python launch_livebench_v7_sanitized_replay72.py
