@@ -1,0 +1,30 @@
+name: Verify H100 zero-learned Unknown-Domain direct V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/h100_zero_learned_unknown_domain_direct_candidate_v1.py'
+      - 'canonical/governance/H100_ZERO_LEARNED_UNKNOWN_DOMAIN_DIRECT_PREEXPOSURE_V1.json'
+      - 'canonical/tests/test_h100_zero_learned_unknown_domain_direct_candidate_v1.py'
+      - 'verify_h100_zero_learned_unknown_domain_direct_v1.py'
+      - '.github/workflows/verify-h100-zero-learned-unknown-domain-direct-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact frozen subject on all 27 TESTONLY cases
+        run: python verify_h100_zero_learned_unknown_domain_direct_v1.py
+      - name: Upload exact receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h100-zero-learned-unknown-domain-direct-v1
+          path: h100_zero_learned_unknown_domain_direct_receipt_v1.json
+          if-no-files-found: error
