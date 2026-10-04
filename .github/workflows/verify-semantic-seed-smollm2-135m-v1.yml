@@ -1,0 +1,54 @@
+name: Verify semantic seed SmolLM2 135M V1
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - SEMANTIC_SEED_SMOLLM2_135M_PREEXPOSURE_V1.json
+      - verify_semantic_seed_smollm2_135m_v1.py
+      - .github/workflows/verify-semantic-seed-smollm2-135m-v1.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Freeze exact candidate model
+        run: |
+          curl -L --fail --retry 3 -o smollm2-135m-instruct-q4_0.gguf \
+            'https://huggingface.co/QuantFactory/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q4_0.gguf?download=true'
+          echo 'f68203bfb98b1b1e8c64fac75fab10c4e36acac081609573b4df0fcc19c90dd9  smollm2-135m-instruct-q4_0.gguf' | sha256sum -c -
+      - name: Build pinned llama.cpp
+        run: |
+          git clone --depth 1 --branch b11379 https://github.com/ggml-org/llama.cpp.git llama.cpp
+          test "$(git -C llama.cpp rev-parse --short=7 HEAD)" = "1537a0a"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build --target llama-server -j2
+      - name: Start local model server
+        run: |
+          ./llama.cpp/build/bin/llama-server \
+            -m smollm2-135m-instruct-q4_0.gguf \
+            -c 2048 -ngl 0 --port 8080 > llama-server.log 2>&1 &
+          echo $! > llama-server.pid
+          for i in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat llama-server.log
+          exit 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run frozen public nonterminal semantic-seed gate
+        run: python verify_semantic_seed_smollm2_135m_v1.py
+      - name: Upload receipt and server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semantic-seed-smollm2-135m-v1-receipt
+          path: |
+            semantic_seed_smollm2_135m_receipt.json
+            llama-server.log
+          if-no-files-found: warn
