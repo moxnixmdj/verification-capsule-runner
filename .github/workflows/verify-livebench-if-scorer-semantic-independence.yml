@@ -1,0 +1,62 @@
+name: Verify LiveBench IF scorer semantic independence
+on:
+  push:
+    branches:
+      - verify/livebench-score-witness-v3-20261004
+    paths:
+      - ".github/workflows/verify-livebench-if-scorer-semantic-independence.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: verify/livebench-score-witness-v3-20261004
+      - name: Fetch and pin exact frozen public scorer
+        run: |
+          set -euo pipefail
+          base="https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091"
+          curl -fsSL "$base/livebench/process_results/instruction_following/utils.py" -o /tmp/livebench_if_utils.py
+          curl -fsSL "$base/livebench/if_runner/ifbench/evaluation_lib.py" -o /tmp/livebench_if_eval.py
+          test "$(git hash-object /tmp/livebench_if_utils.py)" = "8ce01747887ec0792c8f024e1972e34ece781676"
+          test "$(git hash-object /tmp/livebench_if_eval.py)" = "2c7bd1290031dbe4ae0f016c53255f4af0ec645b"
+      - name: Prove score depends only on registered instruction booleans
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          utils=Path("/tmp/livebench_if_utils.py").read_text(encoding="utf-8")
+          ev=Path("/tmp/livebench_if_eval.py").read_text(encoding="utf-8")
+          required_utils=[
+              "score_1 = 1 if follow_all_instructions else 0",
+              "score_2 = [1 if follow else 0 for follow in follow_instruction_list]",
+              "score_2 = sum(score_2) / len(score_2)",
+              "avg_score = (score_1 + score_2) / 2",
+              "result = evaluation_lib.test_instruction_following_strict(inp, response)",
+              "score = score_results(result.follow_all_instructions, result.follow_instruction_list)",
+          ]
+          required_eval=[
+              "instruction.check_following(response)",
+              "follow_all_instructions=all(is_following_list)",
+              "follow_instruction_list=is_following_list",
+          ]
+          for needle in required_utils:
+              assert needle in utils, needle
+          for needle in required_eval:
+              assert needle in ev, needle
+          # Exact blobs above are the semantic authority.  These negative checks
+          # guard against accidentally proving a different scoring pipeline.
+          strict=ev[ev.index("def test_instruction_following_strict"):ev.index("def test_instruction_following_loose")]
+          for forbidden in ("reference_answer", "semantic_score", "llm_judge", "model_judge"):
+              assert forbidden not in strict, forbidden
+          print("PASS: frozen LiveBench IF strict scorer has no independent semantic-quality term")
+          PY
+      - name: Verify exact V3 subject
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/instruction_constraint_compiler_v1.py)" = "a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"
+          test "$(git hash-object canonical/runtime/root2_livebench_if_astra_inference_adapter_v3.py)" = "ff977b2e34d551e5a2751852bb77d23c7c503647"
+          test "$(git hash-object canonical/tests/test_root2_livebench_if_astra_inference_adapter_v3.py)" = "647a216d934c939a4d10fcbab0e39e66369e195a"
