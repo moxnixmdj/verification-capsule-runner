@@ -50,6 +50,9 @@ def transform(seed: str, instruction: str) -> dict[str, Any]:
             error="CONSTRAINT_COMPILE_FAILED:" + type(exc).__name__,
         )
 
+    # Exact-output constraints are compatible with a seed-preserving route only
+    # when the seed is already exactly the requested output. Replacing the seed
+    # would delete semantic material and violate this module's contract.
     if constraints.exact_response is not None and constraints.exact_response != seed:
         return _result(
             "FAIL_CLOSED",
@@ -62,6 +65,8 @@ def transform(seed: str, instruction: str) -> dict[str, Any]:
     candidate = seed
     applied: list[str] = []
 
+    # Literal wrappers are the only transformations performed here. They leave
+    # every seed byte intact and in order, so the seed is trivially recoverable.
     if constraints.prefix is not None and not candidate.startswith(constraints.prefix):
         candidate = constraints.prefix + candidate
         applied.append("PREFIX")
@@ -69,6 +74,9 @@ def transform(seed: str, instruction: str) -> dict[str, Any]:
         candidate = candidate + constraints.suffix
         applied.append("SUFFIX")
 
+    # Case conversion is deliberately not performed. It is lossy in general
+    # ("US" vs "us", proper names, identifiers, etc.). If the seed/wrappers
+    # already satisfy a case constraint, validation accepts them unchanged.
     ok, errors = compiler.validate_response(candidate, constraints)
     if not ok:
         return _result(
@@ -81,6 +89,8 @@ def transform(seed: str, instruction: str) -> dict[str, Any]:
             seed_verbatim_preserved=(seed in candidate),
         )
 
+    # Defensive invariant. Future edits cannot accidentally broaden PASS without
+    # tripping this check.
     if seed not in candidate:
         return _result(
             "FAIL_CLOSED",
