@@ -66,7 +66,8 @@ assert policy["execution_authority"] is False
 token=os.environ.get("GH_TOKEN")
 repo=os.environ.get("GITHUB_REPOSITORY")
 target_sha=os.environ.get("GITHUB_SHA")
-if not token or not repo or not target_sha:
+run_id=os.environ.get("GITHUB_RUN_ID")
+if not token or not repo or not target_sha or not run_id:
     raise SystemExit("GITHUB_ENV_REQUIRED")
 
 lease={
@@ -76,7 +77,7 @@ lease={
     "benchmark_id":"VERIFIER_ATOMIC_ONE_USE_V1",
     "target_predicate":"VERIFIER_ONLY",
     "execution_kind":"DISPOSABLE_REAL_GIT_REF_TRANSACTION",
-    "scope_id":"EXACT_SUBJECT_"+EXPECTED[SUB/"canonical/runtime/atomic_one_use_execution_claim_v1.py"],
+    "scope_id":"VERIFIER_RUN_"+run_id+"_EXACT_SUBJECT_"+EXPECTED[SUB/"canonical/runtime/atomic_one_use_execution_claim_v1.py"],
     "max_case_count":0,
     "new_case_exposure":False,
   },
@@ -105,10 +106,10 @@ def request(method,url,payload=None):
         except Exception: parsed={"raw":body.decode(errors="replace")}
         return e.code,parsed
 
-# Cleanup any stale verifier-only ref from an aborted prior verification. This is
-# not a production lease and uses a verifier-only benchmark id/scope.
+# The verifier scope includes GITHUB_RUN_ID, so the first create is fresh
+# without any absence probe or pre-delete. Uniqueness is established only by
+# the atomic create response.
 delete_path=urllib.parse.quote(claim_ref.removeprefix("refs/"),safe="/")
-request("DELETE",api+"/git/refs/"+delete_path)
 
 status1,body1=request("POST",api+"/git/refs",{"ref":claim_ref,"sha":target_sha})
 if status1!=201:
