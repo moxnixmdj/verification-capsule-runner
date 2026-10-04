@@ -12,7 +12,7 @@ ROOT=Path(__file__).resolve().parent
 SUB=ROOT/"subject"/"livebench_constraint_compiler_v2_20261004"
 EXPECTED={
     "instruction_constraint_compiler_v1.py":"a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f",
-    "instruction_constraint_compiler_v2.py":"4d7169fed49014c83369958ba9975d57098b4e35",
+    "instruction_constraint_compiler_v2.py":"c93add618e2a2cde56df002e438433edcfe9b9e0",
     "test_instruction_constraint_compiler_v2.py":"096f92efe9b64a4f246ce550fbbeecb7acb0f552",
 }
 
