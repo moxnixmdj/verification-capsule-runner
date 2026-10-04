@@ -1,0 +1,30 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V10_REPLAY72_ACTIVATION_V1",
+  "date": "2026-10-04",
+  "status": "ACTIVE__CONTENT_ADDRESSED_EXECUTION_PROJECTION__ONE_USE_REPLAY72_ONLY__ZERO_CREDIT",
+  "target_predicate": "LIVEBENCH_IF_GE_65_7",
+  "epoch_digest_sha256": "a71f24f79df6b6be6e910efb1299776ac9fede9e78539577695d6e386fc2eb52",
+  "candidate_git_blob_sha": "7d42814e46abda96eed0fb1929bef5a829bd2236",
+  "wrapper_git_blob_sha": "56ea114d59f0309bc14ef0504a44bec1f808e876",
+  "launcher_git_blob_sha": "2d3b9ad4e3f4f02af56f402733a8d8bb04ab79c0",
+  "authority": {
+    "replay72": true,
+    "new_case_exposure": false,
+    "fresh_reality": false,
+    "promotion": false,
+    "acceptance_credit": false
+  },
+  "replay_scope": {
+    "already_exposed_prefix_only": true,
+    "replay_prefix_limit": 72,
+    "new_case_exposure": false,
+    "case_73_or_later": false
+  },
+  "one_use_claim_ref": "refs/heads/livebench-v10-claims/a71f24f79df6b6be6e910efb1299776ac9fede9e78539577695d6e386fc2eb52",
+  "hard_rules": [
+    "ATOMIC_CLAIM_MUST_PRECEDE_DATASET_READ",
+    "DUPLICATE_OR_NON201_ABORT_BEFORE_DATASET_READ",
+    "NO_CASE_73_OR_LATER",
+    "NO_ACCEPTANCE_OR_PROMOTION_CREDIT"
+  ]
+}
