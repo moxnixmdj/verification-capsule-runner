@@ -1,0 +1,28 @@
+name: Verify LiveBench Public Parameter Truth
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_public_parameter_truth.py
+      - .github/workflows/verify-livebench-public-parameter-truth.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute from pinned public upstream bytes
+        run: python verify_livebench_public_parameter_truth.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-public-parameter-truth-receipt
+          path: livebench_public_parameter_truth_receipt.json
+          if-no-files-found: error
