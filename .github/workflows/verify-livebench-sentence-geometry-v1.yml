@@ -6,6 +6,7 @@ on:
     paths:
       - 'verification/livebench_sentence_geometry_public_audit_v1.py'
       - '.github/workflows/verify-livebench-sentence-geometry-v1.yml'
+      - 'verification/LIVEBENCH_SENTENCE_GEOMETRY_TRIGGER_20261005.txt'
 
 permissions:
   contents: read
