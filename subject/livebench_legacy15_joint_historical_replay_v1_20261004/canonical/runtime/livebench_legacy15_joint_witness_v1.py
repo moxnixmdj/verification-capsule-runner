@@ -143,6 +143,12 @@ def _build_general(constraints: list[dict[str, Any]]) -> str:
 
     if bullets:
         n = int(_slots(bullets)["num_bullets"])
+        # Quotation wraps the whole response. If a bullet is the first visible
+        # line, the leading quote prevents the frozen checker from matching
+        # ^\s*\*. Prefix one punctuation-free safe line so every bullet remains
+        # a true line-start after outer quoting.
+        if quote and not body_parts:
+            body_parts.append(filler)
         body_parts.extend(f"* {filler}{i}" for i in range(n))
 
     # Sentence requirement is isolated from exact/nth paragraphs by the frozen
