@@ -1,0 +1,32 @@
+name: Diagnose Retrieval V17 Maven JSON lineage
+on:
+  push:
+    branches:
+      - verify/retrieval-v17-maven-json-lineage-20261004
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact V17 runtime
+        run: test "$(git hash-object canonical/runtime/retrieval_live_provider_arena_v17.py)" = "18ce57fa697eab157540747c612aa41c730a433c"
+      - name: Run diagnostic without masking result
+        run: |
+          set +e
+          PYTHONPATH=. python canonical/runtime/retrieval_live_provider_arena_v17.py > v17_diag.json
+          code=$?
+          cat v17_diag.json
+          echo "V17_EXIT_CODE=$code"
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-v17-diagnostic
+          path: v17_diag.json
+          if-no-files-found: error
