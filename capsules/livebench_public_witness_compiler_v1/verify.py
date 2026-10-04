@@ -8,18 +8,28 @@ import json
 import pathlib
 import re
 import string
+import sys
 import urllib.request
 
 import nltk
 
 ROOT = pathlib.Path(__file__).resolve().parent
-SUBJECT = ROOT / "subject" / "livebench_public_witness_compiler_v1.py"
-EXPECTED_SUBJECT_BLOB = "25acb3193166af8d394ac3fdb4bd89400a1f76d7"
+SUBJECT_DIR = ROOT / "subject"
+COMPILER = SUBJECT_DIR / "livebench_public_witness_compiler_v1.py"
+DETECTOR = SUBJECT_DIR / "livebench_public_description_detector_v1.py"
+EXPECTED_COMPILER_BLOB = "f381c46d011c03b25ada9e8780308463fbf6c290"
+EXPECTED_DETECTOR_BLOB = "ffe3569f0cf0c6dedc4fc5714ae435fd5c5691d9"
 PIN = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+
 LEGACY_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/instruction_following_eval/instructions.py"
 MODERN_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/ifbench/instructions.py"
+LEGACY_REGISTRY_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/instruction_following_eval/instructions_registry.py"
+MODERN_REGISTRY_URL = f"https://raw.githubusercontent.com/LiveBench/LiveBench/{PIN}/livebench/if_runner/ifbench/instructions_registry.py"
+
 LEGACY_BLOB = "4997bab885a676d92545fd91a9a20b48d234a2b2"
 MODERN_BLOB = "02b2dfeb50f036b89bec3df34522c73f756d8f44"
+LEGACY_REGISTRY_BLOB = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+MODERN_REGISTRY_BLOB = "adfed4832877566e62970257b50c6fa32c302fb2"
 
 
 def git_blob(data: bytes) -> str:
@@ -30,6 +40,69 @@ def fetch(url: str) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": "project-brain-independent-verifier"})
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.read()
+
+
+def load_subject(name: str, path: pathlib.Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def literal_string_expr(node: ast.AST) -> str:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return literal_string_expr(node.left) + literal_string_expr(node.right)
+    raise AssertionError(("NON_LITERAL_DESCRIPTION_PATTERN", ast.dump(node)))
+
+
+def registered_classes(registry_source: str) -> list[str]:
+    tree = ast.parse(registry_source)
+    value = None
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "INSTRUCTION_DICT" for t in node.targets):
+            value = node.value
+            break
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "INSTRUCTION_DICT":
+            value = node.value
+            break
+    assert isinstance(value, ast.Dict), ast.dump(value) if value else None
+    out = []
+    for item in value.values:
+        assert isinstance(item, ast.Attribute), ast.dump(item)
+        assert isinstance(item.value, ast.Name) and item.value.id == "instructions", ast.dump(item)
+        out.append(item.attr)
+    return out
+
+
+def description_patterns(source: str, class_name: str) -> list[str]:
+    tree = ast.parse(source)
+    cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == class_name)
+    fn = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "build_description")
+    out = []
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Assign):
+            continue
+        for target in node.targets:
+            if (
+                isinstance(target, ast.Attribute)
+                and target.attr == "_description_pattern"
+                and isinstance(target.value, ast.Name)
+                and target.value.id == "self"
+            ):
+                out.append(literal_string_expr(node.value))
+    assert out, class_name
+    return out
+
+
+def module_constant(source: str, name: str):
+    tree = ast.parse(source)
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+            return ast.literal_eval(node.value)
+    raise AssertionError(("MISSING_MODULE_CONSTANT", name))
 
 
 class Util:
@@ -50,12 +123,9 @@ class Instruction:
     pass
 
 
-def exact_class(source: str, name: str):
+def exact_class(source: str, name: str, legacy_comparison_relation=None):
     tree = ast.parse(source)
-    node = next(
-        n for n in tree.body
-        if isinstance(n, ast.ClassDef) and n.name == name
-    )
+    node = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == name)
     module = ast.Module(body=[node], type_ignores=[])
     ns = {
         "Instruction": Instruction,
@@ -65,28 +135,65 @@ def exact_class(source: str, name: str):
         "string": string,
         "nltk": nltk,
     }
+    if legacy_comparison_relation is not None:
+        ns["_COMPARISON_RELATION"] = legacy_comparison_relation
     exec(compile(ast.fix_missing_locations(module), f"<pinned:{name}>", "exec"), ns)
     return ns[name]
 
 
-def load_candidate():
-    data = SUBJECT.read_bytes()
-    assert git_blob(data) == EXPECTED_SUBJECT_BLOB, (git_blob(data), EXPECTED_SUBJECT_BLOB)
-    spec = importlib.util.spec_from_file_location("candidate", SUBJECT)
-    assert spec and spec.loader
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def main() -> int:
+    compiler_bytes = COMPILER.read_bytes()
+    detector_bytes = DETECTOR.read_bytes()
+    assert git_blob(compiler_bytes) == EXPECTED_COMPILER_BLOB
+    assert git_blob(detector_bytes) == EXPECTED_DETECTOR_BLOB
+
     legacy_raw = fetch(LEGACY_URL)
     modern_raw = fetch(MODERN_URL)
+    legacy_registry_raw = fetch(LEGACY_REGISTRY_URL)
+    modern_registry_raw = fetch(MODERN_REGISTRY_URL)
     assert git_blob(legacy_raw) == LEGACY_BLOB
     assert git_blob(modern_raw) == MODERN_BLOB
+    assert git_blob(legacy_registry_raw) == LEGACY_REGISTRY_BLOB
+    assert git_blob(modern_registry_raw) == MODERN_REGISTRY_BLOB
+
     legacy = legacy_raw.decode("utf-8")
     modern = modern_raw.decode("utf-8")
-    candidate = load_candidate()
+    legacy_registry = legacy_registry_raw.decode("utf-8")
+    modern_registry = modern_registry_raw.decode("utf-8")
+
+    sys.path.insert(0, str(SUBJECT_DIR))
+    detector = load_subject("livebench_public_description_detector_v1", DETECTOR)
+    compiler = load_subject("livebench_public_witness_compiler_v1", COMPILER)
+
+    legacy_classes = registered_classes(legacy_registry)
+    modern_classes = registered_classes(modern_registry)
+    assert len(legacy_classes) == 25
+    assert len(modern_classes) == 58
+    assert len(legacy_classes) + len(modern_classes) == 83
+    exact_registered = set(legacy_classes + modern_classes)
+    assert exact_registered == set(detector.PUBLIC_DESCRIPTION_PATTERNS)
+
+    pattern_count = 0
+    for name in legacy_classes:
+        expected = description_patterns(legacy, name)
+        got = detector.PUBLIC_DESCRIPTION_PATTERNS[name]
+        assert got["family"] == "legacy"
+        assert sorted(got["patterns"]) == sorted(expected), (name, got["patterns"], expected)
+        pattern_count += len(expected)
+    for name in modern_classes:
+        expected = description_patterns(modern, name)
+        got = detector.PUBLIC_DESCRIPTION_PATTERNS[name]
+        assert got["family"] == "modern"
+        assert sorted(got["patterns"]) == sorted(expected), (name, got["patterns"], expected)
+        pattern_count += len(expected)
+    assert pattern_count == 86
+
+    self_cov = detector.verify_registry_self_coverage()
+    assert self_cov["status"] == "PASS", self_cov
+    assert self_cov["checker_count"] == 83
+    assert self_cov["pattern_count"] == 86
+
+    comparison_relation = module_constant(legacy, "_COMPARISON_RELATION")
 
     cases = [
         ("Task. Answer with at least 7 words.", "legacy:NumberOfWords", legacy, "NumberOfWords",
@@ -115,7 +222,7 @@ def main() -> int:
         ("Task. Include keywords ['alpha', 'beta'] in the response.", "legacy:KeywordChecker", legacy, "KeywordChecker",
          {"_keywords": ["alpha", "beta"]}),
         ("Task. Do not include keywords ['forbidden', 'ban'] in the response.", "legacy:ForbiddenWords", legacy, "ForbiddenWords",
-         {"_forbidden_words": ["ban", "forbidden"]}),
+         {"_forbidden_words": ["forbidden", "ban"]}),
         ("Task. In your response, the word alpha should appear at least 3 times.", "legacy:KeywordFrequencyChecker", legacy, "KeywordFrequencyChecker",
          {"_keyword": "alpha", "_frequency": 3, "_comparison_relation": "at least"}),
         ("Task. Your answer must contain exactly 4 bullet points.", "legacy:BulletListChecker", legacy, "BulletListChecker",
@@ -128,7 +235,7 @@ def main() -> int:
 
     verified = []
     for prompt, expected_route, source, class_name, attrs in cases:
-        out = candidate.compile_witness(prompt)
+        out = compiler.compile_witness(prompt)
         assert out["status"] == "PASS", (prompt, out)
         assert out["matched_checkers"] == [expected_route], (expected_route, out)
         assert out["terminal_case_content_used"] is False
@@ -137,7 +244,12 @@ def main() -> int:
         assert out["incremental_spend_usd"] == 0
         assert out["model_dependency_count"] == 0
         assert out["terminal_authority"] is False
-        cls = exact_class(source, class_name)
+
+        cls = exact_class(
+            source,
+            class_name,
+            comparison_relation if source is legacy else None,
+        )
         checker = cls()
         for key, value in attrs.items():
             setattr(checker, key, value)
@@ -148,37 +260,46 @@ def main() -> int:
         }
         verified.append(expected_route)
 
-    unknown = candidate.compile_witness("Task. Use an unsupported public instruction form.")
-    assert unknown["status"] == "BLOCKED"
-    assert unknown["reason"] == "NO_SUPPORTED_PUBLIC_DESCRIPTION"
+    unsupported = compiler.compile_witness(
+        "Task. Use at least 7 unique words in the response."
+    )
+    assert unsupported["status"] == "BLOCKED", unsupported
+    assert unsupported["reason"] == "UNSUPPORTED_PUBLIC_CHECKER_DETECTED", unsupported
+    assert "UniqueWordCountChecker" in unsupported["detected_unsupported_checkers"]
 
-    conjunction = candidate.compile_witness(
+    conjunction = compiler.compile_witness(
         "Task. Answer with at least 5 words. Wrap your entire response with double quotation marks."
     )
-    assert conjunction["status"] == "BLOCKED"
-    assert conjunction["reason"] == "MULTI_CHECKER_COMBINATION_NOT_PROVED"
+    assert conjunction["status"] == "BLOCKED", conjunction
+    assert conjunction["reason"] == "MULTI_CHECKER_COMBINATION_NOT_PROVED", conjunction
 
     verdict = {
-        "schema": "PROJECT_BRAIN_LIVEBENCH_PUBLIC_WITNESS_COMPILER_INDEPENDENT_VERIFICATION_V1",
+        "schema": "PROJECT_BRAIN_LIVEBENCH_PUBLIC_WITNESS_COMPILER_INDEPENDENT_VERIFICATION_V2",
         "status": "PASS",
-        "brain_candidate_blob": EXPECTED_SUBJECT_BLOB,
+        "brain_compiler_blob": EXPECTED_COMPILER_BLOB,
+        "brain_detector_blob": EXPECTED_DETECTOR_BLOB,
         "pinned_livebench_commit": PIN,
         "pinned_public_source_blobs": {
             "legacy_instructions": LEGACY_BLOB,
             "modern_instructions": MODERN_BLOB,
+            "legacy_registry": LEGACY_REGISTRY_BLOB,
+            "modern_registry": MODERN_REGISTRY_BLOB,
         },
+        "active_registry_checker_count": 83,
+        "exact_description_pattern_count": pattern_count,
+        "detector_registry_exactly_matches_pinned_active_registries_and_pattern_assignments": True,
+        "detector_synthetic_pattern_self_coverage": True,
         "exact_public_checker_body_pass_count": len(verified),
         "exact_public_checker_body_passes": verified,
-        "unsupported_prompt_fail_closed": True,
+        "unsupported_public_checker_fail_closed": True,
         "recognized_multi_checker_fail_closed": True,
         "terminal_cases_consumed": 0,
         "terminal_case_content_used": False,
         "hidden_instruction_ids_or_kwargs_used": False,
         "acceptance_credit_delta": 0,
         "promotion_authority": False,
-        "hard_nonclaims": [
-            "DOES_NOT_PROVE_COMPLETE_DETECTION_OF_ALL_83_PUBLIC_CHECKER_DESCRIPTIONS",
-            "DOES_NOT_PROVE_MULTI_CHECKER_CONJUNCTION_SOUNDNESS",
+        "remaining_hard_nonclaims": [
+            "DOES_NOT_PROVE_JOINT_WITNESS_CONSTRUCTION_FOR_MULTI_CHECKER_PROMPTS",
             "DOES_NOT_PROVE_FOUR_OR_MORE_TERMINAL_CASE_RECOVERIES",
             "DOES_NOT_CLOSE_LIVEBENCH_IF_GE_65_7",
         ],
