@@ -1,0 +1,33 @@
+{
+  "schema":"PROJECT_BRAIN_H100_OEWN_SENSE_GOLD_V1",
+  "date":"2026-10-04",
+  "status":"FROZEN_AFTER_INVENTORY_EXPOSURE_BEFORE_CANDIDATE_DISAMBIGUATOR_IMPLEMENTATION__ZERO_CREDIT",
+  "source":{"lexicon":"oewn:2025","inventory_workflow_run_id":37190476845,"inventory_job_id":111401401534},
+  "adjudication_rule":"SELECT_ONLY_SYNSETS_WHOSE_PUBLISHED_DEFINITION_IS_SEMANTICALLY_COMPATIBLE_WITH_THE_PREEXPOSED_CONTEXT_AND_INTENT__IF_NO_INVENTORY_SENSE_EXPRESSES_THE_REQUIRED_DOMAIN_MEANING_MARK_REQUIRED_SENSE_MISSING_INSTEAD_OF_FORCING_A_CLOSE_SENSE",
+  "tasks":[
+    {"id":"INPUT_SYSTEM_DATA","lemma":"input","gold_status":"REQUIRED_SENSE_MISSING_OR_ONLY_APPROXIMATE","acceptable_synset_ids":[],"reason":"inventory has electronic input signal, production input, comment, stimulus, and input-as-verb but no exact noun sense for arbitrary data supplied to a computational model"},
+    {"id":"OUTPUT_SYSTEM_DATA","lemma":"output","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-03292089-n"],"gold_definition":"final product; the things produced"},
+    {"id":"PREDICTOR_STATISTICAL_VARIABLE","lemma":"predictor","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-05832637-n"],"gold_definition":"information that supports a probabilistic estimate of future events"},
+    {"id":"RESPONSE_EXPERIMENTAL_VARIABLE","lemma":"response","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-00860679-n","oewn-11437102-n"],"gold_definition":"reaction to an antecedent stimulus or a result"},
+    {"id":"OUTCOME_TRIAL_RESULT","lemma":"outcome","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-07307418-n"],"gold_definition":"something that results"},
+    {"id":"RESULT_COMPUTED_VALUE","lemma":"result","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-06756201-n","oewn-07307418-n"],"gold_definition":"answer or result of solving a problem; or something that results"},
+    {"id":"ANTECEDENT_LOGICAL_CONDITIONAL","lemma":"antecedent","gold_status":"REQUIRED_SENSE_MISSING","acceptable_synset_ids":[],"reason":"inventory lacks the logical-conditional first-proposition sense"},
+    {"id":"PARAMETER_STATISTICAL","lemma":"parameter","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-05867861-n"],"gold_definition":"a quantity such as mean or variance characterizing a statistical population and estimated from sample data"},
+    {"id":"FEATURE_ML_ATTRIBUTE","lemma":"feature","gold_status":"GOLD_PRESENT","acceptable_synset_ids":["oewn-05858316-n"],"gold_definition":"a prominent attribute or aspect of something"},
+    {"id":"LABEL_ML_CLASS","lemma":"label","gold_status":"REQUIRED_SENSE_MISSING_OR_ONLY_APPROXIMATE","acceptable_synset_ids":[],"reason":"inventory has tagging, identifying description or physical marker senses but no exact noun sense for a target class assigned to a machine-learning example"}
+  ],
+  "aggregate":{"task_count":10,"gold_present_tasks":7,"required_sense_missing_or_only_approximate_tasks":3},
+  "candidate_scoring_rule":{
+    "gold_present_task":"PASS_IFF_SELECTED_SYNSET_ID_IS_IN_ACCEPTABLE_SYNSET_IDS",
+    "missing_required_sense_task":"PASS_IFF_CANDIDATE_ABSTAINS_WITH_NO_EXACT_DOMAIN_SENSE",
+    "no_partial_credit":true
+  },
+  "hard_rules":[
+    "GOLD_FILE_MUST_NOT_CHANGE_AFTER_CANDIDATE_IMPLEMENTATION",
+    "CANDIDATE_MUST_NOT_READ_THIS_GOLD_FILE_AT_RUNTIME",
+    "CANDIDATE_MAY_READ_ONLY_FROZEN_CONTEXT_AND_RAW_OEWN_KNOWLEDGE",
+    "NO_EXTERNAL_LEARNED_SEMANTIC_PROVIDER_DURING_SCORED_EXECUTION",
+    "MISSING_REQUIRED_SENSE_IS_A_RAW_KNOWLEDGE_COVERAGE_RESIDUAL_NOT_A_DISAMBIGUATION_FAILURE"
+  ],
+  "accounting":{"persistent_learned_bytes":0,"external_frontier_model_calls":0,"external_learned_capability_calls":0,"incremental_spend_usd":0,"terminal_cases_consumed":0}
+}
