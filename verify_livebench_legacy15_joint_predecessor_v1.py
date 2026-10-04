@@ -123,7 +123,7 @@ for idx,row in enumerate(rows):
     if not candidates:
         generation_fail+=1
         if len(failure_samples)<20:
-            failure_samples.append({"row":idx,"kind":"generate","ids":ids,"gen":gen})
+            failure_samples.append({"row":idx,"kind":"generate","ids":ids,"constraints":constraints,"gen":gen})
         continue
 
     ok_any=False
