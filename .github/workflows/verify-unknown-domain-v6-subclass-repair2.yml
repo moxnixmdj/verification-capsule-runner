@@ -9,6 +9,15 @@ on:
       - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
       - "canonical/tests/test_unknown_domain_direct_v5.py"
       - "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py"
+  push:
+    branches: [main]
+    paths:
+      - "verification/unknown_domain_v6_subclass_repair2_independent.py"
+      - ".github/workflows/verify-unknown-domain-v6-subclass-repair2.yml"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
+      - "canonical/tests/test_unknown_domain_direct_v5.py"
+      - "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py"
+  workflow_dispatch:
 
 permissions:
   contents: read
