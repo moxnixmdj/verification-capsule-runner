@@ -24,3 +24,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python verify_livebench_v6_replay72_truth_20261004.py
+
+# retry after redirect-safe gh log transport
