@@ -1,0 +1,19 @@
+name: Verify LiveBench local Root1 reclassification
+on:
+  push:
+    branches:
+      - 'verify/livebench-local-root1-20261004'
+    paths:
+      - 'VERIFY_LIVEBENCH_LOCAL_ROOT1'
+      - 'verify_livebench_local_root1_reclassification_v1.py'
+      - 'subject/livebench_local_root1_20261004/**'
+      - '.github/workflows/verify-livebench-local-root1-20261004.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_livebench_local_root1_reclassification_v1.py
