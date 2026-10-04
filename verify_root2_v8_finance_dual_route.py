@@ -71,7 +71,7 @@ v7_extra=[x for x in v7["projection_deltas"] if (x["target"],x["deletion"]) not 
 assert len(v7_extra)==1, v7_extra
 assert v7_extra[0]["target"]=="FINANCE_AGENT_V2_GE_58_59"
 assert v7_extra[0]["deletion"]=="A_PRIORI_WORST_CASE_PROVIDER_DEMAND_PROOFS_AS_EXECUTION_PRECONDITION"
-assert guard_ver["verifier"]["conclusion"]=="success"
+assert guard_ver["independent_runner"]["conclusion"]=="success"
 assert adapter_ver["verifier"]["conclusion"]=="success"
 assert "NO_FREE_QUOTA_SUFFICIENCY_CLAIM" in adapter_ver["hard_nonclaims"]
 assert "NO_CURRENT_PROVIDER_ACCOUNT_OR_KEY_CLAIM" in adapter_ver["hard_nonclaims"]
