@@ -1,0 +1,82 @@
+name: Verify Root1 Qwen3.5 4B semantic seed V1
+
+on:
+  pull_request:
+    paths:
+      - "verify_root1_qwen35_4b_semantic_seed_v1.py"
+      - ".github/workflows/verify-root1-qwen35-4b-semantic-seed-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v0.5.0 https://github.com/ggml-org/llama.cpp.git /tmp/llama.cpp
+          test "$(git -C /tmp/llama.cpp rev-parse HEAD)" = "7fe450e19305b828c199d602c23a8337aaa1f03b"
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/llama.cpp/build -j 2 --target llama-server
+
+      - name: Fetch exact previously verified 4B carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL=/tmp/Qwen_Qwen3.5-4B-Q4_K_M.gguf
+          curl -L --fail --retry 3 --retry-delay 2 --silent --show-error \
+            -o "$MODEL" \
+            'https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/ba06320255db2dbec194dad738d066be90dabf29/Qwen_Qwen3.5-4B-Q4_K_M.gguf?download=true'
+          echo '13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983  /tmp/Qwen_Qwen3.5-4B-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' "$MODEL")" = "3013027808"
+
+      - name: Start exact local model
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if /tmp/llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup /tmp/llama.cpp/build/bin/llama-server \
+            -m /tmp/Qwen_Qwen3.5-4B-Q4_K_M.gguf \
+            --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --no-webui "${EXTRA[@]}" \
+            > qwen35-4b-server.log 2>&1 &
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > qwen35-4b-health.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Run frozen meaning-sensitive semantic gate
+        id: semantic
+        continue-on-error: true
+        shell: bash
+        run: |
+          python verify_root1_qwen35_4b_semantic_seed_v1.py \
+            --server http://127.0.0.1:8080 \
+            --model /tmp/Qwen_Qwen3.5-4B-Q4_K_M.gguf \
+            --result qwen35-4b-semantic-seed-result.json
+
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root1-qwen35-4b-semantic-seed-v1
+          path: |
+            qwen35-4b-semantic-seed-result.json
+            qwen35-4b-server.log
+            qwen35-4b-health.json
+          if-no-files-found: warn
+
+      - name: Enforce candidate gate
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.semantic.outcome }}" = "success"
