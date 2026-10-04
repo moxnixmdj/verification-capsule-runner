@@ -17,6 +17,7 @@ import hashlib
 import json
 import os
 import secrets
+import subprocess
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -118,6 +119,20 @@ def validate_lease(lease:Mapping[str,Any],digest:str)->None:
             raise ProductionLaunchError("LEASE_COMPONENT_BLOB_MISMATCH:"+str(rel))
 
 
+def validate_event_sha_binding(launch_sha:str,runtime_head:str)->None:
+    if runtime_head!=launch_sha:
+        raise ProductionLaunchError("RUNTIME_HEAD_EVENT_SHA_MISMATCH")
+
+
+def current_git_head()->str:
+    try:
+        return subprocess.check_output(
+            ["git","rev-parse","HEAD"],cwd=ROOT,text=True,stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception as exc:
+        raise ProductionLaunchError("RUNTIME_HEAD_UNAVAILABLE") from exc
+
+
 def validate_point_of_use()->Mapping[str,Any]:
     doc=json.loads(PREFLIGHT_INPUT_PATH.read_text())
     out=preflight(doc)
@@ -216,12 +231,13 @@ def claim_then_execute(
     response_ref=str(response.get("ref") or "")
     obj=response.get("object") if isinstance(response,Mapping) else None
     obj_sha=str(obj.get("sha") or "") if isinstance(obj,Mapping) else ""
-    if response_ref!=claim_ref or len(obj_sha)!=40:
-        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_INVALID")
+    if response_ref!=claim_ref or obj_sha!=launch_sha:
+        raise ProductionLaunchError("ATOMIC_CLAIM_RESPONSE_SHA_MISMATCH")
     result=dict(execute_fn(claim_id=claim_ref))
     result["claim_create_http_status"]=201
     result["claim_response_ref"]=response_ref
     result["claim_response_object_sha"]=obj_sha
+    result["launch_event_sha"]=launch_sha
     result["claim_uniqueness_source"]="ATOMIC_CREATE_RESPONSE"
     return claim_branch,result
 
@@ -233,6 +249,8 @@ def main()->None:
     launch_sha=os.environ.get("GITHUB_SHA","")
     if not repo or not token or len(launch_sha)!=40:
         raise ProductionLaunchError("GITHUB_CONTEXT_INVALID")
+    runtime_head=current_git_head()
+    validate_event_sha_binding(launch_sha,runtime_head)
     if not ref_name.startswith(LAUNCH_PREFIX):
         raise ProductionLaunchError("LAUNCH_REF_PREFIX_INVALID")
     suffix=ref_name[len(LAUNCH_PREFIX):]
@@ -249,6 +267,13 @@ def main()->None:
     result["execution_lease_sha256"]=digest
     result["execution_lease_git_blob_sha"]=_git_blob(raw)
     result["launch_ref"]="refs/heads/"+ref_name
+    result["runtime_git_head"]=runtime_head
+    canonical_result=json.dumps(result,sort_keys=True,separators=(",",":"))
+    print(json.dumps({
+        "status":"PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD",
+        "result_sha256":hashlib.sha256(canonical_result.encode()).hexdigest(),
+        "result":result,
+    },sort_keys=True,separators=(",",":")))
     result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
     status,response=put_result(repo,token,claim_branch,result_path,result)
     if status!=201:
