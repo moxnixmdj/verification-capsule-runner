@@ -1,0 +1,127 @@
+name: Qualify Root1 semantic seed Qwen3.5 4B
+
+on:
+  push:
+    branches:
+      - "verify/root1-semantic-seed-qwen4b-v1-20261004-sol"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      MODEL_URL: "https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/ba06320255db2dbec194dad738d066be90dabf29/Qwen_Qwen3.5-4B-Q4_K_M.gguf?download=true"
+      MODEL_BYTES: "3013027808"
+      MODEL_SHA256: "13c16f426047e2de38cd075bdade4a7bcbc8c774384876f677740cda65f8a983"
+      LLAMA_CPP_COMMIT: "7fe450e19305b828c199d602c23a8337aaa1f03b"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build exact previously proven llama.cpp runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build
+          git clone --filter=blob:none https://github.com/ggerganov/llama.cpp.git
+          cd llama.cpp
+          git checkout "$LLAMA_CPP_COMMIT"
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_OPENMP=ON -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-server -j2
+          ./build/bin/llama-server --version
+
+      - name: Acquire and hash-verify exact reused 4B subject
+        run: |
+          curl -L --fail --retry 4 --retry-delay 3 "$MODEL_URL" -o model.gguf
+          python - <<'PY'
+          import hashlib, os
+          p="model.gguf"
+          size=os.path.getsize(p)
+          h=hashlib.sha256()
+          with open(p,"rb") as f:
+              for b in iter(lambda:f.read(8*1024*1024),b""): h.update(b)
+          actual=h.hexdigest()
+          print("bytes",size)
+          print("sha256",actual)
+          assert size==int(os.environ["MODEL_BYTES"]),(size,os.environ["MODEL_BYTES"])
+          assert actual==os.environ["MODEL_SHA256"],(actual,os.environ["MODEL_SHA256"])
+          PY
+
+      - name: Start exact local inference subject
+        run: |
+          ./llama.cpp/build/bin/llama-server             -m model.gguf -c 4096 -np 1 -t 2             --host 127.0.0.1 --port 8080             > llama-server.log 2>&1 &
+          echo $! > llama-server.pid
+          python - <<'PY'
+          import time, urllib.request
+          for i in range(120):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:8080/health",timeout=2) as r:
+                      if r.status==200:
+                          print("server healthy")
+                          raise SystemExit(0)
+              except Exception:
+                  pass
+              time.sleep(2)
+          raise SystemExit("llama-server failed health check")
+          PY
+
+      - name: Execute meaning-sensitive semantic seed gate
+        id: gate
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python root1_semantic_seed_gate_v1.py             --endpoint http://127.0.0.1:8080/v1/chat/completions             --out root1_semantic_seed_result.json             2>&1 | tee root1_semantic_seed_stdout.log
+
+      - name: Emit exact provenance manifest
+        if: always()
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          def sha(p):
+              h=hashlib.sha256()
+              with open(p,"rb") as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b""): h.update(b)
+              return h.hexdigest()
+          out={
+            "schema":"PROJECT_BRAIN_ROOT1_SEMANTIC_SEED_PUBLIC_RUNNER_RECEIPT_V1",
+            "subject":{
+              "model":"Qwen/Qwen3.5-4B",
+              "repo":"bartowski/Qwen_Qwen3.5-4B-GGUF",
+              "revision":"ba06320255db2dbec194dad738d066be90dabf29",
+              "file":"Qwen_Qwen3.5-4B-Q4_K_M.gguf",
+              "bytes":int(os.environ["MODEL_BYTES"]),
+              "sha256":os.environ["MODEL_SHA256"]
+            },
+            "runtime":{"llama_cpp_commit":os.environ["LLAMA_CPP_COMMIT"]},
+            "gate_sha256":sha("root1_semantic_seed_gate_v1.py"),
+            "workflow_head_sha":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
+            "terminal_case_content_used":False,
+            "incremental_spend_usd":0,
+            "acceptance_credit_delta":0,
+            "capability_credit_delta":0,
+            "ownership_credit_delta":0
+          }
+          p=pathlib.Path("root1_semantic_seed_provenance.json")
+          p.write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          PY
+
+      - name: Upload exact semantic-seed evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root1-semantic-seed-qwen35-4b-v1
+          path: |
+            root1_semantic_seed_result.json
+            root1_semantic_seed_stdout.log
+            root1_semantic_seed_provenance.json
+            llama-server.log
+          if-no-files-found: warn
+
+      - name: Fail closed if semantic gate failed
+        if: steps.gate.outcome != 'success'
+        run: exit 1
