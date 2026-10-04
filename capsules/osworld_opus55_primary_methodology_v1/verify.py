@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import hashlib,io,json,re,urllib.request
+import hashlib,io,json,re,unicodedata,urllib.request
 from pathlib import Path
 from pypdf import PdfReader
 R=Path(__file__).resolve().parent
@@ -14,7 +14,7 @@ req=urllib.request.Request(p["system_card_pdf_url"],headers={"User-Agent":"Proje
 pdf=urllib.request.urlopen(req,timeout=60).read()
 assert hashlib.sha256(pdf).hexdigest()==p["expected_system_card_pdf_sha256"]
 text="\n".join((page.extract_text() or "") for page in PdfReader(io.BytesIO(pdf)).pages)
-norm=" ".join(text.split())
+norm=unicodedata.normalize("NFKC"," ".join(text.split()))
 need=[
  "OSWorld 2.0","108 long-horizon computer use tasks","weighted checkpoints",
  "partial score","strict pass rate","five independent runs","1080p resolution",
