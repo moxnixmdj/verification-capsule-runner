@@ -290,3 +290,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+# BRANCH_TRIGGER_V1
