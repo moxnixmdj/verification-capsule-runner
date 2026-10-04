@@ -1,0 +1,13 @@
+name: Verify combined zero-reality reductions
+on:
+  pull_request:
+    paths: ['subject/combined_zero_reality_reductions_20261004_sol/**','verify_combined_zero_reality_reductions.py','.github/workflows/verify-combined-zero-reality-reductions.yml']
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python verify_combined_zero_reality_reductions.py
