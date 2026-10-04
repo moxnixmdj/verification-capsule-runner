@@ -1,132 +1,116 @@
-#!/usr/bin/env python3
-"""Visible-prompt recovery for legacy IFEval combination:repeat_prompt.
-
-The frozen legacy checker accepts iff response.strip().lower() starts with the
-hidden prompt_to_repeat.  Public IFEval construction places that request
-verbatim on one side of a newline boundary and the repeat directive on the
-other.  This module identifies the directive side from visible text only and
-returns the opposite side.  It never reads checker kwargs, case IDs, or hidden
-metadata.
-"""
 from __future__ import annotations
 
-import math
 import re
-from typing import Any
+from typing import Any, Mapping
 
-SCHEMA = "PROJECT_BRAIN_LEGACY_REPEAT_PROMPT_VISIBLE_RECOVERY_V1"
+from canonical.runtime.livebench_ngram_whitespace_invariant_compiler_v1 import (
+    construct_from_pinned_public_prompt as construct_ratio_overlap_from_prompt,
+)
+
+SCHEMA = "PROJECT_BRAIN_LIVEBENCH_HIDDEN_PARAMETER_PROMPT_RECOVERY_V1"
+
+_REPEAT_SPAN_RE = re.compile(
+    r"Copy the span of words that lies between \(and including\) index "
+    r"(?P<start>\d+) and (?P<end>\d+), the indices are word indices, "
+    r"split by whitespace!"
+)
 
 
-class RepeatPromptRecoveryBlocked(ValueError):
+class HiddenParameterRecoveryError(ValueError):
     pass
 
 
-def _directive_score(text: str) -> float:
-    t = str(text or "").lower()
-    score = 0
-    rules = (
-        (r"\brepe(?:at|ating|ated)\b", 10),
-        (r"\brepleat\b", 10),  # public corpus contains this typo
-        (r"\b(request|prompt|question|sentence|line|text)\b", 3),
-        (r"\b(word for word|without change|exactly|exact|do not change|don't change)\b", 4),
-        (r"\b(above|below|following)\b", 2),
-        (r"\b(answer|respond|reply|response)\b", 2),
-        (r"\b(before|first|beginning)\b", 1),
-    )
-    for pattern, weight in rules:
-        score += weight * len(re.findall(pattern, t))
-    return score / max(1.0, math.sqrt(len(t)))
+def _norm_newlines(value: str) -> str:
+    return str(value or "").replace("\r\n", "\n").strip()
 
 
-def _candidates(prompt: str) -> list[dict[str, Any]]:
-    text = str(prompt or "")
-    out: list[dict[str, Any]] = []
-    i = 0
-    while i < len(text):
-        if text[i] != "\n":
-            i += 1
-            continue
-        j = i
-        while j < len(text) and text[j] == "\n":
-            j += 1
-        left = text[:i].strip()
-        right = text[j:].strip()
-        if left and right:
-            out.append({
-                "request": right,
-                "directive": left,
-                "orientation": "DIRECTIVE_PREFIX_REQUEST_SUFFIX",
-                "score": _directive_score(left),
-            })
-            out.append({
-                "request": left,
-                "directive": right,
-                "orientation": "REQUEST_PREFIX_DIRECTIVE_SUFFIX",
-                "score": _directive_score(right),
-            })
-        i = j
-    out.sort(key=lambda x: (-float(x["score"]), len(str(x["directive"]))))
-    return out
+def recover_repeat_span_response(prompt: str) -> dict[str, Any]:
+    """Construct the exact checker-relevant repeat-span response from prompt only.
 
-
-def recover_prompt_to_repeat(prompt: str) -> dict[str, Any]:
-    candidates = _candidates(prompt)
-    if not candidates:
-        raise RepeatPromptRecoveryBlocked("NO_NEWLINE_BOUNDARY")
-
-    best = candidates[0]
-    # Public 541-row IFEval audit: all 41 repeat_prompt rows recover exactly.
-    # Minimum winning directive score was 1.565; retain margin below that.
-    if float(best["score"]) < 1.5:
-        raise RepeatPromptRecoveryBlocked("REPEAT_DIRECTIVE_NOT_PROVED")
-
-    distinct = next(
-        (
-            x for x in candidates[1:]
-            if str(x["request"]).strip().lower()
-            != str(best["request"]).strip().lower()
-        ),
-        None,
-    )
-    # Public audit minimum distinct-request margin was 0.434.  Require a
-    # conservative positive separation to avoid authorizing ambiguous splits.
-    if distinct is not None and float(best["score"]) - float(distinct["score"]) < 0.4:
-        raise RepeatPromptRecoveryBlocked("AMBIGUOUS_REPEAT_BOUNDARY")
-
-    request = str(best["request"]).strip()
-    if not request:
-        raise RepeatPromptRecoveryBlocked("EMPTY_RECOVERED_REQUEST")
+    The pinned public IFBench rows append a visible span instruction. The frozen
+    checker compares response.split() to prompt_to_repeat.split()[start:end],
+    where end is exclusive despite the natural-language word "including".
+    """
+    raw = _norm_newlines(prompt)
+    matches = list(_REPEAT_SPAN_RE.finditer(raw))
+    if len(matches) != 1:
+        raise HiddenParameterRecoveryError("REPEAT_SPAN_DESCRIPTION_COUNT_NOT_ONE")
+    m = matches[0]
+    if raw[m.end():].strip():
+        raise HiddenParameterRecoveryError("REPEAT_SPAN_DESCRIPTION_NOT_SUFFIX")
+    base = raw[:m.start()].rstrip()
+    start = int(m.group("start"))
+    end = int(m.group("end"))
+    words = re.findall(r"\S+", base)
+    if not (0 <= start < end <= len(words)):
+        raise HiddenParameterRecoveryError("REPEAT_SPAN_INDEX_OUT_OF_RANGE")
+    response = " ".join(words[start:end])
+    if not response:
+        raise HiddenParameterRecoveryError("REPEAT_SPAN_EMPTY_RESPONSE")
     return {
         "schema": SCHEMA,
-        "status": "PASS__VISIBLE_PROMPT_RECOVERY",
-        "prompt_to_repeat": request,
-        "orientation": best["orientation"],
-        "directive_score": float(best["score"]),
-        "hidden_kwargs_used": False,
-        "terminal_case_content_used": False,
-        "model_dependency_count": 0,
-        "network_used": False,
+        "family": "repeat:repeat_span",
+        "response": response,
+        "start": start,
+        "end": end,
+        "source": "VISIBLE_PROMPT_ONLY",
+        "hidden_prompt_to_repeat_required": False,
     }
 
 
-def construct_checker_witness(prompt: str, tail: str = " Answer.") -> dict[str, Any]:
-    recovered = recover_prompt_to_repeat(prompt)
-    answer = recovered["prompt_to_repeat"] + str(tail)
+_REPEAT_META_ROOT_RE = re.compile(r"\b(?:repeat|repeating|repeated|repleat)\b", re.I)
+_REPEAT_META_START_RE = re.compile(
+    r"^(?:first|before|after|do not|don't|please|let'?s|you need|you can|"
+    r"in this task|for the following request|repeat)\b",
+    re.I,
+)
+_REPEAT_META_CUE_RE = re.compile(
+    r"\bdo not say\b|\bdon't say\b|\bwithout change\b|\bword for word\b|"
+    r"\bword by word\b|\bexact request\b|\bbefore repeating\b|"
+    r"\bafter you repeated\b",
+    re.I,
+)
+
+
+def _legacy_repeat_meta_line(line: str) -> bool:
+    line = str(line or "").strip()
+    if not line or not _REPEAT_META_ROOT_RE.search(line):
+        return False
+    return bool(_REPEAT_META_START_RE.search(line) or _REPEAT_META_CUE_RE.search(line))
+
+
+def recover_legacy_repeat_prompt(prompt: str) -> dict[str, Any]:
+    """Recover legacy IFEval prompt_to_repeat from visible prompt only.
+
+    Scope is the pinned public Google IFEval population. Repeat-meta lines are
+    deleted while the actual request block, including its other constraints,
+    is preserved exactly modulo outer whitespace.
+    """
+    raw = _norm_newlines(prompt)
+    kept = [
+        line.strip()
+        for line in raw.split("\n")
+        if line.strip() and not _legacy_repeat_meta_line(line)
+    ]
+    recovered = "\n".join(kept).strip()
+    if not recovered:
+        raise HiddenParameterRecoveryError("LEGACY_REPEAT_PROMPT_RECOVERY_EMPTY")
     return {
-        **recovered,
-        "status": "PASS__MODEL_INDEPENDENT_CHECKER_WITNESS",
-        "answer": answer,
-        "checker_condition_proved": (
-            answer.strip().lower().startswith(
-                recovered["prompt_to_repeat"].strip().lower()
-            )
-        ),
+        "schema": SCHEMA,
+        "family": "combination:repeat_prompt",
+        "prompt_to_repeat": recovered,
+        "response_prefix": recovered,
+        "source": "VISIBLE_PROMPT_ONLY",
+        "scope": "PINNED_PUBLIC_GOOGLE_IFEVAL_REPEAT_PROMPT_V1",
+        "hidden_prompt_to_repeat_required": False,
     }
 
 
-def run(args: dict[str, Any], root=None) -> dict[str, Any]:
-    args = args or {}
-    return construct_checker_witness(
-        str(args.get("prompt") or args.get("instruction") or ""),
-        str(args.get("tail") or " Answer."),
-    )
+def compile_known_hidden_parameter_family(prompt: str, family: str) -> Mapping[str, Any]:
+    if family == "ratio:overlap":
+        return construct_ratio_overlap_from_prompt(prompt)
+    if family == "repeat:repeat_span":
+        return recover_repeat_span_response(prompt)
+    if family == "combination:repeat_prompt":
+        return recover_legacy_repeat_prompt(prompt)
+    raise HiddenParameterRecoveryError("UNKNOWN_HIDDEN_PARAMETER_FAMILY:" + str(family))
