@@ -26,9 +26,18 @@ def main():
  assert m["derivation_independence"]["candidate_response_used_to_design_repair"] is False
  assert m["derivation_independence"]["score_used_to_design_repair"] is False
  run([sys.executable,"-m","pip","install","--disable-pip-version-check","--quiet",
+      "nltk==3.10.3","emoji==2.16.0","syllapy==0.7.2","setuptools==80.9.0",
+      "spacy==3.8.16",
+      "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
       "langdetect==1.0.9","immutabledict==4.3.1","pandas==2.3.3"])
- versions={x:importlib.metadata.version(x) for x in ("langdetect","immutabledict","pandas")}
- assert versions=={"langdetect":"1.0.9","immutabledict":"4.3.1","pandas":"2.3.3"}
+ versions={x:importlib.metadata.version(x) for x in (
+      "nltk","emoji","syllapy","setuptools","spacy","en-core-web-sm",
+      "langdetect","immutabledict","pandas")}
+ expected={
+      "nltk":"3.10.3","emoji":"2.16.0","syllapy":"0.7.2","setuptools":"80.9.0",
+      "spacy":"3.8.16","en-core-web-sm":"3.8.0",
+      "langdetect":"1.0.9","immutabledict":"4.3.1","pandas":"2.3.3"}
+ assert versions==expected,(versions,expected)
  with tempfile.TemporaryDirectory(prefix="lb-legacy-zero-") as td:
   repo=pathlib.Path(td)/"LiveBench"
   run(["git","clone","--quiet","--filter=blob:none","--no-checkout","https://github.com/LiveBench/LiveBench.git",str(repo)])
