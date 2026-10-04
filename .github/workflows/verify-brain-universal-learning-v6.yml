@@ -1,0 +1,186 @@
+name: Verify Brain Universal Learning V6
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_learning_v6/**"
+      - ".github/workflows/verify-brain-universal-learning-v6.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/universal_learning_v6
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for rel,expected in m["exact_brain_blobs"].items():
+              p=pathlib.Path(rel)
+              data=p.read_bytes()
+              got=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert got==expected,(rel,got,expected)
+          print("exact Brain blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+
+      - name: Compile V1 through V6 learning stack
+        run: |
+          cd capsules/universal_learning_v6
+          python -m py_compile \
+            canonical/runtime/universal_learning_contract_v1.py \
+            canonical/runtime/universal_active_transfer_learner_v2.py \
+            canonical/runtime/structural_transfer_v3.py \
+            canonical/runtime/decision_discriminator_v3.py \
+            canonical/runtime/open_world_hypothesis_guard_v4.py \
+            canonical/runtime/dependency_superset_delta_v5.py \
+            canonical/runtime/recursive_abstraction_v5.py \
+            canonical/runtime/compounding_probe_rank_v5.py \
+            canonical/runtime/universal_learning_recursive_abstraction_router_v5.py \
+            canonical/runtime/mechanism_discovery_v6.py \
+            canonical/runtime/safe_adaptive_experiment_synthesizer_v6.py \
+            canonical/runtime/universal_learning_mechanism_router_v6.py
+
+      - name: Run V6 unit and binding tests
+        run: |
+          cd capsules/universal_learning_v6
+          export PYTHONPATH=.
+          python -m unittest \
+            canonical.tests.test_universal_learning_mechanism_v6 \
+            canonical.tests.test_universal_learning_mechanism_binding_v6 -v
+
+      - name: Execute V6 invariant theorem
+        run: |
+          cd capsules/universal_learning_v6
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.universal_learning_mechanism_router_v6 import prove_v6_invariants
+          out=prove_v6_invariants()
+          assert out["pass"] is True,out
+          assert out["m_open_model_expansion_preserved"] is True,out
+          assert out["decision_quotient_compression_preserved"] is True,out
+          assert out["candidate_invariant_no_self_verification_preserved"] is True,out
+          assert out["v5_and_v4_safety_preserved"] is True,out
+          assert out["semantic_success_rate_proved"] is False,out
+          assert out["unknown_domain_acceptance_proved"] is False,out
+          assert out["acceptance_credit_delta"]==0,out
+          assert out["ownership_credit_delta"]==0,out
+          assert out["promotion_authority"] is False,out
+          print("V6 invariant theorem: PASS")
+          PY
+
+      - name: Run independent adversarial V6 boundaries
+        run: |
+          cd capsules/universal_learning_v6
+          export PYTHONPATH=.
+          python - <<'PY'
+          import hashlib,json
+          from canonical.runtime import mechanism_discovery_v6 as m
+          from canonical.runtime import safe_adaptive_experiment_synthesizer_v6 as s
+          from canonical.runtime import universal_learning_mechanism_router_v6 as r
+          from canonical.runtime import open_world_hypothesis_guard_v4 as g
+
+          env,goal,epoch,state="e","g","ep","st"
+          cs=[
+            {"id":"a","best_action":"LEFT","predictions":{"p":"0","q":"0"},"invariants":["shared"],"provenance":["x"]},
+            {"id":"b","best_action":"RIGHT","predictions":{"p":"1","q":"0"},"invariants":["shared"],"provenance":["y"]},
+          ]
+
+          dead=m.update(candidates=cs,observations=[{"probe_id":"p","outcome":"2"}])
+          assert dead["status"]=="MODEL_CLASS_FALSIFIED__EXPAND_HYPOTHESIS_LANGUAGE",dead
+          assert dead["true_mechanism_proved"] is False,dead
+
+          q=m.decision_quotient([
+            {"id":"a","best_action":"SAME","predictions":{"p":"0"},"invariants":[],"provenance":[]},
+            {"id":"b","best_action":"SAME","predictions":{"p":"1"},"invariants":[],"provenance":[]},
+          ])
+          assert q["decision_class_count"]==1,q
+          assert q["open_world_sufficiency_proved"] is False,q
+
+          inv=m.common_invariant_candidates(cs)
+          assert inv["candidate_invariants"]==["shared"],inv
+          assert inv["verified_invariants"]==[],inv
+          assert inv["candidate_only"] is True,inv
+
+          def class_digest(candidates):
+              rows=[]
+              for c in m.normalize_candidates(candidates):
+                  rows.append({"id":c["id"],"digest":c["digest"],"best_action":c["best_action"]})
+              raw=json.dumps(rows,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+              return "sha256:"+hashlib.sha256(raw).hexdigest()
+
+          def probe(pid,outcomes,wall,spend="0"):
+              return {
+                "id":pid,
+                "outcome_by_mechanism":outcomes,
+                "wall_clock":wall,"resource_cost":0,"residual_risk":0,
+                "incremental_spend_usd_ub":spend,
+                "safety_receipt":{
+                  "receipt_id":"safe-"+pid,"independent_verified":True,"exact_byte_bound":True,
+                  "conclusion":"success","safe_under_all_admissible_worlds":True,
+                  "environment_id":env,"goal_id":goal,"probe_id":pid,
+                  "experiment_epoch":epoch,"state_fingerprint":state,
+                },
+                "outcome_model_receipt":{
+                  "receipt_id":"model-"+pid,"independent_verified":True,"exact_byte_bound":True,
+                  "conclusion":"success","deterministic_within_bound_mechanism_class":True,
+                  "decision_relevant_outcome_partition_complete_within_class":True,
+                  "observation_only_or_state_restored":True,
+                  "experiment_epoch":epoch,"state_fingerprint":state,
+                  "environment_id":env,"goal_id":goal,"probe_id":pid,
+                  "mechanism_class_sha256":class_digest(cs),
+                  "outcome_map_sha256":s.outcome_digest(probe_id=pid,outcomes=outcomes),
+                },
+              }
+
+          p=probe("p",{"a":"0","b":"1"},1)
+          out=s.synthesize(environment_id=env,goal_id=goal,candidates=cs,probes=[p],hypothesis_coverage_receipt=None)
+          assert out["status"]=="CONDITIONAL_EXACT_PLAN_OVER_DECLARED_MECHANISM_CLASS",out
+          assert out["open_world_terminal_decision_authorized"] is False,out
+          assert out["recommended_probe"]=="p",out
+
+          paid=probe("paid",{"a":"0","b":"1"},1,"0.01")
+          try:
+              s.synthesize(environment_id=env,goal_id=goal,candidates=cs,probes=[paid])
+              raise AssertionError("positive spend probe admitted")
+          except s.ExperimentSynthesisError:
+              pass
+
+          bad=probe("tamper",{"a":"0","b":"1"},1)
+          bad["outcome_by_mechanism"]["b"]="0"
+          try:
+              s.synthesize(environment_id=env,goal_id=goal,candidates=cs,probes=[bad])
+              raise AssertionError("tampered outcome model admitted")
+          except s.ExperimentSynthesisError:
+              pass
+
+          false_consensus=g.decision_sufficient(
+              environment_id=env,goal_id=goal,
+              hypotheses=[{"id":"h","plausible":True,"best_action":"A"}],
+              coverage_receipt=None,residual_action_receipt=None,
+          )
+          assert false_consensus["sufficient"] is False,false_consensus
+
+          rout=r.route(
+              goal=goal,environment_id=env,verified_coverage=False,
+              goal_facts=["goal"],fallback_required_facts=["goal"],
+              verified_facts=[],dependencies={},dependency_receipt=None,transfer_mappings=[],
+              mechanism_candidates=cs,observations=[{"probe_id":"p","outcome":"2"}],
+              hypothesis_coverage_receipt=None,residual_action_receipt=None,
+              probes=[],verified_skills=[],
+          )
+          assert rout["route"]=="EXPAND_MECHANISM_LANGUAGE",rout
+          assert rout["trusted_execution_authorized"] is False,rout
+          assert rout["acceptance_credit_delta"]==0,rout
+          print("independent adversarial V6 boundaries: PASS")
+          PY
