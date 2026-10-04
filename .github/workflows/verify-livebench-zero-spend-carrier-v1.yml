@@ -6,6 +6,8 @@ on:
       - ".github/workflows/verify-livebench-zero-spend-carrier-v1.yml"
       - "capsules/root2_livebench_astra_adapter_v1/**"
       - "canonical/runtime/goal_compiler.py"
+      - "canonical/runtime/capability_planner.py"
+      - "canonical/runtime/capability_proposal_generators.py"
       - "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json"
   workflow_dispatch:
 jobs:
