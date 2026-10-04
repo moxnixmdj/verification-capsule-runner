@@ -1,0 +1,146 @@
+name: Diagnose LiveBench IFBench key provenance
+
+on:
+  push:
+    branches: ["diagnose/livebench-ifbench-key-provenance-20261004"]
+    paths:
+      - ".github/workflows/diagnose-livebench-ifbench-key-provenance.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "diagnose/livebench-ifbench-key-provenance-20261004"
+
+      - name: Fetch pinned public IFBench source
+        run: |
+          set -euo pipefail
+          git init /tmp/IFBench
+          git -C /tmp/IFBench remote add origin https://github.com/allenai/IFBench.git
+          git -C /tmp/IFBench fetch --depth 1 origin 1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d
+          git -C /tmp/IFBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/IFBench rev-parse HEAD)" = "1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d"
+          test "$(git -C /tmp/IFBench hash-object data/IFBench_test.jsonl)" = "a8e343ed928d8b4e649b9dba651fed7757ccacc3"
+
+      - name: Fetch exact frozen LiveBench parquet
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --silent --show-error             "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet"             -o /tmp/instruction_following.parquet
+          test "$(stat -c %s /tmp/instruction_following.parquet)" = "537024"
+          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | sha256sum -c -
+
+      - name: Compare identifier-only provenance
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "pyarrow==21.0.0"
+          python - <<'PY'
+          import hashlib, json
+          from collections import Counter
+          from pathlib import Path
+          import pyarrow.parquet as pq
+
+          parquet="/tmp/instruction_following.parquet"
+          schema=pq.read_schema(parquet)
+          names=schema.names
+
+          required=["question_id","task","livebench_release_date","livebench_removal_date"]
+          missing=[x for x in required if x not in names]
+          if missing:
+              raise SystemExit("MISSING_REQUIRED_COLUMNS:"+",".join(missing))
+
+          identifier_cols=list(required)
+          if "key" in names:
+              identifier_cols.append("key")
+
+          # Explicitly read identifier/release metadata only. Never load turns,
+          # prompt, kwargs, instruction_id_list, or any answer content.
+          rows=pq.read_table(parquet, columns=identifier_cols).to_pylist()
+
+          release="2026-06-25"
+          releases={"2024-06-24","2024-07-26","2024-08-31","2024-11-25",
+                    "2025-04-02","2025-04-25","2025-05-30","2025-11-25",
+                    "2025-12-23","2026-01-08","2026-06-25"}
+          active=[]
+          for r in rows:
+              rd=r["livebench_release_date"]
+              rd=rd.strftime("%Y-%m-%d") if hasattr(rd,"strftime") else str(rd)
+              rem=r["livebench_removal_date"] or ""
+              if rd in releases and (rem=="" or rem>release):
+                  active.append(r)
+
+          public=[]
+          for line in Path("/tmp/IFBench/data/IFBench_test.jsonl").read_text(encoding="utf-8").splitlines():
+              if not line.strip():
+                  continue
+              # Public source is not terminal content; only retain the public key.
+              obj=json.loads(line)
+              public.append(obj.get("key"))
+
+          public_keys=public
+          public_set=set(public_keys)
+          active_keys=[r.get("key") for r in active] if "key" in names else []
+          active_nonnull=[k for k in active_keys if k is not None]
+          active_set=set(active_nonnull)
+
+          def digest(values):
+              canonical="\n".join(sorted(map(str, values))).encode()
+              return hashlib.sha256(canonical).hexdigest()
+
+          qids=[r["question_id"] for r in active]
+          result={
+              "schema":"LIVEBENCH_IFBENCH_IDENTIFIER_ONLY_PROVENANCE_DIAGNOSTIC_V1",
+              "status":"DIAGNOSTIC_ONLY_ZERO_CREDIT",
+              "source_bindings":{
+                  "livebench_hf_revision":"0868379c4b5cf62aeacaf8be4f08fced815c81bb",
+                  "livebench_parquet_sha256":"a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25",
+                  "ifbench_commit":"1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d",
+                  "ifbench_jsonl_git_blob":"a8e343ed928d8b4e649b9dba651fed7757ccacc3"
+              },
+              "terminal_fields_read":identifier_cols,
+              "terminal_fields_explicitly_not_read":[
+                  "turns","prompt","kwargs","instruction_id_list","reference_answer","model_answer"
+              ],
+              "frozen_rows_total":len(rows),
+              "active_rows":len(active),
+              "active_task_counts":dict(sorted(Counter(r["task"] for r in active).items())),
+              "key_column_present":"key" in names,
+              "active_key_nonnull_count":len(active_nonnull),
+              "active_key_unique_count":len(active_set),
+              "public_ifbench_key_count":len(public_keys),
+              "public_ifbench_unique_key_count":len(public_set),
+              "active_keys_in_public_count":sum(1 for k in active_nonnull if k in public_set),
+              "active_key_set_subset_of_public": bool(active_nonnull) and active_set.issubset(public_set),
+              "active_key_set_sha256":digest(active_set) if active_set else None,
+              "public_key_set_sha256":digest(public_set),
+              "active_question_id_unique_count":len(set(qids)),
+              "active_question_ids_equal_keys_count":(
+                  sum(1 for r in active if r.get("key") is not None and str(r["question_id"])==str(r.get("key")))
+                  if "key" in names else 0
+              ),
+              "hard_nonclaims":[
+                  "IDENTIFIER_SET_MEMBERSHIP_ALONE_DOES_NOT_PROVE_ROW_CONTENT_IDENTITY",
+                  "NO_PROMPT_OR_KWARGS_READ_FROM_FROZEN_TERMINAL_PARQUET",
+                  "NO_ACCEPTANCE_OR_EXECUTION_CREDIT"
+              ]
+          }
+          Path("diagnostics/livebench-ifbench-key-provenance").mkdir(parents=True,exist_ok=True)
+          Path("diagnostics/livebench-ifbench-key-provenance/result.json").write_text(
+              json.dumps(result,indent=2,sort_keys=True)+"\n",encoding="utf-8"
+          )
+          print(json.dumps(result,sort_keys=True))
+          PY
+
+      - name: Persist diagnostic result on this isolated branch
+        run: |
+          set -euo pipefail
+          git config user.name "brain-verifier"
+          git config user.email "brain-verifier@users.noreply.github.com"
+          git add diagnostics/livebench-ifbench-key-provenance/result.json
+          git commit -m "Record LiveBench IFBench identifier-only provenance diagnostic"
+          git push origin HEAD:diagnose/livebench-ifbench-key-provenance-20261004
