@@ -1,0 +1,19 @@
+name: Verify Root2 V6 finance compression
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root2_v6_finance/**"
+      - ".github/workflows/verify-root2-v6-finance.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/root2_v6_finance/verify.py
