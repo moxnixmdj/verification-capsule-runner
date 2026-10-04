@@ -1,5 +1,13 @@
 name: Verify LiveBench zero-spend carrier v1
 on:
+  push:
+    branches:
+      - "diagnose/livebench-template-runtime-postrun-v2-20261004"
+    paths:
+      - "diagnose_livebench_template_runtime_postrun_v2.py"
+      - "subject/livebench_frozen_generic_closure_v1/**"
+      - "verify_livebench_zero_spend_carrier_v1.py"
+      - ".github/workflows/verify-livebench-zero-spend-carrier-v1.yml"
   pull_request:
     paths:
       - "verify_livebench_zero_spend_carrier_v1.py"
