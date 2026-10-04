@@ -28,6 +28,8 @@ for pkg,version in {
   "emoji":"2.16.0",
   "syllapy":"0.7.2",
   "setuptools":"80.9.0",
+  "spacy":"3.8.16",
+  "en-core-web-sm":"3.8.0",
 }.items():
     got=importlib.metadata.version(pkg)
     assert got==version,(pkg,got,version)
@@ -86,13 +88,16 @@ assert check=={"status":"PASS","count":1,"content_inspected":False},check
 # Import the exact pinned IF scorer module. This intentionally uses the frozen
 # environment only; missing undeclared dependencies must fail closed.
 sys.path.insert(0,str(SUB))
+import spacy
+assert spacy.util.is_package("en_core_web_sm") is True
+
 evaluation_lib=importlib.import_module("livebench.if_runner.ifbench.evaluation_lib")
 assert evaluation_lib is not None
 
 print(json.dumps({
   "status":"PASS",
   "exact_blob_count":len(EXPECTED),
-  "frozen_declared_package_count":4,
+  "frozen_declared_package_count":6,
   "astra_model_independent_smoke":True,
   "response_adapter_smoke":True,
   "scorer_import_pass":True,
