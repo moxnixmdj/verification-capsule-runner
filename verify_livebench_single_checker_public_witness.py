@@ -71,12 +71,17 @@ def install_public_checker() -> tuple[object, dict[str, str]]:
     return registry, observed
 
 
-def instantiate_checker(registry: object, iid: str, kwargs: dict | None):
+def instantiate_checker(registry: object, iid: str, kwargs: dict | None, prompt: str):
     mapping = getattr(registry, "INSTRUCTION_DICT")
     cls = mapping[iid]
     inst = cls(iid)
-    kw = dict(kwargs or {})
+    # Mirror frozen evaluation_lib.test_instruction_following_strict:
+    # remove null kwargs, build once, then rebuild with prompt iff requested.
+    kw = {key: value for key, value in dict(kwargs or {}).items() if value is not None}
     inst.build_description(**kw)
+    args = inst.get_instruction_args()
+    if args and "prompt" in args:
+        inst.build_description(prompt=prompt)
     return inst
 
 
@@ -149,7 +154,7 @@ def main() -> int:
                 continue
 
             family_solved[iid] += 1
-            checker = instantiate_checker(registry, iid, row["kwargs"][0] if row.get("kwargs") else None)
+            checker = instantiate_checker(registry, iid, row["kwargs"][0] if row.get("kwargs") else None, str(row["prompt"]))
             passed = bool(checker.check_following(response))
             record["exact_checker_pass"] = passed
             record["response_chars"] = len(response)
