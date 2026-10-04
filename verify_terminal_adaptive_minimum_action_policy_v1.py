@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
@@ -9,6 +10,7 @@ GOV=ROOT/"TERMINAL_ADAPTIVE_MINIMUM_ACTION_POLICY_V1.json"
 
 spec=importlib.util.spec_from_file_location("candidate", CAND)
 m=importlib.util.module_from_spec(spec)
+sys.modules[spec.name]=m
 spec.loader.exec_module(m)
 
 def A(i,targets,t,p,**kw):
