@@ -1,0 +1,28 @@
+name: Verify LiveBench Prompt-Only Ratio Reduction
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_prompt_only_ratio_reduction.py
+      - .github/workflows/verify-livebench-prompt-only-ratio-reduction.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Independently verify prompt-only ratio reduction
+        run: python verify_livebench_prompt_only_ratio_reduction.py
+      - name: Upload independent receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-prompt-only-ratio-reduction-receipt
+          path: livebench_prompt_only_ratio_reduction_receipt.json
+          if-no-files-found: error
