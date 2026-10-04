@@ -57,6 +57,39 @@ jobs:
               getattr(t,name)()
           print("REGRESSION_FUNCTIONS_PASS",len(tests))
           PY
+      - name: Adversarially search exact V3 domain for V2 exact-float failures
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          from canonical.runtime import unknown_domain_direct_candidate_v2 as candidate
+          from canonical.runtime import unknown_domain_direct_hidden_generator_v3 as g3
+          from canonical.runtime import unknown_domain_direct_execution_harness_v1 as harness
+          failures=[]
+          checked=0
+          for i in range(512):
+              secret=hashlib.sha256(f"V3-TOTALIZED-ADVERSARIAL-SECRET-{i}".encode()).digest()
+              beacon=f"V3-TOTALIZED-ADVERSARIAL-BEACON-{i:06d}"
+              packet=g3._generate(beacon=beacon,evaluator_secret=secret,namespace="UDIRV3")
+              for visible,hidden in zip(packet["visible_cases"],packet["hidden_records"]):
+                  out=harness.execute_case(candidate_step=candidate.step,case_visible=visible,hidden_record=hidden)
+                  checked+=1
+                  if not out["scorer_result"]["pass"]:
+                      failures.append({
+                          "i":i,
+                          "beacon":beacon,
+                          "case_id":visible["case_id"],
+                          "leaf_id":hidden["leaf_id"],
+                          "primitive_family":hidden.get("primitive_family"),
+                          "errors":out["scorer_result"].get("errors"),
+                          "candidate_terminal_action":out.get("candidate_terminal_action"),
+                          "gold_terminal_consequence":hidden.get("gold_terminal_consequence"),
+                          "domain_mapping":hidden.get("domain_mapping"),
+                      })
+                      print("COUNTEREXAMPLE",failures[-1])
+                      raise AssertionError("V3_TOTALIZED_UNIVERSAL_CLAIM_FALSIFIED")
+          print("ADVERSARIAL_CASES_PASS",checked)
+          PY
       - name: Verify theorem output
         shell: bash
         run: |
