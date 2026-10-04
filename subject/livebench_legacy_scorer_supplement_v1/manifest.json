@@ -12,16 +12,47 @@
     ],
     "dispatch_rule": "category == instruction_following AND livebench_release_date < 2025-11-25 => legacy instruction_following_process_results; otherwise current IFBench path",
     "legacy_files": [
-      ["livebench/if_runner/instruction_following_eval/evaluation_main.py","4a341984936c4d609644a3b77f8c030ac5aa7269"],
-      ["livebench/if_runner/instruction_following_eval/instructions_registry.py","903ed738398648c7cfac61d5ffa478c22f1f0891"],
-      ["livebench/if_runner/instruction_following_eval/instructions.py","4997bab885a676d92545fd91a9a20b48d234a2b2"],
-      ["livebench/if_runner/instruction_following_eval/instructions_util.py","1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"],
-      ["livebench/process_results/instruction_following/utils.py","8ce01747887ec0792c8f024e1972e34ece781676"]
+      [
+        "livebench/if_runner/instruction_following_eval/evaluation_main.py",
+        "4a341984936c4d609644a3b77f8c030ac5aa7269"
+      ],
+      [
+        "livebench/if_runner/instruction_following_eval/instructions_registry.py",
+        "903ed738398648c7cfac61d5ffa478c22f1f0891"
+      ],
+      [
+        "livebench/if_runner/instruction_following_eval/instructions.py",
+        "4997bab885a676d92545fd91a9a20b48d234a2b2"
+      ],
+      [
+        "livebench/if_runner/instruction_following_eval/instructions_util.py",
+        "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+      ],
+      [
+        "livebench/process_results/instruction_following/utils.py",
+        "8ce01747887ec0792c8f024e1972e34ece781676"
+      ]
     ]
   },
   "environment_extension": {
     "python_version": "3.12",
-    "packages": [["langdetect","1.0.9",null],["immutabledict","4.3.1",null],["pandas","2.3.3",null]],
+    "packages": [
+      [
+        "langdetect",
+        "1.0.9",
+        null
+      ],
+      [
+        "immutabledict",
+        "4.3.1",
+        null
+      ],
+      [
+        "pandas",
+        "2.3.3",
+        null
+      ]
+    ],
     "paid_external_model_or_api_allowed": false,
     "larger_or_paid_runner_allowed": false
   },
