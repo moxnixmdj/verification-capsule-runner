@@ -9,12 +9,13 @@ EXPECTED = {
     "canonical/tests/test_terminal_minimum_causal_depth_guard_v2.py": "e734ee48527096ef381db61ed97bd33dd4d140b0",
     "canonical/governance/ROOT2_BLIND_THRESHOLD_RECEIPT_ACTIVATION_V1.json": "324a7a762a3a2e7116372414afa6b52343673a3d",
     "canonical/governance/TERMINAL_MINIMUM_CAUSAL_DEPTH_ACTIVATION_V1.json": "c184c1aed33c06f6b4307ace79a959c21de96958",
-    "canonical/governance/ARENA_COMPARATOR_PUBLIC_SEMANTICS_RECONCILIATION_V1.json": "d9bbedb43e8b5da66331d9cdd7254718a7ab23db"
+    "canonical/governance/ARENA_COMPARATOR_PUBLIC_SEMANTICS_RECONCILIATION_V1.json": "d9bbedb43e8b5da66331d9cdd7254718a7ab23db",
 }
 
 def git_blob_sha(path: str) -> str:
     data = Path(path).read_bytes()
-    header = f"blob {len(data)}".encode() + b"\x00"\n    return hashlib.sha1(header + data).hexdigest()
+    header = f"blob {len(data)}".encode() + bytes([0])
+    return hashlib.sha1(header + data).hexdigest()
 
 for path, want in EXPECTED.items():
     got = git_blob_sha(path)
@@ -32,15 +33,15 @@ from canonical.tests.test_terminal_minimum_causal_depth_guard_v2 import test_gua
 test_guard_passes()
 
 print(json.dumps({
-    "schema":"PROJECT_BRAIN_TERMINAL_MINIMUM_CAUSAL_DEPTH_V2_INDEPENDENT_RESULT",
-    "status":"PASS",
-    "exact_subject_blobs":True,
-    "v1_verified_subject_immutability_preserved":True,
-    "blind_threshold_minimum_information_bound":True,
-    "relative_elo_transport_fail_closed":True,
-    "matched_noninferiority_not_collapsed":True,
-    "execution_authority":False,
-    "promotion_authority":False,
-    "fresh_reality_authority":False,
-    "acceptance_credit_delta":0
+    "schema": "PROJECT_BRAIN_TERMINAL_MINIMUM_CAUSAL_DEPTH_V2_INDEPENDENT_RESULT",
+    "status": "PASS",
+    "exact_subject_blobs": True,
+    "v1_verified_subject_immutability_preserved": True,
+    "blind_threshold_minimum_information_bound": True,
+    "relative_elo_transport_fail_closed": True,
+    "matched_noninferiority_not_collapsed": True,
+    "execution_authority": False,
+    "promotion_authority": False,
+    "fresh_reality_authority": False,
+    "acceptance_credit_delta": 0,
 }, sort_keys=True))
