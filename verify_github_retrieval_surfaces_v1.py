@@ -1,114 +1,111 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import hashlib
-import importlib.util
-import json
-import pathlib
-import urllib.parse
+import json, os, re, sys, urllib.request
 
-ROOT=pathlib.Path(__file__).resolve().parent
-PROVIDER=ROOT/"subjects/github_public_retrieval_provider_v1.py"
-ROUTER=ROOT/"subjects/residual_witness_backend_router_v1.py.txt"
-EXPECTED_PROVIDER="29b808935559382ab7ddc81aaa08fe0611a05df8"
-EXPECTED_ROUTER="578c5f87901a458b12d7df984e0a6a525d367456"
+REPO="moxnixmdj/verification-capsule-runner"
+RUN_ID=37191977679
+JOB_ID=111405917591
+TRIGGER_SHA="556c4deeeb3f659f8ad48a214da6c207de72a134"
+EXPECTED_RECEIPTS_SHA256="3e1ba75095ebcd84847c663b87866e4535ba9efe9f9d9974ca65a75b7c8a8366"
+EMPTY_SHA="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
-def blob_sha(path):
-    raw=path.read_bytes()
-    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+def api(url: str) -> bytes:
+    token=os.environ.get("GITHUB_TOKEN","")
+    req=urllib.request.Request(url,headers={
+        "Accept":"application/vnd.github+json",
+        "X-GitHub-Api-Version":"2022-11-28",
+        **({"Authorization":"Bearer "+token} if token else {})
+    })
+    with urllib.request.urlopen(req,timeout=60) as r:
+        return r.read()
 
-assert blob_sha(PROVIDER)==EXPECTED_PROVIDER,(blob_sha(PROVIDER),EXPECTED_PROVIDER)
-assert blob_sha(ROUTER)==EXPECTED_ROUTER,(blob_sha(ROUTER),EXPECTED_ROUTER)
+def main() -> int:
+    run=json.loads(api(f"https://api.github.com/repos/{REPO}/actions/runs/{RUN_ID}"))
+    assert run["status"]=="completed", run["status"]
+    assert run["conclusion"]=="success", run["conclusion"]
+    assert run["head_sha"]==TRIGGER_SHA, run["head_sha"]
+    assert run["head_branch"]=="execute/livebench-replay72-v6-20261004-0918"
 
-spec=importlib.util.spec_from_file_location("subject_provider",PROVIDER)
-m=importlib.util.module_from_spec(spec)
-spec.loader.exec_module(m)
+    jobs=json.loads(api(f"https://api.github.com/repos/{REPO}/actions/runs/{RUN_ID}/jobs?per_page=100"))
+    job=[j for j in jobs["jobs"] if int(j["id"])==JOB_ID]
+    assert len(job)==1
+    assert job[0]["conclusion"]=="success"
 
-class Resp:
-    def __init__(self,payload):
-        self.raw=json.dumps(payload,ensure_ascii=False).encode()
-    def __enter__(self): return self
-    def __exit__(self,*args): return False
-    def read(self,*args): return self.raw
+    log=api(f"https://api.github.com/repos/{REPO}/actions/jobs/{JOB_ID}/logs").decode("utf-8","replace")
+    pre=[]
+    recs=[]
+    terms=[]
+    for line in log.splitlines():
+        if "LIVEBENCH_V6_PRELAUNCH=" in line:
+            pre.append(json.loads(line.split("LIVEBENCH_V6_PRELAUNCH=",1)[1]))
+        if "LIVEBENCH_CASE_RECEIPT=" in line:
+            recs.append(json.loads(line.split("LIVEBENCH_CASE_RECEIPT=",1)[1]))
+        if "LIVEBENCH_TERMINAL_RESULT=" in line:
+            terms.append(json.loads(line.split("LIVEBENCH_TERMINAL_RESULT=",1)[1]))
 
-class Opener:
-    def __init__(self): self.urls=[]
-    def __call__(self,req,timeout=0):
-        self.urls.append(req.full_url)
-        path=urllib.parse.urlsplit(req.full_url).path
-        if path=="/search/repositories":
-            return Resp({"items":[{"full_name":"例子/仓库","html_url":"https://github.com/e/r","description":None,"language":"Python","default_branch":"main","archived":False,"fork":False}]})
-        if path=="/search/code":
-            return Resp({"items":[{"name":"codec.py","path":"src/codec.py","sha":"a"*40,"html_url":"https://github.com/e/r/blob/main/src/codec.py","repository":{"full_name":"e/r"}}]})
-        if path=="/search/issues":
-            return Resp({"items":[{"html_url":"https://github.com/e/r/issues/1","repository_url":"https://api.github.com/repos/e/r","title":"编解码器","state":"open"}]})
-        if path=="/search/commits":
-            return Resp({"items":[{"sha":"b"*40,"html_url":"https://github.com/e/r/commit/"+"b"*40,"repository":{"full_name":"e/r"},"commit":{"message":"修复 UBJSON 编码"}}]})
-        raise AssertionError(req.full_url)
+    assert len(pre)==1, len(pre)
+    p=pre[0]
+    assert p["status"]=="PASS__V6_POINT_OF_USE_PRELAUNCH"
+    assert p["compatible"] is True
+    assert p["new_case_exposure_authorized"] is False
+    assert p["terminal_cases_consumed"]==0
+    assert p["activation_git_blob_sha"]=="c449329ad9e6e9ac001c5a1cdb2f3fa187fa49b3"
+    assert p["candidate_git_blob_sha"]=="07e857f0a7095838cecbc6a79961fe9580673ee4"
+    assert p["executor_git_blob_sha"]=="2a57ce896ddbd6819246aab8b44d17a00f36b61e"
+    assert p["point_of_use_root_git_blob_sha"]=="822d7a0e64b2e919a873526d111e7202c40e1f5b"
+    assert p["added_scheduler_overlays"]==["root2_decision_only_evaluation"]
 
-def action(surface,q="中文 UBJSON 编解码器"):
-    return {"action":"QUERY","query_id":"Q000","query":q,"surface":surface}
+    assert len(recs)==72, len(recs)
+    assert len({r["question_id"] for r in recs})==72
+    policy=[r for r in recs if r.get("inference_error")=="POLICY_BLOCKED_POST_PROMPT_CAPABILITY_ACQUISITION"]
+    exits=[r for r in recs if str(r.get("inference_error") or "").startswith("INFERENCE_EXIT_1:")]
+    valid=[r for r in recs if not r.get("inference_error")]
+    other=[r for r in recs if r not in policy and r not in exits and r not in valid]
+    assert len(policy)==43, len(policy)
+    assert len(exits)==29, len(exits)
+    assert len(valid)==0, len(valid)
+    assert len(other)==0, len(other)
+    assert len({r["inference_error"].split(":",1)[1] for r in exits})==29
+    assert all(r["response_sha256"]==EMPTY_SHA for r in recs)
+    assert sum(float(r["score"]) for r in recs)==0.0
 
-# Unicode transport + code-content independence from metadata/popularity.
-o=Opener()
-out=m.search(action("CODE_CONTENT"),opener=o)
-assert out["candidate_count"]==1,out
-assert "中文 UBJSON 编解码器" in urllib.parse.unquote_plus(o.urls[0]),o.urls
-assert out["complete"] is False and out["independently_complete"] is False,out
-c=out["candidates"][0]
-assert c["repository"]=="e/r" and c["path"]=="src/codec.py",c
-assert "stars" not in c and "description" not in c,c
+    assert len(terms)==1, len(terms)
+    t=terms[0]
+    assert t["schema"]=="PROJECT_BRAIN_LIVEBENCH_IF_THRESHOLD_EXECUTION_RESULT_V2"
+    assert t["status"]=="FAIL_FORCED"
+    assert t["terminal_cases_consumed"]==72
+    assert t["replay_prefix_limit"]==72
+    assert t["replay_only_no_new_case_exposure"] is True
+    assert t["predicate_fail_forced"] is True
+    assert t["predicate_pass_forced"] is False
+    assert float(t["observed_score_mass"])==0.0
+    assert float(t["conservative_full_population_upper_percent"])==64.0
+    assert t["receipts_sha256"]==EXPECTED_RECEIPTS_SHA256
+    assert t["promotion_authority"] is False
+    assert t["acceptance_credit_authority"] is False
+    assert int(t["incremental_spend_usd"])==0
 
-# Descriptionless repo survives candidate discovery.
-o=Opener()
-repo=m.search(action("REPOSITORY_METADATA"),opener=o)
-assert repo["candidate_count"]==1,repo
-assert repo["candidates"][0]["description"] is None,repo
+    out={
+      "schema":"PROJECT_BRAIN_LIVEBENCH_REPLAY72_V6_PUBLIC_RESULT_VERIFICATION_20261004_V1",
+      "status":"INDEPENDENT_PUBLIC_RUNNER_PASS__EXACT_PUBLIC_RUN_AND_LOG_RECOMPUTATION__43_POLICY_BLOCK__29_UNLOCALIZED_EXIT__ZERO_VALID_RESPONSES__ZERO_CREDIT",
+      "run_id":RUN_ID,
+      "job_id":JOB_ID,
+      "trigger_sha":TRIGGER_SHA,
+      "terminal_cases_replayed":72,
+      "new_cases_exposed":0,
+      "valid_candidate_responses":0,
+      "policy_blocked_post_prompt_capability_acquisition":43,
+      "inference_exit_1":29,
+      "unique_exit_hashes":29,
+      "score_mass":0.0,
+      "raw_executor_fail_forced":True,
+      "receipts_sha256":EXPECTED_RECEIPTS_SHA256,
+      "capability_fail_adjudicated":False,
+      "root1_reopen_adjudicated":False,
+      "acceptance_credit_delta":0
+    }
+    print(json.dumps(out,sort_keys=True))
+    return 0
 
-# Manifest/test searches really hit code search with structural qualifiers.
-for surface,needle in (("MANIFESTS","filename:"),("TESTS_EXAMPLES","path:")):
-    o=Opener()
-    got=m.search(action(surface,"ubjson"),limit=2,opener=o)
-    assert got["candidate_count"]>=1,got
-    decoded="\n".join(urllib.parse.unquote_plus(x) for x in o.urls)
-    assert needle in decoded,(surface,decoded)
-
-# Issues/history are candidate discovery; history explicitly remains partial.
-o=Opener()
-issue=m.search(action("ISSUES_PRS"),opener=o)
-history=m.search(action("COMMITS_RELEASES_BRANCHES_TAGS"),opener=o)
-assert issue["candidates"][0]["repository"]=="e/r",issue
-assert "COMMIT_SEARCH_ONLY" in history["coverage_detail"],history
-assert history["complete"] is False,history
-
-# Router exact bytes bind the seven surfaces to the one provider.
-router_text=ROUTER.read_text()
-for surface in (
-    "REPOSITORY_METADATA","CODE_CONTENT","SYMBOLS","MANIFESTS",
-    "TESTS_EXAMPLES","ISSUES_PRS","COMMITS_RELEASES_BRANCHES_TAGS",
-):
-    assert f'"{surface}"' in router_text,surface
-assert "github_public_retrieval_provider_v1.search(action,limit=20)" in router_text
-assert '"SOCIAL_TECHNICAL_DISCUSSION"' not in router_text.split("def default_providers",1)[1].split("def _candidate_id",1)[0]
-
-# Authority boundary remains hard: subject never emits verified sufficiency.
-for surface in m.SUPPORTED_SURFACES:
-    o=Opener()
-    got=m.search(action(surface,"ubjson"),limit=1,opener=o)
-    assert got.get("acceptance_credit")==0,got
-    assert got.get("sufficiency_status")=="UNVERIFIED",got
-    assert got.get("complete") is False,got
-    assert "verified_sufficient" not in got,got
-
-print("GITHUB_RESIDUAL_RETRIEVAL_SURFACES_V1_VERIFIED")
-print(json.dumps({
-    "provider_blob":EXPECTED_PROVIDER,
-    "router_blob":EXPECTED_ROUTER,
-    "supported_surface_count":len(m.SUPPORTED_SURFACES),
-    "unicode_transport":True,
-    "descriptionless_repository_retained":True,
-    "content_search_metadata_independent":True,
-    "candidate_only_authority":True,
-    "history_scope_partial_and_explicit":True,
-},sort_keys=True))
-
-# trigger exact-byte verification run
+if __name__=="__main__":
+    raise SystemExit(main())
