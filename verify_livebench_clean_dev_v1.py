@@ -16,6 +16,7 @@ ALL_CONSTRAINTS=[
  "length_constraints:number_sentences","length_constraints:number_paragraphs",
  "length_constraints:number_words","length_constraints:nth_paragraph_first_word",
  "keywords:existence","keywords:frequency","keywords:forbidden_words","keywords:letter_frequency",
+ "language:response_language",
  "detectable_content:number_placeholders","detectable_content:postscript",
  "detectable_format:number_bullet_lists","detectable_format:constrained_response",
  "detectable_format:number_highlighted_sections","detectable_format:multiple_sections",
