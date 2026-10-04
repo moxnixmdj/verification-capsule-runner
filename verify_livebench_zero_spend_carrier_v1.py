@@ -173,4 +173,7 @@ if __name__=="__main__":
     if rc==0:
         import verify_livebench_legacy_scorer_supplement_v1 as legacy_supplement
         rc=legacy_supplement.main()
+    if rc==0:
+        import diagnose_livebench_template_runtime_postrun_v2 as postrun_diag
+        rc=postrun_diag.main()
     raise SystemExit(rc)
