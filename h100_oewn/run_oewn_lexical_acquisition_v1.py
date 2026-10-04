@@ -67,5 +67,8 @@ def main():
     if failures:
         raise SystemExit("OEWN_QUERY_FAILURES_PRESENT")
 
+    from export_oewn_sense_inventory_v1 import main as export_inventory
+    export_inventory()
+
 if __name__=="__main__":
     main()
