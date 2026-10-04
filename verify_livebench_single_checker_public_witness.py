@@ -31,8 +31,9 @@ PUBLIC_FILES = {
     ),
 }
 SUBJECT_ROOT = Path(__file__).resolve().parent / "subjects" / "livebench_single_checker_v1"
-SUBJECT_SOLVER_BLOB = "b74d986fae033ac94827c5f1eb2db655a99ae4cc"
+SUBJECT_SOLVER_BLOB = "b21e2a0946523e7aaa2d4a929676574ddc14c92b"
 SUBJECT_HELPER_BLOB = "bcd4a4ede2e70e17e90a33416f3f4a564162f3ea"
+SUBJECT_REPEAT_BLOB = "332fbb1fac1cdee2632dc454b497376d319e2287"
 RECEIPT = Path("livebench_single_checker_public_witness_receipt.json")
 
 
@@ -71,12 +72,17 @@ def install_public_checker() -> tuple[object, dict[str, str]]:
     return registry, observed
 
 
-def instantiate_checker(registry: object, iid: str, kwargs: dict | None):
+def instantiate_checker(registry: object, iid: str, kwargs: dict | None, prompt: str):
     mapping = getattr(registry, "INSTRUCTION_DICT")
     cls = mapping[iid]
     inst = cls(iid)
-    kw = dict(kwargs or {})
+    # Mirror frozen evaluation_lib.test_instruction_following_strict:
+    # remove null kwargs, build once, then rebuild with prompt iff requested.
+    kw = {key: value for key, value in dict(kwargs or {}).items() if value is not None}
     inst.build_description(**kw)
+    args = inst.get_instruction_args()
+    if args and "prompt" in args:
+        inst.build_description(prompt=prompt)
     return inst
 
 
@@ -94,8 +100,10 @@ def main() -> int:
     sys.path.insert(0, str(SUBJECT_ROOT))
     solver_file = SUBJECT_ROOT / "canonical" / "runtime" / "livebench_if_single_checker_solver_v1.py"
     helper_file = SUBJECT_ROOT / "canonical" / "runtime" / "livebench_ngram_reference_free_v1.py"
+    repeat_file = SUBJECT_ROOT / "canonical" / "runtime" / "livebench_prompt_only_repeat_compiler_v1.py"
     assert local_blob(solver_file) == SUBJECT_SOLVER_BLOB
     assert local_blob(helper_file) == SUBJECT_HELPER_BLOB
+    assert local_blob(repeat_file) == SUBJECT_REPEAT_BLOB
 
     import nltk
     for resource in ("punkt", "punkt_tab", "stopwords", "averaged_perceptron_tagger", "averaged_perceptron_tagger_eng"):
@@ -149,7 +157,7 @@ def main() -> int:
                 continue
 
             family_solved[iid] += 1
-            checker = instantiate_checker(registry, iid, row["kwargs"][0] if row.get("kwargs") else None)
+            checker = instantiate_checker(registry, iid, row["kwargs"][0] if row.get("kwargs") else None, str(row["prompt"]))
             passed = bool(checker.check_following(response))
             record["exact_checker_pass"] = passed
             record["response_chars"] = len(response)
@@ -191,6 +199,7 @@ def main() -> int:
         "subject": {
             "solver_git_blob_sha": SUBJECT_SOLVER_BLOB,
             "ngram_helper_git_blob_sha": SUBJECT_HELPER_BLOB,
+            "repeat_compiler_git_blob_sha": SUBJECT_REPEAT_BLOB,
         },
         "public_sources": {
             "ifbench_test_git_blob_sha": git_blob_sha(raw),
