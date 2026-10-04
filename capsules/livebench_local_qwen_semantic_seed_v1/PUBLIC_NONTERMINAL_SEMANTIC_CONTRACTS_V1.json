@@ -1,0 +1,134 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_LOCAL_QWEN_SEMANTIC_CONTRACTS_V1",
+  "date": "2026-10-04",
+  "status": "PRECOMMITTED_PUBLIC_NONTERMINAL_SYNTHETIC_CONTRACTS",
+  "terminal_cases": 0,
+  "tasks": [
+    {
+      "id": "P1",
+      "kind": "paraphrase",
+      "source": "At 07:15, Mira placed the blue key inside locker 12 before the museum opened.",
+      "prompt": "Paraphrase this sentence without changing its meaning. Preserve every factual detail, proper name, number, object, location, and time relation. Return only the paraphrase: At 07:15, Mira placed the blue key inside locker 12 before the museum opened.",
+      "required_groups": [["07:15"], ["mira"], ["blue key"], ["locker 12"], ["museum"], ["before", "prior to", "ahead of"]],
+      "require_nonidentity": true,
+      "max_words": 32
+    },
+    {
+      "id": "P2",
+      "kind": "paraphrase",
+      "source": "Imani sent the revised map to Tomas on Tuesday because the original route crossed a flooded bridge.",
+      "prompt": "Paraphrase this sentence without changing its meaning. Preserve every factual detail, including who sent what to whom, when, and why. Return only the paraphrase: Imani sent the revised map to Tomas on Tuesday because the original route crossed a flooded bridge.",
+      "required_groups": [["imani"], ["revised map"], ["tomas"], ["tuesday"], ["original route"], ["flooded bridge"], ["because", "since", "as", "due to"]],
+      "require_nonidentity": true,
+      "max_words": 34
+    },
+    {
+      "id": "P3",
+      "kind": "paraphrase",
+      "source": "The solar pump filled Tank B with 240 liters after sensor K-7 reported low pressure.",
+      "prompt": "Paraphrase this sentence without changing its meaning. Preserve the equipment, tank, quantity, sensor code, pressure state, and event order. Return only the paraphrase: The solar pump filled Tank B with 240 liters after sensor K-7 reported low pressure.",
+      "required_groups": [["solar pump"], ["tank b"], ["240"], ["liters", "litres"], ["k-7"], ["low pressure"], ["after", "following", "once"]],
+      "require_nonidentity": true,
+      "max_words": 32
+    },
+    {
+      "id": "S1",
+      "kind": "simplify",
+      "source": "Although the backup generator remained operational, the clinic postponed the vaccine transfer because the eastern road, which had flooded overnight, was unsafe.",
+      "prompt": "Rewrite this in simpler language without dropping or changing any facts. Use 2 or 3 short sentences. Return only the simplified text: Although the backup generator remained operational, the clinic postponed the vaccine transfer because the eastern road, which had flooded overnight, was unsafe.",
+      "required_groups": [["backup generator"], ["operational", "working", "worked"], ["clinic"], ["vaccine transfer"], ["eastern road"], ["flooded overnight", "flooded during the night"], ["unsafe", "not safe"]],
+      "require_nonidentity": true,
+      "sentence_count_min": 2,
+      "sentence_count_max": 3,
+      "max_sentence_words": 18,
+      "max_words": 40
+    },
+    {
+      "id": "S2",
+      "kind": "simplify",
+      "source": "The committee, having reviewed all four bids, selected Aria Systems only after its safety certificate was independently confirmed.",
+      "prompt": "Rewrite this in simpler language without dropping or changing any facts. Use 2 or 3 short sentences. Return only the simplified text: The committee, having reviewed all four bids, selected Aria Systems only after its safety certificate was independently confirmed.",
+      "required_groups": [["committee"], ["four bids", "4 bids"], ["aria systems"], ["safety certificate"], ["independently"], ["confirmed", "verified"], ["after", "then"]],
+      "require_nonidentity": true,
+      "sentence_count_min": 2,
+      "sentence_count_max": 3,
+      "max_sentence_words": 18,
+      "max_words": 38
+    },
+    {
+      "id": "S3",
+      "kind": "simplify",
+      "source": "Because the battery temperature exceeded 52°C while the rover was descending, the controller reduced motor power to prevent thermal damage.",
+      "prompt": "Rewrite this in simpler language without dropping or changing any facts. Use 2 or 3 short sentences. Return only the simplified text: Because the battery temperature exceeded 52°C while the rover was descending, the controller reduced motor power to prevent thermal damage.",
+      "required_groups": [["battery temperature"], ["52°c", "52 °c", "52 degrees celsius"], ["rover"], ["descending", "going down"], ["controller"], ["reduced motor power", "lowered motor power"], ["thermal damage", "heat damage"]],
+      "require_nonidentity": true,
+      "sentence_count_min": 2,
+      "sentence_count_max": 3,
+      "max_sentence_words": 18,
+      "max_words": 40
+    },
+    {
+      "id": "U1",
+      "kind": "summarize",
+      "source": "The North Ridge Observatory completed calibration of its new tracking camera on Wednesday. The team had planned the first full observation for Thursday night. Forecasts then showed high winds above the safe operating limit, so the observation was moved to Friday. The camera calibration remains complete and does not need to be repeated. Routine maintenance scheduled for Saturday is unchanged.",
+      "prompt": "Summarize the following in at most 30 words. Preserve the three key facts: calibration is complete, the observation moved from Thursday to Friday, and high winds caused the move. Return only the summary. Text: The North Ridge Observatory completed calibration of its new tracking camera on Wednesday. The team had planned the first full observation for Thursday night. Forecasts then showed high winds above the safe operating limit, so the observation was moved to Friday. The camera calibration remains complete and does not need to be repeated. Routine maintenance scheduled for Saturday is unchanged.",
+      "required_groups": [["calibration"], ["complete", "completed"], ["thursday"], ["friday"], ["high winds", "strong winds"], ["moved", "rescheduled", "postponed"]],
+      "max_words": 30,
+      "max_source_ratio": 0.48
+    },
+    {
+      "id": "U2",
+      "kind": "summarize",
+      "source": "Renovation work at Harbor Library is finishing in stages. The west wing, including the main reading room, will reopen on May 3. The archive room will remain closed because its fire inspection is still pending. The children's room reopened last week. New exterior signs arrive later in May, but that delivery does not affect public access.",
+      "prompt": "Summarize the following in at most 28 words. Preserve the key facts that the west wing reopens May 3, the archive room remains closed, and the reason is a pending fire inspection. Return only the summary. Text: Renovation work at Harbor Library is finishing in stages. The west wing, including the main reading room, will reopen on May 3. The archive room will remain closed because its fire inspection is still pending. The children's room reopened last week. New exterior signs arrive later in May, but that delivery does not affect public access.",
+      "required_groups": [["west wing"], ["may 3", "may 3rd"], ["archive room"], ["closed", "remain closed"], ["fire inspection"], ["pending", "not yet complete", "not complete"]],
+      "max_words": 28,
+      "max_source_ratio": 0.5
+    },
+    {
+      "id": "U3",
+      "kind": "summarize",
+      "source": "A pilot study enrolled 48 participants to test a new scheduling protocol over six weeks. No serious adverse events were reported. The primary adherence measure improved relative to the study baseline. The secondary endpoint, which compared weekend response times, was inconclusive because too few weekend events occurred. Investigators will collect more weekend data before deciding whether to expand the protocol.",
+      "prompt": "Summarize the following in at most 30 words. Preserve the key facts: 48 participants, no serious adverse events, and the secondary endpoint was inconclusive. Return only the summary. Text: A pilot study enrolled 48 participants to test a new scheduling protocol over six weeks. No serious adverse events were reported. The primary adherence measure improved relative to the study baseline. The secondary endpoint, which compared weekend response times, was inconclusive because too few weekend events occurred. Investigators will collect more weekend data before deciding whether to expand the protocol.",
+      "required_groups": [["48"], ["participants"], ["no serious adverse events", "without serious adverse events"], ["secondary endpoint"], ["inconclusive"]],
+      "max_words": 30,
+      "max_source_ratio": 0.45
+    },
+    {
+      "id": "T1",
+      "kind": "story_generation",
+      "prompt": "Write a coherent 70-140 word story. Required plot, in this order: Nia finds a brass compass; Nia gives the compass to Rowan; Rowan repairs the compass; the repaired compass leads them to a lighthouse; the lighthouse beacon turns on at the end. Keep the names Nia and Rowan and the objects brass compass and lighthouse. Return only the story.",
+      "required_groups": [["nia"], ["rowan"], ["brass compass"], ["lighthouse"], ["beacon"]],
+      "ordered_groups": [["finds", "found", "discovers", "discovered"], ["gives", "gave", "hands", "handed"], ["repairs", "repaired", "fixes", "fixed"], ["lighthouse"], ["beacon"]],
+      "min_words": 70,
+      "max_words": 140
+    },
+    {
+      "id": "T2",
+      "kind": "story_generation",
+      "prompt": "Write a coherent 70-140 word story. Required plot, in this order: Omar discovers a sealed red envelope at the train station; he brings it to Leena; Leena opens it and finds a map; they follow the map to the old clock tower; at the end they return the map to its owner, Mrs. Vale. Preserve the names Omar, Leena, Mrs. Vale, the red envelope, and the clock tower. Return only the story.",
+      "required_groups": [["omar"], ["leena"], ["mrs. vale", "mrs vale"], ["red envelope"], ["clock tower"], ["map"]],
+      "ordered_groups": [["envelope"], ["leena"], ["map"], ["clock tower"], ["mrs. vale", "mrs vale"]],
+      "min_words": 70,
+      "max_words": 140
+    },
+    {
+      "id": "T3",
+      "kind": "story_generation",
+      "prompt": "Write a coherent 70-140 word story. Required plot, in this order: Sora notices the greenhouse heater has stopped; Sora calls Eli; Eli replaces a broken fuse; the heater starts again; at the end the frost alarm clears before dawn. Preserve the names Sora and Eli, the greenhouse heater, broken fuse, frost alarm, and before dawn ending. Return only the story.",
+      "required_groups": [["sora"], ["eli"], ["greenhouse"], ["heater"], ["broken fuse"], ["frost alarm"], ["before dawn"]],
+      "ordered_groups": [["stopped", "failed", "not working"], ["eli"], ["fuse"], ["heater"], ["frost alarm"], ["before dawn"]],
+      "min_words": 70,
+      "max_words": 140
+    }
+  ],
+  "hard_rules": [
+    "NO_TERMINAL_PROMPT_TEXT",
+    "NO_TERMINAL_RESPONSE_TEXT",
+    "NO_TERMINAL_CASE_IDS_OR_KWARGS",
+    "CONTRACTS_ARE_FROZEN_BEFORE_ANY_LIVE_GENERATION",
+    "VALIDATORS_ARE_DETERMINISTIC_AND_MODEL_INDEPENDENT",
+    "PASS_PROVES_ONLY_THIS_SYNTHETIC_NONTERMINAL_CONTRACT_ENVELOPE",
+    "ZERO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT_BY_ITSELF"
+  ]
+}
