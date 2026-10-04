@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
   "date": "2026-10-04",
-  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__ENTRYPOINT_TRANSITIVE_INDEPENDENT_PASS__EVENT_SHA_REPAIR_PENDING_INDEPENDENT_VERIFICATION__NO_CASES_CONSUMED__ZERO_LEARNED__ZERO_CREDIT",
+  "status": "FROZEN_ONE_USE_PRODUCTION_LEASE__FINAL_CONVERGENCE_V3__INDEPENDENT_VERIFICATION_REQUIRED__NO_CASES_CONSUMED__ZERO_CREDIT",
   "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
   "authorized_leaves": [
     "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
@@ -10,7 +10,9 @@
   "source_brain": {
     "activation_merge_commit": "ec77d3591ec6f70c7836e4f0c481d61461f9f4ac",
     "final_activation_blob": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
-    "final_activation_verification_blob": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec"
+    "final_activation_verification_blob": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
+    "qualification_receipt_blob": "36452412fb60ce38405f139111eba98b5cebc040",
+    "production_precommit_blob": "ddf55f3e54ef6af89a95395075441742cb124258"
   },
   "verification_chain": {
     "qualification": {
@@ -45,7 +47,7 @@
     "repository": "moxnixmdj/verification-capsule-runner",
     "launch_ref_prefix": "refs/heads/unknown-domain-direct-launch/",
     "claim_ref_prefix": "refs/heads/unknown-domain-direct-claims/",
-    "claim_key_rule": "SHA256_OF_EXACT_RAW_EXECUTION_LEASE_BYTES",
+    "claim_key_rule": "SHA256_OF_CANONICAL_QUALIFIED_EXECUTION_TUPLE_V2",
     "required_first_claim_create_http_status": 201,
     "any_non_201_behavior": "ABORT_BEFORE_BEACON_OR_CASE_GENERATION",
     "claim_uniqueness_source": "ATOMIC_CREATE_RESPONSE"
@@ -60,9 +62,11 @@
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PREFLIGHT_INPUT_V1.json": "deb2e2ce7d639b5650fa2e76d44425ee547157ef",
     "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PREDICATE_LOCAL_ACTIVATION_V1.json": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
     "canonical/verification/UNKNOWN_DOMAIN_V2_FINAL_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "93353244a5a0a6a7ef2e1e0a3a1bbedb63cef3ec",
-    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "7f05674904a4b3223cb26993a1e2e4b0bac8a0e7",
+    "canonical/runtime/unknown_domain_direct_production_once_v1.py": "7359db5d59f92b3958391f8d000bcece1830fb7a",
     ".github/workflows/unknown-domain-direct-one-use-production.yml": "990b4fe712ca509f3e01c8e632c75416a3cd0b98",
-    "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937"
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
+    "canonical/verification/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json": "36452412fb60ce38405f139111eba98b5cebc040",
+    "canonical/governance/UNKNOWN_DOMAIN_DIRECT_PRODUCTION_PRECOMMIT_V1.json": "ddf55f3e54ef6af89a95395075441742cb124258"
   },
   "limits": {
     "production_populations": 1,
@@ -92,7 +96,6 @@
     "acceptance_credit": false
   },
   "hard_rules": [
-    "RAW_LEASE_SHA256_IS_THE_LAUNCH_AND_CLAIM_KEY",
     "NO_CLAIM_ABSENCE_PRECHECK",
     "ONLY_ATOMIC_CLAIM_CREATE_HTTP_201_MAY_ADVANCE",
     "BEACON_AND_EVALUATOR_SECRET_MUST_NOT_EXIST_BEFORE_CLAIM_201",
@@ -103,7 +106,9 @@
     "PRODUCTION_WORKTREE_MUST_CHECKOUT_IMMUTABLE_CREATE_EVENT_SHA_NOT_MUTABLE_BRANCH_REF",
     "ATOMIC_CLAIM_RESPONSE_SHA_MUST_EQUAL_CREATE_EVENT_SHA",
     "RUNTIME_GIT_HEAD_MUST_EQUAL_IMMUTABLE_CREATE_EVENT_SHA",
-    "SANITIZED_PRODUCTION_RESULT_MUST_BE_WRITE_AHEAD_LOGGED_BEFORE_GITHUB_RESULT_COMMIT"
+    "SANITIZED_PRODUCTION_RESULT_MUST_BE_WRITE_AHEAD_LOGGED_BEFORE_GITHUB_RESULT_COMMIT",
+    "CLAIM_KEY_IS_CANONICAL_QUALIFIED_EXECUTION_TUPLE_NOT_RAW_METADATA",
+    "POST_201_FAILURES_MUST_SEAL_FAIL_CLOSED_WITHOUT_REPLAY"
   ],
   "entrypoint_repair": {
     "defect": "CREATE_TRIGGER_REACHED_RUNNER_BUT_PATH_EXECUTION_SET_SYS_PATH_TO_CANONICAL_RUNTIME_AND_FAILED_IMPORT_CANONICAL_BEFORE_ATOMIC_CLAIM",
@@ -167,5 +172,41 @@
         "independent_verification_required": true
       }
     }
+  },
+  "lease_identity": {
+    "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_IDENTITY_V2",
+    "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+    "authorized_leaves": [
+      "CALIBRATED_UNKNOWN_OR_ABSTENTION_ON_NONIDENTIFIABLE_OR_UNDERSPECIFIED_VARIANTS",
+      "CROSS_DOMAIN_TRANSFER_OUTSIDE_MYSTERYMECHANISM_TASK_STRUCTURE"
+    ],
+    "activation_git_blob_sha": "337bb7ee777e8b0f7f6340f395ca6c50e466594c",
+    "qualification_receipt_git_blob_sha": "36452412fb60ce38405f139111eba98b5cebc040",
+    "production_precommit_git_blob_sha": "ddf55f3e54ef6af89a95395075441742cb124258",
+    "exact_execution_subject": {
+      "candidate_v1": "a2a77269a8175ce315b466035049da0f761b8734",
+      "candidate_v2": "4470716f95a559a700e461262df909ae19a41651",
+      "generator_v1": "f974a4594c78e74693c7ba5a19f131dfa481b937",
+      "generator_v2": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+      "hidden_scorer": "e8cf5d1b5d311644725a751c15e6235958fb587d",
+      "execution_harness": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd"
+    },
+    "claim_repository": "moxnixmdj/verification-capsule-runner",
+    "claim_namespace": "refs/heads/unknown-domain-direct-claims/",
+    "production_budget": {
+      "production_populations_allowed": 1,
+      "production_cases_allowed": 27,
+      "max_transfer_probes_per_case": 2,
+      "replay_allowed": false,
+      "replacement_allowed": false,
+      "post_result_tuning_allowed": false
+    },
+    "resource_boundary": {
+      "persistent_learned_bytes": 0,
+      "external_frontier_model_calls": 0,
+      "external_learned_capability_calls": 0,
+      "incremental_spend_usd": 0
+    },
+    "global_fresh_reality": false
   }
 }
