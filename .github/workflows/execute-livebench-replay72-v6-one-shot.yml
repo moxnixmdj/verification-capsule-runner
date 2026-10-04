@@ -1,0 +1,29 @@
+name: Execute LiveBench Replay72 V6 One Shot
+
+on:
+  push:
+    branches:
+      - exec/livebench-replay72-v6-20261004-0919
+    paths:
+      - .github/workflows/execute-livebench-replay72-v6-one-shot.yml
+
+permissions:
+  contents: read
+
+jobs:
+  replay72:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact execution branch
+        uses: actions/checkout@v4
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Execute authorized LiveBench V6 replay72
+        env:
+          REPOSITORY_PRIVATE: "false"
+        run: python launch_livebench_replay72_v6.py
