@@ -3,7 +3,7 @@ name: Qwen3.8 Q2 CPU semantic smoke
 on:
   push:
     branches:
-      - verify/qwen38-q2-cpu-semantic-probe-20261004-sol
+      - main
     paths:
       - verification/qwen38_q2_cpu_semantic_probe_v1.py
       - .github/workflows/qwen38-q2-cpu-semantic-smoke-v1.yml
@@ -20,13 +20,14 @@ permissions:
 
 jobs:
   probe:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
       LLAMA_SHA: 5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
       MODEL_REV: 27af057ecb382ddfea5d12837360a8980560e3ed
       MODEL_FILE: Qwen3.8-27B-UD-Q2_K_XL.gguf
       MODEL_BYTES: "9828981664"
+      MODEL_SHA256: fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0
     steps:
       - uses: actions/checkout@v4
 
@@ -69,6 +70,7 @@ jobs:
           echo "model_bytes=$size"
           echo "model_sha256=$sha"
           test "$size" -eq "$MODEL_BYTES"
+          test "$sha" = "$MODEL_SHA256"
           printf '%s  %s\n' "$sha" "$MODEL_FILE" > "$RUNNER_TEMP/model.sha256"
           df -B1 "$RUNNER_TEMP"
           free -b
