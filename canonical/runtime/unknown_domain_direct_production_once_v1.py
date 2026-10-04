@@ -424,11 +424,16 @@ def main()->None:
     result_path=RESULT_PREFIX+digest.upper()+"_V1.json"
     result["result_path"]=result_path
     sealed_json=json.dumps(result,sort_keys=True,separators=(",",":"))
-    RESULT_ARTIFACT_PATH.write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+    sealed_raw=_result_bytes(result)
     print("SEALED_PRODUCTION_RESULT_SHA256="+hashlib.sha256(sealed_json.encode()).hexdigest(),flush=True)
     print("SEALED_PRODUCTION_RESULT_JSON="+sealed_json,flush=True)
+    print("UNKNOWN_DOMAIN_RESULT_RECOVERY_B64_V1="+base64.b64encode(sealed_raw).decode(),flush=True)
+    try:
+        RESULT_ARTIFACT_PATH.write_bytes(sealed_raw)
+    except Exception as exc:
+        print("LOCAL_RESULT_WRITE_FAILED="+type(exc).__name__,flush=True)
     persistence=persist_result_durable(
-        repo=repo,token=token,branch=claim_branch,path=result_path,content=result
+        repo=repo,token=token,branch=claim_branch,path=result_path,content=result,emit_recovery=False
     )
     commit_sha=str(persistence.get("commit_sha") or "")
     print(json.dumps({
