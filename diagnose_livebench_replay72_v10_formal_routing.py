@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import hashlib,pathlib,re,shutil
-
 import diagnose_livebench_replay72_v8_structural as v8
 
 ROOT=pathlib.Path(__file__).resolve().parent
@@ -21,10 +20,10 @@ def blob(path):
 for rel,want in EXPECTED.items():
     p=ROOT/rel
     if not p.is_file() or blob(p)!=want:
-        raise SystemExit("FAIL_CLOSED:V9_SUBJECT_BLOB_DRIFT:"+rel)
+        raise SystemExit("FAIL_CLOSED:V10_SUBJECT_BLOB_DRIFT:"+rel)
 
 _original_build=v8.build_template
-def _build_v9(base,mod):
+def _build_v10(base,mod):
     template=_original_build(base,mod)
     for name in (
       "root2_livebench_if_astra_inference_adapter_v2.py",
@@ -35,7 +34,7 @@ def _build_v9(base,mod):
         shutil.copy2(src,dst)
     return template
 
-v8.build_template=_build_v9
+v8.build_template=_build_v10
 old="from canonical.runtime import root2_livebench_if_astra_inference_adapter_v1 as adapter"
 new="from canonical.runtime import root2_livebench_if_astra_inference_adapter_v2 as adapter"
 if old not in v8.CASE_DRIVER:
@@ -44,10 +43,10 @@ v8.CASE_DRIVER=v8.CASE_DRIVER.replace(old,new,1)
 
 def main(*,authorized=False,activation_blob=None):
     if authorized is not True:
-        raise SystemExit("FAIL_CLOSED:VERIFIED_V9_LAUNCHER_REQUIRED")
+        raise SystemExit("FAIL_CLOSED:VERIFIED_V10_LAUNCHER_REQUIRED")
     if not isinstance(activation_blob,str) or re.fullmatch(r"[0-9a-f]{40}",activation_blob) is None:
-        raise SystemExit("FAIL_CLOSED:VERIFIED_V9_ACTIVATION_BLOB_REQUIRED")
+        raise SystemExit("FAIL_CLOSED:VERIFIED_V10_ACTIVATION_BLOB_REQUIRED")
     return v8.main(authorized=True,activation_blob=activation_blob)
 
 if __name__=="__main__":
-    raise SystemExit("FAIL_CLOSED:VERIFIED_V9_LAUNCHER_REQUIRED")
+    raise SystemExit("FAIL_CLOSED:VERIFIED_V10_LAUNCHER_REQUIRED")
