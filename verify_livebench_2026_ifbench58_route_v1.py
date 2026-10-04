@@ -2,26 +2,44 @@
 from __future__ import annotations
 
 import ast
+import datetime
 import hashlib
 import json
 import pathlib
 import subprocess
+import urllib.request
+
+import pyarrow.parquet as pq
 
 ROOT = pathlib.Path("/tmp/LiveBench")
-# Workflow exists before this trigger commit; receipt remains outcome-blind.
 PINNED_COMMIT = "8f8e5c381a16e3f24257776edd53471fe86f8091"
-RELEASE = "2026-06-25"
+SELECTED_LEADERBOARD_RELEASE = "2026-06-25"
 CUTOFF = "2025-11-25"
-EXPECTED = {
+
+DATASET_REV = "0868379c4b5cf62aeacaf8be4f08fced815c81bb"
+DATASET_SHA256 = "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25"
+DATASET_BYTES = 537024
+DATASET_ROWS = 400
+EXPECTED_SELECTED_ROWS = 200
+
+# Exact release set used by the frozen executor / public loader surface.
+VALID_RELEASES = {
+    "2024-06-24", "2024-07-26", "2024-08-31", "2024-11-25",
+    "2025-04-02", "2025-04-25", "2025-05-30", "2025-11-25",
+    "2025-12-23", "2026-01-08", "2026-06-25",
+}
+
+EXPECTED_SOURCE_BLOBS = {
     "livebench/gen_ground_truth_judgment.py": "b36561da5b54380c724c507462d0ee65feefeac8",
+    "livebench/common.py": "95373cc6a82bc935013e2c23d2a183022f802f5c",
     "livebench/process_results/instruction_following/utils.py": "8ce01747887ec0792c8f024e1972e34ece781676",
-    "livebench/if_runner/ifbench/evaluation_lib.py": "2c7bd1290031dbe4ae0f016c53255f4af0ec645b",
-    "livebench/if_runner/ifbench/instructions_registry.py": "adfed4832877566e62970257b50c6fa32c302fb2",
 }
 
 
 def git(*args: str) -> str:
-    return subprocess.check_output(["git", "-C", str(ROOT), *args], text=True).strip()
+    return subprocess.check_output(
+        ["git", "-C", str(ROOT), *args], text=True
+    ).strip()
 
 
 def source(rel: str) -> str:
@@ -39,100 +57,183 @@ def compact(node: ast.AST) -> str:
     return ast.unparse(node).replace(" ", "").replace("\n", "")
 
 
+def iso(v) -> str:
+    if isinstance(v, (datetime.date, datetime.datetime)):
+        return v.strftime("%Y-%m-%d")
+    return "" if v is None else str(v)[:10]
+
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+# 1. Bind exact public source bytes.
 head = git("rev-parse", "HEAD")
 assert head == PINNED_COMMIT, (head, PINNED_COMMIT)
-observed = {rel: git("rev-parse", f"HEAD:{rel}") for rel in EXPECTED}
-assert observed == EXPECTED, {"observed": observed, "expected": EXPECTED}
+observed_blobs = {
+    rel: git("rev-parse", f"HEAD:{rel}") for rel in EXPECTED_SOURCE_BLOBS
+}
+assert observed_blobs == EXPECTED_SOURCE_BLOBS, {
+    "observed": observed_blobs,
+    "expected": EXPECTED_SOURCE_BLOBS,
+}
 
+# 2. Prove the router compares each match.question release field, not the
+# selected leaderboard release passed to load_questions.
 router_src = source("livebench/gen_ground_truth_judgment.py")
 router = ast.parse(router_src)
 gen = function(router, "gen_judgments")
-play = function(router, "play_a_match_gt")
-
-# Bind the release split exactly from syntax rather than from comments.
 old_assignment = None
-normal_assignment = None
 for node in ast.walk(gen):
-    if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-        if node.targets[0].id == "old_instruction_following_matches":
-            old_assignment = node.value
-        elif node.targets[0].id == "normal_matches":
-            normal_assignment = node.value
-assert old_assignment is not None and normal_assignment is not None
+    if (
+        isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id == "old_instruction_following_matches"
+    ):
+        old_assignment = node.value
+        break
+assert old_assignment is not None
 old_text = compact(old_assignment)
-normal_text = compact(normal_assignment)
-assert "category" in old_text and "instruction_following" in old_text
-assert "livebench_release_date" in old_text
+assert "m.question.get('livebench_release_date','')" in old_text or (
+    'm.question.get("livebench_release_date","")' in old_text
+)
 assert "<'2025-11-25'" in old_text or '<"2025-11-25"' in old_text
-assert "old_instruction_following_matches" in normal_text
-assert RELEASE >= CUTOFF
+assert SELECTED_LEADERBOARD_RELEASE not in old_text
 
-# The old evaluator must occur only in the legacy batch path inside gen_judgments.
-legacy_calls = [
-    n for n in ast.walk(gen)
-    if isinstance(n, ast.Call)
-    and isinstance(n.func, ast.Name)
-    and n.func.id == "instruction_following_process_results"
-]
-assert len(legacy_calls) == 1
+# 3. Prove load_questions does not overwrite q.livebench_release_date with the
+# selected leaderboard release. The selected release only gates removal_date.
+common_src = source("livebench/common.py")
+common = ast.parse(common_src)
+load_questions = function(common, "load_questions")
+load_text = compact(load_questions)
+assert "livebench_release" in load_text
+assert "livebench_removal_date" in load_text
+assert "q['livebench_removal_date']==''" in load_text or (
+    'q["livebench_removal_date"]==""' in load_text
+)
+assert "q['livebench_removal_date']>livebench_release" in load_text or (
+    'q["livebench_removal_date"]>livebench_release' in load_text
+)
+# There must be no assignment that writes the function parameter
+# livebench_release into q["livebench_release_date"].
+for node in ast.walk(load_questions):
+    if isinstance(node, ast.Assign):
+        value_text = compact(node.value)
+        for target in node.targets:
+            target_text = compact(target)
+            assert not (
+                "livebench_release_date" in target_text
+                and value_text == "livebench_release"
+            ), "LOADER_OVERWRITES_PER_QUESTION_RELEASE"
 
-# The per-question normal instruction-following route must call IFBench.
-play_text = compact(play)
-assert "question.get('category')=='instruction_following'" in play_text or 'question.get("category")=="instruction_following"' in play_text
-assert "ifbench_process_results(question,llm_answer,debug)" in play_text
+# 4. Download the exact frozen dataset and read only routing metadata.
+url = (
+    "https://huggingface.co/datasets/livebench/instruction_following/resolve/"
+    + DATASET_REV
+    + "/data/test-00000-of-00001.parquet?download=true"
+)
+req = urllib.request.Request(
+    url, headers={"User-Agent": "project-brain-route-truth-verifier"}
+)
+with urllib.request.urlopen(req, timeout=60) as response:
+    parquet_bytes = response.read()
+assert len(parquet_bytes) == DATASET_BYTES
+assert sha256(parquet_bytes) == DATASET_SHA256
 
+dataset_path = pathlib.Path("livebench_instruction_following_exact.parquet")
+dataset_path.write_bytes(parquet_bytes)
+pf = pq.ParquetFile(dataset_path)
+assert pf.metadata.num_rows == DATASET_ROWS
+
+table = pq.read_table(
+    dataset_path,
+    columns=["livebench_release_date", "livebench_removal_date"],
+)
+release_dates = [iso(v) for v in table.column("livebench_release_date").to_pylist()]
+removal_dates = [iso(v) for v in table.column("livebench_removal_date").to_pylist()]
+assert len(release_dates) == DATASET_ROWS
+assert len(removal_dates) == DATASET_ROWS
+
+selected_dates: list[str] = []
+for release_date, removal_date in zip(release_dates, removal_dates):
+    if release_date not in VALID_RELEASES:
+        continue
+    if removal_date and removal_date <= SELECTED_LEADERBOARD_RELEASE:
+        continue
+    selected_dates.append(release_date)
+
+assert len(selected_dates) == EXPECTED_SELECTED_ROWS, len(selected_dates)
+histogram: dict[str, int] = {}
+for value in selected_dates:
+    histogram[value] = histogram.get(value, 0) + 1
+assert histogram == {"2024-11-25": 200}, histogram
+assert all(value < CUTOFF for value in selected_dates)
+
+legacy_rows = sum(value < CUTOFF for value in selected_dates)
+modern_rows = len(selected_dates) - legacy_rows
+assert legacy_rows == 200
+assert modern_rows == 0
+
+# 5. Bind the actual old-batch evaluator.
 utils_src = source("livebench/process_results/instruction_following/utils.py")
 utils = ast.parse(utils_src)
-ifbench = function(utils, "ifbench_process_results")
-score_results = function(utils, "score_results")
-ifbench_text = compact(ifbench)
-score_text = compact(score_results)
-assert "evaluation_lib.test_instruction_following_strict(inp,response)" in ifbench_text
-assert "score_results(result.follow_all_instructions,result.follow_instruction_list)" in ifbench_text
-assert "score_1=1iffollow_all_instructionselse0" in score_text
-assert "score_2=sum(score_2)/len(score_2)" in score_text
-assert "avg_score=(score_1+score_2)/2" in score_text
-
-registry_src = source("livebench/if_runner/ifbench/instructions_registry.py")
-registry = ast.parse(registry_src)
-registry_node = None
-for node in registry.body:
-    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "INSTRUCTION_DICT":
-        registry_node = node.value
-        break
-    if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "INSTRUCTION_DICT" for t in node.targets):
-        registry_node = node.value
-        break
-assert isinstance(registry_node, ast.Dict)
-keys = [k.value for k in registry_node.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)]
-assert len(keys) == 58, len(keys)
-assert len(set(keys)) == 58
+legacy_process = function(utils, "instruction_following_process_results")
+legacy_text = compact(legacy_process)
+assert "evaluation_main.evaluator(" in legacy_text
 
 receipt = {
-    "schema": "PROJECT_BRAIN_LIVEBENCH_2026_06_25_IFBENCH58_SCORER_ROUTE_INDEPENDENT_VERIFICATION_V1",
-    "status": "PASS__PINNED_2026_06_25_ROUTES_TO_IFBENCH58_STRICT_NOT_LEGACY25__ZERO_TERMINAL_CONTENT__ZERO_CREDIT",
+    "schema": "PROJECT_BRAIN_LIVEBENCH_2026_ROUTE_VARIABLE_TRUTH_INDEPENDENT_VERIFICATION_V2",
+    "status": (
+        "PASS__EXACT_FROZEN_200_ROUTE_TO_LEGACY_IFEVAL__"
+        "IFBENCH58_ROUTE_CANDIDATE_REFUTED"
+    ),
     "pinned_commit": PINNED_COMMIT,
-    "exact_source_blobs": observed,
-    "release": RELEASE,
+    "exact_source_blobs": observed_blobs,
+    "selected_leaderboard_release": SELECTED_LEADERBOARD_RELEASE,
+    "router_operand": "per-question livebench_release_date",
     "legacy_cutoff": CUTOFF,
-    "release_is_not_legacy": RELEASE >= CUTOFF,
-    "legacy_instruction_following_process_call_count_in_gen_judgments": len(legacy_calls),
-    "normal_instruction_following_calls_ifbench_process_results": True,
-    "ifbench_calls_strict_evaluator": True,
-    "score_formula": "(ALL_INSTRUCTIONS_FOLLOWED_INDICATOR + FRACTION_OF_INSTRUCTIONS_FOLLOWED) / 2",
-    "ifbench_registry_count": len(keys),
-    "legacy25_load_bearing_for_2026_06_25": False,
-    "ifbench58_load_bearing_for_2026_06_25": True,
+    "dataset": {
+        "revision": DATASET_REV,
+        "sha256": DATASET_SHA256,
+        "bytes": DATASET_BYTES,
+        "rows": DATASET_ROWS,
+    },
+    "metadata_only_recomputation": {
+        "selected_rows": len(selected_dates),
+        "selected_release_histogram": histogram,
+        "legacy_ifeval_rows": legacy_rows,
+        "modern_ifbench_rows": modern_rows,
+        "all_selected_pre_cutoff": True,
+    },
+    "loader_semantics": {
+        "selected_release_overwrites_question_release": False,
+        "selected_release_filters_removal_date": True,
+    },
+    "legacy_processor": (
+        "instruction_following_process_results -> "
+        "instruction_following_eval.evaluation_main.evaluator"
+    ),
+    "refuted_proposition": (
+        "selected leaderboard release 2026-06-25 >= cutoff therefore "
+        "all selected rows use IFBench58"
+    ),
+    "correct_proposition": (
+        "router uses each selected question's livebench_release_date; "
+        "all 200 exact selected rows carry 2024-11-25 < cutoff"
+    ),
     "terminal_prompt_text_read": False,
     "terminal_response_text_read": False,
-    "terminal_kwargs_read": False,
-    "terminal_case_content_read": False,
+    "terminal_kwargs_values_read": False,
+    "terminal_instruction_ids_read": False,
+    "terminal_case_ids_read": False,
     "terminal_cases_consumed": 0,
     "acceptance_credit_delta": 0,
     "family_credit_delta": 0,
     "capability_credit_delta": 0,
     "ownership_credit_delta": 0,
 }
-path = pathlib.Path("livebench_2026_ifbench58_route_v1_receipt.json")
-path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+out = pathlib.Path("livebench_2026_route_variable_truth_v2_receipt.json")
+out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 print(json.dumps(receipt, sort_keys=True))
