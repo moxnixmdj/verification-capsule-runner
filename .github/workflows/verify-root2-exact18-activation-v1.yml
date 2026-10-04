@@ -1,0 +1,22 @@
+name: Verify Root2 exact18 scheduling activation V1
+
+on:
+  push:
+    branches: [verify-livebench-exact-brain-bytes-20261004-sol]
+    paths:
+      - 'root2_exact18_activation_candidate_v1.json'
+      - 'verify_root2_exact18_activation_v1.py'
+      - '.github/workflows/verify-root2-exact18-activation-v1.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact activation candidate blob
+        run: |
+          set -euo pipefail
+          test "$(git hash-object root2_exact18_activation_candidate_v1.json)" = "ac2f59f0727714d9b88d0cb6b77d10c956316f4c"
+      - name: Verify activation authority boundaries
+        run: python verify_root2_exact18_activation_v1.py
