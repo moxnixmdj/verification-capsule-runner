@@ -5,3 +5,5 @@ terminal_rows=0
 acceptance_credit=0
 unsat_policy=independent_exact_end_forbidden_collision_proof
 verifier_regex_boundary_fix=1
+current_generator_blob=b6ace46a0887321c4c8c8354d88169be1fdbf582
+slot_feasibility_blob=abcd0aac17dc7f0be70c6ac37855d5ef6a87ca1f
