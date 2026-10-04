@@ -46,6 +46,27 @@ class ProductionLauncherTests(unittest.TestCase):
         self.assertNotIn("hidden_records",raw)
         self.assertNotIn("evaluator_secret",raw)
 
+
+    def test_lease_does_not_require_impossible_self_digest(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            payload=b"component-bytes"
+            (root/"component.bin").write_bytes(payload)
+            lease={
+                "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1",
+                "target_predicate":prod.TARGET,
+                "authorized_leaves":sorted(prod.LEAVES),
+                "limits":{"production_populations":1,"production_cases":27,"replay_allowed":False,"replacement_allowed":False},
+                "resources":{"persistent_learned_bytes":0,"external_frontier_model_calls":0,"external_learned_capability_calls":0,"incremental_spend_usd":0},
+                "exact_components":{"component.bin":prod._git_blob(payload)},
+            }
+            old=prod.ROOT
+            try:
+                prod.ROOT=root
+                prod.validate_lease(lease,"f"*64)
+            finally:
+                prod.ROOT=old
+
     def test_lease_digest_is_raw_file_sha256(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/"lease.json"; p.write_bytes(b'{"x":1}\n')
