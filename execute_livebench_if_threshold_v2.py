@@ -425,6 +425,7 @@ def main() -> int:
                 if iid not in instructions_registry.INSTRUCTION_DICT:
                     unknown.add(iid)
         if unknown:
+            print("LIVEBENCH_UNKNOWN_INSTRUCTION_IDS="+json.dumps(sorted(unknown)), flush=True)
             raise SystemExit("FAIL_CLOSED:UNKNOWN_INSTRUCTION_IDS:"+hashlib.sha256(json.dumps(sorted(unknown)).encode()).hexdigest())
 
         template=build_runtime_template(base)
