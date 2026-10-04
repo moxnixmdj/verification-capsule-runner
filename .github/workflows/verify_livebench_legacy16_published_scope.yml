@@ -1,0 +1,29 @@
+name: Verify LiveBench published legacy16 scope
+
+on:
+  push:
+    branches:
+      - verify/livebench-legacy16-published-scope-20261004
+  pull_request:
+    paths:
+      - "verify_livebench_legacy16_published_scope.py"
+      - ".github/workflows/verify_livebench_legacy16_published_scope.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure pdftotext
+        run: |
+          if ! command -v pdftotext >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y poppler-utils
+          fi
+      - name: Verify exact published 16-of-25 scope
+        run: python verify_livebench_legacy16_published_scope.py
