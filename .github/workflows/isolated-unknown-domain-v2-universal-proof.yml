@@ -1,6 +1,12 @@
 name: Isolated Unknown-Domain V2 universal proof
 
 on:
+  pull_request:
+    branches:
+      - verify-sink/unknown-domain-v2-universal-20261005
+    paths:
+      - verification/unknown_domain_v2_universal_proof_isolated_v1.py
+      - .github/workflows/isolated-unknown-domain-v2-universal-proof.yml
   push:
     branches:
       - exec/unknown-domain-v2-universal-proof-isolated-20261005
