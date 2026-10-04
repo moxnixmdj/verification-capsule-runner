@@ -1,0 +1,46 @@
+name: Verify Unknown-Domain pre-result reducer V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/unknown_domain_production_result_reducer_v1.py'
+      - 'canonical/tests/test_unknown_domain_production_result_reducer_v1.py'
+      - '.github/workflows/verify-unknown-domain-result-reducer-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact pre-result frozen bytes
+        run: |
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          expected={
+            "canonical/runtime/unknown_domain_production_result_reducer_v1.py":"86ee0cf13b874e6b7373737429bef6ae99878415",
+            "canonical/tests/test_unknown_domain_production_result_reducer_v1.py":"52e90bcd698f0ac74845f22e329b8fd26fa07cc9",
+          }
+          def blob(p):
+              b=Path(p).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          for p,want in expected.items():
+              got=blob(p)
+              assert got==want,(p,got,want)
+          src=Path("canonical/runtime/unknown_domain_production_result_reducer_v1.py").read_text()
+          assert "urllib" not in src
+          assert "requests" not in src
+          assert "openai" not in src.lower()
+          assert "anthropic" not in src.lower()
+          assert "promotion_authority" in src
+          assert "family_closure_inferred" in src
+          print("exact reducer bytes PASS")
+          PY
+      - name: Run frozen adversarial reducer tests
+        run: python -m unittest canonical.tests.test_unknown_domain_production_result_reducer_v1 -v
