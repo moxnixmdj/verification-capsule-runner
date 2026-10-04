@@ -1,6 +1,9 @@
 name: Verify LiveBench universal pointwise gate
 
 on:
+  push:
+    branches:
+      - "verify/livebench-universal-construction-20261005-v1"
   pull_request:
     branches: [main]
     paths:
