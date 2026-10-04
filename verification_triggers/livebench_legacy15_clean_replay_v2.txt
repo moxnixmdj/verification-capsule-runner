@@ -4,3 +4,4 @@ generator_blob=287e5a7e320503accf202d634f12b72fa3bbd403
 terminal_rows=0
 acceptance_credit=0
 unsat_policy=independent_exact_end_forbidden_collision_proof
+verifier_regex_boundary_fix=1
