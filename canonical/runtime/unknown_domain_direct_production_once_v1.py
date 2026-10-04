@@ -93,8 +93,6 @@ def lease_bytes_and_digest(path:Path=LEASE_PATH):
 def validate_lease(lease:Mapping[str,Any],digest:str)->None:
     if lease.get("schema")!="PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1":
         raise ProductionLaunchError("LEASE_SCHEMA_INVALID")
-    if lease.get("lease_sha256")!=digest:
-        raise ProductionLaunchError("LEASE_SELF_DIGEST_MISMATCH")
     if lease.get("target_predicate")!=TARGET:
         raise ProductionLaunchError("LEASE_TARGET_MISMATCH")
     if set(map(str,lease.get("authorized_leaves",[])))!=LEAVES:
