@@ -7,6 +7,11 @@ from canonical.runtime import unknown_domain_direct_hidden_generator_v2 as gener
 from canonical.runtime import unknown_domain_direct_production_once_v1 as prod
 
 class ProductionLauncherTests(unittest.TestCase):
+    def test_runtime_head_must_equal_create_event_sha(self):
+        prod.validate_event_sha_binding("a"*40,"a"*40)
+        with self.assertRaisesRegex(prod.ProductionLaunchError,"RUNTIME_HEAD_EVENT_SHA_MISMATCH"):
+            prod.validate_event_sha_binding("a"*40,"b"*40)
+
     def test_claim_failure_prevents_execution(self):
         called={"execute":False}
         def fake_create(repo,token,ref,sha):
