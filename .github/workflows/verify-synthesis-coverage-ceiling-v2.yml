@@ -1,0 +1,32 @@
+name: Verify synthesis coverage ceiling v2
+
+on:
+  pull_request:
+    paths:
+      - "canonical/governance/OPUS55_SYNTHESIS_REQUIRED_CLAIM_COVERAGE_CEILING_LIFT_V2.json"
+      - "canonical/runtime/synthesis_required_claim_coverage_ceiling_lift_verifier_v2.py"
+      - "canonical/tests/test_synthesis_required_claim_coverage_ceiling_lift_v2.py"
+      - "canonical/governance/OPUS55_SYNTHESIS_REQUIRED_CLAIM_COVERAGE_CEILING_LIFT_V1.json"
+      - "canonical/verification/OPUS55_SYNTHESIS_REQUIRED_CLAIM_COVERAGE_CEILING_INDEPENDENT_FAILURE_20261002_V1.json"
+      - "canonical/verification/SYNTHESIS_OVERLAY_V3_REBIND_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json"
+      - "canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_V1.json"
+      - "canonical/verification/SYNTHESIS_LOSSLESS_SCOPE_DECOMPOSITION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json"
+      - "canonical/verification/SYNTHESIS_SCOPE_CERTIFICATE_ACTIVATION_PUBLIC_RUNNER_VERIFICATION_20261004_V1.json"
+      - ".github/workflows/verify-synthesis-coverage-ceiling-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run adversarial unit tests
+        run: python -m unittest canonical.tests.test_synthesis_required_claim_coverage_ceiling_lift_v2 -v
+      - name: Verify exact proof composition
+        run: python canonical/runtime/synthesis_required_claim_coverage_ceiling_lift_verifier_v2.py
