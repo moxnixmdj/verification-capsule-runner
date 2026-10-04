@@ -1,4 +1,5 @@
 name: Verify LiveBench local Qwen semantic seed V1
+# trigger-refresh: 2026-10-04
 
 on:
   pull_request:
