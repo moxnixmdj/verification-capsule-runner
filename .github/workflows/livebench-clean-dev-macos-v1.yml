@@ -40,7 +40,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m venv .venv
-          .venv/bin/python -m pip install --disable-pip-version-check numpy==2.3.3 nltk==3.10.3 langdetect==1.0.9
+          .venv/bin/python -m pip install --disable-pip-version-check numpy==2.3.3 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.3.1
       - name: Fetch exact public checker and historical generator sources
         run: |
           set -euo pipefail
