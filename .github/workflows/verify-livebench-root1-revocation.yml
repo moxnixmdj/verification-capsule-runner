@@ -1,0 +1,28 @@
+name: Verify LiveBench Root1 revocation
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_root1_revocation.py
+      - subject/livebench_root1_revocation_v1/**
+      - .github/workflows/verify-livebench-root1-revocation.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify Root1 revocation
+        run: python verify_livebench_root1_revocation.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-root1-revocation-receipt
+          path: livebench_root1_revocation_verification_receipt.json
+          if-no-files-found: error
