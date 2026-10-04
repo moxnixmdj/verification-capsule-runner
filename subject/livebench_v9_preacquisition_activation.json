@@ -1,0 +1,30 @@
+{
+  "schema": "PROJECT_BRAIN_LIVEBENCH_V9_PREACQUISITION_STATIC_ACTIVATION_V1",
+  "date": "2026-10-04",
+  "status": "RUNNER_LOCAL_ACTIVATION__REPLAY72_ONLY__ZERO_NEW_EXPOSURE__ZERO_CREDIT",
+  "target_predicate": "LIVEBENCH_IF_GE_65_7",
+  "prior_receipt_path": "evidence/LIVEBENCH_V8_STRUCTURAL_REFINEMENT_EXECUTION_RECEIPT.json",
+  "prior_workflow_run_id": 37194573632,
+  "diagnostic_git_blob_sha": "d383f6b609ab8c16c4dca3457af3008771243280",
+  "base_executor_git_blob_sha": "2a57ce896ddbd6819246aab8b44d17a00f36b61e",
+  "epoch_digest_sha256": "e2f1f2a8d42165e7ba4ecf07a87df0a347ca70143211c4e39e18d4689129c543",
+  "claim_ref": "refs/heads/livebench-v9-claims/e2f1f2a8d42165e7ba4ecf07a87df0a347ca70143211c4e39e18d4689129c543",
+  "scope": {
+    "replay_prefix_limit": 72,
+    "already_exposed_prefix_only": true,
+    "new_case_exposure": false,
+    "case_73_or_later": false,
+    "aggregate_static_labels_only": true,
+    "prompt_text_output_forbidden": true,
+    "response_text_output_forbidden": true,
+    "case_id_output_forbidden": true,
+    "raw_exception_output_forbidden": true
+  },
+  "authority": {
+    "execution": true,
+    "replay_existing_prefix": true,
+    "new_case_exposure": false,
+    "promotion": false,
+    "acceptance_credit": false
+  }
+}
