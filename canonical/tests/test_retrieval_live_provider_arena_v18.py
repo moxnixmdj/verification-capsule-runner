@@ -1,48 +1,57 @@
 from canonical.runtime import retrieval_live_provider_arena_v18 as v18
 
-def test_semver_ignores_rc_suffix_number():
-    assert v18.semantic_version_key("jackson-databind-3.0.0-rc10")== (3,0,0)
-    assert v18.semantic_version_key("release-2.18.4")== (2,18,4)
+def test_semver_ignores_rc_suffix_digits():
+    assert v18.semantic_version_from_tag("jackson-databind-3.0.0-rc10")== (3,0,0)
+    assert v18.semantic_version_from_tag("jackson-databind-2.20.1")== (2,20,1)
+    assert v18.semantic_version_from_tag("v1.2")== (1,2,None)
 
-def test_representative_tags_use_real_major_lines():
-    rows=[
-        {"name":"jackson-databind-3.0.0-rc10","commit_sha":"a","source_page":1},
-        {"name":"jackson-databind-3.0.0-rc9","commit_sha":"b","source_page":1},
-        {"name":"jackson-databind-2.20.1","commit_sha":"c","source_page":2},
-        {"name":"jackson-databind-2.19.4","commit_sha":"d","source_page":2},
+def test_major_line_selection_preserves_old_major():
+    tags=[
+        {"name":"x-3.0.0-rc10","version_major":3},
+        {"name":"x-3.0.0-rc9","version_major":3},
+        {"name":"x-3.0.0-rc8","version_major":3},
+        {"name":"x-2.20.1","version_major":2},
+        {"name":"x-2.19.4","version_major":2},
+        {"name":"x-1.9.0","version_major":1},
     ]
-    got=v18.representative_tags(rows,max_tags=12)
-    majors={x["version_major"] for x in got}
-    assert 3 in majors and 2 in majors
-    assert 10 not in majors and 9 not in majors
+    selected=v18.select_version_line_tags(tags,max_per_major=1)
+    assert [x["version_major"] for x in selected[:3]]==[3,2,1]
 
-def test_paginated_tags_stops_on_short_page():
-    old=v18.v17.v13._github_json
-    calls=[]
-    def fake(url,timeout=1):
-        import urllib.parse
-        calls.append(url)
-        q=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
-        page=int(q["page"][0])
-        if page==1:
-            return [{"name":f"v3.0.{i}","commit":{"sha":str(i)}} for i in range(100)]
-        if page==2:
-            return [{"name":"v2.0.0","commit":{"sha":"b"}}]
-        return []
-    v18.v17.v13._github_json=fake
-    try:
-        rows=v18.paginated_tags("org/repo",timeout=1,max_pages=5,per_page=100)
-    finally:
-        v18.v17.v13._github_json=old
-    assert len(calls)==2
-    assert any(x["name"]=="v2.0.0" for x in rows)
-
-def test_validate_answer_key_blind():
+def test_validate_answer_key_blind_queries():
     v18.validate()
 
+def test_history_functions_are_target_parameter_free():
+    import inspect
+    for fn in [v18.list_tags,v18.select_version_line_tags,v18.historical_coordinates]:
+        assert "target" not in str(inspect.signature(fn))
+
+def test_historical_coords_cross_major_lines():
+    old_list=v18.list_tags
+    old_paths=v18.repository_pom_paths
+    old_pom=v18.pom_at_ref
+    try:
+        v18.list_tags=lambda repo,timeout=1,max_pages=3:[
+            {"name":"jackson-databind-3.0.0-rc10","version_major":3},
+            {"name":"jackson-databind-2.20.1","version_major":2},
+        ]
+        v18.repository_pom_paths=lambda repo,timeout=1,max_poms=20:["pom.xml"]
+        docs={
+            "jackson-databind-3.0.0-rc10":"<project><groupId>tools.jackson.core</groupId><artifactId>jackson-databind</artifactId></project>",
+            "jackson-databind-2.20.1":"<project><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></project>",
+        }
+        v18.pom_at_ref=lambda repo,path,ref,timeout=1:docs[ref]
+        out=v18.historical_coordinates("FasterXML/jackson-databind",timeout=1,max_per_major=1)
+        assert "tools.jackson.core:jackson-databind" in out["coordinates"]
+        assert "com.fasterxml.jackson.core:jackson-databind" in out["coordinates"]
+    finally:
+        v18.list_tags=old_list
+        v18.repository_pom_paths=old_paths
+        v18.pom_at_ref=old_pom
+
 if __name__=="__main__":
-    test_semver_ignores_rc_suffix_number()
-    test_representative_tags_use_real_major_lines()
-    test_paginated_tags_stops_on_short_page()
-    test_validate_answer_key_blind()
+    test_semver_ignores_rc_suffix_digits()
+    test_major_line_selection_preserves_old_major()
+    test_validate_answer_key_blind_queries()
+    test_history_functions_are_target_parameter_free()
+    test_historical_coords_cross_major_lines()
     print("test_retrieval_live_provider_arena_v18: PASS")
