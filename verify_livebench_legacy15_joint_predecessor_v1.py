@@ -11,7 +11,7 @@ import urllib.request
 import pyarrow.parquet as pq
 
 from canonical.runtime import livebench_frozen_active_legacy15_v1 as active15
-from canonical.runtime import livebench_legacy_visible_constraint_compiler_v2 as compiler
+from canonical.runtime import livebench_legacy_visible_constraint_compiler_v4 as compiler
 from canonical.runtime import livebench_legacy15_joint_candidate_generator_v1 as generator
 
 REV="4f7ab12f0d47848da31de92bd7cc3d7d4acfe695"
@@ -26,7 +26,7 @@ SOURCE_FILES={
 }
 BRAIN_BLOBS={
     "canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py":"e986035ff68b53c0dc7a7eb478f6e3d8882214aa",
-    "canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py":"0e7519f4f2b7d40084effc83a5bef814ee7fd487",
+    "canonical/runtime/livebench_legacy_visible_constraint_compiler_v4.py":"721207ba39d502e3f610289578e9d5bab78b1fcc",
     "canonical/runtime/livebench_frozen_active_legacy15_v1.py":"34440ee69322e9d519cbe656cb03c55683a8b9c6",
     "canonical/runtime/livebench_legacy15_composition_partition_v1.py":"b817b4f63f4e98c2705f221c7a4abd8e571f9d80",
     "canonical/runtime/livebench_legacy15_joint_candidate_generator_v1.py":"76a936e7380e169860114c4331043a0214bb8104",
