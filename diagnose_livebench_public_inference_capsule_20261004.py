@@ -1,9 +1,18 @@
 from __future__ import annotations
-import importlib.util, json, sys, types
+import hashlib, importlib.util, json, sys, types
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 SUB=ROOT/"subject"/"livebench_zero_case_resource_fit_20261004"
+
+EXPECTED_GOAL_COMPILER_BLOB="c895df9898bc97e4017f9e42bf6b27357ab1f315"
+
+def git_blob(path: Path) -> str:
+    b=path.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+
+actual_goal_compiler_blob=git_blob(SUB/"goal_compiler.py")
+assert actual_goal_compiler_blob==EXPECTED_GOAL_COMPILER_BLOB,(actual_goal_compiler_blob,EXPECTED_GOAL_COMPILER_BLOB)
 
 canonical=types.ModuleType("canonical")
 runtime=types.ModuleType("canonical.runtime")
@@ -43,16 +52,34 @@ except Exception as exc:
       "paid_external_model_or_api_used":False,
     }
 else:
-    result={
-      "schema":"PROJECT_BRAIN_LIVEBENCH_PUBLIC_INFERENCE_CAPSULE_DIAGNOSTIC_V1",
-      "status":"PASS",
-      "adapter_status":out.get("status"),
-      "answer":out.get("answer"),
-      "cognition_dependency_class":out.get("cognition_dependency_class"),
-      "model_dependency_count":out.get("model_dependency_count"),
-      "terminal_case_content_read":False,
-      "terminal_cases_consumed":0,
-      "paid_external_model_or_api_used":False,
-    }
+    answer=out.get("answer")
+    if answer!="SYNTHETIC_OK":
+        result={
+          "schema":"PROJECT_BRAIN_LIVEBENCH_PUBLIC_INFERENCE_CAPSULE_DIAGNOSTIC_V1",
+          "status":"BLOCKED",
+          "error_type":"SyntheticAnswerMismatch",
+          "error":"expected SYNTHETIC_OK",
+          "answer":answer,
+          "cognition_dependency_class":out.get("cognition_dependency_class"),
+          "model_dependency_count":out.get("model_dependency_count"),
+          "terminal_case_content_read":False,
+          "terminal_cases_consumed":0,
+          "paid_external_model_or_api_used":False,
+        }
+    else:
+        result={
+          "schema":"PROJECT_BRAIN_LIVEBENCH_PUBLIC_INFERENCE_CAPSULE_DIAGNOSTIC_V1",
+          "status":"PASS",
+          "adapter_status":out.get("status"),
+          "answer":answer,
+          "answer_exact":True,
+          "cognition_dependency_class":out.get("cognition_dependency_class"),
+          "model_dependency_count":out.get("model_dependency_count"),
+          "terminal_case_content_read":False,
+          "terminal_cases_consumed":0,
+          "paid_external_model_or_api_used":False,
+        }
 
+result["goal_compiler_blob_sha"]=actual_goal_compiler_blob
+result["goal_compiler_exact"]=actual_goal_compiler_blob==EXPECTED_GOAL_COMPILER_BLOB
 print(json.dumps(result,sort_keys=True))
