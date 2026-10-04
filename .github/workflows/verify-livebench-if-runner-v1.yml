@@ -1,0 +1,21 @@
+name: Verify LiveBench IF runner V1
+
+on:
+  pull_request:
+    paths:
+      - "livebench_if_terminal_runner_v1.py"
+      - ".github/workflows/run-livebench-if-terminal-v1.yml"
+      - ".github/workflows/verify-livebench-if-runner-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m py_compile livebench_if_terminal_runner_v1.py
