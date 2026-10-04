@@ -1,0 +1,29 @@
+name: Verify Unknown-Domain V3 exact-float universal proof
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_unknown_domain_v3_exact_float_universal_20261005.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v3.py'
+      - 'canonical/runtime/unknown_domain_direct_v3_universal_proof_v1.py'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_V3_UNIVERSAL_PROOF_CANDIDATE_20261005_V1.json'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v2.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_generator_v2.py'
+      - 'canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_execution_harness_v1.py'
+      - '.github/workflows/verify-unknown-domain-v3-exact-float-universal-20261005.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce V2 counterexample and prove V3 correction
+        run: python verify_unknown_domain_v3_exact_float_universal_20261005.py
