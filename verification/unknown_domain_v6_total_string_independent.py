@@ -76,12 +76,22 @@ assert surrogate_codepoints==0x800
 # 1b. Explicitly attack the domain that falsified the old universal theorem:
 # isinstance-accepted subclasses whose overridable instance hooks explode.
 class EvilStr(str):
+    def __getattribute__(self,name):
+        raise RuntimeError("OVERRIDDEN_GETATTRIBUTE_MUST_NOT_RUN")
+    def __len__(self):
+        raise RuntimeError("OVERRIDDEN_LEN_MUST_NOT_RUN")
+    def __getitem__(self,*args,**kwargs):
+        raise RuntimeError("OVERRIDDEN_GETITEM_MUST_NOT_RUN")
+    def __iter__(self):
+        raise RuntimeError("OVERRIDDEN_ITER_MUST_NOT_RUN")
     def strip(self,*args,**kwargs):
         raise RuntimeError("OVERRIDDEN_STRIP_MUST_NOT_RUN")
     def encode(self,*args,**kwargs):
         raise RuntimeError("OVERRIDDEN_ENCODE_MUST_NOT_RUN")
 
 class EvilBytes(bytes):
+    def __getattribute__(self,name):
+        raise RuntimeError("OVERRIDDEN_GETATTRIBUTE_MUST_NOT_RUN")
     def __bytes__(self):
         raise RuntimeError("OVERRIDDEN_BYTES_MUST_NOT_RUN")
     def __buffer__(self,*args,**kwargs):
@@ -240,8 +250,9 @@ receipt={
  "unicode_codepoints_exhausted":unicode_codepoints,
  "surrogate_codepoints_exhausted":surrogate_codepoints,
  "adversarial_str_subclass_totality_pass":True,
+ "adversarial_str_hooks_overridden":["__getattribute__","__len__","__getitem__","__iter__","strip","encode"],
  "adversarial_bytes_subclass_totality_pass":True,
- "adversarial_bytes_hooks_overridden":["__bytes__","__buffer__","__len__","__getitem__","__iter__"],
+ "adversarial_bytes_hooks_overridden":["__getattribute__","__bytes__","__buffer__","__len__","__getitem__","__iter__"],
  "base_bytes_descriptor_full_slice_verified":True,
  "subclass_nonproduction_cases_exact_scorer_pass":27,
  "v4_strict_utf8_counterexample_preserved":v4_surrogate_counterexample,
