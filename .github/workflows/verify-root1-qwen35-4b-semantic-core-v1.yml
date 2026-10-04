@@ -1,6 +1,10 @@
 name: Verify Root1 Qwen3.5 4B semantic core V1
 
 on:
+  pull_request:
+    paths:
+      - "verify_root1_qwen35_4b_semantic_core_v1.py"
+      - ".github/workflows/verify-root1-qwen35-4b-semantic-core-v1.yml"
   push:
     branches: ["verify/root1-qwen35-4b-semantic-core-v1-20261004"]
     paths:
