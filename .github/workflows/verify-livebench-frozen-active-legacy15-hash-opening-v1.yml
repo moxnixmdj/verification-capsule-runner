@@ -1,0 +1,27 @@
+name: Verify LiveBench frozen active legacy15 hash opening
+
+on:
+  push:
+    paths:
+      - "verify_livebench_frozen_active_legacy15_hash_opening_v1.py"
+      - ".github/workflows/verify-livebench-frozen-active-legacy15-hash-opening-v1.yml"
+  pull_request:
+    paths:
+      - "verify_livebench_frozen_active_legacy15_hash_opening_v1.py"
+      - ".github/workflows/verify-livebench-frozen-active-legacy15-hash-opening-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify existing set commitment opens to exact active legacy15
+        run: python verify_livebench_frozen_active_legacy15_hash_opening_v1.py
