@@ -28,7 +28,7 @@ jobs:
           python - <<'PY'
           import nltk
           nltk.download("punkt", quiet=True)
-          nltk.download("punkt_tab", quiet=True)
+          nltk.download("punkt_tab", quiet=True)\n          nltk.download("stopwords", quiet=True)
           PY
       - name: Compile candidate and verifier
         run: |
