@@ -3,7 +3,7 @@ import hashlib, json, pathlib, importlib.util
 EXPECTED={
  "runtime":"0150744f8e2024421c94c1ec4944368cf72a59b9",
  "tests":"1afcbbf63be5d8d0d577a279572e9fa0bdc87c68",
- "governance":"6df743cfe00ec3ca43e2cd09363d130e4d67e5cb",
+ "governance":"3638e78e42a869f29f69c3697de78169cbca7699",
  "intent":"c9b73e65c7d84c9e22bad414c407d94fc4f8d0f1",
 }
 FILES={
@@ -49,12 +49,16 @@ assert f2["fresh_reality_authorized"]==["score"]
 
 g=json.loads(pathlib.Path(FILES["governance"]).read_text())
 i=json.loads(pathlib.Path(FILES["intent"]).read_text())
+assert g["exact_state"]["root2_only"]==16
+assert g["exact_state"]["root2_and_root3"]==3
+assert g["exact_state"]["root2_touching"]==19
+assert g["reconciliation"]["acceptance_delta"]==0
 assert g["accounting"]["incremental_spend_usd"]==0
 assert g["accounting"]["acceptance_credit_delta"]==0
 assert g["independent_verification_required"] is True
 assert i["execution_authority"] is False
 assert i["promotion_authority"] is False
 assert i["fresh_reality_authority"] is False
-print("ROOT2_CLOSURE_CONTROLLER_V2_PUBLIC_RUNNER_PASS")
+print("ROOT2_CLOSURE_CONTROLLER_V2_RECONCILED_PUBLIC_RUNNER_PASS")
 
 # synchronize trigger: exact subject bytes unchanged
