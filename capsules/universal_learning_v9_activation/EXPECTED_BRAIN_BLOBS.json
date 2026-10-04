@@ -1,0 +1,17 @@
+{
+  "schema": "BRAIN_UNIVERSAL_LEARNING_V9_ACTIVATION_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "activate/universal-learning-v9-certificate-20261004",
+  "exact_brain_blobs": {
+    "canonical/governance/UNIVERSAL_LEARNING_META_POLICY_V9_ACTIVATION_V1.json": "17fa19762b6f6970a918b32b7ec0fd30000b3ef2",
+    "canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7_ACTIVATION_V1.json": "58cbfecea60e7f4259c5b7c0218ebc15c4e33399",
+    "canonical/governance/UNIVERSAL_LEARNING_PROOF_PROGRAM_V7.json": "e26c8f4d8614720c1a45f28bcd2703dbb36bd980",
+    "canonical/governance/UNIVERSAL_LEARNING_EQUIVALENCE_BASIS_V8.json": "095dc93747a64a95feb001f1ecca4714ad666b72",
+    "canonical/governance/UNIVERSAL_LEARNING_META_POLICY_V9.json": "7b8ca47355f73b0f78e439e407cd632f1ad7d99d",
+    "canonical/governance/UNKNOWN_DOMAIN_TRANSFER_ABSTENTION_DIRECT_PROOF_PROTOCOL_V1.json": "fd586455d582c38c7062ffe735f86cb9f2e803ab"
+  },
+  "verifier_commits": {
+    "v8": "c097af209497b00cf57664473ad44bdd71750eec",
+    "v9": "b04e9b138366bb1cb4f13ae478275025ad2d64da"
+  }
+}
