@@ -164,6 +164,13 @@ jobs:
           except s.ExperimentSynthesisError:
               pass
 
+          incoherent=probe("p",{"a":"1","b":"1"},1)
+          try:
+              s.synthesize(environment_id=env,goal_id=goal,candidates=cs,probes=[incoherent])
+              raise AssertionError("mechanism/probe prediction inconsistency admitted")
+          except s.ExperimentSynthesisError:
+              pass
+
           false_consensus=g.decision_sufficient(
               environment_id=env,goal_id=goal,
               hypotheses=[{"id":"h","plausible":True,"best_action":"A"}],
