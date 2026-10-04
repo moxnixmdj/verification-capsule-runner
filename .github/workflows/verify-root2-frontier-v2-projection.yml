@@ -1,0 +1,18 @@
+name: Verify Root2 frontier V2 pointer projection
+on:
+  pull_request:
+    paths:
+      - 'subject/root2_frontier_v2_projection/**'
+      - 'verify_root2_frontier_v2_projection.py'
+      - '.github/workflows/verify-root2-frontier-v2-projection.yml'
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact V2 pointer projection
+        run: python verify_root2_frontier_v2_projection.py
