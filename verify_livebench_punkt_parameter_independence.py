@@ -82,7 +82,7 @@ def adversarial_parameter_sets():
 
 def count_with(params, text: str) -> int:
     from nltk.tokenize.punkt import PunktSentenceTokenizer
-    return len(PunktSentenceTokenizer(params=params).tokenize(text))
+    return len(PunktSentenceTokenizer(train_text=params).tokenize(text))
 
 
 def verify_runtime_invariance():
