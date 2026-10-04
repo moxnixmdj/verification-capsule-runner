@@ -40,7 +40,7 @@ jobs:
           cd capsules/universal_learning_v10
           export PYTHONPATH=.
           python - <<'PY'
-          import importlib,sys,types
+          import importlib,json,sys,types
           from canonical.runtime import meta_learning_policy_v9 as mp
           from canonical.runtime import context_morphism_v10 as cm
           from canonical.runtime import cross_context_meta_policy_v10 as cc
