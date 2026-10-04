@@ -1,0 +1,76 @@
+name: Verify LiveBench active15 closure V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/livebench_active15_closure_v3/**'
+      - '.github/workflows/verify-livebench-active15-closure-v3.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact mirrored Brain candidate bytes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          expected = {
+            "livebench_legacy15_end2end_exact_synthetic_audit_v2.py": "48ad9194317637a91a269cf6dc0f841453622cc1",
+            "livebench_legacy15_joint_router_v2.py": "2a8fd2bb33c9b5b1730bceec57a3740afb1304c2",
+            "livebench_legacy15_joint_witness_v1.py": "90a5f4ce60e0e05d0638e7844f450b89a4b9af8c",
+            "livebench_legacy15_general_composer_v1.py": "0a94b48dd7b86b76d0aa49532888100209691054",
+            "livebench_legacy_visible_constraint_compiler_v4.py": "721207ba39d502e3f610289578e9d5bab78b1fcc",
+            "livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
+            "livebench_frozen_active_legacy15_v1.py": "34440ee69322e9d519cbe656cb03c55683a8b9c6",
+            "livebench_legacy_visible_constraint_compiler_v1.py": "e986035ff68b53c0dc7a7eb478f6e3d8882214aa",
+          }
+          root = Path("subject/livebench_active15_closure_v3/canonical/runtime")
+          for name, want in expected.items():
+            data = (root / name).read_bytes()
+            got = hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+            assert got == want, (name, got, want)
+          print("exact mirrored Brain candidate bytes PASS")
+          PY
+
+      - name: Install pinned legacy checker dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --quiet nltk==3.9.2 langdetect==1.0.9 immutabledict==4.2.1
+          python - <<'PY'
+          import nltk
+          assert nltk.download("punkt", quiet=True)
+          try:
+              nltk.download("punkt_tab", quiet=True)
+          except Exception:
+              pass
+          PY
+
+      - name: Checkout exact frozen LiveBench scorer
+        run: |
+          git clone --quiet --filter=blob:none --no-checkout https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench fetch --quiet --depth=1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/livebench checkout --quiet --detach 8f8e5c381a16e3f24257776edd53471fe86f8091
+
+      - name: Run exact 7424-case active15 audit
+        working-directory: subject/livebench_active15_closure_v3
+        run: |
+          mkdir -p /tmp/receipt
+          PYTHONPATH=. python -m canonical.runtime.livebench_legacy15_end2end_exact_synthetic_audit_v2             --livebench-root /tmp/livebench             --output /tmp/receipt/livebench-active15-closure-v3.json
+
+      - name: Upload exact audit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active15-closure-v3
+          path: /tmp/receipt/
+          if-no-files-found: warn
