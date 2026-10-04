@@ -83,10 +83,11 @@ def main() -> int:
         assert got == expected, (rel, got, expected)
 
     data_repo = pathlib.Path("/tmp/nltk_data_repo")
-    assert run(["git", "-C", str(data_repo), "rev-parse", "HEAD"]) == NLTK_DATA_COMMIT
+    commit_obj = run(["git", "-C", str(data_repo), "rev-parse", NLTK_DATA_COMMIT + "^{commit}"])
+    assert commit_obj == NLTK_DATA_COMMIT, commit_obj
     data_blobs = {}
     for rel, expected in PUNKT_BLOBS.items():
-        got = run(["git", "-C", str(data_repo), "rev-parse", "HEAD:" + rel])
+        got = run(["git", "-C", str(data_repo), "rev-parse", NLTK_DATA_COMMIT + ":" + rel])
         data_blobs[rel] = got
         assert got == expected, (rel, got, expected)
 
