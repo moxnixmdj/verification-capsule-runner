@@ -136,4 +136,5 @@ print("PASS: Anthropic current source binds general Opus 5.5 benchmark default t
 print("PASS: TB4 xhigh exception remains local to frozen 66.4 bar")
 print("PASS: fixed public bars remain scalar comparator facts; no new Opus run required")
 print("PASS: generic live matched comparator effort is frozen pre-exposure to adaptive max")
-print("PASS: native Opus55 matched request contract frozen to exact model + adaptive/max + default sampling")\nprint("PASS: provider enforcement/identity/cost/harness remain open; zero cases/spend/credit")
+print("PASS: native Opus55 matched request contract frozen to exact model + adaptive/max + default sampling")
+print("PASS: provider enforcement/identity/cost/harness remain open; zero cases/spend/credit")
