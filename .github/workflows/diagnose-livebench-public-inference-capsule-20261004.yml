@@ -1,0 +1,29 @@
+name: Diagnose LiveBench public inference capsule
+
+on:
+  pull_request:
+    paths:
+      - 'diagnose_livebench_public_inference_capsule_20261004.py'
+      - '.github/workflows/diagnose-livebench-public-inference-capsule-20261004.yml'
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install corrected zero-case environment
+        run: |
+          python -m pip install --disable-pip-version-check \
+            nltk==3.10.3 \
+            emoji==2.16.0 \
+            syllapy==0.7.2 \
+            setuptools==80.9.0 \
+            spacy==3.8.16
+          python -m pip install --disable-pip-version-check \
+            https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+      - name: Diagnose exact inference adapter on synthetic zero-case request
+        run: python diagnose_livebench_public_inference_capsule_20261004.py
