@@ -1,0 +1,65 @@
+{
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_PRECLAIM_RETRY_V1",
+  "date": "2026-10-05",
+  "status": "FROZEN_PRECLAIM_INFRASTRUCTURE_RETRY__SAME_LEASE__SAME_ATOMIC_CLAIM__ZERO_CASES_CONSUMED_BY_FAILED_ATTEMPT",
+  "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+  "failed_attempt": {
+    "workflow_run_id": 37239903215,
+    "workflow_job_id": 111546358270,
+    "launch_ref": "refs/heads/unknown-domain-direct-launch/76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9",
+    "head_sha": "4057d47245354fb0054a056a4ea401506d92a68a",
+    "conclusion": "failure",
+    "failure": "ModuleNotFoundError: No module named 'canonical'",
+    "failure_phase": "PYTHON_MODULE_IMPORT_BEFORE_MAIN",
+    "original_invocation": "python canonical/runtime/unknown_domain_direct_production_once_v1.py",
+    "causal_defect": "FILE_PATH_EXECUTION_SETS_IMPORT_SEARCH_ROOT_TO_CANONICAL_RUNTIME_INSTEAD_OF_REPOSITORY_ROOT"
+  },
+  "nonconsumption_proof": {
+    "launcher_blob": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+    "first_effectful_production_action": "ATOMIC_GITHUB_CLAIM_CREATE_INSIDE_MAIN_AFTER_IMPORTS_LEASE_VALIDATION_AND_PREFLIGHT",
+    "observed_failure_precedes_main": true,
+    "atomic_claim_create_reached": false,
+    "beacon_generation_reached": false,
+    "evaluator_secret_generation_reached": false,
+    "production_case_generation_reached": false,
+    "production_cases_consumed": 0
+  },
+  "retry_binding": {
+    "execution_lease_sha256": "76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9",
+    "execution_lease_git_blob_sha": "26f98012ecf01c6a3f20e855bdebf60cf70d1c1f",
+    "launch_ref": "refs/heads/unknown-domain-direct-launch/76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9",
+    "claim_ref": "refs/heads/unknown-domain-direct-claims/76e8040db826990a90f5ab36b833c40af1ade15c89c579eeef2ca44bf1d0c7e9",
+    "launcher_git_blob_sha": "4218195d0cf49252ac6733c0bd80b673826ef95a",
+    "original_create_workflow_git_blob_sha": "190ac379f5cf2b2b2005b6f537f43643a80ff24e",
+    "corrected_invocation": "python -m canonical.runtime.unknown_domain_direct_production_once_v1"
+  },
+  "semantic_rule": "RETRY_ONLY_THE_PRECLAIM_TRANSPORT_FAILURE; DO_NOT CREATE A NEW LEASE, CLAIM KEY, BEACON, POPULATION, OR ACCEPTANCE RULE. THE EXISTING ATOMIC CLAIM REMAINS THE SINGLE LINEARIZATION POINT.",
+  "hard_rules": [
+    "NO_CLAIM_ABSENCE_PRECHECK",
+    "NO_NEW_EXECUTION_LEASE",
+    "NO_NEW_CLAIM_KEY",
+    "NO_NEW_LAUNCH_KEY",
+    "ONLY_THE_EXACT_EXISTING_LAUNCH_BRANCH_IS_ELIGIBLE",
+    "RECHECK_EXACT_LEASE_SHA256_AND_FROZEN_LAUNCHER_BLOB_BEFORE_RETRY",
+    "ONLY_ATOMIC_CLAIM_CREATE_HTTP_201_MAY_ADVANCE",
+    "ANY_NON_201_CLAIM_CREATE_ABORTS_BEFORE_BEACON_OR_CASE_GENERATION",
+    "EXACTLY_ONE_27_CASE_PRODUCTION_POPULATION_MAXIMUM",
+    "NO_REPLAY_REPLACEMENT_OR_POST_RESULT_TUNING",
+    "ZERO_INCREMENTAL_SPEND"
+  ],
+  "authority": {
+    "preclaim_transport_retry": true,
+    "fresh_reality": false,
+    "acceptance_credit": false,
+    "promotion": false
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed_by_failed_attempt": 0,
+    "terminal_cases_consumed_by_failed_attempt": 0,
+    "acceptance_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  },
+  "independent_verification_required": true
+}
