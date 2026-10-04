@@ -30,7 +30,7 @@ BRAIN_BLOBS={
     "canonical/runtime/livebench_frozen_active_legacy15_v1.py":"34440ee69322e9d519cbe656cb03c55683a8b9c6",
     "canonical/runtime/livebench_legacy15_composition_partition_v1.py":"b817b4f63f4e98c2705f221c7a4abd8e571f9d80",
     "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py":"0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
-    "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py":"a0885303a9c7088c4eb6f0510963069e35750f02",
+    "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py":"fdafdab83eb5b0d8067589e1e6f331b6c91d2a17",
     "canonical/runtime/livebench_legacy15_joint_candidate_generator_v1.py":"b6ace46a0887321c4c8c8354d88169be1fdbf582",
 }
 
