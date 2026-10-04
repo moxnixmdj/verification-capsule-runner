@@ -1,0 +1,6 @@
+{
+  "schema": "CHARTOGRAPHY_ZERO_SPEND_GUARD_VERIFICATION_TRIGGER_V1",
+  "purpose": "TRIGGER_INSTALLED_EXACT_BLOB_AND_ADVERSARIAL_VERIFIER_WITHOUT_CHANGING_BRAIN_INPUTS",
+  "brain_blobs_unchanged": true,
+  "acceptance_credit_delta": 0
+}
