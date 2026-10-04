@@ -38,25 +38,29 @@ assert "two-hour time limit" in vals
 assert "weighted checks" in vals and "dealbreakers" in vals
 
 tavily=txt(fetch("https://www.tavily.com/pricing"))
-tiingo=txt(fetch("https://www.tiingo.com/pricing"))
 assert "1,000 api credits" in tavily and "no credit card required" in tavily and "requests will stop" in tavily
 
-# sec-api pricing is client-rendered for GitHub-hosted raw HTTP. Verify the exact
-# first-party text in a real browser rather than weakening the 100-call claim.
+# sec-api and Tiingo pricing are client-rendered for GitHub-hosted raw HTTP.
+# Verify the exact first-party rendered pages rather than weakening either quota.
 chrome=shutil.which("google-chrome") or shutil.which("chromium") or shutil.which("chromium-browser")
 assert chrome, "CHROMIUM_NOT_AVAILABLE"
-with tempfile.TemporaryDirectory() as td:
-    out=pathlib.Path(td)/"page.txt"
-    js=pathlib.Path(td)/"dump.html"
+def rendered(url):
     cmd=[chrome,"--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
-         "--virtual-time-budget=8000","--dump-dom","https://sec-api.io/pricing"]
+         "--virtual-time-budget=8000","--dump-dom",url]
     proc=subprocess.run(cmd,text=True,capture_output=True,timeout=45)
     assert proc.returncode==0,proc.stderr[-1000:]
-    sec=txt(proc.stdout)
+    return txt(proc.stdout)
+
+sec=rendered("https://sec-api.io/pricing")
 assert re.search(r"(first\s+)?100\s+api\s+calls",sec) and "free" in sec
 assert "free trial api key" in sec and re.search(r"100\s+calls\s+total",sec)
-assert "starter" in tiingo and ("$0/month" in tiingo or "$0 / month" in tiingo)
-assert "500" in tiingo and "50" in tiingo and "1000" in tiingo and "1 gb" in tiingo
+
+tiingo=rendered("https://www.tiingo.com/pricing")
+assert "starter" in tiingo and re.search(r"\$0\s*/?\s*month",tiingo)
+assert "unique symbols per month" in tiingo and "500" in tiingo
+assert "max requests per hour" in tiingo and "50" in tiingo
+assert "max requests per day" in tiingo and "1000" in tiingo
+assert "max bandwidth per month" in tiingo and "1 gb" in tiingo
 
 assert s["first_party_methodology"]["dataset_total_questions"]==927
 assert s["first_party_methodology"]["splits"]=={"public":27,"private_validation":450,"test":450}
