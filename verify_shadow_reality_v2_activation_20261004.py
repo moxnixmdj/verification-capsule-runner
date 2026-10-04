@@ -79,3 +79,26 @@ assert required <= gates
 assert a["active"] is False
 
 print("PASS: shadow reality V2 activation preserves current root truth and grants collection-only authority")
+
+
+# Final activation receipt verification
+F=S/"PROOF_CARRYING_SHADOW_REALITY_V2_FINAL_ACTIVATION_V1.json"
+EXPECTED_F="a2fcc67341171d5e01917e3819e8d91eba9adf25"
+assert blob(F)==EXPECTED_F
+f=json.loads(F.read_text())
+assert f["bound_main_commit"]==a["bound_main_commit"]
+assert f["subject"]["git_blob_sha"]=="df8bce24360102395f397b28399e0e8e5fb9f6d4"
+iv=f["independent_verification"]
+assert iv["repository"]=="moxnixmdj/verification-capsule-runner"
+assert iv["pull_request"]==1818
+assert iv["workflow_run_id"]==37193998355
+assert iv["workflow_job_id"]==111411941098
+assert iv["conclusion"]=="success"
+ea=f["effective_authority"]
+assert ea["per_route_shadow_collection"] is True
+for k in ("result_release","terminal_execution","acceptance_credit","promotion","global_fresh_reality_promotion"):
+    assert ea[k] is False
+for k,v in f["accounting"].items():
+    assert v==0
+assert f["active_if_exact_subject_and_verification_bindings_hold"] is True
+print("PASS: final shadow reality V2 activation receipt is exact, collection-only, and zero-credit")
