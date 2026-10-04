@@ -85,14 +85,64 @@ def put_result(repo:str,token:str,branch:str,path:str,content:Mapping[str,Any]):
     return _json_request("PUT",f"https://api.github.com/repos/{repo}/contents/{path}",token,payload)
 
 
+def canonical_identity_from_lease(lease:Mapping[str,Any])->dict[str,Any]:
+    components=lease.get("exact_components")
+    source=lease.get("source_brain")
+    claim=lease.get("atomic_claim")
+    limits=lease.get("limits")
+    resources=lease.get("resources")
+    authority=lease.get("authority")
+    if not isinstance(components,Mapping) or not all(isinstance(x,Mapping) for x in (source,claim,limits,resources,authority)):
+        raise ProductionLaunchError("LEASE_IDENTITY_INPUT_INVALID")
+    return {
+        "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_IDENTITY_V2",
+        "target_predicate":str(lease.get("target_predicate") or ""),
+        "authorized_leaves":sorted(map(str,lease.get("authorized_leaves",[]))),
+        "activation_git_blob_sha":source.get("final_activation_blob"),
+        "qualification_receipt_git_blob_sha":source.get("qualification_receipt_blob"),
+        "production_precommit_git_blob_sha":source.get("production_precommit_blob"),
+        "exact_execution_subject":{
+            "candidate_v1":components.get("canonical/runtime/unknown_domain_direct_candidate_v1.py"),
+            "candidate_v2":components.get("canonical/runtime/unknown_domain_direct_candidate_v2.py"),
+            "generator_v1":components.get("canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"),
+            "generator_v2":components.get("canonical/runtime/unknown_domain_direct_hidden_generator_v2.py"),
+            "hidden_scorer":components.get("canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py"),
+            "execution_harness":components.get("canonical/runtime/unknown_domain_direct_execution_harness_v1.py"),
+        },
+        "claim_repository":claim.get("repository"),
+        "claim_namespace":claim.get("claim_ref_prefix"),
+        "production_budget":{
+            "production_populations_allowed":limits.get("production_populations"),
+            "production_cases_allowed":limits.get("production_cases"),
+            "max_transfer_probes_per_case":limits.get("max_transfer_probes_per_case"),
+            "replay_allowed":limits.get("replay_allowed"),
+            "replacement_allowed":limits.get("replacement_allowed"),
+            "post_result_tuning_allowed":limits.get("post_result_tuning_allowed"),
+        },
+        "resource_boundary":dict(resources),
+        "global_fresh_reality":authority.get("global_fresh_reality"),
+    }
+
+
 def lease_bytes_and_digest(path:Path=LEASE_PATH):
     raw=path.read_bytes()
-    return raw,hashlib.sha256(raw).hexdigest()
+    lease=json.loads(raw)
+    identity=canonical_identity_from_lease(lease)
+    canonical=json.dumps(identity,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+    return raw,hashlib.sha256(canonical).hexdigest()
 
 
 def validate_lease(lease:Mapping[str,Any],digest:str)->None:
     if lease.get("schema")!="PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1":
         raise ProductionLaunchError("LEASE_SCHEMA_INVALID")
+    derived_identity=canonical_identity_from_lease(lease)
+    if lease.get("lease_identity")!=derived_identity:
+        raise ProductionLaunchError("LEASE_IDENTITY_NOT_CANONICAL")
+    canonical=json.dumps(derived_identity,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+    if hashlib.sha256(canonical).hexdigest()!=digest:
+        raise ProductionLaunchError("LEASE_IDENTITY_DIGEST_MISMATCH")
+    if lease.get("atomic_claim",{}).get("claim_key_rule")!="SHA256_OF_CANONICAL_QUALIFIED_EXECUTION_TUPLE_V2":
+        raise ProductionLaunchError("LEASE_CLAIM_KEY_RULE_INVALID")
     if lease.get("target_predicate")!=TARGET:
         raise ProductionLaunchError("LEASE_TARGET_MISMATCH")
     if set(map(str,lease.get("authorized_leaves",[])))!=LEAVES:
