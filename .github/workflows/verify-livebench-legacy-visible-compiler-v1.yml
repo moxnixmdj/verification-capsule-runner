@@ -1,0 +1,57 @@
+name: Verify LiveBench legacy visible compiler V1
+
+on:
+  push:
+    branches: ["verify/livebench-legacy-visible-compiler-v1-20261004-m"]
+    paths:
+      - ".github/workflows/verify-livebench-legacy-visible-compiler-v1.yml"
+      - "capsules/livebench_legacy_visible_compiler_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-legacy-visible-compiler-v1.yml"
+      - "capsules/livebench_legacy_visible_compiler_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact Brain candidate bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/livebench_legacy_visible_compiler_v1/compiler.py)" = "0e9e90699e5cbff58090d13aef616c0dd2bd73d6"
+
+      - name: Fetch exact pinned LiveBench source
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_util.py)" = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+
+      - name: Install exact verification dependencies
+        run: |
+          python -m pip install --quiet "immutabledict==4.2.1" "langdetect==1.0.9" "nltk==3.9.1"
+
+      - name: Verify all 25 legacy description families and hidden-parameter cut
+        run: |
+          set -euo pipefail
+          python capsules/livebench_legacy_visible_compiler_v1/verify.py
+
+      - name: Upload immutable result
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-visible-compiler-v1
+          path: capsules/livebench_legacy_visible_compiler_v1/RESULT.json
+          if-no-files-found: error
+          retention-days: 30
