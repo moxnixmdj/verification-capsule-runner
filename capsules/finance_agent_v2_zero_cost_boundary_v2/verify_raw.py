@@ -48,7 +48,7 @@ tavily=txt(fetch("https://www.tavily.com/pricing"))
 sec=txt(fetch("https://sec-api.io/"))
 tiingo=txt(fetch("https://www.tiingo.com/pricing"))
 assert "1,000 api credits" in tavily and "no credit card required" in tavily and "requests will stop" in tavily
-assert re.search(r"100\s+api\s+calls",sec) and "free" in sec
+assert "no credit card is required" in sec and "free tier covers every endpoint" in sec
 assert "starter" in tiingo and ("$0/month" in tiingo or "$0 / month" in tiingo)
 assert "500" in tiingo and "50" in tiingo and "1000" in tiingo and "1 gb" in tiingo
 
