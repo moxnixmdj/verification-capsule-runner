@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'diagnose_livebench_public_inference_capsule_20261004.py'
+      - 'subject/livebench_zero_case_resource_fit_20261004/**'
       - '.github/workflows/diagnose-livebench-public-inference-capsule-20261004.yml'
   workflow_dispatch:
 
