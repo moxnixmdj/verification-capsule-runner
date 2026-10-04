@@ -1,0 +1,76 @@
+{
+  "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_DIRECT_ROLE_SIGNATURE_V3_CANDIDATE_20261005_V1",
+  "date": "2026-10-05",
+  "status": "CANDIDATE_CAPABILITY_REPAIR__PUBLIC_ROLE_SIGNATURE_RECOVERS_EXACT_ADD2_ROLE_ORDER__INDEPENDENT_VERIFICATION_REQUIRED__ZERO_CREDIT",
+  "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
+  "target_predicate": "UNKNOWN_DOMAIN_UNCOVERED_TRANSFER_AUDIT",
+  "root_cause": {
+    "class": "FROZEN_CANDIDATE_ROLE_ORDER_AMBIGUITY_INTERACTS_WITH_EXACT_BINARY64_SCORING",
+    "not_a_capability_failure": true,
+    "v2_counterexample": {
+      "qualification_input_beacon": "FLOAT-ROLE-SWAP-000000000004",
+      "transfer_index": 4,
+      "primitive": "ADD2",
+      "hidden_order_terminal": 3.245061279870221,
+      "swapped_order_terminal": 3.2450612798702205,
+      "absolute_delta": 4.440892098500626e-16,
+      "failure": "DOMAIN_B_TERMINAL_CONSEQUENCE_WRONG"
+    }
+  },
+  "repair": {
+    "runtime": "canonical/runtime/unknown_domain_direct_candidate_v3.py",
+    "method": "MATCH_PUBLIC_DOMAIN_A_SOURCE_ROLE_SIGN_SIGNATURES_TO_PUBLIC_DOMAIN_B_TASK_FEATURE_SIGN_SIGNATURES_BEFORE_EXACT_QUERY_EVALUATION",
+    "hidden_truth_access": false,
+    "new_probe_required": false,
+    "max_transfer_probes": 2,
+    "persistent_learned_bytes": 0,
+    "external_frontier_model_calls": 0,
+    "external_learned_capability_calls": 0
+  },
+  "universal_structural_invariant": {
+    "scope": "EXACT_FROZEN_V2_GENERATOR_ADD2_CASES_ONLY",
+    "add2_transfer_indices": [4, 10],
+    "source_and_target_r0_public_sign_signature": [-1, 1, -1],
+    "source_and_target_r1_public_sign_signature": [1, -1, 1],
+    "secret_beacon_domain_independent_reason": "MAGNITUDES_ARE_STRICTLY_POSITIVE_AND_ONLY_MAGNITUDES_DEPEND_ON_HMAC; ROLE_SIGNS_DEPEND_ONLY_ON_PUBLIC_ROW_INDEX_AND_TRANSFER_INDEX",
+    "role_signatures_distinct": true,
+    "consequence": "ONCE_SUPPORT_IS_IDENTIFIED_THE_TRUE_R0_R1_ORDER_IS_PUBLICLY_IDENTIFIABLE_WITHOUT_HIDDEN_TRUTH"
+  },
+  "exact_subject_blobs": {
+    "canonical/runtime/unknown_domain_direct_candidate_v1.py": "a2a77269a8175ce315b466035049da0f761b8734",
+    "canonical/runtime/unknown_domain_direct_candidate_v2.py": "4470716f95a559a700e461262df909ae19a41651",
+    "canonical/runtime/unknown_domain_direct_candidate_v3.py": "6a56cbd8e9aac8730fb87e5e64d1ca031ce77395",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py": "f974a4594c78e74693c7ba5a19f131dfa481b937",
+    "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py": "d077028c9bde534dc4bc6eb0d1f776341f9d59f8",
+    "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py": "e8cf5d1b5d311644725a751c15e6235958fb587d",
+    "canonical/runtime/unknown_domain_direct_execution_harness_v1.py": "04fe06f4eed081c4cb6197b12f2d92bd396aeafd"
+  },
+  "verification": {
+    "script": "verify_unknown_domain_role_signature_v3.py",
+    "unit_test": "canonical/tests/test_unknown_domain_direct_candidate_v3.py",
+    "qualification_only_grid_cases": 1728,
+    "production_cases_consumed": 0,
+    "independent_public_runner_required": true
+  },
+  "hard_nonclaims": [
+    "NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT_YET",
+    "NO_PRODUCTION_OR_TERMINAL_CASE_WAS_GENERATED",
+    "NO_OPEN_WORLD_GENERALIZATION_BEYOND_THE_EXACT_FROZEN_EVALUATOR_DOMAIN",
+    "V3_REQUIRES_INDEPENDENT_VERIFICATION_AND_SEPARATE_SCOPE_REDUCTION_BEFORE_PROMOTION"
+  ],
+  "authority": {
+    "execution": false,
+    "fresh_reality": false,
+    "promotion": false,
+    "acceptance_credit": false
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed": 0,
+    "production_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
