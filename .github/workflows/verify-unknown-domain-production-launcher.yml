@@ -31,6 +31,8 @@ jobs:
           assert 'workflow_dispatch' not in p
           assert "unknown-domain-direct-launch/" in p
           assert "contents: write" in p
+          assert "ref: ${{ github.sha }}" in p
+          assert "ref: ${{ github.ref }}" not in p
           assert "run: python -m canonical.runtime.unknown_domain_direct_production_once_v1" in p
           raw=workflow_path.read_bytes()
           blob=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
