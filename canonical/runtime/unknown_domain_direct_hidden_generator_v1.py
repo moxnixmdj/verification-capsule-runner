@@ -196,6 +196,7 @@ def _transfer_case(secret: bytes, beacon: str, index: int, *, namespace: str) ->
         "receipt_id": receipt_id,
         "normalized_primitive_program": program,
         "primitive_fingerprint": fingerprint,
+        "source_role_binding": dict(a_map),
         "source_evidence_digest": _sha256(source_observations),
         "independent_verified": True,
         "exact_byte_bound": True,
