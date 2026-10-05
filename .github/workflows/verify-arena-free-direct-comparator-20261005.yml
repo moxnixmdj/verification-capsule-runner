@@ -1,0 +1,18 @@
+name: Verify Arena free Direct comparator truth repair
+on:
+  pull_request:
+    paths:
+      - 'capsules/arena_free_direct_comparator_20261005/**'
+      - '.github/workflows/verify-arena-free-direct-comparator-20261005.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python capsules/arena_free_direct_comparator_20261005/verify.py
