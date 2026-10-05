@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_ZERO_REALITY_V12_PUBLIC_CAPSULE",
+  "brain_head": "dac3ed8c1658b8e8844346a51af521cf77f27ea3",
+  "exact_brain_blobs": {
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "ce04ca62612681d3d3493bf8a664f066e0b61b98",
+    "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json": "7c1ed0adf243b92abab2cbdb6ebced921dcbb860",
+    "canonical/governance/ROOT2_18_CURRENT_14_24_SCHEDULING_ACTIVATION_V1.json": "7d0dd1a755d5e278897791e11884d4a4287ef58d",
+    "canonical/governance/ROOT3_MINIMUM_ACTION_CUT_V5.json": "8397c1341b48947727c070f37a184580ca32c844",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V12.json": "a695486b5af5e3046f1b535cc19d2a9fed6c038a"
+  }
+}
