@@ -2,6 +2,9 @@ name: Verify Unknown-Domain V6 total exact
 # isolated-v2-run
 
 on:
+  push:
+    branches:
+      - verify/unknown-domain-v6-v2-isolated-20261005
   pull_request:
     branches:
       - main
@@ -16,7 +19,7 @@ permissions:
 
 jobs:
   verify:
-    runs-on: macos-15-intel
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
