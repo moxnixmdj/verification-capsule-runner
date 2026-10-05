@@ -13,3 +13,6 @@ jobs:
         with:
           python-version: '3.11'
       - run: python capsules/opus55_schema_snapshot_v1/verify.py
+      - name: Verify total lossless IR encoder
+        working-directory: capsules/opus55_schema_snapshot_v1
+        run: python -m unittest -v canonical.tests.test_opus55_schema_lossless_ir_encoder_v1
