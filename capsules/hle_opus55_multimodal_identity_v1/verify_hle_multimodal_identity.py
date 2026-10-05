@@ -64,3 +64,5 @@ print(json.dumps({
 }, sort_keys=True))
 
 # verifier-trigger-v1
+
+# pr-verifier-trigger-v1
