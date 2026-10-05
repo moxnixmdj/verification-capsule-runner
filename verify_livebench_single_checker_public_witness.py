@@ -231,3 +231,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+# Trigger independent post-bootstrap public verification; no subject semantics changed.

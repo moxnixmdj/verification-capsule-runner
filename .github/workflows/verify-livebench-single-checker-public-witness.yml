@@ -1,5 +1,8 @@
 name: Verify LiveBench Single Checker Public Witnesses
 on:
+  push:
+    branches:
+      - verify/livebench-single-checker-public-witness-run-20261004-sol
   pull_request:
     branches:
       - main
