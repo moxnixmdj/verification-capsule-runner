@@ -12,7 +12,7 @@ from canonical.runtime.opus55_opaque_state_observational_quotient_v1 import (
 ROOT = Path(__file__).resolve().parent
 EXPECTED = {
     "canonical/governance/OPUS55_OPAQUE_STATE_OBSERVATIONAL_QUOTIENT_20261005_V1.json":
-        "4b8d32144cdcb983d8a1c3ceebaaaf1b7b133ed8",
+        "91c19b54193bd3d22e54f5bc26ae3abd819ef892",
     "canonical/runtime/opus55_opaque_state_observational_quotient_v1.py":
         "4d99d262efd20501428160c3f2f03e92348ed03d",
     "canonical/tests/test_opus55_opaque_state_observational_quotient_v1.py":
@@ -136,7 +136,7 @@ def main():
     print(json.dumps({
         "status": "PASS",
         "brain_pr": 2181,
-        "brain_head": "ac3252c43ee833e400ec3ff6f1e50c1701d77aef",
+        "brain_head": "31564e99c65e199824b137f0a4e772e736e531f9",
         "exact_blobs": EXPECTED,
         "independent_alpha_bijections_checked": checked,
         "adversarial_dimensions": [
