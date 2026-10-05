@@ -1,0 +1,18 @@
+name: Verify Qwen3.8 Q2 zero-cost runner resource envelope
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/verify_qwen38_q2_resource_probe_v1.yml'
+      - 'verify_qwen38_q2_resource_probe_v1.py'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_qwen38_q2_resource_probe_v1.py
