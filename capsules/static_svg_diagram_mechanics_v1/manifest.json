@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_STATIC_SVG_DIAGRAM_MECHANICS_PUBLIC_VERIFIER_MANIFEST_V1",
+  "date": "2026-10-05",
+  "source_repository": "moxnixmdj/brain",
+  "exact_blobs": {
+    "canonical/runtime/html_svg_diagram_mechanics_v1.py": "9476c34e34f64f0e5babd00fa2e5967f41b4f5bb",
+    "canonical/tests/test_html_svg_diagram_mechanics_v1.py": "30fd4a3a1d9d57b97168d68c6100558b6c6cd84c",
+    "canonical/runtime/svg_diagram_render_oracle_v1.py": "9a66f7d915fa6d510c9cda50b569f6e4ddd8eb25",
+    "canonical/tests/test_svg_diagram_render_oracle_v1.py": "9c5385c81ef6f78dd5b53feb4aafc98e42caf2ad",
+    "canonical/governance/STATIC_SVG_DIAGRAM_MECHANICS_KERNEL_20261005_V1.json": "5680d37569e95923c62b9292af96abad7ca39e98",
+    "canonical/governance/CREATIVE_DIAGRAM_ACCEPTANCE_BASIS_REPAIR_V2_20261005.json": "02ee9918fc38f3bdee96f847d04e7fd1337b9e46"
+  },
+  "verification_goal": "INDEPENDENTLY_EXECUTE_EXACT_STATIC_SVG_MECHANICS_AND_REAL_RENDERER_ORACLE_WITH_ADVERSARIAL_CHECKS",
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0
+}
