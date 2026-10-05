@@ -1,0 +1,31 @@
+name: Verify LiveBench legacy cardinality regions
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_legacy_cardinality_region_v1.py
+      - .github/workflows/verify-livebench-legacy-cardinality-region.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute public duplicate-surface theorem
+        run: python verify_livebench_legacy_cardinality_region_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-cardinality-region-receipt
+          path: livebench_legacy_cardinality_region_receipt.json
+          if-no-files-found: error
