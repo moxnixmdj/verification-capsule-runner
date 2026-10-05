@@ -1,17 +1,10 @@
 name: Verify synthesis C2 grounded expression V1
 on:
-  push:
-    branches:
-      - verify/synthesis-c2-grounded-expression-v1-20261005-sol
-    paths:
-      - "capsules/synthesis_c2_grounded_expression_v1/**"
-      - ".github/workflows/verify-synthesis-c2-grounded-expression-v1.yml"
   pull_request:
     branches:
       - main
     paths:
       - "capsules/synthesis_c2_grounded_expression_v1/**"
-      - ".github/workflows/verify-synthesis-c2-grounded-expression-v1.yml"
 permissions:
   contents: read
 jobs:
