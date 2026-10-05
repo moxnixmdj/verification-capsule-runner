@@ -260,3 +260,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# PR synchronization marker: run the independent verifier on this frozen subject.
