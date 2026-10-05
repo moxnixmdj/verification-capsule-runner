@@ -36,3 +36,5 @@ jobs:
           name: livebench-clean-active15-promotion-v1
           path: livebench_clean_active15_promotion_v1_receipt.json
           if-no-files-found: error
+
+# schema-binding-fix-trigger
