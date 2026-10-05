@@ -1,0 +1,37 @@
+name: Verify LiveBench clean Active15 promotion V1
+
+on:
+  push:
+    branches:
+      - verify-livebench-clean-active15-promotion-v1
+    paths:
+      - "verify_livebench_clean_active15_promotion_v1.py"
+      - "subject/livebench_clean_active15_promotion_20261005/**"
+      - ".github/workflows/verify-livebench-clean-active15-promotion-v1.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_clean_active15_promotion_v1.py"
+      - "subject/livebench_clean_active15_promotion_20261005/**"
+      - ".github/workflows/verify-livebench-clean-active15-promotion-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Execute clean Active15 composition proof
+        run: python verify_livebench_clean_active15_promotion_v1.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-clean-active15-promotion-v1
+          path: livebench_clean_active15_promotion_v1_receipt.json
+          if-no-files-found: error
