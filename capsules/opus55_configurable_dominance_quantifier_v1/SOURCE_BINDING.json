@@ -1,0 +1,32 @@
+{
+  "schema": "PROJECT_BRAIN_CONFIGURABLE_DOMINANCE_QUANTIFIER_VERIFICATION_SOURCE_BINDING_V1",
+  "date": "2026-10-05",
+  "source_repository": "moxnixmdj/brain",
+  "source_merge_commit": "728ab464589a042afc881cdea07d68e5acb07179",
+  "source_path": "canonical/governance/OPUS55_CONFIGURABLE_CAPABILITY_QUANTIFIER_CORRECTION_20261005_V1.json",
+  "source_git_blob_sha": "f019b28366b985dec2d6e3dec527e54482d9af3b",
+  "copied_path": "capsules/opus55_configurable_dominance_quantifier_v1/brain/canonical/governance/OPUS55_CONFIGURABLE_CAPABILITY_QUANTIFIER_CORRECTION_20261005_V1.json",
+  "verification_scope": [
+    "FIXED_POLICY_THEOREM_PRESERVED",
+    "FORALL_TASK_EXISTS_CONFIGURATION_DISTINCT_FROM_EXISTS_CONFIGURATION_FORALL_TASK",
+    "FINITE_EXPLICIT_EVALUATOR_ARGMAX_COUNTERMODEL_DOMINATES_ANY_TARGET_DISTRIBUTION",
+    "HIDDEN_EVALUATOR_FAIL_CLOSED",
+    "RESOURCE_VALIDITY_FAIL_CLOSED",
+    "OWNERSHIP_FAIL_CLOSED",
+    "ZERO_TERMINAL_CREDIT"
+  ],
+  "hard_nonclaims": [
+    "DOES_NOT_PROVE_ROUTE_C_COVERS_ALL_USEFUL_OPUS55_TASKS",
+    "DOES_NOT_CLOSE_ANY_ATOMIC_ACCEPTANCE_PREDICATE",
+    "DOES_NOT_AUTHORIZE_FRESH_REALITY"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  }
+}
