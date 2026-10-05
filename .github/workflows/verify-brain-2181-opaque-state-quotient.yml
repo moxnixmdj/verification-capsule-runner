@@ -25,9 +25,9 @@ jobs:
         working-directory: capsules/brain_2181
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.12.10"
+          python-version: "3.12"
       - name: Run exact vendored candidate regressions
         run: python -m unittest canonical.tests.test_opus55_opaque_state_observational_quotient_v1 -v
       - name: Run independent adversarial verifier
