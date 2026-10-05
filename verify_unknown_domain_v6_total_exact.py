@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import sys
 
@@ -130,6 +131,9 @@ def main() -> int:
         "schema": "PROJECT_BRAIN_UNKNOWN_DOMAIN_V6_SUBCLASS_REPAIR_INDEPENDENT_VERIFICATION_V1",
         "status": "PASS__INDEPENDENT_CONTENT_BOUND_REPAIRED_SUBCLASS_TOTALITY_AND_27_CASE_EXECUTION__ZERO_CREDIT",
         "brain_subject_commit": BRAIN_SUBJECT_COMMIT,
+        "runner_repository": os.environ.get("GITHUB_REPOSITORY", "moxnixmdj/verification-capsule-runner"),
+        "runner_commit_sha": os.environ.get("GITHUB_SHA"),
+        "runner_event_name": os.environ.get("GITHUB_EVENT_NAME"),
         "subject_blobs": observed,
         "universal_theorem_status": result["status"],
         "surrogate_codepoints_exhausted": 2048,
