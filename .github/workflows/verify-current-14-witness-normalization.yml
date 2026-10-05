@@ -1,0 +1,24 @@
+name: Verify current 14-witness normalization
+on:
+  pull_request:
+    paths:
+      - 'subject/current_14_witness_normalization/**'
+      - 'verify_current_14_witness_normalization.py'
+      - '.github/workflows/verify-current-14-witness-normalization.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run copied Brain adversarial test
+        env:
+          PYTHONPATH: subject/current_14_witness_normalization
+        run: python subject/current_14_witness_normalization/canonical/tests/test_brain_witness_normalization_v3.py
+      - name: Run independent verifier
+        run: python verify_current_14_witness_normalization.py
