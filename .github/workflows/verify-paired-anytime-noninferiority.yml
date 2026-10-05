@@ -1,0 +1,21 @@
+name: Verify paired anytime noninferiority
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verification/paired_anytime_noninferiority.py'
+      - 'verification/test_paired_anytime_noninferiority_independent.py'
+      - 'verification/paired_anytime_source_binding.json'
+      - '.github/workflows/verify-paired-anytime-noninferiority.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - run: cd verification && python -m unittest -v test_paired_anytime_noninferiority_independent.py
