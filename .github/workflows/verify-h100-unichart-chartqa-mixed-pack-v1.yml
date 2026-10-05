@@ -8,6 +8,14 @@ on:
       - 'test_h100_unichart_chartqa_mixed_packer_v1.py'
       - '.github/workflows/verify-h100-unichart-chartqa-mixed-pack-v1.yml'
 
+  push:
+    branches:
+      - verify/h100-unichart-chartqa-mixed-pack-v1
+    paths:
+      - 'h100_unichart_chartqa_mixed_packer_v1.py'
+      - 'test_h100_unichart_chartqa_mixed_packer_v1.py'
+      - '.github/workflows/verify-h100-unichart-chartqa-mixed-pack-v1.yml'
+
 permissions:
   contents: read
 
