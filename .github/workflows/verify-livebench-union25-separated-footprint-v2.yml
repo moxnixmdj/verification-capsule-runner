@@ -1,0 +1,32 @@
+name: Verify LiveBench union25 separated footprint V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_union25_separated_footprint_v2.py"
+      - ".github/workflows/verify-livebench-union25-separated-footprint-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Independently verify separated mandatory floors
+        run: python verify_livebench_union25_separated_footprint_v2.py
+      - name: Print compact receipt
+        if: always()
+        run: test ! -f livebench_union25_separated_footprint_v2_receipt.json || python -c "import json; j=json.load(open('livebench_union25_separated_footprint_v2_receipt.json')); print(j['status'], j['structural_combinations_verified'], j['letter_target_checks'], j['keyword_target_checks'], j['demo_v1_max_floor'], j['demo_v2_separated_sum_floor'])"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-union25-separated-footprint-v2
+          path: livebench_union25_separated_footprint_v2_receipt.json
+          if-no-files-found: error
