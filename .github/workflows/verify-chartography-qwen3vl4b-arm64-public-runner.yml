@@ -108,7 +108,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          set +e
           /usr/bin/time -v timeout 1200             ./llama.cpp/build/bin/llama-mtmd-cli             -m weights/model.gguf             --mmproj weights/mmproj.gguf             -c 1024 -t 4             --image synthetic.bmp             -p 'Describe the image briefly. Mention the two visible colors.'             -n 32 --temp 0             > inference.txt 2> inference.stderr
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ]; then
+            echo '=== inference failure stderr ==='
+            cat inference.stderr
+            exit "$rc"
+          fi
           test -s inference.txt
           echo '=== inference ==='
           cat inference.txt
