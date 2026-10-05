@@ -1,0 +1,48 @@
+name: Verify LiveBench visible compiler V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_visible_prompt_compiler_v1.py"
+      - ".github/workflows/verify-livebench-visible-compiler-v1.yml"
+      - "subject/livebench_visible_compiler_20261005/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Install exact public dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --quiet             numpy==2.3.3 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+      - name: Checkout exact historical LiveBench generator
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBenchGen
+          git init /tmp/LiveBenchGen
+          git -C /tmp/LiveBenchGen remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBenchGen fetch --depth 1 origin 686be1e78a0ba8036d7e355bc406e1a265da5292
+          git -C /tmp/LiveBenchGen checkout --detach FETCH_HEAD
+      - name: Verify visible compiler against exact generator
+        run: python verify_livebench_visible_prompt_compiler_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_visible_prompt_compiler_v1_verification.json; then
+            cat livebench_visible_prompt_compiler_v1_verification.json
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-visible-prompt-compiler-v1-verification
+          path: livebench_visible_prompt_compiler_v1_verification.json
+          if-no-files-found: error
