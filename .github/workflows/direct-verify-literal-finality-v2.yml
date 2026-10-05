@@ -1,0 +1,21 @@
+name: Direct verify literal finality internal coverage lane V2
+on:
+  push:
+    branches:
+      - "direct-verify/literal-finality-v2-20261005-sol"
+    paths:
+      - "capsules/direct_literal_finality_internal_coverage_lane_v2/**"
+      - ".github/workflows/direct-verify-literal-finality-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify content-addressed scheduler truth repair
+        run: python capsules/direct_literal_finality_internal_coverage_lane_v2/verify.py
