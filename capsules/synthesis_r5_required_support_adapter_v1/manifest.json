@@ -1,0 +1,25 @@
+{
+  "schema": "PROJECT_BRAIN_INDEPENDENT_VERIFICATION_CAPSULE_MANIFEST_V1",
+  "date": "2026-10-05",
+  "subject": "SYNTHESIS_R5_REQUIRED_SUPPORT_ADAPTER_20261005_V1",
+  "source_repository": "moxnixmdj/brain",
+  "source_commit": "0e2e02cf60c578bf8fa7f716197f81dce1230679",
+  "exact_blobs": {
+    "canonical/runtime/synthesis_bound_claim_guard_v1.py": "bd631efbfd76787e9dc1d4f9e276c195d1142790",
+    "canonical/tests/test_synthesis_bound_claim_guard_v1.py": "4fbe63bd742e8a18c652fc7efd6e4b141649ba7a",
+    "canonical/governance/SYNTHESIS_R5_REQUIRED_SUPPORT_ADAPTER_20261005_V1.json": "2b39b023a364893d30db27eccb7a70bcc882e953"
+  },
+  "verification_scope": [
+    "EXACT_CONTENT_ADDRESS_MATCH",
+    "COMMITTED_EIGHT_REGRESSION_EXECUTION",
+    "INDEPENDENT_ADVERSARIAL_REQUIRED_CONFLICTED_INSUFFICIENT_DUPLICATE_BINDING_DUPLICATE_EVIDENCE_CHECKS",
+    "ZERO_CREDIT_AND_NO_AUTHORITY_BOUNDARY"
+  ],
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "family_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "ownership_credit_delta": 0
+}
