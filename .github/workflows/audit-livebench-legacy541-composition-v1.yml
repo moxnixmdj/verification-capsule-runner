@@ -1,0 +1,67 @@
+name: Audit legacy IFEval 541-row composition V1
+
+on:
+  push:
+    branches: ["verify/livebench-legacy541-composition-audit-v1-20261004-m"]
+    paths:
+      - ".github/workflows/audit-livebench-legacy541-composition-v1.yml"
+      - "subject/legacy541/**"
+      - "verify_livebench_legacy541_composition_v1.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/audit-livebench-legacy541-composition-v1.yml"
+      - "subject/legacy541/**"
+      - "verify_livebench_legacy541_composition_v1.py"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact Brain subject bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object subject/legacy541/canonical/runtime/livebench_legacy_ifeval_prompt_inverter_v1.py)" = "74904d2a00ed3f0bb2e8ab7787c59c0a8f828f7a"
+          test "$(git hash-object subject/legacy541/canonical/runtime/livebench_legacy_ifeval_constructive_solver_v1.py)" = "c293426df092ca1b82d77aa194ef182b510a0294"
+
+      - name: Fetch exact pinned LiveBench checker source
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --quiet --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/process_results/instruction_following/utils.py)" = "8ce01747887ec0792c8f024e1972e34ece781676"
+
+      - name: Install exact legacy evaluator dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --quiet "langdetect==1.0.9" "immutabledict==4.2.1" "nltk==3.9.1"
+          python - <<'PY'
+          import nltk
+          for name in ["punkt", "punkt_tab"]:
+              nltk.download(name, quiet=True)
+          PY
+
+      - name: Run exact 541-row public composition audit
+        run: python verify_livebench_legacy541_composition_v1.py
+
+      - name: Upload immutable audit receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy541-composition-public-audit-v1
+          path: livebench_legacy541_composition_public_audit_v1.json
+          if-no-files-found: error
+          retention-days: 30
