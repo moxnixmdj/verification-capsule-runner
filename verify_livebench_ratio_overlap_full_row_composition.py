@@ -8,6 +8,8 @@ import unicodedata
 import urllib.request
 from pathlib import Path
 
+# Independent rerun trigger: verifier logic is unchanged from the bootstrapped base.
+
 IFBENCH_URL = "https://raw.githubusercontent.com/allenai/IFBench/1c40f0c10d9b5c5c2f10a175a28007ebb64f7f4d/data/IFBench_test.jsonl"
 IFBENCH_BLOB = "a8e343ed928d8b4e649b9dba651fed7757ccacc3"
 CHECKER_URL = "https://raw.githubusercontent.com/LiveBench/LiveBench/8f8e5c381a16e3f24257776edd53471fe86f8091/livebench/if_runner/ifbench/instructions.py"
