@@ -16,7 +16,7 @@ EXPECTED = {
     "canonical/runtime/opus55_opaque_state_observational_quotient_v1.py":
         "4d99d262efd20501428160c3f2f03e92348ed03d",
     "canonical/tests/test_opus55_opaque_state_observational_quotient_v1.py":
-        "8dc86af3edbbcc1f1ae371f6088ef0121b3c6395",
+        "9cfafc353c16aaf638f871e1c7e14bfb60082c84",
 }
 
 
@@ -136,7 +136,7 @@ def main():
     print(json.dumps({
         "status": "PASS",
         "brain_pr": 2181,
-        "brain_head": "09f184abae09f12d2a48d486ad7fc6839f63a2d0",
+        "brain_head": "ac3252c43ee833e400ec3ff6f1e50c1701d77aef",
         "exact_blobs": EXPECTED,
         "independent_alpha_bijections_checked": checked,
         "adversarial_dimensions": [
