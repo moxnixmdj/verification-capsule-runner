@@ -1,0 +1,29 @@
+{
+  "schema": "PROJECT_BRAIN_ACCEPTANCE_QUOTIENT_POLICY_V5_PUBLIC_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-05",
+  "brain_repository": "moxnixmdj/brain",
+  "exact_brain_blobs": {
+    "canonical/runtime/acceptance_quotient_simulation_v1.py": "9b0160ac849c159c31b42a275283326d643fa51e",
+    "canonical/runtime/acceptance_quotient_simulation_v2.py": "9f09278dac694079bf39c139e5e735ca8d26439a",
+    "canonical/runtime/acceptance_quotient_simulation_v3.py": "53c0ddfe38d959f664b4306d7e346802f8c948c8",
+    "canonical/runtime/acceptance_quotient_simulation_v4.py": "7eb72d917d954b443e586ab06e88c1b6c56431bd",
+    "canonical/runtime/acceptance_quotient_simulation_v5.py": "01b751ea015630bb1c1441478f12e49f75b90909",
+    "canonical/tests/test_acceptance_quotient_simulation_v5.py": "dad0ac003ea7ed48d2f3616efb1f6461ab428bba"
+  },
+  "claims_checked": [
+    "EXACT_V5_TEST_SUITE_PASSES",
+    "ONE_SHARED_POLICY_COMMITMENT_IS_REQUIRED_ACROSS_GLOBAL_STRATEGY_AND_EDGE_BINDINGS",
+    "STOCHASTIC_POLICY_DISTRIBUTION_RECEIPT_MUST_BIND_THE_SAME_POLICY",
+    "DISTRIBUTION_FREE_UNIVERSAL_OVER_ALL_ADMISSIBLE_POLICIES_REMAINS_ALLOWED",
+    "V4_FAILURES_REMAIN_FAIL_CLOSED"
+  ],
+  "nonclaims": [
+    "PRODUCTION_BRAIN_POLICY_RECEIPTS_ARE_TRUE",
+    "ANY_ACCEPTANCE_PREDICATE_IS_CLOSED",
+    "TARGET_DISTRIBUTION_PARITY_IS_PROVED",
+    "TERMINAL_GOAL_IS_ACHIEVED"
+  ],
+  "incremental_spend_usd": 0,
+  "fresh_reality_units_consumed": 0,
+  "acceptance_credit_delta": 0
+}
