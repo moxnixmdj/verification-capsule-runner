@@ -5,6 +5,10 @@ on:
     paths:
       - "capsules/hle_opus55_multimodal_identity_v1/**"
       - ".github/workflows/verify-hle-opus55-multimodal-identity-v1.yml"
+  pull_request:
+    paths:
+      - "capsules/hle_opus55_multimodal_identity_v1/**"
+      - ".github/workflows/verify-hle-opus55-multimodal-identity-v1.yml"
   workflow_dispatch:
 
 permissions:
