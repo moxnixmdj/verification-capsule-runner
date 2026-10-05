@@ -1,0 +1,28 @@
+name: Verify H100 zero-learned Unknown-Domain direct V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/h100_zero_learned_unknown_domain_direct_candidate_v1.py'
+      - 'canonical/runtime/h100_zero_learned_unknown_domain_direct_candidate_v2.py'
+      - 'canonical/governance/H100_ZERO_LEARNED_UNKNOWN_DOMAIN_DIRECT_PREEXPOSURE_V2.json'
+      - 'verify_h100_zero_learned_unknown_domain_direct_v2.py'
+      - '.github/workflows/verify-h100-zero-learned-unknown-domain-direct-v2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_h100_zero_learned_unknown_domain_direct_v2.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h100-zero-learned-unknown-domain-direct-v2
+          path: h100_zero_learned_unknown_domain_direct_receipt_v2.json
+          if-no-files-found: error
