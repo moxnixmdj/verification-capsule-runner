@@ -2,27 +2,31 @@
   "schema": "PROJECT_BRAIN_SYNTHESIS_C2_GROUNDED_EXPRESSION_PUBLIC_RUNNER_INPUT_V1",
   "date": "2026-10-05",
   "brain_commits": {
-    "runtime": "6c9ad66f3b870bc751ecf2a79a23a72574aab794",
-    "tests": "03f65f7d2bf5f4b877002d09a19f25f48132083c",
-    "governance": "d5cc7a19bd41a9e3a834a3cc7e44d3704c0fd82e"
+    "runtime": "41b21c23079f8b6f479ba17dbd8d8a6801c424fc",
+    "tests": "3121b0e0d7d03e2080ab8fa0db028c0baa1399c8",
+    "governance": "95d2d45ae5592376fafb6ed696d99c32f6f79a96"
   },
   "exact_blobs": {
-    "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "6388c425ecac5fc5f85e02bf55bdc4b1d0f99caa",
-    "canonical/tests/test_synthesis_grounded_expression_ir_v1.py": "6f83d7bc61161e4cf5423e7ca3fb4c4b47e88a37",
-    "canonical/governance/SYNTHESIS_C2_GROUNDED_EXPRESSION_BOUNDED_ROUTE_20261005_V1.json": "beb7663361a61bb424b0e629947f4040eeec5aba"
+    "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "09e97a6ba83d4dd832c202199fefa1e03671a00c",
+    "canonical/tests/test_synthesis_grounded_expression_ir_v1.py": "5dfde53005c6beaa5ffbd12e805b4680fb655291",
+    "canonical/governance/SYNTHESIS_C2_GROUNDED_EXPRESSION_BOUNDED_ROUTE_20261005_V1.json": "82a475c062bad4d8382c38890ef19b232a4d1982"
   },
   "requirements": [
     "EXACT_BLOB_MATCH",
     "ALL_COMMITTED_UNIT_TESTS_PASS",
     "UNKNOWN_CONSTRAINT_FAIL_CLOSED",
     "MISSING_PROVENANCE_FAIL_CLOSED",
+    "AMBIGUOUS_PROVENANCE_DELIMITER_FAIL_CLOSED",
+    "RESERVED_CITATION_MARKER_IN_RENDERED_MATERIAL_FAIL_CLOSED",
     "INFEASIBLE_BUDGET_FAIL_CLOSED_WITHOUT_DROP_OR_TRUNCATION",
-    "BAD_ORDER_CANNOT_DROP_ITEMS",
+    "LOSSY_NUMERIC_OR_BOOLEAN_CONSTRAINT_COERCION_FAIL_CLOSED",
+    "SECTION_CONSTRAINTS_FAIL_CLOSED_OUTSIDE_SECTIONED_MARKDOWN",
+    "BAD_ORDER_CANNOT_DROP_OR_REGROUP_ITEMS",
     "SECTION_STRUCTURE_PASS",
     "UNCERTAINTY_AND_CONFLICT_RENDERED",
     "ZERO_PROMOTION_CAPABILITY_FAMILY_OR_TERMINAL_AUTHORITY"
   ],
   "new_reality_units_consumed": 0,
   "terminal_cases_consumed": 0,
-  "verification_trigger_revision": 1
+  "verification_trigger_revision": 2
 }
