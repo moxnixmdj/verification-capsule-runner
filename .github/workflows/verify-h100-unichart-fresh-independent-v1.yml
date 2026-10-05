@@ -1,0 +1,103 @@
+name: Verify H100 UniChart fresh capability independently
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/h100_unichart_*.py'
+      - 'structural_safeguard_packer.py'
+      - 'mse_affine_structural_packer.py'
+      - 'h100_unichart_fresh_capability_holdout_v1.json'
+      - 'verify_h100_unichart_fresh_independent_v1.py'
+      - '.github/workflows/verify-h100-unichart-fresh-independent-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install exact inference dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir numpy==1.26.4
+          python -m pip install --disable-pip-version-check --no-cache-dir torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check --no-cache-dir transformers==4.28.1 sentencepiece==0.1.99 Pillow==10.4.0
+
+      - name: Download exact public donor and runtime assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=/tmp/h100fresh
+          M=$ROOT/modeldir
+          mkdir -p "$M" "$ROOT/images"
+          REV=e5eb1e52c1d775e0f3febaddc7fc3559e80cb989
+          BASE="https://huggingface.co/ahmed-masry/unichart-chartqa-960/resolve/$REV"
+          curl -fL --retry 4 --retry-delay 2 "$BASE/pytorch_model.bin?download=true" -o "$ROOT/pytorch_model.bin"
+          test "$(stat -c%s "$ROOT/pytorch_model.bin")" -eq 809199995
+          echo '4407db60801a20bcf254946acfee6727491ef1739ad7b4d3abbf87b7c75e7229  /tmp/h100fresh/pytorch_model.bin' | sha256sum -c -
+          total=0
+          for f in .gitattributes README.md added_tokens.json config.json generation_config.json preprocessor_config.json sentencepiece.bpe.model special_tokens_map.json tokenizer.json tokenizer_config.json
+          do
+            curl -fL --retry 4 --retry-delay 1 "$BASE/$f?download=true" -o "$M/$f"
+            n=$(stat -c%s "$M/$f")
+            total=$((total+n))
+          done
+          test "$total" -eq 5313202
+
+      - name: Download exact frozen holdout images
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,urllib.parse,urllib.request,pathlib
+          pre=json.load(open('h100_unichart_fresh_capability_holdout_v1.json'))
+          root=pathlib.Path('/tmp/h100fresh/images'); root.mkdir(parents=True,exist_ok=True)
+          base='https://raw.githubusercontent.com/vis-nlp/ChartQA/044eabfc306abfe9340c5741f0093aefc5973d06/ChartQA%20Dataset/val/png/'
+          for c in pre['cases']:
+              p=root/c['imgname']
+              with urllib.request.urlopen(base+urllib.parse.quote(c['imgname']),timeout=60) as r:
+                  b=r.read()
+              assert len(b)==c['image_bytes'],(c['id'],len(b),c['image_bytes'])
+              assert hashlib.sha256(b).hexdigest()==c['image_sha256'],c['id']
+              p.write_bytes(b)
+          print('FROZEN_IMAGES_VERIFIED',len(pre['cases']))
+          PY
+
+      - name: Rebuild exact 99,999,997-byte subject from source
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python mse_affine_structural_packer.py             --source /tmp/h100fresh/pytorch_model.bin             --output /tmp/h100fresh/chartqa_mse_structural.h100uc             --expected-source-sha256 4407db60801a20bcf254946acfee6727491ef1739ad7b4d3abbf87b7c75e7229             --ancillary-bytes 5313202             --result-json /tmp/h100fresh/pack.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/h100fresh/pack.json'))
+          assert d['output_sha256']=='17fc7d37f6c6e8457d53dd93efff365b17850acf5810ba3067bb06c7c226cb14',d
+          assert d['output_bytes']==94686795,d
+          assert d['complete_bundle_bytes']==99999997,d
+          assert d['margin_bytes']==3,d
+          print('PACK_REPRODUCED_EXACTLY')
+          PY
+
+      - name: Replay frozen fresh capability holdout
+        env:
+          HF_HOME: /tmp/h100fresh/hf
+        run: PYTHONPATH=. python verify_h100_unichart_fresh_independent_v1.py
+
+      - name: Upload small independent receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h100-unichart-fresh-independent-v1
+          path: h100_unichart_fresh_independent_replay_result_v1.json
+          if-no-files-found: warn
+          retention-days: 3
