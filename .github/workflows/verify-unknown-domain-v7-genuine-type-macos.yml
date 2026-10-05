@@ -1,0 +1,38 @@
+name: Verify Unknown-Domain V7 genuine types macOS
+
+on:
+  push:
+    branches:
+      - "verify/unknown-domain-v7-genuine-type-20261005-sol2"
+    paths:
+      - "VERIFY_UNKNOWN_DOMAIN_V7_GENUINE_TYPE_MACOS"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
+      - "canonical/tests/test_unknown_domain_direct_v5.py"
+      - "canonical/runtime/unknown_domain_direct_v7_genuine_type_proof_v1.py"
+      - "verification/unknown_domain_v7_genuine_type_independent.py"
+      - ".github/workflows/verify-unknown-domain-v7-genuine-type-macos.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Independent V7 adversarial verification
+        run: PYTHONPATH=. python verification/unknown_domain_v7_genuine_type_independent.py
+      - name: Exact V5 regression suite
+        run: PYTHONPATH=. python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v7-genuine-type-macos-py312
+          path: unknown_domain_v7_genuine_type_receipt.json
+          if-no-files-found: error
