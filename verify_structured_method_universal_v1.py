@@ -1,3 +1,4 @@
+# trigger: structured-method-universal-v1 public runner
 #!/usr/bin/env python3
 from __future__ import annotations
 import ast, hashlib, json, subprocess, sys
