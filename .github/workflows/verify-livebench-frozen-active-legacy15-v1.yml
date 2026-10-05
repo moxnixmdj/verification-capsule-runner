@@ -1,0 +1,54 @@
+name: Verify frozen LiveBench active legacy15 opening V1
+
+on:
+  push:
+    branches: ["verify/livebench-frozen-active-legacy15-opening-v1-20261004-m"]
+    paths:
+      - ".github/workflows/verify-livebench-frozen-active-legacy15-v1.yml"
+      - "subject/legacy15/**"
+      - "verify_livebench_frozen_active_legacy15_v1.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-frozen-active-legacy15-v1.yml"
+      - "subject/legacy15/**"
+      - "verify_livebench_frozen_active_legacy15_v1.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch exact first-attempt runner
+        run: |
+          set -euo pipefail
+          git fetch --quiet --depth=1 origin d8e6edd61fb1fbeedd856aa31cc202348e52529c
+          git show FETCH_HEAD:execute_livebench_if_threshold_v1.py > /tmp/execute_livebench_if_threshold_v1.py
+          test "$(git hash-object /tmp/execute_livebench_if_threshold_v1.py)" = "05d71d3d06ebac9b5d74eb31b137141e6b8797c2"
+
+      - name: Fetch exact pinned LiveBench registries
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --quiet --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/ifbench/instructions_registry.py)" = "adfed4832877566e62970257b50c6fa32c302fb2"
+
+      - name: Verify cryptographic opening and registry partition
+        run: python verify_livebench_frozen_active_legacy15_v1.py
+
+      - name: Upload immutable receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-frozen-active-legacy15-opening-v1
+          path: livebench_frozen_active_legacy15_opening_v1.json
+          if-no-files-found: error
+          retention-days: 30
