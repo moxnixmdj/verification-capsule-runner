@@ -1,0 +1,69 @@
+name: Verify Astra target comparator separation V1
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "capsules/astra_target_comparator_separation_v1/**"
+      - ".github/workflows/verify-astra-target-comparator-separation-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain mirrors
+        run: |
+          set -euo pipefail
+          cd capsules/astra_target_comparator_separation_v1
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for path, expected in m["exact_blobs"].items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert got==expected,(path,expected,got)
+          assert m["accounting"]["incremental_spend_usd"]==0
+          assert m["accounting"]["new_reality_units_consumed"]==0
+          assert m["accounting"]["terminal_cases_consumed"]==0
+          print("EXACT_BRAIN_MIRRORS_PASS",len(m["exact_blobs"]))
+          PY
+      - name: Verify target universe
+        run: |
+          set -euo pipefail
+          cd capsules/astra_target_comparator_separation_v1
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_astra_target_universe_compiler_v1
+          PYTHONPATH=. python canonical/runtime/astra_target_universe_compiler_v1.py
+      - name: Verify legacy crosswalk
+        run: |
+          set -euo pipefail
+          cd capsules/astra_target_comparator_separation_v1
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_astra_legacy_target_crosswalk_verifier_v1
+          PYTHONPATH=. python canonical/runtime/astra_legacy_target_crosswalk_verifier_v1.py
+      - name: Verify residual and zero-credit boundary
+        run: |
+          set -euo pipefail
+          cd capsules/astra_target_comparator_separation_v1
+          python - <<'PY'
+          import json
+          m=json.load(open("manifest.json"))
+          g=json.load(open("canonical/governance/ASTRA_TARGET_COMPARATOR_SEPARATION_CANDIDATE_V1.json"))
+          r=json.load(open("canonical/governance/ASTRA_TARGET_CURRENT_RESIDUAL_V1.json"))
+          x=json.load(open("canonical/capabilities/astra/ASTRA_DEMONSTRATED_CAPABILITY_TARGET_UNIVERSE_V1.json"))
+          c=json.load(open("canonical/governance/LEGACY_OPUS19_TO_ASTRA_DEMONSTRATED_TARGET_CROSSWALK_V1.json"))
+          assert len(x["target_behaviors"])==m["expected"]["target_behavior_count"]==13
+          assert c["findings"]["legacy_family_count"]==m["expected"]["legacy_family_count"]==19
+          assert c["findings"]["astra_targets_with_no_dedicated_legacy_family"]==m["expected"]["dedicated_legacy_gap"]
+          assert r["counts"]["targets_without_dedicated_legacy_family"]==1
+          assert r["counts"]["legacy_rows_reclassified_as_route_components_not_current_terminal_targets"]==m["expected"]["route_component_legacy_rows"]==4
+          for k in ("acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+              assert g[k]==0,(k,g[k])
+          assert r["acceptance_credit_delta"]==0
+          assert r["ownership_credit_delta"]==0
+          assert r["terminal"] is False
+          print("ASTRA_TARGET_COMPARATOR_SEPARATION_INDEPENDENT_PASS")
+          PY
