@@ -1,0 +1,154 @@
+name: Verify real H100 UniChart ChartQA W4-W3 subject
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'h100_unichart_chartqa_mixed_packer_v1.py'
+      - 'test_h100_unichart_chartqa_mixed_packer_v1.py'
+      - '.github/workflows/verify-h100-unichart-chartqa-mixed-pack-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pinned CPU pack runtime
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir numpy==1.26.4
+          python -m pip install --disable-pip-version-check --no-cache-dir torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Run packer unit tests
+        run: python -m unittest test_h100_unichart_chartqa_mixed_packer_v1 -v
+
+      - name: Download exact ChartQA checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/h100-chartqa
+          URL='https://huggingface.co/ahmed-masry/unichart-chartqa-960/resolve/e5eb1e52c1d775e0f3febaddc7fc3559e80cb989/pytorch_model.bin?download=true'
+          curl -fL --retry 3 --retry-delay 2 --max-filesize 820000000 "$URL" -o /tmp/h100-chartqa/pytorch_model.bin
+          test "$(stat -c%s /tmp/h100-chartqa/pytorch_model.bin)" -eq 809199995
+          echo '4407db60801a20bcf254946acfee6727491ef1739ad7b4d3abbf87b7c75e7229  /tmp/h100-chartqa/pytorch_model.bin' | sha256sum -c -
+
+      - name: Create real mixed W4-W3 ChartQA packed checkpoint
+        run: |
+          python h100_unichart_chartqa_mixed_packer_v1.py             --source-bin /tmp/h100-chartqa/pytorch_model.bin             --output /tmp/h100-chartqa/model.h100ucq             --receipt /tmp/h100-chartqa/packer_receipt.json             --groups-per-chunk 4096
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/h100-chartqa/packer_receipt.json'))
+          assert d['status']=='PASS__REAL_CHARTQA_MIXED_W4_ENCODER_W3_DECODER_CHECKPOINT_CREATED',d
+          assert d['packed_checkpoint_bytes'] <= 100_000_000,d
+          print(json.dumps({
+            'source_state_manifest_sha256':d['source_state_manifest_sha256'],
+            'packed_checkpoint_bytes':d['packed_checkpoint_bytes'],
+            'packed_checkpoint_margin_bytes':d['packed_checkpoint_margin_bytes'],
+            'packed_checkpoint_sha256':d['packed_checkpoint_sha256'],
+            'encoder_relative_mse':d['quantization_error']['encoder']['relative_mse'],
+            'decoder_relative_mse':d['quantization_error']['decoder']['relative_mse'],
+          },indent=2,sort_keys=True))
+          PY
+
+      - name: Build complete ChartQA runtime-state bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          REV='e5eb1e52c1d775e0f3febaddc7fc3559e80cb989'
+          BASE="https://huggingface.co/ahmed-masry/unichart-chartqa-960/resolve/$REV"
+          B=/tmp/h100-chartqa/bundle
+          mkdir -p "$B"
+          cp /tmp/h100-chartqa/model.h100ucq "$B/model.h100ucq"
+          for f in             .gitattributes             README.md             added_tokens.json             config.json             generation_config.json             preprocessor_config.json             sentencepiece.bpe.model             special_tokens_map.json             tokenizer.json             tokenizer_config.json
+          do
+            curl -fL --retry 3 --retry-delay 1 "$BASE/$f?download=true" -o "$B/$f"
+          done
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner             -cf /tmp/h100-chartqa/unichart_chartqa_h100_bundle.tar -C /tmp/h100-chartqa bundle
+          test "$(stat -c%s /tmp/h100-chartqa/unichart_chartqa_h100_bundle.tar)" -le 100000000
+
+      - name: Freeze small receipt only
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('/tmp/h100-chartqa')
+          pack=json.load(open(root/'packer_receipt.json'))
+          bundle=root/'unichart_chartqa_h100_bundle.tar'
+          def sha(p):
+              h=hashlib.sha256()
+              with open(p,'rb') as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b''):
+                      h.update(b)
+              return h.hexdigest()
+          ancillary=[]
+          for p in sorted((root/'bundle').iterdir()):
+              if p.name=='model.h100ucq':
+                  continue
+              ancillary.append({'name':p.name,'bytes':p.stat().st_size,'sha256':sha(p)})
+          out={
+            'schema':'PROJECT_BRAIN_H100_UNICHART_CHARTQA_REAL_PACKED_SUBJECT_RECEIPT_V1',
+            'status':'PASS__REAL_CHARTQA_MIXED_W4_W3_COMPLETE_BUNDLE_UNDER_H100',
+            'source':{
+              'model':'ahmed-masry/unichart-chartqa-960',
+              'revision':'e5eb1e52c1d775e0f3febaddc7fc3559e80cb989',
+              'pytorch_bin_sha256':'4407db60801a20bcf254946acfee6727491ef1739ad7b4d3abbf87b7c75e7229',
+              'pytorch_bin_bytes':809199995,
+            },
+            'packed_checkpoint':pack,
+            'complete_bundle':{
+              'bytes':bundle.stat().st_size,
+              'sha256':sha(bundle),
+              'h100_budget_bytes':100000000,
+              'margin_bytes':100000000-bundle.stat().st_size,
+              'ancillary_total_bytes':sum(x['bytes'] for x in ancillary),
+              'ancillary_files':ancillary,
+            },
+            'hard_nonclaims':[
+              'REAL_PACKED_SUBJECT_CREATION_DOES_NOT_PROVE_CHARTQA_CAPABILITY_PRESERVATION',
+              'NO_CHARTOGRAPHY_THRESHOLD_CREDIT',
+              'NO_H100_TERMINAL_CREDIT',
+              'LARGE_BINARY_IS_DELETED_AFTER_HASHING',
+            ],
+            'accounting':{
+              'incremental_spend_usd':0,
+              'terminal_cases_consumed':0,
+              'acceptance_credit_delta':0,
+              'capability_credit_delta':0,
+              'ownership_credit_delta':0,
+              'h100_credit_delta':0,
+            },
+          }
+          assert out['complete_bundle']['bytes'] <= 100_000_000,out
+          pathlib.Path('h100_unichart_chartqa_real_packed_subject_receipt.json').write_text(
+              json.dumps(out,indent=2,sort_keys=True)+'\n'
+          )
+          print(json.dumps({
+            'status':out['status'],
+            'packed_checkpoint_bytes':pack['packed_checkpoint_bytes'],
+            'packed_checkpoint_sha256':pack['packed_checkpoint_sha256'],
+            'complete_bundle_bytes':out['complete_bundle']['bytes'],
+            'complete_bundle_margin_bytes':out['complete_bundle']['margin_bytes'],
+            'complete_bundle_sha256':out['complete_bundle']['sha256'],
+            'source_state_manifest_sha256':pack['source_state_manifest_sha256'],
+          },indent=2,sort_keys=True))
+          PY
+
+      - name: Delete large transient model files
+        if: always()
+        run: |
+          rm -rf /tmp/h100-chartqa/pytorch_model.bin                  /tmp/h100-chartqa/model.h100ucq                  /tmp/h100-chartqa/unichart_chartqa_h100_bundle.tar                  /tmp/h100-chartqa/bundle || true
+
+      - name: Upload receipt only
+        uses: actions/upload-artifact@v4
+        with:
+          name: h100-unichart-chartqa-real-packed-subject-receipt-v1
+          path: h100_unichart_chartqa_real_packed_subject_receipt.json
+          if-no-files-found: error
+          retention-days: 1
