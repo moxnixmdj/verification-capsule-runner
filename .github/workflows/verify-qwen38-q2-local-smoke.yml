@@ -1,0 +1,90 @@
+name: Verify Qwen3.8 Q2 local CPU smoke
+on:
+  push:
+    branches:
+      - verify/qwen38-q2-local-smoke-20261004
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12.14"
+
+      - name: Resource gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODEL=9828981664
+          DISK_RESERVE=2000000000
+          MEM_RESERVE=2000000000
+          FREE=$(df -B1 --output=avail / | tail -1 | tr -d ' ')
+          MEM=$(awk '/MemAvailable:/ {print $2*1024}' /proc/meminfo)
+          echo "free_disk_bytes=$FREE"
+          echo "mem_available_bytes=$MEM"
+          test "$FREE" -ge "$((MODEL+DISK_RESERVE))"
+          awk -v have="$MEM" -v need="$((MODEL+MEM_RESERVE))" 'BEGIN {exit !(have>=need)}'
+
+      - name: Build pinned llama.cpp CPU runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout cd26896
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF
+          cmake --build build -j 4 --target llama-cli
+          ./build/bin/llama-cli --version
+
+      - name: Download exact Q2 subject and verify SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-UD-Q2_K_XL.gguf"
+          curl --fail --location --retry 5 --retry-delay 5 --output Qwen3.8-27B-UD-Q2_K_XL.gguf "$URL"
+          echo "fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0  Qwen3.8-27B-UD-Q2_K_XL.gguf" | sha256sum --check -
+
+      - name: Run local nonterminal semantic smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          PROMPT='Paraphrase this sentence while preserving its meaning: The research team completed the migration because every safety check passed.'
+          timeout 1200s ./llama.cpp/build/bin/llama-cli \
+            -m Qwen3.8-27B-UD-Q2_K_XL.gguf \
+            -c 2048 -n 96 -t 4 --temp 0 \
+            --no-display-prompt \
+            -p "$PROMPT" > qwen38_q2_smoke_output.txt
+          test -s qwen38_q2_smoke_output.txt
+          ./llama.cpp/build/bin/llama-cli --version | head -20 > llama_version.txt
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          p=pathlib.Path("Qwen3.8-27B-UD-Q2_K_XL.gguf")
+          h=hashlib.sha256()
+          with p.open("rb") as f:
+              for chunk in iter(lambda:f.read(8*1024*1024),b""):
+                  h.update(chunk)
+          version=pathlib.Path("llama_version.txt").read_text(errors="replace").strip()
+          pathlib.Path("qwen38_q2_smoke_meta.json").write_text(json.dumps({
+              "model_sha256":h.hexdigest(),
+              "llama_commit":"cd26896",
+              "llama_version":version,
+          },indent=2,sort_keys=True))
+          PY
+          python verify_qwen38_q2_local_smoke.py
+
+      - name: Upload receipt only
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-q2-local-smoke-receipt
+          path: qwen38_q2_smoke_receipt.json
+          if-no-files-found: error
