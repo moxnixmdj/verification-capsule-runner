@@ -1,0 +1,88 @@
+name: Verify Unknown-Domain V7 reachable domain Windows V5
+
+on:
+  push:
+    branches:
+      - "verify/unknown-domain-v7-reachable-windows-v5-20261005"
+    paths:
+      - "TRIGGER_UNKNOWN_DOMAIN_V7_WINDOWS_V5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rematerialize exact Git blob bytes
+        shell: pwsh
+        run: |
+          git config core.autocrlf false
+          git reset --hard HEAD
+          $expected = @{
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py" = "0faa62fce4bc2f2a99c173b0a10a32d5e1c6a244"
+            "canonical/tests/test_unknown_domain_direct_v5.py" = "1961cff0013ff9f17feca981409d89d01ecf6769"
+            "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py" = "2da564d27a318a99713165208126aaaf36ebc924"
+          }
+          foreach ($path in $expected.Keys) {
+            $got = (git hash-object --no-filters $path).Trim()
+            if ($got -ne $expected[$path]) {
+              throw "WORKTREE_BLOB_MISMATCH_AFTER_NORMALIZATION:$path:$got"
+            }
+          }
+
+      - name: Python 3.12.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+
+      - name: Verify Python 3.12.10
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $env:PYTHONPATH="."
+          python --version
+          python -m pip install --disable-pip-version-check pytest==8.4.2
+          python verification/unknown_domain_v7_reachable_domain_independent_v3.py
+          python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+          Copy-Item unknown_domain_v7_reachable_domain_receipt.json unknown_domain_v7_reachable_domain_receipt_py312.json
+          New-Item -ItemType File PY312_V7_PASS | Out-Null
+
+      - name: Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Verify Python 3.13
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $env:PYTHONPATH="."
+          python --version
+          python -m pip install --disable-pip-version-check pytest==8.4.2
+          python verification/unknown_domain_v7_reachable_domain_independent_v3.py
+          python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+          Copy-Item unknown_domain_v7_reachable_domain_receipt.json unknown_domain_v7_reachable_domain_receipt_py313.json
+          New-Item -ItemType File PY313_V7_PASS | Out-Null
+
+      - name: Upload both receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v7-reachable-windows-v5-both-pythons
+          path: |
+            unknown_domain_v7_reachable_domain_receipt_py312.json
+            unknown_domain_v7_reachable_domain_receipt_py313.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Require both runtimes green
+        if: always()
+        shell: pwsh
+        run: |
+          if (!(Test-Path PY312_V7_PASS)) { throw "PY312_V7_NOT_GREEN" }
+          if (!(Test-Path PY313_V7_PASS)) { throw "PY313_V7_NOT_GREEN" }
