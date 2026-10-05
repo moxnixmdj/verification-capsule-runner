@@ -1,0 +1,29 @@
+{
+  "schema": "PROJECT_BRAIN_INDEPENDENT_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-05",
+  "subject_repo": "moxnixmdj/brain",
+  "subject_pr": 2207,
+  "objective": "Independently verify the constructive counterexample falsifying global matched_quality=1 for the current P3 v3 synthesis candidate.",
+  "exact_blobs": {
+    "canonical/runtime/p3_information_safe_candidate_v3.py": "54bfc7e5ee205aa328863a5ea1ca6f47f864d85a",
+    "canonical/governance/SYNTHESIS_P3_TYPED_INPUT_DOMAIN_COUNTERMODEL_PARTITION_20261005_V1.json": "4150a16f4c20bf0bfcaa23d31b0b03af69417b2b",
+    "canonical/runtime/synthesis_matched_quality_metric_v1.py": "116b7394f4b0a6845056c798e966f4cc26f294bf",
+    "canonical/governance/SYNTHESIS_HIDDEN_EVALUATOR_ROUTE_TRUTH_REPAIR_ACTIVATION_V1.json": "ac12d96b7d060ba996f1f2672d66f05da628dd93",
+    "canonical/governance/SYNTHESIS_CURRENT_CANDIDATE_CEILING_COUNTEREXAMPLE_20261005_V1.json": "6a28da70caba24cef70e19b39a1fb15fc940e88e",
+    "canonical/tests/test_synthesis_current_candidate_ceiling_counterexample_20261005_v1.py": "482f2a7e4834df6f1ed93071a0ac4236aef736fc"
+  },
+  "expected": {
+    "theorem_result": "CURRENT_CANDIDATE_UNIVERSAL_CEILING_1_ROUTE_FALSIFIED",
+    "candidate_selected_claims": [
+      "C"
+    ],
+    "matched_quality": 0,
+    "reason": "UNSUPPORTED_MATERIAL_CLAIM_HARD_ZERO"
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0
+  }
+}
