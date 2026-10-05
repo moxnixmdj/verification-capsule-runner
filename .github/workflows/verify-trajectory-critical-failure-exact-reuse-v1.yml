@@ -1,0 +1,52 @@
+name: Verify trajectory critical-failure exact reuse V1
+on:
+  push:
+    branches: [verify/trajectory-critical-failure-exact-reuse-v1-20261005-sol]
+    paths:
+      - "capsules/trajectory_critical_failure_exact_reuse_v1/**"
+      - ".github/workflows/verify-trajectory-critical-failure-exact-reuse-v1.yml"
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact content-addressed inputs
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("capsules/trajectory_critical_failure_exact_reuse_v1/manifest.json"))
+          for p,sha in m["source_files"].items():
+              got=subprocess.check_output(["git","hash-object",p],text=True).strip()
+              assert got==sha,(p,sha,got)
+          print("EXACT_INPUT_BLOBS_PASS",len(m["source_files"]))
+          PY
+      - name: Verify exact reusable contract binding
+        run: |
+          set -euo pipefail
+          python capsules/trajectory_critical_failure_exact_reuse_v1/verify.py
+      - name: Enforce zero-reality and conservative credit boundary
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util, pathlib
+          p=pathlib.Path("capsules/trajectory_critical_failure_exact_reuse_v1/verify.py")
+          spec=importlib.util.spec_from_file_location("reuse_verify",p)
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          o=m.evaluate(m.load_sources())
+          assert o["pass"] is True,o
+          assert o["new_reality_units_consumed"]==0,o
+          assert o["terminal_cases_consumed"]==0,o
+          assert o["promotion_authority"] is False,o
+          assert o["global_family_slot_count"]==8,o
+          assert o["additional_family_slots_beyond_already_accepted_recovery"]==7,o
+          print("TRAJECTORY_EXACT_REUSE_BOUNDARY_PASS")
+          PY
