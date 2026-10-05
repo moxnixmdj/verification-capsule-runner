@@ -1,5 +1,5 @@
 from __future__ import annotations
-import hashlib, json
+import hashlib, json, subprocess, sys
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
@@ -111,4 +111,8 @@ def main():
     return 0 if not errors else 1
 
 if __name__=="__main__":
-    raise SystemExit(main())
+    rc=main()
+    if rc==0:
+        child=Path(__file__).resolve().parents[1]/"composition_debugging_bridge_v1"/"verify.py"
+        rc=subprocess.run([sys.executable,str(child)],check=False).returncode
+    raise SystemExit(rc)
