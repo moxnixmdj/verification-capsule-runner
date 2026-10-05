@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 SUBJECT=ROOT/"SUBJECT.json"
-EXPECTED_BRAIN_BLOB="7dfc7559aa89cd1e90a98469a3588ad09328b04e"
+EXPECTED_BRAIN_BLOB="7434040c58142a0f4f537b2ad8ec23223acd38e3"
 
 URLS={
  "credit":"https://help.arena.ai/articles/5476762589-credit-sytem",
