@@ -1,0 +1,36 @@
+name: Verify Root2 current 14/24 exact-18 V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_root2_current14_exact18_v3.py"
+      - "subject/root2_current14_exact18_v3/**"
+      - ".github/workflows/verify-root2-current14-exact18-v3.yml"
+  push:
+    branches: [main]
+    paths:
+      - "verify_root2_current14_exact18_v3.py"
+      - "subject/root2_current14_exact18_v3/**"
+      - ".github/workflows/verify-root2-current14-exact18-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify current Root2 V3 rebind
+        run: python verify_root2_current14_exact18_v3.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root2-current14-exact18-v3-receipt
+          path: root2_current14_exact18_v3_receipt.json
+          if-no-files-found: error
