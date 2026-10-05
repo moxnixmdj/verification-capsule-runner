@@ -1,0 +1,41 @@
+{
+  "schema": "PROJECT_BRAIN_AUTHORITY_EPOCH_V4_EXTERNAL_COMPUTE_VERIFICATION_V1",
+  "date": "2026-10-05",
+  "status": "PASS__GITHUB_LIVE_BLOB_IDS_MATCH_DECLARATION__INDEPENDENT_WOLFRAM_SHA256_MATCH__ZERO_CREDIT",
+  "subject": {
+    "brain_candidate_pr": 2106,
+    "candidate_ref": "d77219c62a3a4e6b49351f97ccd9becce43ab19b",
+    "brain_live_ref": "b63f869b1d0c910ffce69269b164c3ef6c1368ec",
+    "expected_epoch_sha256": "e390cb4bff7b323617b1e3c440ea44c42815b8cac64bf7f749228ccfc6347dc8"
+  },
+  "live_components": {
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY_V1.json": "9015b1fcacb40222f920c124986fcea63cc6e5ee",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V14.json": "ecf98388d2055ce9212b14570bc3f86877bc7c6f",
+    "canonical/governance/CURRENT_ZERO_REALITY_MINIMUM_CUT_V14_ACTIVATION_V1.json": "343be0d774f96ed851d668ad29045a12195f12ce",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "a3fd20e58fdbd9b86278b7de0c245de3063dce27",
+    "canonical/governance/TERMINAL_ROOT_CAUSE_STATE_V1.json": "7c1ed0adf243b92abab2cbdb6ebced921dcbb860"
+  },
+  "canonical_serialization": {
+    "rule": "sort path lexicographically; concatenate path=blobsha plus LF",
+    "utf8_byte_length": 531
+  },
+  "independent_computation": {
+    "engine": "Wolfram Language kernel",
+    "control_input": "abc",
+    "control_sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "computed_epoch_sha256": "e390cb4bff7b323617b1e3c440ea44c42815b8cac64bf7f749228ccfc6347dc8",
+    "pass": true
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed": 0,
+    "terminal_cases_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "family_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0
+  },
+  "execution_authority": false,
+  "promotion_authority": false,
+  "fresh_reality_authority": false
+}
