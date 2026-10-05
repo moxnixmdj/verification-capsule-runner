@@ -1,0 +1,20 @@
+{
+  "schema": "PROJECT_BRAIN_SYNTHESIS_MATERIAL_ORDER_MONOTONICITY_CAPSULE_V1",
+  "date": "2026-10-05",
+  "source_repository": "moxnixmdj/brain",
+  "source_pull_request": 2167,
+  "source_branch": "breakthrough/synthesis-material-order-monotonicity-sol-v1",
+  "exact_blobs": {
+    "brain/canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "brain/canonical/governance/SYNTHESIS_SCOPE_CERTIFICATE_V1.json": "dea9028f92f111ee3c8be71615fa4b02e8a8bfb6",
+    "brain/canonical/governance/SYNTHESIS_MATCHED_QUALITY_METRIC_CONTRACT_V1.json": "0886f7592875a5b750cdd401aa783351ab2f0854",
+    "brain/canonical/governance/SYNTHESIS_DIMENSION_SCORERS_AND_STRICT_REDUCER_V1.json": "8206cb013b5cd0d653ffa70d1e867f8c4d4630b8",
+    "brain/canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "a3fd20e58fdbd9b86278b7de0c245de3063dce27",
+    "brain/canonical/governance/SYNTHESIS_MATERIAL_OUTCOME_ORDER_MONOTONICITY_CERTIFICATE_20261005_V1.json": "60087399b58885bb314cfa13378cb9dc9c0d9ff1",
+    "brain/canonical/governance/SYNTHESIS_TARGET_FREE_COUPLING_CEILING_EQUIVALENCE_20261005_V1.json": "f7df689ec2ec98ace0b9a8f1076c0fd562197456"
+  },
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0
+}
