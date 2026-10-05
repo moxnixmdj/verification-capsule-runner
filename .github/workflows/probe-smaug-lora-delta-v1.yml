@@ -1,0 +1,32 @@
+name: Probe Smaug LoRA Delta Compressibility V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "experiments/smaug_lora_delta_range_probe_v1.py"
+      - ".github/workflows/probe-smaug-lora-delta-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install numeric dependency
+        run: python -m pip install --quiet "numpy==2.3.3"
+      - name: Run HTTP-range delta probe
+        run: python experiments/smaug_lora_delta_range_probe_v1.py
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smaug-lora-delta-range-probe-v1
+          path: smaug_lora_delta_range_probe_v1.json
+          if-no-files-found: error
