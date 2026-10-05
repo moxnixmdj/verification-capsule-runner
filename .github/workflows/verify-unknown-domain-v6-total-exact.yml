@@ -1,8 +1,11 @@
 name: Verify Unknown-Domain V6 total exact
+# subclass-safe V2 subject rebind
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - verification-isolation/ud-v6-subclass-safe-20261005
     paths:
       - "subject/unknown_domain_v6_20261005/**"
       - "verify_unknown_domain_v6_total_exact.py"
@@ -13,7 +16,7 @@ permissions:
 
 jobs:
   verify:
-    runs-on: macos-15-intel
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
