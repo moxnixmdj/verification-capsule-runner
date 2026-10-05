@@ -1,6 +1,12 @@
 name: Verify LiveBench frozen schema19 envelope
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "subject/livebench_schema19_20261005/**"
+      - "verify_livebench_schema19_envelope_v1.py"
+      - ".github/workflows/verify-livebench-schema19-envelope-v1.yml"
   pull_request:
     paths:
       - "subject/livebench_schema19_20261005/**"
