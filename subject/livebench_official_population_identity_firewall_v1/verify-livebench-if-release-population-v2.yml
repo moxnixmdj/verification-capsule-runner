@@ -1,0 +1,148 @@
+name: Verify LiveBench IF release population V2
+
+on:
+  push:
+    branches: ["verify/livebench-if-release-population-v2-20261003-sol"]
+    paths:
+      - ".github/workflows/verify-livebench-if-release-population-v2.yml"
+      - "capsules/livebench_if_release_population_v2/brain/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-if-release-population-v2.yml"
+      - "capsules/livebench_if_release_population_v2/brain/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact candidate
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/livebench_if_release_population_v2/brain/CANDIDATE.json)" = "fa9acadf92826cff424d97f25b4094f60fed3571"
+          python - <<'PY'
+          import json
+          p="capsules/livebench_if_release_population_v2/brain/CANDIDATE.json"
+          c=json.load(open(p))
+          assert c["target_predicate"]=="LIVEBENCH_IF_GE_65_7"
+          assert c["new_reality_units_consumed"]==0
+          assert c["incremental_spend_usd"]==0
+          assert c["acceptance_credit_delta"]==0
+          assert c["execution_authority"] is False
+          assert c["promotion_authority"] is False
+          assert c["fresh_reality_authority"] is False
+          PY
+
+      - name: Fetch exact first-party LiveBench sources
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/common.py)" = "95373cc6a82bc935013e2c23d2a183022f802f5c"
+
+          git init /tmp/new-livebench
+          git -C /tmp/new-livebench remote add origin https://github.com/LiveBench/new-livebench.git
+          git -C /tmp/new-livebench fetch --depth 1 origin caa4253c8a3aa93b5c7ec234e681d4f120a20240
+          git -C /tmp/new-livebench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/new-livebench rev-parse HEAD)" = "caa4253c8a3aa93b5c7ec234e681d4f120a20240"
+          test "$(git -C /tmp/new-livebench hash-object public/table_2026_06_25.csv)" = "73ab7d8d9752b4d7cc1bc8c574ab0eb80c36c84b"
+          test "$(git -C /tmp/new-livebench hash-object public/categories_2026_06_25.json)" = "50b5672fe14023f5ba14efc1ce16e221e6573056"
+          test "$(git -C /tmp/new-livebench hash-object public/cost_2026_06_25.csv)" = "6f6271ed5497706e290675a1ad92a716a0f45b6b"
+          test "$(git -C /tmp/new-livebench hash-object scripts/generate_model_rows.py)" = "44b01ffac16adfceb96bd2786846918d0720d94b"
+          test "$(git -C /tmp/new-livebench hash-object src/lib/constants.js)" = "f2965512857e2974ecd135054bd4bd4def94bcb5"
+
+      - name: Verify first-party release and comparator bar
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import ast,csv,json,re
+          from pathlib import Path
+
+          common=Path("/tmp/LiveBench/livebench/common.py").read_text()
+          m=re.search(r"LIVE_BENCH_RELEASES\s*=\s*(\{[^\n]+\})",common)
+          assert m
+          releases=ast.literal_eval(m.group(1))
+          assert "2026-06-25" in releases
+          assert 'load_dataset(f"{LIVE_BENCH_HF_ORGANIZATION}/{dataset_name}", split=split)' in common
+          assert "q['livebench_removal_date'] == \"\" or q['livebench_removal_date'] > livebench_release" in common
+
+          categories=json.load(open("/tmp/new-livebench/public/categories_2026_06_25.json"))
+          assert categories["IF"]==["paraphrase","simplify","story_generation","summarize"]
+
+          rows={r["model"]:r for r in csv.DictReader(open("/tmp/new-livebench/public/table_2026_06_25.csv"))}
+          costs={r["model"]:r for r in csv.DictReader(open("/tmp/new-livebench/public/cost_2026_06_25.csv"))}
+          model="claude-opus-5-5-max-effort"
+          cols=categories["IF"]
+          vals=[float(rows[model][c]) for c in cols]
+          assert vals==[64.267,58.667,70.917,69.1]
+          mean=sum(vals)/len(vals)
+          assert abs(mean-65.73775)<1e-12
+          assert round(mean,1)==65.7
+          assert [int(costs[model]["nq_"+c]) for c in cols]==[50,50,50,50]
+
+          gen=Path("/tmp/new-livebench/scripts/generate_model_rows.py").read_text()
+          assert "q.get('livebench_removal_date', '') == ''" in gen
+          assert "score[col]  = mean(judgment.score for the model over valid question_ids" in gen
+          print("FIRST_PARTY_RELEASE_BAR_PASS",mean)
+          PY
+
+      - name: Download exact frozen HF parquet
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --silent --show-error             "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet"             -o /tmp/instruction_following.parquet
+          test "$(stat -c %s /tmp/instruction_following.parquet)" = "537024"
+          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | sha256sum -c -
+
+      - name: Verify metadata-only active population
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "pyarrow==21.0.0"
+          python - <<'PY'
+          from collections import Counter
+          import pyarrow.parquet as pq
+
+          # Read metadata columns only. Prompt/turn text is never loaded.
+          cols=["question_id","task","livebench_release_date","livebench_removal_date"]
+          t=pq.read_table("/tmp/instruction_following.parquet",columns=cols)
+          rows=t.to_pylist()
+          assert len(rows)==400
+          ids=[r["question_id"] for r in rows]
+          assert len(ids)==len(set(ids))
+
+          release="2026-06-25"
+          active=[]
+          for r in rows:
+              rd=r["livebench_release_date"]
+              rd=rd.strftime("%Y-%m-%d") if hasattr(rd,"strftime") else str(rd)
+              rem=r["livebench_removal_date"] or ""
+              if rd in {"2024-06-24","2024-07-26","2024-08-31","2024-11-25","2025-04-02","2025-04-25","2025-05-30","2025-11-25","2025-12-23","2026-01-08","2026-06-25"} and (rem=="" or rem>release):
+                  active.append(r)
+
+          counts=Counter(r["task"] for r in active)
+          expected={"paraphrase":50,"simplify":50,"story_generation":50,"summarize":50}
+          assert counts==expected, (counts,expected)
+          assert len(active)==200
+          print("HF_ACTIVE_POPULATION_PASS",dict(sorted(counts.items())))
+          PY
+
+      - name: Verify fail-closed consequence
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          c=json.load(open("capsules/livebench_if_release_population_v2/brain/CANDIDATE.json"))
+          theorem=c["candidate_population_theorem"]
+          assert "RELEASE_IDENTITY_AND_ACTIVE_PUBLIC_POPULATION_IDENTITY_CLOSED" in theorem["if_verified_consequence"]
+          assert "LIVEBENCH_IF_GE_65_7_REMAINS_OPEN" in theorem["if_verified_consequence"]
+          assert "NO_BRAIN_LIVEBENCH_IF_SCORE_IS_CLAIMED" in c["hard_nonclaims"]
+          print("LIVEBENCH_IF_RELEASE_POPULATION_V2_VERIFIED")
+          PY
