@@ -1,0 +1,31 @@
+name: verify-open24-target-information-mincut
+
+on:
+  pull_request:
+    paths:
+      - "subjects/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json"
+      - "subjects/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json"
+      - "subjects/OPUS55_OPEN24_TARGET_INFORMATION_MINCUT_20261005_V1.json"
+      - "verify_open24_target_information_mincut_20261005_v1.py"
+      - ".github/workflows/verify-open24-target-information-mincut.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Derive exact open24 target-information partition
+        run: python verify_open24_target_information_mincut_20261005_v1.py
+      - name: Upload deterministic receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: open24-target-information-mincut-verification
+          path: results/open24_target_information_mincut_verification_20261005_v1.json
+          if-no-files-found: error
