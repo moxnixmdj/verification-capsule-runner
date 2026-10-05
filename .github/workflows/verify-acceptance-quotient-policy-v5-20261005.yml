@@ -1,0 +1,30 @@
+name: Verify acceptance quotient policy V5
+
+on:
+  push:
+    paths:
+      - "capsules/acceptance_quotient_policy_v5_20261005/**"
+      - ".github/workflows/verify-acceptance-quotient-policy-v5-20261005.yml"
+  pull_request:
+    paths:
+      - "capsules/acceptance_quotient_policy_v5_20261005/**"
+      - ".github/workflows/verify-acceptance-quotient-policy-v5-20261005.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact vendored Brain V5 tests
+        working-directory: capsules/acceptance_quotient_policy_v5_20261005
+        run: python -m unittest -v canonical.tests.test_acceptance_quotient_simulation_v5
+      - name: Run independent V5 policy identity checks
+        working-directory: capsules/acceptance_quotient_policy_v5_20261005
+        run: python verify_policy_identity_v5.py
