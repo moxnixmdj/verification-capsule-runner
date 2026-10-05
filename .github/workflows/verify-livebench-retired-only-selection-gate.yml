@@ -1,0 +1,37 @@
+name: Verify LiveBench retired-only selection gate
+
+on:
+  push:
+    branches:
+      - verify/livebench-retired-only-qualification-gate-20261004
+    paths:
+      - verify_livebench_retired_only_selection_gate_v1.py
+      - .github/workflows/verify-livebench-retired-only-selection-gate.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_retired_only_selection_gate_v1.py
+      - .github/workflows/verify-livebench-retired-only-selection-gate.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify retired-only server-side selection firewall
+        run: python verify_livebench_retired_only_selection_gate_v1.py
+      - name: Upload non-sensitive receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-retired-only-selection-gate-receipt
+          path: livebench_retired_only_selection_gate_receipt.json
+          if-no-files-found: error
