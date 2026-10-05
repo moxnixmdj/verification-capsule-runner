@@ -1,0 +1,32 @@
+name: Verify adaptive recompute V1
+
+on:
+  pull_request:
+    paths:
+      - 'ADAPTIVE_RECOMPUTE_V1.json'
+      - 'RECOMPUTE_FINANCE_SATURATION_V1.json'
+      - 'RECOMPUTE_OSWORLD_GITLAB_V1.json'
+      - 'RECOMPUTE_ADAPTIVE_FINAL_ACTIVATION_V1.json'
+      - 'verify_adaptive_recompute_v1.py'
+      - '.github/workflows/verify-adaptive-recompute-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain fixtures
+        shell: bash
+        run: |
+          test "$(git hash-object ADAPTIVE_RECOMPUTE_V1.json)" = "90b884fb2618e1f49debc3a4a58d3b6d6412f934"
+          test "$(git hash-object RECOMPUTE_FINANCE_SATURATION_V1.json)" = "2a831b8632b18fe9e10ed423f131b6ae93d99b77"
+          test "$(git hash-object RECOMPUTE_OSWORLD_GITLAB_V1.json)" = "d03a0a6d85148017c073b79ee78895cc94870eb3"
+          test "$(git hash-object RECOMPUTE_ADAPTIVE_FINAL_ACTIVATION_V1.json)" = "637e8802e33856ba6760aaaf4999993f6df8b338"
+      - name: Verify recompute semantics
+        run: python verify_adaptive_recompute_v1.py
