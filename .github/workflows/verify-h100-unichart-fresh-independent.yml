@@ -1,0 +1,56 @@
+name: Independently replay H100 UniChart fresh capability pass
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/h100_unichart_*.py'
+      - 'structural_safeguard_packer.py'
+      - 'mse_affine_structural_packer.py'
+      - 'H100_UNICHART_FRESH_CAPABILITY_HOLDOUT_V1.json'
+      - 'H100_UNICHART_CHARTQA_RUNTIME_ASSETS_V1.json'
+      - 'verify_h100_unichart_fresh_independent.py'
+      - '.github/workflows/verify-h100-unichart-fresh-independent.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen replay runtime
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.0.1
+          python -m pip install transformers==4.28.1 tokenizers==0.13.3 huggingface_hub==0.36.2 numpy==1.26.4 pillow sentencepiece
+      - name: Show exact runtime
+        run: |
+          python - <<'PY'
+          import sys, torch, transformers, tokenizers, huggingface_hub, numpy, PIL, sentencepiece
+          print("python", sys.version)
+          print("torch", torch.__version__)
+          print("transformers", transformers.__version__)
+          print("tokenizers", tokenizers.__version__)
+          print("huggingface_hub", huggingface_hub.__version__)
+          print("numpy", numpy.__version__)
+          print("PIL", PIL.__version__)
+          print("sentencepiece", sentencepiece.__version__)
+          PY
+      - name: Reconstruct candidate and replay frozen holdout
+        env:
+          PYTHONHASHSEED: '0'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: python verify_h100_unichart_fresh_independent.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: h100-unichart-independent-replay-receipt
+          path: independent_replay_receipt.json
+          if-no-files-found: warn
