@@ -1,0 +1,21 @@
+name: Verify evidence synthesis TB-Science scope falsification
+on:
+  pull_request:
+    paths:
+      - 'subject/evidence_synthesis_tbscience_scope_falsification/**'
+      - 'verify_evidence_synthesis_tbscience_scope_falsification_v1.py'
+      - '.github/workflows/verify-evidence-synthesis-tbscience-scope-falsification-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run independent verifier
+        run: python verify_evidence_synthesis_tbscience_scope_falsification_v1.py
