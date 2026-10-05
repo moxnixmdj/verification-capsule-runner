@@ -9,6 +9,15 @@ on:
       - 'canonical/tests/test_h100_unichart_mixed_packer_v1.py'
       - 'canonical/governance/H100_UNICHART_MIXED_PACK_CANDIDATE_V1.json'
       - '.github/workflows/verify-h100-unichart-mixed-pack-v1.yml'
+  push:
+    branches:
+      - verify/h100-unichart-mixed-pack-v1
+    paths:
+      - 'canonical/runtime/h100_unichart_mixed_packer_v1.py'
+      - 'canonical/runtime/h100_unichart_safetensors_header_audit_v1.py'
+      - 'canonical/tests/test_h100_unichart_mixed_packer_v1.py'
+      - 'canonical/governance/H100_UNICHART_MIXED_PACK_CANDIDATE_V1.json'
+      - '.github/workflows/verify-h100-unichart-mixed-pack-v1.yml'
   workflow_dispatch:
 
 permissions:
