@@ -1,0 +1,36 @@
+name: Verify shared Root3 channel dominator kernel
+on:
+  push:
+    branches:
+      - 'root3-channel-dominator-fastlane/**'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reconstruct package and run exact tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=subject/root3_shared_channel_dominator
+          mkdir -p "$root/canonical/runtime" "$root/canonical/tests"
+          touch "$root/canonical/__init__.py" "$root/canonical/runtime/__init__.py" "$root/canonical/tests/__init__.py"
+          cd "$root"
+          python -m unittest -v canonical.tests.test_shared_channel_dominator_v1
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          g=json.loads(Path("canonical/governance/ROOT3_SHARED_CHANNEL_DOMINATOR_KERNEL_V1.json").read_text())
+          assert g["status"].startswith("CANDIDATE_IMPLEMENTATION")
+          assert g["accounting"]["acceptance_credit_delta"] == 0
+          assert g["fresh_reality_authority"] is False
+          print("GOVERNANCE_FAIL_CLOSED_PASS")
+          PY
