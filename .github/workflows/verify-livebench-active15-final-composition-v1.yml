@@ -1,0 +1,35 @@
+name: Verify LiveBench Active15 final composition V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/livebench_active15_final_composition_20261005/**"
+      - "verify_livebench_active15_final_composition_v1.py"
+      - ".github/workflows/verify-livebench-active15-final-composition-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run independent final composition verifier
+        run: python verify_livebench_active15_final_composition_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_active15_final_composition_verification_v1.json; then
+            cat livebench_active15_final_composition_verification_v1.json
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-active15-final-composition-v1
+          path: livebench_active15_final_composition_verification_v1.json
+          if-no-files-found: error
