@@ -1,0 +1,24 @@
+name: Verify Unknown-Domain candidate V2 qualification
+on:
+  pull_request:
+    paths:
+      - 'canonical/runtime/unknown_domain_direct_candidate_v1.py'
+      - 'canonical/runtime/unknown_domain_direct_candidate_v2.py'
+      - 'canonical/tests/test_unknown_domain_direct_candidate_v2.py'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_PREEXPOSURE_V1.json'
+      - 'canonical/governance/UNKNOWN_DOMAIN_DIRECT_CANDIDATE_V2_QUALIFICATION_V1.json'
+      - 'verify_unknown_domain_candidate_v2.py'
+      - '.github/workflows/verify-unknown-domain-candidate-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact-byte and fresh-beacon V2 qualification
+        run: python verify_unknown_domain_candidate_v2.py
