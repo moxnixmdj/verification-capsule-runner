@@ -1,0 +1,31 @@
+name: MM V2 operator fast lane
+
+on:
+  push:
+    branches:
+      - mm-v2-operator-fastlane-20261005
+    paths:
+      - "subject/mm_v2_operator/**"
+      - "verify_mm_v2_operator.py"
+      - ".github/workflows/mm-v2-operator-fastlane.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify frozen MM V2 operator expansion
+        run: python verify_mm_v2_operator.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mm-v2-operator-verification
+          path: mm_v2_operator_verification.json
+          if-no-files-found: error
