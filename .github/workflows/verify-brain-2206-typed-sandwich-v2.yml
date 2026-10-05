@@ -1,0 +1,34 @@
+name: Verify Brain 2206 typed sandwich bridge V2
+
+on:
+  pull_request:
+    paths:
+      - "capsules/brain_2206_v2/**"
+      - ".github/workflows/verify-brain-2206-typed-sandwich-v2.yml"
+  push:
+    branches:
+      - "verify/typed-sandwich-bridge-2206"
+    paths:
+      - "capsules/brain_2206_v2/**"
+      - ".github/workflows/verify-brain-2206-typed-sandwich-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: capsules/brain_2206_v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Run exact vendored candidate regressions
+        run: python -m unittest canonical.tests.test_opus55_typed_coverage_dominance_bridge_v1 -v
+      - name: Run independent exhaustive partition verifier
+        run: python independent_verify_v2.py
