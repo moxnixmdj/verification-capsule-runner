@@ -1,0 +1,24 @@
+name: Verify LiveBench legacy repeat visible recovery
+
+on:
+  push:
+    branches:
+      - verify/livebench-legacy-repeat-visible-recovery-sol-20261004
+  pull_request:
+    paths:
+      - verify_livebench_legacy_repeat_visible_recovery.py
+      - .github/workflows/verify_livebench_legacy_repeat_visible_recovery.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_livebench_legacy_repeat_visible_recovery.py
