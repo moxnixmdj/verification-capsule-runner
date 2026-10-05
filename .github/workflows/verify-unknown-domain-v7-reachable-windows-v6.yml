@@ -1,0 +1,104 @@
+name: Verify Unknown-Domain V7 reachable domain Windows V6 fail-closed
+
+on:
+  push:
+    branches:
+      - "verify/unknown-domain-v7-reachable-windows-v6-20261005-sol"
+    paths:
+      - "TRIGGER_UNKNOWN_DOMAIN_V7_WINDOWS_V6"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rematerialize exact Git blob bytes
+        shell: pwsh
+        run: |
+          git config core.autocrlf false
+          git reset --hard HEAD
+          $expected = @{
+            "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py" = "0faa62fce4bc2f2a99c173b0a10a32d5e1c6a244"
+            "canonical/tests/test_unknown_domain_direct_v5.py" = "1961cff0013ff9f17feca981409d89d01ecf6769"
+            "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py" = "2da564d27a318a99713165208126aaaf36ebc924"
+          }
+          foreach ($path in $expected.Keys) {
+            $got = (git hash-object --no-filters $path).Trim()
+            if ($got -ne $expected[$path]) { throw "WORKTREE_BLOB_MISMATCH_AFTER_NORMALIZATION:$path:$got" }
+          }
+
+      - name: Python 3.12.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+
+      - name: Verify Python 3.12.10 fail-closed
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH="."
+          Remove-Item unknown_domain_v7_reachable_domain_receipt.json -ErrorAction SilentlyContinue
+          Remove-Item unknown_domain_v7_reachable_domain_receipt_py312.json -ErrorAction SilentlyContinue
+          Remove-Item PY312_V7_PASS -ErrorAction SilentlyContinue
+          python --version
+          if ($LASTEXITCODE -ne 0) { throw "PY312_VERSION_COMMAND_FAILED" }
+          python -m pip install --disable-pip-version-check pytest==8.4.2
+          if ($LASTEXITCODE -ne 0) { throw "PY312_PYTEST_BOOTSTRAP_FAILED" }
+          python verification/unknown_domain_v7_reachable_domain_independent_v3.py
+          if ($LASTEXITCODE -ne 0) { throw "PY312_VERIFIER_FAILED" }
+          if (!(Test-Path unknown_domain_v7_reachable_domain_receipt.json)) { throw "PY312_RECEIPT_MISSING" }
+          python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+          if ($LASTEXITCODE -ne 0) { throw "PY312_REGRESSION_FAILED" }
+          python -c "import json; d=json.load(open('unknown_domain_v7_reachable_domain_receipt.json')); assert d['schema']=='PROJECT_BRAIN_UNKNOWN_DOMAIN_V7_REACHABLE_DOMAIN_INDEPENDENT_VERIFICATION_V1'; assert d['status']=='PASS__CONTENT_BOUND_FROZEN_LAUNCHER_REACHABLE_TYPE_DOMAIN__CLASS_SPOOF_REJECTED__54_NONPRODUCTION_CASES__ZERO_TERMINAL_REALITY'; assert d['acceptance_credit_delta']==d['family_credit_delta']==d['capability_credit_delta']==d['ownership_credit_delta']==0"
+          if ($LASTEXITCODE -ne 0) { throw "PY312_RECEIPT_VALIDATION_FAILED" }
+          Copy-Item unknown_domain_v7_reachable_domain_receipt.json unknown_domain_v7_reachable_domain_receipt_py312.json
+          Remove-Item unknown_domain_v7_reachable_domain_receipt.json
+          New-Item -ItemType File PY312_V7_PASS | Out-Null
+
+      - name: Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Verify Python 3.13 fail-closed
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH="."
+          Remove-Item unknown_domain_v7_reachable_domain_receipt.json -ErrorAction SilentlyContinue
+          Remove-Item unknown_domain_v7_reachable_domain_receipt_py313.json -ErrorAction SilentlyContinue
+          Remove-Item PY313_V7_PASS -ErrorAction SilentlyContinue
+          python --version
+          if ($LASTEXITCODE -ne 0) { throw "PY313_VERSION_COMMAND_FAILED" }
+          python -m pip install --disable-pip-version-check pytest==8.4.2
+          if ($LASTEXITCODE -ne 0) { throw "PY313_PYTEST_BOOTSTRAP_FAILED" }
+          python verification/unknown_domain_v7_reachable_domain_independent_v3.py
+          if ($LASTEXITCODE -ne 0) { throw "PY313_VERIFIER_FAILED" }
+          if (!(Test-Path unknown_domain_v7_reachable_domain_receipt.json)) { throw "PY313_RECEIPT_MISSING" }
+          python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+          if ($LASTEXITCODE -ne 0) { throw "PY313_REGRESSION_FAILED" }
+          python -c "import json; d=json.load(open('unknown_domain_v7_reachable_domain_receipt.json')); assert d['schema']=='PROJECT_BRAIN_UNKNOWN_DOMAIN_V7_REACHABLE_DOMAIN_INDEPENDENT_VERIFICATION_V1'; assert d['status']=='PASS__CONTENT_BOUND_FROZEN_LAUNCHER_REACHABLE_TYPE_DOMAIN__CLASS_SPOOF_REJECTED__54_NONPRODUCTION_CASES__ZERO_TERMINAL_REALITY'; assert d['acceptance_credit_delta']==d['family_credit_delta']==d['capability_credit_delta']==d['ownership_credit_delta']==0"
+          if ($LASTEXITCODE -ne 0) { throw "PY313_RECEIPT_VALIDATION_FAILED" }
+          Copy-Item unknown_domain_v7_reachable_domain_receipt.json unknown_domain_v7_reachable_domain_receipt_py313.json
+          Remove-Item unknown_domain_v7_reachable_domain_receipt.json
+          New-Item -ItemType File PY313_V7_PASS | Out-Null
+
+      - name: Upload both receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v7-reachable-windows-v6-both-pythons
+          path: |
+            unknown_domain_v7_reachable_domain_receipt_py312.json
+            unknown_domain_v7_reachable_domain_receipt_py313.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Require both runtimes green
+        shell: pwsh
+        run: |
+          if (!(Test-Path PY312_V7_PASS)) { throw "PY312_V7_NOT_GREEN" }
+          if (!(Test-Path PY313_V7_PASS)) { throw "PY313_V7_NOT_GREEN" }
