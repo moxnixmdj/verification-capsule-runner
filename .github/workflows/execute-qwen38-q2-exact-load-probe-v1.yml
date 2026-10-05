@@ -1,0 +1,20 @@
+name: Execute exact Qwen3.8 Q2 load probe V1
+
+on:
+  pull_request:
+    paths:
+      - 'run_qwen38_q2_exact_load_probe_v1.sh'
+      - '.github/workflows/execute-qwen38-q2-exact-load-probe-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  load-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify exact Q2 bytes and run matched llama.cpp load probe
+        shell: bash
+        run: bash run_qwen38_q2_exact_load_probe_v1.sh
