@@ -1,0 +1,30 @@
+name: Verify Root3 strict current bootstrap
+
+on:
+  push:
+    paths:
+      - "capsules/root3_strict_current_bootstrap_20261005/**"
+      - ".github/workflows/verify-root3-strict-current-bootstrap-20261005.yml"
+  pull_request:
+    paths:
+      - "capsules/root3_strict_current_bootstrap_20261005/**"
+      - ".github/workflows/verify-root3-strict-current-bootstrap-20261005.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact vendored Brain bootstrap tests
+        working-directory: capsules/root3_strict_current_bootstrap_20261005
+        run: python -m unittest -v canonical.tests.test_root3_strict_current_bootstrap_v1
+      - name: Run independent bootstrap invariants
+        working-directory: capsules/root3_strict_current_bootstrap_20261005
+        run: python verify_strict_bootstrap.py
