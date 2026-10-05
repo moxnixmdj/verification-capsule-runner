@@ -1,0 +1,25 @@
+name: Verify authority epoch preemption V3
+on:
+  pull_request:
+    paths:
+      - 'subject/authority_epoch_preemption_v3/**'
+      - 'verify_authority_epoch_preemption_v3.py'
+      - '.github/workflows/verify-authority-epoch-preemption-v3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run copied subject unit tests
+        env:
+          PYTHONPATH: subject/authority_epoch_preemption_v3
+        run: python -m unittest -v canonical.tests.test_authority_epoch_guard_v1
+      - name: Run independent verifier
+        run: python verify_authority_epoch_preemption_v3.py
