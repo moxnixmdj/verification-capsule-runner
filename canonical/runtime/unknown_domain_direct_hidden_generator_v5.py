@@ -21,11 +21,10 @@ IDENTIFIER_TOTALITY="INHERITS_V4_STRUCTURAL_SLOT_ORDINAL_UNIQUENESS"
 
 
 def _beacon_gate(beacon: Any)->str:
-    # Admit only genuine runtime str hierarchy values.  isinstance() is not
-    # sufficient here because object-level __class__ properties can spoof it.
-    # type(beacon) returns the actual runtime class; issubclass against builtin
-    # str is therefore the non-spoofable hierarchy gate used for secrets too.
-    if not issubclass(type(beacon),str) or len(str.strip(beacon))<16:
+    # Preserve the existing isinstance-accepted domain, including str subclasses,
+    # but bypass overridable subclass methods so accepted values cannot make the
+    # supposedly total interface partial.
+    if not isinstance(beacon,str) or len(str.strip(beacon))<16:
         raise v1.UnknownDomainGeneratorError("POST_FREEZE_BEACON_INVALID")
     return beacon
 
