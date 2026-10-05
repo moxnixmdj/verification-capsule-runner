@@ -115,3 +115,15 @@ print(json.dumps({
   "known_tool_envelope":["CONTAINER","IMAGE_FILE","STANDARD_LIBRARIES","IMAGE_CROPPING_TOOL"],
   "frozen_target_percent":89.0
 },sort_keys=True))
+
+
+# Branch-only extension: execute the exact compact-GGUF zero-terminal-case smoke
+# after the frozen protocol verifier passes. This does not alter canonical Brain
+# authority or grant acceptance credit.
+import subprocess as _subprocess
+import sys as _sys
+from pathlib import Path as _Path
+_preflight = _Path(__file__).resolve().parents[2] / "verify_chartography_gguf_public_runner_preflight.py"
+assert _preflight.exists(), _preflight
+_p = _subprocess.run([_sys.executable, str(_preflight)], cwd=_Path(__file__).resolve().parents[2], check=False)
+assert _p.returncode == 0, f"GGUF_PREFLIGHT_FAILED:{_p.returncode}"
