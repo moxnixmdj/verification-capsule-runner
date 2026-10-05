@@ -1,0 +1,23 @@
+name: Verify five public-bar scope and admissibility
+on:
+  pull_request:
+    paths:
+      - 'subject/five_public_bar_admissibility/**'
+      - 'verify_five_public_bar_and_admissibility_20261005_v1.py'
+      - '.github/workflows/verify-five-public-bar-and-admissibility.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run subject verifier
+        run: python subject/five_public_bar_admissibility/canonical/runtime/five_public_bar_observable_target_scope_closure_verifier_v1.py
+      - name: Run independent falsification-oriented verifier
+        run: python verify_five_public_bar_and_admissibility_20261005_v1.py
