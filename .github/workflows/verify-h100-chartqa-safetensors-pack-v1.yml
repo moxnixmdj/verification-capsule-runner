@@ -9,6 +9,7 @@ on:
       - 'h100_chartqa_public_preservation_v1.py'
       - 'h100_chartqa_public_preservation_cases_v1.json'
       - '.github/workflows/verify-h100-chartqa-safetensors-pack-v1.yml'
+      - 'h100_chartqa_pack_execution_trigger_v1.json'
   push:
     branches:
       - verify/h100-unichart-chartqa-safetensors-pack-v1
@@ -18,6 +19,7 @@ on:
       - 'h100_chartqa_public_preservation_v1.py'
       - 'h100_chartqa_public_preservation_cases_v1.json'
       - '.github/workflows/verify-h100-chartqa-safetensors-pack-v1.yml'
+      - 'h100_chartqa_pack_execution_trigger_v1.json'
   workflow_dispatch:
 
 permissions:
