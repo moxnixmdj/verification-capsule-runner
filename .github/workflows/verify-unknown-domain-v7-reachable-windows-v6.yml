@@ -40,9 +40,9 @@ jobs:
           }
           foreach ($path in $expected.Keys) {
             $got = (git hash-object --no-filters $path).Trim()
-            if ($LASTEXITCODE -ne 0) { throw "GIT_HASH_FAILED:$path:$LASTEXITCODE" }
+            if ($LASTEXITCODE -ne 0) { throw "GIT_HASH_FAILED:${path}:$LASTEXITCODE" }
             if ($got -ne $expected[$path]) {
-              throw "WORKTREE_BLOB_MISMATCH_AFTER_NORMALIZATION:$path:$got"
+              throw "WORKTREE_BLOB_MISMATCH_AFTER_NORMALIZATION:${path}:$got"
             }
           }
 
