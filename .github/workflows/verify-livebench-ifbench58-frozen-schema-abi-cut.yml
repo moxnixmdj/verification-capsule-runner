@@ -1,0 +1,53 @@
+name: Verify LiveBench IFBench58 frozen schema ABI cut
+
+on:
+  push:
+    branches:
+      - verify/livebench-ifbench58-frozen-schema-abi-cut-20261005-sol
+  pull_request:
+    paths:
+      - verify_livebench_ifbench58_frozen_schema_abi_cut.py
+      - .github/workflows/verify-livebench-ifbench58-frozen-schema-abi-cut.yml
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout verifier
+        uses: actions/checkout@v4
+        with:
+          path: verifier
+
+      - name: Checkout pinned LiveBench subject
+        uses: actions/checkout@v4
+        with:
+          repository: LiveBench/LiveBench
+          ref: 8f8e5c381a16e3f24257776edd53471fe86f8091
+          path: subject
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install schema reader
+        run: python -m pip install --disable-pip-version-check pyarrow==21.0.0
+
+      - name: Fetch exact frozen parquet
+        run: |
+          curl -L --fail --retry 3 \
+            "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet?download=true" \
+            -o livebench_instruction_following_0868379.parquet
+
+      - name: Verify schema and runtime ABI
+        run: |
+          python verifier/verify_livebench_ifbench58_frozen_schema_abi_cut.py \
+            livebench_instruction_following_0868379.parquet subject
+
+      - name: Upload receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-ifbench58-frozen-schema-abi-cut-receipt
+          path: livebench_ifbench58_frozen_schema_abi_cut_receipt.json
+          if-no-files-found: error
