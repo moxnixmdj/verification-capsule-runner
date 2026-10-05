@@ -9,7 +9,7 @@ from canonical.runtime.opus55_typed_coverage_dominance_bridge_v1 import compile_
 
 ROOT = Path(__file__).resolve().parent
 EXPECTED = {
-    "canonical/governance/OPUS55_TYPED_COVERAGE_DOMINANCE_BRIDGE_20261005_V1.json": "ebdac916d70a77dd9ec9e43009afaa1847d65910",
+    "canonical/governance/OPUS55_TYPED_COVERAGE_DOMINANCE_BRIDGE_20261005_V1.json": "9a53ac18797014456ea985a9f14b8ed26eed9340",
     "canonical/runtime/opus55_typed_coverage_dominance_bridge_v1.py": "35d077bc7451fbbb9b065aef4be3ed0d06c466f2",
     "canonical/tests/test_opus55_typed_coverage_dominance_bridge_v1.py": "bd9c3b48885610ebd204e92f5e824268f56289c7",
 }
@@ -64,6 +64,10 @@ def main():
     req("NO_LITERAL_TERMINAL_COMPLETION" in gov["hard_nonclaims"],"terminal nonclaim missing")
     req(gov["current_truth_repair"]["current_14_of_38_predicates_are_not_a_global_behavioral_region_universe"] is True,
         "heterogeneous-ledger truth repair missing")
+    req("TASK_ACCEPTANCE" in gov["theorem"]["definitions"]["OMEGA"],
+        "Omega regressed from task-acceptance semantics")
+    req("DO_NOT_USE_AS_THE_DOMINANCE_ORDER" in gov["current_truth_repair"]["protocol_schema_role"],
+        "protocol carrier incorrectly promoted to dominance order")
 
     # Exhaustive theorem check over a 3-atom universe:
     # U⊆C1 and U⊆C2; B1⊆Q and B2⊆Q; if C1∩C2⊆B1∪B2 then U⊆Q.
@@ -136,7 +140,7 @@ def main():
     print(json.dumps({
         "status":"PASS",
         "brain_pr":2206,
-        "brain_head":"0de8ed23b743d0924d265089ac7bfbb24eadc0c9",
+        "brain_head":"da75d8cbb6dbae56b094791bebef401630c470be",
         "exact_blobs":EXPECTED,
         "exhaustive_set_theorem_cases":theorem_cases,
         "premise_satisfying_theorem_cases":premise_cases,
