@@ -52,7 +52,7 @@ def parse_header(path:Path):
         if b-a != numel*unit: raise PackError(f"BYTE_MISMATCH:{name}")
         if a!=cursor: raise PackError(f"PAYLOAD_GAP:{name}:{a}!={cursor}")
         cursor=b
-        rows.append({"name":name,"dtype":dtype,"shape":shape,"numel":numel,"data_start":a,"data_end":b})
+        rows.append({"name":name,"dtype":dtype,"shape":shape,"numel":numel,"data_start":a,"data_end":b,"payload_bytes":b-a})
     rows.sort(key=lambda x:x["name"])
     manifest=json.dumps(rows,sort_keys=True,separators=(",",":")).encode()
     msha=hashlib.sha256(manifest).hexdigest()
