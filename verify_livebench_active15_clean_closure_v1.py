@@ -7,6 +7,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SUBJECT = ROOT / "subject/livebench_active15_clean_closure_20261005"
+PARAMETRIC_SUBJECT = ROOT / "subject/livebench_composer_v2_20261005"
+PARAMETRIC_BLOBS = {
+    "canonical/runtime/livebench_legacy15_composition_archetypes_v1.py": "0dbef76a6189a3cdc21ce3dae97ef6921e333b34",
+    "canonical/runtime/livebench_legacy15_contract_composer_v2.py": "d73ec366b32252996258eae6d10d67d4d6a5e042",
+    "canonical/runtime/livebench_legacy15_pointwise_optimal_v1.py": "71e637c70edf1c582e28ea38b3b798965c803a06",
+    "canonical/runtime/livebench_legacy15_slot_feasibility_v1.py": "7477f5ea5bdeac3595ee2784a38d078fe2f385b0",
+    "canonical/runtime/livebench_legacy15_lexical_slot_quotient_v1.py": "09a5d7810fd46713aaf06cf1d204fe140d1d8045",
+    "canonical/runtime/livebench_post_sacrifice_parametric_reduction_v1.py": "fd1ad043fb9fe461b6593f5b8130093be0028c22",
+}
 
 FILES = {
     "canonical/governance/LIVEBENCH_ACTIVE15_SCOPE_REBOUND_POINTWISE_CLOSURE_20261005_V1.json":
@@ -58,6 +67,17 @@ def load(rel: str):
 def main() -> int:
     observed = {rel: git_blob(SUBJECT / rel) for rel in FILES}
     assert observed == FILES, (observed, FILES)
+    observed_parametric = {rel: git_blob(PARAMETRIC_SUBJECT / rel) for rel in PARAMETRIC_BLOBS}
+    assert observed_parametric == PARAMETRIC_BLOBS, (observed_parametric, PARAMETRIC_BLOBS)
+
+    import sys
+    sys.path.insert(0, str(PARAMETRIC_SUBJECT))
+    from canonical.runtime import livebench_post_sacrifice_parametric_reduction_v1 as parametric
+    parametric_result = parametric.verify()
+    assert parametric_result["status"].endswith("ONLY_PINNED_PUNKT_CONTEXT_REMAINS")
+    assert parametric_result["structural_id_sets"] == 928
+    assert parametric_result["conservative_unpadded_word_upper_bound"] < parametric_result["public_min_word_threshold"]
+    assert parametric_result["remaining_load_bearing_obligation"].startswith("INDEPENDENTLY_EXHAUST_PINNED_NLTK_PUNKT_SENTENCE_CONTEXTS")
 
     closure = load("canonical/governance/LIVEBENCH_ACTIVE15_SCOPE_REBOUND_POINTWISE_CLOSURE_20261005_V1.json")
     scope = load("canonical/verification/LIVEBENCH_FROZEN_ACTIVE_LEGACY15_HASH_OPENING_INDEPENDENT_VERIFICATION_20261005_V1.json")
@@ -89,6 +109,7 @@ def main() -> int:
 
     # The old theorem's sole scope blocker is exactly what the opening discharges.
     assert theorem["status"].startswith("CANDIDATE__ACTIVE15_POINTWISE_DOMINANCE_CHAIN_CLOSED")
+    assert theorem["frozen_dependencies"]["post_sacrifice_parametric_reduction"]["git_blob_sha"] == PARAMETRIC_BLOBS["canonical/runtime/livebench_post_sacrifice_parametric_reduction_v1.py"]
     assert theorem["candidate_consequence"]["blocked_on"] == "UNION25_SCOPE_CLOSURE_OR_EXACT_RELEASE_SCOPE_BRIDGE"
     assert theorem["scope_correction"]["consequence"].endswith(
         "WITHOUT_EITHER_AN_INDEPENDENT_EXACT_RELEASE_SCOPE_BRIDGE_TO_ACTIVE15_OR_POINTWISE_CLOSURE_OVER_PUBLIC_UNION25"
@@ -154,6 +175,13 @@ def main() -> int:
             "excluded_legacy_id_count": 10,
             "preexisting_commitment": True,
             "independent_opening": True,
+        },
+        "parametric_runtime_blobs": observed_parametric,
+        "parametric_reduction": {
+            "status": parametric_result["status"],
+            "structural_id_sets": parametric_result["structural_id_sets"],
+            "unpadded_word_upper_bound": parametric_result["conservative_unpadded_word_upper_bound"],
+            "public_min_word_threshold": parametric_result["public_min_word_threshold"],
         },
         "proof_stack": {
             "pointwise_envelope_exact_optimum": "12489/12489",
