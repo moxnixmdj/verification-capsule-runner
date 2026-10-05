@@ -1,0 +1,32 @@
+name: verify-channel-dominator-v1
+
+on:
+  push:
+    paths:
+      - "canonical/runtime/channel_dominator_verifier_v1.py"
+      - "canonical/tests/test_channel_dominator_verifier_v1.py"
+      - "verify_channel_dominator_v1_independent.py"
+      - ".github/workflows/verify-channel-dominator-v1.yml"
+  pull_request:
+    paths:
+      - "canonical/runtime/channel_dominator_verifier_v1.py"
+      - "canonical/tests/test_channel_dominator_verifier_v1.py"
+      - "verify_channel_dominator_v1_independent.py"
+      - ".github/workflows/verify-channel-dominator-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run vendored Brain tests
+        run: python -m unittest canonical.tests.test_channel_dominator_verifier_v1 -v
+      - name: Run independent adversarial verifier
+        run: python verify_channel_dominator_v1_independent.py
