@@ -1,0 +1,24 @@
+{
+  "schema": "PROJECT_BRAIN_PAIRED_ANYTIME_NONINFERIORITY_PUBLIC_VERIFIER_SOURCE_BINDING_V1",
+  "date": "2026-10-05",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_candidate_branch": "paired-anytime-opus-comparator-20261005",
+  "brain_candidate_head": "370b7cf182ee0df71f9b6cb16768af2b36bdcffe",
+  "brain_source_path": "canonical/runtime/paired_anytime_noninferiority.py",
+  "brain_source_git_blob_sha": "683e0497faf468d485f5b7237fd5c9df272650a6",
+  "public_copy_path": "verification/paired_anytime_noninferiority.py",
+  "required_public_copy_git_blob_sha": "683e0497faf468d485f5b7237fd5c9df272650a6",
+  "verification_scope": [
+    "EXACT_FORMULA_RECOMPUTATION",
+    "ALPHA_SPENDING_BUDGET",
+    "FAIL_CLOSED_ATTESTATION_GATES",
+    "CHECKPOINT_MUTATION_REJECTION",
+    "FINITE_EXACT_NULL_OPTIONAL_STOPPING_ENUMERATION",
+    "NONREGISTERED_PEEK_REJECTION",
+    "ZERO_CREDIT_PRESERVATION"
+  ],
+  "acceptance_credit_delta": 0,
+  "family_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "ownership_credit_delta": 0
+}
