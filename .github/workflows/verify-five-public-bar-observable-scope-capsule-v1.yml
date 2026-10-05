@@ -1,0 +1,41 @@
+name: Verify five-public-bar observable scope capsule
+
+on:
+  push:
+    paths:
+      - "capsules/five_public_bar_observable_scope_v1/**"
+      - ".github/workflows/verify-five-public-bar-observable-scope-capsule-v1.yml"
+  pull_request:
+    paths:
+      - "capsules/five_public_bar_observable_scope_v1/**"
+      - ".github/workflows/verify-five-public-bar-observable-scope-capsule-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify exact Brain blob identities
+        run: |
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root = pathlib.Path("capsules/five_public_bar_observable_scope_v1")
+          manifest = json.loads((root / "CAPSULE_MANIFEST.json").read_text())
+          for item in manifest["files"]:
+              p = root / item["path"]
+              actual = subprocess.check_output(["git", "hash-object", str(p)], text=True).strip()
+              expected = item["brain_git_blob_sha"]
+              if actual != expected:
+                  raise SystemExit(f"BLOB_MISMATCH {item['path']} expected={expected} actual={actual}")
+              print(f"BLOB_OK {item['path']} {actual}")
+          print(f"BRAIN_REF {manifest['brain_ref']}")
+          PY
+
+      - name: Run exact fail-closed Brain verifier
+        run: python capsules/five_public_bar_observable_scope_v1/canonical/runtime/five_public_bar_observable_target_scope_closure_verifier_v1.py
