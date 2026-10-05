@@ -1,0 +1,27 @@
+name: Verify Qwen3.8 Q2 runner preflight
+
+on:
+  pull_request:
+    paths:
+      - "verify_qwen38_q2_standard_runner_preflight.py"
+      - ".github/workflows/verify-qwen38-q2-standard-runner-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Measure exact Q2 zero-download fit prerequisites
+        run: python verify_qwen38_q2_standard_runner_preflight.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-q2-standard-runner-preflight
+          path: qwen38_q2_standard_runner_preflight_receipt.json
+          if-no-files-found: warn
