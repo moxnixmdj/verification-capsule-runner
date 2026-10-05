@@ -1,0 +1,42 @@
+name: Verify LiveBench legacy15 commitment opening v1
+
+on:
+  push:
+    branches:
+      - verify-livebench-legacy15-commitment-opening-v1-20261004-sol
+    paths:
+      - verify_livebench_legacy15_commitment_opening_v1.py
+      - .github/workflows/verify-livebench-legacy15-commitment-opening-v1.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_legacy15_commitment_opening_v1.py
+      - .github/workflows/verify-livebench-legacy15-commitment-opening-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch exact historical commitment-producing runner
+        run: |
+          git fetch --no-tags origin d8e6edd61fb1fbeedd856aa31cc202348e52529c
+      - name: Verify zero-reality commitment opening
+        run: python verify_livebench_legacy15_commitment_opening_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy15-commitment-opening-v1
+          path: livebench_legacy15_commitment_opening_receipt.json
+          if-no-files-found: error
