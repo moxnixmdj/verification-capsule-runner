@@ -116,7 +116,7 @@ def main() -> int:
 
     assert visible["target_predicate"] == PREDICATE
     assert visible["status"].startswith("PASS__INDEPENDENT_EXACT_PUBLIC_DESCRIPTION_ROUNDTRIP")
-    assert visible["independent_verifier"]["conclusion"] == "success"
+    assert visible["independent_runner"]["job_conclusion"] == "success"
     zero(visible["terminal_data_accounting"], "active_terminal_rows_read", "hidden_terminal_kwargs_read", "hidden_terminal_instruction_ids_read")
 
     assert population["status"] == "INDEPENDENT_PUBLIC_RUNNER_PASS"
@@ -137,10 +137,11 @@ def main() -> int:
     assert abs(sum(g["comparator_task_scores_percent"].values()) / 4.0 - 65.73775) < 1e-12
     assert abs(g["one_decimal_display_percent"] - 65.7) < 1e-12
 
-    assert revoke["target_predicate"] == PREDICATE
+    assert revoke["predicate_id"] == PREDICATE
     assert revoke["status"].startswith("ACTIVE_FAIL_CLOSED_TRUTH_REPAIR")
-    assert revoke["consequence"]["predicate_state"] == "QUARANTINED_DIRTY_EVIDENCE__NOT_PROVED"
-    assert revoke["accounting"]["acceptance_credit_delta"] == 0
+    assert revoke["corrected_state"]["terminal"] is False
+    assert revoke["corrected_state"]["proved_atomic"] == 12
+    assert revoke["accounting"]["acceptance_credit_delta"] == -1
 
     # Execute the two proof kernels in the independent repository. This is the
     # decisive upper-bound check: "theoretical maximum" must be a true maximum,
