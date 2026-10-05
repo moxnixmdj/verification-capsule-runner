@@ -1,6 +1,6 @@
 """Evaluate FP32 vs exact decoded H100 packed UniChart ChartQA on frozen public cases."""
 from __future__ import annotations
-import argparse, json, math, struct
+import argparse, json, math, os, struct
 from pathlib import Path
 import numpy as np
 import torch
@@ -81,14 +81,18 @@ def apply_packed(model,packed:Path,chunk_groups:int=2048):
             seen+=n
     return {"tensors":len(hdr["tensors"]),"elements_written":seen,"source_manifest_sha256":hdr["source_manifest_sha256"]}
 
-def generate_answer(model,processor,image_path:Path,question:str)->str:
+def encode_image(model,processor,image_path:Path):
     image=Image.open(image_path).convert("RGB")
-    prompt=f"<chartqa> {question} <s_answer>"
-    ids=processor.tokenizer(prompt,add_special_tokens=False,return_tensors="pt").input_ids
     pixels=processor(image,return_tensors="pt").pixel_values
     with torch.inference_mode():
+        return model.get_encoder()(pixel_values=pixels,return_dict=True)
+
+def generate_answer(model,processor,encoder_outputs,question:str)->str:
+    prompt=f"<chartqa> {question} <s_answer>"
+    ids=processor.tokenizer(prompt,add_special_tokens=False,return_tensors="pt").input_ids
+    with torch.inference_mode():
         out=model.generate(
-            pixels,
+            encoder_outputs=encoder_outputs,
             decoder_input_ids=ids,
             max_length=model.decoder.config.max_position_embeddings,
             early_stopping=True,
@@ -105,9 +109,12 @@ def generate_answer(model,processor,image_path:Path,question:str)->str:
     return seq.split("<s_answer>",1)[1].strip()
 
 def evaluate(model,processor,cases,image_root:Path):
-    rows=[]; total=0.0
+    rows=[]; total=0.0; cache={}
     for c in cases:
-        pred=generate_answer(model,processor,image_root/c["imgname"],c["query"])
+        image_name=c["imgname"]
+        if image_name not in cache:
+            cache[image_name]=encode_image(model,processor,image_root/image_name)
+        pred=generate_answer(model,processor,cache[image_name],c["query"])
         score=relaxed(c["label"],pred); total+=score
         rows.append({"id":c["id"],"gold":c["label"],"prediction":pred,"score":score})
     return rows,total/len(cases)
@@ -116,7 +123,7 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--model-dir",required=True); ap.add_argument("--packed",required=True); ap.add_argument("--cases",required=True); ap.add_argument("--image-root",required=True); ap.add_argument("--receipt",required=True)
     a=ap.parse_args()
-    torch.set_num_threads(2)
+    torch.set_num_threads(min(4,os.cpu_count() or 2))
     cases_doc=json.load(open(a.cases)); cases=cases_doc["cases"]; gate=cases_doc["gate"]
     processor=DonutProcessor.from_pretrained(a.model_dir,local_files_only=True)
     model=VisionEncoderDecoderModel.from_pretrained(a.model_dir,local_files_only=True)
