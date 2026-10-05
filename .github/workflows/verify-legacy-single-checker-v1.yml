@@ -1,0 +1,43 @@
+name: Verify legacy LiveBench single-checker witnesses V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/legacy_single_checker_v1.py"
+      - "verify_legacy_single_checker_v1.py"
+      - ".github/workflows/verify-legacy-single-checker-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact candidate blob
+        run: test "$(git hash-object subject/legacy_single_checker_v1.py)" = "6dd4302488b374a45593a83025839cdc5483c789"
+      - name: Fetch exact LiveBench source
+        run: |
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_util.py)" = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+      - name: Install exact-checker dependencies
+        run: |
+          python -m pip install --quiet "langdetect==1.0.9" "immutabledict==4.2.1" "nltk==3.9.1"
+          python -m nltk.downloader -q punkt punkt_tab
+      - name: Execute exact checker verification
+        run: python verify_legacy_single_checker_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-single-checker-v1-receipt
+          path: legacy_single_checker_v1_receipt.json
+          if-no-files-found: error
