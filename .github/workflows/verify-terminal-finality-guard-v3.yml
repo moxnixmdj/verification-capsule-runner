@@ -1,0 +1,33 @@
+name: Verify terminal finality guard V3
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_terminal_finality_guard_v3.py"
+      - "subject/terminal_finality_guard_v3/**"
+      - ".github/workflows/verify-terminal-finality-guard-v3.yml"
+  push:
+    branches: [main]
+    paths:
+      - "verify_terminal_finality_guard_v3.py"
+      - "subject/terminal_finality_guard_v3/**"
+      - ".github/workflows/verify-terminal-finality-guard-v3.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain terminal finality guard V3 snapshot
+        run: python verify_terminal_finality_guard_v3.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-finality-guard-v3
+          path: terminal_finality_guard_v3_receipt.json
+          if-no-files-found: error
