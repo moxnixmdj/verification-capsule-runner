@@ -1,0 +1,30 @@
+name: Verify retired LiveBench generator inverter
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - subject/livebench_legacy_visible_description_inverter_v1.py
+      - verify_livebench_retired_generator_inverter_v1.py
+      - .github/workflows/verify-livebench-retired-generator-inverter.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install historical parquet reader
+        run: python -m pip install --quiet "pyarrow==21.0.0"
+      - name: Audit exact Brain subject on retired official LiveBench distribution
+        run: python verify_livebench_retired_generator_inverter_v1.py
+      - name: Upload aggregate receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-retired-generator-inverter-receipt
+          path: livebench_retired_generator_inverter_receipt.json
+          if-no-files-found: error
