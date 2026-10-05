@@ -1,6 +1,9 @@
 name: Verify H100 UniChart storage feasibility V1
 
 on:
+  push:
+    branches:
+      - verify/h100-unichart-storage-feasibility-v1
   pull_request:
     branches: [main]
     paths:
