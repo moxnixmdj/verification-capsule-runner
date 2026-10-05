@@ -62,3 +62,5 @@ print(json.dumps({
   "new_reality_units_consumed":0,
   "incremental_spend_usd":0
 }, sort_keys=True))
+
+# verifier-trigger-v1
