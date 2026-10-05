@@ -1,0 +1,30 @@
+name: Verify Root3 read-only current authorizer
+
+on:
+  push:
+    paths:
+      - "capsules/root3_readonly_authorizer_20261005/**"
+      - ".github/workflows/verify-root3-readonly-authorizer-20261005.yml"
+  pull_request:
+    paths:
+      - "capsules/root3_readonly_authorizer_20261005/**"
+      - ".github/workflows/verify-root3-readonly-authorizer-20261005.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact candidate tests
+        working-directory: capsules/root3_readonly_authorizer_20261005
+        run: python -m unittest -v canonical.tests.test_root3_read_only_current_authorizer_v1
+      - name: Run independent adversarial verifier
+        working-directory: capsules/root3_readonly_authorizer_20261005
+        run: python verify_readonly_authorizer.py
