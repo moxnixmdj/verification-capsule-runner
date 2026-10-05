@@ -1,0 +1,45 @@
+name: Verify LiveBench deterministic case shield V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_livebench_case_failopen_shield_v1.py"
+      - ".github/workflows/verify-livebench-case-failopen-shield-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12.10","3.13"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install exact scorer dependencies
+        run: python -m pip install --disable-pip-version-check "nltk==3.10.3" "langdetect==1.0.9" "immutabledict==4.2.2"
+      - name: Checkout exact frozen LiveBench
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD:livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+      - name: Run deterministic case-shield verifier
+        run: python verify_livebench_case_failopen_shield_v1.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-case-failopen-shield-v1-${{ matrix.python }}
+          path: livebench_case_failopen_shield_v1_receipt.json
+          if-no-files-found: error
