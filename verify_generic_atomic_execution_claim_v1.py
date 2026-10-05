@@ -1,45 +1,33 @@
-from __future__ import annotations
-import importlib.util,json,pathlib,sys
-P=pathlib.Path("generic_atomic_execution_claim_v1.py")
-spec=importlib.util.spec_from_file_location("claim",P); assert spec and spec.loader
-m=importlib.util.module_from_spec(spec);sys.modules["claim"]=m;spec.loader.exec_module(m)
-subject={
- "benchmark_id":"TEST_BENCH",
- "target_predicate":"TEST_PREDICATE",
- "epoch_id":"epoch-001",
- "candidate_identity":"candidate-sha",
- "activation_identity":"activation-sha",
- "root_identity":"root-sha",
-}
-ref=m.expected_claim_ref(subject)
-base={
- "schema":m.RECEIPT_SCHEMA,
- "subject_binding_sha256":m.binding_sha256(subject),
- "claim_ref":ref,
- "create_http_status":201,
- "reference_created":True,
- "response_ref":ref,
- "response_object_sha":"1"*40,
- "uniqueness_source":"ATOMIC_GIT_REF_CREATE_RESPONSE",
- "case_read_before_claim":False,
- "execution_started_before_claim":False,
- "output_exists_before_claim":False,
-}
-ok=m.verify(subject,base);assert ok["pass"] and ok["execution_authority_for_exact_epoch"]
-for mutation in (
- {"create_http_status":422,"reference_created":False},
- {"subject_binding_sha256":"0"*64},
- {"case_read_before_claim":True},
- {"claim_ref":"refs/heads/execution-claims/wrong"},
-):
- r=dict(base);r.update(mutation);assert not m.verify(subject,r)["pass"],mutation
-print(json.dumps({
- "status":"PASS",
- "generic_subject_binding":True,
- "first_create_201_required":True,
- "duplicate_422_fails_closed":True,
- "preclaim_case_read_rejected":True,
- "exact_epoch_scope":True,
- "terminal_cases_consumed":0,
- "acceptance_credit":0,
-},sort_keys=True))
+import math
+from canonical.runtime import h100_verified_capability_registry_v2 as r
+
+def rows(fn):
+    xs=[-4,-3.5,-3,-2.5,-2,-1.5,-1,-0.6,-0.2,0,0.4,0.8,1,1.5,2,2.5,3,3.5,4]
+    return [{"x":float(x),"y":float(fn(x))} for x in xs]
+
+snap=r.registry_snapshot()
+assert snap["entry_count"]==8
+assert snap["entries"][-1]["capability_id"]=="CAP_AFFINE_CUBIC_V1"
+assert snap["persistent_learned_bytes"]==0
+
+cubic=r.resolve_verified_capability(
+    rows(lambda x:-0.7+0.31*x+0.42*x**3),target="y",input_name="x"
+)
+assert cubic["status"]=="LIBRARY_HIT__VERIFY_BEFORE_USE"
+assert cubic["match"]["capability_id"]=="CAP_AFFINE_CUBIC_V1"
+assert cubic["raw_synthesis_attempts_before_hit"]==0
+expected=-0.7+0.31*1.7+0.42*1.7**3
+assert abs(r.predict(cubic,{"x":1.7})-expected)<1e-9
+
+sinusoid=r.resolve_verified_capability(
+    rows(lambda x:0.4+0.15*x+1.3*math.sin(1.73*x+0.4)),target="y",input_name="x"
+)
+assert sinusoid["status"]=="LIBRARY_HIT__VERIFY_BEFORE_USE"
+assert sinusoid["match"]["capability_id"]=="CAP_LINEAR_TREND_SINUSOID_V1"
+
+quartic=r.resolve_verified_capability(
+    rows(lambda x:0.2+0.1*x+0.7*x**4),target="y",input_name="x"
+)
+assert quartic["status"]=="LIBRARY_MISS__RAW_SYNTHESIS_ALLOWED"
+
+print("PASS H100_REGISTRY_V2_CUBIC_RATCHET")
