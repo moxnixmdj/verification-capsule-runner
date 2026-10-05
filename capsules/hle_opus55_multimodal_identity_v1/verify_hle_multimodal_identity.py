@@ -66,3 +66,5 @@ print(json.dumps({
 # verifier-trigger-v1
 
 # pr-verifier-trigger-v1
+
+# pr-synchronize-trigger-v2
