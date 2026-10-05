@@ -1,0 +1,14 @@
+{
+  "schema": "W4_SUPERDOMAIN_DOMINANCE_OBSTRUCTION_INDEPENDENT_CAPSULE_V1",
+  "brain_pr": 2168,
+  "brain_head_sha": "a1e4e799d74e9a8eadabe0ae8a8bdd5ad35703ca",
+  "exact_blobs": {
+    "canonical/governance/W4_TRANSDUCER_SUPERDOMAIN_UNIVERSAL_DOMINANCE_OBSTRUCTION_20261005_V1.json": "41ac5537b000f37113a266afc1e9d82a71a00402",
+    "canonical/runtime/w4_superdomain_dominance_obstruction_v1.py": "2d70b6712b69d950115379d1f47abbb0c3ce2094",
+    "canonical/tests/test_w4_superdomain_dominance_obstruction_v1.py": "a3f0b338faa356fe129bae40e02eaa0359644663"
+  },
+  "w4_source_blob": "cbeb240dd269f305268d98904d27dae5b20d70b1",
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "incremental_spend_usd": 0
+}
