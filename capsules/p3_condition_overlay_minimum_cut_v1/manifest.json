@@ -1,0 +1,13 @@
+{
+  "schema": "PROJECT_BRAIN_P3_CONDITION_OVERLAY_MINIMUM_CUT_INDEPENDENT_CAPSULE_V1",
+  "date": "2026-10-05",
+  "exact_blobs": {
+    "subject.json": "782c79cae00aec5ed97c59e8abfe5b98a83ebdf8",
+    "envelope.json": "661a57f839101fbf54c7e4edc76166c65ce9327d",
+    "guard.json": "c20051932a2caaef4ef6907da27cb2806e7325eb",
+    "fixed_interface.json": "146b237515ba8867acd6778b291e340e5e9138fc"
+  },
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "incremental_spend_usd": 0
+}
