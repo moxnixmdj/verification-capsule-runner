@@ -1,0 +1,30 @@
+name: Verify LiveBench V6 exact score precedence
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_v6_exact_score_precedence_20261004.py
+      - .github/workflows/verify-livebench-v6-exact-score-precedence.yml
+      - subject/livebench_v6_forced_fail_20261004/**
+  push:
+    branches:
+      - 'verify/livebench-v6-exact-score-precedence-20261004-sol'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute exact-score precedence from immutable V6 receipts
+        run: python verify_livebench_v6_exact_score_precedence_20261004.py
+      - name: Upload independent receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-v6-exact-score-precedence
+          path: livebench_v6_exact_score_precedence_receipt.json
+          if-no-files-found: error
