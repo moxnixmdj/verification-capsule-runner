@@ -1,0 +1,20 @@
+name: Verify synthesis scope overextension quarantine
+on:
+  pull_request:
+    paths:
+      - 'subject/synthesis_scope_overextension/**'
+      - 'verify_synthesis_scope_overextension_v1.py'
+      - '.github/workflows/verify-synthesis-scope-overextension-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python verify_synthesis_scope_overextension_v1.py
