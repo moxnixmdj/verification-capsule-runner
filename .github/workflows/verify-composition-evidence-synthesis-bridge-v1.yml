@@ -1,0 +1,18 @@
+name: Verify composition evidence synthesis bridge v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/composition_evidence_synthesis_bridge_v1/**"
+      - ".github/workflows/verify-composition-evidence-synthesis-bridge-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/composition_evidence_synthesis_bridge_v1/verify.py
