@@ -3,6 +3,7 @@ name: Verify LiveBench clean Active15 promotion V1
 on:
   push:
     branches:
+      - main
       - verify-livebench-clean-active15-promotion-v1
     paths:
       - "verify_livebench_clean_active15_promotion_v1.py"
