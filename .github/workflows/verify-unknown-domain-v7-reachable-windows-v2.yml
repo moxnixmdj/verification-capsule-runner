@@ -1,0 +1,60 @@
+name: Verify Unknown-Domain V7 reachable domain Windows V2
+
+on:
+  push:
+    branches:
+      - "verify/unknown-domain-v7-reachable-windows-v2-20261005-sol"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.12.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Install test dependency on Python 3.12.10
+        shell: pwsh
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify on Python 3.12.10
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH="."
+          python --version
+          python verification/unknown_domain_v7_reachable_domain_independent.py
+          python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+          Copy-Item unknown_domain_v7_reachable_domain_receipt.json unknown_domain_v7_reachable_domain_receipt_py312.json
+
+      - name: Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install test dependency on Python 3.13
+        shell: pwsh
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify on Python 3.13
+        shell: pwsh
+        run: |
+          $env:PYTHONPATH="."
+          python --version
+          python verification/unknown_domain_v7_reachable_domain_independent.py
+          python -m pytest -q canonical/tests/test_unknown_domain_direct_v5.py
+          Copy-Item unknown_domain_v7_reachable_domain_receipt.json unknown_domain_v7_reachable_domain_receipt_py313.json
+
+      - name: Upload both receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v7-reachable-windows-v2-both-pythons
+          path: |
+            unknown_domain_v7_reachable_domain_receipt_py312.json
+            unknown_domain_v7_reachable_domain_receipt_py313.json
+          if-no-files-found: error
+          retention-days: 7
