@@ -4,7 +4,7 @@
     "repository": "moxnixmdj/brain",
     "ref": "sol/opus55-frozen-schema-snapshot-20261005",
     "subject_path": "canonical/governance/OPUS55_FROZEN_INTERACTION_SCHEMA_SNAPSHOT_20261005_V1.json",
-    "subject_blob_sha": "8b9b3956099b7f6f51baf7da87a4123e96ffd056"
+    "subject_blob_sha": "747f535e158d249a6ac358b28266dc0348254dc7"
   },
   "upstream": {
     "repository": "anthropics/anthropic-sdk-python",
