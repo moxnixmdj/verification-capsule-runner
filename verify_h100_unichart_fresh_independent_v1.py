@@ -89,7 +89,8 @@ out={
     "packed_rows":packed,
     "load":load,
     "hard_nonclaims":[
-        "PUBLIC_CHARTQA_CAPABILITY_ONLY",\n        "FROZEN_V2_100_CASE_HOLDOUT",
+        "PUBLIC_CHARTQA_CAPABILITY_ONLY",
+        "FROZEN_V2_100_CASE_HOLDOUT",
         "NO_CHARTOGRAPHY_GE_89_PROOF",
         "NO_FULL_H100_TERMINAL_PROOF"
     ],
