@@ -1,0 +1,19 @@
+name: Verify OSWorld Anthropic Sept10 target contract
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/osworld_anthropic_sept10_target_contract/**"
+      - ".github/workflows/verify-osworld-anthropic-sept10-target-contract.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/osworld_anthropic_sept10_target_contract/verify.py
