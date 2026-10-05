@@ -14,7 +14,7 @@ def synth(path):
     for n,d,s,b in parts: h[n]={"dtype":d,"shape":s,"data_offsets":[c,c+len(b)]}; c+=len(b)
     raw=json.dumps(h,separators=(",",":")).encode(); path.write_bytes(struct.pack("<Q",len(raw))+raw+b"".join(x[3] for x in parts))
     rows=[]; c=0
-    for n,d,s,b in parts: rows.append({"name":n,"dtype":d,"shape":s,"numel":int(np.prod(s)),"data_start":c,"data_end":c+len(b)}); c+=len(b)
+    for n,d,s,b in parts: rows.append({"name":n,"dtype":d,"shape":s,"numel":int(np.prod(s)),"data_start":c,"data_end":c+len(b),"payload_bytes":len(b)}); c+=len(b)
     rows.sort(key=lambda x:x["name"])
     import hashlib
     m=hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(",",":")).encode()).hexdigest()
@@ -33,7 +33,7 @@ class T(unittest.TestCase):
       a=np.ones(1,dtype="<f4").tobytes(); h={"x":{"dtype":"F32","shape":[1],"data_offsets":[0,4]}}
       raw=json.dumps(h,separators=(",",":")).encode(); src=td/"x"; src.write_bytes(struct.pack("<Q",len(raw))+raw+a)
       import hashlib
-      rows=[{"name":"x","dtype":"F32","shape":[1],"numel":1,"data_start":0,"data_end":4}]
+      rows=[{"name":"x","dtype":"F32","shape":[1],"numel":1,"data_start":0,"data_end":4,"payload_bytes":4}]
       m=hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(",",":")).encode()).hexdigest()
       with patch.object(p,"EXPECTED_SOURCE_BYTES",src.stat().st_size),patch.object(p,"EXPECTED_MANIFEST_SHA",m),patch.object(p,"EXPECTED_F32",1),patch.object(p,"EXPECTED_I64",0),patch.object(p,"EXPECTED_ENCODER",0),patch.object(p,"EXPECTED_DECODER",0):
         with self.assertRaises(p.PackError): p.parse_header(src)
