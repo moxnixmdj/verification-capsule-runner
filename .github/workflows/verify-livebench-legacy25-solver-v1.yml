@@ -1,0 +1,49 @@
+name: Verify LiveBench legacy-25 single-checker solver V1
+
+on:
+  push:
+    branches: ["verify/livebench-legacy25-solver-v1-20261004"]
+    paths:
+      - ".github/workflows/verify-livebench-legacy25-solver-v1.yml"
+      - "capsules/livebench_legacy25_solver_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-legacy25-solver-v1.yml"
+      - "capsules/livebench_legacy25_solver_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact subject
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/livebench_legacy25_solver_v1/subject/livebench_legacy25_single_checker_solver_v1.py)" = "3699a676b91845b40029813b60a2c30e7f325667"
+      - name: Fetch exact upstream
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+      - name: Install exact evaluator dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "langdetect==1.0.9" "nltk==3.9.1" "immutabledict==4.2.1"
+          python -m nltk.downloader -q punkt
+          python - <<'PY'
+          import nltk
+          nltk.download("punkt_tab", quiet=True)
+          PY
+      - name: Run exact checker audit
+        run: |
+          set -euo pipefail
+          python capsules/livebench_legacy25_solver_v1/verify.py
