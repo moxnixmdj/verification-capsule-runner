@@ -1,0 +1,162 @@
+name: Verify H100 UniChart real mixed packed checkpoint
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/h100_unichart_mixed_packer_v1.py'
+      - 'canonical/runtime/h100_unichart_safetensors_header_audit_v1.py'
+      - 'canonical/tests/test_h100_unichart_mixed_packer_v1.py'
+      - 'canonical/governance/H100_UNICHART_MIXED_PACK_CANDIDATE_V1.json'
+      - '.github/workflows/verify-h100-unichart-mixed-pack-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned numeric runtime
+        run: python -m pip install --disable-pip-version-check --no-cache-dir numpy==2.0.2
+
+      - name: Run packer unit tests
+        run: python -m unittest canonical.tests.test_h100_unichart_mixed_packer_v1 -v
+
+      - name: Download exact UniChart safetensors subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/h100-unichart
+          URL='https://huggingface.co/ahmed-masry/unichart-base-960/resolve/baa206a05372f8c49778313abb7091e1d0c8e474/model.safetensors?download=true'
+          curl -fL --retry 3 --retry-delay 2 --max-filesize 820000000 "$URL" -o /tmp/h100-unichart/model.safetensors
+          test "$(stat -c%s /tmp/h100-unichart/model.safetensors)" -eq 809095376
+          echo '2faf9ef1ac62a290ea58c80e9e2454db4e3613579e7cb6167cb934a03c09664e  /tmp/h100-unichart/model.safetensors' | sha256sum -c -
+
+      - name: Create real mixed W4/W3 packed checkpoint
+        run: |
+          python canonical/runtime/h100_unichart_mixed_packer_v1.py             --source /tmp/h100-unichart/model.safetensors             --output /tmp/h100-unichart/model.h100ucq             --receipt /tmp/h100-unichart/packer_receipt.json             --groups-per-chunk 4096
+          python - <<'PY'
+          import json, os
+          d=json.load(open('/tmp/h100-unichart/packer_receipt.json'))
+          assert d['status']=='PASS__REAL_MIXED_W4_ENCODER_W3_DECODER_PACKED_CHECKPOINT_CREATED', d
+          assert d['packed_checkpoint_bytes'] <= 100_000_000, d
+          assert d['exact_partition']=={
+            'encoder_f32_elements':74180728,
+            'decoder_f32_elements':127677440,
+            'i64_elements':200000,
+          }, d
+          print(json.dumps({
+            'packed_checkpoint_bytes':d['packed_checkpoint_bytes'],
+            'packed_checkpoint_margin_bytes':d['packed_checkpoint_margin_bytes'],
+            'packed_checkpoint_sha256':d['packed_checkpoint_sha256'],
+            'encoder_relative_mse':d['quantization_error']['encoder']['relative_mse'],
+            'decoder_relative_mse':d['quantization_error']['decoder']['relative_mse'],
+          },indent=2,sort_keys=True))
+          PY
+
+      - name: Build complete runnable-state bundle and enforce H100 byte ceiling
+        shell: bash
+        run: |
+          set -euo pipefail
+          REV='baa206a05372f8c49778313abb7091e1d0c8e474'
+          BASE="https://huggingface.co/ahmed-masry/unichart-base-960/resolve/$REV"
+          B=/tmp/h100-unichart/bundle
+          mkdir -p "$B"
+          cp /tmp/h100-unichart/model.h100ucq "$B/model.h100ucq"
+          for f in             .gitattributes             README.md             added_tokens.json             config.json             generation_config.json             preprocessor_config.json             sentencepiece.bpe.model             special_tokens_map.json             tokenizer.json             tokenizer_config.json
+          do
+            curl -fL --retry 3 --retry-delay 1 "$BASE/$f?download=true" -o "$B/$f"
+          done
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner             -cf /tmp/h100-unichart/unichart_h100_bundle.tar -C /tmp/h100-unichart bundle
+          BUNDLE_BYTES="$(stat -c%s /tmp/h100-unichart/unichart_h100_bundle.tar)"
+          test "$BUNDLE_BYTES" -le 100000000
+
+      - name: Freeze small creation receipt
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path('/tmp/h100-unichart')
+          pack=json.load(open(root/'packer_receipt.json'))
+          bundle=root/'unichart_h100_bundle.tar'
+          def sha(path):
+              h=hashlib.sha256()
+              with open(path,'rb') as f:
+                  for chunk in iter(lambda:f.read(8*1024*1024),b''):
+                      h.update(chunk)
+              return h.hexdigest()
+          ancillary=[]
+          for p in sorted((root/'bundle').iterdir()):
+              if p.name=='model.h100ucq':
+                  continue
+              ancillary.append({'name':p.name,'bytes':p.stat().st_size,'sha256':sha(p)})
+          out={
+            'schema':'PROJECT_BRAIN_H100_UNICHART_REAL_PACKED_SUBJECT_PUBLIC_RUNNER_RECEIPT_V1',
+            'status':'PASS__REAL_MIXED_W4_W3_CHECKPOINT_AND_COMPLETE_BUNDLE_CREATED_UNDER_H100',
+            'source':{
+              'revision':'baa206a05372f8c49778313abb7091e1d0c8e474',
+              'safetensors_sha256':'2faf9ef1ac62a290ea58c80e9e2454db4e3613579e7cb6167cb934a03c09664e',
+              'safetensors_bytes':809095376,
+              'tensor_manifest_sha256':'8b32480b8f7981f3c8413941e522034f3779bef1187374f2ca836bc29af314c5',
+            },
+            'packed_checkpoint':pack,
+            'complete_bundle':{
+              'bytes':bundle.stat().st_size,
+              'sha256':sha(bundle),
+              'h100_budget_bytes':100000000,
+              'margin_bytes':100000000-bundle.stat().st_size,
+              'ancillary_files':ancillary,
+              'ancillary_total_bytes':sum(x['bytes'] for x in ancillary),
+            },
+            'hard_nonclaims':[
+              'REAL_PACKED_SUBJECT_CREATION_DOES_NOT_PROVE_CAPABILITY_PRESERVATION',
+              'NO_CHARTOGRAPHY_THRESHOLD_CREDIT',
+              'NO_H100_TERMINAL_CREDIT',
+              'LARGE_PACKED_BINARY_IS_NOT_RETAINED_AS_A_HOSTED_ARTIFACT',
+            ],
+            'accounting':{
+              'incremental_spend_usd':0,
+              'terminal_cases_consumed':0,
+              'acceptance_credit_delta':0,
+              'capability_credit_delta':0,
+              'ownership_credit_delta':0,
+              'h100_credit_delta':0,
+            },
+          }
+          assert out['complete_bundle']['bytes'] <= 100000000, out
+          pathlib.Path('h100_unichart_real_packed_subject_receipt.json').write_text(
+              json.dumps(out,indent=2,sort_keys=True)+'\n'
+          )
+          print(json.dumps({
+            'status':out['status'],
+            'packed_checkpoint_bytes':pack['packed_checkpoint_bytes'],
+            'packed_checkpoint_sha256':pack['packed_checkpoint_sha256'],
+            'complete_bundle_bytes':out['complete_bundle']['bytes'],
+            'complete_bundle_margin_bytes':out['complete_bundle']['margin_bytes'],
+            'complete_bundle_sha256':out['complete_bundle']['sha256'],
+            'ancillary_total_bytes':out['complete_bundle']['ancillary_total_bytes'],
+          },indent=2,sort_keys=True))
+          PY
+
+      - name: Delete large transient binaries before artifact retention
+        if: always()
+        shell: bash
+        run: |
+          rm -rf /tmp/h100-unichart/model.safetensors                  /tmp/h100-unichart/model.h100ucq                  /tmp/h100-unichart/unichart_h100_bundle.tar                  /tmp/h100-unichart/bundle || true
+
+      - name: Upload only small receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: h100-unichart-real-packed-subject-receipt-v1
+          path: h100_unichart_real_packed_subject_receipt.json
+          if-no-files-found: error
+          retention-days: 1
