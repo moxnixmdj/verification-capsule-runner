@@ -1,12 +1,25 @@
 name: Verify Unknown-Domain V7 reachable domain Windows V7 exact-object
 
 on:
-  push:
+  pull_request:
     branches:
-      - "verify/unknown-domain-v7-reachable-windows-v7-20261005-sol"
+      - main
     paths:
-      - "TRIGGER_UNKNOWN_DOMAIN_V7_WINDOWS_V7"
-  workflow_dispatch:
+      - "verification/unknown_domain_v7_reachable_domain_independent_v3.py"
+      - ".github/workflows/verify-unknown-domain-v7-reachable-windows-v7.yml"
+      - "canonical/runtime/unknown_domain_direct_candidate_v1.py"
+      - "canonical/runtime/unknown_domain_direct_candidate_v2.py"
+      - "canonical/runtime/unknown_domain_direct_candidate_v3.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v1.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v2.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v4.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py"
+      - "canonical/runtime/unknown_domain_direct_hidden_scorer_v1.py"
+      - "canonical/runtime/unknown_domain_direct_execution_harness_v1.py"
+      - "canonical/tests/test_unknown_domain_direct_v5.py"
+      - "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py"
+      - "canonical/runtime/unknown_domain_direct_production_once_v1.py"
+      - ".github/workflows/unknown-domain-direct-one-use-production.yml"
 
 permissions:
   contents: read
