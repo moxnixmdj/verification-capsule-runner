@@ -1,0 +1,24 @@
+name: Verify current 8x14 witness-target totalization
+on:
+  pull_request:
+    paths:
+      - 'subject/current_8x14_totalization/**'
+      - 'verify_current_8x14_totalization.py'
+      - '.github/workflows/verify-current-8x14-totalization.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run copied Brain totalizer tests
+        env:
+          PYTHONPATH: subject/current_8x14_totalization
+        run: python subject/current_8x14_totalization/canonical/tests/test_current_witness_target_totalization_v3.py
+      - name: Run independent recomputation
+        run: python verify_current_8x14_totalization.py
