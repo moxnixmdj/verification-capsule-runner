@@ -1,0 +1,10 @@
+{
+  "schema": "PROJECT_BRAIN_H100_CHARTQA_PACK_EXECUTION_TRIGGER_V1",
+  "date": "2026-10-05",
+  "status": "ONE_SHOT_PUBLIC_ZERO_COST_EXECUTION_REQUEST",
+  "verifier_base_sha": "c08f619fdddaa8bf1db21e99fddaca1e77c5d454",
+  "objective": "CREATE_REAL_SUB100MB_CHARTQA_PACKED_SUBJECT_AND_TEST_PREEXPOSED_PUBLIC_CAPABILITY_PRESERVATION",
+  "terminal_cases_consumed": 0,
+  "acceptance_credit_delta": 0,
+  "h100_credit_delta": 0
+}
