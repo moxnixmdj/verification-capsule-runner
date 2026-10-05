@@ -1,6 +1,12 @@
 name: Verify Composition synthesis scope bridge V1
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'subject/composition_synthesis_scope_bridge_v1/**'
+      - 'verify_composition_synthesis_scope_bridge_v1.py'
+      - '.github/workflows/verify-composition-synthesis-scope-bridge-v1.yml'
   pull_request:
     branches: [main]
     paths:
