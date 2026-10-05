@@ -6,7 +6,19 @@ on:
     paths:
       - 'h100_chartqa_safetensors_pack_v1.py'
       - 'test_h100_chartqa_safetensors_pack_v1.py'
+      - 'h100_chartqa_public_preservation_v1.py'
+      - 'h100_chartqa_public_preservation_cases_v1.json'
       - '.github/workflows/verify-h100-chartqa-safetensors-pack-v1.yml'
+  push:
+    branches:
+      - verify/h100-unichart-chartqa-safetensors-pack-v1
+    paths:
+      - 'h100_chartqa_safetensors_pack_v1.py'
+      - 'test_h100_chartqa_safetensors_pack_v1.py'
+      - 'h100_chartqa_public_preservation_v1.py'
+      - 'h100_chartqa_public_preservation_cases_v1.json'
+      - '.github/workflows/verify-h100-chartqa-safetensors-pack-v1.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,67 +26,121 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: python -m pip install --disable-pip-version-check --no-cache-dir numpy==2.0.2
-      - run: python -m unittest test_h100_chartqa_safetensors_pack_v1 -v
 
-      - name: Download exact verified-conversion ChartQA safetensors
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pinned pack and inference runtime
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/cq
-          URL='https://huggingface.co/ahmed-masry/unichart-chartqa-960/resolve/499d8f9c9c8b712f2c44e0997f366f4f749c77f8/model.safetensors?download=true'
-          curl -fL --retry 3 --retry-delay 2 --max-filesize 820000000 "$URL" -o /tmp/cq/model.safetensors
-          test "$(stat -c%s /tmp/cq/model.safetensors)" -eq 809095376
-          echo '0d06f1b1036b4e1d23dfcbb805bfb1b10ed11a4b3fb9d12912e3ce28e88e6231  /tmp/cq/model.safetensors' | sha256sum -c -
+          python -m pip install --disable-pip-version-check --no-cache-dir numpy==1.26.4
+          python -m pip install --disable-pip-version-check --no-cache-dir torch==2.2.2 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check --no-cache-dir             transformers==4.28.1             safetensors==0.4.5             sentencepiece==0.1.99             Pillow==10.4.0
 
-      - name: Create real mixed checkpoint
+      - name: Run packer unit tests
+        run: python -m unittest test_h100_chartqa_safetensors_pack_v1 -v
+
+      - name: Download exact ChartQA model subject and ancillary runtime state
+        shell: bash
         run: |
-          python h100_chartqa_safetensors_pack_v1.py --source /tmp/cq/model.safetensors --output /tmp/cq/model.h100cq --receipt /tmp/cq/pack.json
+          set -euo pipefail
+          REV='499d8f9c9c8b712f2c44e0997f366f4f749c77f8'
+          BASE="https://huggingface.co/ahmed-masry/unichart-chartqa-960/resolve/$REV"
+          M=/tmp/cq/modeldir
+          mkdir -p "$M"
+          curl -fL --retry 3 --retry-delay 2 --max-filesize 820000000             "$BASE/model.safetensors?download=true" -o "$M/model.safetensors"
+          test "$(stat -c%s "$M/model.safetensors")" -eq 809095376
+          echo '0d06f1b1036b4e1d23dfcbb805bfb1b10ed11a4b3fb9d12912e3ce28e88e6231  /tmp/cq/modeldir/model.safetensors' | sha256sum -c -
+          for f in             .gitattributes             README.md             added_tokens.json             config.json             generation_config.json             preprocessor_config.json             sentencepiece.bpe.model             special_tokens_map.json             tokenizer.json             tokenizer_config.json
+          do
+            curl -fL --retry 3 --retry-delay 1 "$BASE/$f?download=true" -o "$M/$f"
+          done
+
+      - name: Create real mixed W4-W3 checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          python h100_chartqa_safetensors_pack_v1.py             --source /tmp/cq/modeldir/model.safetensors             --output /tmp/cq/model.h100cq             --receipt /tmp/cq/pack.json
           python - <<'PY'
           import json
           d=json.load(open('/tmp/cq/pack.json'))
           assert d['status']=='PASS__REAL_CHARTQA_W4_W3_PACK_CREATED',d
           assert d['source_manifest_sha256']=='8b32480b8f7981f3c8413941e522034f3779bef1187374f2ca836bc29af314c5',d
           assert d['packed_bytes'] <= 100000000,d
-          print(json.dumps(d,indent=2,sort_keys=True))
+          print(json.dumps({
+            'packed_bytes':d['packed_bytes'],
+            'margin':d['margin'],
+            'packed_sha256':d['packed_sha256'],
+            'encoder_relative_mse':d['quant_error']['encoder']['relative_mse'],
+            'decoder_relative_mse':d['quant_error']['decoder']['relative_mse'],
+          },indent=2,sort_keys=True))
           PY
 
-      - name: Build complete runtime bundle
+      - name: Build deterministic complete runtime-state bundle
         shell: bash
         run: |
           set -euo pipefail
-          REV='499d8f9c9c8b712f2c44e0997f366f4f749c77f8'
-          BASE="https://huggingface.co/ahmed-masry/unichart-chartqa-960/resolve/$REV"
-          B=/tmp/cq/bundle; mkdir -p "$B"; cp /tmp/cq/model.h100cq "$B/model.h100cq"
-          for f in .gitattributes README.md added_tokens.json config.json generation_config.json preprocessor_config.json sentencepiece.bpe.model special_tokens_map.json tokenizer.json tokenizer_config.json; do
-            curl -fL --retry 3 --retry-delay 1 "$BASE/$f?download=true" -o "$B/$f"
+          B=/tmp/cq/bundle
+          mkdir -p "$B"
+          cp /tmp/cq/model.h100cq "$B/model.h100cq"
+          for f in             .gitattributes             README.md             added_tokens.json             config.json             generation_config.json             preprocessor_config.json             sentencepiece.bpe.model             special_tokens_map.json             tokenizer.json             tokenizer_config.json
+          do
+            cp "/tmp/cq/modeldir/$f" "$B/$f"
           done
-          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -cf /tmp/cq/bundle.tar -C /tmp/cq bundle
-          test "$(stat -c%s /tmp/cq/bundle.tar)" -le 100000000
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner             -cf /tmp/cq/bundle.tar -C /tmp/cq bundle
+          BUNDLE_BYTES="$(stat -c%s /tmp/cq/bundle.tar)"
+          test "$BUNDLE_BYTES" -le 100000000
+          echo "$BUNDLE_BYTES" > /tmp/cq/bundle.bytes
+          sha256sum /tmp/cq/bundle.tar | cut -d' ' -f1 > /tmp/cq/bundle.sha256
 
-      - name: Emit small durable receipt
+      - name: Download exact pre-exposed public ChartQA images
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=/tmp/cq/images
+          mkdir -p "$ROOT"
+          BASE='https://raw.githubusercontent.com/vis-nlp/ChartQA/044eabfc306abfe9340c5741f0093aefc5973d06/ChartQA%20Dataset/val/png'
+          for f in             3887.png             4576.png             5734.png             11756.png             13153.png             multi_col_20933.png             multi_col_972.png             multi_col_60377.png             multi_col_60563.png             multi_col_101153.png             multi_col_80582.png
+          do
+            curl -fL --retry 3 --retry-delay 1 "$BASE/$f" -o "$ROOT/$f"
+            test -s "$ROOT/$f"
+          done
+
+      - name: Evaluate exact packed values against frozen public preservation gate
+        id: preservation
+        shell: bash
+        run: |
+          set +e
+          python h100_chartqa_public_preservation_v1.py             --model-dir /tmp/cq/modeldir             --packed /tmp/cq/model.h100cq             --cases h100_chartqa_public_preservation_cases_v1.json             --image-root /tmp/cq/images             --receipt h100_chartqa_public_preservation_result_v1.json             > h100_chartqa_public_preservation_stdout.log 2> h100_chartqa_public_preservation_stderr.log
+          CODE=$?
+          echo "$CODE" > h100_chartqa_public_preservation.exit
+          cat h100_chartqa_public_preservation_stdout.log || true
+          cat h100_chartqa_public_preservation_stderr.log >&2 || true
+          exit 0
+
+      - name: Freeze combined small receipt
+        if: always()
         shell: bash
         run: |
           python - <<'PY'
           import hashlib,json,pathlib
-          root=pathlib.Path('/tmp/cq'); pack=json.load(open(root/'pack.json')); bundle=root/'bundle.tar'
+          root=pathlib.Path('/tmp/cq')
           def sha(p):
-            h=hashlib.sha256()
-            with open(p,'rb') as f:
-              for b in iter(lambda:f.read(8*1024*1024),b''): h.update(b)
-            return h.hexdigest()
-          anc=[]
-          for p in sorted((root/'bundle').iterdir()):
-            if p.name=='model.h100cq': continue
-            anc.append({'name':p.name,'bytes':p.stat().st_size,'sha256':sha(p)})
+              h=hashlib.sha256()
+              with open(p,'rb') as f:
+                  for b in iter(lambda:f.read(8*1024*1024),b''):
+                      h.update(b)
+              return h.hexdigest()
+          pack_path=root/'pack.json'
+          bundle=root/'bundle.tar'
+          preservation_path=pathlib.Path('h100_chartqa_public_preservation_result_v1.json')
           out={
-            'schema':'PROJECT_BRAIN_H100_CHARTQA_SAFETENSORS_REAL_PACK_RECEIPT_V1',
-            'status':'PASS__REAL_CHARTQA_W4_W3_COMPLETE_BUNDLE_UNDER_H100',
+            'schema':'PROJECT_BRAIN_H100_CHARTQA_REAL_PACK_AND_PUBLIC_PRESERVATION_RECEIPT_V1',
             'source':{
               'model':'ahmed-masry/unichart-chartqa-960',
               'official_parent_revision':'e5eb1e52c1d775e0f3febaddc7fc3559e80cb989',
@@ -83,20 +149,92 @@ jobs:
               'safetensors_bytes':809095376,
               'conversion_statement':'HUGGINGFACE_SAFETENSORS_CONVERT_PR_STATES_EQUIVALENT_TO_pytorch_model.bin'
             },
-            'pack':pack,
-            'complete_bundle':{'bytes':bundle.stat().st_size,'sha256':sha(bundle),'budget':100000000,'margin':100000000-bundle.stat().st_size,'ancillary_total':sum(x['bytes'] for x in anc),'ancillary':anc},
-            'hard_nonclaims':['NO_CAPABILITY_PRESERVATION_CLAIM','NO_CHARTOGRAPHY_THRESHOLD_CREDIT','NO_H100_TERMINAL_CREDIT','LARGE_BINARY_DELETED_AFTER_HASH'],
-            'accounting':{'incremental_spend_usd':0,'terminal_cases_consumed':0,'h100_credit_delta':0,'acceptance_credit_delta':0}
+            'preexposure':{
+              'chartqa_repository_commit':'044eabfc306abfe9340c5741f0093aefc5973d06',
+              'human_annotations_git_blob_sha':'983dacfcb6aabc8598031c07eeba7747f9884c4a',
+              'augmented_annotations_git_blob_sha':'131068b504407d9cdd8413fe5c574772bb241613',
+              'case_count':20,
+            },
+            'pack':json.load(open(pack_path)) if pack_path.exists() else None,
+            'complete_bundle':None,
+            'public_preservation':json.load(open(preservation_path)) if preservation_path.exists() else None,
+            'preservation_exit_code':int(pathlib.Path('h100_chartqa_public_preservation.exit').read_text().strip()) if pathlib.Path('h100_chartqa_public_preservation.exit').exists() else None,
+            'hard_nonclaims':[
+              'PUBLIC_20_CASE_CAPABILITY_PRESERVATION_IS_NOT_CHARTOGRAPHY_GE_89',
+              'THIS_DOES_NOT_CLOSE_FULL_H100_TERMINAL_CAPABILITY',
+              'NO_ACCEPTANCE_FAMILY_CAPABILITY_OR_OWNERSHIP_CREDIT',
+            ],
+            'accounting':{
+              'incremental_spend_usd':0,
+              'terminal_cases_consumed':0,
+              'acceptance_credit_delta':0,
+              'family_credit_delta':0,
+              'capability_credit_delta':0,
+              'ownership_credit_delta':0,
+              'h100_terminal_credit_delta':0,
+            },
           }
-          assert out['complete_bundle']['bytes']<=100000000,out
-          pathlib.Path('h100_chartqa_real_pack_receipt.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
-          print(json.dumps({'status':out['status'],'packed_bytes':pack['packed_bytes'],'bundle_bytes':out['complete_bundle']['bytes'],'bundle_margin':out['complete_bundle']['margin'],'bundle_sha256':out['complete_bundle']['sha256'],'pack_sha256':pack['packed_sha256']},indent=2,sort_keys=True))
+          if bundle.exists():
+              bb=bundle.stat().st_size
+              out['complete_bundle']={
+                'bytes':bb,
+                'sha256':sha(bundle),
+                'budget_bytes':100000000,
+                'margin_bytes':100000000-bb,
+              }
+          pack_ok=bool(out['pack'] and out['pack'].get('status')=='PASS__REAL_CHARTQA_W4_W3_PACK_CREATED')
+          bundle_ok=bool(out['complete_bundle'] and out['complete_bundle']['bytes']<=100000000)
+          capability_ok=bool(out['public_preservation'] and out['public_preservation'].get('status')=='PASS__PUBLIC_CHARTQA_CAPABILITY_PRESERVED')
+          out['storage_pass']=pack_ok and bundle_ok
+          out['public_capability_preservation_pass']=capability_ok
+          out['status']=(
+            'PASS__REAL_SUB100MB_CHARTQA_SUBJECT_AND_PUBLIC_CAPABILITY_PRESERVATION'
+            if pack_ok and bundle_ok and capability_ok
+            else 'FAIL_OR_INCOMPLETE__SEE_COMPONENT_RECEIPTS'
+          )
+          pathlib.Path('h100_chartqa_combined_receipt_v1.json').write_text(
+              json.dumps(out,indent=2,sort_keys=True)+'\n'
+          )
+          print(json.dumps({
+            'status':out['status'],
+            'storage_pass':out['storage_pass'],
+            'public_capability_preservation_pass':out['public_capability_preservation_pass'],
+            'packed_bytes':None if not out['pack'] else out['pack'].get('packed_bytes'),
+            'bundle_bytes':None if not out['complete_bundle'] else out['complete_bundle']['bytes'],
+            'bundle_margin_bytes':None if not out['complete_bundle'] else out['complete_bundle']['margin_bytes'],
+            'fp32_accuracy':None if not out['public_preservation'] else out['public_preservation'].get('fp32_relaxed_accuracy'),
+            'packed_accuracy':None if not out['public_preservation'] else out['public_preservation'].get('packed_relaxed_accuracy'),
+            'agreement':None if not out['public_preservation'] else out['public_preservation'].get('fp32_packed_relaxed_agreement'),
+          },indent=2,sort_keys=True))
           PY
-      - if: always()
-        run: rm -rf /tmp/cq/model.safetensors /tmp/cq/model.h100cq /tmp/cq/bundle.tar /tmp/cq/bundle || true
-      - uses: actions/upload-artifact@v4
+
+      - name: Delete all large transient model/image files
+        if: always()
+        shell: bash
+        run: |
+          rm -rf /tmp/cq || true
+
+      - name: Upload diagnostic receipts only
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: h100-chartqa-real-pack-receipt-v1
-          path: h100_chartqa_real_pack_receipt.json
-          if-no-files-found: error
+          name: h100-chartqa-pack-and-preservation-v1
+          path: |
+            h100_chartqa_combined_receipt_v1.json
+            h100_chartqa_public_preservation_result_v1.json
+            h100_chartqa_public_preservation_stdout.log
+            h100_chartqa_public_preservation_stderr.log
+            h100_chartqa_public_preservation.exit
+          if-no-files-found: warn
           retention-days: 1
+
+      - name: Enforce conjunctive storage and capability gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('h100_chartqa_combined_receipt_v1.json'))
+          assert d['storage_pass'] is True,d
+          assert d['public_capability_preservation_pass'] is True,d
+          assert d['status']=='PASS__REAL_SUB100MB_CHARTQA_SUBJECT_AND_PUBLIC_CAPABILITY_PRESERVATION',d
+          PY
