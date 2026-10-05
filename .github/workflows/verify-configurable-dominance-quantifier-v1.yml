@@ -1,0 +1,37 @@
+name: Verify configurable dominance quantifier v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/opus55_configurable_dominance_quantifier_v1/**"
+      - ".github/workflows/verify-configurable-dominance-quantifier-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact source binding and executable countermodel
+        run: |
+          cd capsules/opus55_configurable_dominance_quantifier_v1
+          python -m py_compile verify.py test_verify.py
+          python -m unittest test_verify.py -v
+          python verify.py
+      - name: Verify zero-credit source binding
+        run: |
+          cd capsules/opus55_configurable_dominance_quantifier_v1
+          python - <<'PY'
+          import json
+          b=json.load(open("SOURCE_BINDING.json",encoding="utf-8"))
+          assert b["source_git_blob_sha"]=="f019b28366b985dec2d6e3dec527e54482d9af3b"
+          a=b["accounting"]
+          assert all(a[k]==0 for k in (
+              "incremental_spend_usd","new_reality_units_consumed","terminal_cases_consumed",
+              "acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"
+          ))
+          print("zero-credit binding: PASS")
+          PY
