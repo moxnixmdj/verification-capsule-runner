@@ -1,0 +1,30 @@
+name: Verify LiveBench legacy V2 predecessor replay
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v1.py
+      - subject/canonical/runtime/livebench_legacy_visible_constraint_compiler_v2.py
+      - verify_livebench_legacy_v2_predecessor.py
+      - .github/workflows/verify-livebench-legacy-v2-predecessor.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet "pyarrow==21.0.0"
+      - name: Strict replay on direct historical predecessor
+        run: python verify_livebench_legacy_v2_predecessor.py
+      - name: Upload aggregate receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-v2-predecessor-receipt
+          path: livebench_legacy_v2_predecessor_receipt.json
+          if-no-files-found: error
