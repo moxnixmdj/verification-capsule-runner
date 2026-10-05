@@ -34,3 +34,5 @@ jobs:
           assert g["fresh_reality_authority"] is False
           print("GOVERNANCE_FAIL_CLOSED_PASS")
           PY
+
+# isolated verifier trigger v1
