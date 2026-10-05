@@ -1,0 +1,80 @@
+name: Verify W4 superdomain dominance obstruction V1
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "capsules/w4_superdomain_dominance_obstruction_v1/**"
+      - ".github/workflows/verify-w4-superdomain-dominance-obstruction-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact content-addressed mirrors
+        run: |
+          set -euo pipefail
+          cd capsules/w4_superdomain_dominance_obstruction_v1
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for path, expected in m["exact_blobs"].items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert got==expected,(path,expected,got)
+          assert m["new_reality_units_consumed"]==0
+          assert m["terminal_cases_consumed"]==0
+          assert m["incremental_spend_usd"]==0
+          print("EXACT_W4_OBSTRUCTION_BLOBS_PASS",len(m["exact_blobs"]))
+          PY
+      - name: Run committed W4 obstruction regressions
+        run: |
+          set -euo pipefail
+          cd capsules/w4_superdomain_dominance_obstruction_v1
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_w4_superdomain_dominance_obstruction_v1
+      - name: Independently verify algebraic counterwitness
+        run: |
+          set -euo pipefail
+          cd capsules/w4_superdomain_dominance_obstruction_v1
+          PYTHONPATH=. python - <<'PY'
+          from fractions import Fraction
+          from canonical.runtime.w4_superdomain_dominance_obstruction_v1 import binary_counterwitness
+          # Independent grid is much denser than the committed regression probes.
+          for i in range(10001):
+              p=Fraction(i,10000)
+              o=binary_counterwitness(p)
+              assert o["strictly_better"] is True,o
+              assert Fraction(o["competitor_expected_score"]) > Fraction(o["brain_expected_score"]),o
+          # Universal algebraic split used by the theorem:
+          # p in [0,1). competitor y1 gives 1 > p.
+          # p == 1. competitor y0 gives 1 > 0.
+          assert all(Fraction(1,1) > Fraction(i,10000) for i in range(10000))
+          assert Fraction(1,1) > Fraction(0,1)
+          print("INDEPENDENT_W4_COUNTERWITNESS_PASS")
+          PY
+      - name: Verify theorem scope and zero-credit boundary
+        run: |
+          set -euo pipefail
+          cd capsules/w4_superdomain_dominance_obstruction_v1
+          python - <<'PY'
+          import json
+          p="canonical/governance/W4_TRANSDUCER_SUPERDOMAIN_UNIVERSAL_DOMINANCE_OBSTRUCTION_20261005_V1.json"
+          x=json.load(open(p))
+          assert x["theorem"]["id"]=="UNRESTRICTED_ALL_TRANSDUCER_DOMINANCE_NO_GO"
+          assert x["authority"]["w4_transducer_coverage"]["git_blob_sha"]=="cbeb240dd269f305268d98904d27dae5b20d70b1"
+          assert "W4_INTERFACE_COVERAGE_U_SUBSET_OR_EQUAL_D" in x["route_pruning"]["preserve"]
+          assert "UNIVERSAL_BRAIN_DOMINANCE_OVER_ALL_W4_TRANSDUCER_SUPERDOMAIN_D_WITHOUT_TARGET_EVALUATOR_RESTRICTION" in x["route_pruning"]["delete"]
+          assert x["route_pruning"]["terminal_finality_delta"]==0
+          assert x["independent_verification_required"] is True
+          for k in ("scheduling_authority","execution_authority","promotion_authority","fresh_reality_authority"):
+              assert x[k] is False,(k,x[k])
+          a=x["accounting"]
+          for k in ("incremental_spend_usd","new_reality_units_consumed","terminal_cases_consumed","acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+              assert a[k]==0,(k,a[k])
+          print("W4_OBSTRUCTION_SCOPE_AND_ZERO_CREDIT_PASS")
+          PY
