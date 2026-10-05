@@ -1,0 +1,33 @@
+name: Verify Root2 R2E event-bound reclassification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_root2_r2e_event_bound_v1.py"
+      - "subject/root2_r2e_event_bound_v1/**"
+      - ".github/workflows/verify-root2-r2e-event-bound-v1.yml"
+  push:
+    branches: [main]
+    paths:
+      - "verify_root2_r2e_event_bound_v1.py"
+      - "subject/root2_r2e_event_bound_v1/**"
+      - ".github/workflows/verify-root2-r2e-event-bound-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Recompute R2E scheduler classification
+        run: python verify_root2_r2e_event_bound_v1.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root2-r2e-event-bound-v1
+          path: root2_r2e_event_bound_v1_receipt.json
+          if-no-files-found: error
