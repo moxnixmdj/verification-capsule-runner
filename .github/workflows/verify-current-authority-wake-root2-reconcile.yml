@@ -1,0 +1,36 @@
+name: Verify current authority wake-aware Root2 reconciliation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_current_authority_wake_root2_reconcile.py"
+      - "subject/current_authority_wake_root2/**"
+      - ".github/workflows/verify-current-authority-wake-root2-reconcile.yml"
+  push:
+    branches: [main]
+    paths:
+      - "verify_current_authority_wake_root2_reconcile.py"
+      - "subject/current_authority_wake_root2/**"
+      - ".github/workflows/verify-current-authority-wake-root2-reconcile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact control-plane reconciliation
+        run: python verify_current_authority_wake_root2_reconcile.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-authority-wake-root2-reconcile-receipt
+          path: current_authority_wake_root2_reconcile_receipt.json
+          if-no-files-found: error
