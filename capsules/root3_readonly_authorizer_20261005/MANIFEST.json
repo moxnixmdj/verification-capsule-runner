@@ -1,0 +1,24 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT3_READ_ONLY_CURRENT_AUTHORIZER_PUBLIC_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-05",
+  "brain_subject_pr": 2370,
+  "exact_subject_blobs": {
+    "canonical/runtime/root3_read_only_current_authorizer_v1.py": "888432f53f1ee198e86b728e607bcb4288921245",
+    "canonical/tests/test_root3_read_only_current_authorizer_v1.py": "09ab30343e1e12d25b996cf81edf4aab55d53150"
+  },
+  "claims_checked": [
+    "EXACT_CANDIDATE_UNIT_TESTS_PASS",
+    "EXACT_READ_ONLY_CURRENT_REGISTRY_REQUEST_CAN_BE_AUTHORIZED",
+    "ARBITRARY_COMMAND_CURRENT_REGISTRY_REQUEST_IS_DENIED",
+    "TAMPERED_REQUEST_IS_DENIED",
+    "UNKNOWN_OR_DRIFTED_CALLSITE_IS_DENIED"
+  ],
+  "nonclaims": [
+    "BOOTSTRAP_IS_INSTALLED_AT_PRODUCTION_ENTRYPOINT",
+    "OTHER_SIX_EFFECT_CLASSES_ARE_COMPLETE",
+    "ROOT3_C1_C2_C3_IS_CLOSED",
+    "ANY_ACCEPTANCE_OR_TERMINAL_CREDIT"
+  ],
+  "incremental_spend_usd": 0,
+  "fresh_reality_units_consumed": 0
+}
