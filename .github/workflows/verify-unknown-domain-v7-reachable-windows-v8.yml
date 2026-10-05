@@ -1,0 +1,69 @@
+name: Verify Unknown-Domain V7 reachable domain Windows V8 transport-safe
+
+on:
+  push:
+    branches:
+      - "verify/unknown-domain-v7-reachable-windows-v8-20261005-sol"
+    paths:
+      - "TRIGGER_UNKNOWN_DOMAIN_V7_WINDOWS_V8"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.12.10 for exact Git-object materialization
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+
+      - name: Materialize bound subject bytes directly from Git objects
+        shell: python
+        run: |
+          import hashlib
+          import pathlib
+          import subprocess
+
+          expected = {
+              "canonical/runtime/unknown_domain_direct_hidden_generator_v5.py": "0faa62fce4bc2f2a99c173b0a10a32d5e1c6a244",
+              "canonical/tests/test_unknown_domain_direct_v5.py": "1961cff0013ff9f17feca981409d89d01ecf6769",
+              "canonical/runtime/unknown_domain_direct_v6_universal_proof_v1.py": "2da564d27a318a99713165208126aaaf36ebc924",
+          }
+          for path, oid in expected.items():
+              raw = subprocess.check_output(["git", "cat-file", "blob", oid])
+              p = pathlib.Path(path)
+              p.write_bytes(raw)
+              got = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+              if got != oid:
+                  raise SystemExit(f"GIT_OBJECT_HASH_MISMATCH:{path}:{got}:{oid}")
+              reread = p.read_bytes()
+              reread_oid = hashlib.sha1(b"blob " + str(len(reread)).encode() + b"\0" + reread).hexdigest()
+              if reread_oid != oid:
+                  raise SystemExit(f"WORKTREE_BYTE_HASH_MISMATCH:{path}:{reread_oid}:{oid}")
+
+      - name: Verify Python 3.12.10 in isolated fresh receipt state
+        run: python verification/run_unknown_domain_v7_runtime_failclosed_v8.py --tag py312 --version-prefix 3.12.10
+
+      - name: Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Verify Python 3.13 in isolated fresh receipt state
+        run: python verification/run_unknown_domain_v7_runtime_failclosed_v8.py --tag py313 --version-prefix 3.13.
+
+      - name: Upload both independently produced receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: unknown-domain-v7-reachable-windows-v8-both-pythons
+          path: |
+            unknown_domain_v7_reachable_domain_receipt_py312.json
+            unknown_domain_v7_reachable_domain_receipt_py313.json
+          if-no-files-found: error
+          retention-days: 7
