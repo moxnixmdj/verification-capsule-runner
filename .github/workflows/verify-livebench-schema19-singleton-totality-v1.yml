@@ -1,0 +1,56 @@
+name: Verify LiveBench schema19 singleton totality
+
+on:
+  push:
+    branches:
+      - verify/livebench-schema19-singleton-totality-20261005
+    paths:
+      - "subject/livebench_schema19_singleton_totality_20261005/**"
+      - "verify_livebench_schema19_singleton_totality_v1.py"
+      - ".github/workflows/verify-livebench-schema19-singleton-totality-v1.yml"
+  pull_request:
+    paths:
+      - "subject/livebench_schema19_singleton_totality_20261005/**"
+      - "verify_livebench_schema19_singleton_totality_v1.py"
+      - ".github/workflows/verify-livebench-schema19-singleton-totality-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact checker dependencies
+        run: |
+          python -m pip install --disable-pip-version-check langdetect==1.0.9 nltk==3.10.3 immutabledict==4.3.1
+          python - <<'PY'
+          import nltk
+          for name in ["punkt", "punkt_tab"]:
+              nltk.download(name, quiet=True)
+          PY
+      - name: Checkout frozen LiveBench checker source
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Verify exact Brain PR blobs and pinned checker witnesses
+        run: python verify_livebench_schema19_singleton_totality_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_schema19_singleton_totality_receipt.json; then
+            cat livebench_schema19_singleton_totality_receipt.json
+          fi
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-schema19-singleton-totality-receipt
+          path: livebench_schema19_singleton_totality_receipt.json
+          if-no-files-found: error
