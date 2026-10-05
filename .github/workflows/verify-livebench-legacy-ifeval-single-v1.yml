@@ -1,0 +1,173 @@
+name: Verify legacy IFEval single-checker solver V1
+
+on:
+  push:
+    branches: ["verify/livebench-legacy-ifeval-single-v1-20261004-m"]
+    paths:
+      - ".github/workflows/verify-livebench-legacy-ifeval-single-v1.yml"
+      - "capsules/livebench_legacy_ifeval_single_v1/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-livebench-legacy-ifeval-single-v1.yml"
+      - "capsules/livebench_legacy_ifeval_single_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact candidate blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/livebench_legacy_ifeval_single_v1/livebench_legacy_ifeval_description_inverter_v1.py)" = "69b8e3f7f3ab8bd835a9f15503bcd57ee27c53d0"
+          test "$(git hash-object capsules/livebench_legacy_ifeval_single_v1/livebench_legacy_ifeval_single_checker_solver_v1.py)" = "48bec305cd480416eac4c30efbb3e57bf682de1b"
+
+      - name: Fetch exact public LiveBench scorer source
+        run: |
+          set -euo pipefail
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+
+      - name: Install exact lightweight scorer dependencies
+        run: |
+          python -m pip install --quiet "langdetect==1.0.9" "nltk==3.9.1" "immutabledict==4.2.1"
+          python - <<'PY'
+          import nltk
+          for item in ("punkt", "punkt_tab"):
+              nltk.download(item, quiet=True)
+          PY
+
+      - name: Assemble candidate package
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/candidate/canonical/runtime
+          touch /tmp/candidate/canonical/__init__.py
+          touch /tmp/candidate/canonical/runtime/__init__.py
+          cp capsules/livebench_legacy_ifeval_single_v1/livebench_legacy_ifeval_description_inverter_v1.py /tmp/candidate/canonical/runtime/
+          cp capsules/livebench_legacy_ifeval_single_v1/livebench_legacy_ifeval_single_checker_solver_v1.py /tmp/candidate/canonical/runtime/
+
+      - name: Exact upstream single-checker replay
+        run: |
+          set -euo pipefail
+          PYTHONPATH="/tmp/candidate:/tmp/LiveBench/livebench/if_runner" python - <<'PY'
+          import json
+          from canonical.runtime import livebench_legacy_ifeval_description_inverter_v1 as inv
+          from canonical.runtime import livebench_legacy_ifeval_single_checker_solver_v1 as solver
+          from instruction_following_eval import instructions_registry
+
+          CASES = [
+              ("keywords:existence", {"keywords": ["alpha", "beta"]}),
+              ("keywords:frequency", {"keyword": "alpha", "frequency": 3, "relation": "at least"}),
+              ("keywords:frequency", {"keyword": "alpha", "frequency": 3, "relation": "less than"}),
+              ("keywords:forbidden_words", {"forbidden_words": ["alpha", "beta"]}),
+              ("keywords:letter_frequency", {"letter": "x", "let_frequency": 3, "let_relation": "at least"}),
+              ("keywords:letter_frequency", {"letter": "x", "let_frequency": 3, "let_relation": "less than"}),
+              ("length_constraints:number_sentences", {"num_sentences": 3, "relation": "at least"}),
+              ("length_constraints:number_sentences", {"num_sentences": 3, "relation": "less than"}),
+              ("length_constraints:number_sentences", {"num_sentences": 1, "relation": "less than"}),
+              ("length_constraints:number_paragraphs", {"num_paragraphs": 3}),
+              ("length_constraints:number_words", {"num_words": 3, "relation": "at least"}),
+              ("length_constraints:number_words", {"num_words": 3, "relation": "less than"}),
+              ("length_constraints:number_words", {"num_words": 1, "relation": "less than"}),
+              ("length_constraints:nth_paragraph_first_word", {"num_paragraphs": 3, "nth_paragraph": 2, "first_word": "alpha"}),
+              ("detectable_content:number_placeholders", {"num_placeholders": 3}),
+              ("detectable_content:postscript", {"postscript_marker": "P.S."}),
+              ("detectable_content:postscript", {"postscript_marker": "P.P.S"}),
+              ("detectable_format:number_bullet_lists", {"num_bullets": 3}),
+              ("detectable_format:constrained_response", {}),
+              ("detectable_format:number_highlighted_sections", {"num_highlights": 3}),
+              ("detectable_format:multiple_sections", {"section_spliter": "Section", "num_sections": 3}),
+              ("detectable_format:multiple_sections", {"section_spliter": "SECTION", "num_sections": 3}),
+              ("detectable_format:json_format", {}),
+              ("detectable_format:title", {}),
+              ("combination:two_responses", {}),
+              ("combination:repeat_prompt", {"prompt_to_repeat": "Explain gravity."}),
+              ("startend:end_checker", {"end_phrase": "Any other questions?"}),
+              ("change_case:capital_word_frequency", {"capital_frequency": 3, "capital_relation": "at least"}),
+              ("change_case:capital_word_frequency", {"capital_frequency": 3, "capital_relation": "less than"}),
+              ("change_case:english_capital", {}),
+              ("change_case:english_lowercase", {}),
+              ("punctuation:no_comma", {}),
+              ("startend:quotation", {}),
+          ]
+          for language in (
+              "en","es","pt","ar","hi","fr","ru","de","ja","it","bn","uk","th","ur","ta",
+              "te","bg","ko","pl","he","fa","vi","ne","sw","kn","mr","gu","pa","ml","fi"
+          ):
+              CASES.append(("language:response_language", {"language": language}))
+
+          assert len(inv.ENABLED_INSTRUCTION_IDS) == 25
+          assert set(inv.ENABLED_INSTRUCTION_IDS) == set(instructions_registry.INSTRUCTION_DICT)
+
+          results = []
+          for idx, (iid, kwargs) in enumerate(CASES):
+              cls = instructions_registry.INSTRUCTION_DICT[iid]
+              producer = cls(iid)
+              description = producer.build_description(**kwargs)
+              if iid == "combination:repeat_prompt":
+                  prompt = kwargs["prompt_to_repeat"] + "\n-------\n" + description
+              else:
+                  prompt = description
+
+              out = solver.solve(prompt)
+              assert out["status"] == "PASS_CANDIDATE_SINGLE_CHECKER_WITNESS", (iid, kwargs, description, out)
+              assert out["instruction_id"] == iid, (iid, out)
+              response = out["response"]
+              assert response and response.strip()
+
+              checker = cls(iid)
+              checker.build_description(**kwargs)
+              passed = bool(checker.check_following(response))
+              assert passed, (iid, kwargs, description, response, out)
+              results.append({
+                  "index": idx,
+                  "instruction_id": iid,
+                  "kwargs": kwargs,
+                  "passed": passed,
+                  "response_sha256": __import__("hashlib").sha256(response.encode()).hexdigest(),
+              })
+
+          summary = {
+              "schema": "PROJECT_BRAIN_LIVEBENCH_LEGACY_IFEVAL_SINGLE_CHECKER_PUBLIC_RUNNER_RESULT_V1",
+              "status": "PASS",
+              "pinned_livebench_commit": "8f8e5c381a16e3f24257776edd53471fe86f8091",
+              "registry_blob": "903ed738398648c7cfac61d5ffa478c22f1f0891",
+              "instructions_blob": "4997bab885a676d92545fd91a9a20b48d234a2b2",
+              "inverter_blob": "69b8e3f7f3ab8bd835a9f15503bcd57ee27c53d0",
+              "solver_blob": "48bec305cd480416eac4c30efbb3e57bf682de1b",
+              "enabled_instruction_types": 25,
+              "replay_instances": len(results),
+              "passed_instances": sum(x["passed"] for x in results),
+              "runtime_hidden_kwargs_used": False,
+              "runtime_terminal_case_ids_used": False,
+              "terminal_cases_executed": 0,
+              "acceptance_credit_delta": 0,
+              "incremental_spend_usd": 0,
+              "results": results,
+          }
+          open("/tmp/livebench_legacy_ifeval_single_v1_result.json","w").write(
+              json.dumps(summary, indent=2, sort_keys=True) + "\n"
+          )
+          print("LEGACY_IFEVAL_SINGLE_RESULT="+json.dumps({
+              k:v for k,v in summary.items() if k != "results"
+          },sort_keys=True))
+          PY
+
+      - name: Upload receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-ifeval-single-v1
+          path: /tmp/livebench_legacy_ifeval_single_v1_result.json
+          if-no-files-found: error
+          retention-days: 30
