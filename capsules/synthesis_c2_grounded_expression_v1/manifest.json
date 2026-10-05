@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_SYNTHESIS_C2_GROUNDED_EXPRESSION_PUBLIC_RUNNER_INPUT_V1",
+  "date": "2026-10-05",
+  "brain_commits": {
+    "runtime": "6c9ad66f3b870bc751ecf2a79a23a72574aab794",
+    "tests": "03f65f7d2bf5f4b877002d09a19f25f48132083c",
+    "governance": "d5cc7a19bd41a9e3a834a3cc7e44d3704c0fd82e"
+  },
+  "exact_blobs": {
+    "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "6388c425ecac5fc5f85e02bf55bdc4b1d0f99caa",
+    "canonical/tests/test_synthesis_grounded_expression_ir_v1.py": "6f83d7bc61161e4cf5423e7ca3fb4c4b47e88a37",
+    "canonical/governance/SYNTHESIS_C2_GROUNDED_EXPRESSION_BOUNDED_ROUTE_20261005_V1.json": "beb7663361a61bb424b0e629947f4040eeec5aba"
+  },
+  "requirements": [
+    "EXACT_BLOB_MATCH",
+    "ALL_COMMITTED_UNIT_TESTS_PASS",
+    "UNKNOWN_CONSTRAINT_FAIL_CLOSED",
+    "MISSING_PROVENANCE_FAIL_CLOSED",
+    "INFEASIBLE_BUDGET_FAIL_CLOSED_WITHOUT_DROP_OR_TRUNCATION",
+    "BAD_ORDER_CANNOT_DROP_ITEMS",
+    "SECTION_STRUCTURE_PASS",
+    "UNCERTAINTY_AND_CONFLICT_RENDERED",
+    "ZERO_PROMOTION_CAPABILITY_FAMILY_OR_TERMINAL_AUTHORITY"
+  ],
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0
+}
