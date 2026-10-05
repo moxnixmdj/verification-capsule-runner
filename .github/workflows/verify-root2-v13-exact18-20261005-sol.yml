@@ -7,17 +7,16 @@ on:
       - 'subject/root2_v13_exact18_20261005_sol/**'
       - 'verify_root2_v13_exact18_20261005_sol.py'
       - '.github/workflows/verify-root2-v13-exact18-20261005-sol.yml'
-  pull_request:
-    paths:
-      - 'subject/root2_v13_exact18_20261005_sol/**'
-      - 'verify_root2_v13_exact18_20261005_sol.py'
-      - '.github/workflows/verify-root2-v13-exact18-20261005-sol.yml'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-slim, ubuntu-24.04-arm, windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
