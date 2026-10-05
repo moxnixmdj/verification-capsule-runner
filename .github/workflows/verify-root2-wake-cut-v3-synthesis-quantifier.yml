@@ -1,0 +1,36 @@
+name: Verify Root2 wake-cut V3 synthesis quantifier repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_root2_wake_cut_v3_synthesis_quantifier.py"
+      - "subject/root2_wake_cut_v3_synthesis_quantifier/**"
+      - ".github/workflows/verify-root2-wake-cut-v3-synthesis-quantifier.yml"
+  push:
+    branches: [main]
+    paths:
+      - "verify_root2_wake_cut_v3_synthesis_quantifier.py"
+      - "subject/root2_wake_cut_v3_synthesis_quantifier/**"
+      - ".github/workflows/verify-root2-wake-cut-v3-synthesis-quantifier.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify only the intended synthesis quantifier delta
+        run: python verify_root2_wake_cut_v3_synthesis_quantifier.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root2-wake-cut-v3-synthesis-quantifier-receipt
+          path: root2_wake_cut_v3_synthesis_quantifier_receipt.json
+          if-no-files-found: error
