@@ -1,0 +1,26 @@
+name: Verify LiveBench Legacy 25 Single Witnesses
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verify_livebench_legacy_25_single_checker_witness.py
+      - .github/workflows/verify-livebench-legacy-25-single-witness.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --quiet "langdetect==1.0.9" "immutabledict==4.2.1" "nltk==3.9.1"
+      - run: python verify_livebench_legacy_25_single_checker_witness.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-legacy-25-single-witness-receipt
+          path: livebench_legacy_25_single_checker_witness_receipt.json
+          if-no-files-found: error
