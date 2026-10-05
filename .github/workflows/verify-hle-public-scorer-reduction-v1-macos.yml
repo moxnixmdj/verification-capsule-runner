@@ -1,0 +1,24 @@
+name: Verify HLE public scorer reduction V1 macOS
+on:
+  push:
+    branches:
+      - verify/hle-public-scorer-20261005-macos
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independently verify pinned HLE public scorer facts
+        run: python verify_hle_public_scorer_reduction_v1.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-public-scorer-reduction-v1-macos
+          path: hle_public_scorer_reduction_receipt.json
+          if-no-files-found: error
