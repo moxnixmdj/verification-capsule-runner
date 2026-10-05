@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT3_ZERO_FLOOR_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 2159,
+  "brain_head": "61183784e33dd63fb7096d5cad39762ce7bc1dea",
+  "exact_brain_blobs": {
+    "canonical/governance/ROOT3_ZERO_BAD_EVENT_THEORETICAL_FLOOR_REDUCTION_20261005_V1.json": "ae28cb20f088b603ef3667af1756189585ed638c",
+    "canonical/runtime/atomic_predicate_theoretical_floor_reducer_v1.py": "459f33401a3a2fe76e0f7451af32ab8fc88a686d",
+    "canonical/tests/test_atomic_predicate_theoretical_floor_reducer_v1.py": "2daaf29f76fb1ed7c71a39575914aa10aaf362f9",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json": "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a",
+    "canonical/governance/ROOT3_MATCHED_SUPERPORTFOLIO_MINIMUM_REALITY_BINDING_V2.json": "e886f262aa4b4946b290d636d336bf857afa946c",
+    "canonical/governance/ABSOLUTE_DOMINANCE_SCOPE_COMPLETENESS_RECONCILIATION_V1.json": "ec2d931860e7cd7d9f73a658706f8c33fca3a10d"
+  }
+}
