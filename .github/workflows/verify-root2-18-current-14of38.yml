@@ -1,0 +1,24 @@
+name: Verify current Root2 18 at 14-of-38
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/root2_18_current_14of38/**'
+      - 'verify_root2_18_current_14of38.py'
+      - '.github/workflows/verify-root2-18-current-14of38.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact current Root2 18 identity
+        run: python verify_root2_18_current_14of38.py
