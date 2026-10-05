@@ -69,8 +69,8 @@ RUN_SCRIPT_BINDINGS = {
         "6b4a2e7aad44f1c8369378595898dbfa86f78a2f",
     ),
     "punkt": (
-        "verify_livebench_punkt_context_closure_v1.py",
-        "c6b99f27fadea7ffe09126b0603163dd03d93916",
+        "verify_livebench_punkt_contexts_v1.py",
+        "ce4d350c70c8b15b463999c5ef2ebacb2c87b0d4",
     ),
     "population": (
         "capsules/livebench_if_release_population_v2/brain/CANDIDATE.json",
