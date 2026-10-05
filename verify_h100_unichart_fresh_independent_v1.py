@@ -25,7 +25,7 @@ def sha(path:Path)->str:
     return h.hexdigest()
 
 raw_pre=PRE.read_bytes()
-pre_blob=hashlib.sha1(b"blob "+str(len(raw_pre)).encode()+b"\\0"+raw_pre).hexdigest()
+pre_blob=hashlib.sha1(b"blob "+str(len(raw_pre)).encode()+b"\0"+raw_pre).hexdigest()
 assert pre_blob==EXPECTED_PRE_GIT_BLOB
 assert sha(SOURCE)==EXPECTED_SOURCE_SHA
 assert sha(PACK)==EXPECTED_PACK_SHA
