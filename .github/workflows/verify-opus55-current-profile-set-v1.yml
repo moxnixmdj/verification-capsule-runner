@@ -1,0 +1,20 @@
+name: Verify Opus 5.5 current profile set V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/opus55_current_profile_set_v1/**"
+      - ".github/workflows/verify-opus55-current-profile-set-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob and live first-party current state
+        run: python capsules/opus55_current_profile_set_v1/verify_current_profile_set.py
