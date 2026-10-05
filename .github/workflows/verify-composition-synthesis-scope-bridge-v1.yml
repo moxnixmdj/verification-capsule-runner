@@ -1,0 +1,30 @@
+name: Verify Composition synthesis scope bridge V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'subject/composition_synthesis_scope_bridge_v1/**'
+      - 'verify_composition_synthesis_scope_bridge_v1.py'
+      - '.github/workflows/verify-composition-synthesis-scope-bridge-v1.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/composition_synthesis_scope_bridge_v1/**'
+      - 'verify_composition_synthesis_scope_bridge_v1.py'
+      - '.github/workflows/verify-composition-synthesis-scope-bridge-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Composition synthesis scope bridge
+        run: python verify_composition_synthesis_scope_bridge_v1.py
