@@ -6,6 +6,12 @@ on:
     paths:
       - "capsules/synthesis_c2_grounded_expression_v1/**"
       - ".github/workflows/verify-synthesis-c2-grounded-expression-v1.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "capsules/synthesis_c2_grounded_expression_v1/**"
+      - ".github/workflows/verify-synthesis-c2-grounded-expression-v1.yml"
 permissions:
   contents: read
 jobs:
