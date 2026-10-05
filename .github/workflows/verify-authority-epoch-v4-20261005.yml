@@ -1,0 +1,31 @@
+name: Verify Brain authority epoch V4 public capsule
+
+on:
+  push:
+    branches:
+      - verify/authority-epoch-v4-20261005-sol
+    paths:
+      - "subject/authority_epoch_v4_20261005/**"
+      - "verify_authority_epoch_v4_20261005.py"
+      - ".github/workflows/verify-authority-epoch-v4-20261005.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "subject/authority_epoch_v4_20261005/**"
+      - "verify_authority_epoch_v4_20261005.py"
+      - ".github/workflows/verify-authority-epoch-v4-20261005.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Verify exact component bytes and epoch hash
+        run: python verify_authority_epoch_v4_20261005.py
