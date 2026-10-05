@@ -10,7 +10,7 @@ PRE=Path("h100_unichart_fresh_capability_holdout_v1.json")
 SOURCE=Path("/tmp/h100fresh/pytorch_model.bin")
 PACK=Path("/tmp/h100fresh/chartqa_mse_structural.h100uc")
 IMG=Path("/tmp/h100fresh/images")
-EXPECTED_PRE_SHA="45ae2e11ba4493ca51d6a17e8341f45f0a140fad58aa833ca550e6a5c734efaa"
+EXPECTED_PRE_GIT_BLOB="e4b42fb7e0a2210ce00eae64136567319091f4d6"
 EXPECTED_SOURCE_SHA="4407db60801a20bcf254946acfee6727491ef1739ad7b4d3abbf87b7c75e7229"
 EXPECTED_PACK_SHA="17fc7d37f6c6e8457d53dd93efff365b17850acf5810ba3067bb06c7c226cb14"
 EXPECTED_PACK_BYTES=94686795
@@ -24,7 +24,9 @@ def sha(path:Path)->str:
             h.update(b)
     return h.hexdigest()
 
-assert sha(PRE)==EXPECTED_PRE_SHA
+raw_pre=PRE.read_bytes()
+pre_blob=hashlib.sha1(b"blob "+str(len(raw_pre)).encode()+b"\\0"+raw_pre).hexdigest()
+assert pre_blob==EXPECTED_PRE_GIT_BLOB
 assert sha(SOURCE)==EXPECTED_SOURCE_SHA
 assert sha(PACK)==EXPECTED_PACK_SHA
 assert PACK.stat().st_size==EXPECTED_PACK_BYTES
@@ -32,7 +34,7 @@ assert PACK.stat().st_size+ANCILLARY_BYTES==EXPECTED_COMPLETE
 
 pre=json.load(PRE.open())
 cases=pre["cases"]
-assert len(cases)==20
+assert len(cases)==100
 assert pre["candidate_precommit"]["packed_sha256"]==EXPECTED_PACK_SHA
 assert pre["candidate_precommit"]["complete_bundle_bytes"]==EXPECTED_COMPLETE
 
@@ -58,28 +60,28 @@ for i,c in enumerate(cases,1):
     print(json.dumps({"subject":"packed",**packed[-1]}),flush=True)
 
 gate=pre["pass_gate"]
-fp_acc=fp_correct/20
-p_acc=pc/20
+fp_acc=fp_correct/100
+p_acc=pc/100
 passed=(
     fp_acc>=float(gate["minimum_fp32_relaxed_accuracy"])
     and p_acc>=fp_acc-float(gate["packed_noninferiority_margin_absolute"])
     and EXPECTED_COMPLETE<=100_000_000
 )
 out={
-    "schema":"PROJECT_BRAIN_H100_UNICHART_FRESH_CAPABILITY_INDEPENDENT_REPLAY_V1",
+    "schema":"PROJECT_BRAIN_H100_UNICHART_FRESH_CAPABILITY_V2_PROVIDER_DIVERSE_REPLAY_V1",
     "status":"PASS__INDEPENDENT_CARRIER_FRESH_CAPABILITY_REPLAY" if passed else "FAIL__INDEPENDENT_CARRIER_FRESH_CAPABILITY_REPLAY",
     "carrier":"GITHUB_HOSTED_UBUNTU",
-    "precommit_sha256":EXPECTED_PRE_SHA,
+    "precommit_git_blob_sha":EXPECTED_PRE_GIT_BLOB,
     "source_sha256":EXPECTED_SOURCE_SHA,
     "packed_sha256":EXPECTED_PACK_SHA,
     "packed_bytes":EXPECTED_PACK_BYTES,
     "ancillary_bytes":ANCILLARY_BYTES,
     "complete_bundle_bytes":EXPECTED_COMPLETE,
     "fp32_correct":fp_correct,
-    "fp32_total":20,
+    "fp32_total":100,
     "fp32_accuracy":fp_acc,
     "packed_correct":pc,
-    "packed_total":20,
+    "packed_total":100,
     "packed_accuracy":p_acc,
     "packed_minus_fp32_accuracy":p_acc-fp_acc,
     "noninferiority_pass":passed,
@@ -87,7 +89,7 @@ out={
     "packed_rows":packed,
     "load":load,
     "hard_nonclaims":[
-        "PUBLIC_CHARTQA_CAPABILITY_ONLY",
+        "PUBLIC_CHARTQA_CAPABILITY_ONLY",\n        "FROZEN_V2_100_CASE_HOLDOUT",
         "NO_CHARTOGRAPHY_GE_89_PROOF",
         "NO_FULL_H100_TERMINAL_PROOF"
     ],
