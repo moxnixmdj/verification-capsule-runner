@@ -37,9 +37,13 @@ def main()->None:
     assert "SET_OF_OUTCOME_EQUIVALENCE_CLASSES" in defs["achievable_set"]
     assert "reliability" in defs["task_preorder"].lower()
 
-    # Current executable candidate kernel represents frontier elements only as
-    # numeric points and applies coordinatewise >=; it contains no probability law.
-    assert candidate.Point == tuple[float, ...]
+    # Current executable candidate kernel represents frontier elements as numeric
+    # tuples and applies coordinatewise >=; exact source bytes bind this assertion.
+    kernel_source=(HERE/"candidate_kernel.py").read_text()
+    assert "Point = Tuple[float, ...]" in kernel_source
+    assert "def owned_frontier_simulates(opus: Sequence[Point], brain: Sequence[Point])" in kernel_source
+    assert "probability" not in kernel_source.lower()
+    assert "distribution" not in kernel_source.lower()
     assert candidate.owned_frontier_simulates(((0.0,1.0),),((0.0,1.0),)) is True
 
     out=counter.stochastic_reliability_countermodel()
