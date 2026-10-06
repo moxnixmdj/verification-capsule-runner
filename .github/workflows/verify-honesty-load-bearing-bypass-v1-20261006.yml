@@ -1,0 +1,30 @@
+name: Verify honesty load-bearing bypass V1
+
+on:
+  push:
+    paths:
+      - "capsules/honesty_load_bearing_bypass_20261006/**"
+      - ".github/workflows/verify-honesty-load-bearing-bypass-v1-20261006.yml"
+  pull_request:
+    paths:
+      - "capsules/honesty_load_bearing_bypass_20261006/**"
+      - ".github/workflows/verify-honesty-load-bearing-bypass-v1-20261006.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact vendored Brain verifier test
+        working-directory: capsules/honesty_load_bearing_bypass_20261006
+        run: python -m canonical.tests.test_honesty_load_bearing_bypass_verifier_v1
+      - name: Run independent bypass checker
+        working-directory: capsules/honesty_load_bearing_bypass_20261006
+        run: python verify_independent.py
