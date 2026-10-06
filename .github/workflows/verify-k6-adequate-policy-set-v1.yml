@@ -1,0 +1,21 @@
+name: Verify K6 adequate policy set compiler v1
+
+on:
+  pull_request:
+    paths:
+      - 'capsules/k6_adequate_policy_set_v1/**'
+      - '.github/workflows/verify-k6-adequate-policy-set-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run exact zero-dependency capsule
+        working-directory: capsules/k6_adequate_policy_set_v1
+        run: python run.py
