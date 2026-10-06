@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_HONESTY_LOAD_BEARING_BYPASS_PUBLIC_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-06",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pull_request": 2419,
+  "exact_brain_blobs": {
+    "canonical/governance/HONESTY_LOAD_BEARING_PROPAGATION_BYPASS_20261006_V1.json": "e6c2cb36dec4e9d24c61efeaabe88c220eb6fffd",
+    "canonical/runtime/honesty_load_bearing_bypass_verifier_v1.py": "ebf59ddbae7fd369a1aada536e84ad9c220b8f46",
+    "canonical/tests/test_honesty_load_bearing_bypass_verifier_v1.py": "58ba6ab5b4007fc36d9fa91e5e4ec4dbad137546",
+    "canonical/runtime/astra_runtime.py": "15dd59ad644c5c73a9218dba4fcc17f880d725f0",
+    "canonical/runtime/root3_typed_durable_admin_write_v1.py": "6c488b10b8afbaf61781703775cfd9a79710de52",
+    "canonical/runtime/honesty_envelope_v1.py": "1ff02d62322b76068933498e869b1ee22949b991"
+  },
+  "claims_checked": [
+    "MODEL_OR_GOAL_SUMMARY_CAN_ENTER_RESULT_STDOUT_OR_FINAL_SUMMARY",
+    "GOAL_RESULT_PATH_DOES_NOT_INVOKE_HONESTY_ENVELOPE",
+    "RESULT_IS_PERSISTED_IN_STATE_HISTORY",
+    "TYPED_DURABLE_WRITE_CHECKS_BYTES_PATH_PRESTATE_NOT_HONESTY_SEMANTICS",
+    "DECLARED_CROSS_STEP_CHANNELS_CAN_EXPORT_PRIOR_RESULT_JSON_BODY_OR_STDOUT",
+    "CURRENT_HONESTY_UNIVERSAL_MEDIATION_TOTALITY_IS_CONSTRUCTIVELY_FALSIFIED_ON_CURRENT_ASTRA_BYTES",
+    "ONE_SHARED_UNMEDIATED_EFFECT_ESCAPE_WITH_C_EFFECT_BOUNDARY_CLOSURE_V2_IS_LOCALIZED",
+    "NO_REPAIR_OR_TERMINAL_CREDIT"
+  ],
+  "incremental_spend_usd": 0,
+  "new_reality_units_consumed": 0,
+  "acceptance_credit_delta": 0
+}
