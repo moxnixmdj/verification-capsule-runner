@@ -1,0 +1,14 @@
+{
+  "schema":"PROJECT_BRAIN_GATEWAY_V3_VERIFICATION_CAPSULE_V1",
+  "date":"2026-10-06",
+  "brain_pr":2426,
+  "runtime_sha":"39d32d4e73a1542253c541d63d88dc7e4f9193ce",
+  "test_sha":"27846c2a7717a2984e4ea9a2a6b83946f89291ca",
+  "governance_sha":"8dc80de8a8312133f46d8a415c6764d734e3ac30",
+  "envelope_sha":"1ff02d62322b76068933498e869b1ee22949b991",
+  "namespace_sha":"6e687527e9c4da82fb5d974a729aaa263ee73ea8",
+  "namespace_verification_sha":"b8de7cea6ca06a0ad2a3a4ec359472366870ba95",
+  "credit_delta":0,
+  "universal_entry_dominance":false,
+  "ledger_completeness":false
+}
