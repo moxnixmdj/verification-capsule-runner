@@ -1,0 +1,28 @@
+name: Verify semantic state bus V1 capsule
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/semantic_state_bus_v1/**"
+      - ".github/workflows/verify-semantic-state-bus-v1-20261006.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Replay exact Brain tests
+        env:
+          PYTHONPATH: capsules/semantic_state_bus_v1
+        run: python -m pytest -q capsules/semantic_state_bus_v1/canonical/tests/test_semantic_state_bus_v1.py
+      - name: Independent finite falsification
+        run: python capsules/semantic_state_bus_v1/independent_verify.py
