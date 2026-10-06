@@ -1,0 +1,30 @@
+name: Verify Brain-first differential prewave V1
+
+on:
+  push:
+    paths:
+      - "capsules/brain_first_diff_prewave_20261006/**"
+      - ".github/workflows/verify-brain-first-diff-prewave-v1-20261006.yml"
+  pull_request:
+    paths:
+      - "capsules/brain_first_diff_prewave_20261006/**"
+      - ".github/workflows/verify-brain-first-diff-prewave-v1-20261006.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact vendored Brain tests
+        working-directory: capsules/brain_first_diff_prewave_20261006
+        run: python canonical/tests/test_brain_first_differential_prewave_v1.py
+      - name: Run independent exhaustive verifier
+        working-directory: capsules/brain_first_diff_prewave_20261006
+        run: python verify_independent.py
