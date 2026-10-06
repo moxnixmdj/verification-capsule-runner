@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+
 from canonical.runtime.brain_first_differential_prewave_v1 import (
     SCHEMA,
     compile_brain_first_prewave,
