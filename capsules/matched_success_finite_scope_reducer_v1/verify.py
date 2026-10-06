@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import itertools
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -25,6 +26,7 @@ assert git_blob(GOV) == EXPECTED_GOV_BLOB
 
 spec = importlib.util.spec_from_file_location("reducer", RUNTIME)
 mod = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = mod
 assert spec.loader is not None
 spec.loader.exec_module(mod)
 
