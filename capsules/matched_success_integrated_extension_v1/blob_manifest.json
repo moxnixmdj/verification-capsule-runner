@@ -1,8 +1,8 @@
 {
-  "canonical/runtime/matched_success_integrated_extension_v1.py": "a6ead6751de47ed6491d65c92d36d8c18ba7bb00",
-  "canonical/runtime/matched_success_integrated_extension_harness_v1.py": "ff8bc8185c4b382554ffd5c485bc697311a2874f",
+  "canonical/runtime/matched_success_integrated_extension_v1.py": "3728b93098694b2f5174070377a0916f2f45f627",
+  "canonical/runtime/matched_success_integrated_extension_harness_v1.py": "3eda9f3665e4ccf560747e216e0353d3215f616f",
   "canonical/tests/test_matched_success_integrated_extension_v1.py": "0685acb02e28f7e637de25e69248ffdcb1b1c97c",
-  "canonical/tests/test_matched_success_integrated_extension_harness_v1.py": "7915a7e7c90c03110af3262295ae8fbc07503c90",
+  "canonical/tests/test_matched_success_integrated_extension_harness_v1.py": "0a7c02365143ffb57d4be9bc870425dfa94cc67f",
   "canonical/runtime/matched_success_scope_compiler_v1.py": "e10ad027ae6c44f587050362511cfaae31ff7f5c",
   "canonical/runtime/browser_state_information_safe_proof.py": "3723d3233d6058f0a43491e4654a21490f992d1e",
   "canonical/runtime/browser_state_information_safe_candidate.py": "8acf61f21a15a0d3b3e0e5735ebb80e20393e405",
