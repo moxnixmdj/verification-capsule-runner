@@ -178,3 +178,17 @@ def test_nonconformant_future_comparator_fails_closed():
     out = compile_brain_first_prewave(x)
     assert out["status"] == "FAIL_CLOSED"
     assert "COMPARATOR_INTERFACE_NONCONFORMANT" in out["errors"][0]
+
+
+if __name__ == "__main__":
+    test_all_brain_success_needs_zero_comparator_cases()
+    test_only_brain_failures_become_comparator_residual()
+    test_comparator_failure_on_every_residual_proves_pointwise_dominance()
+    test_opus_success_on_brain_failure_is_direct_counterexample()
+    test_nonmonotone_reducer_fails_closed()
+    test_outcome_dependent_case_generation_fails_closed()
+    test_stateful_cross_case_dependency_fails_closed()
+    test_brain_repair_after_exposure_is_forbidden()
+    test_proxy_comparator_on_residual_fails_closed()
+    test_nonconformant_future_comparator_fails_closed()
+    print("test_brain_first_differential_prewave_v1: PASS")
