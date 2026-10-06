@@ -1,0 +1,23 @@
+name: Independently verify matched success prewave structural V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/matched_success_prewave_structural_v1/**"
+      - ".github/workflows/verify-matched-success-prewave-structural-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - run: python capsules/matched_success_prewave_structural_v1/verify.py
