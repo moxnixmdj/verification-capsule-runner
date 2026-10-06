@@ -1,0 +1,174 @@
+name: Mirror exact Qwen3.5 9B M capability bytes V1
+
+on:
+  push:
+    branches: [mirror-qwen35-9b-m-exact-v1-20261006]
+    paths:
+      - '.github/workflows/mirror-qwen35-9b-m-exact-v1.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-qwen35-9b-m-exact-v1
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  TAG: brain-capability-qwen35-9b-m-exact-v1
+  SOURCE_REPO: TheStageAI/Qwen3.5-9B-GGUF
+  SOURCE_REV: 0705f4f9fcb5001ec8e483977a02478e4b4ea9be
+  SOURCE_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+  SOURCE_BYTES: '5060174144'
+  SOURCE_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+  BASE_MODEL_REPO: Qwen/Qwen3.5-9B
+  BASE_MODEL_REV: c202236235762e1c871ad0ccb60c8ee5ba337b9a
+  LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Recreate exact-byte Brain-controlled mirror release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          fi
+          cat > release-notes.txt <<EOF
+          Project Brain exact capability-byte mirror.
+
+          Upstream repository: https://huggingface.co/$SOURCE_REPO
+          Pinned upstream repository revision: $SOURCE_REV
+          Exact upstream file: $SOURCE_FILE
+          Exact byte count: $SOURCE_BYTES
+          Exact whole-file SHA-256: $SOURCE_SHA256
+          Base model: $BASE_MODEL_REPO
+          Pinned base-model revision: $BASE_MODEL_REV
+          Verified runtime revision used by upstream/Brain: llama.cpp $LLAMA_CPP_REV
+          License: Apache-2.0
+
+          This is a byte-preserving mirror. The file is split only to remain below GitHub's per-release-asset size limit.
+          Concatenating part01 through part03 in lexical order MUST reproduce the exact upstream bytes and SHA-256.
+          Storage identity alone grants no benchmark, capability, ownership, or terminal credit.
+          EOF
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"             --title "Project Brain exact Qwen3.5 9B M capability-byte mirror V1"             --notes-file release-notes.txt
+
+      - name: Preserve pinned upstream manifest README and Apache license
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors             -o upstream-release-manifest.json             "https://huggingface.co/$SOURCE_REPO/resolve/$SOURCE_REV/release-manifest.json?download=true"
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors             -o upstream-README.md             "https://huggingface.co/$SOURCE_REPO/resolve/$SOURCE_REV/README.md?download=true"
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors             -o LICENSE.apache-2.0             "https://huggingface.co/$BASE_MODEL_REPO/resolve/$BASE_MODEL_REV/LICENSE?download=true"
+          sha256sum upstream-release-manifest.json upstream-README.md LICENSE.apache-2.0 > metadata.sha256
+          gh release upload "$TAG" upstream-release-manifest.json upstream-README.md LICENSE.apache-2.0 metadata.sha256             --repo "$GITHUB_REPOSITORY" --clobber
+
+  upload-parts:
+    needs: prepare-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { part: '01', start: 0, end: 1899999999, bytes: 1900000000 }
+          - { part: '02', start: 1900000000, end: 3799999999, bytes: 1900000000 }
+          - { part: '03', start: 3800000000, end: 5060174143, bytes: 1260174144 }
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download exact pinned byte range and upload
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset="$SOURCE_FILE.part${{ matrix.part }}of03"
+          url="https://huggingface.co/$SOURCE_REPO/resolve/$SOURCE_REV/$SOURCE_FILE?download=true"
+          curl -fL --retry 8 --retry-delay 2 --retry-all-errors --connect-timeout 30             --range "${{ matrix.start }}-${{ matrix.end }}"             --max-filesize 2000000000 -o "$asset" "$url"
+          actual="$(stat -c '%s' "$asset")"
+          test "$actual" = "${{ matrix.bytes }}"
+          sha256sum "$asset" > "$asset.sha256"
+          gh release upload "$TAG" "$asset" "$asset.sha256"             --repo "$GITHUB_REPOSITORY" --clobber
+
+  verify-reassembly:
+    needs: upload-parts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Stream Brain-controlled assets and verify exact whole-file identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > release.json
+          python3 - "$SOURCE_FILE" <<'PY' > asset_urls.txt
+          import json, sys
+          release = json.load(open("release.json", encoding="utf-8"))
+          stem = sys.argv[1]
+          assets = {a["name"]: a["browser_download_url"] for a in release["assets"]}
+          expected = [f"{stem}.part{i:02d}of03" for i in range(1, 4)]
+          missing = [x for x in expected if x not in assets]
+          if missing:
+              raise SystemExit("MISSING_RELEASE_ASSETS:" + ",".join(missing))
+          for name in expected:
+              print(assets[name])
+          PY
+          cat > stream_verify.py <<'PY'
+          import hashlib, json, sys
+          expected_bytes = int(sys.argv[1])
+          expected_sha = sys.argv[2]
+          source_rev = sys.argv[3]
+          source_file = sys.argv[4]
+          h = hashlib.sha256()
+          total = 0
+          while True:
+              block = sys.stdin.buffer.read(8 * 1024 * 1024)
+              if not block:
+                  break
+              total += len(block)
+              h.update(block)
+          actual_sha = h.hexdigest()
+          if total != expected_bytes:
+              raise SystemExit(f"WHOLE_BYTE_COUNT_MISMATCH:{total}:{expected_bytes}")
+          if actual_sha != expected_sha:
+              raise SystemExit(f"WHOLE_SHA256_MISMATCH:{actual_sha}:{expected_sha}")
+          receipt = {
+              "schema": "PROJECT_BRAIN_QWEN35_9B_M_EXACT_RELEASE_MIRROR_RECEIPT_V1",
+              "status": "PASS",
+              "source_repository": "TheStageAI/Qwen3.5-9B-GGUF",
+              "source_revision": source_rev,
+              "source_file": source_file,
+              "whole_bytes": total,
+              "whole_sha256": actual_sha,
+              "release_asset_parts": 3,
+              "brain_controlled_repository": "moxnixmdj/verification-capsule-runner",
+              "release_tag": "brain-capability-qwen35-9b-m-exact-v1",
+              "reassembly_verified_without_full_file_materialization": True,
+              "incremental_spend_usd": 0,
+              "terminal_cases_consumed": 0,
+              "capability_credit_delta": 0,
+              "acceptance_credit_delta": 0,
+              "ownership_credit_delta": 0,
+              "hard_nonclaim": "EXACT_BYTE_MIRROR_CLOSES_DURABLE_STORAGE_IDENTITY_ONLY__IT_DOES_NOT_BY_ITSELF_PROVE_TERMINAL_CAPABILITY_OR_FULL_OWNERSHIP"
+          }
+          open("qwen35_9b_m_exact_release_mirror_receipt.json", "w", encoding="utf-8").write(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+          )
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+          (
+            while IFS= read -r url; do
+              curl -fL --retry 8 --retry-delay 2 --retry-all-errors --connect-timeout 30 "$url"
+            done < asset_urls.txt
+          ) | python3 stream_verify.py "$SOURCE_BYTES" "$SOURCE_SHA256" "$SOURCE_REV" "$SOURCE_FILE"
+
+      - name: Attach exact reassembly receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" qwen35_9b_m_exact_release_mirror_receipt.json             --repo "$GITHUB_REPOSITORY" --clobber
