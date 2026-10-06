@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
       - name: Run exact vendored Brain tests
         working-directory: capsules/brain_first_diff_prewave_20261006
-        run: python canonical/tests/test_brain_first_differential_prewave_v1.py
+        run: python -m canonical.tests.test_brain_first_differential_prewave_v1
       - name: Run independent exhaustive verifier
         working-directory: capsules/brain_first_diff_prewave_20261006
         run: python verify_independent.py
