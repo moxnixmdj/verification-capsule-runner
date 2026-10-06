@@ -14,8 +14,8 @@ EXPECTED_INTEGRATED = {
     "dimension:multi_step_planning_with_at_least_three_distinct_tool_or_action_types": {"browser", "tool", "delegation_v2"},
     "dimension:long_horizon_state_retention": {"browser", "tool", "delegation_v2"},
     "dimension:minimal_oversight_completion": {"browser", "tool", "delegation_v2"},
-    "dimension:multi_constraint_instruction_compliance": {"m0", "delegation_v2"},
-    "dimension:requirement_change": {"m0", "delegation_v2"},
+    "dimension:multi_constraint_instruction_compliance": {"m0", "m0_change", "delegation_v2"},
+    "dimension:requirement_change": {"m0", "m0_change", "delegation_v2"},
     "dimension:research_plus_tool_use_plus_artifact_creation": {"tool", "p3", "native"},
     "dimension:browser_or_computer_action_plus_memory_plus_recovery": {"browser", "p1"},
     "dimension:coding_plus_debugging_plus_tool_discovery": {"structured", "p1", "tool"},
@@ -57,6 +57,23 @@ for row in rows:
         assert kinds == EXPECTED_INTEGRATED[atom], (atom, kinds)
         assert body["class_id"] == INTEGRATED_CLASS[atom]
         assert len(body["handoff_chain"]) == len(body["components"]) - 1
+        if atom in {
+            "dimension:multi_constraint_instruction_compliance",
+            "dimension:requirement_change",
+        }:
+            m0_rows = [
+                x for x in body["components"]
+                if x["kind"] in {"m0", "m0_change"}
+            ]
+            assert len(m0_rows) == 2
+            assert all(
+                len(x["case"]["_oracle"]["requirements"]) >= 2
+                for x in m0_rows
+            )
+            assert (
+                m0_rows[0]["case"]["raw_source"]
+                != m0_rows[1]["case"]["raw_source"]
+            )
     else:
         assert mode == "LEGACY_SUBSTRATE_REUSE"
 
