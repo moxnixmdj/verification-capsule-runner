@@ -1,0 +1,23 @@
+name: Verify Root3 safe frontier preservation falsifier V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/root3_safe_frontier_preservation_falsifier_v1/**"
+      - ".github/workflows/verify-root3-safe-frontier-preservation-falsifier-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - run: python -m py_compile capsules/root3_safe_frontier_preservation_falsifier_v1/verify.py
+      - run: python capsules/root3_safe_frontier_preservation_falsifier_v1/verify.py
