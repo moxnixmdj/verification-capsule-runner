@@ -1,0 +1,83 @@
+name: Probe Qwen3.8 27B Q2_K zero-dollar fit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-livebench-zero-spend-carrier-20261004-sol.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  fit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Record public runner prestate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo RUNNER_ENVIRONMENT=$RUNNER_ENVIRONMENT
+          echo RUNNER_OS=$RUNNER_OS
+          echo RUNNER_ARCH=$RUNNER_ARCH
+          free -b
+          df -B1 /
+      - name: Build exact llama.cpp text runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git init llama.cpp
+          cd llama.cpp
+          git remote add origin https://github.com/ggml-org/llama.cpp.git
+          git fetch --depth=1 origin 5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = 5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
+          cmake -S . -B build -DGGML_NATIVE=OFF -DGGML_CCACHE=OFF -DLLAMA_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-cli -j2
+          cp build/bin/llama-cli ../llama-cli
+          cd ..
+          rm -rf llama.cpp
+          ./llama-cli --version
+          df -B1 /
+      - name: Acquire and hash exact Q2_K subject
+        shell: bash
+        run: |
+          set -euxo pipefail
+          MODEL="$RUNNER_TEMP/Qwen3.8-27B-Q2_K.gguf"
+          curl -L --fail --retry 4 --retry-all-errors --connect-timeout 30 \
+            -o "$MODEL" \
+            'https://huggingface.co/Chungulus/Qwen3.8-27B-Q2_K-GGUF/resolve/main/Qwen3.8-27B-Q2_K.gguf?download=true'
+          echo MODEL_BYTES=$(stat -c%s "$MODEL")
+          echo '185bc2aa1f15a34ef9d2b14f51f9edda69f4e43b5ee9e39e3c2ae8c439ddd1a5  '"$MODEL" | sha256sum -c -
+          df -B1 /
+      - name: Execute zero-terminal-case load and generation fit
+        shell: bash
+        run: |
+          set -uo pipefail
+          MODEL="$RUNNER_TEMP/Qwen3.8-27B-Q2_K.gguf"
+          set +e
+          /usr/bin/time -v ./llama-cli \
+            -m "$MODEL" -c 256 -n 8 --temp 0 \
+            -p 'Return exactly the token FIT_OK.' \
+            > qwen-fit.stdout 2> qwen-fit.stderr
+          EC=$?
+          set -e
+          cat qwen-fit.stdout
+          cat qwen-fit.stderr
+          echo QWEN38_27B_Q2K_EXIT_CODE=$EC
+          grep -F 'Maximum resident set size' qwen-fit.stderr || true
+          free -b
+          df -B1 /
+          test "$EC" -eq 0
+          test -s qwen-fit.stdout
+      - name: Emit fail-closed receipt boundary
+        if: always()
+        shell: bash
+        run: |
+          echo TERMINAL_CASE_CONTENT_READ=false
+          echo TERMINAL_CASES_CONSUMED=0
+          echo ACCEPTANCE_CREDIT_DELTA=0
+          echo MODEL_SHA256=185bc2aa1f15a34ef9d2b14f51f9edda69f4e43b5ee9e39e3c2ae8c439ddd1a5
+          echo LLAMA_CPP_COMMIT=5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
+          echo RUNNER_CLASS=STANDARD_GITHUB_HOSTED_PUBLIC
+          echo INCREMENTAL_SPEND_USD=0

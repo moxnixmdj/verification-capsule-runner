@@ -1,0 +1,52 @@
+name: Project Brain internalize Smaug Mini exact learned state
+
+on:
+  push:
+    paths:
+      - ".github/workflows/project-brain-internalize-smaug-mini-2750fd9-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: project-brain-smaug-mini-2750fd9-v1
+  cancel-in-progress: false
+
+env:
+  MODEL_ID: abacusai/Smaug-Mini
+  MODEL_REVISION: 2750fd9f1e67e004111a53a6d9a39c15fbbd33ef
+  RELEASE_TAG: project-brain-smaug-mini-2750fd9-v1
+  CHUNK_BYTES: "1800000000"
+
+jobs:
+  internalize:
+    name: Stream exact source into content-addressed release assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bounded public-source client
+        run: python -m pip install --disable-pip-version-check "huggingface_hub>=0.32,<2" "requests>=2.31,<3"
+
+      - name: Internalize exact pinned learned state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/internalize_smaug_mini_release_v1.py
+
+  independent-reconstruction:
+    name: Independently reconstruct and bind stored bytes
+    needs: internalize
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install independent public metadata client
+        run: python -m pip install --disable-pip-version-check "huggingface_hub>=0.32,<2"
+
+      - name: Verify release shards against exact public source metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/verify_smaug_mini_release_v1.py

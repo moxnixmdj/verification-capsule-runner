@@ -1,0 +1,97 @@
+name: Verify synthesis R5 required-support adapter V1
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "capsules/synthesis_r5_required_support_adapter_v1/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact content-addressed mirrors
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v1
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for path, expected in m["exact_blobs"].items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert got==expected,(path,expected,got)
+          assert m["new_reality_units_consumed"]==0
+          assert m["terminal_cases_consumed"]==0
+          print("EXACT_R5_ADAPTER_INPUT_BLOBS_PASS",len(m["exact_blobs"]))
+          PY
+      - name: Run committed R5 adapter regressions
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v1
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_synthesis_bound_claim_guard_v1
+      - name: Run independent adversarial R5 checks
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v1
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime.synthesis_bound_claim_guard_v1 import solve
+
+          def case():
+              return {"task":{
+                  "claims":[{"claim_id":"REQ","required":True},{"claim_id":"OPT","required":False}],
+                  "evidence":[
+                      {"evidence_id":"E1","provenance":["S1","S1","S2"]},
+                      {"evidence_id":"E2","provenance":["S3"]}
+                  ],
+                  "support_bindings":[
+                      {"claim_id":"REQ","status":"CONFLICTED","evidence_ids":["E1","E2"]}
+                  ]
+              }}
+
+          x=solve(case())
+          assert x["status"]=="READY_FOR_SYNTHESIS",x
+          assert x["uncertainty_claims"]==["REQ"],x
+          assert x["claim_to_evidence"]["REQ"]==["E1","E2"],x
+          assert x["claim_to_provenance"]["REQ"]==["S1","S2","S3"],x
+
+          y=case()
+          y["task"]["support_bindings"][0]={"claim_id":"REQ","status":"INSUFFICIENT","evidence_ids":[]}
+          o=solve(y)
+          assert o["status"]=="FAIL_CLOSED_INSUFFICIENT_REQUIRED_SUPPORT",o
+          assert o["insufficient_required_claims"]==["REQ"],o
+
+          z=case()
+          z["task"]["support_bindings"].append({"claim_id":"REQ","status":"SUPPORTED","evidence_ids":["E1"]})
+          o=solve(z)
+          assert o["status"]=="FAIL_CLOSED" and o["reason"]=="SUPPORT_BINDING_CLAIM_INVALID",o
+
+          q=case()
+          q["task"]["evidence"].append({"evidence_id":"E1","provenance":["S4"]})
+          o=solve(q)
+          assert o["status"]=="FAIL_CLOSED" and o["reason"]=="EVIDENCE_ID_OR_PROVENANCE_INVALID",o
+
+          print("INDEPENDENT_R5_ADVERSARIAL_PASS")
+          PY
+      - name: Verify governance zero-credit boundary
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v1
+          python - <<'PY'
+          import json
+          p="canonical/governance/SYNTHESIS_R5_REQUIRED_SUPPORT_ADAPTER_20261005_V1.json"
+          x=json.load(open(p))
+          assert x["schema"]=="PROJECT_BRAIN_SYNTHESIS_R5_REQUIRED_SUPPORT_ADAPTER_20261005_V1"
+          assert x["independent_verification_required"] is True
+          for k in ("scheduling_authority","execution_authority","promotion_authority","fresh_reality_authority"):
+              assert x[k] is False,(k,x[k])
+          a=x["accounting"]
+          for k in ("incremental_spend_usd","new_reality_units_consumed","terminal_cases_consumed","acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+              assert a[k]==0,(k,a[k])
+          print("R5_ADAPTER_ZERO_CREDIT_BOUNDARY_PASS")
+          PY

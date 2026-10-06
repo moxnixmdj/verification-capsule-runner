@@ -1,0 +1,195 @@
+name: Verify Qwen3.8-27B Q2_K zero-dollar runner fit
+
+on:
+  push:
+    paths:
+      - ".github/workflows/verify_qwen38_q2k_public_runner_fit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify-qwen38-q2k-public-runner-fit-v1
+  cancel-in-progress: false
+
+env:
+  MODEL_REPO: Chungulus/Qwen3.8-27B-Q2_K-GGUF
+  MODEL_FILE: Qwen3.8-27B-Q2_K.gguf
+  MODEL_SHA256: 185bc2aa1f15a34ef9d2b14f51f9edda69f4e43b5ee9e39e3c2ae8c439ddd1a5
+  LLAMA_CPP_COMMIT: 5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
+  RECEIPT_PATH: receipts/qwen38-27b-q2k-public-runner-fit-v1.json
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Capture runner prestate
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/qwen-fit"
+          {
+            echo "=== uname ==="
+            uname -a
+            echo "=== memory ==="
+            free -b
+            echo "=== disk ==="
+            df -B1 /
+            echo "=== cpu ==="
+            nproc
+          } | tee "$RUNNER_TEMP/qwen-fit/prestate.txt"
+
+      - name: Build pinned llama.cpp CPU runtime and release build disk
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -L --fail --retry 5 --retry-all-errors \
+            -o llama.cpp.tar.gz \
+            "https://github.com/ggml-org/llama.cpp/archive/$LLAMA_CPP_COMMIT.tar.gz"
+          mkdir llama-src
+          tar -xzf llama.cpp.tar.gz --strip-components=1 -C llama-src
+          rm llama.cpp.tar.gz
+          cmake -S llama-src -B llama-src/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DGGML_NATIVE=OFF \
+            -DGGML_BLAS=OFF \
+            -DGGML_CUDA=OFF
+          cmake --build llama-src/build --config Release -j2 --target llama-cli
+          cp llama-src/build/bin/llama-cli "$RUNNER_TEMP/qwen-fit/llama-cli"
+          chmod +x "$RUNNER_TEMP/qwen-fit/llama-cli"
+          "$RUNNER_TEMP/qwen-fit/llama-cli" --version | tee "$RUNNER_TEMP/qwen-fit/llama-version.txt"
+          ldd "$RUNNER_TEMP/qwen-fit/llama-cli" | tee "$RUNNER_TEMP/qwen-fit/llama-ldd.txt"
+          rm -rf llama-src
+          df -B1 /
+
+      - name: Download and verify exact Q2_K bytes
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/qwen-fit"
+          curl -L --fail --retry 8 --retry-all-errors --connect-timeout 30 \
+            -o "$MODEL_FILE" \
+            "https://huggingface.co/$MODEL_REPO/resolve/main/$MODEL_FILE?download=true"
+          echo "$MODEL_SHA256  $MODEL_FILE" | sha256sum -c -
+          stat -c '%s' "$MODEL_FILE" | tee model-bytes.txt
+          sha256sum "$MODEL_FILE" | tee model-sha256.txt
+          free -b | tee memory-before-inference.txt
+          df -B1 / | tee disk-before-inference.txt
+
+      - name: Execute nonterminal text-only smoke with real RSS measurement
+        id: inference
+        shell: bash
+        run: |
+          set +e
+          cd "$RUNNER_TEMP/qwen-fit"
+          /usr/bin/time -v -o inference-time.txt \
+            timeout 300s ./llama-cli \
+              -m "$MODEL_FILE" \
+              -p "Reply with a short greeting." \
+              -c 128 \
+              -n 8 \
+              -t 2 \
+              --temp 0 \
+              --no-display-prompt \
+              > inference-stdout.txt 2> inference-stderr.txt
+          rc=$?
+          echo "$rc" > inference-exit-code.txt
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          cat inference-time.txt || true
+          head -c 4096 inference-stdout.txt || true
+          echo
+          head -c 4096 inference-stderr.txt || true
+          echo
+          exit 0
+
+      - name: Build fail-closed execution receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/qwen-fit"
+          exit_code="$(cat inference-exit-code.txt 2>/dev/null || echo 999)"
+          model_bytes="$(cat model-bytes.txt 2>/dev/null || echo null)"
+          max_rss_kib="$(awk -F': ' '/Maximum resident set size/ {print $2}' inference-time.txt 2>/dev/null || true)"
+          elapsed="$(awk -F': ' '/Elapsed \\(wall clock\\) time/ {print $2}' inference-time.txt 2>/dev/null || true)"
+          stdout_b64="$(head -c 4096 inference-stdout.txt 2>/dev/null | base64 -w0 || true)"
+          stderr_b64="$(head -c 4096 inference-stderr.txt 2>/dev/null | base64 -w0 || true)"
+          if [ "$exit_code" = "0" ] && [ -s inference-stdout.txt ]; then
+            status="PASS__EXACT_Q2K_LOADED_AND_GENERATED_ON_STANDARD_PUBLIC_RUNNER"
+          else
+            status="FAIL_CLOSED__Q2K_PUBLIC_RUNNER_EXECUTION_NOT_PROVED"
+          fi
+          jq -n \
+            --arg schema "PROJECT_BRAIN_QWEN38_27B_Q2K_PUBLIC_RUNNER_EXECUTION_RECEIPT_V1" \
+            --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg status "$status" \
+            --arg source_model_revision "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0" \
+            --arg quant_repository "$MODEL_REPO" \
+            --arg quant_file "$MODEL_FILE" \
+            --arg quant_sha256 "$MODEL_SHA256" \
+            --arg llama_cpp_commit "$LLAMA_CPP_COMMIT" \
+            --arg runner_os "$RUNNER_OS" \
+            --arg runner_arch "$RUNNER_ARCH" \
+            --arg github_run_id "$GITHUB_RUN_ID" \
+            --arg github_run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg exit_code "$exit_code" \
+            --arg model_bytes "$model_bytes" \
+            --arg max_rss_kib "$max_rss_kib" \
+            --arg elapsed "$elapsed" \
+            --arg stdout_b64 "$stdout_b64" \
+            --arg stderr_b64 "$stderr_b64" \
+            '{
+              schema:$schema,
+              date:$date,
+              status:$status,
+              subject:{
+                source_model_revision:$source_model_revision,
+                quant_repository:$quant_repository,
+                quant_file:$quant_file,
+                quant_sha256:$quant_sha256,
+                llama_cpp_commit:$llama_cpp_commit
+              },
+              runner:{os:$runner_os,arch:$runner_arch,github_run_id:$github_run_id,github_run_attempt:$github_run_attempt},
+              observed:{exit_code:$exit_code,model_bytes:$model_bytes,max_rss_kib:$max_rss_kib,elapsed_wall_clock:$elapsed,stdout_first_4096_base64:$stdout_b64,stderr_first_4096_base64:$stderr_b64},
+              proof_boundary:{
+                terminal_benchmark_cases_consumed:0,
+                proves:["EXACT_Q2K_BYTE_IDENTITY_IF_DOWNLOAD_STEP_REACHED_SHA_PASS","TEXT_ONLY_EXECUTION_FIT_ONLY_IF_STATUS_PASS"],
+                does_not_prove:["NO_LIVEBENCH_SCORE_INHERITANCE","NO_SEMANTIC_CAPABILITY_NONINFERIORITY","NO_OPUS55_CAPABILITY_CREDIT","NO_ACCEPTANCE_OR_OWNERSHIP_CREDIT"]
+              },
+              accounting:{incremental_spend_usd:0,new_terminal_cases_exposed:0}
+            }' > receipt.json
+          cat receipt.json
+
+      - name: Persist receipt to public verifier repository
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/qwen-fit"
+          payload="$(base64 -w0 receipt.json)"
+          current_sha="$(gh api "repos/$GITHUB_REPOSITORY/contents/$RECEIPT_PATH?ref=main" --jq .sha 2>/dev/null || true)"
+          if [ -n "$current_sha" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/contents/$RECEIPT_PATH" \
+              -X PUT \
+              -f message="Record Qwen3.8 27B Q2_K public-runner execution receipt" \
+              -f content="$payload" \
+              -f branch="main" \
+              -f sha="$current_sha"
+          else
+            gh api "repos/$GITHUB_REPOSITORY/contents/$RECEIPT_PATH" \
+              -X PUT \
+              -f message="Record Qwen3.8 27B Q2_K public-runner execution receipt" \
+              -f content="$payload" \
+              -f branch="main"
+          fi
+
+      - name: Fail workflow when execution did not pass
+        if: always()
+        shell: bash
+        run: |
+          rc="$(cat "$RUNNER_TEMP/qwen-fit/inference-exit-code.txt" 2>/dev/null || echo 999)"
+          test "$rc" = "0"
+          test -s "$RUNNER_TEMP/qwen-fit/inference-stdout.txt"

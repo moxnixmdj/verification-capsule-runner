@@ -1,0 +1,148 @@
+name: Internalize Smaug Mini Q4 V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/internalize-smaug-mini-q4-v1.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: brain-capability-vault-smaug-mini-q4-v1
+  cancel-in-progress: false
+
+jobs:
+  internalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: brain-capability-smaug-mini-q4-k-m-v1
+      SOURCE_REV: 72e19c6d6302bbb3610e966d58eb2ddcbd62c524
+      SOURCE_FILE: Smaug-Mini.Q4_K_M.gguf
+      EXPECTED_SHA256: 2fa6ef34b67820d21ce0819a8dc66c80f8fb1f33d6d8b9fca3c9bb84e39d8ac1
+      EXPECTED_BYTES: '16547400480'
+      CHUNK_BYTES: '1900000000'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Hard zero-spend and public-carrier gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          private="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.private')"
+          test "$private" = "false"
+          echo "public_repository=true"
+          echo "incremental_spend_usd=0"
+
+      - name: Create draft capability-vault release before source transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --draft
+          else
+            gh release create "$TAG" \
+              --draft \
+              --target "$GITHUB_SHA" \
+              --title "Brain capability vault: Smaug Mini Q4_K_M V1" \
+              --notes "Brain-controlled zero-incremental-spend capability-byte mirror. Source: prithivMLmods/Smaug-Mini-GGUF at ${SOURCE_REV}. Upstream semantic model: abacusai/Smaug-Mini, Apache-2.0. This storage mirror carries no benchmark, acceptance, or capability credit until separately qualified."
+          fi
+
+      - name: Stream, content-verify, split, and upload exact capability bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          export TAG
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          cd "$work"
+          export CHUNK_MANIFEST="$work/chunks.tsv"
+          : > "$CHUNK_MANIFEST"
+
+          source_url="https://huggingface.co/prithivMLmods/Smaug-Mini-GGUF/resolve/${SOURCE_REV}/${SOURCE_FILE}?download=true"
+
+          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 "$source_url" \
+            | tee >(sha256sum | awk '{print $1}' > "$work/source.sha256") >(wc -c | tr -d ' ' > "$work/source.bytes") \
+            | split -b "$CHUNK_BYTES" -d -a 2 --additional-suffix=.bin \
+                --filter='
+                  set -e
+                  chunk="$FILE"
+                  cat > "$chunk"
+                  sha="$(sha256sum "$chunk" | awk "{print \\$1}")"
+                  bytes="$(stat -c %s "$chunk")"
+                  printf "%s\t%s\t%s\n" "$(basename "$chunk")" "$bytes" "$sha" >> "$CHUNK_MANIFEST"
+                  printf "%s  %s\n" "$sha" "$(basename "$chunk")" > "$chunk.sha256"
+                  gh release upload "$TAG" "$chunk" "$chunk.sha256" --clobber
+                  rm -f "$chunk" "$chunk.sha256"
+                ' - "${SOURCE_FILE}.part-"
+
+          actual_sha="$(cat "$work/source.sha256")"
+          actual_bytes="$(cat "$work/source.bytes")"
+          test "$actual_sha" = "$EXPECTED_SHA256"
+          test "$actual_bytes" = "$EXPECTED_BYTES"
+
+          cp "$CHUNK_MANIFEST" ./CHUNKS_SHA256.tsv
+          cat > SOURCE_MANIFEST.txt <<EOF
+          schema=PROJECT_BRAIN_CAPABILITY_VAULT_SOURCE_MANIFEST_V1
+          source_repository=prithivMLmods/Smaug-Mini-GGUF
+          source_revision=${SOURCE_REV}
+          source_file=${SOURCE_FILE}
+          source_sha256=${EXPECTED_SHA256}
+          source_bytes=${EXPECTED_BYTES}
+          quantization=Q4_K_M
+          upstream_model=abacusai/Smaug-Mini
+          upstream_license=Apache-2.0
+          incremental_spend_usd=0
+          acceptance_credit=0
+          capability_credit=0
+          EOF
+
+          cat > REASSEMBLY.txt <<EOF
+          Reassemble in lexical part order:
+            cat ${SOURCE_FILE}.part-*.bin > ${SOURCE_FILE}
+          Then verify:
+            sha256sum ${SOURCE_FILE}
+          Expected SHA-256:
+            ${EXPECTED_SHA256}
+          Expected bytes:
+            ${EXPECTED_BYTES}
+          EOF
+
+          curl --fail --location --retry 3 \
+            'https://www.apache.org/licenses/LICENSE-2.0.txt' -o APACHE-2.0.txt
+          curl --fail --location --retry 3 \
+            'https://huggingface.co/abacusai/Smaug-Mini/raw/2750fd9f1e67e004111a53a6d9a39c15fbbd33ef/README.md' \
+            -o UPSTREAM_SMAUG_MINI_MODEL_CARD.md
+          curl --fail --location --retry 3 \
+            "https://huggingface.co/prithivMLmods/Smaug-Mini-GGUF/raw/${SOURCE_REV}/README.md" \
+            -o QUANTIZATION_SOURCE_MODEL_CARD.md
+
+          sha256sum SOURCE_MANIFEST.txt CHUNKS_SHA256.tsv REASSEMBLY.txt APACHE-2.0.txt \
+            UPSTREAM_SMAUG_MINI_MODEL_CARD.md QUANTIZATION_SOURCE_MODEL_CARD.md \
+            > METADATA_SHA256.txt
+
+          gh release upload "$TAG" \
+            SOURCE_MANIFEST.txt CHUNKS_SHA256.tsv REASSEMBLY.txt APACHE-2.0.txt \
+            UPSTREAM_SMAUG_MINI_MODEL_CARD.md QUANTIZATION_SOURCE_MODEL_CARD.md \
+            METADATA_SHA256.txt --clobber
+
+      - name: Publish only after exact source hash and size match
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release edit "$TAG" --draft=false
+          gh release view "$TAG" --json tagName,isDraft,assets,url
+
+      - name: Emit zero-credit completion marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'storage_internalization_candidate=complete'
+          echo 'semantic_qualification=pending'
+          echo 'acceptance_credit=0'
+          echo 'capability_credit=0'
+          echo 'ownership_credit=pending_canonical_binding_and_independent_retrieval_verification'
+# registration-trigger-v2

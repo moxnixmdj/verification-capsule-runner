@@ -1,0 +1,32 @@
+name: Verify LiveBench generator universality refutation V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'verify_livebench_generator_support_universality_refutation_v1.py'
+      - '.github/workflows/verify-livebench-generator-universality-refutation-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact frozen LiveBench source
+        run: |
+          git clone --filter=blob:none https://github.com/LiveBench/LiveBench.git /tmp/livebench
+          git -C /tmp/livebench checkout 8f8e5c381a16e3f24257776edd53471fe86f8091
+      - name: Verify source-bound impossibility theorem
+        run: |
+          python verify_livebench_generator_support_universality_refutation_v1.py \
+            --livebench-root /tmp/livebench \
+            --output livebench-generator-universality-refutation-v1.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: livebench-generator-universality-refutation-v1
+          path: livebench-generator-universality-refutation-v1.json

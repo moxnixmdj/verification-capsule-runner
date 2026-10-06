@@ -12,6 +12,8 @@ assert blob(BASE)==EXPECTED_BASE
 src=DIAG.read_text()
 for lit in [
  "REPLAY_LIMIT=72",
+ "mod.install_scorer_deps()",
+ "mod.prepare_nltk(base)",
  'case_ids_emitted":False',
  'prompt_text_emitted":False',
  'response_text_emitted":False',

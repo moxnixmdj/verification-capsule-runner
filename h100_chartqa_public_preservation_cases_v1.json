@@ -1,0 +1,142 @@
+{
+  "schema": "PROJECT_BRAIN_H100_CHARTQA_PUBLIC_PRESERVATION_CASES_V1",
+  "date": "2026-10-05",
+  "status": "PREEXPOSED_BEFORE_PACKED_OUTPUTS__PUBLIC_NONTERMINAL",
+  "chartqa_repository_commit": "044eabfc306abfe9340c5741f0093aefc5973d06",
+  "annotation_blobs": {
+    "human": "983dacfcb6aabc8598031c07eeba7747f9884c4a",
+    "augmented": "131068b504407d9cdd8413fe5c574772bb241613"
+  },
+  "selection": "FIRST_10_HUMAN_PLUS_FIRST_10_AUGMENTED_IN_FROZEN_FILE_ORDER",
+  "scorer": {
+    "numeric_relative_tolerance": 0.05,
+    "text": "case-insensitive stripped exact"
+  },
+  "gate": {
+    "min_fp32_accuracy": 0.5,
+    "max_absolute_accuracy_drop": 0.05,
+    "min_fp32_packed_agreement": 0.85
+  },
+  "cases": [
+    {
+      "id": "H00",
+      "imgname": "3887.png",
+      "query": "What's the color of graph with 56 as the highest value?",
+      "label": "Blue"
+    },
+    {
+      "id": "H01",
+      "imgname": "3887.png",
+      "query": "In which year the difference between blue and green graph 1?",
+      "label": "2018"
+    },
+    {
+      "id": "H02",
+      "imgname": "4576.png",
+      "query": "What does the blue line represent?",
+      "label": "Not too much/not at all"
+    },
+    {
+      "id": "H03",
+      "imgname": "4576.png",
+      "query": "What is the max value of blue line?",
+      "label": "0.72"
+    },
+    {
+      "id": "H04",
+      "imgname": "5734.png",
+      "query": "What's the percentage of respondents who say Job is a top priority for the president and Congress in 2016?",
+      "label": "68"
+    },
+    {
+      "id": "H05",
+      "imgname": "5734.png",
+      "query": "Which line has the lowest value of 71%?",
+      "label": "Economy"
+    },
+    {
+      "id": "H06",
+      "imgname": "11756.png",
+      "query": "What is the unfavourable value in 2014?",
+      "label": "64"
+    },
+    {
+      "id": "H07",
+      "imgname": "11756.png",
+      "query": "What is the median value of favourable line in the graph?",
+      "label": "40"
+    },
+    {
+      "id": "H08",
+      "imgname": "13153.png",
+      "query": "Which answer response has the highest value on this graph?",
+      "label": "Disapprove"
+    },
+    {
+      "id": "H09",
+      "imgname": "13153.png",
+      "query": "How many data points on the disapprove line are above 50?",
+      "label": "2"
+    },
+    {
+      "id": "A00",
+      "imgname": "multi_col_20933.png",
+      "query": "Who portrayed Jon Snow?",
+      "label": "Kit Harington"
+    },
+    {
+      "id": "A01",
+      "imgname": "multi_col_20933.png",
+      "query": "Who played Mother of Dragons Daenerys Targaryen?",
+      "label": "Emilia Clarke"
+    },
+    {
+      "id": "A02",
+      "imgname": "multi_col_20933.png",
+      "query": "What was the estimated net worth of Peter Dinklage and Nikolaj Coster-Waldau?",
+      "label": "16"
+    },
+    {
+      "id": "A03",
+      "imgname": "multi_col_972.png",
+      "query": "What is the most popular cross-platform mobile framwork used by global developers?",
+      "label": "React Native"
+    },
+    {
+      "id": "A04",
+      "imgname": "multi_col_60377.png",
+      "query": "When did the population of the Dominican Republic begin to increase?",
+      "label": "2008"
+    },
+    {
+      "id": "A05",
+      "imgname": "multi_col_60377.png",
+      "query": "What was the population of the Dominican Republic in 2018?",
+      "label": "10.63"
+    },
+    {
+      "id": "A06",
+      "imgname": "multi_col_60563.png",
+      "query": "Which Supreme Court justice did 32 percent of respondents not know if they had a favorable or unfavorable opinion of?",
+      "label": "Brett Kavanaugh"
+    },
+    {
+      "id": "A07",
+      "imgname": "multi_col_101153.png",
+      "query": "When did the population of Antigua & Barbuda begin to increase?",
+      "label": "2008"
+    },
+    {
+      "id": "A08",
+      "imgname": "multi_col_80582.png",
+      "query": "How many Macy's branded stores did Macy's operate in 2020?",
+      "label": "572"
+    },
+    {
+      "id": "A09",
+      "imgname": "multi_col_80582.png",
+      "query": "How many Bluemercury stores did Macy's operate in 2020?",
+      "label": "162"
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+name: Verify Unknown-Domain immutable push fastlane V1
+on:
+  push:
+    branches:
+      - 'unknown-domain-verify-push/**'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bind push ref, event SHA, and exact lease
+        run: |
+          python - <<'PY'
+          import hashlib, os, subprocess
+          from pathlib import Path
+          raw=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
+          digest=hashlib.sha256(raw).hexdigest()
+          prefix="unknown-domain-verify-push/"+digest+"-"
+          assert os.environ["GITHUB_REF_NAME"].startswith(prefix),(os.environ["GITHUB_REF_NAME"],prefix)
+          head=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+          assert head==os.environ["GITHUB_SHA"],(head,os.environ["GITHUB_SHA"])
+          print("immutable push subject PASS",digest,head)
+          PY
+      - name: Verify exact execution lease
+        run: python verify_unknown_domain_execution_lease.py
+      - name: Verify production launcher unit invariants
+        run: python -m unittest canonical.tests.test_unknown_domain_direct_production_once_v1 -v
+      - name: Verify immutable production workflow firewall
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path(".github/workflows/unknown-domain-direct-one-use-production.yml")
+          text=p.read_text()
+          assert "create:" in text
+          assert "workflow_dispatch" not in text
+          assert "ref: ${{ github.sha }}" in text
+          assert "ref: ${{ github.ref }}" not in text
+          assert "run: python -m canonical.runtime.unknown_domain_direct_production_once_v1" in text
+          b=p.read_bytes()
+          blob=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          lease=json.loads(Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_text())
+          assert lease["exact_components"][".github/workflows/unknown-domain-direct-one-use-production.yml"]==blob
+          launcher_path=Path("canonical/runtime/unknown_domain_direct_production_once_v1.py")
+          launcher=launcher_path.read_text()
+          launcher_raw=launcher_path.read_bytes()
+          launcher_blob=hashlib.sha1(b"blob "+str(len(launcher_raw)).encode()+b"\0"+launcher_raw).hexdigest()
+          assert lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"]==launcher_blob
+          assert 'obj_sha!=launch_sha' in launcher
+          assert 'RUNTIME_HEAD_EVENT_SHA_MISMATCH' in launcher
+          assert 'PRODUCTION_SANITIZED_RESULT_WRITE_AHEAD' in launcher
+          print("immutable production firewall PASS",blob,launcher_blob)
+          PY
+      - name: Publish immutable verification receipt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import base64,hashlib,json,os,urllib.error,urllib.request
+          from pathlib import Path
+          repo=os.environ["GITHUB_REPOSITORY"]
+          token=os.environ["GITHUB_TOKEN"]
+          event_sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          lease_raw=Path("canonical/governance/UNKNOWN_DOMAIN_DIRECT_EXECUTION_LEASE_V1.json").read_bytes()
+          lease=json.loads(lease_raw)
+          digest=hashlib.sha256(lease_raw).hexdigest()
+          blob=lambda b: hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          lease_blob=blob(lease_raw)
+          verifier_raw=Path(".github/workflows/verify-unknown-domain-push-fastlane-v1.yml").read_bytes()
+          verifier_blob=blob(verifier_raw)
+          receipt_branch=f"unknown-domain-verification-receipts/{digest}-{event_sha[:12]}"
+          receipt_ref="refs/heads/"+receipt_branch
+
+          def request(method,url,payload):
+              raw=json.dumps(payload,separators=(",",":")).encode()
+              req=urllib.request.Request(url,data=raw,method=method,headers={
+                  "Authorization":"Bearer "+token,
+                  "Accept":"application/vnd.github+json",
+                  "X-GitHub-Api-Version":"2022-11-28",
+                  "Content-Type":"application/json",
+              })
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as resp:
+                      return int(resp.status),json.loads(resp.read() or b"{}")
+              except urllib.error.HTTPError as exc:
+                  body=exc.read()
+                  try: parsed=json.loads(body or b"{}")
+                  except Exception: parsed={"message":"non-json error"}
+                  return int(exc.code),parsed
+
+          status,response=request("POST",f"https://api.github.com/repos/{repo}/git/refs",{"ref":receipt_ref,"sha":event_sha})
+          assert status==201,(status,response)
+          receipt={
+              "schema":"PROJECT_BRAIN_UNKNOWN_DOMAIN_FASTLANE_PUBLIC_RECEIPT_V1",
+              "status":"PASS",
+              "repository":repo,
+              "actions_run_id":int(run_id),
+              "verified_event_sha":event_sha,
+              "verification_trigger":"PUSH_NON_PR_FASTLANE",
+              "runner":"macos-15-intel",
+              "execution_lease_sha256":digest,
+              "execution_lease_git_blob_sha":lease_blob,
+              "exact_component_count":len(lease["exact_components"]),
+              "production_launcher_git_blob_sha":lease["exact_components"]["canonical/runtime/unknown_domain_direct_production_once_v1.py"],
+              "production_workflow_git_blob_sha":lease["exact_components"][".github/workflows/unknown-domain-direct-one-use-production.yml"],
+              "fastlane_verifier_git_blob_sha":verifier_blob,
+              "claim_response_sha_binding_required":True,
+              "runtime_head_event_sha_binding_required":True,
+              "sanitized_result_write_ahead_required":True,
+              "production_cases_generated":0,
+              "acceptance_credit_delta":0
+          }
+          payload=(json.dumps(receipt,indent=2,sort_keys=True)+"\n").encode()
+          path=f"canonical/verification/UNKNOWN_DOMAIN_FASTLANE_RECEIPT_{digest.upper()}_{event_sha[:12].upper()}_V1.json"
+          status,response=request("PUT",f"https://api.github.com/repos/{repo}/contents/{path}",{
+              "message":"Record immutable Unknown-Domain push-fastlane verification receipt",
+              "content":base64.b64encode(payload).decode(),
+              "branch":receipt_branch,
+          })
+          assert status==201,(status,response)
+          print(json.dumps({"status":"PUBLIC_FASTLANE_RECEIPT_PASS","receipt_branch":receipt_branch,"receipt_path":path},sort_keys=True))
+          PY

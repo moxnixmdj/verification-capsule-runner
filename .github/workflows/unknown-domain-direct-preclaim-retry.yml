@@ -1,0 +1,12 @@
+name: Unknown-Domain direct preclaim retry (QUARANTINED)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quarantined:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "QUARANTINED - stale raw-lease retry superseded before any production cases were consumed."

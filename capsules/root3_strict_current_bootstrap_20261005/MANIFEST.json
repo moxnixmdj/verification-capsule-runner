@@ -1,0 +1,32 @@
+{
+  "schema": "PROJECT_BRAIN_ROOT3_STRICT_CURRENT_BOOTSTRAP_PUBLIC_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-05",
+  "brain_repository": "moxnixmdj/brain",
+  "exact_brain_blobs": {
+    "canonical/runtime/root3_strict_current_bootstrap_v1.py": "2b7d2b0e659e9391bbd1a28dcfb57aeb5b7cd11d",
+    "canonical/tests/test_root3_strict_current_bootstrap_v1.py": "f41b7cea134acc292a866358f1b921a6f3ae8d27",
+    "canonical/runtime/root3_subprocess_mediator_v2.py": "80560cdfa91c11a4b47b9ee2161af726b2f9bccf",
+    "canonical/runtime/root3_subprocess_mediator_v1.py": "8443b61b15cb2bc597c4fa292650f2a0aae899b5",
+    "canonical/runtime/root3_subprocess_callsite_classifier_v1.py": "e654b264096dba724d82f04e5adef0dc6d6c90f7",
+    "canonical/runtime/root3_subprocess_effect_class_registry_v1.py": "24e00a3e6b70d0879cab664a8512f243973c6196",
+    "canonical/runtime/root3_child_process_channel_registry_v1.py": "fc737c1ff5d767d590a5ac52b604890f5d22b1c5",
+    "canonical/runtime/root3_read_only_local_file_query_executor_v1.py": "74166a80c47ed8ddce7bae7b61a3a3610ac2ef8a",
+    "canonical/runtime/zero_ambient_namespace_launcher_v1.py": "6e687527e9c4da82fb5d974a729aaa263ee73ea8"
+  },
+  "claims_checked": [
+    "BOOTSTRAP_BINDS_EXACTLY_READ_ONLY_DECLARED_QUERY",
+    "OTHER_SIX_EFFECT_CLASSES_REMAIN_UNBOUND_FAIL_CLOSED",
+    "SUBPROCESS_RUN_AND_POPEN_GLOBAL_GUARDS_ARE_ACTIVE_AFTER_INSTALL",
+    "UNREGISTERED_DIRECT_PROCESS_CALL_FAILS_BEFORE_AUTHORIZER",
+    "CURRENT_PROCESS_UNIVERSE_DRIFT_FAILS_BEFORE_INSTALL"
+  ],
+  "nonclaims": [
+    "ASTRA_MAIN_IS_ALREADY_LAUNCHED_THROUGH_THIS_BOOTSTRAP",
+    "OTHER_SIX_EFFECT_CLASSES_ARE_FUNCTIONALLY_COMPLETE",
+    "FINAL_SEMANTIC_AUTHORIZER_PRODUCTION_RECEIPTS_ARE_PROVED",
+    "ANY_ROOT3_OR_TERMINAL_PREDICATE_IS_CLOSED"
+  ],
+  "incremental_spend_usd": 0,
+  "fresh_reality_units_consumed": 0,
+  "acceptance_credit_delta": 0
+}

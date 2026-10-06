@@ -1,0 +1,47 @@
+name: Verify LiveBench 2026 IFBench58 scorer route V1
+# explicit post-install dispatch trigger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "verify_livebench_2026_ifbench58_route_v1.py"
+      - ".github/workflows/verify-livebench-2026-ifbench58-route-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Checkout exact pinned LiveBench
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/LiveBench
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+      - name: Prove scorer dispatch without terminal content
+        run: python verify_livebench_2026_ifbench58_route_v1.py
+      - name: Print receipt
+        if: always()
+        run: |
+          if test -f livebench_2026_ifbench58_route_v1_receipt.json; then
+            cat livebench_2026_ifbench58_route_v1_receipt.json
+          fi
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-2026-ifbench58-route-v1
+          path: livebench_2026_ifbench58_route_v1_receipt.json
+          if-no-files-found: error

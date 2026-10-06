@@ -1,0 +1,28 @@
+name: Verify LiveBench Public Exact Kwargs Reference
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_public_kwargs_exact_reference.py
+      - .github/workflows/verify-livebench-public-kwargs-exact-reference.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact public kwargs parameter recovery
+        run: python verify_livebench_public_kwargs_exact_reference.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-public-kwargs-exact-reference-receipt
+          path: livebench_public_kwargs_exact_reference_receipt.json
+          if-no-files-found: error

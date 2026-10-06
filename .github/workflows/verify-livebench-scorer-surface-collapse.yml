@@ -1,0 +1,28 @@
+name: Verify LiveBench Scorer Surface Collapse
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - verify_livebench_scorer_surface_collapse.py
+      - .github/workflows/verify-livebench-scorer-surface-collapse.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Recompute scorer semantics and threshold theorem
+        run: python verify_livebench_scorer_surface_collapse.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: livebench-scorer-surface-collapse-receipt
+          path: livebench_scorer_surface_collapse_receipt.json
+          if-no-files-found: error

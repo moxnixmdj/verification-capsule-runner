@@ -1,0 +1,277 @@
+name: Verify Qwen3.8-4B Root1 semantic seed V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'verify_qwen38_4b_root1_semantic_seed_v1.py'
+      - 'verify_qwen38_4b_livebench_public_exact_v1.py'
+      - '.github/workflows/verify-qwen38-4b-root1-semantic-seed-v1.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: verify-qwen38-4b-root1-semantic-seed-v1
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  MODEL_REPO: empero-ai/Qwen3.8-4B-Distill-GGUF
+  MODEL_REV: 391fc7d103e3942a408def3e4f51c2f85d464417
+  MODEL_FILE: Qwen3.8-4B-Q4_K_M.gguf
+  MODEL_BYTES: '2783446304'
+  MODEL_SHA256: dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790
+  MODEL_URL: https://huggingface.co/empero-ai/Qwen3.8-4B-Distill-GGUF/resolve/391fc7d103e3942a408def3e4f51c2f85d464417/Qwen3.8-4B-Q4_K_M.gguf
+  LLAMA_COMMIT: 0504396140d1c882f5f6ee34466a42db7ae90114
+  RELEASE_TAG: brain-capability-qwen38-4b-root1-seed-v1
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 210
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify runner resource geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          uname -a
+          nproc
+          free -h
+          df -h .
+
+      - name: Download exact frozen model subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors --connect-timeout 30             -o "$MODEL_FILE" "$MODEL_URL"
+          test "$(stat -c '%s' "$MODEL_FILE")" = "$MODEL_BYTES"
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_FILE" | sha256sum -c -
+
+      - name: Build exact frozen llama.cpp runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_COMMIT"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_COMMIT"
+          cmake -S llama.cpp -B llama.cpp/build             -DCMAKE_BUILD_TYPE=Release             -DGGML_NATIVE=OFF             -DLLAMA_CURL=OFF
+          cmake --build llama.cpp/build --config Release -j 4 --target llama-server
+
+      - name: Start frozen local inference subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./llama.cpp/build/bin/llama-server             -m "$MODEL_FILE"             -c 4096             -t 4             -np 1             --host 127.0.0.1             --port 8080             > llama_server.log 2>&1 &
+          echo "$!" > llama_server.pid
+
+          ready=0
+          for _ in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat llama_server.pid)" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if test "$ready" != "1"; then
+            cat llama_server.log
+            exit 1
+          fi
+          curl -fsS http://127.0.0.1:8080/health
+          grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat llama_server.pid)/status" || true
+
+      - name: Execute frozen eight-case semantic-seed diagnostic
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verify_qwen38_4b_root1_semantic_seed_v1.py
+
+      - name: Prepare exact public LiveBench 2026-06-25 legacy IFEval population
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check \
+            pyarrow==21.0.0 nltk==3.10.3 langdetect==1.0.9 immutabledict==4.2.2
+          rm -rf /tmp/LiveBench /tmp/nltk_data_repo /tmp/nltk_data
+          git init /tmp/LiveBench
+          git -C /tmp/LiveBench remote add origin https://github.com/LiveBench/LiveBench.git
+          git -C /tmp/LiveBench fetch --depth 1 origin 8f8e5c381a16e3f24257776edd53471fe86f8091
+          git -C /tmp/LiveBench checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/LiveBench rev-parse HEAD)" = "8f8e5c381a16e3f24257776edd53471fe86f8091"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions.py)" = "4997bab885a676d92545fd91a9a20b48d234a2b2"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_registry.py)" = "903ed738398648c7cfac61d5ffa478c22f1f0891"
+          test "$(git -C /tmp/LiveBench hash-object livebench/if_runner/instruction_following_eval/instructions_util.py)" = "1f0dc0eaa05bd0f72f82f8183b90276ea4d2a87b"
+
+          git clone --filter=blob:none --no-checkout https://github.com/nltk/nltk_data.git /tmp/nltk_data_repo
+          git -C /tmp/nltk_data_repo checkout 550b6625bcef1f2abff2ff770a5a0d272c9c6b2a -- packages/tokenizers/punkt.zip packages/tokenizers/punkt_tab.zip
+          mkdir -p /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt.zip -d /tmp/nltk_data/tokenizers
+          unzip -q /tmp/nltk_data_repo/packages/tokenizers/punkt_tab.zip -d /tmp/nltk_data/tokenizers
+
+          curl --fail --location --retry 6 --retry-delay 2 --retry-all-errors \
+            "https://huggingface.co/datasets/livebench/instruction_following/resolve/0868379c4b5cf62aeacaf8be4f08fced815c81bb/data/test-00000-of-00001.parquet" \
+            -o /tmp/instruction_following.parquet
+          test "$(stat -c %s /tmp/instruction_following.parquet)" = "537024"
+          echo "a9bb97bbaf8788142c310bcb33d50e2f6f5df8cbd8b8c3db677816b06f0f4f25  /tmp/instruction_following.parquet" | sha256sum -c -
+
+      - name: Execute exact 200-case public LiveBench IF qualification
+        env:
+          NLTK_DATA: /tmp/nltk_data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verify_qwen38_4b_livebench_public_exact_v1.py
+
+      - name: Print exact qualification receipt and runtime evidence
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          if test -f qwen38_4b_root1_semantic_seed_receipt.json; then
+            cat qwen38_4b_root1_semantic_seed_receipt.json
+          fi
+          if test -f qwen38_4b_livebench_public_exact_receipt.json; then
+            cat qwen38_4b_livebench_public_exact_receipt.json
+          fi
+          if test -f llama_server.pid && kill -0 "$(cat llama_server.pid)" 2>/dev/null; then
+            echo "SERVER_MEMORY:"
+            grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat llama_server.pid)/status" || true
+            kill "$(cat llama_server.pid)" || true
+          fi
+          echo "SERVER_LOG_TAIL:"
+          tail -n 120 llama_server.log 2>/dev/null || true
+
+      - name: Upload public qualification receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen38-4b-root1-public-qualification
+          path: |
+            qwen38_4b_root1_semantic_seed_receipt.json
+            qwen38_4b_livebench_public_exact_receipt.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  internalize-exact-bytes:
+    needs: qualify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download and re-verify exact frozen model bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors --connect-timeout 30             -o "$MODEL_FILE" "$MODEL_URL"
+          test "$(stat -c '%s' "$MODEL_FILE")" = "$MODEL_BYTES"
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_FILE" | sha256sum -c -
+
+      - name: Create Brain-controlled durable release vault
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release delete "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          fi
+          cat > notes.txt <<EOF
+          Project Brain exact Qwen3.8-4B Root1 semantic-seed execution subject.
+
+          Source repository: https://huggingface.co/$MODEL_REPO
+          Pinned revision: $MODEL_REV
+          Exact file: $MODEL_FILE
+          Exact bytes: $MODEL_BYTES
+          Exact SHA-256: $MODEL_SHA256
+          Declared license: Apache-2.0
+          Frozen runtime: ggml-org/llama.cpp@$LLAMA_COMMIT
+
+          The model file is split solely to satisfy GitHub's <2 GiB per-release-asset limit.
+          This release is a durable exact-byte mirror. It does not by itself grant LiveBench threshold or terminal acceptance credit.
+          EOF
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"             --target "$GITHUB_SHA"             --title "Project Brain Qwen3.8-4B Root1 semantic-seed exact bytes V1"             --notes-file notes.txt
+
+          split -b 1900000000 -d -a 2 "$MODEL_FILE" split_
+          mv split_00 "$MODEL_FILE.part01of02"
+          mv split_01 "$MODEL_FILE.part02of02"
+          test "$(stat -c '%s' "$MODEL_FILE.part01of02")" = "1900000000"
+          test "$(stat -c '%s' "$MODEL_FILE.part02of02")" = "883446304"
+
+          sha256sum "$MODEL_FILE.part01of02" > "$MODEL_FILE.part01of02.sha256"
+          sha256sum "$MODEL_FILE.part02of02" > "$MODEL_FILE.part02of02.sha256"
+          gh release upload "$RELEASE_TAG"             "$MODEL_FILE.part01of02" "$MODEL_FILE.part01of02.sha256"             "$MODEL_FILE.part02of02" "$MODEL_FILE.part02of02.sha256"             --repo "$GITHUB_REPOSITORY" --clobber
+
+  verify-release-reassembly:
+    needs: internalize-exact-bytes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Verify release assets reconstruct exact source bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > release.json
+          python3 - <<'PY' > urls.txt
+          import json
+          release = json.load(open("release.json", encoding="utf-8"))
+          assets = {a["name"]: a["browser_download_url"] for a in release["assets"]}
+          stem = "Qwen3.8-4B-Q4_K_M.gguf"
+          expected = [f"{stem}.part01of02", f"{stem}.part02of02"]
+          missing = [x for x in expected if x not in assets]
+          if missing:
+              raise SystemExit("MISSING_ASSETS:" + ",".join(missing))
+          for name in expected:
+              print(assets[name])
+          PY
+
+          cat > verify_stream.py <<'PY'
+          import hashlib, json, sys
+          expected_bytes = 2783446304
+          expected_sha = "dec96e8cf2e11b613bb46513dec485377f9ca5a351e71712ee0e244f287c6790"
+          h = hashlib.sha256()
+          total = 0
+          while True:
+              block = sys.stdin.buffer.read(8 * 1024 * 1024)
+              if not block:
+                  break
+              total += len(block)
+              h.update(block)
+          sha = h.hexdigest()
+          if total != expected_bytes:
+              raise SystemExit(f"BYTE_MISMATCH:{total}")
+          if sha != expected_sha:
+              raise SystemExit(f"SHA_MISMATCH:{sha}")
+          receipt = {
+              "schema": "PROJECT_BRAIN_QWEN38_4B_ROOT1_EXACT_BYTE_INTERNALIZATION_RECEIPT_V1",
+              "status": "PASS",
+              "whole_bytes": total,
+              "whole_sha256": sha,
+              "release_asset_parts": 2,
+              "stream_reassembly_verified": True,
+              "incremental_spend_usd": 0,
+              "terminal_cases_consumed": 0,
+              "acceptance_credit_delta": 0,
+              "hard_nonclaim": "BYTE_INTERNALIZATION_DOES_NOT_BY_ITSELF_PROVE_LIVEBENCH_THRESHOLD_ACCEPTANCE"
+          }
+          open("qwen38_4b_exact_byte_internalization_receipt.json", "w", encoding="utf-8").write(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+          )
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+
+          (
+            while IFS= read -r url; do
+              curl -fL --retry 6 --retry-delay 2 --retry-all-errors                 --connect-timeout 30 "$url"
+            done < urls.txt
+          ) | python3 verify_stream.py
+
+          gh release upload "$RELEASE_TAG"             qwen38_4b_exact_byte_internalization_receipt.json             --repo "$GITHUB_REPOSITORY" --clobber

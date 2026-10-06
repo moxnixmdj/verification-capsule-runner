@@ -1,0 +1,18 @@
+name: Verify LiveBench ratio-overlap score equivalence
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'subject/livebench_ratio_overlap_score_equivalence_20261004/verify.py'
+      - '.github/workflows/verify-livebench-ratio-overlap-score-equivalence.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python subject/livebench_ratio_overlap_score_equivalence_20261004/verify.py
