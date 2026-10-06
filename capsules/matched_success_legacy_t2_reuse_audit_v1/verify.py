@@ -9,8 +9,8 @@ SRC = ROOT / "source"
 AUTH = ROOT / "authority"
 
 BLOBS = {
-    SRC / "MATCHED_SUCCESS_LEGACY_T2_REUSE_AUDIT_V1.json": "53d75b54560f75c9ca4ba353392de8d3d9c504e3",
-    SRC / "matched_success_legacy_t2_reuse_audit_v1.py": "dd5999be6c17ff41d0410dc9fa14025aefb7a36d",
+    SRC / "MATCHED_SUCCESS_LEGACY_T2_REUSE_AUDIT_V1.json": "43d2b820ac1389c7e1e76f907acf2f6f11311607",
+    SRC / "matched_success_legacy_t2_reuse_audit_v1.py": "6051f2fef40bbcc7f5971128e4fb5eb87f09f7e4",
     AUTH / "OPUS55_MATCHED_TARGET_NORMALIZATION_PROVENANCE_V3.json": "72a5cd689f55df84de73693371264f02ef4e7226",
     AUTH / "BROWSER_T2_OBJECTIVE_TERMINAL_BINDING_V1.json": "28e955d5d593d1de9cfab0f9cdcdae732fd315f1",
     AUTH / "DELEGATION_T2_OBJECTIVE_TERMINAL_BINDING_V1.json": "a1e441567b132d71713ed55dfc51f01d8de112d1",
@@ -75,8 +75,8 @@ if (
     "STALE_REBIND" in browser_classes
     and "FRESH_STATE_CONDITIONING" in browser_dims
     and {
-        "WORKER_CAPABILITY_REMOVED",
-        "RESOURCE_CAPACITY_CHANGED",
+        "V2_WORKER_CAPABILITY_REMOVED",
+        "V2_RESOURCE_CAPACITY_CHANGED",
     }.issubset(delegation_classes)
     and {
         "SELECTED_TOOL_LOSES_CAPABILITY",
