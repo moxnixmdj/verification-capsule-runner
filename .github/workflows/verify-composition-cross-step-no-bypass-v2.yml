@@ -1,0 +1,68 @@
+name: Verify Composition explicit cross-step no-bypass v2
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/composition_cross_step_no_bypass_v2/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: composition-cross-step-no-bypass-v2-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain candidate bytes
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib
+          C=pathlib.Path("capsules/composition_cross_step_no_bypass_v2")
+          m=json.loads((C/"MANIFEST.json").read_text())
+          assert m["incremental_spend_usd_max"] == 0
+          assert m["terminal_credit"] is False
+          for rel,meta in m["files"].items():
+              raw=(C/"vendor"/rel).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got == meta["git_blob_sha"], (rel,got,meta["git_blob_sha"])
+          print("EXACT_BRAIN_BYTES_PASS")
+          PY
+      - name: Run declared-boundary and global no-bypass tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/composition_cross_step_no_bypass_v2/vendor
+        run: |
+          set -euo pipefail
+          python -m unittest -v             canonical.tests.test_astra_declared_cross_step_boundary_v1             canonical.tests.test_composition_cross_step_no_bypass_audit_v2
+      - name: Execute deterministic v2 audit
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/composition_cross_step_no_bypass_v2/vendor
+        run: |
+          set -euo pipefail
+          python -m canonical.runtime.composition_cross_step_no_bypass_audit_v2 > COMPOSITION_CROSS_STEP_AUDIT_V2.json
+          python - <<'PY'
+          import json
+          x=json.load(open("COMPOSITION_CROSS_STEP_AUDIT_V2.json"))
+          assert x["pass"] is True, x
+          assert x["status"] == "PASS__EXPLICIT_ASTRA_SHELL_PRIOR_RESULT_PROJECTION_HAS_NO_LEGACY_BYPASS", x
+          assert x["structural"]["astra_step_projection_site_count"] == 1, x
+          assert x["structural"]["legacy_all_prior_loop_count"] == 0, x
+          assert x["structural"]["legacy_context_results_return_count"] == 0, x
+          assert x["terminal_credit_delta"] == 0, x
+          print(json.dumps({"status":x["status"],"structural":x["structural"]},sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: composition-cross-step-no-bypass-v2
+          path: COMPOSITION_CROSS_STEP_AUDIT_V2.json
+          if-no-files-found: error
+          retention-days: 7
