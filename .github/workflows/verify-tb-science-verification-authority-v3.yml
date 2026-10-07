@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: moxnixmdj/brain
-          ref: repair/tb-science-verification-authority-v3-20261007
+          ref: repair/tb-science-shell-truncation-taint-20261007
           path: brain
           fetch-depth: 1
       - uses: actions/setup-python@v5
@@ -36,7 +36,7 @@ jobs:
         run: |
           set -euo pipefail
           cd brain
-          test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "a2c4c3f7d2d1cc85b58c8bfdd5d2d4b4490a795c"
-          test "$(git hash-object canonical/runtime/harbor_science_planner_v1.py)" = "ebc9d8be19e3fc4f2b5a5e2691b0d8c0d31db03f"
-          test "$(git hash-object canonical/tests/test_harbor_science_agent_v1.py)" = "87b43b46d164d825bcf73ae4033e01618621b1c0"
-          test "$(git hash-object canonical/tests/test_harbor_science_planner_v1.py)" = "b17c6b2aaa72259c26644aee04785050bbb89532"
+          test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "f891c3a3f728db9cdcdfa9ad3c0b5db9e64accf8"
+          test "$(git hash-object canonical/runtime/harbor_science_planner_v1.py)" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
+          test "$(git hash-object canonical/tests/test_harbor_science_agent_v1.py)" = "dcd1ab69e921301f5bbdd15fbd154ebe1031eff7"
+          test "$(git hash-object canonical/tests/test_harbor_science_planner_v1.py)" = "d59f7b452e647c7cf8527276820603d9fbe2dd5e"
