@@ -1,0 +1,23 @@
+name: Cancel duplicate TB-Science rank6 branch run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cancel-duplicate-tb-science-rank6-20261007-v1.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank6-one-shot-20261007
+  cancel-in-progress: true
+
+jobs:
+  cancellation-barrier:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Cancel duplicate concurrency generation without task exposure
+        run: |
+          echo "CANCELLATION_BARRIER_ONLY__NO_TASK_EXPOSURE"
