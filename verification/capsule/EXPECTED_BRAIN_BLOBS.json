@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_V3_SELF_CERTIFICATION_FALSIFIER_MANIFEST_V1",
+  "claim_under_test": "V3_EFFECT_SEMANTICS_BINDING_IS_INDEPENDENTLY_AUTHENTICATED",
+  "exact_brain_blobs": {
+    "canonical/runtime/capability_planner.py": "629766f8a1194fd298e0809b64a5e9c5a39fa3ea",
+    "canonical/runtime/effect_broker_receipt_resolver_v2.py": "7f4eeeb19def420d0014631b99c5e2dc3a30592e",
+    "canonical/runtime/universal_verified_adaptive_solver_v1.py": "821e46173da4671f417fef0a070fa56b7df84446",
+    "canonical/runtime/universal_verified_adaptive_solver_v2.py": "be0857bbe1e506a3ff94e8e6b71c7796dea8ba22",
+    "canonical/runtime/universal_verified_adaptive_solver_v3.py": "f19742eda2107bd1bb6650f17714709c6a102af2"
+  },
+  "expected_counterexample": "A_SINGLE_LOCAL_PROCESS_WRITES_BOTH_EFFECT_SEMANTICS_RECEIPT_AND_SO_CALLED_INDEPENDENT_VERIFICATION_JSON__SETS_independent_verified_TRUE__V3_ACCEPTS_TARGET_EFFECT_WITHOUT_EXTERNAL_ATTESTATION",
+  "hard_nonclaims": [
+    "NO_CLAIM_V3_VERIFIER_LOGIC_ITSELF_IS_WRONG",
+    "NO_OPUS55_OR_TERMINAL_CREDIT"
+  ]
+}
