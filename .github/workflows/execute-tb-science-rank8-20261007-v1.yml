@@ -31,6 +31,7 @@ jobs:
           test "$GITHUB_BASE_REF" = "main"
           test "$GITHUB_HEAD_REF" = "activate/tb-science-rank8-execute-20261007"
           test "$GITHUB_REPOSITORY" = "moxnixmdj/verification-capsule-runner"
+          wfPath=".github/workflows/execute-tb-science-rank8-20261007-v1.yml"
           C=capsules/tb_science_rank8_20261007_v1
           R=capsules/tb_science_canary_v3_execution
           test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK8_ONE_SHOT_20261007_V1.json")" = "87fea6ecfe13cd2b40e1f549138276d75744681b"
