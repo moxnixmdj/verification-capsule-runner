@@ -24,6 +24,7 @@ jobs:
           python-version: "3.12"
 
       - name: Independent pre-exposure exact rank8 authority gate
+        id: gate
         run: |
           set -euo pipefail
           test "$GITHUB_RUN_ATTEMPT" = "1"
@@ -176,6 +177,7 @@ jobs:
           TASK_NAME: terminal-bench-science/linked-cell-suppression
           SAFE_ID: linked-cell-suppression-trial-0
           HARBOR_OUTCOME: ${{ steps.execute.outcome }}
+          PREEXPOSURE_GATE_OUTCOME: ${{ steps.gate.outcome }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -196,21 +198,28 @@ jobs:
               ex=obj.get("exception_info")
               if isinstance(ex,dict):
                   exception_info.append({"path":str(p.relative_to(root)),"exception_type":ex.get("exception_type"),"exception_message":ex.get("exception_message")})
+          gate_ok=(os.environ.get("PREEXPOSURE_GATE_OUTCOME")=="success")
           reward=None; errors=[]
-          if len(scored)==1:
+          if not gate_ok:
+              errors.append("PREEXPOSURE_GATE_NOT_PASS")
+          elif len(scored)==1:
               _,obj=scored[0]
               raw=obj["verifier_result"]["rewards"].get("reward")
               if isinstance(raw,(int,float)) and not isinstance(raw,bool): reward=float(raw)
               else: errors.append("REWARD_MISSING_OR_NONNUMERIC")
           elif not scored: errors.append("NO_TRIAL_RESULT_WITH_VERIFIER_REWARD")
           else: errors.append("MULTIPLE_TRIAL_RESULTS_WITH_VERIFIER_REWARD")
-          success=(reward is not None and reward>=1.0 and not errors)
+          success=(gate_ok and reward is not None and reward>=1.0 and not errors)
+          finalized=(gate_ok)
           hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p,_ in results}
           receipt={
             "schema":"PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_RANK8_V1",
             "slot_id":os.environ["SLOT_ID"],"task_name":os.environ["TASK_NAME"],
-            "status":"SUCCESS" if success else "FINAL_ZERO","reward":reward if reward is not None else 0.0,
+            "status":("SUCCESS" if success else ("FINAL_ZERO" if finalized else "PREEXPOSURE_ABORT")),
+            "reward":reward if reward is not None else (0.0 if finalized else None),
             "errors":errors,"exception_info":exception_info,"harbor_step_outcome":os.environ.get("HARBOR_OUTCOME"),
+            "preexposure_gate_outcome":os.environ.get("PREEXPOSURE_GATE_OUTCOME"),
+            "task_exposed":finalized,
             "authority_blob":"82e9573f64037ae2f0d39228e4d57cc45deb7a29",
             "ledger_blob":"32a57737b09fd6b38758814a6e3f843afd13ca16",
             "rank7_result_blob":"b6da8ab77554096032901ca69f72ea82497f6921",
@@ -220,7 +229,7 @@ jobs:
             "controller_blob":"5557efd21f1a433ad16766def3775a79c459784b",
             "source_gate_blob":"b168b131f6383e158bdc0d931439d14e61f2a5de",
             "github_run_id":os.environ["GITHUB_RUN_ID"],"github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],"github_sha":os.environ["GITHUB_SHA"],
-            "result_hashes":hashes,"execution_authority_consumed":True,"rerun_credit":False,"incremental_spend_usd":0,"promotion_authority":False
+            "result_hashes":hashes,"execution_authority_consumed":finalized,"authority_remains_unconsumed":not finalized,"rerun_credit":False,"incremental_spend_usd":0,"promotion_authority":False
           }
           out=root/"linked-cell-suppression-trial-0__SLOT_RECEIPT.json"
           out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
