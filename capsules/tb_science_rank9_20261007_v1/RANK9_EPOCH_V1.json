@@ -1,0 +1,17 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK9_EPOCH_V1",
+  "date": "2026-10-07",
+  "epoch_id": "TBSCI-RANK9-20261007-E1",
+  "status": "CURRENT__ONE_USE_PREEXPOSURE_GATE",
+  "slot_id": "terminal-bench-science/neo-orbit-determination::trial-0",
+  "task_digest": "sha256:b0038fd39395b57f2036b2c0271f37b508e1250fc97d12c899590b61e997cada",
+  "attempts": 1,
+  "retries": 0,
+  "incremental_spend_usd_max": 0,
+  "precheck_failure_consumes_slot": false,
+  "after_task_start_result_is_irreversible": true,
+  "carrier_precondition": "EXACT_CURRENT_14_FILE_TRANSITIVE_RUNTIME_CLOSURE_MUST_PASS_BEFORE_TASK_START",
+  "note": "Canonical use requires binding this exact Git blob. The carrier must compare the current public main blob immediately before the benchmark step.",
+  "credit": false,
+  "reuse_authority": false
+}
