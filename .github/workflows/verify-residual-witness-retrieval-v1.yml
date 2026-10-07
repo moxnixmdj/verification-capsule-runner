@@ -2,6 +2,7 @@ name: Verify residual witness retrieval V1
 
 on:
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
