@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_SYNTHESIS_R5_REQUIRED_SUPPORT_ADAPTER_V2_VERIFICATION_CAPSULE",
+  "date": "2026-10-07",
+  "source_repository": "moxnixmdj/brain",
+  "exact_blobs": {
+    "canonical/runtime/synthesis_bound_claim_guard_v2.py": "6d342f37140c1790485366dada18e32d5f7aa8d0",
+    "canonical/tests/test_synthesis_bound_claim_guard_v2.py": "3e5c4ec8b391388a28554769ef38aa296471db0e"
+  },
+  "intended_checks": [
+    "EXACT_BLOB_IDENTITY",
+    "COMMITTED_V2_TEST_SUITE_PASS",
+    "NON_MAPPING_TOP_LEVEL_FAILS_CLOSED",
+    "WHITESPACE_ONLY_IDENTIFIERS_AND_PROVENANCE_FAIL_CLOSED",
+    "REQUIRED_UNSUPPORTED_OR_INSUFFICIENT_SUPPORT_FAILS_CLOSED",
+    "CONFLICT_AND_PROVENANCE_TRANSPORT_PRESERVED"
+  ],
+  "hard_nonclaims": [
+    "NO_SYNTHESIS_FAMILY_CLOSURE",
+    "NO_SUPPORT_OR_RELEVANCE_INFERENCE",
+    "NO_AUDIENCE_SALIENCE_INFERENCE",
+    "NO_TERMINAL_ACCEPTANCE_CAPABILITY_OR_OWNERSHIP_CREDIT"
+  ],
+  "incremental_spend_usd": 0,
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "terminal_credit_delta": 0
+}
