@@ -132,14 +132,14 @@ jobs:
           hashes={}
           if selected is not None:
               hashes[str(selected.relative_to(root))]=hashlib.sha256(selected.read_bytes()).hexdigest()
-          auth=json.load(open(root/"capsules/tb_science_execution_v2/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V4.json"))
+          arm=json.load(open(root/"capsules/tb_science_execution_v2/ARM_CANARY_V4.json"))
           receipt={
             "schema":"PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_V4",
             "slot_id":os.environ["SLOT_ID"],"task_name":os.environ["TASK_NAME"],
             "status":"SUCCESS" if success else "FINAL_ZERO",
             "reward":reward if reward is not None else 0.0,
             "errors":errors,"harbor_step_outcome":os.environ.get("HARBOR_OUTCOME"),
-            "authority_blob":auth["self_blob_sha"],
+            "authority_blob":arm["authority_blob"],
             "manifest_blob":"6dfa880b1f68881531afbba6ca211681801fd19b",
             "controller_blob":"5557efd21f1a433ad16766def3775a79c459784b",
             "planner_blob":"fe7c0ce885197217774638df382aeb6f68ff38dd",
