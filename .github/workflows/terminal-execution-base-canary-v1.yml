@@ -1,0 +1,36 @@
+name: Terminal execution base canary v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "terminal-execution-canary/CANARY.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terminal-execution-base-canary-v1
+  cancel-in-progress: true
+
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify marker-only isolated execution base
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          test "$GITHUB_BASE_REF" = "terminal-execution-v1"
+          test "$GITHUB_HEAD_REF" = "canary/terminal-execution-base-v1"
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path("terminal-execution-canary/CANARY.json")
+          obj=json.loads(p.read_text())
+          assert obj["schema"]=="PROJECT_BRAIN_TERMINAL_EXECUTION_BASE_CANARY_V1"
+          assert obj["terminal_case_exposure"] is False
+          assert obj["incremental_spend_usd"]==0
+          print("TERMINAL_EXECUTION_BASE_CANARY_PASS")
+          PY
