@@ -17,8 +17,12 @@
   "incremental_spend_usd_required": 0,
   "promotion_authority": false,
   "activation_transport_retrigger": {
-    "reason": "INITIAL_PULL_REQUEST_OPEN_EVENT_EMITTED_NO_EXECUTION_WORKFLOW_RUN",
-    "semantics": "TRANSPORT_ONLY__NO_AUTHORITY_TASK_PLANNER_OR_RETRY_CHANGE",
-    "expected_event": "pull_request.synchronize"
+    "reason": "INITIAL_PULL_REQUEST_AND_PRIOR_SYNCHRONIZE_EVENTS_EMITTED_NO_EXECUTION_WORKFLOW_RUN",
+    "semantics": "TRANSPORT_ONLY__NO_AUTHORITY_TASK_PLANNER_RETRY_OR_COST_CHANGE",
+    "expected_event": "pull_request.synchronize",
+    "sequence": 2,
+    "invariant_authority_blob": "544cc48f21f6f0736ffdb1c3288761bff6553b56",
+    "invariant_planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
+    "invariant_workflow_blob": "37f72d2aab513f38a599f6764606164813b2c878"
   }
 }
