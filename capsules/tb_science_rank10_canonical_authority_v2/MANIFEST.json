@@ -1,0 +1,40 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK10_CANONICAL_AUTHORITY_PUBLIC_VERIFICATION_MANIFEST_V2",
+  "date": "2026-10-07",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_current_authority_merge_commit": "2dfd13ce380897637c2a9ef88bdfbed7ac6264ac",
+  "files": {
+    "TB_SCIENCE_RANK10_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json": {
+      "git_blob_sha": "7b4d8c2555d102b30e02673c95675403ae947629"
+    },
+    "ACTION_INTENT_TB_SCIENCE_RANK10_ONE_SHOT_20261007_V1.json": {
+      "git_blob_sha": "e65720a36d7c09a3be5a33246f3ab54e20612915"
+    },
+    "TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V8.json": {
+      "git_blob_sha": "eb869db71db99a77912c0051ff12f162d616b1a1"
+    },
+    "TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V7.json": {
+      "git_blob_sha": "d3ff32dd833dfb5fcdce58e134185bfaf19e95ae"
+    },
+    "TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json": {
+      "git_blob_sha": "6dfa880b1f68881531afbba6ca211681801fd19b"
+    },
+    "TB_SCIENCE_PLANNER_TRANSPORT_REPAIR_LIVE_VERIFICATION_20261007_V1.json": {
+      "git_blob_sha": "877e5ddf815c1958f4ab41f8462ad54af87f0c87"
+    },
+    "TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261007_V2.json": {
+      "git_blob_sha": "31656d35034338dfcb699672bcd4788b283b83c9"
+    },
+    "TB_SCIENCE_REPAIRED_TRANSITIVE_CARRIER_CLOSURE_PUBLIC_VERIFICATION_20261007_V1.json": {
+      "git_blob_sha": "61495f5977ea745e63ca14136875b97e3e95cd45"
+    },
+    "RANK10_EPOCH_V1.json": {
+      "git_blob_sha": "8d0bc7999769a32147eab08acb31436e7abe743c"
+    }
+  },
+  "benchmark_task_exposure": false,
+  "fresh_target_reality_units_consumed": 0,
+  "incremental_spend_usd_max": 0,
+  "promotion_authority": false,
+  "terminal_credit": false
+}
