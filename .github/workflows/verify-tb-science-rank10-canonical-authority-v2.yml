@@ -100,7 +100,7 @@ jobs:
           assert len(rows)==1 and rows[0]["digest"]==digest
           slots=[x for x in tm["slots"] if x.get("slot_id")==slot]
           assert len(slots)==1
-          assert slots[0]["schedule_rank"]==10 and slots[0]["task_digest"]==digest
+          assert slots[0]["schedule_order"]==9 and slots[0]["task_digest"]==digest
 
           assert tv["status"].startswith("INDEPENDENT_LIVE_LLAMA_CPP_TRANSPORT_PASS")
           assert tv["verified"]["live_tool_schema_and_decode_probe_passed"] is True
