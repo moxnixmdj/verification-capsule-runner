@@ -1,28 +1,14 @@
 {
-  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK7_PR_ACTIVATION_V1",
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK7_PR_ACTIVATION_V2_STALE_CANCEL_ONLY",
   "date": "2026-10-07",
-  "status": "ACTIVE_EXACT_RANK7_ONE_SHOT",
-  "authorized_slot": "terminal-bench-science/reactor-safety-control::trial-0",
-  "authorized_task_digest": "sha256:96c8c5764042dca01ba0b7bd127cf2587f8df538a335f36abf6b4c200f0bb669",
-  "authority_blob": "544cc48f21f6f0736ffdb1c3288761bff6553b56",
-  "action_intent_blob": "07cbd5483bce0135289445a766d49c1f37a8db72",
-  "ledger_blob": "9fb958da1d7272a3133ef4f31ac39282e42a2ca5",
-  "planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
-  "planner_repair_verification_blob": "dcada0f538ace33e13bf716bdca5fdd02aae2561",
-  "execution_workflow_blob": "37f72d2aab513f38a599f6764606164813b2c878",
-  "fresh_reality_units_authorized": 1,
-  "run_attempt_required": 1,
-  "retries": 0,
-  "replacement": false,
+  "status": "STALE_CONSUMED_RANK7__CANCEL_ONLY__NO_EXECUTION_AUTHORITY",
+  "consumed_slot": "terminal-bench-science/reactor-safety-control::trial-0",
+  "canonical_irreversible_result": "moxnixmdj/brain@7cd8296d5817bf31469775d2b4e9b12df6a5c293",
+  "canonical_ledger_advance": "moxnixmdj/brain@02bda85f9cbeaad5661f17f5e29eb96f3cc3176f",
+  "next_untouched_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
+  "purpose": "TRIGGER_SAME_CONCURRENCY_GROUP_WITH_CANCEL_IN_PROGRESS_TRUE_AND_NO_BENCHMARK_EXECUTION",
+  "execution_authority": false,
+  "rerun_credit": false,
   "incremental_spend_usd_required": 0,
-  "promotion_authority": false,
-  "activation_transport_retrigger": {
-    "reason": "INITIAL_PULL_REQUEST_AND_PRIOR_SYNCHRONIZE_EVENTS_EMITTED_NO_EXECUTION_WORKFLOW_RUN",
-    "semantics": "TRANSPORT_ONLY__NO_AUTHORITY_TASK_PLANNER_RETRY_OR_COST_CHANGE",
-    "expected_event": "pull_request.synchronize",
-    "sequence": 2,
-    "invariant_authority_blob": "544cc48f21f6f0736ffdb1c3288761bff6553b56",
-    "invariant_planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
-    "invariant_workflow_blob": "37f72d2aab513f38a599f6764606164813b2c878"
-  }
+  "promotion_authority": false
 }
