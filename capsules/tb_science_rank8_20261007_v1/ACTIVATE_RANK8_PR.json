@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_PR_ACTIVATION_V1",
   "date": "2026-10-07",
-  "status": "ACTIVE_EXACT_RANK8_ONE_SHOT",
+  "status": "REVOKED_PREEXPOSURE__SUPERSEDED_KNOWN_512_CHAR_ARTIFACT_COMMAND_BOTTLENECK",
   "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
   "authorized_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
   "authorized_task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
@@ -17,5 +17,13 @@
   "replacement": false,
   "duplicate_credit": false,
   "incremental_spend_usd_required": 0,
-  "promotion_authority": false
+  "promotion_authority": false,
+  "revocation_reason": "RANK7_ARTIFACT_ANALYSIS_PROVED_PLANNER_BLOB_3d6f50be... CAPS COMMAND_AND_VERIFY_COMMAND_AT_512_CHARS; RANK8 MUST NOT BE EXPOSED UNDER A KNOWN_ARTIFACT_TRUNCATION ROUTE.",
+  "revoked_before_rank8_task_exposure": true,
+  "superseding_planner_candidate": {
+    "branch": "chatgpt/tbscience-artifact-command-capacity-20261007-v1",
+    "planner_git_blob_sha": "614c261e296f4d3dbc1b835f0ad8aec29e2e2aee",
+    "independent_unit_replay": "PASS_13_OF_13",
+    "acceptance_credit": 0
+  }
 }
