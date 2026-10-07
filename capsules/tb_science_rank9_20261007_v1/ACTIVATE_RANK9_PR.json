@@ -1,0 +1,23 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK9_ACTIVATION_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVE_EXACT_RANK9_V1_ONE_SHOT__TRANSITIVE_CARRIER_CLOSED",
+  "authorized_slot": "terminal-bench-science/neo-orbit-determination::trial-0",
+  "task_digest": "sha256:b0038fd39395b57f2036b2c0271f37b508e1250fc97d12c899590b61e997cada",
+  "authority_blob": "af464670453e432367531edb17e8590959ae5c41",
+  "intent_blob": "54dfd6dbdf858b386b8a6fa303b55e6ea5803f04",
+  "ledger_blob": "b82cffd09260c6792f473c952d2f0644bb2ca1fa",
+  "closure_manifest_blob": "4b2a4fb3bd85b066e642a0253d4c325dbb431237",
+  "closure_verification_blob": "cb8c4e36ee47dc2542b120a4a631de6ebdd4e8c5",
+  "epoch_blob": "a172896454ef0faf405dc371ac06a01acc866c76",
+  "execution_workflow_blob": "435a41999b791e25c32140f7b9dbde990fe482c1",
+  "exact_transitive_runtime_file_count": 14,
+  "fresh_reality_units_authorized": 1,
+  "run_attempt_required": 1,
+  "retries": 0,
+  "replacement": false,
+  "precheck_failure_consumes_slot": false,
+  "after_task_start_result_is_irreversible": true,
+  "incremental_spend_usd_max": 0,
+  "credit": false
+}
