@@ -278,6 +278,61 @@ def verify_adversarial_orchestration():
     assert s["planner_calls"] == 0
 
 
+def verify_live_activation():
+    activation = json.loads(
+        (ROOT / "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1_ACTIVATION_20261007_V1.json")
+        .read_text(encoding="utf-8")
+    )
+    authority = json.loads(
+        (ROOT / "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json")
+        .read_text(encoding="utf-8")
+    )
+
+    assert activation["operative_scope"] == "ANY_ALREADY_BOUND_SURVIVING_ESCAPE_CELL_IN_E_EQUALS_S_TRACE_MINUS_D_B"
+    boundary = activation["authority_boundary"]
+    assert boundary["planner_may_authorize_execution"] is False
+    assert boundary["planner_may_authorize_db_admission"] is False
+    assert boundary["planner_may_authorize_u_empty"] is False
+    assert boundary["planner_may_authorize_terminal"] is False
+    assert boundary["only_existing_fail_closed_db_admission_can_promote_cell"] is True
+    truth = activation["truth_preservation"]
+    assert truth["open_abc_refinement_family_count_changed"] is False
+    assert truth["u_empty_changed"] is False
+    assert truth["d_finality_changed"] is False
+    assert truth["terminal_changed"] is False
+    assert truth["terminal_credit_delta"] == 0
+
+    src = authority["authoritative_sources"]["universal_escape_resolver_active_planning_overlay"]
+    assert src["path"] == "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1_ACTIVATION_20261007_V1.json"
+    assert src["git_blob_sha"] == "d0bf6b9b6151e049b0e21b909a7b9da1bd0639e4"
+    assert src["runtime"]["git_blob_sha"] == "9043273c97b53a991de8cb418e0c6a58efa0cec3"
+    assert src["independent_verification"]["git_blob_sha"] == "dc9e16ee542c9c77e1fc35c225e8a7fdc990f5c2"
+    assert src["independent_verification"]["workflow_run_id"] == 37595704301
+    assert src["independent_verification"]["workflow_job_id"] == 112707682297
+
+    live = authority["live_truth"]
+    assert live["universal_escape_resolver_planning_overlay_active"] is True
+    assert live["universal_escape_resolver_db_admission_authority"] is False
+    assert live["universal_escape_resolver_u_empty_authority"] is False
+    assert live["universal_escape_resolver_terminal_authority"] is False
+    assert live["new_environment_learning_reopened_as_capability_build_problem"] is False
+    assert live["current_escape_planning_order"] == [
+        "SOURCE_PROVED_POSITIVE_ADEQUACY",
+        "ROBUST_COMMON_POLICY",
+        "COMPLETE_OBJECTIVE_OPTIMUM",
+        "DIRECT_END_TO_END_ACCEPTANCE",
+        "UNIVERSAL_LEARNING_V9_V8_V7_MINIMUM_MISSING_DECISION_RELEVANT_EVIDENCE_PLANNING",
+        "RETRY_EXISTING_FAIL_CLOSED_D_B_ADMISSION",
+        "RECOMPUTE_E",
+    ]
+
+    assert live["current_U_empty_proved"] is False
+    assert live["complete_selected_context_ABC_closed"] is False
+    assert live["D_finality_closed"] is False
+    assert live["terminal"] is False
+    assert live["open_ABC_refinement_family_count"] == 13
+
+
 if __name__ == "__main__":
     verify_exact_bytes()
     print("exact Brain resolver blobs: PASS")
@@ -285,4 +340,6 @@ if __name__ == "__main__":
     print("static authority boundary: PASS")
     verify_adversarial_orchestration()
     print("adversarial orchestration theorem: PASS")
+    verify_live_activation()
+    print("live activation truth-preservation theorem: PASS")
     print("UNIVERSAL ESCAPE RESOLVER V1 INDEPENDENT VERIFICATION: PASS")
