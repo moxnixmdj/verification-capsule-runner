@@ -1,0 +1,70 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK10_AUTHORITY_PUBLIC_VERIFICATION_V1",
+  "date": "2026-10-07",
+  "status": "INDEPENDENT_PUBLIC_RUNNER_PASS__EXACT_MERGED_AUTHORITY_AND_PREEXPOSURE_CHAIN__ZERO_TASK_EXPOSURE__ZERO_CREDIT",
+  "subject": {
+    "authority_path": "canonical/governance/TB_SCIENCE_RANK10_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json",
+    "authority_git_blob_sha": "7b4d8c2555d102b30e02673c95675403ae947629",
+    "intent_git_blob_sha": "e65720a36d7c09a3be5a33246f3ab54e20612915",
+    "ledger_v7_git_blob_sha": "d3ff32dd833dfb5fcdce58e134185bfaf19e95ae",
+    "epoch_git_blob_sha": "8d0bc7999769a32147eab08acb31436e7abe743c",
+    "terminal_manifest_git_blob_sha": "6dfa880b1f68881531afbba6ca211681801fd19b",
+    "slot_id": "terminal-bench-science/rdkit-ic-constraints::trial-0",
+    "schedule_rank": 10,
+    "task_digest": "sha256:17e356ab255088712c7dfa9765bf077b33a3da221f4a03d4770576857f9c0b6f"
+  },
+  "independent_runner": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "pull_request": 2403,
+    "workflow_run_id": 37628333729,
+    "workflow_job_id": 112815794796,
+    "workflow_name": "Verify TB-Science rank10 authority v1",
+    "head_sha": "5ae36890449b929bb28d3b05134d771b15cb50a0",
+    "run_attempt": 1,
+    "conclusion": "success",
+    "artifact_id": 11484724906,
+    "artifact_name": "tb-science-rank10-authority-verification-v1",
+    "artifact_digest": "sha256:22972e0fff0b45450354e1852bfd9a06cc27b45a9d0b82d93ae933107b03c81a"
+  },
+  "verified_preflight_runs": {
+    "planner_transport": {
+      "workflow_run_id": 37622800294,
+      "head_sha": "b8a31d29c2928cef6e99b61164477dc1e9591504",
+      "workflow_name": "Verify TB-Science planner transport repair v1",
+      "conclusion": "success"
+    },
+    "transitive_closure": {
+      "workflow_run_id": 37624610910,
+      "head_sha": "9368d6544d9c305be22cfc69eee11bc4a0572526",
+      "workflow_name": "Verify Science transitive closure v1",
+      "conclusion": "success"
+    }
+  },
+  "verified": {
+    "exact_authority_blob": true,
+    "exact_intent_blob": true,
+    "exact_current_slot_ledger_v7_blob": true,
+    "exact_inert_epoch_blob": true,
+    "exact_terminal_manifest_blob": true,
+    "next_untouched_slot_is_rank10": true,
+    "authorized_slot_not_consumed": true,
+    "one_shot_attempts": 1,
+    "retries": 0,
+    "replacement": false,
+    "precheck_failure_consumes_slot": false,
+    "rank9_transport_failure_not_task_capability_negative": true,
+    "benchmark_task_exposure": 0,
+    "fresh_target_reality_units_consumed": 0,
+    "incremental_spend_usd": 0
+  },
+  "hard_nonclaims": [
+    "NO_RANK10_TASK_EXECUTION_FROM_THIS_RECEIPT",
+    "NO_TB_SCIENCE_ACCEPTANCE_CREDIT",
+    "NO_FAMILY_OR_TERMINAL_CREDIT"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "fresh_target_reality_units_consumed": 0,
+    "terminal_credit_delta": 0
+  }
+}
