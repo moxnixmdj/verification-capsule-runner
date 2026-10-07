@@ -11,6 +11,10 @@
     "canonical/verification/TOOL_DISCOVERY_UNIVERSAL_SCOPE_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json": "f44e2378cf00f86a59159cb9d8edb35f0a7c27f4",
     "canonical/verification/ACCEPTED_THREE_OWNERSHIP_PROMOTION_PROOF_20261003_V1.json": "4711fb5eed330990edea369725de6eaedfd3bc70",
     "canonical/runtime/trajectory_failure_typed_ir_candidate_v7.py": "28940387bd6c11671035ad9201e37bba13fd9bc9",
-    "canonical/runtime/tool_discovery_information_safe_candidate.py": "64c02edd568d95ec5ed54b7b8122183ce5b82e17"
+    "canonical/runtime/tool_discovery_information_safe_candidate.py": "64c02edd568d95ec5ed54b7b8122183ce5b82e17",
+    "canonical/runtime/trajectory_failure_typed_ir_proof_v6.py": "0f41a36e6ad16722ce05b180e036fb921a2ef886",
+    "canonical/runtime/p1_v6_derived_only_counterexample_v1.py": "3466e7382d940133fa2b10206874bb39cdf3722f",
+    "canonical/runtime/recovery_typed_ir_domain_invariance_v1.py": "dfe9c8f0c605c75ab09ba1c2b09965b2bf8b3228",
+    "canonical/tests/test_recovery_typed_ir_domain_invariance_v1.py": "100349bdf89374cf19dc5b9dfc120fa19cb1041c"
   }
 }
