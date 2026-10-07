@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_SYNTHESIS_C2_GROUNDED_EXPRESSION_V2_PUBLIC_CAPSULE_V1",
+  "date": "2026-10-05",
+  "source_repository": "moxnixmdj/brain",
+  "source_ref": "main",
+  "source_control_plane_head": "5156efaeffaace5ce714f5741346e4576b280163",
+  "exact_blobs": {
+    "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "0709b7d43a069eaa9eb3240df28789a9107a36db",
+    "canonical/tests/test_synthesis_grounded_expression_ir_v1.py": "f28e5648e7327fdd6cba54c602016485e0eb66c5",
+    "canonical/governance/SYNTHESIS_C2_GROUNDED_EXPRESSION_BOUNDED_ROUTE_20261005_V2.json": "a138e506a9488a6f268c65febed7eb9420404de5"
+  },
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "incremental_spend_usd": 0,
+  "purpose": "Independently verify the adversarially repaired bounded C2 grounded-expression runtime, tests, and zero-credit governance boundary on exact content-addressed bytes."
+}
