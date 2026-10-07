@@ -1,0 +1,42 @@
+name: Verify TB-Science verification authority V3
+
+on:
+  push:
+    branches:
+      - verify/tb-science-verification-authority-v3-20261007
+    paths:
+      - '.github/workflows/verify-tb-science-verification-authority-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: moxnixmdj/brain
+          ref: repair/tb-science-verification-authority-v3-20261007
+          path: brain
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Replay exact patched unit suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd brain
+          python -m unittest -v             canonical.tests.test_harbor_science_agent_v1             canonical.tests.test_harbor_science_planner_v1
+      - name: Bind exact subject blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd brain
+          test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "a2c4c3f7d2d1cc85b58c8bfdd5d2d4b4490a795c"
+          test "$(git hash-object canonical/runtime/harbor_science_planner_v1.py)" = "ebc9d8be19e3fc4f2b5a5e2691b0d8c0d31db03f"
+          test "$(git hash-object canonical/tests/test_harbor_science_agent_v1.py)" = "87b43b46d164d825bcf73ae4033e01618621b1c0"
+          test "$(git hash-object canonical/tests/test_harbor_science_planner_v1.py)" = "b17c6b2aaa72259c26644aee04785050bbb89532"
