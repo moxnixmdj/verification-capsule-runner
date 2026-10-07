@@ -132,8 +132,8 @@ assert manifest["acceptance"]["required_successes"]==124
 assert manifest["acceptance"]["irreversible_failure_count"]==87
 rows=[x for x in manifest["task_metadata"] if x["name"]==TASK]
 assert len(rows)==1 and rows[0]["digest"]==DIGEST
-schedule=[x for x in manifest["slot_schedule"] if x["slot_id"]==SLOT]
-assert len(schedule)==1 and schedule[0]["schedule_order"]==10 and schedule[0]["task_digest"]==DIGEST
+schedule=[x for x in manifest["slots"] if x["slot_id"]==SLOT]
+assert len(schedule)==1 and schedule[0]["schedule_order"]==9 and schedule[0]["task_digest"]==DIGEST
 
 print(json.dumps({
  "status":"PASS",
