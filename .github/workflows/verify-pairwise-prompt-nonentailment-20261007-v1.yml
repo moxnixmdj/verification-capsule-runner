@@ -1,0 +1,21 @@
+name: Verify pairwise prompt non-entailment cut
+on:
+  push:
+    paths:
+      - 'capsules/pairwise_prompt_nonentailment_20261007_v1/**'
+      - '.github/workflows/verify-pairwise-prompt-nonentailment-20261007-v1.yml'
+  pull_request:
+    paths:
+      - 'capsules/pairwise_prompt_nonentailment_20261007_v1/**'
+      - '.github/workflows/verify-pairwise-prompt-nonentailment-20261007-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain bytes and constructive countermodel
+        run: python capsules/pairwise_prompt_nonentailment_20261007_v1/verify.py
