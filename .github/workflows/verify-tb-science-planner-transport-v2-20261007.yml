@@ -1,0 +1,145 @@
+name: Verify TB-Science repaired planner transport v2
+
+on:
+  push:
+    branches:
+      - verify/tb-science-planner-transport-v2-20261007
+    paths:
+      - "capsules/tb_science_planner_transport_v2_20261007/ACTIVATE.json"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tb-science-planner-transport-v2-exact
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact repaired planner bytes and unit tests
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_transport_v2_20261007
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "01d859c8f27b317893027e693c9aa49e833a256f"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "3020cc54412c158efe38180025d066b5c2028165"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_planner_v1
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire and verify exact model if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local cognition endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > TRANSPORT_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > TRANSPORT_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute zero-benchmark live planner transport probe
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_transport_v2_20261007
+          PYTHONPATH="$C" python - <<'PY'
+          import hashlib,json,os,pathlib
+          from canonical.runtime.harbor_science_planner_v1 import plan, extract_json_object, MAX_COMMAND_CHARS
+          prompt=(
+              "Synthetic transport probe only. No benchmark task is present. "
+              "Requirement R1: propose exactly one harmless local shell command that writes the word probe "
+              "to /tmp/project_brain_transport_probe.txt, plus a verification command that checks that exact content."
+          )
+          out=plan(prompt,timeout_s=180)
+          proposal=extract_json_object(out["text"])
+          candidates=proposal.get("candidates")
+          assert isinstance(candidates,list) and len(candidates)==1, proposal
+          c=candidates[0]
+          assert isinstance(c.get("command"),str) and 0 < len(c["command"]) <= MAX_COMMAND_CHARS
+          assert isinstance(c.get("verify_command"),str) and 0 < len(c["verify_command"]) <= MAX_COMMAND_CHARS
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_TRANSPORT_V2_PUBLIC_RUNNER_RECEIPT",
+            "date":"2026-10-07",
+            "status":"INDEPENDENT_LIVE_TRANSPORT_PASS",
+            "planner_blob":"01d859c8f27b317893027e693c9aa49e833a256f",
+            "planner_test_blob":"3020cc54412c158efe38180025d066b5c2028165",
+            "command_policy_blob":"a525773417291c7a4841bf35e1baff5370350d0d",
+            "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+            "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+            "transport":out["transport"],
+            "endpoint":out["endpoint"],
+            "proposal_sha256":hashlib.sha256(out["text"].encode()).hexdigest(),
+            "candidate_count":1,
+            "command_length":len(c["command"]),
+            "verify_command_length":len(c["verify_command"]),
+            "benchmark_task_exposure_count":0,
+            "fresh_target_reality_units_consumed":0,
+            "incremental_spend_usd":0,
+            "acceptance_credit":False,
+            "terminal_credit":False,
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+          }
+          pathlib.Path("TB_SCIENCE_PLANNER_TRANSPORT_V2_PUBLIC_RUNNER_RECEIPT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - name: Persist exact verification receipt
+        run: |
+          set -euo pipefail
+          P=TB_SCIENCE_PLANNER_TRANSPORT_V2_PUBLIC_RUNNER_RECEIPT.json
+          git config user.name "Project Brain Science Transport Verifier"
+          git config user.email "project-brain-science-transport@users.noreply.github.com"
+          mkdir -p capsules/tb_science_planner_transport_v2_20261007/verification
+          cp "$P" capsules/tb_science_planner_transport_v2_20261007/verification/
+          git add capsules/tb_science_planner_transport_v2_20261007/verification/TB_SCIENCE_PLANNER_TRANSPORT_V2_PUBLIC_RUNNER_RECEIPT.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Verify repaired TB-Science planner live transport"
+          git push origin HEAD:verify/tb-science-planner-transport-v2-20261007
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-planner-transport-v2-public-runner
+          path: |
+            TB_SCIENCE_PLANNER_TRANSPORT_V2_PUBLIC_RUNNER_RECEIPT.json
+            TRANSPORT_QWEN_HEALTH.json
+            TRANSPORT_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 1
