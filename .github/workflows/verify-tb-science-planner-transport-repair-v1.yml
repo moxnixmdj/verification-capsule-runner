@@ -1,0 +1,134 @@
+name: Verify TB-Science planner transport repair v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_planner_transport_repair_20261007_v1/ACTIVATE.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-planner-transport-repair-v1
+  cancel-in-progress: false
+
+jobs:
+  live-transport:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Exact-byte and unit-test gate
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_transport_repair_20261007_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "01d859c8f27b317893027e693c9aa49e833a256f"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "3020cc54412c158efe38180025d066b5c2028165"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_planner_v1
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire and verify exact Qwen model if needed
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > PLANNER_TRANSPORT_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > PLANNER_TRANSPORT_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Live synthetic planner transport probe
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_transport_repair_20261007_v1
+          PYTHONPATH="$C" python - <<'PY'
+          import hashlib,json,pathlib
+          from canonical.runtime import harbor_science_planner_v1 as planner
+          from canonical.runtime.harbor_command_policy import validate_environment_command,MAX_COMMAND_CHARS
+
+          prompt=(
+              "Synthetic transport verification only. No benchmark task is present. "
+              "Use submit_science_proposal exactly once. Use material requirement R1. "
+              "Return one harmless local candidate whose command is 'echo transport-ok' "
+              "and verify_command is 'test true'."
+          )
+          out=planner.plan(prompt,timeout_s=180)
+          proposal=planner.extract_json_object(out["text"])
+          reqs=proposal.get("material_requirements")
+          candidates=proposal.get("candidates")
+          assert isinstance(reqs,list) and reqs
+          assert isinstance(candidates,list) and len(candidates)==1
+          candidate=candidates[0]
+          command=validate_environment_command(candidate["command"])
+          verify=validate_environment_command(candidate["verify_command"])
+          assert len(command)<=MAX_COMMAND_CHARS
+          assert len(verify)<=MAX_COMMAND_CHARS
+          receipt={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_LIVE_TRANSPORT_PROBE_RECEIPT_V1",
+              "status":"PASS__LIVE_LLAMA_CPP_TOOL_SCHEMA_AND_DECODE_PATH",
+              "planner_git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f",
+              "tests_git_blob_sha":"3020cc54412c158efe38180025d066b5c2028165",
+              "command_policy_git_blob_sha":"a525773417291c7a4841bf35e1baff5370350d0d",
+              "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "planner_transport":out["transport"],
+              "model":out["model"],
+              "candidate_count":1,
+              "decoded_command_bound_enforced":True,
+              "benchmark_task_exposure":0,
+              "rank10_task_exposure":False,
+              "incremental_spend_usd":0,
+              "acceptance_credit_delta":0,
+              "terminal_credit_delta":0
+          }
+          pathlib.Path("PLANNER_TRANSPORT_PROBE_RECEIPT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+          ! grep -q 'NUMBER_OF_REPETITIONS_EXCEEDS_SANE_DEFAULTS' PLANNER_TRANSPORT_SERVER.log
+          ! grep -q 'number of repetitions exceeds sane defaults' PLANNER_TRANSPORT_SERVER.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-planner-transport-repair-v1
+          path: |
+            PLANNER_TRANSPORT_PROBE_RECEIPT.json
+            PLANNER_TRANSPORT_HEALTH.json
+            PLANNER_TRANSPORT_SERVER.log
+          if-no-files-found: warn
+          retention-days: 1
