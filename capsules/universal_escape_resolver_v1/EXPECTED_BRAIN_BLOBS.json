@@ -7,8 +7,12 @@
     "canonical/runtime/universal_escape_resolver_v1.py": "9043273c97b53a991de8cb418e0c6a58efa0cec3",
     "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1.json": "1459c9da4e7178ca06a30cf46588bfd5f644b534",
     "canonical/tests/test_universal_escape_resolver_v1.py": "fd1e9c3adb5132987c71c8f8e7e83e35bf9cefbc",
-    "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json": "7937d10c8cd1f05d30f22b35f7a3da270de015f6",
-    "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json": "13da6cdb17122a4a8a8d97072e9886c0009f3616"
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json": "58b3db5056760406fbce459a9ee83affa975485d",
+    "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json": "78c1c6be7e6055f0bdf99ebdc682370083e5c847",
+    "canonical/runtime/universal_solver_episode_verification_authenticator_v1.py": "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171",
+    "canonical/runtime/universal_solver_authenticated_resume_v1.py": "6b9d3f2c9ad2096a294d97b255798cac13262cd1",
+    "canonical/runtime/universal_verified_adaptive_solver_v9.py": "659cda15bb956606a023cc9495e4036ce13e19d9",
+    "canonical/runtime/executable_skill_verification_authenticator_v1.py": "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
   },
   "reused_authorities": {
     "universal_learning_v9_router_blob": "e6b594931e6bd6f87c802cd1e18d06e90cac1719",
@@ -18,12 +22,14 @@
   },
   "claim_under_test": "GLOBAL_PLANNING_SCOPE_LIFT_WITHOUT_GLOBAL_ACCEPTANCE_SCOPE_LIFT",
   "verification_trigger_revision": 2,
-  "activation_claim_under_test": "FOUR_ROLE_TWO_REGIME_LIVE_PLANNING_WITHOUT_DB_U_EMPTY_D_FINALITY_OR_TERMINAL_AUTHORITY",
-  "activation_verification_revision": 2,
+  "activation_claim_under_test": "FOUR_ROLE_TWO_REGIME_LIVE_PLANNING_WITH_AUTHENTICATED_V9_RESUME_EPISODE_AND_SKILL_BEHAVIOR_EVIDENCE",
+  "activation_verification_revision": 4,
   "frontier_bindings": {
     "primitive_u_frontier_blob": "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838",
     "acceptance_regime_quotient_blob": "2bf5d4b28fb839028fc7a369eab53f93e8b8605c",
-    "universal_solver_v7_blob": "d65ebac0fdce52c9873af8da4cb69c34ef7e6206",
-    "authenticated_resume_blob": "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+    "universal_solver_v9_blob": "659cda15bb956606a023cc9495e4036ce13e19d9",
+    "authenticated_resume_blob": "6b9d3f2c9ad2096a294d97b255798cac13262cd1",
+    "episode_verification_authenticator_blob": "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171",
+    "skill_verification_authenticator_blob": "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
   }
 }

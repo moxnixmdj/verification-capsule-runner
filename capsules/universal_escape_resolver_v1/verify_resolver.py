@@ -311,8 +311,10 @@ def verify_live_activation():
     assert regime["regimes"] == ["O_OBJECTIVE_ACCEPTANCE", "Q_QUALITATIVE_RELATIVE_ORDER"]
 
     continuity = activation["cross_run_continuity"]
-    assert continuity["solver_git_blob_sha"] == "d65ebac0fdce52c9873af8da4cb69c34ef7e6206"
+    assert continuity["solver_git_blob_sha"] == "659cda15bb956606a023cc9495e4036ce13e19d9"
     assert continuity["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+    assert continuity["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
+    assert continuity["skill_verification_authenticator_git_blob_sha"] == "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
     assert continuity["terminal_authority"] is False
 
     boundary = activation["authority_boundary"]
@@ -333,11 +335,13 @@ def verify_live_activation():
 
     src = authority["authoritative_sources"]["universal_escape_resolver_v2_active_planning_overlay"]
     assert src["path"] == "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json"
-    assert src["git_blob_sha"] == "13da6cdb17122a4a8a8d97072e9886c0009f3616"
+    assert src["git_blob_sha"] == "78c1c6be7e6055f0bdf99ebdc682370083e5c847"
     assert src["primitive_u_frontier"]["git_blob_sha"] == "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838"
     assert src["acceptance_regime_quotient"]["git_blob_sha"] == "2bf5d4b28fb839028fc7a369eab53f93e8b8605c"
-    assert src["cross_run_solver"]["git_blob_sha"] == "d65ebac0fdce52c9873af8da4cb69c34ef7e6206"
+    assert src["cross_run_solver"]["git_blob_sha"] == "659cda15bb956606a023cc9495e4036ce13e19d9"
     assert src["cross_run_solver"]["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+    assert src["cross_run_solver"]["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
+    assert src["cross_run_solver"]["skill_verification_authenticator_git_blob_sha"] == "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
 
     live = authority["live_truth"]
     assert live["universal_escape_resolver_v2_planning_overlay_active"] is True
@@ -351,6 +355,8 @@ def verify_live_activation():
     assert live["universal_escape_resolver_terminal_authority"] is False
     assert live["new_environment_learning_reopened_as_capability_build_problem"] is False
     assert live["universal_solver_authenticated_cross_run_resume_available"] is True
+    assert live["universal_solver_authenticated_episode_learning_evidence_required"] is True
+    assert live["universal_solver_authenticated_skill_behavior_verification_required"] is True
 
     assert live["current_U_empty_proved"] is False
     assert live["complete_selected_context_ABC_closed"] is False
