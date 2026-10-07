@@ -1,14 +1,14 @@
 {
   "schema": "BRAIN_UNIVERSAL_ESCAPE_RESOLVER_V1_VERIFIER_INPUT",
   "brain_repository": "moxnixmdj/brain",
-  "brain_ref": "research/universal-escape-resolver-v1-20261007",
+  "brain_ref": "activate/universal-escape-resolver-v2-20261007",
   "brain_head_sha": "7eaf5dca2ba2afcd11e0af76f5e88953354af4b9",
   "exact_brain_blobs": {
     "canonical/runtime/universal_escape_resolver_v1.py": "9043273c97b53a991de8cb418e0c6a58efa0cec3",
     "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1.json": "1459c9da4e7178ca06a30cf46588bfd5f644b534",
     "canonical/tests/test_universal_escape_resolver_v1.py": "fd1e9c3adb5132987c71c8f8e7e83e35bf9cefbc",
-    "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1_ACTIVATION_20261007_V1.json": "d0bf6b9b6151e049b0e21b909a7b9da1bd0639e4",
-    "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json": "a74435bd8ca151a1001091842b671b760e821030"
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json": "7937d10c8cd1f05d30f22b35f7a3da270de015f6",
+    "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json": "13da6cdb17122a4a8a8d97072e9886c0009f3616"
   },
   "reused_authorities": {
     "universal_learning_v9_router_blob": "e6b594931e6bd6f87c802cd1e18d06e90cac1719",
@@ -18,6 +18,12 @@
   },
   "claim_under_test": "GLOBAL_PLANNING_SCOPE_LIFT_WITHOUT_GLOBAL_ACCEPTANCE_SCOPE_LIFT",
   "verification_trigger_revision": 2,
-  "activation_claim_under_test": "LIVE_SCHEDULER_USES_GLOBAL_PLANNING_OVERLAY_WITHOUT_GRANTING_DB_U_EMPTY_D_FINALITY_OR_TERMINAL_AUTHORITY",
-  "activation_verification_revision": 1
+  "activation_claim_under_test": "FOUR_ROLE_TWO_REGIME_LIVE_PLANNING_WITHOUT_DB_U_EMPTY_D_FINALITY_OR_TERMINAL_AUTHORITY",
+  "activation_verification_revision": 2,
+  "frontier_bindings": {
+    "primitive_u_frontier_blob": "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838",
+    "acceptance_regime_quotient_blob": "2bf5d4b28fb839028fc7a369eab53f93e8b8605c",
+    "universal_solver_v7_blob": "d65ebac0fdce52c9873af8da4cb69c34ef7e6206",
+    "authenticated_resume_blob": "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+  }
 }
