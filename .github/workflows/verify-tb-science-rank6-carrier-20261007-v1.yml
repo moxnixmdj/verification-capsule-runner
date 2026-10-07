@@ -75,6 +75,7 @@ jobs:
           grep -F 'branches: [main]' "$W"
           grep -F 'capsules/tb_science_rank6_20261007_v1/ARM_RANK6.json' "$W"
           grep -F 'test "$GITHUB_RUN_ATTEMPT" = "1"' "$W"
+          grep -F 'execution_workflow_blob' "$W"
           grep -F 'terminal-bench-science/koopman-mfg-id::trial-0' "$W"
           grep -F 'TASK_NAME: terminal-bench-science/koopman-mfg-id' "$W"
           grep -F 'continue-on-error: true' "$W"
