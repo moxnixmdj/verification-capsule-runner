@@ -8,7 +8,7 @@ on:
       - "capsules/gdpval_public_220_semantic_v2_20261007_v1/ACTIVATE.json"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: gdpval-public-220-semantic-v2-exact
@@ -62,6 +62,17 @@ jobs:
           assert x["soundness"]["terminal_authority"] is False, x
           print(json.dumps({"status":x["status"],"population":x["population"],"aggregate":x["aggregate"],"compound_candidate_counts":x["compound_candidate_counts"]},sort_keys=True))
           PY
+
+      - name: Persist exact generated evidence on execution branch
+        run: |
+          set -euo pipefail
+          P=capsules/gdpval_public_220_semantic_v2_20261007_v1/canonical/evidence/GDPVAL_PUBLIC_220_COMPOSED_SEMANTIC_LOCALIZATION_20261007_V2.json
+          git config user.name "Project Brain GDPval Public Runner"
+          git config user.email "project-brain-gdpval-runner@users.noreply.github.com"
+          git add "$P"
+          git diff --cached --quiet && exit 0
+          git commit -m "GDPval: persist exact public-220 semantic localization v2 evidence"
+          git push origin HEAD:execute/gdpval-public-220-semantic-v2-20261007-v1
 
       - uses: actions/upload-artifact@v4
         with:
