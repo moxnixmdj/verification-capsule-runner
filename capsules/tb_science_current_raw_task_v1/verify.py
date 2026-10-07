@@ -2,13 +2,17 @@ from __future__ import annotations
 import asyncio, hashlib, importlib.util, json, pathlib, sys, types
 
 ROOT=pathlib.Path(__file__).resolve().parent
-TARGET=ROOT/"harbor_science_agent_v1.py"
-EXPECTED="5bc8ebac26bb7c809d4698f535eff43b667b30df"
+AGENT=ROOT/"canonical/runtime/harbor_science_agent_v1.py"
+PLANNER=ROOT/"canonical/runtime/harbor_science_planner_v1.py"
+EXPECTED_AGENT="5bc8ebac26bb7c809d4698f535eff43b667b30df"
+EXPECTED_PLANNER="c3e36eba57c450f325c8a9476ee048c841bbdbc8"
 
-raw=TARGET.read_bytes()
-blob=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
-assert blob==EXPECTED,(blob,EXPECTED)
-compile(raw,str(TARGET),"exec")
+def blob(path):
+    raw=path.read_bytes()
+    return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+
+assert blob(AGENT)==EXPECTED_AGENT,(blob(AGENT),EXPECTED_AGENT)
+assert blob(PLANNER)==EXPECTED_PLANNER,(blob(PLANNER),EXPECTED_PLANNER)
 
 canonical=types.ModuleType("canonical"); canonical.__path__=[]
 runtime=types.ModuleType("canonical.runtime"); runtime.__path__=[]
@@ -20,23 +24,21 @@ localizer=types.ModuleType("canonical.runtime.raw_task_acceptance_residual_local
 
 policy.validate_environment_command=lambda command: str(command)
 class HarborEnvironmentTransport:
-    def __init__(self,environment): self.environment=environment
-    async def exec(self,command,timeout_sec=None): return await self.environment.exec(command,timeout_sec=timeout_sec)
+    def __init__(self, environment): self.environment=environment
+    async def exec(self, command, timeout_sec=None): return await self.environment.exec(command,timeout_sec=timeout_sec)
 transport.HarborEnvironmentTransport=HarborEnvironmentTransport
 
-def compile_contract(goal,source_id=None,routing_target_effects=None):
+def compile_contract(goal, source_id=None, routing_target_effects=None):
     text=str(goal)
-    digest=hashlib.sha256(text.encode()).hexdigest()
     return {
       "pass":True,
-      "task_contract_sha256":digest,
+      "task_contract_sha256":hashlib.sha256(text.encode()).hexdigest(),
       "acceptance_contract":{
         "required_obligation_ids":["RAW_1"],
-        "obligations":[{"obligation_id":"RAW_1","segment_sha256":digest,"text":text}]
+        "obligations":[{"obligation_id":"RAW_1","segment_sha256":hashlib.sha256(text.encode()).hexdigest(),"text":text}]
       }
     }
 contract.compile_contract=compile_contract
-
 def localize(task_contract):
     return {
       "pass":True,
@@ -57,11 +59,8 @@ sys.modules.update({
  "canonical.runtime.raw_task_acceptance_residual_localizer_v1":localizer,
 })
 runtime.harbor_science_planner_v1=planner
-
-spec=importlib.util.spec_from_file_location("candidate",TARGET)
-candidate=importlib.util.module_from_spec(spec)
-assert spec and spec.loader
-spec.loader.exec_module(candidate)
+spec=importlib.util.spec_from_file_location("candidate",AGENT)
+candidate=importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(candidate)
 
 class Receipt:
     def __init__(self,returncode=0,stdout="",stderr=""):
@@ -77,7 +76,8 @@ class Env:
         if command=="VERIFY_WORK": return Receipt(0,"verified","")
         for p in ("/app/submission/controller.py","/app/submission/design_report.json"):
             if p in command:
-                return Receipt(0,"ok","") if p in self.files else Receipt(1,"","missing")
+                if p not in self.files: return Receipt(1,"","missing")
+                return Receipt(0,"ok","")
         return Receipt(0,"ok","")
 
 def install(outputs):
@@ -86,9 +86,8 @@ def install(outputs):
     planner.extract_json_object=lambda text: json.loads(text)
     planner.normalize_proposal_object=lambda obj: obj
 
-async def cases():
+async def run():
     goal="Create /app/submission/controller.py and /app/submission/design_report.json for the task."
-
     install([{
       "material_requirements":["R1","BRAIN_DELIVERABLE_01","BRAIN_DELIVERABLE_02"],
       "candidates":[{"action_id":"make","covers":["R1","BRAIN_DELIVERABLE_01","BRAIN_DELIVERABLE_02"],"command":"CREATE_BOTH","verify_command":"VERIFY_WORK"}]
@@ -109,12 +108,13 @@ async def cases():
 
     assert candidate._action_transport_clean(0,"","bash: warning: here-document at line 1") is False
 
-asyncio.run(cases())
+asyncio.run(run())
 print(json.dumps({
  "status":"PASS",
- "exact_git_blob_sha":blob,
+ "agent_git_blob_sha":blob(AGENT),
+ "planner_git_blob_sha":blob(PLANNER),
  "checks":[
-   "EXACT_CURRENT_AGENT_BYTES_BOUND",
+   "EXACT_BYTES_BOUND",
    "DECLARED_OUTPUTS_REQUIRED",
    "SUBMISSION_READY_NEVER_EQUALS_TASK_ACCEPTED",
    "RAW_TASK_ACCEPTANCE_RECEIPT_REMAINS_REQUIRED",
