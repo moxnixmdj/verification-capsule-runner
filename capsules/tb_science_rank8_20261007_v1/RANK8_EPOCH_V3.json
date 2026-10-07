@@ -1,0 +1,13 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_EPOCH_V3",
+  "date": "2026-10-07",
+  "epoch_id": "TBSCI-RANK8-20261007-E3",
+  "status": "CURRENT",
+  "slot_id": "terminal-bench-science/linked-cell-suppression::trial-0",
+  "task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
+  "attempts": 1,
+  "retries": 0,
+  "incremental_spend_usd_max": 0,
+  "note": "Canonical use requires binding this exact Git blob. The carrier compares the current public main blob immediately before the benchmark step.",
+  "credit": false
+}
