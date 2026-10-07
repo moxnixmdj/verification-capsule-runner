@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_ACTIVATION_V3",
+  "date": "2026-10-07",
+  "status": "ACTIVE_EXACT_RANK8_V3_ONE_SHOT",
+  "authorized_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
+  "task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
+  "authority_blob": "16698c0125075213387e3cd662082d71a68471e3",
+  "intent_blob": "e1c663ccd0090c7d3b3b3e201d1d4e9112496ee1",
+  "ledger_blob": "651a800d1e9f43f15be3447546b2807e1365b42d",
+  "replay_blob": "be73ef34aece4d1f9e5622a006568653ab2f5c5d",
+  "epoch_blob": "f95f513b0ad57b8b3398fcabba44beae6fd805f4",
+  "execution_workflow_blob": "058ba4b77d4e11657ee088c8c5d7c52f519df5b7",
+  "exact_route": {
+    "agent": "5bc8ebac26bb7c809d4698f535eff43b667b30df",
+    "planner": "c3e36eba57c450f325c8a9476ee048c841bbdbc8",
+    "raw_task_contract": "d54d5a2f7efa76b653d288f4f53da4883644baa6",
+    "raw_task_localizer": "f29616cf7726959aa28db4ed6541a9fc0bc2ac76"
+  },
+  "fresh_reality_units_authorized": 1,
+  "run_attempt_required": 1,
+  "retries": 0,
+  "replacement": false,
+  "incremental_spend_usd_max": 0,
+  "precheck_failure_consumes_slot": false,
+  "after_task_start_result_is_irreversible": true,
+  "credit": false
+}
