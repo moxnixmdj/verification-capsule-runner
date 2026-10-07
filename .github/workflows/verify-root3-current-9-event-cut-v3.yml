@@ -1,0 +1,36 @@
+name: Verify Root3 current nine event cut V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "verify_root3_current_9_event_cut_v3.py"
+      - "subject/root3_current_9_event_cut_v3/**"
+      - ".github/workflows/verify-root3-current-9-event-cut-v3.yml"
+  push:
+    branches: [main]
+    paths:
+      - "verify_root3_current_9_event_cut_v3.py"
+      - "subject/root3_current_9_event_cut_v3/**"
+      - ".github/workflows/verify-root3-current-9-event-cut-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify Root3 current-nine reduction
+        run: python verify_root3_current_9_event_cut_v3.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root3-current-9-event-cut-v3
+          path: root3_current_9_event_cut_v3_receipt.json
+          if-no-files-found: error
