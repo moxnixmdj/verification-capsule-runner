@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_PR_ACTIVATION_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVE_EXACT_RANK8_ONE_SHOT",
+  "authorized_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
+  "authorized_task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
+  "authority_blob": "82e9573f64037ae2f0d39228e4d57cc45deb7a29",
+  "planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
+  "execution_workflow_blob": "64512d2d4efbe791fe83c8efc8e5def6ed71c66a",
+  "fresh_reality_units_authorized": 1,
+  "retries": 0,
+  "replacement": false,
+  "incremental_spend_usd": 0
+}
