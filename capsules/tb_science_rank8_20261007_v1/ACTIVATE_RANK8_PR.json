@@ -1,0 +1,21 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_PR_ACTIVATION_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVE_EXACT_RANK8_ONE_SHOT",
+  "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
+  "authorized_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
+  "authorized_task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
+  "authority_blob": "82e9573f64037ae2f0d39228e4d57cc45deb7a29",
+  "action_intent_blob": "87fea6ecfe13cd2b40e1f549138276d75744681b",
+  "ledger_blob": "32a57737b09fd6b38758814a6e3f843afd13ca16",
+  "rank7_irreversible_result_blob": "b6da8ab77554096032901ca69f72ea82497f6921",
+  "planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
+  "planner_repair_verification_blob": "dcada0f538ace33e13bf716bdca5fdd02aae2561",
+  "execution_workflow_blob": "27e4661e19b72dfbca8b4a2fb45a1c9c63ad59e1",
+  "fresh_reality_units_authorized": 1,
+  "retries": 0,
+  "replacement": false,
+  "duplicate_credit": false,
+  "incremental_spend_usd_required": 0,
+  "promotion_authority": false
+}
