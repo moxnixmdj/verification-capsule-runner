@@ -1,4 +1,4 @@
-name: Verify TB-Science rank6 unarmed carrier
+name: Verify TB-Science rank6 carrier state
 
 on:
   pull_request:
@@ -23,7 +23,25 @@ jobs:
           set -euo pipefail
           C=capsules/tb_science_rank6_20261007_v1
           R=capsules/tb_science_canary_v3_execution
-          test ! -e "$C/ARM_RANK6.json"
+          if [ -e "$C/ARM_RANK6.json" ]; then
+            export EXECUTION_WORKFLOW_BLOB="$(git hash-object .github/workflows/execute-tb-science-rank6-20261007-v1.yml)"
+            python - <<'PY'
+          import json,os
+          p="capsules/tb_science_rank6_20261007_v1/ARM_RANK6.json"
+          x=json.load(open(p))
+          assert x["status"]=="ARMED_AFTER_AUTHORITY_AND_CARRIER_VERIFICATION"
+          assert x["authorized_slot"]=="terminal-bench-science/koopman-mfg-id::trial-0"
+          assert x["task_digest"]=="sha256:ba37bd6173cc7d21aff84b2124524ef2ec60cb85f5f9cef2c42e6111ad9ed18f"
+          assert x["authority_blob"]=="3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2"
+          assert x["authority_verification_blob"]=="1aff0bc47f34c6cd93c1252a0659e48712a22bef"
+          assert x["execution_workflow_blob"]==os.environ["EXECUTION_WORKFLOW_BLOB"]
+          assert x["run_attempt_required"]==1 and x["retries"]==0 and x["replacement"] is False
+          assert x["fresh_reality_units_armed"]==1
+          assert x["fresh_reality_units_consumed"]==0
+          assert x["activation_transport"]=="PULL_REQUEST_MERGE_PUSH_EVENT"
+          assert x["pre_activation_direct_commit_workflow_runs"]==0
+          PY
+          fi
           test "$(git hash-object "$C/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json")" = "3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2"
           test "$(git hash-object "$C/TB_SCIENCE_RANK6_ONE_SLOT_AUTHORITY_PUBLIC_RUNNER_VERIFICATION_20261007_V1.json")" = "1aff0bc47f34c6cd93c1252a0659e48712a22bef"
           test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
