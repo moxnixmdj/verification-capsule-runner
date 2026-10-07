@@ -38,8 +38,9 @@ jobs:
           assert x["run_attempt_required"]==1 and x["retries"]==0 and x["replacement"] is False
           assert x["fresh_reality_units_armed"]==1
           assert x["fresh_reality_units_consumed"]==0
-          assert x["activation_transport"]=="PULL_REQUEST_MERGE_PUSH_EVENT"
+          assert x["activation_transport"]=="PULL_REQUEST_EVENT_EXACT_BRANCH"
           assert x["pre_activation_direct_commit_workflow_runs"]==0
+          assert x["pre_activation_merge_commit_workflow_runs"]==0
           PY
           fi
           test "$(git hash-object "$C/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json")" = "3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2"
@@ -91,7 +92,9 @@ jobs:
           set -euo pipefail
           W=.github/workflows/execute-tb-science-rank6-20261007-v1.yml
           grep -F 'branches: [main]' "$W"
-          grep -F 'capsules/tb_science_rank6_20261007_v1/ARM_RANK6.json' "$W"
+          grep -F 'pull_request:' "$W"
+          grep -F 'capsules/tb_science_rank6_20261007_v1/ACTIVATE_RANK6_PR.json' "$W"
+          grep -F 'activate/tb-science-rank6-execute-20261007' "$W"
           grep -F 'test "$GITHUB_RUN_ATTEMPT" = "1"' "$W"
           grep -F 'execution_workflow_blob' "$W"
           grep -F 'terminal-bench-science/koopman-mfg-id::trial-0' "$W"
