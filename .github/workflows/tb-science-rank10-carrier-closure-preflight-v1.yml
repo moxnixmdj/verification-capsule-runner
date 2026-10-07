@@ -58,7 +58,7 @@ jobs:
           assert x["carrier_execution_authority"] is True, x
           assert x["benchmark_execution_authority"] is False, x
           expected={
-            "canonical/runtime/harbor_science_agent_v1.py":"5bc8ebac26bb7c8098f535eff43b667b30df",
+            "canonical/runtime/harbor_science_agent_v1.py":"5bc8ebac26bb7c809d4698f535eff43b667b30df",
             "canonical/runtime/harbor_science_planner_v1.py":"01d859c8f27b317893027e693c9aa49e833a256f",
             "canonical/runtime/lossless_raw_task_contract_v1.py":"d54d5a2f7efa76b653d288f4f53da4883644baa6",
             "canonical/runtime/raw_task_acceptance_residual_localizer_v1.py":"f29616cf7726959aa28db4ed6541a9fc0bc2ac76",
@@ -104,7 +104,7 @@ jobs:
             "closure_file_count":x["closure"]["closure_file_count"],
             "closure_result_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
             "planner_git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f",
-            "agent_git_blob_sha":"5bc8ebac26bb7c8098f535eff43b667b30df",
+            "agent_git_blob_sha":"5bc8ebac26bb7c809d4698f535eff43b667b30df",
             "github_run_id":os.environ["GITHUB_RUN_ID"],
             "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
             "github_sha":os.environ["GITHUB_SHA"],
