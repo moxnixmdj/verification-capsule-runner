@@ -18,4 +18,4 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify exact closure, imports, and adversarial carrier gates
-        run: python capsules/science_transitive_closure_20261007_v1/verify.py
+        run: python capsules/science_transitive_closure_20261007_v1/verify_v2.py
