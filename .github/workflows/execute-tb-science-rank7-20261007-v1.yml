@@ -11,13 +11,18 @@ permissions:
 
 concurrency:
   group: tb-science-rank7-one-shot
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   terminal-slot:
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     steps:
+      - name: Permanent consumed-authority hard stop
+        run: |
+          echo "TB-Science rank7 authority was already consumed by workflow run 37606898246 with FINAL_ZERO; rerun/replacement forbidden."
+          exit 1
+
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
