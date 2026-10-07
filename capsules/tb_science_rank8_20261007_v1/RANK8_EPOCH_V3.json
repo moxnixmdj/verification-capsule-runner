@@ -2,12 +2,20 @@
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_EPOCH_V3",
   "date": "2026-10-07",
   "epoch_id": "TBSCI-RANK8-20261007-E3",
-  "status": "CURRENT",
+  "status": "RETIRED__RANK8_V3_AUTHORITY_CONSUMED__NO_REUSE",
   "slot_id": "terminal-bench-science/linked-cell-suppression::trial-0",
   "task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
   "attempts": 1,
   "retries": 0,
   "incremental_spend_usd_max": 0,
   "note": "Canonical use requires binding this exact Git blob. The carrier compares the current public main blob immediately before the benchmark step.",
-  "credit": false
+  "credit": false,
+  "retired_by": {
+    "workflow_run_id": 37614049003,
+    "workflow_job_id": 112767999838,
+    "artifact_id": 11479083901,
+    "artifact_digest": "sha256:93e066ab85f6e15072b1ed5f07b0278c410a016ba277f6c2120251fc0020622c",
+    "reason": "AUTHORIZED V3 RUN CROSSED SECOND LIVE-EPOCH GATE AND ENTERED THE FROZEN TASK-START STEP; AUTHORITY IS IRREVERSIBLY CONSUMED."
+  },
+  "reuse_authority": false
 }
