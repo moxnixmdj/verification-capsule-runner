@@ -1,0 +1,60 @@
+name: Verify H100 UniChart storage feasibility V1
+
+on:
+  push:
+    branches:
+      - verify/h100-unichart-storage-feasibility-v1
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/h100_unichart_storage_feasibility_v1.py'
+      - 'canonical/tests/test_h100_unichart_storage_feasibility_v1.py'
+      - 'canonical/governance/H100_UNICHART_STORAGE_FEASIBILITY_CANDIDATE_V1.json'
+      - 'canonical/verification/H100_UNICHART_STORAGE_FEASIBILITY_CONNECTOR_VERIFICATION_20261005_V1.json'
+      - '.github/workflows/verify-h100-unichart-storage-feasibility-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run exact tests without external dependencies
+        run: |
+          python - <<'PY'
+          from canonical.tests.test_h100_unichart_storage_feasibility_v1 import (
+              test_bound_matches_frozen_arithmetic,
+              test_candidate_is_strictly_zero_credit,
+          )
+          test_bound_matches_frozen_arithmetic()
+          test_candidate_is_strictly_zero_credit()
+          print("TESTS_PASS")
+          PY
+      - name: Cross-check candidate against runtime
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime.h100_unichart_storage_feasibility_v1 import audit
+          c=json.loads(Path("canonical/governance/H100_UNICHART_STORAGE_FEASIBILITY_CANDIDATE_V1.json").read_text())
+          v=json.loads(Path("canonical/verification/H100_UNICHART_STORAGE_FEASIBILITY_CONNECTOR_VERIFICATION_20261005_V1.json").read_text())
+          out=audit()
+          th=c["conditional_storage_theorem"]
+          assert out["total_candidate_bytes"]==th["total_candidate_bytes"]==v["recomputation"]["total_candidate_bytes"]==84341436
+          assert out["margin_bytes"]==th["margin_bytes"]==v["recomputation"]["margin_bytes"]==15658564
+          assert out["h100_credit_delta"]==c["accounting"]["h100_credit_delta"]==v["accounting"]["h100_credit_delta"]==0
+          assert out["execution_authority"] is False
+          assert out["promotion_authority"] is False
+          assert "NO_CLAIM_W3_PRESERVES_UNICHART_CAPABILITY" in c["hard_nonclaims"]
+          print(json.dumps({
+            "status":"PASS__CONDITIONAL_STORAGE_FEASIBILITY__ZERO_CREDIT",
+            "total_candidate_bytes":out["total_candidate_bytes"],
+            "margin_bytes":out["margin_bytes"],
+            "h100_credit_delta":0
+          },indent=2,sort_keys=True))
+          PY
