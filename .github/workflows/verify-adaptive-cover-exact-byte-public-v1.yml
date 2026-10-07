@@ -26,4 +26,4 @@ jobs:
           cp "$C/canonical/runtime/adaptive_cover_induction_gate_v1.py" verifytree/canonical/runtime/
           cp "$C/canonical/tests/test_adaptive_cover_induction_gate_v1.py" verifytree/canonical/tests/
           touch verifytree/canonical/__init__.py verifytree/canonical/runtime/__init__.py verifytree/canonical/tests/__init__.py
-          PYTHONPATH=verifytree python -m unittest -v             canonical.tests.test_adaptive_cover_induction_gate_v1
+          PYTHONPATH=verifytree python -m pytest -q verifytree/canonical/tests/test_adaptive_cover_induction_gate_v1.py
