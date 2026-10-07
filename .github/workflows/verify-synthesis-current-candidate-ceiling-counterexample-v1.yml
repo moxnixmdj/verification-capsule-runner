@@ -1,0 +1,87 @@
+name: Verify synthesis current-candidate ceiling counterexample V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/synthesis_current_candidate_ceiling_counterexample_v1/**"
+      - ".github/workflows/verify-synthesis-current-candidate-ceiling-counterexample-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain mirrors
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_current_candidate_ceiling_counterexample_v1
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for path, expected in m["exact_blobs"].items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert got==expected,(path,expected,got)
+          a=m["accounting"]
+          assert a["incremental_spend_usd"]==0
+          assert a["new_reality_units_consumed"]==0
+          assert a["terminal_cases_consumed"]==0
+          assert a["acceptance_credit_delta"]==0
+          print("EXACT_BRAIN_MIRRORS_PASS",len(m["exact_blobs"]))
+          PY
+      - name: Independently replay constructive witness
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_current_candidate_ceiling_counterexample_v1
+          PYTHONPATH=. python - <<'PY'
+          import json
+          from canonical.runtime.p3_information_safe_candidate_v3 import solve
+          from canonical.runtime.synthesis_matched_quality_metric_v1 import aggregate
+
+          partition=json.load(open("canonical/governance/SYNTHESIS_P3_TYPED_INPUT_DOMAIN_COUNTERMODEL_PARTITION_20261005_V1.json"))
+          r6=next(x for x in partition["constructive_uncovered_classes"] if x["id"]=="SYNTHESIS_SCOPE_R6_PROVENANCE_AND_UNIT_SENSITIVE_SUPPORT")
+          assert "source authority" in r6["witness"]
+          assert partition["source_bound_facts"]["provenance_consumed_by_candidate"] is False
+          assert partition["source_bound_facts"]["evidence_unit_consumed_by_candidate"] is False
+
+          public={
+            "contract":"EVIDENCE_TO_AUDIENCE_SYNTHESIS_001",
+            "task":{
+              "audience":"executive",
+              "required_claims":["C"],
+              "max_claims":1,
+              "claims":[{"claim_id":"C","metric":"M","relation":"at_least","threshold":50,"kind":"risk"}],
+              "evidence":[
+                {"metric":"M","value":60,"unit":"index_point","provenance":["SRC_A"]},
+                {"metric":"M","value":40,"unit":"index_point","provenance":["SRC_B"]}
+              ]
+            }
+          }
+          result=solve(public)
+          assert result["selected_claims"]==["C"], result
+          assert public["task"]["evidence"][1]["value"] < public["task"]["claims"][0]["threshold"]
+
+          components={
+            "claim_to_source_fidelity":1.0,
+            "uncertainty_and_disagreement_preservation":1.0,
+            "audience_adaptation":1.0,
+            "format_and_style_constraints":1.0,
+            "compression_without_decision_relevant_loss":1.0
+          }
+          scored=aggregate(components,unsupported_material_claims=1)
+          assert scored["matched_quality"]==0.0, scored
+          assert scored["reason"]=="UNSUPPORTED_MATERIAL_CLAIM_HARD_ZERO", scored
+
+          cert=json.load(open("canonical/governance/SYNTHESIS_CURRENT_CANDIDATE_CEILING_COUNTEREXAMPLE_20261005_V1.json"))
+          assert cert["theorem"]["result"]=="CURRENT_CANDIDATE_UNIVERSAL_CEILING_1_ROUTE_FALSIFIED"
+          assert cert["fresh_reality_authority"] is False
+          assert cert["acceptance_credit_delta"]==0
+          print("SYNTHESIS_CURRENT_CANDIDATE_CEILING_COUNTEREXAMPLE_INDEPENDENT_PASS")
+          PY
