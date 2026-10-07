@@ -1,0 +1,20 @@
+name: Verify P3 condition overlay minimum cut V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p3_condition_overlay_minimum_cut_v1/**"
+      - ".github/workflows/verify-p3-condition-overlay-minimum-cut-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact blobs, frozen-envelope absence, and live first-party evidence
+        run: python capsules/p3_condition_overlay_minimum_cut_v1/verify.py
