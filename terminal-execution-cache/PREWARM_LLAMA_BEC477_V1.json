@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_PREWARM_LLAMA_BEC477_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVE_ZERO_EXPOSURE_BUILD_CACHE_PREWARM",
+  "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+  "cache_key": "brain-llamacpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu24-x86_64-release-cpu-v1",
+  "terminal_case_exposure": false,
+  "fresh_target_reality_units_consumed": 0,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
