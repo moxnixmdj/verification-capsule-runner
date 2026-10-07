@@ -1,0 +1,98 @@
+name: Verify Root1 Qwen3.8 27B Q2 semantic seed V1
+
+on:
+  push:
+    branches:
+      - "verify/root1-qwen38-27b-q2-semantic-seed-20261007-v1"
+    paths:
+      - "verify_root1_qwen38_27b_q2_semantic_seed_v1.py"
+      - ".github/workflows/verify-root1-qwen38-27b-q2-semantic-seed-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      MODEL_FILE: Qwen3.8-27B-UD-Q2_K_XL.gguf
+      MODEL_BYTES: '9828981664'
+      MODEL_SHA256: fd4730dd8aad070517978752b63d530aeb1740d2283cab9fa24f1e404032ddb0
+      MODEL_REV: 27af057ecb382ddfea5d12837360a8980560e3ed
+      LLAMA_SHA: 5f754ea0e2fd21e1213db7ebebfd65d938d9d69c
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free non-load-bearing runner disk
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup || true
+          sudo apt-get clean || true
+          df -h "$RUNNER_TEMP"
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$RUNNER_TEMP/llama.cpp"
+          git init "$src"
+          git -C "$src" remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C "$src" fetch --depth 1 origin "$LLAMA_SHA"
+          git -C "$src" checkout --detach FETCH_HEAD
+          test "$(git -C "$src" rev-parse HEAD)" = "$LLAMA_SHA"
+          cmake -S "$src" -B "$src/build" -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$src/build" -j 4 --target llama-server
+          cp "$src/build/bin/llama-server" "$RUNNER_TEMP/llama-server"
+          rm -rf "$src"
+
+      - name: Fetch exact frozen 27B Q2 subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          model="$RUNNER_TEMP/$MODEL_FILE"
+          curl -fL --retry 6 --retry-delay 3 --retry-all-errors --connect-timeout 30             -o "$model"             "https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/$MODEL_REV/$MODEL_FILE?download=true"
+          test "$(stat -c '%s' "$model")" = "$MODEL_BYTES"
+          echo "$MODEL_SHA256  $model" | sha256sum -c -
+
+      - name: Start bounded reasoning-off local subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if "$RUNNER_TEMP/llama-server" --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup "$RUNNER_TEMP/llama-server"             -m "$RUNNER_TEMP/$MODEL_FILE"             --host 127.0.0.1 --port 8080 -c 2048 -t 4 --parallel 1 --no-webui "${EXTRA[@]}"             > qwen38-27b-q2-server.log 2>&1 &
+          echo $! > qwen38-27b-q2-server.pid
+          ok=0
+          for i in $(seq 1 300); do
+            if curl -fsS http://127.0.0.1:8080/health > qwen38-27b-q2-health.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat qwen38-27b-q2-server.pid)" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          if test "$ok" != 1; then tail -n 300 qwen38-27b-q2-server.log; exit 1; fi
+
+      - name: Run unchanged frozen meaning-sensitive gate
+        id: semantic
+        continue-on-error: true
+        shell: bash
+        run: |
+          python verify_root1_qwen38_27b_q2_semantic_seed_v1.py             --server http://127.0.0.1:8080             --model "$RUNNER_TEMP/$MODEL_FILE"             --result qwen38-27b-q2-semantic-seed-result.json
+
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root1-qwen38-27b-q2-semantic-seed-v1
+          path: |
+            qwen38-27b-q2-semantic-seed-result.json
+            qwen38-27b-q2-server.log
+            qwen38-27b-q2-health.json
+          if-no-files-found: warn
+
+      - name: Enforce frozen candidate gate
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.semantic.outcome }}" = "success"
