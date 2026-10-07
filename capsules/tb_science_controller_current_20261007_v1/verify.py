@@ -166,7 +166,6 @@ async def cases():
     assert action["brain_deliverable_checks"][0]["verified"] is True
 
     # 5. Zero-exit transport truncation cannot reach proposal verification/coverage promotion.
-    assert candidate._action_transport_clean(0,"bash: warning: here-document at line 1","","") is False if False else True
     assert candidate._action_transport_clean(0,"bash: warning: here-document at line 1","") is False
     assert candidate._action_transport_clean(0,"","bash: warning: here-document at line 1") is False
 
