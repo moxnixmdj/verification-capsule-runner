@@ -1,0 +1,50 @@
+name: Verify isolated exact Brain symbolic V4
+on:
+  push:
+    branches:
+      - 'verify-run/symbolic-v4-isolated-20261007-sol'
+    paths:
+      - 'capsules/symbolic_v4_exact_public_replay_20261007_v2/**'
+      - '.github/workflows/verify-symbolic-v4-isolated-push.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact source blobs
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          cap="capsules/symbolic_v4_exact_public_replay_20261007_v2/"
+          m=json.load(open(cap+"manifest.json"))
+          for rel,expected in m["files"].items():
+              path=cap+"brain/"+rel
+              actual=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert actual==expected,(rel,expected,actual)
+          print("EXACT_BRAIN_BLOBS_PASS",len(m["files"]))
+          PY
+      - name: Run exact V2 V3 V4 suites and live canary
+        working-directory: capsules/symbolic_v4_exact_public_replay_20261007_v2/brain
+        run: |
+          set -euo pipefail
+          python -m pytest -q             canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v2.py             canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v3.py             canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v4.py
+          python - <<'PY'
+          import json
+          from canonical.runtime.certificate_gated_selected_route_runtime_entrypoint_v4 import preflight, dispatch
+          out=preflight()
+          assert out["pass"] is True,out
+          assert out["route_count"]==1,out
+          assert out["creditable_route_count"]==0,out
+          assert out["selected_cover_complete"] is False,out
+          routed=dispatch({"kind":"SYMBOLIC_ROUTER_DEPLOYMENT_CANARY_V1"},{"probe":41})
+          assert routed["creditable"] is False,routed
+          assert routed["payload_sha256"] is None,routed
+          assert routed["result"]["terminal_result"] is False,routed
+          print("SYMBOLIC_V4_EXACT_PUBLIC_REPLAY_PASS",json.dumps(out,sort_keys=True))
+          PY
