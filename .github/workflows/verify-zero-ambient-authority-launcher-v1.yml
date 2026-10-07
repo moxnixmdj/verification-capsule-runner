@@ -1,0 +1,26 @@
+name: Verify zero ambient authority launcher V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/zero_ambient_authority_launcher_v1/**"
+      - ".github/workflows/verify-zero-ambient-authority-launcher-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact launcher unit tests
+        run: |
+          cd capsules/zero_ambient_authority_launcher_v1
+          python -m unittest -v canonical.tests.test_zero_ambient_authority_launcher_v1
+      - name: Run pinned Docker escape canaries
+        run: |
+          cd capsules/zero_ambient_authority_launcher_v1
+          python -m unittest -v canonical.tests.test_zero_ambient_authority_escape_integration_v1
