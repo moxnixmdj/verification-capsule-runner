@@ -1,0 +1,131 @@
+name: TB-Science rank10 exact carrier closure preflight v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank10_carrier_closure_v1/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank10-carrier-closure-v1-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact current Brain carrier bytes
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib
+          C=pathlib.Path("capsules/tb_science_rank10_carrier_closure_v1")
+          m=json.loads((C/"MANIFEST.json").read_text())
+          assert m["rank"] == 10
+          assert m["terminal_benchmark_task_exposure"] is False
+          assert m["fresh_benchmark_slots_consumed"] == 0
+          assert m["incremental_spend_usd_max"] == 0
+          for rel,meta in m["files"].items():
+              raw=(C/rel).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got == meta["git_blob_sha"], (rel,got,meta["git_blob_sha"])
+          print("EXACT_CURRENT_CARRIER_BYTES_PASS")
+          PY
+
+      - name: Recompute and verify exact transitive closure
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank10_carrier_closure_v1
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py"             --repo-root "$C" --carrier-root "$C"             --root canonical/runtime/harbor_science_agent_v1.py             --root canonical/runtime/harbor_science_planner_v1.py             --root canonical/runtime/lossless_raw_task_contract_v1.py             --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py             > RANK10_CARRIER_CLOSURE.json
+          python - <<'PY'
+          import json
+          x=json.load(open("RANK10_CARRIER_CLOSURE.json"))
+          assert x["pass"] is True, x
+          assert x["status"] == "PASS__CARRIER_CONTAINS_EXACT_TRANSITIVE_RUNTIME_CLOSURE", x
+          assert x["closure"]["pass"] is True, x
+          assert x["closure"]["closure_file_count"] == 14, x
+          assert x["missing_paths"] == [], x
+          assert x["mismatched"] == [], x
+          assert x["carrier_execution_authority"] is True, x
+          assert x["benchmark_execution_authority"] is False, x
+          expected={
+            "canonical/runtime/harbor_science_agent_v1.py":"5bc8ebac26bb7c8098f535eff43b667b30df",
+            "canonical/runtime/harbor_science_planner_v1.py":"01d859c8f27b317893027e693c9aa49e833a256f",
+            "canonical/runtime/lossless_raw_task_contract_v1.py":"d54d5a2f7efa76b653d288f4f53da4883644baa6",
+            "canonical/runtime/raw_task_acceptance_residual_localizer_v1.py":"f29616cf7726959aa28db4ed6541a9fc0bc2ac76",
+          }
+          got={r["path"]:r["git_blob_sha"] for r in x["closure"]["files"]}
+          for path,sha in expected.items():
+              assert got[path] == sha, (path,got.get(path),sha)
+          print(json.dumps({
+            "status":x["status"],
+            "closure_file_count":x["closure"]["closure_file_count"],
+            "planner_blob":got["canonical/runtime/harbor_science_planner_v1.py"],
+          },sort_keys=True))
+          PY
+
+      - name: Import exact agent and repaired planner from carrier
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank10_carrier_closure_v1
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from canonical.runtime.harbor_science_agent_v1 import HarborScienceAgent
+          import canonical.runtime.harbor_science_planner_v1 as planner
+          assert HarborScienceAgent.name()=="project-brain-science"
+          assert planner.MODEL=="brain-qwen3.5-9b"
+          assert "maxLength" not in planner.TOOL["function"]["parameters"]["properties"]["candidates"]["items"]["properties"]["command"]
+          assert "maxLength" not in planner.TOOL["function"]["parameters"]["properties"]["candidates"]["items"]["properties"]["verify_command"]
+          print("AGENT_AND_REPAIRED_PLANNER_IMPORT_PASS")
+          PY
+
+      - name: Bind conservative closure receipt
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path("RANK10_CARRIER_CLOSURE.json")
+          x=json.loads(p.read_text())
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK10_CARRIER_CLOSURE_PREFLIGHT_RECEIPT_V1",
+            "status":"PASS",
+            "rank":10,
+            "slot_id":"terminal-bench-science/rdkit-ic-constraints::trial-0",
+            "task_digest":"sha256:17e356ab255088712c7dfa9765bf077b33a3da221f4a03d4770576857f9c0b6f",
+            "closure_file_count":x["closure"]["closure_file_count"],
+            "closure_result_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+            "planner_git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f",
+            "agent_git_blob_sha":"5bc8ebac26bb7c8098f535eff43b667b30df",
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "terminal_benchmark_task_exposure":False,
+            "fresh_benchmark_slots_consumed":0,
+            "incremental_spend_usd":0,
+            "rank10_authority":False,
+            "acceptance_credit":False,
+            "terminal_credit":False
+          }
+          pathlib.Path("RANK10_CARRIER_CLOSURE_RECEIPT.json").write_text(
+            json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-rank10-carrier-closure-v1
+          path: |
+            RANK10_CARRIER_CLOSURE.json
+            RANK10_CARRIER_CLOSURE_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 7
