@@ -59,3 +59,7 @@ unsupported["acceptance_semantics_class"] = "UNCLASSIFIED"
 require(verify_v5(unsupported)["status"] == "FAIL_CLOSED", "V4_UNSUPPORTED_CLASS_MUST_REMAIN_FAIL_CLOSED")
 
 print("PASS: independent V5 policy-identity checks")
+
+
+from verify_task_acceptance_inventory_v1 import main as verify_task_acceptance_inventory
+verify_task_acceptance_inventory()
