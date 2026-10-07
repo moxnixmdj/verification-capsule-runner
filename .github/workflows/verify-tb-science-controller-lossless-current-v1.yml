@@ -1,0 +1,23 @@
+name: Verify current lossless TB-Science controller
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/tb_science_controller_lossless_current_20261007_v1/**'
+      - '.github/workflows/verify-tb-science-controller-lossless-current-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact current controller and lossless finish boundary
+        run: python capsules/tb_science_controller_lossless_current_20261007_v1/verify.py
