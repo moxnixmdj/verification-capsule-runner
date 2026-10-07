@@ -1,0 +1,29 @@
+name: Independently verify matched success semantic coupling V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "vendor/brain/canonical/runtime/matched_success_semantic_coupling_contract_v2.py"
+      - "vendor/brain/canonical/governance/MATCHED_SUCCESS_SEMANTIC_COUPLING_CONTRACT_V2.json"
+      - "vendor/brain/canonical/runtime/matched_success_integrated_causal_harness_v2.py"
+      - "vendor/brain/canonical/governance/MATCHED_SUCCESS_INTEGRATED_CAUSAL_HARNESS_V2.json"
+      - "vendor/brain/canonical/tests/test_matched_success_semantic_coupling_contract_v2.py"
+      - "vendor/brain/canonical/tests/test_matched_success_integrated_causal_harness_v2.py"
+      - "verify_matched_success_semantic_coupling_v2.py"
+      - ".github/workflows/verify-matched-success-semantic-coupling-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - run: python verify_matched_success_semantic_coupling_v2.py
