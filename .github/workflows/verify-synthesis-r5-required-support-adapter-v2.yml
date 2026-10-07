@@ -1,0 +1,53 @@
+name: Verify synthesis R5 required-support adapter V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/synthesis_r5_required_support_adapter_v2/**"
+      - ".github/workflows/verify-synthesis-r5-required-support-adapter-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact content-addressed mirrors
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v2
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for path, expected in m["exact_blobs"].items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert got==expected,(path,expected,got)
+          assert m["incremental_spend_usd"]==0
+          assert m["new_reality_units_consumed"]==0
+          assert m["terminal_cases_consumed"]==0
+          assert m["terminal_credit_delta"]==0
+          print("EXACT_R5_V2_INPUT_BLOBS_PASS",len(m["exact_blobs"]))
+          PY
+      - name: Run committed repaired V2 tests
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v2
+          touch canonical/__init__.py canonical/runtime/__init__.py canonical/tests/__init__.py
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_synthesis_bound_claim_guard_v2
+      - name: Independent boundary checks
+        run: |
+          set -euo pipefail
+          cd capsules/synthesis_r5_required_support_adapter_v2
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime.synthesis_bound_claim_guard_v2 import solve
+          assert solve(None)["reason"]=="INPUT_INVALID"
+          x={"task":{"claims":[{"claim_id":"   ","required":True}],"evidence":[],"support_bindings":[]}}
+          assert solve(x)["reason"]=="CLAIM_ID_OR_REQUIRED_INVALID"
+          x={"task":{"claims":[{"claim_id":"R","required":True}],"evidence":[{"evidence_id":"E","provenance":["   "]}],"support_bindings":[]}}
+          assert solve(x)["reason"]=="EVIDENCE_ID_OR_PROVENANCE_INVALID"
+          print("R5_V2_INDEPENDENT_BOUNDARY_PASS")
+          PY
