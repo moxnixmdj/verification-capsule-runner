@@ -1,0 +1,26 @@
+name: Verify symbolic admission predicate successor v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/symbolic_admission_predicate_successor_v1/**"
+      - ".github/workflows/verify-symbolic-admission-predicate-successor-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independent exact-byte adversarial replay
+        run: |
+          cd capsules/symbolic_admission_predicate_successor_v1
+          python -m py_compile canonical/runtime/symbolic_admission_predicate_successor_v1.py
+          python verify.py
