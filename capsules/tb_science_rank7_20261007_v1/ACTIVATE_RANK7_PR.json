@@ -10,5 +10,7 @@
   "execution_authority": false,
   "rerun_credit": false,
   "incremental_spend_usd_required": 0,
-  "promotion_authority": false
+  "promotion_authority": false,
+  "cancellation_trigger_sequence": 2,
+  "cancellation_trigger_reason": "FORCE_PULL_REQUEST_SYNCHRONIZE_UNDER_CANCEL_IN_PROGRESS_GUARD__NO_BENCHMARK_EXECUTION"
 }
