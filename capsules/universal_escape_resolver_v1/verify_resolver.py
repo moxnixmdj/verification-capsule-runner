@@ -312,7 +312,8 @@ def verify_live_activation():
 
     continuity = activation["cross_run_continuity"]
     assert continuity["solver_git_blob_sha"] == "46e07d1af3c42b2e779fbb0ad7f6c293471fa60a"
-    assert continuity["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"\n    assert continuity["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
+    assert continuity["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+    assert continuity["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
     assert continuity["terminal_authority"] is False
 
     boundary = activation["authority_boundary"]
@@ -337,7 +338,8 @@ def verify_live_activation():
     assert src["primitive_u_frontier"]["git_blob_sha"] == "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838"
     assert src["acceptance_regime_quotient"]["git_blob_sha"] == "2bf5d4b28fb839028fc7a369eab53f93e8b8605c"
     assert src["cross_run_solver"]["git_blob_sha"] == "46e07d1af3c42b2e779fbb0ad7f6c293471fa60a"
-    assert src["cross_run_solver"]["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"\n    assert src["cross_run_solver"]["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
+    assert src["cross_run_solver"]["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+    assert src["cross_run_solver"]["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
 
     live = authority["live_truth"]
     assert live["universal_escape_resolver_v2_planning_overlay_active"] is True
@@ -350,7 +352,8 @@ def verify_live_activation():
     assert live["universal_escape_resolver_d_finality_authority"] is False
     assert live["universal_escape_resolver_terminal_authority"] is False
     assert live["new_environment_learning_reopened_as_capability_build_problem"] is False
-    assert live["universal_solver_authenticated_cross_run_resume_available"] is True\n    assert live["universal_solver_authenticated_episode_learning_evidence_required"] is True
+    assert live["universal_solver_authenticated_cross_run_resume_available"] is True
+    assert live["universal_solver_authenticated_episode_learning_evidence_required"] is True
 
     assert live["current_U_empty_proved"] is False
     assert live["complete_selected_context_ABC_closed"] is False
