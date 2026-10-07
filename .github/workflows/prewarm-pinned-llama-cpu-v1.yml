@@ -1,0 +1,89 @@
+name: Prewarm pinned llama CPU build v1
+
+on:
+  push:
+    branches: [terminal-execution-v1]
+    paths:
+      - "terminal-execution-cache/PREWARM_LLAMA_BEC477_V1.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prewarm-pinned-llama-bec477-v1
+  cancel-in-progress: false
+
+jobs:
+  prewarm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify zero-exposure activation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          x=json.load(open("terminal-execution-cache/PREWARM_LLAMA_BEC477_V1.json"))
+          assert x["llama_cpp_commit"]=="bec4772f6a2527d371557b5d2032641e5ff7619c"
+          assert x["terminal_case_exposure"] is False
+          assert x["incremental_spend_usd"]==0
+          PY
+
+      - name: Restore immutable pinned build cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            llama.cpp/build/bin
+            terminal-execution-cache/LLAMA_BEC477_BIN_MANIFEST.sha256
+          key: brain-llamacpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu24-x86_64-release-cpu-v1
+
+      - name: Build exact llama.cpp on cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          mkdir -p terminal-execution-cache
+          find llama.cpp/build/bin -type f -print0 | sort -z | xargs -0 sha256sum > terminal-execution-cache/LLAMA_BEC477_BIN_MANIFEST.sha256
+
+      - name: Verify cached or newly built binary set
+        run: |
+          set -euo pipefail
+          test -x llama.cpp/build/bin/llama-server
+          test -s terminal-execution-cache/LLAMA_BEC477_BIN_MANIFEST.sha256
+          sha256sum -c terminal-execution-cache/LLAMA_BEC477_BIN_MANIFEST.sha256
+          llama.cpp/build/bin/llama-server --help >/dev/null 2>&1
+          cp terminal-execution-cache/LLAMA_BEC477_BIN_MANIFEST.sha256 LLAMA_BEC477_BIN_MANIFEST.sha256
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          p=pathlib.Path("LLAMA_BEC477_BIN_MANIFEST.sha256")
+          receipt={
+            "schema":"PROJECT_BRAIN_PINNED_LLAMA_CPU_BUILD_CACHE_RECEIPT_V1",
+            "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+            "cache_key":"brain-llamacpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu24-x86_64-release-cpu-v1",
+            "manifest_sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+            "cache_hit":None,
+            "terminal_case_exposure":False,
+            "incremental_spend_usd":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0,
+          }
+          pathlib.Path("LLAMA_BEC477_BUILD_CACHE_RECEIPT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pinned-llama-bec477-cpu-build-cache-v1
+          path: |
+            LLAMA_BEC477_BIN_MANIFEST.sha256
+            LLAMA_BEC477_BUILD_CACHE_RECEIPT.json
+          retention-days: 7
