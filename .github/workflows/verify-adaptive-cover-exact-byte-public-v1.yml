@@ -1,0 +1,29 @@
+name: Verify adaptive-cover exact-byte receipts public v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'capsules/adaptive_cover_exact_byte_20261007_v1/**'
+      - '.github/workflows/verify-adaptive-cover-exact-byte-public-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact source blobs and run canaries
+        run: |
+          set -euo pipefail
+          C=capsules/adaptive_cover_exact_byte_20261007_v1
+          test "$(git hash-object "$C/canonical/runtime/adaptive_cover_induction_gate_v1.py")" = "fd3058f4e8182cae91161f16090e90e443ea2c00"
+          test "$(git hash-object "$C/canonical/tests/test_adaptive_cover_induction_gate_v1.py")" = "1a3e3889c8f9b2405ce3c8cb8dee2c03322800ef"
+          mkdir -p verifytree/canonical/runtime verifytree/canonical/tests
+          cp "$C/canonical/runtime/adaptive_cover_induction_gate_v1.py" verifytree/canonical/runtime/
+          cp "$C/canonical/tests/test_adaptive_cover_induction_gate_v1.py" verifytree/canonical/tests/
+          touch verifytree/canonical/__init__.py verifytree/canonical/runtime/__init__.py verifytree/canonical/tests/__init__.py
+          PYTHONPATH=verifytree python -m unittest -v             canonical.tests.test_adaptive_cover_induction_gate_v1
