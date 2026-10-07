@@ -1,0 +1,44 @@
+{
+  "schema": "PROJECT_BRAIN_GDPVAL_PUBLIC_220_ISOLATED_EXECUTION_MANIFEST_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_commit_sha": "faf0e0a2a9034bdb7df85924333f7fc47ae0a2a2",
+  "files": {
+    "canonical/runtime/gdpval_semantic_complement_localizer_v2.py": {
+      "git_blob_sha": "347607991ccd68c9a27b0afcb56a271f45ed0326"
+    },
+    "canonical/runtime/explicit_obligation_index_v1.py": {
+      "git_blob_sha": "a28e1bde45bfe85c086202c3a5ecca2ae730fe7d"
+    },
+    "canonical/runtime/explicit_compound_requirement_decomposer.py": {
+      "git_blob_sha": "06da82ccd7cf5ba37b78d1d664b5638caa4e1956"
+    },
+    "canonical/runtime/bounded_predicate_argument_semantics.py": {
+      "git_blob_sha": "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
+    },
+    "canonical/runtime/explicit_definition_reference_graph.py": {
+      "git_blob_sha": "950f073b35b9d7f42c76c518711462f00e89b262"
+    },
+    "canonical/runtime/bounded_contextual_semantics.py": {
+      "git_blob_sha": "5e69ce25dcb7765fc26a8ff290a6d11ec2a06699"
+    },
+    "canonical/runtime/contextual_reference_operators.py": {
+      "git_blob_sha": "a437c23cc845637824083dcd50a90ad1f7e09fef"
+    },
+    "canonical/runtime/bounded_semantic_decomposer.py": {
+      "git_blob_sha": "679f4f45269c26a793a147efc7da82a224268b1d"
+    },
+    "canonical/runtime/source_obligation_inventory.py": {
+      "git_blob_sha": "55bc8e639dbe2ca401bae46ee57c3faec8b260e4"
+    },
+    "canonical/tests/test_gdpval_semantic_complement_localizer_v2.py": {
+      "git_blob_sha": "8f7f70f5007a9fd3e4cff668559fd9aab6586bf4"
+    }
+  },
+  "terminal_case_exposure": false,
+  "fresh_target_model_queries_authorized": 0,
+  "provider_evaluation_queries_authorized": 0,
+  "new_internal_model_inference_authorized": 0,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
