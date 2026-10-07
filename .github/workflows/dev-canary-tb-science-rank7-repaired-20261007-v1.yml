@@ -1,0 +1,166 @@
+name: TB-Science rank7 repaired development canary
+
+on:
+  push:
+    branches:
+      - dev-canary/tb-science-rank7-repaired-20261007-v1
+    paths:
+      - "capsules/tb_science_rank7_repaired_devcanary_20261007_v1/**"
+      - ".github/workflows/dev-canary-tb-science-rank7-repaired-20261007-v1.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank7-repaired-devcanary
+  cancel-in-progress: true
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact repaired Brain bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank7_repaired_devcanary_20261007_v1
+          R=capsules/tb_science_canary_v3_execution
+          test "$(git hash-object "$C/harbor_science_planner_v1.py")" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
+          test "$(git hash-object "$C/harbor_science_agent_v1.py")" = "bd6b47651d264dc84d0b706c514aa2eb9646dcd6"
+          test "$(git hash-object "$R/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$R/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          cp "$C/harbor_science_planner_v1.py" "$R/canonical/runtime/harbor_science_planner_v1.py"
+          cp "$C/harbor_science_agent_v1.py" "$R/canonical/runtime/harbor_science_agent_v1.py"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_agent_v1.py")" = "bd6b47651d264dc84d0b706c514aa2eb9646dcd6"
+
+      - name: Install exact Harbor
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor") == "0.23.0"
+          PY
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire and verify exact Qwen model if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local cognition endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Replay consumed rank7 as development-only canary
+        id: replay
+        continue-on-error: true
+        env:
+          TASK_NAME: terminal-bench-science/reactor-safety-control
+          SAFE_ID: reactor-safety-control-rank7-repaired-devcanary
+        run: |
+          set -uo pipefail
+          R="$GITHUB_WORKSPACE/capsules/tb_science_canary_v3_execution"
+          export PYTHONPATH="$R"
+          mkdir -p "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
+          harbor run -d terminal-bench-science/terminal-bench-science@0.1.0 -i "$TASK_NAME" -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent -k 1 -n 1 -r 0 --agent-timeout-multiplier 0.60 --environment-build-timeout-multiplier 1.0 --verifier-timeout-multiplier 1.0 --job-name "$SAFE_ID" --jobs-dir "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
+          echo "harbor_exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize development-only receipt
+        if: always()
+        env:
+          SAFE_ID: reactor-safety-control-rank7-repaired-devcanary
+          HARBOR_OUTCOME: ${{ steps.replay.outcome }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, os, pathlib
+          root=pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          base=root/"jobs"/os.environ["SAFE_ID"]
+          results=[]
+          for p in base.rglob("result.json") if base.exists() else []:
+              try: obj=json.loads(p.read_text())
+              except Exception: continue
+              results.append((p,obj))
+          scored=[]
+          for p,obj in results:
+              vr=obj.get("verifier_result")
+              if isinstance(vr,dict) and isinstance(vr.get("rewards"),dict):
+                  scored.append((p,obj))
+          reward=None
+          if len(scored)==1:
+              reward=scored[0][1]["verifier_result"]["rewards"].get("reward")
+          traces=list(base.rglob("project_brain_science_trace.json")) if base.exists() else []
+          trace=None
+          if traces:
+              try: trace=json.loads(traces[0].read_text())
+              except Exception: pass
+          files=[]
+          for name in ("controller.py","design_report.json"):
+              hits=list(base.rglob(name)) if base.exists() else []
+              files.append({"name":name,"found":bool(hits),"sizes":[p.stat().st_size for p in hits]})
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK7_REPAIRED_DEVELOPMENT_CANARY_V1",
+            "development_only":True,
+            "fresh_target_reality_units_consumed":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0,
+            "original_rank7_rerun_credit":False,
+            "task":"terminal-bench-science/reactor-safety-control",
+            "planner_blob":"c3e36eba57c450f325c8a9476ee048c841bbdbc8",
+            "controller_blob":"bd6b47651d264dc84d0b706c514aa2eb9646dcd6",
+            "harbor_outcome":os.environ.get("HARBOR_OUTCOME"),
+            "reward":reward,
+            "trace_status":trace.get("status") if isinstance(trace,dict) else None,
+            "resolved_requirements":trace.get("resolved_requirements") if isinstance(trace,dict) else None,
+            "submission_artifacts":files,
+            "result_hashes":{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p,_ in results},
+          }
+          pathlib.Path("RANK7_REPAIRED_DEVCANARY_RECEIPT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-rank7-repaired-development-canary
+          path: |
+            RANK7_REPAIRED_DEVCANARY_RECEIPT.json
+            jobs/reactor-safety-control-rank7-repaired-devcanary/
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
