@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CARRIER_TRANSITIVE_CLOSURE_VERIFICATION_INTENT_V1",
+  "date": "2026-10-07",
+  "status": "VERIFY_EXACT_CAUSAL_REPAIR__ZERO_BENCHMARK_EXPOSURE",
+  "causal_counterexample": {
+    "source_run_id": 37614049003,
+    "source_job_id": 112767999838,
+    "failure": "No module named 'canonical.runtime.explicit_requirement_index_v2'",
+    "classification": "CARRIER_TRANSITIVE_DEPENDENCY_CLOSURE_MISSING"
+  },
+  "exact_runtime_closure": {
+    "harbor_science_agent_v1.py": "5bc8ebac26bb7c809d4698f535eff43b667b30df",
+    "harbor_science_planner_v1.py": "c3e36eba57c450f325c8a9476ee048c841bbdbc8",
+    "lossless_raw_task_contract_v1.py": "d54d5a2f7efa76b653d288f4f53da4883644baa6",
+    "raw_task_acceptance_residual_localizer_v1.py": "f29616cf7726959aa28db4ed6541a9fc0bc2ac76",
+    "harbor_environment_transport.py": "ec46f648214a37bb16025d5ef2593efdf59f0d79",
+    "harbor_command_policy.py": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "explicit_requirement_index_v2.py": "30629b10fdbf3c337eb3252c043ec13123ca66a1",
+    "bounded_predicate_argument_semantics.py": "8303231779d6fe8c7fb740e3bbaa492914d4eba9",
+    "source_aligned_acceptance_program_v1.py": "742c183cccc2ec4bb5f94e88048590e2991dacd4",
+    "source_contract_compiler.py": "ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231"
+  },
+  "required_checks": [
+    "EXACT_GIT_BLOB_BINDING_FOR_ALL_10_RUNTIME_FILES",
+    "STATIC_CANONICAL_RUNTIME_IMPORT_CLOSURE",
+    "CLEAN_PACKAGE_AGENT_IMPORT",
+    "CLEAN_PACKAGE_CONTRACT_IMPORT",
+    "CLEAN_PACKAGE_LOCALIZER_IMPORT"
+  ],
+  "controls": {
+    "benchmark_task_exposure": 0,
+    "verifier_invocations": 0,
+    "incremental_spend_usd_max": 0
+  },
+  "credit": false
+}
