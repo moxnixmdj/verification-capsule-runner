@@ -1,10 +1,6 @@
 name: Execute TB-Science rank8 one-shot
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/execute-tb-science-rank8-20261007-v1.yml"
   pull_request:
     branches: [main]
     paths:
