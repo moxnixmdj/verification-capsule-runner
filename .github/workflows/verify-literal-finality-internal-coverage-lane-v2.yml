@@ -1,0 +1,21 @@
+name: Verify literal finality internal coverage lane V2
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "capsules/literal_finality_internal_coverage_lane_v2/**"
+      - ".github/workflows/verify-literal-finality-internal-coverage-lane-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify content-addressed scheduler truth repair
+        run: python capsules/literal_finality_internal_coverage_lane_v2/verify.py

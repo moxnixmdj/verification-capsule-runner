@@ -1,0 +1,18 @@
+{
+  "schema": "PROJECT_BRAIN_LITERAL_FINALITY_INTERNAL_COVERAGE_LANE_V2_INDEPENDENT_CAPSULE",
+  "date": "2026-10-05",
+  "subject_repo": "moxnixmdj/brain",
+  "subject_branch": "breakthrough/literal-finality-internal-coverage-lane-v2-20261005-sol",
+  "exact_blobs": {
+    "subject.json": "39e1cb3030240ab249d547b5702531bd8e7939c5",
+    "v1.json": "2d80cbb05ca95bc03d57523a8bfbf181c9441afb",
+    "fixed_interface.json": "146b237515ba8867acd6778b291e340e5e9138fc",
+    "role_guard.json": "c20051932a2caaef4ef6907da27cb2806e7325eb",
+    "role_guard_verification.json": "310918042a64c6d87a914273336f6b0e768f6001",
+    "impossibility_repair.json": "8fe2b00be6e127f60bd498840c2d7a12cc9d7557",
+    "impossibility_verification.json": "be702566a74aef20232a7a184075a97a5f2bdcfb"
+  },
+  "incremental_spend_usd": 0,
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0
+}
