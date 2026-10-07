@@ -1,0 +1,18 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CARRIER_DEPENDENCY_CLOSURE_VERIFICATION_INTENT_V2",
+  "date": "2026-10-07",
+  "status": "VERIFY_CAUSAL_REPAIR_ONLY__ZERO_BENCHMARK_EXPOSURE",
+  "source_counterexample": {
+    "run_id": 37614049003,
+    "job_id": 112767999838,
+    "failure": "No module named 'canonical.runtime.explicit_requirement_index_v2'",
+    "class": "CARRIER_TRANSITIVE_DEPENDENCY_CLOSURE_MISSING"
+  },
+  "exact_runtime_file_count": 14,
+  "benchmark_task_exposure_authorized": 0,
+  "verifier_invocations_authorized": 0,
+  "incremental_spend_usd_max": 0,
+  "rank8_rerun_authorized": false,
+  "rank9_execution_authorized": false,
+  "credit": false
+}
