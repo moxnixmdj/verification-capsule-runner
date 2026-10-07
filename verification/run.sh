@@ -6,7 +6,7 @@ CAP="$ROOT/verification/capsule"
 
 declare -A EXPECTED=(
   ["verification/capsule/canonical/runtime/same_identity_supervisor_credited_v2.py"]="45d48c23ec4ae429550c264c07f530b0347430cb"
-  ["verification/capsule/canonical/verification/run_long_horizon_continuity_v2.py"]="820f079725b5734b4c89a8ad09d49a740281cb8e"
+  ["verification/capsule/canonical/verification/run_long_horizon_continuity_v2.py"]="b861f1710261de5d973ce6f2c34489ac38de65c8"
   ["verification/capsule/canonical/runtime/root3_production_astra_launcher_v1.py"]="3ac42e7be5a391cfda738131ecb0d3d600fa2147"
   ["verification/capsule/canonical/runtime/root3_strict_current_bootstrap_v2.py"]="7d6e4f4e00fda4eae6ff1974f68f970ceee69c2e"
   ["verification/capsule/canonical/runtime/root3_subprocess_mediator_v2.py"]="80560cdfa91c11a4b47b9ee2161af726b2f9bccf"
