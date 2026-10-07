@@ -47,7 +47,12 @@ jobs:
           assert auth["authorized_slot"]["slot_id"]==slot
           assert ver["execution_authority_verified"] is True
           assert arm["authority_blob"]==ver["authority_blob"]
+          assert arm["verification_blob"]==ver["self_blob_sha"]
           PY
+          AUTH_EXPECTED="$(python -c 'import json; print(json.load(open("capsules/tb_science_execution_v2/ARM_CANARY_V4.json"))["authority_blob"])')"
+          VER_EXPECTED="$(python -c 'import json; print(json.load(open("capsules/tb_science_execution_v2/ARM_CANARY_V4.json"))["verification_blob"])')"
+          test "$(git hash-object "$C/canonical/governance/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V4.json")" = "$AUTH_EXPECTED"
+          test "$(git hash-object "$C/canonical/verification/TB_SCIENCE_ONE_SLOT_CANARY_AUTHORITY_V4_INDEPENDENT_VERIFICATION_20261007_V1.json")" = "$VER_EXPECTED"
       - name: Install exact Harbor and verify Docker
         run: |
           set -euo pipefail
