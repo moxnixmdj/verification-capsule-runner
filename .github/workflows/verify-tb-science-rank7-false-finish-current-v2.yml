@@ -1,0 +1,171 @@
+name: Verify TB-Science rank7 false-finish repair current v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tb-science-rank7-false-finish-current-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact Brain candidate and dependency bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank7_false_finish_replay_current_20261007_v2
+          R=capsules/tb_science_canary_v3_execution
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "39cc756bafba817dfd697e65769da5ca0a316837"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "ce55b9df05119c544f03abca9c5c96f72254712f"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "dd8a77c097ab1a7773f6575c5676d5d17e6f657f"
+          test "$(git hash-object "$R/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$R/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$R/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+
+      - name: Install exact Harbor and overlay candidate
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C=capsules/tb_science_rank7_false_finish_replay_current_20261007_v2
+          R=capsules/tb_science_canary_v3_execution
+          cp "$C/canonical/runtime/harbor_science_agent_v1.py" "$R/canonical/runtime/harbor_science_agent_v1.py"
+          cp "$C/canonical/runtime/harbor_science_planner_v1.py" "$R/canonical/runtime/harbor_science_planner_v1.py"
+          mkdir -p "$R/canonical/tests"
+          cp "$C/canonical/tests/test_harbor_science_agent_v1.py" "$R/canonical/tests/test_harbor_science_agent_v1.py"
+          cp "$C/canonical/tests/test_harbor_science_planner_v1.py" "$R/canonical/tests/test_harbor_science_planner_v1.py"
+
+      - name: Run current repaired unit suite including exact rank7 truncation regression
+        run: |
+          set -euo pipefail
+          R=capsules/tb_science_canary_v3_execution
+          PYTHONPATH="$R" python -m unittest -v canonical.tests.test_harbor_science_agent_v1 canonical.tests.test_harbor_science_planner_v1
+
+      - name: Replay rank7 false-finish shape without benchmark exposure
+        run: |
+          set -euo pipefail
+          R=capsules/tb_science_canary_v3_execution
+          PYTHONPATH="$R" python - <<'PY'
+          import asyncio, json, pathlib
+          from unittest.mock import patch
+          from canonical.runtime import harbor_science_agent_v1 as s
+
+          class Receipt:
+              def __init__(self, returncode=0, stdout="", stderr=""):
+                  self.returncode=returncode; self.stdout=stdout; self.stderr=stderr
+
+          class Env:
+              def __init__(self): self.commands=[]
+              async def exec(self, command, timeout_sec=None, **kwargs):
+                  self.commands.append(command)
+                  if "/app/submission/design_report.json" in command:
+                      return Receipt(1, "", "missing design_report.json")
+                  if "/app/submission/controller.py" in command:
+                      return Receipt(0, "controller present", "")
+                  return Receipt(0, "OK", "")
+
+          proposal={
+            "material_requirements":["plant_model","plant_params","controller_api","scenarios_public"],
+            "candidates":[{
+              "action_id":"create_controller",
+              "covers":[
+                "plant_model","plant_params","controller_api","scenarios_public",
+                "BRAIN_DELIVERABLE_01","BRAIN_DELIVERABLE_02"
+              ],
+              "command":"echo replay-rank7-action",
+              "verify_command":"echo OK"
+            }],
+            "finish_summary":"Brain independently verified all frozen material requirements."
+          }
+          def fake_plan(prompt, timeout_s=180):
+              return {"text":json.dumps(proposal), "model":"rank7-failure-shape-replay"}
+
+          goal="Create /app/submission/controller.py and /app/submission/design_report.json for the task."
+          env=Env()
+          with patch.object(s.science_planner,"plan",fake_plan):
+              result=asyncio.run(s.run_science_goal(goal,env,max_cycles=1))
+          assert result["status"] != "FINISHED", result
+          assert "BRAIN_DELIVERABLE_02" not in result["resolved_requirements"], result
+          rows=[x for x in result["trace"] if x.get("kind")=="BRAIN_SELECTED_RESEARCH_ACTION"]
+          assert len(rows)==1, result
+          row=rows[0]
+          assert row["action_transport_clean"] is True, row
+          assert row["coverage_promoted"] is False, row
+          checks={x["path"]:x["verified"] for x in row["brain_deliverable_checks"]}
+          assert checks["/app/submission/controller.py"] is True, checks
+          assert checks["/app/submission/design_report.json"] is False, checks
+
+          warning_proposal={
+            "material_requirements":["R1"],
+            "candidates":[{
+              "action_id":"rank7_warning",
+              "covers":["R1"],
+              "command":"work-heredoc-warning",
+              "verify_command":"echo should-not-run"
+            }]
+          }
+          class WarnEnv:
+              def __init__(self): self.commands=[]
+              async def exec(self, command, timeout_sec=None, **kwargs):
+                  self.commands.append(command)
+                  if command=="work-heredoc-warning":
+                      return Receipt(0,"bash: line 22: warning: here-document at line 1 delimited by end-of-file (wanted PYEOF)","")
+                  return Receipt(0,"OK","")
+          wenv=WarnEnv()
+          with patch.object(s.science_planner,"plan",lambda prompt,timeout_s=180:{"text":json.dumps(warning_proposal),"model":"rank7-warning-replay"}):
+              wres=asyncio.run(s.run_science_goal("synthetic science goal",wenv,max_cycles=1))
+          assert wres["status"] != "FINISHED", wres
+          wrow=[x for x in wres["trace"] if x.get("kind")=="BRAIN_SELECTED_RESEARCH_ACTION"][0]
+          assert wrow["action_transport_clean"] is False, wrow
+          assert wrow["coverage_promoted"] is False, wrow
+          assert wrow["verify_result"] is None, wrow
+          assert wenv.commands==["work-heredoc-warning"], wenv.commands
+
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK7_FALSE_FINISH_CURRENT_REPLAY_V2",
+            "date":"2026-10-07",
+            "status":"PASS__EXACT_RANK7_FALSE_FINISH_AND_ZERO_EXIT_TRUNCATION_SHAPES_FAIL_CLOSED",
+            "candidate_blobs":{
+              "harbor_science_agent_v1.py":"39cc756bafba817dfd697e65769da5ca0a316837",
+              "harbor_science_planner_v1.py":"c3e36eba57c450f325c8a9476ee048c841bbdbc8",
+              "test_harbor_science_agent_v1.py":"ce55b9df05119c544f03abca9c5c96f72254712f",
+              "test_harbor_science_planner_v1.py":"dd8a77c097ab1a7773f6575c5676d5d17e6f657f"
+            },
+            "rank7_source":{
+              "workflow_run_id":37606898246,
+              "artifact_id":11474839915,
+              "artifact_digest":"sha256:8866fd656285ede4081fecc99bd952680c59f63028a3ceb58c48013e3594fe5d",
+              "old_false_finish":True,
+              "missing_output":"/app/submission/design_report.json",
+              "zero_exit_warning_replayed":True
+            },
+            "checks":{
+              "current_unit_suite_pass":True,
+              "missing_declared_output_blocks_finish":True,
+              "exact_rank7_zero_exit_warning_blocks_verification":True,
+              "proposal_verify_not_reached_on_warning":True,
+              "benchmark_task_exposure":0,
+              "benchmark_verifier_invocations":0,
+              "incremental_spend_usd":0
+            },
+            "terminal_credit_delta":0
+          }
+          pathlib.Path("rank7_false_finish_current_replay_v2_receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-rank7-false-finish-current-replay-v2
+          path: rank7_false_finish_current_replay_v2_receipt.json
+          if-no-files-found: error
+          retention-days: 1
