@@ -2,7 +2,7 @@ from __future__ import annotations
 import hashlib, json, pathlib
 
 ROOT=pathlib.Path(__file__).resolve().parent
-PUBLIC_ROOT=ROOT.parents[1]
+PUBLIC_ROOT=ROOT.parent
 EXPECTED={
  "ACTION_INTENT_TB_SCIENCE_RANK9_ONE_SHOT_20261007_V1.json":"54dfd6dbdf858b386b8a6fa303b55e6ea5803f04",
  "TB_SCIENCE_RANK9_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json":"af464670453e432367531edb17e8590959ae5c41",
