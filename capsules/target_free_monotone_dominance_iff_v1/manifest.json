@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_TARGET_FREE_MONOTONE_DOMINANCE_IFF_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-05",
+  "source_repository": "moxnixmdj/brain",
+  "source_pull_request": 2188,
+  "source_head_sha": "79da3f632462e4c2bf18c3508e75ae4cc8ad3cff",
+  "theorem": "TARGET_FREE_UNIVERSAL_MONOTONE_DOMINANCE_IFF_UNIQUE_GREATEST_SUPPORT",
+  "exact_blobs": {
+    "canonical/governance/HIDDEN_EVALUATOR_TARGET_FREE_MONOTONE_DOMINANCE_CHARACTERIZATION_V1.json": "a4175910f1a1d88f683b25cecc94d6252002f9d1",
+    "canonical/runtime/hidden_evaluator_target_free_characterization_v1.py": "78cd1f82a174de8ffe178d25137f2df5f244a4ed",
+    "canonical/tests/test_hidden_evaluator_target_free_characterization_v1.py": "92164bda42531db133102f1ed910d2df4ec9bf05",
+    "canonical/verification/HIDDEN_EVALUATOR_TARGET_FREE_MONOTONE_DOMINANCE_WOLFRAM_VERIFICATION_20261005_V1.json": "ac5911a29eb50cf89b7fb7a409b2d20b1383600b"
+  },
+  "independent_checks": [
+    "EXACT_GIT_BLOB_IDENTITY",
+    "COMMITTED_UNIT_TESTS",
+    "SEPARATE_IMPLEMENTATION_EXHAUSTIVE_LABELED_POSET_N_LE_4_SUPPORT_CHECK",
+    "CONSTRUCTIVE_UPPER_SET_COUNTEREXAMPLE_ORACLE",
+    "ZERO_CREDIT_AND_NO_AUTHORITY_BOUNDARY"
+  ],
+  "expected_enumeration": {
+    "n1": {"labeled_posets": 1, "support_tests": 1},
+    "n2": {"labeled_posets": 3, "support_tests": 9},
+    "n3": {"labeled_posets": 19, "support_tests": 133},
+    "n4": {"labeled_posets": 219, "support_tests": 3285},
+    "total_support_tests": 3428,
+    "expected_mismatches": 0
+  },
+  "incremental_spend_usd": 0,
+  "new_reality_units_consumed": 0,
+  "terminal_cases_consumed": 0,
+  "acceptance_credit_delta": 0,
+  "family_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "ownership_credit_delta": 0
+}

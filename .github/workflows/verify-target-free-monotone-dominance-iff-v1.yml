@@ -1,0 +1,134 @@
+name: Verify target-free monotone dominance iff V1
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "capsules/target_free_monotone_dominance_iff_v1/**"
+      - ".github/workflows/verify-target-free-monotone-dominance-iff-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact content-addressed mirrors
+        run: |
+          set -euo pipefail
+          cd capsules/target_free_monotone_dominance_iff_v1
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for path, expected in m["exact_blobs"].items():
+              got=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert got==expected,(path,expected,got)
+          assert m["incremental_spend_usd"]==0
+          assert m["new_reality_units_consumed"]==0
+          assert m["terminal_cases_consumed"]==0
+          print("EXACT_TARGET_FREE_IFF_INPUT_BLOBS_PASS",len(m["exact_blobs"]))
+          PY
+      - name: Run committed characterization regressions
+        run: |
+          set -euo pipefail
+          cd capsules/target_free_monotone_dominance_iff_v1
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_hidden_evaluator_target_free_characterization_v1
+      - name: Exhaustively verify independent finite-poset characterization
+        run: |
+          set -euo pipefail
+          cd capsules/target_free_monotone_dominance_iff_v1
+          PYTHONPATH=. python - <<'PY'
+          from canonical.runtime.hidden_evaluator_target_free_characterization_v1 import characterize_target_free_monotone_dominance
+
+          def ge(mask,n,i,j):
+              return bool(mask & (1 << (i*n+j)))
+
+          def is_poset(mask,n):
+              if any(not ge(mask,n,i,i) for i in range(n)):
+                  return False
+              for i in range(n):
+                  for j in range(n):
+                      if i != j and ge(mask,n,i,j) and ge(mask,n,j,i):
+                          return False
+              for i in range(n):
+                  for j in range(n):
+                      if ge(mask,n,i,j):
+                          for k in range(n):
+                              if ge(mask,n,j,k) and not ge(mask,n,i,k):
+                                  return False
+              return True
+
+          def upper_sets(mask,n):
+              out=[]
+              for u in range(1,1<<n):
+                  ok=True
+                  for i in range(n):
+                      if u & (1<<i):
+                          for j in range(n):
+                              if ge(mask,n,j,i) and not (u & (1<<j)):
+                                  ok=False
+                                  break
+                          if not ok:
+                              break
+                  if ok:
+                      out.append(u)
+              return out
+
+          expected={1:(1,1),2:(3,9),3:(19,133),4:(219,3285)}
+          total_tests=0
+          total_mismatch=0
+          for n in range(1,5):
+              posets=0
+              support_tests=0
+              for mask in range(1 << (n*n)):
+                  if not is_poset(mask,n):
+                      continue
+                  posets += 1
+                  ups=upper_sets(mask,n)
+                  greatest=[g for g in range(n) if all(ge(mask,n,g,y) for y in range(n))]
+                  assert len(greatest) <= 1
+                  rhs_mask=(1 << greatest[0]) if greatest else 0
+                  outcomes=[f"Y{i}" for i in range(n)]
+                  edges=[[f"Y{i}",f"Y{j}"] for i in range(n) for j in range(n) if i!=j and ge(mask,n,i,j)]
+                  for support in range(1,1<<n):
+                      support_tests += 1
+                      lhs=all((support & ~u)==0 for u in ups)
+                      rhs=(rhs_mask != 0 and support == rhs_mask)
+                      if lhs != rhs:
+                          total_mismatch += 1
+                          raise AssertionError(("THEOREM_MISMATCH",n,mask,support,lhs,rhs))
+                      cert={"outcomes":outcomes,"dominance_edges":edges,
+                            "brain_support":[f"Y{i}" for i in range(n) if support & (1<<i)]}
+                      verdict=characterize_target_free_monotone_dominance(cert)
+                      assert verdict["status"]=="PASS",verdict
+                      assert verdict["target_free_universal_monotone_dominance"]==rhs,(n,mask,support,verdict,rhs)
+                      if not rhs:
+                          assert verdict["counterexample"] is not None,(n,mask,support,verdict)
+              assert (posets,support_tests)==expected[n],(n,posets,support_tests,expected[n])
+              total_tests += support_tests
+              print("N_PASS",n,posets,support_tests)
+          assert total_tests==3428,total_tests
+          assert total_mismatch==0,total_mismatch
+          print("INDEPENDENT_TARGET_FREE_IFF_EXHAUSTIVE_PASS",total_tests)
+          PY
+      - name: Verify zero-credit and no-authority boundary
+        run: |
+          set -euo pipefail
+          cd capsules/target_free_monotone_dominance_iff_v1
+          python - <<'PY'
+          import json
+          p="canonical/governance/HIDDEN_EVALUATOR_TARGET_FREE_MONOTONE_DOMINANCE_CHARACTERIZATION_V1.json"
+          x=json.load(open(p))
+          assert x["schema"]=="PROJECT_BRAIN_HIDDEN_EVALUATOR_TARGET_FREE_MONOTONE_DOMINANCE_CHARACTERIZATION_V1"
+          assert x["independent_verification_required"] is True
+          for k in ("scheduling_authority","execution_authority","promotion_authority","fresh_reality_authority"):
+              assert x[k] is False,(k,x[k])
+          a=x["accounting"]
+          for k in ("incremental_spend_usd","new_reality_units_consumed","terminal_cases_consumed","acceptance_credit_delta","family_credit_delta","capability_credit_delta","ownership_credit_delta"):
+              assert a[k]==0,(k,a[k])
+          print("TARGET_FREE_IFF_ZERO_CREDIT_BOUNDARY_PASS")
+          PY
