@@ -1,0 +1,6 @@
+{
+  "schema": "PROJECT_BRAIN_ATTESTATION_RERUN_TRIGGER_V1",
+  "reason": "REEXECUTE_IDENTICAL_VERIFICATION_RESULT_UNDER_GITHUB_SIGSTORE_SIGNED_ATTESTATION_BASE",
+  "base_workflow_commit": "5c0110a71ddcdfe6f126ede953b5d5e7cd669083",
+  "no_claim_delta": true
+}
