@@ -1,0 +1,22 @@
+name: Verify Root3 information HTTP boundary V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/root3_information_http_boundary_v1/**
+      - verifiers/verify_root3_information_http_boundary_v1.py
+      - .github/workflows/verify-root3-information-http-boundary-v1.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Independent exact-byte and behavioral verification
+        run: python verifiers/verify_root3_information_http_boundary_v1.py
