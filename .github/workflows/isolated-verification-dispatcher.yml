@@ -18,3 +18,10 @@ jobs:
           set -euo pipefail
           test -f verification/run.sh
           bash verification/run.sh
+      - name: Upload isolated verification result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-verification-result
+          path: verification/result.json
+          if-no-files-found: error
