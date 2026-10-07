@@ -1,0 +1,28 @@
+name: Verify Brain Universal Escape Resolver V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/universal_escape_resolver_v1/**"
+      - ".github/workflows/verify-brain-universal-escape-resolver-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile resolver
+        run: |
+          python -m py_compile capsules/universal_escape_resolver_v1/canonical/runtime/universal_escape_resolver_v1.py
+      - name: Independent exact-byte and adversarial verification
+        run: |
+          cd capsules/universal_escape_resolver_v1
+          python verify_resolver.py
