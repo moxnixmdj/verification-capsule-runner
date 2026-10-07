@@ -1,0 +1,21 @@
+name: Verify professional positive adequacy escape
+on:
+  push:
+    paths:
+      - 'capsules/professional_positive_adequacy_escape_20261007_v1/**'
+      - '.github/workflows/verify-professional-positive-adequacy-escape-20261007-v1.yml'
+  pull_request:
+    paths:
+      - 'capsules/professional_positive_adequacy_escape_20261007_v1/**'
+      - '.github/workflows/verify-professional-positive-adequacy-escape-20261007-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain bytes and fail-closed routing
+        run: python capsules/professional_positive_adequacy_escape_20261007_v1/verify.py
