@@ -45,7 +45,7 @@ jobs:
           test "$(git hash-object "$R/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
           test "$(git hash-object "$R/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
           test "$(git hash-object "$R/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
-          export EXECUTION_WORKFLOW_BLOB="$(git hash-object "$wfPath")"
+          export EXECUTION_WORKFLOW_BLOB="$(git hash-object .github/workflows/execute-tb-science-rank8-20261007-v1.yml)"
           test -f "$C/ACTIVATE_RANK8_PR.json"
           vis="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$GITHUB_REPOSITORY" | python -c 'import json,sys; print(json.load(sys.stdin)["visibility"])')"
           test "$vis" = "public"
