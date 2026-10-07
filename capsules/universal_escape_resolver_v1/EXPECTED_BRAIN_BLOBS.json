@@ -1,18 +1,21 @@
 {
   "schema": "BRAIN_UNIVERSAL_ESCAPE_RESOLVER_V1_VERIFIER_INPUT",
   "brain_repository": "moxnixmdj/brain",
-  "brain_ref": "activate/universal-escape-resolver-v2-20261007",
+  "brain_ref": "activate/universal-escape-resolver-v3-acceptance-20261007",
   "brain_head_sha": "7eaf5dca2ba2afcd11e0af76f5e88953354af4b9",
   "exact_brain_blobs": {
     "canonical/runtime/universal_escape_resolver_v1.py": "9043273c97b53a991de8cb418e0c6a58efa0cec3",
     "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1.json": "1459c9da4e7178ca06a30cf46588bfd5f644b534",
     "canonical/tests/test_universal_escape_resolver_v1.py": "fd1e9c3adb5132987c71c8f8e7e83e35bf9cefbc",
-    "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json": "58b3db5056760406fbce459a9ee83affa975485d",
+    "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json": "4de13ea7d3873c69d5d299c2c1389f799e601b6b",
     "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json": "78c1c6be7e6055f0bdf99ebdc682370083e5c847",
     "canonical/runtime/universal_solver_episode_verification_authenticator_v1.py": "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171",
     "canonical/runtime/universal_solver_authenticated_resume_v1.py": "6b9d3f2c9ad2096a294d97b255798cac13262cd1",
     "canonical/runtime/universal_verified_adaptive_solver_v9.py": "659cda15bb956606a023cc9495e4036ce13e19d9",
-    "canonical/runtime/executable_skill_verification_authenticator_v1.py": "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
+    "canonical/runtime/executable_skill_verification_authenticator_v1.py": "aa1925d9192f5bba6e65d32c9319397e03b02e6c",
+    "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V3_ACCEPTANCE_RELATION_ACTIVATION_20261007_V1.json": "ee77bf0584095a39a2aeceb014462aaf5860aec2",
+    "canonical/governance/ACCEPTANCE_RELATION_UNCERTAINTY_NORMAL_FORM_20261007_V1.json": "42498bbe40327cd47be5e4251e7f524a8c0c8d5b",
+    "canonical/runtime/universal_bound_capability_carrier_v1.py": "3333e933af779f0de8d833f7c84e1507887b1343"
   },
   "reused_authorities": {
     "universal_learning_v9_router_blob": "e6b594931e6bd6f87c802cd1e18d06e90cac1719",
@@ -22,8 +25,8 @@
   },
   "claim_under_test": "GLOBAL_PLANNING_SCOPE_LIFT_WITHOUT_GLOBAL_ACCEPTANCE_SCOPE_LIFT",
   "verification_trigger_revision": 2,
-  "activation_claim_under_test": "FOUR_ROLE_TWO_REGIME_LIVE_PLANNING_WITH_AUTHENTICATED_V9_RESUME_EPISODE_AND_SKILL_BEHAVIOR_EVIDENCE",
-  "activation_verification_revision": 4,
+  "activation_claim_under_test": "SINGLE_ACCEPTANCE_RELATION_UNCERTAINTY_PRIMITIVE_WITH_ASTRA_BOUND_SUBPLAN_PROPOSAL_ONLY",
+  "activation_verification_revision": 5,
   "frontier_bindings": {
     "primitive_u_frontier_blob": "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838",
     "acceptance_regime_quotient_blob": "2bf5d4b28fb839028fc7a369eab53f93e8b8605c",
@@ -31,5 +34,9 @@
     "authenticated_resume_blob": "6b9d3f2c9ad2096a294d97b255798cac13262cd1",
     "episode_verification_authenticator_blob": "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171",
     "skill_verification_authenticator_blob": "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
+  },
+  "acceptance_relation_binding": {
+    "normal_form_blob": "42498bbe40327cd47be5e4251e7f524a8c0c8d5b",
+    "astra_bound_subplan_carrier_blob": "3333e933af779f0de8d833f7c84e1507887b1343"
   }
 }
