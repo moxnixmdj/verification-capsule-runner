@@ -1,0 +1,23 @@
+name: Verify P2 generator universal top law V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p2_generator_universal_toplaw_v1/**"
+      - ".github/workflows/verify-p2-generator-universal-toplaw-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - run: python -m py_compile capsules/p2_generator_universal_toplaw_v1/candidate_source.py capsules/p2_generator_universal_toplaw_v1/evaluator_source.py capsules/p2_generator_universal_toplaw_v1/verify.py
+      - run: python capsules/p2_generator_universal_toplaw_v1/verify.py
