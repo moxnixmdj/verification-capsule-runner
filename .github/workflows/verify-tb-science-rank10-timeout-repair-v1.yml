@@ -1,0 +1,122 @@
+name: Verify TB-Science rank10 timeout causal repair v1
+on:
+  push:
+    branches: ["verify/tb-science-rank10-timeout-repair-20261007-v1"]
+    paths:
+      - "capsules/tb_science_rank10_timeout_repair_20261007_v1/**"
+      - ".github/workflows/verify-tb-science-rank10-timeout-repair-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact candidate bytes and unit tests
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank10_timeout_repair_20261007_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "273869b57acd5f8903c410eacd074c2f933dce1b"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "48f3f2bd97cd238679ceb605d66722e75f5482a3"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          grep -F 'MAX_TOOL_COMPLETION_TOKENS = 384' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          grep -F 'if len(value) > MAX_COMMAND_CHARS:' "$C/canonical/runtime/harbor_science_planner_v1.py"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_planner_v1
+      - name: Restore pinned llama.cpp cache
+        uses: actions/cache@v4
+        with:
+          path: llama.cpp
+          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
+      - name: Ensure exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          if [ ! -d llama.cpp/.git ]; then
+            rm -rf llama.cpp
+            git init llama.cpp
+            git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+            git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+            git -C llama.cpp checkout --detach FETCH_HEAD
+          fi
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+      - name: Restore pinned Qwen cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      - name: Acquire exact Qwen if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+      - name: Start exact local endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+      - name: Stress composed latency repair without benchmark exposure
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_rank10_timeout_repair_20261007_v1"
+          PYTHONPATH="$C" python - <<'PY' | tee RANK10_TIMEOUT_REPAIR_RESULT.json
+          import json,time
+          from canonical.runtime import harbor_science_planner_v1 as p
+          from canonical.runtime.harbor_command_policy import MAX_COMMAND_CHARS
+          cases=[
+            ("short","Synthetic research context. "),
+            ("task_length_equivalent","Synthetic neutral technical context. "*130),
+            ("long_complex","Independent synthetic engineering observations and constraints. "*150),
+          ]
+          rows=[]
+          for i,(name,pad) in enumerate(cases):
+              path=f"/tmp/brain_rank10_timeout_probe_{i}"
+              prompt=(pad+"\nSynthetic non-benchmark content only. Use material requirement R1. "
+                      "Return one candidate A1 covering R1 with command 'printf ok > "+path+
+                      "' and verify_command 'test -s "+path+"'. No finish summary.")
+              started=time.monotonic()
+              out=p.plan(prompt,timeout_s=180)
+              elapsed=time.monotonic()-started
+              proposal=p.normalize_proposal_object(p.extract_json_object(out["text"]))
+              cs=proposal.get("candidates")
+              assert isinstance(cs,list) and len(cs)==1,(name,proposal)
+              row=cs[0]
+              assert row.get("action_id")=="A1",(name,row)
+              assert row.get("covers")==["R1"],(name,row)
+              assert len(row["command"])<=MAX_COMMAND_CHARS
+              assert len(row["verify_command"])<=MAX_COMMAND_CHARS
+              assert elapsed < 180,(name,elapsed)
+              rows.append({"name":name,"prompt_chars":len(prompt),"elapsed_s":round(elapsed,3),"planner_duration_s":out["duration_s"]})
+          receipt={"schema":"PROJECT_BRAIN_TB_SCIENCE_RANK10_TIMEOUT_CAUSAL_REPAIR_PUBLIC_RESULT_V1",
+                   "status":"PASS__THREE_SYNTHETIC_LATENCY_CLASSES_UNDER_180S__POST_DECODE_BOUND_PRESERVED",
+                   "planner_git_blob_sha":"273869b57acd5f8903c410eacd074c2f933dce1b",
+                   "tests_git_blob_sha":"48f3f2bd97cd238679ceb605d66722e75f5482a3",
+                   "command_policy_git_blob_sha":"a525773417291c7a4841bf35e1baff5370350d0d",
+                   "results":rows,"benchmark_task_exposure":0,"terminal_trials_executed":0,
+                   "incremental_spend_usd":0,"acceptance_credit_delta":0,"terminal_credit_delta":0}
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-rank10-timeout-causal-repair-v1
+          path: |
+            RANK10_TIMEOUT_REPAIR_RESULT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 7
