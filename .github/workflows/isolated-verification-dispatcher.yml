@@ -7,14 +7,22 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
       - name: Run isolated verification capsule
         run: |
           set -euo pipefail
           test -f verification/run.sh
           bash verification/run.sh
+      - name: Upload isolated verification result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-verification-result
+          path: verification/result.json
+          if-no-files-found: warn
