@@ -26,3 +26,5 @@ jobs:
           echo "Rank8 execution authority is suspended before exposure in canonical Brain."
           echo "Cancel stale rank8 concurrency only. No benchmark task may be exposed."
           exit 0
+
+# cancel-only main push sentinel: rank8 authority suspended before exposure
