@@ -1,0 +1,71 @@
+name: Execute GDPval public 220 semantic localization v2
+
+on:
+  push:
+    branches:
+      - execute/gdpval-public-220-semantic-v2-20261007-v1
+    paths:
+      - "capsules/gdpval_public_220_semantic_v2_20261007_v1/ACTIVATE.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gdpval-public-220-semantic-v2-exact
+  cancel-in-progress: false
+
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify exact zero-reality carrier before execution
+        run: |
+          set -euo pipefail
+          C=capsules/gdpval_public_220_semantic_v2_20261007_v1
+          test "$(git hash-object "$C/canonical/runtime/gdpval_semantic_complement_localizer_v2.py")" = "347607991ccd68c9a27b0afcb56a271f45ed0326"
+          test "$(git hash-object "$C/canonical/runtime/explicit_obligation_index_v1.py")" = "a28e1bde45bfe85c086202c3a5ecca2ae730fe7d"
+          test "$(git hash-object "$C/canonical/runtime/explicit_compound_requirement_decomposer.py")" = "06da82ccd7cf5ba37b78d1d664b5638caa4e1956"
+          test "$(git hash-object "$C/canonical/runtime/bounded_predicate_argument_semantics.py")" = "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
+          test "$(git hash-object "$C/canonical/runtime/explicit_definition_reference_graph.py")" = "950f073b35b9d7f42c76c518711462f00e89b262"
+          test "$(git hash-object "$C/canonical/runtime/bounded_contextual_semantics.py")" = "5e69ce25dcb7765fc26a8ff290a6d11ec2a06699"
+          test "$(git hash-object "$C/canonical/runtime/contextual_reference_operators.py")" = "a437c23cc845637824083dcd50a90ad1f7e09fef"
+          test "$(git hash-object "$C/canonical/runtime/bounded_semantic_decomposer.py")" = "679f4f45269c26a793a147efc7da82a224268b1d"
+          test "$(git hash-object "$C/canonical/runtime/source_obligation_inventory.py")" = "55bc8e639dbe2ca401bae46ee57c3faec8b260e4"
+          test "$(git hash-object "$C/canonical/tests/test_gdpval_semantic_complement_localizer_v2.py")" = "8f7f70f5007a9fd3e4cff668559fd9aab6586bf4"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_gdpval_semantic_complement_localizer_v2
+
+      - name: Execute complete public 220 population
+        run: |
+          set -euo pipefail
+          C=capsules/gdpval_public_220_semantic_v2_20261007_v1
+          mkdir -p "$C/canonical/evidence"
+          PYTHONPATH="$C" python -m canonical.runtime.gdpval_semantic_complement_localizer_v2 > "$C/canonical/evidence/GDPVAL_PUBLIC_220_COMPOSED_SEMANTIC_LOCALIZATION_20261007_V2.json"
+          python - <<'PY'
+          import json
+          p="capsules/gdpval_public_220_semantic_v2_20261007_v1/canonical/evidence/GDPVAL_PUBLIC_220_COMPOSED_SEMANTIC_LOCALIZATION_20261007_V2.json"
+          x=json.load(open(p))
+          assert x["status"].startswith("PASS__"), x
+          assert x["population"]["task_count"]==220, x
+          assert x["inference"]["fresh_target_model_queries"]==0, x
+          assert x["inference"]["provider_evaluation_queries"]==0, x
+          assert x["inference"]["new_internal_model_inference"]==0, x
+          assert x["inference"]["incremental_spend_usd"]==0, x
+          assert x["soundness"]["candidate_is_credit"] is False, x
+          assert x["soundness"]["gdpval_scope_closed"] is False, x
+          assert x["soundness"]["u_deletion_authority"] is False, x
+          assert x["soundness"]["terminal_authority"] is False, x
+          print(json.dumps({"status":x["status"],"population":x["population"],"aggregate":x["aggregate"],"compound_candidate_counts":x["compound_candidate_counts"]},sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gdpval-public-220-composed-semantic-localization-v2-exact
+          path: capsules/gdpval_public_220_semantic_v2_20261007_v1/canonical/evidence/GDPVAL_PUBLIC_220_COMPOSED_SEMANTIC_LOCALIZATION_20261007_V2.json
+          if-no-files-found: error
+          retention-days: 1
