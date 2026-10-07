@@ -279,43 +279,53 @@ def verify_adversarial_orchestration():
 
 
 
+
 def verify_live_activation():
     activation = json.loads(
-        (ROOT / "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json")
+        (ROOT / "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V3_ACCEPTANCE_RELATION_ACTIVATION_20261007_V1.json")
         .read_text(encoding="utf-8")
     )
     authority = json.loads(
         (ROOT / "canonical/governance/CURRENT_TERMINAL_AUTHORITY.json")
         .read_text(encoding="utf-8")
     )
+    normal = json.loads(
+        (ROOT / "canonical/governance/ACCEPTANCE_RELATION_UNCERTAINTY_NORMAL_FORM_20261007_V1.json")
+        .read_text(encoding="utf-8")
+    )
 
-    frontier = activation["current_frontier"]
-    assert frontier["git_blob_sha"] == "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838"
-    assert frontier["primary_roles"] == [
-        "B0_INPUT_PERCEPTION_AND_GROUNDING",
-        "B2_INFORMATION_TRANSFORMATION_REASONING_AND_PROBLEM_SOLVING",
-        "B4_EXTERNAL_ACTION_PLANNING_AND_ENVIRONMENT_CONTROL",
-        "B7_OUTPUT_COMMUNICATION_SYNTHESIS_AND_ARTIFACT_CONSTRUCTION",
-    ]
-    assert frontier["deferred_local_only"] == ["B9_MULTI_ROLE_COMPOSITION"]
-    assert set(frontier["do_not_schedule_as_primary"]) == {
-        "B1_GOAL_CONSTRAINT_SCOPE_AND_JUDGMENT",
-        "B3_TEMPORAL_STATE_MEMORY_AND_CONTINUITY",
-        "B5_TOOL_DISCOVERY_SELECTION_AND_LEARNING",
-        "B6_DELEGATION_AND_COORDINATION",
-        "B8_SELF_VERIFICATION_FAILURE_LOCALIZATION_AND_RECOVERY",
+    assert normal["status"] == "PROVED_LOGICAL_REDUCTION__O_AND_Q_COLLAPSE_TO_ONE_ACCEPTANCE_UNCERTAINTY_PRIMITIVE__ZERO_CREDIT"
+    assert normal["wolfram_check"] == {
+        "general_implication": True,
+        "singleton_objective_special_case": True,
+        "multi_relation_quality_special_case": True,
     }
+    assert "R_STAR_IS_IN_R_OVER" in normal["theorem"]
+    assert "FOR_EVERY_R_IN_R_OVER" in normal["theorem"]
 
-    regime = activation["acceptance_regime_quotient"]
-    assert regime["git_blob_sha"] == "2bf5d4b28fb839028fc7a369eab53f93e8b8605c"
-    assert regime["regimes"] == ["O_OBJECTIVE_ACCEPTANCE", "Q_QUALITATIVE_RELATIVE_ORDER"]
+    ar = activation["acceptance_relation_normal_form"]
+    assert ar["git_blob_sha"] == "42498bbe40327cd47be5e4251e7f524a8c0c8d5b"
+    assert ar["R_STAR"].startswith("ACTUAL_LOAD_BEARING_TARGET_ACCEPTANCE")
+    assert ar["R_OVER"].startswith("SOUND_OVERAPPROXIMATION")
+    assert "MINIMUM_TRUTHFUL_INFORMATION" in ar["refinement_rule"]
 
-    continuity = activation["cross_run_continuity"]
-    assert continuity["solver_git_blob_sha"] == "659cda15bb956606a023cc9495e4036ce13e19d9"
-    assert continuity["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
-    assert continuity["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
-    assert continuity["skill_verification_authenticator_git_blob_sha"] == "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
-    assert continuity["terminal_authority"] is False
+    ul = activation["universal_learning_role"]
+    assert ul["new_environment_learning_reopened_as_build_problem"] is False
+    assert ul["self_certification_authority"] is False
+    assert "MINIMUM_DECISION_OR_POLICY_ADEQUACY_CHANGING" in ul["objective"]
+
+    solver = activation["solver_execution_chain"]
+    assert solver["solver_git_blob_sha"] == "659cda15bb956606a023cc9495e4036ce13e19d9"
+    assert solver["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
+    assert solver["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
+    assert solver["skill_verification_authenticator_git_blob_sha"] == "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
+
+    astra = activation["astra_bound_subplan_proposal_source"]
+    assert astra["carrier_git_blob_sha"] == "3333e933af779f0de8d833f7c84e1507887b1343"
+    assert astra["semantic_effect_authority"] is False
+    assert astra["db_admission_authority"] is False
+    assert astra["terminal_authority"] is False
+    assert "PROPOSAL" in astra["admitted_use"]
 
     boundary = activation["authority_boundary"]
     assert boundary["planner_may_authorize_execution"] is False
@@ -323,46 +333,43 @@ def verify_live_activation():
     assert boundary["planner_may_authorize_u_empty"] is False
     assert boundary["planner_may_authorize_d_finality"] is False
     assert boundary["planner_may_authorize_terminal"] is False
-    assert boundary["acceptance_regime_quotient_is_scope_complete_proof"] is False
+    assert boundary["acceptance_relation_reduction_grants_cell_credit"] is False
+    assert boundary["astra_carrier_grants_semantic_effect_authority"] is False
     assert boundary["only_existing_fail_closed_db_admission_can_promote_cell"] is True
 
-    truth = activation["truth_preservation"]
-    assert truth["open_abc_refinement_family_count_changed"] is False
-    assert truth["u_empty_changed"] is False
-    assert truth["d_finality_changed"] is False
-    assert truth["terminal_changed"] is False
-    assert truth["terminal_credit_delta"] == 0
-
-    src = authority["authoritative_sources"]["universal_escape_resolver_v2_active_planning_overlay"]
-    assert src["path"] == "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V2_ACTIVATION_20261007_V1.json"
-    assert src["git_blob_sha"] == "78c1c6be7e6055f0bdf99ebdc682370083e5c847"
-    assert src["primitive_u_frontier"]["git_blob_sha"] == "8ab5cd358f460ca649ec3b0ac8eea56e87d7f838"
-    assert src["acceptance_regime_quotient"]["git_blob_sha"] == "2bf5d4b28fb839028fc7a369eab53f93e8b8605c"
-    assert src["cross_run_solver"]["git_blob_sha"] == "659cda15bb956606a023cc9495e4036ce13e19d9"
-    assert src["cross_run_solver"]["resume_authenticator_git_blob_sha"] == "6b9d3f2c9ad2096a294d97b255798cac13262cd1"
-    assert src["cross_run_solver"]["episode_verification_authenticator_git_blob_sha"] == "6a2fc8f26d1908eb7a35006f3a550fe2cd55c171"
-    assert src["cross_run_solver"]["skill_verification_authenticator_git_blob_sha"] == "aa1925d9192f5bba6e65d32c9319397e03b02e6c"
+    src = authority["authoritative_sources"]["universal_escape_resolver_v3_acceptance_relation_overlay"]
+    assert src["git_blob_sha"] == "ee77bf0584095a39a2aeceb014462aaf5860aec2"
+    assert src["acceptance_relation_normal_form"]["git_blob_sha"] == "42498bbe40327cd47be5e4251e7f524a8c0c8d5b"
+    assert src["universal_solver"]["git_blob_sha"] == "659cda15bb956606a023cc9495e4036ce13e19d9"
+    assert src["astra_bound_subplan_carrier"]["git_blob_sha"] == "3333e933af779f0de8d833f7c84e1507887b1343"
+    assert src["astra_bound_subplan_carrier"]["semantic_effect_authority"] is False
+    assert src["astra_bound_subplan_carrier"]["db_admission_authority"] is False
+    assert src["astra_bound_subplan_carrier"]["terminal_authority"] is False
 
     live = authority["live_truth"]
-    assert live["universal_escape_resolver_v2_planning_overlay_active"] is True
-    assert live["universal_escape_resolver_primary_u_roles"] == frontier["primary_roles"]
-    assert live["universal_escape_resolver_deferred_local_only_roles"] == ["B9_MULTI_ROLE_COMPOSITION"]
-    assert live["universal_escape_resolver_acceptance_regimes"] == ["O_OBJECTIVE_ACCEPTANCE", "Q_QUALITATIVE_RELATIVE_ORDER"]
-    assert live["universal_escape_resolver_acceptance_regime_quotient_scope_complete_proof"] is False
-    assert live["universal_escape_resolver_db_admission_authority"] is False
-    assert live["universal_escape_resolver_u_empty_authority"] is False
-    assert live["universal_escape_resolver_d_finality_authority"] is False
-    assert live["universal_escape_resolver_terminal_authority"] is False
-    assert live["new_environment_learning_reopened_as_capability_build_problem"] is False
-    assert live["universal_solver_authenticated_cross_run_resume_available"] is True
-    assert live["universal_solver_authenticated_episode_learning_evidence_required"] is True
-    assert live["universal_solver_authenticated_skill_behavior_verification_required"] is True
+    assert live["universal_escape_resolver_v3_acceptance_relation_overlay_active"] is True
+    assert live["universal_escape_resolver_v2_planning_overlay_active"] is False
+    assert live["universal_escape_resolver_primary_terminal_proof_primitive"] == "SOUND_ACCEPTANCE_RELATION_OVERAPPROXIMATION_PLUS_COMMON_POSITIVE_ADEQUACY"
+    assert live["universal_escape_resolver_acceptance_relation_symbol"] == "R_OVER"
+    assert live["universal_escape_resolver_actual_acceptance_relation_symbol"] == "R_STAR"
+    assert live["universal_escape_resolver_O_Q_split_superseded_for_primary_scheduling"] is True
+    assert live["universal_escape_resolver_O_Q_preserved_as_special_cases"] is True
+    assert live["astra_bound_subplan_carrier_available_as_proposal_source"] is True
+    assert live["astra_bound_subplan_carrier_semantic_effect_authority"] is False
+    assert live["astra_bound_subplan_carrier_db_admission_authority"] is False
+    assert live["astra_bound_subplan_carrier_terminal_authority"] is False
+
+    order = live["current_escape_planning_order"]
+    assert order[0] == "SELECT_BOUND_ESCAPE_CELL_IN_B0_B2_B4_OR_B7"
+    assert order[1] == "BIND_SOUND_R_OVER_CONTAINING_R_STAR"
+    assert "IF_COMMON_POLICY_PROVED_SUBMIT_TO_EXISTING_FAIL_CLOSED_D_B_ADMISSION" in order
+    assert "IF_UNRESOLVED_USE_UNIVERSAL_LEARNING_FOR_MINIMUM_POLICY_CHANGING_INFORMATION_OR_MISSING_MECHANISM_ONLY" in order
+    assert "ALLOW_VERIFIED_ASTRA_BOUND_SUBPLAN_CARRIER_AS_PROPOSAL_SOURCE_WHEN_APPLICABLE_WITH_ZERO_SEMANTIC_AUTHORITY" in order
 
     assert live["current_U_empty_proved"] is False
     assert live["complete_selected_context_ABC_closed"] is False
     assert live["D_finality_closed"] is False
     assert live["terminal"] is False
-    assert live["open_ABC_refinement_family_count"] == 13
 
 
 if __name__ == "__main__":
@@ -373,5 +380,5 @@ if __name__ == "__main__":
     verify_adversarial_orchestration()
     print("adversarial orchestration theorem: PASS")
     verify_live_activation()
-    print("four-role two-regime live activation truth-preservation theorem: PASS")
+    print("single acceptance-relation live activation truth-preservation theorem: PASS")
     print("UNIVERSAL ESCAPE RESOLVER V1 INDEPENDENT VERIFICATION: PASS")
