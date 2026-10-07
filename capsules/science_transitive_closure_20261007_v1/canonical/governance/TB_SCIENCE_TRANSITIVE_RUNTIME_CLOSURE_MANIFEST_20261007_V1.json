@@ -1,10 +1,10 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_V1",
   "date": "2026-10-07",
-  "status": "CANDIDATE_EXACT_CURRENT_ROUTE_CLOSURE__14_FILES__RANK8_MISSING_10__ZERO_ACCEPTANCE_OR_TERMINAL_CREDIT",
+  "status": "CANDIDATE_EXACT_REPAIRED_ROUTE_CLOSURE__14_FILES__RANK10_PREFLIGHT__ZERO_ACCEPTANCE_OR_TERMINAL_CREDIT",
   "roots": [
     {"path":"canonical/runtime/harbor_science_agent_v1.py","git_blob_sha":"5bc8ebac26bb7c809d4698f535eff43b667b30df"},
-    {"path":"canonical/runtime/harbor_science_planner_v1.py","git_blob_sha":"c3e36eba57c450f325c8a9476ee048c841bbdbc8"},
+    {"path":"canonical/runtime/harbor_science_planner_v1.py","git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f"},
     {"path":"canonical/runtime/lossless_raw_task_contract_v1.py","git_blob_sha":"d54d5a2f7efa76b653d288f4f53da4883644baa6"},
     {"path":"canonical/runtime/raw_task_acceptance_residual_localizer_v1.py","git_blob_sha":"f29616cf7726959aa28db4ed6541a9fc0bc2ac76"}
   ],
@@ -15,7 +15,7 @@
     {"path":"canonical/runtime/harbor_command_policy.py","git_blob_sha":"a525773417291c7a4841bf35e1baff5370350d0d"},
     {"path":"canonical/runtime/harbor_environment_transport.py","git_blob_sha":"ec46f648214a37bb16025d5ef2593efdf59f0d79"},
     {"path":"canonical/runtime/harbor_science_agent_v1.py","git_blob_sha":"5bc8ebac26bb7c809d4698f535eff43b667b30df"},
-    {"path":"canonical/runtime/harbor_science_planner_v1.py","git_blob_sha":"c3e36eba57c450f325c8a9476ee048c841bbdbc8"},
+    {"path":"canonical/runtime/harbor_science_planner_v1.py","git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f"},
     {"path":"canonical/runtime/instruction_constraint_compiler_v1.py","git_blob_sha":"a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"},
     {"path":"canonical/runtime/lossless_raw_task_contract_v1.py","git_blob_sha":"d54d5a2f7efa76b653d288f4f53da4883644baa6"},
     {"path":"canonical/runtime/raw_task_acceptance_residual_localizer_v1.py","git_blob_sha":"f29616cf7726959aa28db4ed6541a9fc0bc2ac76"},
@@ -32,9 +32,13 @@
     "task_capability_negative_evidence": false,
     "carrier_closure_failure": true
   },
-  "rank9_precondition": "THE_EXACT_CURRENT_ROUTE_TRANSITIVE_CLOSURE_MUST_BE_RECOMPUTED_AND_AN_INDEPENDENT_CARRIER_PREFLIGHT_MUST_PROVE_EVERY_CLOSURE_BLOB_PRESENT_AND_IMPORTABLE_BEFORE_ANY_BENCHMARK_TASK_START.",
+  "rank9_precondition": "SATISFIED_HISTORICALLY_FOR_RANK9_PREEXPOSURE_ONLY__RANK9_CONSUMED_FINAL_ZERO_AFTER_SEPARATE_PLANNER_TRANSPORT_FAILURE.",
+  "rank10_precondition": "THE_EXACT_REPAIRED_CURRENT_ROUTE_TRANSITIVE_CLOSURE_MUST_BE_RECOMPUTED_AND_AN_INDEPENDENT_CARRIER_PREFLIGHT_MUST_PROVE_EVERY_CLOSURE_BLOB_PRESENT_AND_IMPORTABLE_BEFORE_RANK10_TASK_START.",
+  "planner_transport_repair_blob": "01d859c8f27b317893027e693c9aa49e833a256f",
+  "planner_transport_live_probe_run_id": 37622800294,
+  "planner_transport_live_probe_artifact_digest": "sha256:3645b4e82dc02dd7c663b8f2add7ced4d73a620211458dbb7f3470c8273b9d21",
   "hard_nonclaims": [
-    "NO_RANK9_EXECUTION_AUTHORITY",
+    "NO_RANK10_EXECUTION_AUTHORITY_FROM_THIS_MANIFEST_ALONE",
     "NO_TB_SCIENCE_ACCEPTANCE_CREDIT",
     "NO_SCIENCE_CAPABILITY_DEFICIT_INFERRED",
     "NO_TERMINAL_CREDIT"
