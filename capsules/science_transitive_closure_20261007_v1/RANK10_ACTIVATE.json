@@ -1,0 +1,9 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK10_CLOSURE_TRIGGER_V1",
+  "date": "2026-10-07",
+  "purpose": "TRIGGER_EXISTING_ZERO_BENCHMARK_REPAIRED_ROUTE_CLOSURE_VERIFIER",
+  "benchmark_task_exposure_authorized": 0,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit": false,
+  "terminal_credit": false
+}
