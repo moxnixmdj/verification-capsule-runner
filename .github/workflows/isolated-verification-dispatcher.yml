@@ -5,6 +5,8 @@ on:
       - 'verify-base/**'
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -18,10 +20,45 @@ jobs:
           set -euo pipefail
           test -f verification/run.sh
           bash verification/run.sh
+      - name: Attest isolated verification result
+        id: attest
+        uses: actions/attest@v4
+        with:
+          subject-path: verification/result.json
+      - name: Capture trusted roots
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh attestation trusted-root > verification/trusted_root.jsonl
+          test -s verification/trusted_root.jsonl
+      - name: Verify attestation offline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh attestation verify verification/result.json \
+            -R moxnixmdj/verification-capsule-runner \
+            --bundle "${{ steps.attest.outputs.bundle-path }}" \
+            --custom-trusted-root verification/trusted_root.jsonl
+      - name: Stage attestation bundle
+        run: |
+          set -euo pipefail
+          cp "${{ steps.attest.outputs.bundle-path }}" verification/attestation_bundle.json
+          test -s verification/attestation_bundle.json
       - name: Upload isolated verification result
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: isolated-verification-result
           path: verification/result.json
+          if-no-files-found: error
+      - name: Upload signed attestation material
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isolated-verification-attestation
+          path: |
+            verification/attestation_bundle.json
+            verification/trusted_root.jsonl
           if-no-files-found: error
