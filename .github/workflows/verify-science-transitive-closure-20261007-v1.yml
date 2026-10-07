@@ -1,0 +1,21 @@
+name: Verify Science transitive closure v1
+on:
+  push:
+    paths:
+      - 'capsules/science_transitive_closure_20261007_v1/**'
+      - '.github/workflows/verify-science-transitive-closure-20261007-v1.yml'
+  pull_request:
+    paths:
+      - 'capsules/science_transitive_closure_20261007_v1/**'
+      - '.github/workflows/verify-science-transitive-closure-20261007-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact closure, imports, and adversarial carrier gates
+        run: python capsules/science_transitive_closure_20261007_v1/verify.py
