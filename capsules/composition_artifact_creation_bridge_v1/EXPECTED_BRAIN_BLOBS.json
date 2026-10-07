@@ -1,0 +1,15 @@
+{
+  "schema": "BRAIN_COMPOSITION_ARTIFACT_CREATION_BRIDGE_PUBLIC_VERIFIER_INPUT_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_pr": 2117,
+  "brain_ref": "breakthrough/composition-artifact-creation-scope-bridge-20261005-sol",
+  "exact_brain_blobs": {
+    "canonical/governance/COMPOSITION_ARTIFACT_CREATION_SCOPE_COMPLETE_BRIDGE_V1.json": "f400756e84284c5a6ce4971af61e544e9b2f94eb",
+    "canonical/tests/test_composition_artifact_creation_scope_complete_bridge_v1.py": "5a9af7fa7970b78f251d1082b7e5832aaf4db15e",
+    "canonical/governance/OPUS55_TERMINAL_PROOF_PROTOCOLS_V1.json": "62394e5b7d221ec9f69c3458f669e40e253a9d09",
+    "canonical/governance/FROZEN_COMPOSITION_COMPONENT_INTERFACE_MANIFEST_V1.json": "9efbf3e81e67fbd15e34be2fcd86fbfc626b246d",
+    "canonical/governance/BEHAVIORAL_CONTRACT_REGISTRY_V1.json": "ee187f611a0e82b2de495ee377682f39bc31dd31",
+    "canonical/verification/ARTIFACT_UNCOVERED_SCOPE_PARTITION_PROOF_20261002_V1.json": "11aaa9915906511acf9f8a48e02b993b670fe44d",
+    "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json": "a3fd20e58fdbd9b86278b7de0c245de3063dce27"
+  }
+}
