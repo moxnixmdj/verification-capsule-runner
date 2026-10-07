@@ -42,6 +42,7 @@ jobs:
           test "$(git hash-object "$R/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
           test "$(git hash-object "$R/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
           test "$(git hash-object "$R/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          export EXECUTION_WORKFLOW_BLOB="$(git hash-object .github/workflows/execute-tb-science-rank6-20261007-v1.yml)"
           vis="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$GITHUB_REPOSITORY" | python -c 'import json,sys; print(json.load(sys.stdin)["visibility"])')"
           test "$vis" = "public"
           test "$(nproc)" -ge 4
@@ -50,7 +51,7 @@ jobs:
           docker version >/dev/null
           docker info >/dev/null
           python - <<'PY'
-          import json
+          import json,os
           C="capsules/tb_science_rank6_20261007_v1"
           arm=json.load(open(C+"/ARM_RANK6.json"))
           auth=json.load(open(C+"/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json"))
@@ -61,6 +62,7 @@ jobs:
           assert arm["task_digest"]=="sha256:ba37bd6173cc7d21aff84b2124524ef2ec60cb85f5f9cef2c42e6111ad9ed18f"
           assert arm["authority_blob"]=="3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2"
           assert arm["authority_verification_blob"]=="1aff0bc47f34c6cd93c1252a0659e48712a22bef"
+          assert arm["execution_workflow_blob"]==os.environ["EXECUTION_WORKFLOW_BLOB"]
           assert arm["run_attempt_required"]==1 and arm["retries"]==0 and arm["replacement"] is False
           assert auth["execution_authority"] is True
           assert auth["fresh_reality_authority"]["authorized"] is True
