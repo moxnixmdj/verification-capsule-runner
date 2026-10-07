@@ -1,0 +1,20 @@
+{
+  "schema": "PROJECT_BRAIN_SEMANTIC_STATE_BUS_V1_VERIFICATION_CAPSULE",
+  "source_repository": "moxnixmdj/brain",
+  "source_pull_request": 2430,
+  "source_head_sha": "3a6aa8cfdcf208c954eb38ed1f2ef28dd5b30e19",
+  "exact_blobs": {
+    "canonical/runtime/semantic_state_bus_v1.py": "fc7d07b48c69168909b063452a1947d7dc27ec0c",
+    "canonical/tests/test_semantic_state_bus_v1.py": "b3a82eb563cea5688cc2ee15056075d8d412b137",
+    "canonical/governance/SEMANTIC_STATE_BUS_V1.json": "1e782299494d80b84c997df7fa6658256ff8a4a5"
+  },
+  "claims_under_test": [
+    "EXACT_SOURCE_BYTE_IDENTITY",
+    "STALE_WRITE_AND_ROLLBACK_FAIL_CLOSED",
+    "SAME_SHAPE_DECOY_CHANGES_BOUND_DOWNSTREAM_CONTEXT",
+    "EXACT_ROLLBACK_RESTORES_CHECKPOINT_STATE_AND_CONTEXT_BINDING",
+    "TAMPERED_STATE_FAILS_CLOSED",
+    "CROSS_CASE_CHECKPOINT_FAILS_CLOSED"
+  ],
+  "terminal_credit": 0
+}
