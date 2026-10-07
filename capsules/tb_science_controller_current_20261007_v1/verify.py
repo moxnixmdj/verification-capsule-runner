@@ -42,7 +42,7 @@ class C:
     min_words: int|None=None
     max_words: int|None=None
     min_unique_words: int|None=None
-    exact_numbers: tuple=()
+    exact_numbers: int|None=None
     lowercase_only: bool=False
     uppercase_only: bool=False
     required_literals: tuple=()
