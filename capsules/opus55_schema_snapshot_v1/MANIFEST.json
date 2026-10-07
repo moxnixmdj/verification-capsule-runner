@@ -1,0 +1,17 @@
+{
+  "schema": "OPUS55_SCHEMA_SNAPSHOT_VERIFIER_MANIFEST_V1",
+  "brain": {
+    "repository": "moxnixmdj/brain",
+    "ref": "sol/opus55-frozen-schema-snapshot-20261005",
+    "subject_path": "canonical/governance/OPUS55_FROZEN_INTERACTION_SCHEMA_SNAPSHOT_20261005_V1.json",
+    "subject_blob_sha": "747f535e158d249a6ac358b28266dc0348254dc7",
+    "encoder_runtime_blob_sha": "b4d7501d12c24b12fca06a5041b5ca567c3d0ec4",
+    "encoder_tests_blob_sha": "28c7a8cb5fcb61f423e6fadd3350853094c6dcb8",
+    "encoder_theorem_blob_sha": "a22c4be924fac274cb4311e12d8488602746b8d4"
+  },
+  "upstream": {
+    "repository": "anthropics/anthropic-sdk-python",
+    "commit": "18f25547f20cf5f01da69ac611e700e3bc9ebf21"
+  },
+  "no_credit": true
+}

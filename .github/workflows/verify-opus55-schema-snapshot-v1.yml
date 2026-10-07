@@ -1,0 +1,18 @@
+name: Verify Opus 5.5 frozen interaction schema snapshot
+on:
+  pull_request:
+    paths:
+      - 'capsules/opus55_schema_snapshot_v1/**'
+      - '.github/workflows/verify-opus55-schema-snapshot-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python capsules/opus55_schema_snapshot_v1/verify.py
+      - name: Verify total lossless IR encoder
+        working-directory: capsules/opus55_schema_snapshot_v1
+        run: python -m unittest -v canonical.tests.test_opus55_schema_lossless_ir_encoder_v1
