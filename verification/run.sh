@@ -1,17 +1,6 @@
-# Isolated P1 verifier entrypoint; deterministic spent fixtures only.
 #!/usr/bin/env bash
 set -euo pipefail
-python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1
-python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1
-python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_v1
-python - <<'PY'
-import json
-from pathlib import Path
-d=json.loads(Path("canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json").read_text())
-assert d["new_reality_units_consumed"] == 0
-assert d["execution_authority"] is False
-assert d["promotion_authority"] is False
-assert d["terminal_results_replayed"] == 0
-assert d["incremental_spend_usd"] == 0
-print("ZERO_FRESH_REALITY_PREFLIGHT_CONFIRMED")
-PY
+cd "$(dirname "$0")/capsule"
+python -m py_compile   canonical/runtime/capability_planner.py   canonical/runtime/universal_verified_adaptive_solver_v1.py   canonical/runtime/universal_verified_adaptive_solver_v2.py   canonical/runtime/effect_broker_receipt_resolver_v2.py   canonical/runtime/executable_skill_program_v7.py   canonical/runtime/skill_receipt_authenticator_v1.py   canonical/runtime/universal_verified_skill_ratchet_v1.py   verify_independent.py
+python verify_independent.py
+test -s ../result.json
