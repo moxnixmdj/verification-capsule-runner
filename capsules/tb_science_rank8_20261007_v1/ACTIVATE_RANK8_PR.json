@@ -33,6 +33,6 @@
     "task_reality_consumed": 0
   },
   "revocation_trigger": "FORCE_SAME_CONCURRENCY_GROUP_CANCEL_BEFORE_TERMINAL_TASK_EXPOSURE__KNOWN_SUPERSEDED_PLANNER",
-  "revocation_transport_sequence": 1,
-  "revocation_transport_reason": "FORCE_PULL_REQUEST_SYNCHRONIZE_UNDER_CANCEL_IN_PROGRESS_TRUE__RANK8_REVOKED_PREEXPOSURE__NO_TASK_EXECUTION"
+  "revocation_transport_sequence": 2,
+  "revocation_transport_reason": "PATH_MATCHED_SYNCHRONIZE_CANCEL_ONLY__REVOKED_PREEXPOSURE__NO_RANK8_TASK_EXECUTION"
 }
