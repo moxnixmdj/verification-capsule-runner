@@ -1,0 +1,17 @@
+{
+  "schema": "PROJECT_BRAIN_GDPVAL_PUBLIC_220_COMPOSED_SEMANTIC_LOCALIZATION_PUBLIC_RUNNER_ACTIVATION_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVE__ONE_EXACT_ZERO_REALITY_PUBLIC_220_LOCALIZATION",
+  "carrier_commit": "7da9331b2231d556ab0de8200bac0a14450169f9",
+  "workflow_blob": "13cb2da2bf626e387ed0b3677fdb1face6e92756",
+  "canonical_intent_blob": "ab94338b6222e8459fa3a5d7ef57a456cd07681e",
+  "exact_runtime_root_blob": "347607991ccd68c9a27b0afcb56a271f45ed0326",
+  "exact_local_runtime_closure_file_count": 9,
+  "public_task_count": 220,
+  "fresh_target_model_queries_authorized": 0,
+  "provider_evaluation_queries_authorized": 0,
+  "new_internal_model_inference_authorized": 0,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit": false,
+  "terminal_credit": false
+}
