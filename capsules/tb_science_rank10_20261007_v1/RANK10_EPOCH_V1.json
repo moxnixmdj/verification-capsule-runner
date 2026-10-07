@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK10_PUBLIC_EPOCH_V1",
+  "date": "2026-10-07",
+  "status": "CURRENT__ONE_USE_PREEXPOSURE_GATE",
+  "epoch_id": "TBSCI-RANK10-20261007-E1",
+  "slot_id": "terminal-bench-science/rdkit-ic-constraints::trial-0",
+  "schedule_rank": 10,
+  "task_digest": "sha256:17e356ab255088712c7dfa9765bf077b33a3da221f4a03d4770576857f9c0b6f",
+  "brain_ledger_path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V7.json",
+  "brain_ledger_git_blob_sha": "d3ff32dd833dfb5fcdce58e134185bfaf19e95ae",
+  "repaired_planner_git_blob_sha": "01d859c8f27b317893027e693c9aa49e833a256f",
+  "repaired_closure_manifest_git_blob_sha": "31656d35034338dfcb699672bcd4788b283b83c9",
+  "planner_transport_verification_run_id": 37622800294,
+  "repaired_closure_verification_run_id": 37624610910,
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "incremental_spend_usd_max": 0,
+  "benchmark_task_exposure": 0,
+  "consumed": false,
+  "credit": false
+}
