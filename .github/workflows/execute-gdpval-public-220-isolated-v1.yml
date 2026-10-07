@@ -1,0 +1,86 @@
+name: GDPval public 220 isolated execution v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/gdpval_public_220_isolated_v1/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gdpval-public-220-isolated-v1-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify exact mirrored Brain bytes
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib
+          base=pathlib.Path("capsules/gdpval_public_220_isolated_v1")
+          m=json.loads((base/"MANIFEST.json").read_text())
+          assert m["terminal_case_exposure"] is False
+          assert m["fresh_target_model_queries_authorized"] == 0
+          assert m["provider_evaluation_queries_authorized"] == 0
+          assert m["new_internal_model_inference_authorized"] == 0
+          assert m["incremental_spend_usd_max"] == 0
+          for rel, meta in m["files"].items():
+              p=base/"vendor"/rel
+              raw=p.read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got == meta["git_blob_sha"], (rel, got, meta["git_blob_sha"])
+          print("EXACT_BRAIN_BYTES_PASS")
+          PY
+
+      - name: Run fail-closed unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/gdpval_public_220_isolated_v1/vendor
+        run: |
+          set -euo pipefail
+          python -m unittest -v canonical.tests.test_gdpval_semantic_complement_localizer_v2
+
+      - name: Execute complete public 220 localization
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/gdpval_public_220_isolated_v1/vendor
+        run: |
+          set -euo pipefail
+          mkdir -p capsules/gdpval_public_220_isolated_v1/evidence
+          python -m canonical.runtime.gdpval_semantic_complement_localizer_v2 \
+            > capsules/gdpval_public_220_isolated_v1/evidence/RESULT.json
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path("capsules/gdpval_public_220_isolated_v1/evidence/RESULT.json")
+          x=json.loads(p.read_text())
+          assert x["status"] == "PASS__COMPLETE_PUBLIC_220_STRUCTURAL_RELOCALIZATION__ZERO_PROMOTION_CREDIT", x
+          assert x["population"]["task_count"] == 220, x
+          assert x["population"]["row_indices_contiguous"] is True, x
+          assert x["population"]["unique_task_ids"] is True, x
+          assert x["inference"]["fresh_target_model_queries"] == 0, x
+          assert x["inference"]["provider_evaluation_queries"] == 0, x
+          assert x["inference"]["new_internal_model_inference"] == 0, x
+          assert x["inference"]["incremental_spend_usd"] == 0, x
+          assert x["soundness"]["candidate_is_credit"] is False, x
+          assert x["soundness"]["gdpval_scope_closed"] is False, x
+          assert x["soundness"]["u_deletion_authority"] is False, x
+          assert x["soundness"]["terminal_authority"] is False, x
+          print(json.dumps({"status":x["status"],"population":x["population"],"aggregate":x["aggregate"]},sort_keys=True))
+          PY
+
+      - name: Upload exact execution evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdpval-public-220-isolated-v1
+          path: capsules/gdpval_public_220_isolated_v1/evidence/RESULT.json
+          if-no-files-found: error
