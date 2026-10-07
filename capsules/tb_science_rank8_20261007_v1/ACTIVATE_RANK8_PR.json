@@ -11,7 +11,7 @@
   "rank7_irreversible_result_blob": "b6da8ab77554096032901ca69f72ea82497f6921",
   "planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
   "planner_repair_verification_blob": "dcada0f538ace33e13bf716bdca5fdd02aae2561",
-  "execution_workflow_blob": "6153a9c3d591c064ae633c65f3d9fd961222944b",
+  "execution_workflow_blob": "87a00dd6c3355b8e6a2fe112f234abce59089558",
   "fresh_reality_units_authorized": 1,
   "retries": 0,
   "replacement": false,
@@ -25,5 +25,11 @@
     "planner_git_blob_sha": "614c261e296f4d3dbc1b835f0ad8aec29e2e2aee",
     "independent_unit_replay": "PASS_13_OF_13",
     "acceptance_credit": 0
+  },
+  "activation_transport_repair": {
+    "prior_run_id": 37608883571,
+    "prior_run_disposition": "PREEXPOSURE_ABORT__NO_TASK_EXPOSURE__AUTHORITY_NOT_CONSUMED",
+    "repaired_gate": "EXPLICIT_WORKFLOW_PATH_AND_ABORT_SAFE_FINALIZER",
+    "task_reality_consumed": 0
   }
 }
