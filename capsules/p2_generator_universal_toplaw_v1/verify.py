@@ -61,7 +61,7 @@ def main():
         '+(2 if h["analysis_value"] else 0)',
         'if hidden[x["id"]]["supported"] and hidden[x["id"]]["analysis_value"]',
         'score-=20*len(missing)',
-        'key=(-score,cost,ids,score,cost,sorted(missing))',
+        'key=(-score,cost,ids)',\n        'best=(key,ids,score,cost,sorted(missing))',
     ):
         assert snippet in evaluator_text, "EVALUATOR_SEMANTIC_ANCHOR_MISSING:" + snippet
 
