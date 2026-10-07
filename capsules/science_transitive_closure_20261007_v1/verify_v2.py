@@ -5,7 +5,7 @@ ROOT=pathlib.Path(__file__).resolve().parent
 EXPECTED_TOP={
  "canonical/runtime/python_transitive_runtime_closure_v1.py":"43d502c621c219632fa0f9a19632dfc0228e4847",
  "canonical/tests/test_python_transitive_runtime_closure_v1.py":"7f71c5ac0d0dfd64a9ca64861422546d9fec9bb7",
- "canonical/governance/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261007_V1.json":"4b2a4fb3bd85b066e642a0253d4c325dbb431237",
+ "canonical/governance/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261007_V1.json":"31656d35034338dfcb699672bcd4788b283b83c9",
  "canonical/governance/TB_SCIENCE_TRANSITIVE_CARRIER_CLOSURE_REPAIR_20261007_V1.json":"a2162c41f7b40bd41d4c53ca608557e9ebe2e8f2",
 }
 def blob(path):
