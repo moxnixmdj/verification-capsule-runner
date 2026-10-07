@@ -29,7 +29,7 @@ jobs:
           test "$GITHUB_RUN_ATTEMPT" = "1"
           test "$GITHUB_EVENT_NAME" = "pull_request"
           test "$GITHUB_BASE_REF" = "main"
-          test "$GITHUB_HEAD_REF" = "activate/tb-science-rank8-execute-20261007"
+          test "$GITHUB_HEAD_REF" = "activate/tb-science-rank8-execute-20261007-sol"
           test "$GITHUB_REPOSITORY" = "moxnixmdj/verification-capsule-runner"
           C=capsules/tb_science_rank8_20261007_v1
           R=capsules/tb_science_canary_v3_execution
