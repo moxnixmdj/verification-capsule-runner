@@ -1,0 +1,147 @@
+name: Execute AutomationBench public 600 terminal-now V1
+
+on:
+  push:
+    branches:
+      - 'terminal-now/automationbench-600-20261007-v1'
+    paths:
+      - '.github/workflows/execute-automationbench-public-600-terminal-now-v1.yml'
+      - 'candidate/automationbench_gateway_v2/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automationbench-public-600-terminal-now-v1
+  cancel-in-progress: false
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      BRAIN_AUTOMATION_PLANNER_URL: https://text.pollinations.ai/
+      BRAIN_AUTOMATION_PLANNER_MODELS: openai-fast,openai,mistral
+      BRAIN_AUTOMATION_PLANNER_TIMEOUT_S: '60'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install exact frozen AutomationBench
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir             "git+https://github.com/zapier/AutomationBench.git@4a8e1061254004d9dac807054eed33fad7d1ff14"
+
+      - name: Start Brain-owned control gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -u candidate/automationbench_gateway_v2/runtime.py --host 127.0.0.1 --port 8787 >/tmp/brain-gateway.log 2>&1 &
+          echo $! >/tmp/brain-gateway.pid
+          python - <<'PY'
+          import time, urllib.request
+          url='http://127.0.0.1:8787/health'
+          for _ in range(60):
+              try:
+                  with urllib.request.urlopen(url, timeout=2) as r:
+                      if r.status == 200:
+                          print(r.read().decode())
+                          raise SystemExit(0)
+              except Exception:
+                  time.sleep(0.5)
+          raise SystemExit('GATEWAY_HEALTH_TIMEOUT')
+          PY
+
+      - name: Execute exact public 600 population
+        shell: bash
+        run: |
+          set -euo pipefail
+          auto-bench             --model brain-automation-v1             --base-url http://127.0.0.1:8787/v1             --api-key brain-local             --api chat_completions             --domains all             --toolset api             --num-examples -1             --max-steps 50             --max-concurrent 64             --input-cost 0             --output-cost 0             --export-json automationbench-public-600-terminal-now-v1.json
+
+      - name: Compile immutable score receipt
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json, pathlib, subprocess
+          p=pathlib.Path('automationbench-public-600-terminal-now-v1.json')
+          if not p.is_file():
+              pathlib.Path('AUTOMATIONBENCH_PUBLIC_600_TERMINAL_NOW_V1_RECEIPT.json').write_text(json.dumps({
+                  'schema':'PROJECT_BRAIN_AUTOMATIONBENCH_PUBLIC_600_TERMINAL_NOW_RECEIPT_V1',
+                  'status':'NO_SCORE_FILE__EXECUTION_FAILED_BEFORE_COMPLETE_RESULT',
+                  'pass':False,
+                  'threshold':0.40,
+                  'incremental_spend_usd':0,
+                  'terminal_credit_delta':0
+              },indent=2,sort_keys=True)+'\n')
+              raise SystemExit(0)
+          d=json.loads(p.read_text())
+          s=d.get('summary') or {}
+          m=d.get('meta') or {}
+          total=int(m.get('total_tasks') or 0)
+          passed=int(s.get('passed_count') or 0)
+          rate=float(s.get('pass_rate') or 0.0)
+          aborted=list(s.get('aborted_tasks') or [])
+          raw=p.read_bytes()
+          out={
+            'schema':'PROJECT_BRAIN_AUTOMATIONBENCH_PUBLIC_600_TERMINAL_NOW_RECEIPT_V1',
+            'status':'PASS_BAR' if total==600 and not aborted and rate>=0.40 else 'FAIL_OR_INCOMPLETE',
+            'pass': bool(total==600 and not aborted and rate>=0.40),
+            'predicate':'AUTOMATIONBENCH_GE_40',
+            'benchmark_repository':'zapier/AutomationBench',
+            'benchmark_commit':'4a8e1061254004d9dac807054eed33fad7d1ff14',
+            'population':'PUBLIC_600__100_EACH_SALES_MARKETING_OPERATIONS_SUPPORT_FINANCE_HR',
+            'brain_gateway':{
+              'path':'candidate/automationbench_gateway_v2/runtime.py',
+              'git_blob_sha':subprocess.check_output(['git','hash-object','candidate/automationbench_gateway_v2/runtime.py'],text=True).strip(),
+              'operative_configuration':'BRAIN_OWNED_TOOL_ALLOWLIST_SCHEMA_AND_ONE_ACTION_GATE'
+            },
+            'substrate_transport':'ZERO_INCREMENTAL_PUBLIC_PROPOSAL_ENDPOINT',
+            'total_tasks':total,
+            'passed_count':passed,
+            'failed_count':int(s.get('failed_count') or 0),
+            'pass_rate':rate,
+            'threshold':0.40,
+            'aborted_tasks':aborted,
+            'result_sha256':hashlib.sha256(raw).hexdigest(),
+            'incremental_spend_usd':0,
+            'fresh_target_provider_queries':0,
+            'terminal_credit_delta': 1 if total==600 and not aborted and rate>=0.40 else 0,
+            'hard_nonclaims':[
+              'NO_PRIVATE_AUTOMATIONBENCH_SCORE_CLAIM',
+              'NO_OTHER_PREDICATE_CREDIT',
+              'NO_TERMINAL_TRUE_FROM_THIS_RECEIPT_ALONE'
+            ]
+          }
+          pathlib.Path('AUTOMATIONBENCH_PUBLIC_600_TERMINAL_NOW_V1_RECEIPT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload exact result and receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: automationbench-public-600-terminal-now-v1
+          path: |
+            automationbench-public-600-terminal-now-v1.json
+            AUTOMATIONBENCH_PUBLIC_600_TERMINAL_NOW_V1_RECEIPT.json
+            /tmp/brain-gateway.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Enforce verdict
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('AUTOMATIONBENCH_PUBLIC_600_TERMINAL_NOW_V1_RECEIPT.json'))
+          assert d.get('pass') is True, d
+          print('AUTOMATIONBENCH_GE_40_PASS')
+          PY
