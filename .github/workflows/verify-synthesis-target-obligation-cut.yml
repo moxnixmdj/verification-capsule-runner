@@ -1,0 +1,27 @@
+name: Verify synthesis target-obligation cut
+on:
+  pull_request:
+    paths:
+      - "subject/synthesis_target_obligation_cut/**"
+      - "verify_synthesis_target_obligation_cut.py"
+      - ".github/workflows/verify-synthesis-target-obligation-cut.yml"
+  push:
+    branches:
+      - "verify/synthesis-target-obligation-cut-20261005-v1"
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python verify_synthesis_target_obligation_cut.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthesis-target-obligation-cut-receipt
+          path: synthesis_target_obligation_cut_independent_receipt.json
+          if-no-files-found: error
