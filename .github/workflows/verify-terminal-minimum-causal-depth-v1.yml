@@ -1,6 +1,7 @@
 name: verify-terminal-minimum-causal-depth-v1
 on:
   pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
