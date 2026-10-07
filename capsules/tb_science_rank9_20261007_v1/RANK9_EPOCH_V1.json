@@ -2,7 +2,7 @@
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK9_EPOCH_V1",
   "date": "2026-10-07",
   "epoch_id": "TBSCI-RANK9-20261007-E1",
-  "status": "CURRENT__ONE_USE_PREEXPOSURE_GATE",
+  "status": "RETIRED__CONSUMED_FINAL_ZERO",
   "slot_id": "terminal-bench-science/neo-orbit-determination::trial-0",
   "task_digest": "sha256:b0038fd39395b57f2036b2c0271f37b508e1250fc97d12c899590b61e997cada",
   "attempts": 1,
@@ -13,5 +13,13 @@
   "carrier_precondition": "EXACT_CURRENT_14_FILE_TRANSITIVE_RUNTIME_CLOSURE_MUST_PASS_BEFORE_TASK_START",
   "note": "Canonical use requires binding this exact Git blob. The carrier must compare the current public main blob immediately before the benchmark step.",
   "credit": false,
-  "reuse_authority": false
+  "reuse_authority": false,
+  "retired_reason": "RANK9_TASK_STARTED_AND_FINALIZED__NO_REUSE",
+  "workflow_run_id": 37619396615,
+  "workflow_job_id": 112787673716,
+  "artifact_id": 11481907378,
+  "artifact_digest": "sha256:7c3d8b0a3edadb3cd04f075aa948807abeee4b6db0af0e851f48ff03843422d3",
+  "result_status": "FINAL_ZERO",
+  "reward": 0,
+  "failure_class": "SCIENCE_PLANNER_TOOL_SCHEMA_LLAMA_CPP_GRAMMAR_REPETITION_LIMIT"
 }
