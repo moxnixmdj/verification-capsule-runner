@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_PR_ACTIVATION_V1",
   "date": "2026-10-07",
-  "status": "REVOKED_PREEXPOSURE__SUPERSEDED_KNOWN_512_CHAR_ARTIFACT_COMMAND_BOTTLENECK",
+  "status": "SUSPENDED_CANCEL_ONLY__CANONICAL_RANK8_AUTHORITY_REVOKED_BEFORE_EXPOSURE",
   "terminal_objective": "PERMANENTLY_INTERNALIZE_CONFIGURE_VERIFY_AND_OWN_ALL_USEFUL_OPUS_5_5_CAPABILITIES_AT_EQUAL_OR_BETTER_LEVEL__KNOWLEDGE_EXTERNAL_JIT_ONLY",
   "authorized_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
   "authorized_task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
@@ -11,14 +11,14 @@
   "rank7_irreversible_result_blob": "b6da8ab77554096032901ca69f72ea82497f6921",
   "planner_blob": "3d6f50be86cc61a9b907a04d8f3fb161c2d40e99",
   "planner_repair_verification_blob": "dcada0f538ace33e13bf716bdca5fdd02aae2561",
-  "execution_workflow_blob": "87a00dd6c3355b8e6a2fe112f234abce59089558",
-  "fresh_reality_units_authorized": 1,
+  "execution_workflow_blob": "b72617f9113a3e2acd98968712c6c4e56ae6d6e6",
+  "fresh_reality_units_authorized": 0,
   "retries": 0,
   "replacement": false,
   "duplicate_credit": false,
   "incremental_spend_usd_required": 0,
   "promotion_authority": false,
-  "revocation_reason": "RANK7_ARTIFACT_ANALYSIS_PROVED_PLANNER_BLOB_3d6f50be... CAPS COMMAND_AND_VERIFY_COMMAND_AT_512_CHARS; RANK8 MUST NOT BE EXPOSED UNDER A KNOWN_ARTIFACT_TRUNCATION ROUTE.",
+  "revocation_reason": "CANONICAL_BRAIN_MAIN_SUSPENDED_RANK8_AFTER_RANK7_FALSE_FINISH_CONTRACT_FALSIFICATION; CANCEL_STALE_CONCURRENCY_ONLY",
   "revoked_before_rank8_task_exposure": true,
   "superseding_planner_candidate": {
     "branch": "chatgpt/tbscience-artifact-command-capacity-20261007-v1",
@@ -33,6 +33,7 @@
     "task_reality_consumed": 0
   },
   "revocation_trigger": "FORCE_SAME_CONCURRENCY_GROUP_CANCEL_BEFORE_TERMINAL_TASK_EXPOSURE__KNOWN_SUPERSEDED_PLANNER",
-  "revocation_transport_sequence": 3,
-  "revocation_transport_reason": "FORCE_PATH_MATCHED_SYNCHRONIZE_CANCEL_ONLY__REVOKED_PREEXPOSURE__NO_RANK8_TASK_EXECUTION"
+  "revocation_transport_sequence": 4,
+  "revocation_transport_reason": "FORCE_PATH_MATCHED_SYNCHRONIZE_CANCEL_ONLY__REVOKED_PREEXPOSURE__NO_RANK8_TASK_EXECUTION",
+  "execution_authority": false
 }
