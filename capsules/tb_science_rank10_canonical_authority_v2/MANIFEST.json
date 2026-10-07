@@ -36,5 +36,7 @@
   "fresh_target_reality_units_consumed": 0,
   "incremental_spend_usd_max": 0,
   "promotion_authority": false,
-  "terminal_credit": false
+  "terminal_credit": false,
+  "verifier_base_fix_commit_sha": "5199cf3bbedf36956c493a3b7b275c2c6b7a5341",
+  "verifier_base_fix": "USE_FROZEN_SLOTS_SCHEDULE_ORDER_9_FOR_ONE_BASED_RANK10"
 }
