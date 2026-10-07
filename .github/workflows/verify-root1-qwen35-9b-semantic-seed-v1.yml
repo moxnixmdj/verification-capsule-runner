@@ -1,0 +1,87 @@
+name: Verify Root1 Qwen3.5 9B semantic seed V1
+
+on:
+  push:
+    branches:
+      - "verify/root1-qwen35-9b-semantic-seed-20261007-v1"
+    paths:
+      - "verify_root1_qwen35_9b_semantic_seed_v1.py"
+      - ".github/workflows/verify-root1-qwen35-9b-semantic-seed-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build pinned llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init /tmp/llama.cpp
+          git -C /tmp/llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C /tmp/llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C /tmp/llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S /tmp/llama.cpp -B /tmp/llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/llama.cpp/build -j 2 --target llama-server
+
+      - name: Reassemble exact Brain-controlled 9B carrier
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=brain-capability-qwen35-9b-m-exact-v1
+          stem=Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          mkdir -p /tmp/modelparts
+          cd /tmp/modelparts
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "$stem.part*of03"
+          cat "$stem.part01of03" "$stem.part02of03" "$stem.part03of03" > /tmp/$stem
+          test "$(stat -c '%s' /tmp/$stem)" = "5060174144"
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  /tmp/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local model
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if /tmp/llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup /tmp/llama.cpp/build/bin/llama-server             -m /tmp/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --host 127.0.0.1 --port 8080 -c 4096 -t 4 --parallel 1 --no-webui "${EXTRA[@]}"             > qwen35-9b-server.log 2>&1 &
+          echo $! > qwen35-9b-server.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > qwen35-9b-health.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat qwen35-9b-server.pid)" 2>/dev/null; then break; fi
+            sleep 1
+          done
+          if test "$ok" != 1; then cat qwen35-9b-server.log; exit 1; fi
+
+      - name: Run frozen meaning-sensitive semantic gate
+        id: semantic
+        continue-on-error: true
+        shell: bash
+        run: |
+          python verify_root1_qwen35_9b_semantic_seed_v1.py             --server http://127.0.0.1:8080             --model /tmp/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --result qwen35-9b-semantic-seed-result.json
+
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: root1-qwen35-9b-semantic-seed-v1
+          path: |
+            qwen35-9b-semantic-seed-result.json
+            qwen35-9b-server.log
+            qwen35-9b-health.json
+          if-no-files-found: warn
+
+      - name: Enforce candidate gate
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.semantic.outcome }}" = "success"
