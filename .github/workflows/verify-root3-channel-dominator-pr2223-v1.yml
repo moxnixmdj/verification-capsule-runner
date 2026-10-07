@@ -1,0 +1,31 @@
+name: Verify Root3 channel dominator PR2223
+
+on:
+  push:
+    branches:
+      - "verify/root3-channel-dominator-pr2223-v1"
+    paths:
+      - "candidate/root3_channel_dominator_pr2223_v1.py"
+      - "verify_root3_channel_dominator_pr2223_v1.py"
+      - ".github/workflows/verify-root3-channel-dominator-pr2223-v1.yml"
+  pull_request:
+    paths:
+      - "candidate/root3_channel_dominator_pr2223_v1.py"
+      - "verify_root3_channel_dominator_pr2223_v1.py"
+      - ".github/workflows/verify-root3-channel-dominator-pr2223-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Independent exhaustive and adversarial verification
+        run: python verify_root3_channel_dominator_pr2223_v1.py
