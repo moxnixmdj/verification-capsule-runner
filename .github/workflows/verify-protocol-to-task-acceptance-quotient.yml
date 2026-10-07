@@ -1,0 +1,29 @@
+name: verify-protocol-to-task-acceptance-quotient
+
+on:
+  pull_request:
+    paths:
+      - "subjects/OPUS55_PROTOCOL_TO_TASK_ACCEPTANCE_QUOTIENT_NORMAL_FORM_20261005_V1.json"
+      - "verify_protocol_to_task_acceptance_quotient_20261005_v1.py"
+      - ".github/workflows/verify-protocol-to-task-acceptance-quotient.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify theorem and falsification boundaries
+        run: python verify_protocol_to_task_acceptance_quotient_20261005_v1.py
+      - name: Upload deterministic receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: protocol-to-task-acceptance-quotient-verification
+          path: results/protocol_to_task_acceptance_quotient_verification_20261005_v1.json
+          if-no-files-found: error
