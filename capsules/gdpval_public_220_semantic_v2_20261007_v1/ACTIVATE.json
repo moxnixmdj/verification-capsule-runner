@@ -13,5 +13,6 @@
   "new_internal_model_inference_authorized": 0,
   "incremental_spend_usd_max": 0,
   "acceptance_credit": false,
-  "terminal_credit": false
+  "terminal_credit": false,
+  "persistence_nonce": "DURABLE_EVIDENCE_V1"
 }
