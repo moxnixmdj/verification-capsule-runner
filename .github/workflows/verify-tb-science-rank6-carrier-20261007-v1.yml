@@ -1,0 +1,89 @@
+name: Verify TB-Science rank6 unarmed carrier
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/execute-tb-science-rank6-20261007-v1.yml"
+      - ".github/workflows/verify-tb-science-rank6-carrier-20261007-v1.yml"
+      - "capsules/tb_science_rank6_20261007_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify unarmed state and exact bindings
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank6_20261007_v1
+          R=capsules/tb_science_canary_v3_execution
+          test ! -e "$C/ARM_RANK6.json"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json")" = "3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK6_ONE_SLOT_AUTHORITY_PUBLIC_RUNNER_VERIFICATION_20261007_V1.json")" = "1aff0bc47f34c6cd93c1252a0659e48712a22bef"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$R/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$R/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$R/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$R/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
+          test "$(git hash-object "$R/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+
+      - name: Verify authority and resource boundary without task exposure
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "moxnixmdj/verification-capsule-runner"
+          vis="$(curl -fsSL -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$GITHUB_REPOSITORY" | python -c 'import json,sys; print(json.load(sys.stdin)["visibility"])')"
+          test "$vis" = "public"
+          test "$(nproc)" -ge 4
+          awk '/MemTotal/{exit !($2 >= 12000000)}' /proc/meminfo
+          df -Pk "$GITHUB_WORKSPACE" | awk 'NR==2{exit !($4 >= 12000000)}'
+          docker version >/dev/null
+          docker info >/dev/null
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata,json
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          C="capsules/tb_science_rank6_20261007_v1"
+          a=json.load(open(C+"/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json"))
+          v=json.load(open(C+"/TB_SCIENCE_RANK6_ONE_SLOT_AUTHORITY_PUBLIC_RUNNER_VERIFICATION_20261007_V1.json"))
+          slot="terminal-bench-science/koopman-mfg-id::trial-0"
+          assert a["execution_authority"] is True
+          assert a["fresh_reality_authority"]["authorized"] is True
+          assert a["fresh_reality_authority"]["units"]==1
+          assert a["fresh_reality_authority"]["zero_incremental_spend_hard_stop"] is True
+          assert a["authorized_slot"]["slot_id"]==slot
+          assert a["authorized_slot"]["schedule_rank"]==6
+          assert slot not in a["permanently_consumed_slots"]
+          assert a["execution_semantics"]["retries_per_slot"]==0
+          assert a["execution_semantics"]["slot_replacement"] is False
+          assert a["exact_route"]["compiled_llama_cpp_cache_allowed"] is False
+          assert v["independent_runner"]["conclusion"]=="success"
+          assert v["verified"]["task_content_exposed"]==0
+          assert v["verified"]["terminal_slots_consumed"]==0
+          PY
+
+      - name: Verify execution workflow guardrails
+        run: |
+          set -euo pipefail
+          W=.github/workflows/execute-tb-science-rank6-20261007-v1.yml
+          grep -F 'branches: [main]' "$W"
+          grep -F 'capsules/tb_science_rank6_20261007_v1/ARM_RANK6.json' "$W"
+          grep -F 'test "$GITHUB_RUN_ATTEMPT" = "1"' "$W"
+          grep -F 'terminal-bench-science/koopman-mfg-id::trial-0' "$W"
+          grep -F 'TASK_NAME: terminal-bench-science/koopman-mfg-id' "$W"
+          grep -F 'continue-on-error: true' "$W"
+          grep -F 'rm -rf llama.cpp' "$W"
+          grep -F 'bec4772f6a2527d371557b5d2032641e5ff7619c' "$W"
+          grep -F 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c' "$W"
+          ! grep -F 'brain-llama-cpp-' "$W"
+          ! grep -F 'virtual-baseline-localization' "$W"
+          ! grep -F 'baseline-free-localization' "$W"
+          ! grep -F 'genomic-model-ranking' "$W"
+          ! grep -F 'mri-harmonization' "$W"
+          ! grep -F 'navigation-sensor-calibration' "$W"
