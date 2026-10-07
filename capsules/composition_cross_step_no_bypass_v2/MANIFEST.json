@@ -1,0 +1,30 @@
+{
+  "schema": "PROJECT_BRAIN_COMPOSITION_CROSS_STEP_NO_BYPASS_PUBLIC_VERIFICATION_MANIFEST_V2",
+  "date": "2026-10-07",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_candidate_head_sha": "3192f2649d6fd09f01d20f9818a214b5d99a86da",
+  "files": {
+    "canonical/runtime/astra_runtime.py": {
+      "git_blob_sha": "e00962ec64d96dad475cdf20cdac85315cc9d689"
+    },
+    "canonical/tests/test_astra_declared_cross_step_boundary_v1.py": {
+      "git_blob_sha": "9d9bbd7bed432f126fd55fcb3392aff78a21076b"
+    },
+    "canonical/runtime/composition_cross_step_no_bypass_audit_v2.py": {
+      "git_blob_sha": "0a00ad8acd29321b4b39eed27d633c91792a2405"
+    },
+    "canonical/tests/test_composition_cross_step_no_bypass_audit_v2.py": {
+      "git_blob_sha": "ef33572bc636cbff07b7e029724897a920ec233a"
+    },
+    "canonical/astra_runtime/missions/ASTRA_RUNTIME_RESEARCH_ARTIFACT_001.json": {
+      "git_blob_sha": "3624b85f88a5f19138916680d6e5c188924bd7b5"
+    }
+  },
+  "proved_scope": "ALL_EXPLICIT_PRIOR_STEP_RESULT_PROJECTION_INTO_ASTRA_SHELL_ASTRA_STEP_ENVIRONMENT_CHANNELS_IN_CURRENT_RUNTIME_BYTES",
+  "non_result_mutable_channel_completeness": false,
+  "semantic_declaration_completeness": false,
+  "external_evidence_channel_completeness": false,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit": false,
+  "terminal_credit": false
+}
