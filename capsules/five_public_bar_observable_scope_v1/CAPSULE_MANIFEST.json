@@ -1,0 +1,35 @@
+{
+  "schema": "FIVE_PUBLIC_BAR_OBSERVABLE_SCOPE_PUBLIC_CAPSULE_V1",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "29d68afc48c8978d49cbf259aa278da5c3551e2e",
+  "files": [
+    {
+      "path": "canonical/governance/FIVE_PUBLIC_BAR_OBSERVABLE_TARGET_SCOPE_CLOSURE_REDUCTION_20261005_V1.json",
+      "brain_git_blob_sha": "1b832c62a739a853b4bbf5228c016072c35da2b0"
+    },
+    {
+      "path": "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json",
+      "brain_git_blob_sha": "661a57f839101fbf54c7e4edc76166c65ce9327d"
+    },
+    {
+      "path": "canonical/governance/PUBLIC_BAR_TASK_UNION_SCOPE_COVERAGE_AUDIT_20261005_V1.json",
+      "brain_git_blob_sha": "2295a03fe9090e6842c6bd850b7bca67d1f71131"
+    },
+    {
+      "path": "canonical/governance/TARGET_BEHAVIOR_MECHANISM_SCOPE_SEPARATION_20261005_V1.json",
+      "brain_git_blob_sha": "251cac9c9f7892e26ca90f2f5118f31e1df02099"
+    },
+    {
+      "path": "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_EVIDENCE_BINDINGS_V2.json",
+      "brain_git_blob_sha": "a3fd20e58fdbd9b86278b7de0c245de3063dce27"
+    },
+    {
+      "path": "canonical/verification/PUBLIC_BAR_TASK_UNION_TARGET_CONDITIONED_RESIDUAL_RECONCILIATION_CONNECTOR_VERIFICATION_20261005_V1.json",
+      "brain_git_blob_sha": "a037a51b9860b4a8404c7dc5bed3a93b290070a8"
+    },
+    {
+      "path": "canonical/runtime/five_public_bar_observable_target_scope_closure_verifier_v1.py",
+      "brain_git_blob_sha": "99566ffba312d28100d6c15a985ed1f5dc210d3b"
+    }
+  ]
+}
