@@ -26,7 +26,11 @@
   "replacement": false,
   "denominator_shrink": false,
   "execution_authority": true,
-  "fresh_reality_units_consumed_by_this_arm": 1,
   "incremental_spend_usd": 0,
-  "promotion_authority": false
+  "promotion_authority": false,
+  "fresh_reality_units_armed": 1,
+  "fresh_reality_units_consumed": 0,
+  "activation_transport": "PULL_REQUEST_MERGE_PUSH_EVENT",
+  "pre_activation_direct_commit": "34ed23e1ed8d6944a22133502dc2fd45d8b3de76",
+  "pre_activation_direct_commit_workflow_runs": 0
 }
