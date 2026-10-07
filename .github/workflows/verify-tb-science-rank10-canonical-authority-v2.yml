@@ -1,0 +1,137 @@
+name: Verify canonical TB-Science rank10 authority v2
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank10_canonical_authority_v2/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank10-canonical-authority-v2-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact canonical rank10 authority chain
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank10_canonical_authority_v2
+          python - <<'PY'
+          import hashlib,json,pathlib
+          C=pathlib.Path("capsules/tb_science_rank10_canonical_authority_v2")
+          m=json.loads((C/"MANIFEST.json").read_text())
+          for rel,meta in m["files"].items():
+              raw=(C/rel).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got == meta["git_blob_sha"], (rel,got,meta["git_blob_sha"])
+
+          a=json.loads((C/"TB_SCIENCE_RANK10_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json").read_text())
+          i=json.loads((C/"ACTION_INTENT_TB_SCIENCE_RANK10_ONE_SHOT_20261007_V1.json").read_text())
+          l8=json.loads((C/"TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V8.json").read_text())
+          l7=json.loads((C/"TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V7.json").read_text())
+          e=json.loads((C/"RANK10_EPOCH_V1.json").read_text())
+          tm=json.loads((C/"TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json").read_text())
+          tv=json.loads((C/"TB_SCIENCE_PLANNER_TRANSPORT_REPAIR_LIVE_VERIFICATION_20261007_V1.json").read_text())
+          cm=json.loads((C/"TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261007_V2.json").read_text())
+          cv=json.loads((C/"TB_SCIENCE_REPAIRED_TRANSITIVE_CARRIER_CLOSURE_PUBLIC_VERIFICATION_20261007_V1.json").read_text())
+
+          slot="terminal-bench-science/rdkit-ic-constraints::trial-0"
+          task="terminal-bench-science/rdkit-ic-constraints"
+          digest="sha256:17e356ab255088712c7dfa9765bf077b33a3da221f4a03d4770576857f9c0b6f"
+
+          assert a["status"].startswith("ACTIVE__")
+          assert a["predicate"]=="TB_SCIENCE_GE_58_7"
+          assert a["slot"]=={"id":slot,"rank":10,"digest":digest}
+          assert a["source_bindings"]["intent"]["git_blob_sha"]==m["files"]["ACTION_INTENT_TB_SCIENCE_RANK10_ONE_SHOT_20261007_V1.json"]["git_blob_sha"]
+          assert a["source_bindings"]["ledger"]["git_blob_sha"]==m["files"]["TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V7.json"]["git_blob_sha"]
+          assert a["source_bindings"]["planner_live_transport_verification"]["git_blob_sha"]==m["files"]["TB_SCIENCE_PLANNER_TRANSPORT_REPAIR_LIVE_VERIFICATION_20261007_V1.json"]["git_blob_sha"]
+          assert a["source_bindings"]["carrier_closure_manifest"]["git_blob_sha"]==m["files"]["TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261007_V2.json"]["git_blob_sha"]
+          assert a["source_bindings"]["carrier_closure_verification"]["git_blob_sha"]==m["files"]["TB_SCIENCE_REPAIRED_TRANSITIVE_CARRIER_CLOSURE_PUBLIC_VERIFICATION_20261007_V1.json"]["git_blob_sha"]
+          assert a["live_epoch"]["git_blob_sha"]==m["files"]["RANK10_EPOCH_V1.json"]["git_blob_sha"]
+          assert a["exact_route"]["planner"]=="01d859c8f27b317893027e693c9aa49e833a256f"
+          assert a["exact_route"]["transitive_runtime_file_count"]==14
+          c=a["controls"]
+          assert c["exact_slot_count"]==1 and c["attempts"]==1 and c["retries"]==0
+          assert c["replacement_allowed"] is False and c["incremental_spend_usd_max"]==0
+          assert c["precheck_failure_consumes_slot"] is False
+          assert c["after_task_start_result_is_irreversible"] is True
+          assert c["after_task_start_missing_or_zero_verifier_result_counts_as_final_zero"] is True
+          assert a["current_truth"]["task_started"] is False
+          assert a["current_truth"]["result_present"] is False
+
+          assert i["slot"]=={"id":slot,"digest":digest,"rank":10}
+          assert i["controls"]["attempts"]==1 and i["controls"]["retries"]==0
+          assert i["controls"]["replacement_allowed"] is False
+          assert i["current_truth"]["task_started"] is False
+
+          assert l8["current_counts"]["consumed_slots"]==9
+          assert l8["current_counts"]["consumed_successes"]==0
+          assert l8["current_counts"]["consumed_final_failures"]==9
+          assert l8["current_counts"]["next_untouched_slot"]=={
+              "schedule_rank":10,"slot_id":slot,"task_digest":digest}
+          assert l8["current_counts"]["pass_still_mathematically_reachable"] is True
+          assert l8["rank10_preexposure"]["planner_live_transport_verified"] is True
+          assert l8["rank10_preexposure"]["exact_repaired_transitive_carrier_closure_verified"] is True
+          assert l8["predecessor"]["git_blob_sha"]==m["files"]["TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V7.json"]["git_blob_sha"]
+
+          nxt=l7["truth_repair"]["next_untouched_slot"]
+          assert nxt["schedule_rank"]==10 and nxt["slot_id"]==slot and nxt["task_digest"]==digest
+          assert len(l7["truth_repair"]["consumed_slots"])==9
+
+          assert e["status"]=="CURRENT__ONE_USE_PREEXPOSURE_GATE"
+          assert e["slot_id"]==slot and e["task_digest"]==digest and e["schedule_rank"]==10
+          assert e["prior_consumed_slots"]==9
+          assert e["benchmark_task_exposure_authorized_by_epoch"] is False
+          assert e["execution_authority_required_from_brain"] is True
+          assert e["run_attempts_authorized_by_epoch"]==0
+
+          rows=[x for x in tm["task_metadata"] if x.get("name")==task]
+          assert len(rows)==1 and rows[0]["digest"]==digest
+          slots=[x for x in tm["slots"] if x.get("slot_id")==slot]
+          assert len(slots)==1
+          assert slots[0]["schedule_rank"]==10 and slots[0]["task_digest"]==digest
+
+          assert tv["status"].startswith("INDEPENDENT_LIVE_LLAMA_CPP_TRANSPORT_PASS")
+          assert tv["verified"]["live_tool_schema_and_decode_probe_passed"] is True
+          assert tv["verified"]["benchmark_task_exposure"]==0
+          assert len(cm["closure"])==14
+          assert cv["status"].startswith("INDEPENDENT_PUBLIC_RUNNER_PASS")
+          assert cv["verified"]["exact_science_runtime_closure_file_count"]==14
+          assert cv["verified"]["complete_exact_carrier_closure_gate_pass"] is True
+          assert cv["verified"]["benchmark_task_exposure"]==0
+
+          receipt={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK10_CANONICAL_AUTHORITY_PUBLIC_VERIFICATION_V2",
+              "status":"PASS__EXACT_CURRENT_CANONICAL_AUTHORITY_CHAIN__ZERO_TASK_EXPOSURE",
+              "slot_id":slot,"schedule_rank":10,"task_digest":digest,
+              "authority_git_blob_sha":m["files"]["TB_SCIENCE_RANK10_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json"]["git_blob_sha"],
+              "intent_git_blob_sha":m["files"]["ACTION_INTENT_TB_SCIENCE_RANK10_ONE_SHOT_20261007_V1.json"]["git_blob_sha"],
+              "ledger_v8_git_blob_sha":m["files"]["TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261007_V8.json"]["git_blob_sha"],
+              "epoch_git_blob_sha":m["files"]["RANK10_EPOCH_V1.json"]["git_blob_sha"],
+              "benchmark_task_exposure":0,
+              "incremental_spend_usd":0,
+              "promotion_authority":False,
+              "terminal_credit":False,
+          }
+          pathlib.Path("RANK10_CANONICAL_AUTHORITY_VERIFICATION.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-rank10-canonical-authority-verification-v2
+          path: RANK10_CANONICAL_AUTHORITY_VERIFICATION.json
+          if-no-files-found: error
+          retention-days: 30
