@@ -15,5 +15,5 @@
     "universal_learning_v8_independent_verifier_commit": "c097af209497b00cf57664473ad44bdd71750eec"
   },
   "claim_under_test": "GLOBAL_PLANNING_SCOPE_LIFT_WITHOUT_GLOBAL_ACCEPTANCE_SCOPE_LIFT",
-  "verification_trigger_revision": 1
+  "verification_trigger_revision": 2
 }
