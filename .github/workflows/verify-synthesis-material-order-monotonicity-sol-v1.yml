@@ -1,0 +1,20 @@
+name: Verify synthesis material-order monotonicity V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/synthesis_material_order_monotonicity_sol_v1/**"
+      - ".github/workflows/verify-synthesis-material-order-monotonicity-sol-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify source bindings and reductions
+        run: python capsules/synthesis_material_order_monotonicity_sol_v1/verify.py
