@@ -1,0 +1,209 @@
+name: TB-Science planner live transport preflight v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_planner_transport_preflight_v1/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-planner-transport-preflight-v1-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify exact Brain bytes and zero-exposure manifest
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_planner_transport_preflight_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          C=pathlib.Path("capsules/tb_science_planner_transport_preflight_v1")
+          m=json.loads((C/"MANIFEST.json").read_text())
+          assert m["terminal_benchmark_task_exposure"] is False
+          assert m["harbor_execution_authorized"] is False
+          assert m["fresh_benchmark_slots_consumed"] == 0
+          assert m["incremental_spend_usd_max"] == 0
+          for rel,meta in m["files"].items():
+              raw=(C/"vendor"/rel).read_bytes()
+              got=hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+              assert got == meta["git_blob_sha"], (rel,got,meta["git_blob_sha"])
+          print("EXACT_BRAIN_BYTES_AND_ZERO_EXPOSURE_PASS")
+          PY
+
+      - name: Run repaired planner unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_planner_transport_preflight_v1/vendor
+        run: |
+          set -euo pipefail
+          python -m unittest -v canonical.tests.test_harbor_science_planner_v1
+
+      - name: Clean-build exact llama.cpp transport
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire exact Qwen model only if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error               -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf               'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local cognition endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 8192 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}" > SCIENCE_TRANSPORT_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > SCIENCE_TRANSPORT_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute synthetic live planner transport probe
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_planner_transport_preflight_v1/vendor
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,time
+          from canonical.runtime import harbor_science_planner_v1 as planner
+
+          prompt=(
+              "Synthetic transport preflight only. No benchmark task exists and no command will be executed. "
+              "Use requirement ID R1. Propose exactly one short local candidate that would create the text "
+              "synthetic-ok in /tmp/brain-science-transport-probe.txt, and a short verification command "
+              "that would check the file contains synthetic-ok."
+          )
+          started=time.monotonic()
+          out=planner.plan(prompt,timeout_s=180)
+          elapsed=round(time.monotonic()-started,3)
+          proposal=planner.extract_json_object(out["text"])
+          assert proposal["material_requirements"] == ["R1"], proposal
+          candidates=proposal.get("candidates")
+          assert isinstance(candidates,list) and len(candidates)==1, proposal
+          candidate=candidates[0]
+          assert candidate.get("action_id"), candidate
+          assert candidate.get("covers") == ["R1"], candidate
+          assert isinstance(candidate.get("command"),str) and candidate["command"], candidate
+          assert isinstance(candidate.get("verify_command"),str) and candidate["verify_command"], candidate
+          assert len(candidate["command"]) <= 12000
+          assert len(candidate["verify_command"]) <= 12000
+
+          result={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_LIVE_TRANSPORT_PREFLIGHT_RESULT_V1",
+              "status":"PASS__LIVE_LLAMA_CPP_TOOL_SCHEMA_ACCEPTED__SYNTHETIC_TOOL_CALL_RETURNED",
+              "transport":out["transport"],
+              "endpoint":out["endpoint"],
+              "model":out["model"],
+              "planner_duration_s":out["duration_s"],
+              "wall_duration_s":elapsed,
+              "proposal_sha256":hashlib.sha256(out["text"].encode()).hexdigest(),
+              "material_requirements":proposal["material_requirements"],
+              "candidate_count":len(candidates),
+              "command_length":len(candidate["command"]),
+              "verify_command_length":len(candidate["verify_command"]),
+              "terminal_benchmark_task_exposure":False,
+              "harbor_execution":False,
+              "fresh_benchmark_slots_consumed":0,
+              "incremental_spend_usd":0,
+              "acceptance_credit":False,
+              "terminal_credit":False
+          }
+          pathlib.Path("SCIENCE_TRANSPORT_RESULT.json").write_text(
+              json.dumps(result,indent=2,sort_keys=True)+"\n"
+          )
+          pathlib.Path("SCIENCE_TRANSPORT_PROPOSAL.json").write_text(
+              json.dumps(proposal,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(result,sort_keys=True))
+          PY
+          ! grep -Eqi 'number of repetitions exceeds sane defaults|failed to parse grammar' SCIENCE_TRANSPORT_SERVER.log
+
+      - name: Bind conservative preflight receipt
+        if: always()
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,os
+          result_path=pathlib.Path("SCIENCE_TRANSPORT_RESULT.json")
+          success=result_path.is_file()
+          result=json.loads(result_path.read_text()) if success else None
+          server=pathlib.Path("SCIENCE_TRANSPORT_SERVER.log")
+          log=server.read_text(errors="replace") if server.is_file() else ""
+          grammar_failure=(
+              "number of repetitions exceeds sane defaults" in log.lower()
+              or "failed to parse grammar" in log.lower()
+          )
+          receipt={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_LIVE_TRANSPORT_PREFLIGHT_RECEIPT_V1",
+              "status":"PASS" if success and not grammar_failure else "FAIL_CLOSED",
+              "brain_planner_git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f",
+              "brain_planner_test_git_blob_sha":"3020cc54412c158efe38180025d066b5c2028165",
+              "harbor_command_policy_git_blob_sha":"a525773417291c7a4841bf35e1baff5370350d0d",
+              "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "qwen_model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "github_run_id":os.environ["GITHUB_RUN_ID"],
+              "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+              "github_sha":os.environ["GITHUB_SHA"],
+              "live_tool_schema_grammar_failure_observed":grammar_failure,
+              "synthetic_live_tool_call_succeeded":bool(success),
+              "result_sha256":hashlib.sha256(result_path.read_bytes()).hexdigest() if success else None,
+              "terminal_benchmark_task_exposure":False,
+              "harbor_execution":False,
+              "fresh_benchmark_slots_consumed":0,
+              "incremental_spend_usd":0,
+              "rank10_authority":False,
+              "acceptance_credit":False,
+              "terminal_credit":False,
+          }
+          pathlib.Path("SCIENCE_TRANSPORT_PREFLIGHT_RECEIPT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(receipt,sort_keys=True))
+          if receipt["status"]!="PASS":
+              raise SystemExit(1)
+          PY
+
+      - name: Upload live transport evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-planner-live-transport-preflight-v1
+          path: |
+            SCIENCE_TRANSPORT_RESULT.json
+            SCIENCE_TRANSPORT_PROPOSAL.json
+            SCIENCE_TRANSPORT_PREFLIGHT_RECEIPT.json
+            SCIENCE_TRANSPORT_HEALTH.json
+            SCIENCE_TRANSPORT_SERVER.log
+          if-no-files-found: warn
+          retention-days: 7
