@@ -5,5 +5,8 @@
   "terminal_case_exposure": false,
   "fresh_target_reality_units_consumed": 0,
   "incremental_spend_usd": 0,
-  "terminal_credit_delta": 0
+  "terminal_credit_delta": 0,
+  "isolation_revision": 2,
+  "base_branch": "terminal-execution-v1",
+  "expected_workflow_fanout": 1
 }
