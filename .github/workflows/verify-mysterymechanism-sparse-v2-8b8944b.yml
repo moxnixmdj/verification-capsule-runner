@@ -1,0 +1,24 @@
+name: Verify MysteryMechanism sparse V2 8b8944b
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'subject/mysterymechanism_sparse_v2_8b8944b/**'
+      - '.github/workflows/verify-mysterymechanism-sparse-v2-8b8944b.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run exact copied Brain tests
+        env:
+          PYTHONPATH: subject/mysterymechanism_sparse_v2_8b8944b
+        run: python -m unittest canonical.tests.test_mysterymechanism_sparse_symbolic_adapter_v2 -v
