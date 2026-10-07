@@ -1,1 +1,8 @@
-{"schema":"PROJECT_BRAIN_INDEPENDENT_VERIFICATION_TRIGGER_V1","subject_git_blob_sha":"39cc756bafba817dfd697e65769da5ca0a316837","trigger_revision":2,"terminal_credit_delta":0}
+{
+  "schema": "PROJECT_BRAIN_INDEPENDENT_VERIFICATION_TRIGGER_V1",
+  "subject_git_blob_sha": "39cc756bafba817dfd697e65769da5ca0a316837",
+  "trigger_revision": 2,
+  "terminal_credit_delta": 0,
+  "trigger_sequence": 1,
+  "trigger_semantics": "INDEPENDENT_ZERO_BENCHMARK_CONTENT_VERIFICATION_ONLY"
+}
