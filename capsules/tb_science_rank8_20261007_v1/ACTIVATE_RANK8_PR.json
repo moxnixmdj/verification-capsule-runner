@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK8_PR_ACTIVATION_V1",
   "date": "2026-10-07",
-  "status": "ACTIVE_EXACT_RANK8_ONE_SHOT",
+  "status": "REVOKED_PREEXPOSURE__KNOWN_SUPERSEDED_512_CHAR_COMMAND_CAP",
   "authorized_slot": "terminal-bench-science/linked-cell-suppression::trial-0",
   "authorized_task_digest": "sha256:34d92f30b75011c93d55caced3a4a58c6f68a7bebdbb601b36cb6561ef4069c0",
   "authority_blob": "82e9573f64037ae2f0d39228e4d57cc45deb7a29",
@@ -11,5 +11,7 @@
   "retries": 0,
   "replacement": false,
   "incremental_spend_usd": 0,
-  "trigger_nonce": "20261007T1039Z_AFTER_MAIN_GATE_REPAIR"
+  "trigger_nonce": "20261007T1039Z_AFTER_MAIN_GATE_REPAIR",
+  "revoked_before_rank8_task_exposure": true,
+  "revocation_reason": "Canonical Brain main superseded planner 3d6f50be after rank7 forensics proved a 512-character artifact-command bottleneck; do not expose rank8 under this authority."
 }
