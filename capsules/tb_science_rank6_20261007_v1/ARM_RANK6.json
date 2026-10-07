@@ -8,7 +8,7 @@
   "task_digest": "sha256:ba37bd6173cc7d21aff84b2124524ef2ec60cb85f5f9cef2c42e6111ad9ed18f",
   "authority_blob": "3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2",
   "authority_verification_blob": "1aff0bc47f34c6cd93c1252a0659e48712a22bef",
-  "execution_workflow_blob": "d8dc581cdb0b1cae10a052c418cbd17e4387d1ea",
+  "execution_workflow_blob": "87fa385a48f769967046779837964f99f6010986",
   "public_carrier_merge_sha": "93d470314036a3a0e50477e247eef8166f71766f",
   "brain_authority_merge_sha": "b6d721971615e450fc1f8b8b724551c9d969ca9d",
   "manifest_blob": "6dfa880b1f68881531afbba6ca211681801fd19b",
@@ -30,7 +30,9 @@
   "promotion_authority": false,
   "fresh_reality_units_armed": 1,
   "fresh_reality_units_consumed": 0,
-  "activation_transport": "PULL_REQUEST_MERGE_PUSH_EVENT",
+  "activation_transport": "PULL_REQUEST_EVENT_EXACT_BRANCH",
   "pre_activation_direct_commit": "34ed23e1ed8d6944a22133502dc2fd45d8b3de76",
-  "pre_activation_direct_commit_workflow_runs": 0
+  "pre_activation_direct_commit_workflow_runs": 0,
+  "pre_activation_merge_commit": "9d9e232fe2b86fdae374fece272bd2644cd5d380",
+  "pre_activation_merge_commit_workflow_runs": 0
 }
