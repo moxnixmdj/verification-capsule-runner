@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify exact rank10 authority bytes and pre-exposure semantics
+      - name: Verify exact merged rank10 authority and pre-exposure chain
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -34,9 +34,9 @@ jobs:
           test "$GITHUB_BASE_REF" = "main"
           test "$GITHUB_HEAD_REF" = "chatgpt/verify-tb-science-rank10-authority-20261007-v1"
 
-          test "$(git hash-object "$A")" = "68677870239588798458d18c43ece1f62aa2d4d0"
+          test "$(git hash-object "$A")" = "7b4d8c2555d102b30e02673c95675403ae947629"
           test "$(git hash-object "$L")" = "d3ff32dd833dfb5fcdce58e134185bfaf19e95ae"
-          test "$(git hash-object "$I")" = "5381a685143af04a76c68e1836eb794b6604ada5"
+          test "$(git hash-object "$I")" = "e65720a36d7c09a3be5a33246f3ab54e20612915"
           test "$(git hash-object "$E")" = "8d0bc7999769a32147eab08acb31436e7abe743c"
           test "$(git hash-object "$M")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
 
@@ -53,42 +53,56 @@ jobs:
           slot="terminal-bench-science/rdkit-ic-constraints::trial-0"
           digest="sha256:17e356ab255088712c7dfa9765bf077b33a3da221f4a03d4770576857f9c0b6f"
 
-          assert a["target_predicate"]=="TB_SCIENCE_GE_58_7"
-          assert a["authorized_slot"]["slot_id"]==slot
-          assert a["authorized_slot"]["schedule_rank"]==10
-          assert a["authorized_slot"]["task_digest"]==digest
-          assert slot not in a["permanently_consumed_slots"]
-          assert len(a["permanently_consumed_slots"])==9
+          assert a["schema"]=="PROJECT_BRAIN_TB_SCIENCE_RANK10_ONE_SLOT_AUTHORITY_V1"
+          assert a["status"].startswith("ACTIVE__")
+          assert a["predicate"]=="TB_SCIENCE_GE_58_7"
+          assert a["slot"]["id"]==slot and a["slot"]["rank"]==10 and a["slot"]["digest"]==digest
+          assert a["source_bindings"]["intent"]["git_blob_sha"]=="e65720a36d7c09a3be5a33246f3ab54e20612915"
+          assert a["source_bindings"]["ledger"]["git_blob_sha"]=="d3ff32dd833dfb5fcdce58e134185bfaf19e95ae"
+          assert a["source_bindings"]["planner_live_transport_verification"]["git_blob_sha"]=="877e5ddf815c1958f4ab41f8462ad54af87f0c87"
+          assert a["source_bindings"]["carrier_closure_manifest"]["git_blob_sha"]=="31656d35034338dfcb699672bcd4788b283b83c9"
+          assert a["source_bindings"]["carrier_closure_verification"]["git_blob_sha"]=="61495f5977ea745e63ca14136875b97e3e95cd45"
+          assert a["source_bindings"]["terminal_manifest"]["git_blob_sha"]=="6dfa880b1f68881531afbba6ca211681801fd19b"
+          assert a["live_epoch"]["git_blob_sha"]=="8d0bc7999769a32147eab08acb31436e7abe743c"
+          assert a["live_epoch"]["epoch_id"]=="TBSCI-RANK10-20261007-E1"
+          assert a["live_epoch"]["required_immediately_before_task_start"] is True
+
+          ctl=a["controls"]
+          assert ctl["exact_slot_count"]==1 and ctl["attempts"]==1 and ctl["retries"]==0
+          assert ctl["replacement_allowed"] is False
+          assert ctl["incremental_spend_usd_max"]==0
+          assert ctl["current_public_epoch_must_match_immediately_before_task_start"] is True
+          assert ctl["exact_carrier_blob_identity_required"] is True
+          assert ctl["agent_and_planner_import_required_before_task_start"] is True
+          assert ctl["repaired_planner_live_transport_receipt_required"] is True
+          assert ctl["precheck_failure_consumes_slot"] is False
+          assert ctl["after_task_start_result_is_irreversible"] is True
+          assert ctl["after_task_start_missing_or_zero_verifier_result_counts_as_final_zero"] is True
+          assert a["current_truth"]["slot_is_next_untouched"] is True
+          assert a["current_truth"]["prior_consumed_slots"]==9
+          assert a["current_truth"]["task_started"] is False
+          assert a["current_truth"]["result_present"] is False
+          assert a["current_truth"]["acceptance_credit"] is False
+          assert a["current_truth"]["terminal_credit"] is False
 
           nxt=l["truth_repair"]["next_untouched_slot"]
-          assert nxt["schedule_rank"]==10
-          assert nxt["slot_id"]==slot
-          assert nxt["task_digest"]==digest
-          assert l["truth_repair"]["consumed_slots"]==a["permanently_consumed_slots"]
+          assert nxt["schedule_rank"]==10 and nxt["slot_id"]==slot and nxt["task_digest"]==digest
           assert l["truth_repair"]["consumed_final_failures"]==9
+          assert len(l["truth_repair"]["consumed_slots"])==9
+          assert slot not in l["truth_repair"]["consumed_slots"]
           assert l["truth_repair"]["pass_still_mathematically_reachable"] is True
 
+          assert i["status"]=="READY_AFTER_EXACT_CURRENT_EPOCH_RECHECK__ONE_SHOT__ZERO_SPEND"
+          assert i["predicate"]=="TB_SCIENCE_GE_58_7"
           assert i["slot"]["id"]==slot and i["slot"]["rank"]==10 and i["slot"]["digest"]==digest
-          assert i["controls"]["attempts"]==1
-          assert i["controls"]["retries"]==0
+          assert i["controls"]["attempts"]==1 and i["controls"]["retries"]==0
           assert i["controls"]["replacement_allowed"] is False
           assert i["controls"]["precheck_failure_consumes_slot"] is False
-
-          sem=a["execution_semantics"]
-          assert sem["slots_authorized"]==1
-          assert sem["retries_per_slot"]==0
-          assert sem["slot_replacement"] is False
-          assert sem["denominator_shrink"] is False
-          assert sem["duplicate_slot_credit"] is False
-          assert sem["stop_after_slot"] is True
-          assert sem["auto_revoke_after_slot_finalization"] is True
-
-          assert a["fresh_reality_authority"]["authorized"] is True
-          assert a["fresh_reality_authority"]["units"]==1
-          assert a["fresh_reality_authority"]["zero_incremental_spend_hard_stop"] is True
-          assert a["promotion_authority"] is False
-          assert a["tournament_failure_boundary"]["rank9_task_capability_negative_evidence"] is False
-          assert a["tournament_failure_boundary"]["new_science_capability_primitive_authorized_from_rank9"] is False
+          assert i["controls"]["after_task_start_result_is_final"] is True
+          assert i["current_truth"]["rank9_transport_failure_class_closed_for_repaired_planner"] is True
+          assert i["current_truth"]["task_started"] is False
+          assert i["current_truth"]["result_present"] is False
+          assert i["credit"] is False
 
           assert e["status"]=="CURRENT__ONE_USE_PREEXPOSURE_GATE"
           assert e["epoch_id"]=="TBSCI-RANK10-20261007-E1"
@@ -115,19 +129,16 @@ jobs:
               )
               with urllib.request.urlopen(req, timeout=30) as resp:
                   r=json.load(resp)
-              assert r["status"]=="completed"
-              assert r["conclusion"]=="success"
-              assert r["head_sha"]==head
-              assert r["name"]==name
-              assert r["run_attempt"]==1
+              assert r["status"]=="completed" and r["conclusion"]=="success"
+              assert r["head_sha"]==head and r["name"]==name and r["run_attempt"]==1
               run_results[str(run_id)]={"head_sha":head,"name":name,"conclusion":"success"}
 
           receipt={
               "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK10_AUTHORITY_PUBLIC_VERIFICATION_V1",
-              "status":"PASS__EXACT_AUTHORITY_AND_PREEXPOSURE_CHAIN__ZERO_TASK_EXPOSURE",
-              "authority_git_blob_sha":"68677870239588798458d18c43ece1f62aa2d4d0",
+              "status":"PASS__EXACT_MERGED_AUTHORITY_AND_PREEXPOSURE_CHAIN__ZERO_TASK_EXPOSURE",
+              "authority_git_blob_sha":"7b4d8c2555d102b30e02673c95675403ae947629",
               "ledger_git_blob_sha":"d3ff32dd833dfb5fcdce58e134185bfaf19e95ae",
-              "intent_git_blob_sha":"5381a685143af04a76c68e1836eb794b6604ada5",
+              "intent_git_blob_sha":"e65720a36d7c09a3be5a33246f3ab54e20612915",
               "epoch_git_blob_sha":"8d0bc7999769a32147eab08acb31436e7abe743c",
               "manifest_git_blob_sha":"6dfa880b1f68881531afbba6ca211681801fd19b",
               "slot_id":slot,
