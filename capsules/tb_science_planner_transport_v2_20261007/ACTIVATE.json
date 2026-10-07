@@ -1,0 +1,15 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_PLANNER_TRANSPORT_V2_ACTIVATION",
+  "date": "2026-10-07",
+  "status": "ACTIVE__ZERO_BENCHMARK_LIVE_TRANSPORT_PROBE",
+  "carrier_commit": "5c9f7ba542f8b29ebcf505a7401bdefc74c91bc4",
+  "workflow_blob": "63e3749e9543a9386c492adb418638c89791509b",
+  "planner_blob": "01d859c8f27b317893027e693c9aa49e833a256f",
+  "planner_test_blob": "3020cc54412c158efe38180025d066b5c2028165",
+  "command_policy_blob": "a525773417291c7a4841bf35e1baff5370350d0d",
+  "benchmark_task_exposure_authorized": 0,
+  "fresh_target_reality_units_authorized": 0,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit": false,
+  "terminal_credit": false
+}
