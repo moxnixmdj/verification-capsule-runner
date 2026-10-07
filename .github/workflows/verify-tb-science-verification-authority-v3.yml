@@ -39,4 +39,4 @@ jobs:
           test "$(git hash-object canonical/runtime/harbor_science_agent_v1.py)" = "f891c3a3f728db9cdcdfa9ad3c0b5db9e64accf8"
           test "$(git hash-object canonical/runtime/harbor_science_planner_v1.py)" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
           test "$(git hash-object canonical/tests/test_harbor_science_agent_v1.py)" = "dcd1ab69e921301f5bbdd15fbd154ebe1031eff7"
-          test "$(git hash-object canonical/tests/test_harbor_science_planner_v1.py)" = "d59f7b452e647c7cf8527276820603d9fbe2dd5e"
+          test "$(git hash-object canonical/tests/test_harbor_science_planner_v1.py)" = "dd8a77c097ab1a7773f6575c5676d5d17e6f657f"
