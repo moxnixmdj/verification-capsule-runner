@@ -1,0 +1,34 @@
+name: Verify Brain 2181 opaque-state quotient
+
+on:
+  pull_request:
+    paths:
+      - "capsules/brain_2181/**"
+      - ".github/workflows/verify-brain-2181-opaque-state-quotient.yml"
+  push:
+    branches:
+      - "verify/opaque-state-observational-quotient-2181"
+    paths:
+      - "capsules/brain_2181/**"
+      - ".github/workflows/verify-brain-2181-opaque-state-quotient.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: capsules/brain_2181
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact vendored candidate regressions
+        run: python -m unittest canonical.tests.test_opus55_opaque_state_observational_quotient_v1 -v
+      - name: Run independent adversarial verifier
+        run: python independent_verify.py
