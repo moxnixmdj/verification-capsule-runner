@@ -1,0 +1,23 @@
+name: Verify structured method universal correctness
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/structured_method_universal_correctness_v1/**"
+      - ".github/workflows/verify-structured-method-universal-correctness-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify
+        run: |
+          cd capsules/structured_method_universal_correctness_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_structured_method_normalized_rule_graph_v3 canonical.tests.test_structured_method_normalized_rule_oracle_v3 canonical.tests.test_structured_method_universal_correctness_certificate_v1 -v
+          python -m canonical.runtime.structured_method_universal_correctness_certificate_v1
