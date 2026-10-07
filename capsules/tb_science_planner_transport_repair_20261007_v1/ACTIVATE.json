@@ -1,0 +1,19 @@
+{
+  "schema":"PROJECT_BRAIN_TB_SCIENCE_PLANNER_TRANSPORT_REPAIR_PROBE_V1",
+  "date":"2026-10-07",
+  "status":"ACTIVATE_NO_BENCHMARK_EXPOSURE_LIVE_LLAMA_CPP_TRANSPORT_PROBE",
+  "subject":{
+    "planner_git_blob_sha":"01d859c8f27b317893027e693c9aa49e833a256f",
+    "tests_git_blob_sha":"3020cc54412c158efe38180025d066b5c2028165",
+    "command_policy_git_blob_sha":"a525773417291c7a4841bf35e1baff5370350d0d"
+  },
+  "pinned_transport":{
+    "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "model_alias":"brain-qwen3.5-9b"
+  },
+  "benchmark_task_exposure":0,
+  "rank10_authority":false,
+  "incremental_spend_usd":0,
+  "credit":false
+}
