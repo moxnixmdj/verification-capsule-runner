@@ -108,8 +108,14 @@ assert epoch["attempts"]==1 and epoch["retries"]==0
 assert epoch["precheck_failure_consumes_slot"] is False
 assert epoch["after_task_start_result_is_irreversible"] is True
 assert epoch["reuse_authority"] is False
-assert manifest["fixed_denominator"]==210
-assert manifest["required_successes"]==124
+assert manifest["frozen_dataset"]["slot_count"]==210
+assert manifest["frozen_dataset"]["task_count"]==70
+assert manifest["frozen_dataset"]["trials_per_task"]==3
+assert manifest["acceptance"]["required_successes"]==124
+assert manifest["acceptance"]["irreversible_failure_count"]==87
+rank9_rows=[x for x in manifest["task_metadata"] if x["name"]=="terminal-bench-science/neo-orbit-determination"]
+assert len(rank9_rows)==1
+assert rank9_rows[0]["digest"]==digest
 
 print(json.dumps({
  "status":"PASS",
