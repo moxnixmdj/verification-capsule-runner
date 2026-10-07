@@ -1,0 +1,38 @@
+name: Verify IF authority linearizable Brain 2198
+
+on:
+  push:
+    paths:
+      - "canonical/runtime/instruction_authority_invariant_v1.py"
+      - "canonical/runtime/requirement_graph_kernel.py"
+      - "canonical/tests/test_instruction_authority_invariant_v1.py"
+      - "verify_if_authority_linearizable_2198.py"
+      - "IF_AUTHORITY_LINEARIZABLE_2198_MANIFEST.json"
+      - ".github/workflows/verify-if-authority-linearizable-2198.yml"
+  pull_request:
+    paths:
+      - "canonical/runtime/instruction_authority_invariant_v1.py"
+      - "canonical/runtime/requirement_graph_kernel.py"
+      - "canonical/tests/test_instruction_authority_invariant_v1.py"
+      - "verify_if_authority_linearizable_2198.py"
+      - "IF_AUTHORITY_LINEARIZABLE_2198_MANIFEST.json"
+      - ".github/workflows/verify-if-authority-linearizable-2198.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Run exact vendored Brain tests
+        run: python -m pytest -q canonical/tests/test_instruction_authority_invariant_v1.py
+      - name: Run independent adversarial verifier
+        run: python verify_if_authority_linearizable_2198.py

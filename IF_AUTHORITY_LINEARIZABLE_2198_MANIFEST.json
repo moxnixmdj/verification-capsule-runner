@@ -1,0 +1,21 @@
+{
+  "schema": "PROJECT_BRAIN_IF_AUTHORITY_LINEARIZABLE_PUBLIC_VERIFICATION_CAPSULE_V1",
+  "date": "2026-10-05",
+  "brain_pr": 2198,
+  "brain_head": "d320cc2845a79d11a3b1df7d502b0a350febddc3",
+  "exact_brain_blobs": {
+    "canonical/runtime/instruction_authority_invariant_v1.py": "78f4926de6da3f724c1ccd33b4ae83506cca5a0f",
+    "canonical/tests/test_instruction_authority_invariant_v1.py": "0e4f24038da5ab3ee3adb25b92c22fb4614251df",
+    "canonical/runtime/requirement_graph_kernel.py": "18001b4b7ace6fe77497c7fb92dd8d9dd2d0f607"
+  },
+  "scope": "TEMPORAL_HANDOFF_AND_POINT_IN_TIME_ENFORCEMENT_ONLY",
+  "nonclaims": [
+    "SEMANTIC_EXTRACTION_COMPLETENESS",
+    "UNIVERSAL_ROUTE_COVERAGE",
+    "MATCHED_OPUS55_NONINFERIORITY",
+    "PREDICATE_CLOSURE"
+  ],
+  "incremental_spend_usd": 0,
+  "fresh_reality_units_consumed": 0,
+  "acceptance_credit_delta": 0
+}
