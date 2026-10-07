@@ -1,0 +1,55 @@
+name: Verify exact Brain symbolic payload binding V4
+on:
+  pull_request:
+    paths:
+      - 'canonical/runtime/certificate_gated_selected_route_runtime_entrypoint_v*.py'
+      - 'canonical/runtime/certificate_gated_selected_route_router_v1.py'
+      - 'canonical/runtime/predicate_selected_cover_complement_gate_v1.py'
+      - 'canonical/runtime/router_deployment_canary_v1.py'
+      - 'canonical/runtime/symbolic_router_deployment_canary_predicate_v1.py'
+      - 'canonical/governance/CERTIFICATE_GATED_SELECTED_ROUTE_RUNTIME_REGISTRY_V*.json'
+      - 'canonical/governance/SYMBOLIC_CREDITABLE_PAYLOAD_BINDING_REPAIR_20261007_V1.json'
+      - 'canonical/verification/*ROUTER_DEPLOYMENT_CANARY*20261007_V1.json'
+      - 'canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v*.py'
+      - 'capsules/symbolic_v4_exact_public_replay_20261007_v1/**'
+      - '.github/workflows/verify-symbolic-v4-exact-public-replay.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact transplanted Brain blobs
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("capsules/symbolic_v4_exact_public_replay_20261007_v1/manifest.json"))
+          for path,expected in m["files"].items():
+              actual=subprocess.check_output(["git","hash-object",path],text=True).strip()
+              assert actual==expected,(path,expected,actual)
+          print("EXACT_BRAIN_BLOBS_PASS",len(m["files"]))
+          PY
+      - name: Run exact V2 V3 V4 suites
+        run: |
+          python -m pytest -q             canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v2.py             canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v3.py             canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v4.py
+      - name: Fail-closed live canary assertions
+        run: |
+          python - <<'PY'
+          import json
+          from canonical.runtime.certificate_gated_selected_route_runtime_entrypoint_v4 import preflight, dispatch
+          out=preflight()
+          assert out["pass"] is True,out
+          assert out["route_count"]==1,out
+          assert out["creditable_route_count"]==0,out
+          assert out["selected_cover_complete"] is False,out
+          routed=dispatch({"kind":"SYMBOLIC_ROUTER_DEPLOYMENT_CANARY_V1"},{"probe":41})
+          assert routed["creditable"] is False,routed
+          assert routed["payload_sha256"] is None,routed
+          assert routed["result"]["terminal_result"] is False,routed
+          print("SYMBOLIC_V4_EXACT_PUBLIC_REPLAY_PASS",json.dumps(out,sort_keys=True))
+          PY

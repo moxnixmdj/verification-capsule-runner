@@ -1,0 +1,34 @@
+{
+  "schema": "PROJECT_BRAIN_SYMBOLIC_V4_PUBLIC_EXACT_REPLAY_MANIFEST_V1",
+  "date": "2026-10-07",
+  "source_repository": "moxnixmdj/brain",
+  "source_ref": "a835b20decfe312d073de8c8ffe2d94d1056bddc",
+  "target_claim": "INDEPENDENT_REPLAY_OF_EXACT_V2_V3_V4_ROUTER_SUITES_AND_LIVE_NONCREDITABLE_CANARY",
+  "files": {
+    "canonical/runtime/certificate_gated_selected_route_runtime_entrypoint_v1.py": "4c923a53861c8dc29e5a69bf0bd8678f669d2702",
+    "canonical/runtime/certificate_gated_selected_route_runtime_entrypoint_v2.py": "ba260cd997adb8df97417e5f03eaf547b5365379",
+    "canonical/runtime/certificate_gated_selected_route_runtime_entrypoint_v3.py": "e18b3ee57a680c89dd7fca8a94592f5a5a61655b",
+    "canonical/runtime/certificate_gated_selected_route_runtime_entrypoint_v4.py": "375f415f2e0b7348d88fb23b0efca433791ea581",
+    "canonical/runtime/certificate_gated_selected_route_router_v1.py": "4b99ef1e95e033badfb21ab7af7355122933224a",
+    "canonical/runtime/predicate_selected_cover_complement_gate_v1.py": "48408fad6ec30abc28e4136dcbb1696f015e7bd7",
+    "canonical/runtime/router_deployment_canary_v1.py": "de71202a17071c8af88ec7ac6e1f241fb42854c2",
+    "canonical/runtime/symbolic_router_deployment_canary_predicate_v1.py": "b8a9ba97dc4a2e11cfbcf03fb36dcaa5ca0e45e6",
+    "canonical/governance/CERTIFICATE_GATED_SELECTED_ROUTE_RUNTIME_REGISTRY_V1.json": "78ef7174fd7cdebb24f97882e8c325a5164f18cb",
+    "canonical/governance/CERTIFICATE_GATED_SELECTED_ROUTE_RUNTIME_REGISTRY_V2.json": "5ef3efe40c83b7cb6b2d272593cf50fcbd89b3f4",
+    "canonical/governance/SYMBOLIC_CREDITABLE_PAYLOAD_BINDING_REPAIR_20261007_V1.json": "3ac42b6f8914baa43fe72284cb0886f0eb49ed35",
+    "canonical/verification/ROUTER_DEPLOYMENT_CANARY_ADEQUACY_CERTIFICATE_20261007_V1.json": "e521f7b75123bca5cc9704340283a727bb45e957",
+    "canonical/verification/ROUTER_DEPLOYMENT_CANARY_ADMISSION_CERTIFICATE_20261007_V1.json": "1b2f97e7d46877b8782ea211fd15f679e6bfb5b0",
+    "canonical/verification/SYMBOLIC_ROUTER_DEPLOYMENT_CANARY_ADEQUACY_CERTIFICATE_20261007_V1.json": "1f87838111c606437442b5d100f57004faf89a05",
+    "canonical/verification/SYMBOLIC_ROUTER_DEPLOYMENT_CANARY_ADMISSION_CERTIFICATE_20261007_V1.json": "5eda5a3275cb11c273159426ab79565d6d2ceaab",
+    "canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v2.py": "9acb150390be994dba251f3eb8e1c63eaaade86d",
+    "canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v3.py": "aaa655017d11247e0f7f8a3fa154193bc1c1b657",
+    "canonical/tests/test_certificate_gated_selected_route_runtime_entrypoint_v4.py": "1ecdf4e19888b043ff3393f57109d21bc6dbfb98"
+  },
+  "hard_nonclaims": [
+    "NO_SELECTED_COVER_COMPLETENESS",
+    "NO_U_EMPTY",
+    "NO_D_FINALITY",
+    "NO_TERMINAL_CREDIT"
+  ],
+  "incremental_spend_usd": 0
+}
