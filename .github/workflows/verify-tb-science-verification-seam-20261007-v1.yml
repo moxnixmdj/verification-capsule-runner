@@ -1,0 +1,21 @@
+name: Verify TB-Science verification seam 20261007 v1
+on:
+  push:
+    paths:
+      - 'capsules/tb_science_verification_seam_20261007_v1/**'
+      - '.github/workflows/verify-tb-science-verification-seam-20261007-v1.yml'
+  pull_request:
+    paths:
+      - 'capsules/tb_science_verification_seam_20261007_v1/**'
+      - '.github/workflows/verify-tb-science-verification-seam-20261007-v1.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact patched Brain blob and fail-closed behavior
+        run: python capsules/tb_science_verification_seam_20261007_v1/verify.py
