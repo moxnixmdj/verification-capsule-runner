@@ -2,6 +2,7 @@ name: Verify Tool Discovery retrieval frontier V1
 
 on:
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
