@@ -1,0 +1,73 @@
+name: Verify Agency finite acceptance V1
+on:
+  push:
+    branches: [verify/agency-finite-acceptance-v1-20261007-sol]
+    paths:
+      - "capsules/agency_finite_acceptance_v1/**"
+      - ".github/workflows/verify-agency-finite-acceptance-v1.yml"
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored Brain blobs
+        run: |
+          set -euo pipefail
+          cd capsules/agency_finite_acceptance_v1
+          python - <<'PY'
+          import json, subprocess
+          m=json.load(open("manifest.json"))
+          for p,sha in m["source_files"].items():
+              got=subprocess.check_output(["git","hash-object",p],text=True).strip()
+              assert got==sha,(p,sha,got)
+          print("EXACT_BLOBS_PASS",len(m["source_files"]))
+          PY
+      - name: Execute frozen two-case Agency qualification
+        run: |
+          set -euo pipefail
+          cd capsules/agency_finite_acceptance_v1
+          export PYTHONPATH=.
+          python canonical/runtime/agency_finite_acceptance_closure_v1.py > /tmp/agency-finite.json
+          cat /tmp/agency-finite.json
+          python - <<'PY'
+          import json
+          o=json.load(open("/tmp/agency-finite.json"))
+          required={
+            "multi-step planning with at least three distinct tool/action types",
+            "state change after actions requiring replanning",
+            "long-horizon state retention",
+            "tool failure/recovery",
+            "subtask dependency and fan-in",
+            "minimal-oversight completion",
+          }
+          assert o["pass"] is True,o
+          assert o["status"]=="PASS__FINITE_DECLARED_AGENCY_PORTFOLIO_AT_OBJECTIVE_CEILING",o
+          assert o["case_count"]==2,o
+          assert o["dimension_coverage_complete"] is True,o
+          assert set(o["dimension_coverage"])==required,o
+          assert o["brain_success_fraction"]==1.0,o
+          assert o["metrics_at_objective_ceiling"] is True,o
+          assert o["opus_case_execution_required"] is False,o
+          for row in o["cases"]:
+              assert row["success"] is True and row["verified"] is True,row
+              m=row["metrics"]
+              assert m["terminal_task_success"]==1,row
+              assert m["invalid_action_rate"]==0,row
+              assert m["unrecovered_failure_rate"]==0,row
+              assert m["duplicate_or_conflicting_work_rate"]==0,row
+          failure=next(x for x in o["cases"] if x["kind"]=="DELEGATION_STEP_UNAVAILABLE_WITNESS")
+          assert failure["evidence"]["case_class"]=="STEP_UNAVAILABLE",failure
+          assert failure["evidence"]["receipt_kind"]=="STEP_UNAVAILABLE",failure
+          assert failure["evidence"]["plan_changed_after_receipt"] is True,failure
+          assert failure["evidence"]["completed_work_replayed"] is False,failure
+          assert failure["evidence"]["verdict"]["pass"] is True,failure
+          print("AGENCY_FINITE_ACCEPTANCE_STRICT_PASS")
+          PY
