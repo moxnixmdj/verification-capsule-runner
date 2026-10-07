@@ -10,5 +10,6 @@
   "fresh_reality_units_authorized": 1,
   "retries": 0,
   "replacement": false,
-  "incremental_spend_usd": 0
+  "incremental_spend_usd": 0,
+  "trigger_nonce": "20261007T1039Z_AFTER_MAIN_GATE_REPAIR"
 }
