@@ -1,0 +1,79 @@
+name: Verify TB-Science rank6 execution carrier
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/execute-tb-science-rank6-20261007-v1.yml"
+      - ".github/workflows/verify-tb-science-rank6-execution-carrier-v1.yml"
+      - "capsules/tb_science_rank6_20261007_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify exact carrier bindings without task exposure
+        run: |
+          set -euo pipefail
+          E=.github/workflows/execute-tb-science-rank6-20261007-v1.yml
+          A=capsules/tb_science_rank6_20261007_v1
+          R=capsules/tb_science_canary_v3_execution
+
+          test "$(git hash-object "$E")" = "14daf7fc0d6085a2a750cc4fc7b8d184ddd1f67c"
+          test "$(git hash-object "$A/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json")" = "3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2"
+          test "$(git hash-object "$A/TB_SCIENCE_RANK6_ONE_SLOT_AUTHORITY_PUBLIC_RUNNER_VERIFICATION_20261007_V1.json")" = "1aff0bc47f34c6cd93c1252a0659e48712a22bef"
+          test "$(git hash-object "$R/canonical/governance/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "fe7c0ce885197217774638df382aeb6f68ff38dd"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_agent_v1.py")" = "5557efd21f1a433ad16766def3775a79c459784b"
+          test "$(git hash-object "$R/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$R/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$R/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$R/canonical/runtime/tb_science_conservative_censoring_reducer_v1.py")" = "3b48ea534d606cf47a8321b56427353066393577"
+
+          python - <<'PY'
+          from pathlib import Path
+          import json,re
+          p=Path(".github/workflows/execute-tb-science-rank6-20261007-v1.yml")
+          s=p.read_text()
+          required=[
+            'branches: [main]',
+            'GITHUB_RUN_ATTEMPT',
+            'terminal-bench-science/koopman-mfg-id::trial-0',
+            'terminal-bench-science/koopman-mfg-id',
+            'schedule_rank":6',
+            '-r 0',
+            'compiled_llama_cpp_cache_allowed',
+            'rm -rf llama.cpp',
+            'bec4772f6a2527d371557b5d2032641e5ff7619c',
+            'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c',
+            'FINAL_ZERO',
+            'fresh_reality_units_consumed":1',
+            'replacement_credit":False',
+            'denominator_shrink":False',
+          ]
+          for needle in required:
+              assert needle in s, needle
+          forbidden=[
+            'workflow_dispatch:',
+            'path: llama.cpp',
+            'rerun_workflow',
+            'replacement": true',
+            'denominator_shrink": true',
+          ]
+          for needle in forbidden:
+              assert needle not in s, needle
+          assert s.count('harbor run ') == 1
+          assert s.count('Execute exactly authorized rank6 slot') == 1
+          auth=json.load(open("capsules/tb_science_rank6_20261007_v1/TB_SCIENCE_RANK6_ONE_SLOT_EXECUTION_AUTHORITY_20261007_V1.json"))
+          assert auth["authorized_slot"]["slot_id"]=="terminal-bench-science/koopman-mfg-id::trial-0"
+          assert auth["authorized_slot"]["schedule_rank"]==6
+          assert auth["execution_semantics"]["retries_per_slot"]==0
+          assert auth["execution_semantics"]["slot_replacement"] is False
+          assert auth["exact_route"]["compiled_llama_cpp_cache_allowed"] is False
+          print("PASS__STATIC_EXECUTION_CARRIER_BOUND__NO_TASK_EXPOSURE")
+          PY
