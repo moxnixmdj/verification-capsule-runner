@@ -1,0 +1,32 @@
+{
+  "schema": "PROJECT_BRAIN_PUBLIC_VERIFICATION_CAPSULE_MANIFEST_V1",
+  "scope": [
+    "UNIVERSAL_SOLVER_V2_MECHANICAL_PROOF_TO_EFFECT_BINDING",
+    "SKILL_RATCHET_FORGED_PROVENANCE_FAIL_CLOSED"
+  ],
+  "exact_brain_blobs": {
+    "canonical/runtime/capability_planner.py": "629766f8a1194fd298e0809b64a5e9c5a39fa3ea",
+    "canonical/runtime/universal_verified_adaptive_solver_v1.py": "eac73994d32bc773bbe491eb3bd96e2307e48d45",
+    "canonical/runtime/universal_verified_adaptive_solver_v2.py": "be0857bbe1e506a3ff94e8e6b71c7796dea8ba22",
+    "canonical/tests/test_universal_verified_adaptive_solver_v2.py": "e8ba32cb3bcc68ff73b219ae939d521bdb57fad5",
+    "canonical/runtime/effect_broker_receipt_resolver_v2.py": "7f4eeeb19def420d0014631b99c5e2dc3a30592e",
+    "canonical/runtime/executable_skill_program_v7.py": "3cfd5e48b957c6e91fafbf1b9d69ddc624be4764",
+    "canonical/runtime/skill_receipt_authenticator_v1.py": "d0d7606494db469a33da868bab7e42773caf423a",
+    "canonical/runtime/universal_verified_skill_ratchet_v1.py": "d0b3f35d30b487fd50f5bcc5604342bd8d785615"
+  },
+  "test_only_stubs": [
+    "canonical/runtime/instruction_constraint_compiler_v1.py",
+    "canonical/runtime/judgment_control_envelope_v1.py",
+    "canonical/runtime/p2_authenticated_top_law_route_v1.py",
+    "canonical/runtime/proof_carrying_semantic_refinement_v6.py",
+    "canonical/runtime/source_aligned_acceptance_program_v1.py",
+    "canonical/runtime/structured_method_expression_ast_candidate_v2.py",
+    "canonical/runtime/typed_acceptance_program_v1.py"
+  ],
+  "hard_nonclaims": [
+    "NO_SEMANTIC_VERIFIER_INTEGRATION_CREDIT",
+    "NO_OPUS55_PARITY_CREDIT",
+    "NO_SKILL_PROMOTION_CREDIT",
+    "NO_TERMINAL_CREDIT"
+  ]
+}
