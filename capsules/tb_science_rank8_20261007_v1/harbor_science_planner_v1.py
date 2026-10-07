@@ -13,13 +13,11 @@ import time
 import urllib.request
 from typing import Any
 
-from canonical.runtime.harbor_command_policy import MAX_COMMAND_CHARS
-
 ENDPOINT = "http://127.0.0.1:8080/v1/chat/completions"
 MODEL = "brain-qwen3.5-9b"
 TOOL_NAME = "submit_science_proposal"
 MAX_RESPONSE_BYTES = 100_000
-MAX_TOOL_COMPLETION_TOKENS = 4096
+MAX_TOOL_COMPLETION_TOKENS = 1024
 
 TOOL = {
     "type": "function",
@@ -56,8 +54,8 @@ TOOL = {
                                 "maxItems": 16,
                                 "items": {"type": "string", "minLength": 1, "maxLength": 64},
                             },
-                            "command": {"type": "string", "minLength": 1, "maxLength": MAX_COMMAND_CHARS},
-                            "verify_command": {"type": "string", "minLength": 1, "maxLength": MAX_COMMAND_CHARS},
+                            "command": {"type": "string", "minLength": 1, "maxLength": 512},
+                            "verify_command": {"type": "string", "minLength": 1, "maxLength": 512},
                         },
                         "required": ["action_id", "covers", "command", "verify_command"],
                         "additionalProperties": False,
@@ -170,7 +168,7 @@ def plan(prompt: str, *, timeout_s: int = 180) -> dict[str, Any]:
                     "You are an optional proposal source inside Project Brain. "
                     "Use the provided submit_science_proposal tool exactly once. "
                     "Return exactly one terse candidate action per proposal. Use short requirement IDs, "
-                    f"keep command and verify_command under {MAX_COMMAND_CHARS} characters each, and use no explanatory prose. "
+                    "keep command and verify_command under 512 characters each, and use no explanatory prose. "
                     "Never claim execution or finish authority."
                 ),
             },
