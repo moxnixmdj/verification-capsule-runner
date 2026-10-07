@@ -1,0 +1,38 @@
+name: Verify matched success integrated extension V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/matched_success_integrated_extension_v1/**"
+      - ".github/workflows/verify-matched-success-integrated-extension-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.10"
+      - name: Verify exact Brain bytes
+        run: python capsules/matched_success_integrated_extension_v1/verify_exact_blobs.py
+      - name: Run independent semantic verifier
+        env:
+          PYTHONPATH: capsules/matched_success_integrated_extension_v1/vendor
+        run: python capsules/matched_success_integrated_extension_v1/independent_semantic_verifier.py
+      - name: Compile vendored runtimes
+        env:
+          PYTHONPATH: capsules/matched_success_integrated_extension_v1/vendor
+        run: |
+          python -m py_compile             capsules/matched_success_integrated_extension_v1/vendor/canonical/runtime/matched_success_integrated_extension_v1.py             capsules/matched_success_integrated_extension_v1/vendor/canonical/runtime/matched_success_integrated_extension_harness_v1.py
+      - name: Run exact vendored tests
+        env:
+          PYTHONPATH: capsules/matched_success_integrated_extension_v1/vendor
+        run: |
+          python -m pytest -q             capsules/matched_success_integrated_extension_v1/vendor/canonical/tests/test_matched_success_integrated_extension_v1.py             capsules/matched_success_integrated_extension_v1/vendor/canonical/tests/test_matched_success_integrated_extension_harness_v1.py
