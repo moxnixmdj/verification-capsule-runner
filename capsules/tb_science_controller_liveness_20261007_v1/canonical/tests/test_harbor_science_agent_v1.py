@@ -28,11 +28,11 @@ class Env:
 class ExistingButDeadControllerEnv(Env):
     async def exec(self, command, timeout_sec=None, **kwargs):
         self.commands.append(command)
-        if command == "verify-bad":
-            return Receipt(1, "", "bad")
         if command.startswith("test -s /app/submission/"):
             return Receipt(0, "", "")
         if command.startswith("python -m py_compile /app/submission/"):
+            return Receipt(0, "", "")
+        if "test -s /app/submission/controller.py && python -m py_compile /app/submission/controller.py" in command:
             return Receipt(0, "", "")
         if "PROJECT_BRAIN_CONTROLLER_LIVENESS_V1" in command:
             return Receipt(42, "", "CONTROLLER_EXITED_BEFORE_INPUT")
@@ -63,7 +63,7 @@ class ScienceAgentTests(unittest.TestCase):
             {"finish_summary":"done"}
         ])
         self.assertEqual(env.commands[0],"echo wide")
-        self.assertEqual(result["status"],"FINISHED")
+        self.assertEqual(result["status"],"SUBMISSION_READY__RAW_TASK_ACCEPTANCE_PENDING_EXTERNAL_INDEPENDENT_VERIFIER")
         self.assertEqual(result["resolved_requirements"],["R1","R2"])
 
     def test_candidate_actions_alias_is_normalized(self):
@@ -77,8 +77,28 @@ class ScienceAgentTests(unittest.TestCase):
             {"finish_summary":"done"}
         ])
         self.assertEqual(env.commands[0],"echo work")
-        self.assertEqual(result["status"],"FINISHED")
+        self.assertEqual(result["status"],"SUBMISSION_READY__RAW_TASK_ACCEPTANCE_PENDING_EXTERNAL_INDEPENDENT_VERIFIER")
         self.assertEqual(result["resolved_requirements"],["R1"])
+
+    def test_lossless_raw_task_scope_is_non_droppable_and_acceptance_pending(self):
+        contract,localized,rows=s._compile_lossless_task_scope("Create alpha.\nCreate beta.")
+        self.assertTrue(contract["pass"],contract)
+        self.assertTrue(localized["pass"],localized)
+        self.assertEqual(len(rows),2)
+        self.assertEqual({r["obligation_id"] for r in rows},set(contract["acceptance_contract"]["required_obligation_ids"]))
+        self.assertTrue(all(r["acceptance_receipt_required"] for r in rows))
+        self.assertEqual(localized["accounted_obligation_count"],2)
+
+    def test_submission_ready_never_claims_raw_task_acceptance(self):
+        env,result=self.run_goal([{
+            "material_requirements":["R1"],
+            "candidates":[{"action_id":"a","covers":["R1"],"command":"echo work","verify_command":"echo verify"}]
+        }])
+        self.assertEqual(result["status"],"SUBMISSION_READY__RAW_TASK_ACCEPTANCE_PENDING_EXTERNAL_INDEPENDENT_VERIFIER")
+        self.assertFalse(result["task_completion_claimed"])
+        self.assertEqual(result["finish_authority"],"RAW_TASK_ACCEPTANCE_V1_REQUIRED")
+        self.assertFalse(result["raw_task_acceptance_receipts_present"])
+        self.assertGreaterEqual(result["raw_task_required_obligation_count"],1)
 
     def test_conflicting_candidate_aliases_fail_closed(self):
         env=Env()
@@ -102,8 +122,8 @@ class ScienceAgentTests(unittest.TestCase):
             }
         ])
         self.assertEqual(env.commands,["echo work","echo verify"])
-        self.assertEqual(result["status"],"FINISHED")
-        self.assertEqual(result["finish_authority"],"BRAIN_VERIFIED_STATE")
+        self.assertEqual(result["status"],"SUBMISSION_READY__RAW_TASK_ACCEPTANCE_PENDING_EXTERNAL_INDEPENDENT_VERIFIER")
+        self.assertEqual(result["finish_authority"],"RAW_TASK_ACCEPTANCE_V1_REQUIRED")
         self.assertEqual(result["cycles"],1)
         self.assertEqual(result["resolved_requirements"],["R1"])
         self.assertFalse(result["model_has_terminal_authority"])
@@ -176,7 +196,12 @@ class ScienceAgentTests(unittest.TestCase):
         )
         with patch.object(s.science_planner, "plan", planner(outputs)):
             result=asyncio.run(s.run_science_goal(goal,env,max_cycles=1))
-        self.assertNotEqual(result["status"],"FINISHED",result)
+        self.assertNotEqual(
+            result["status"],
+            "SUBMISSION_READY__RAW_TASK_ACCEPTANCE_PENDING_EXTERNAL_INDEPENDENT_VERIFIER",
+            result,
+        )
+        self.assertFalse(result.get("task_completion_claimed",False),result)
         self.assertNotIn("BRAIN_DELIVERABLE_01",result["resolved_requirements"])
         selected=[x for x in result["trace"] if x.get("kind")=="BRAIN_SELECTED_RESEARCH_ACTION"][0]
         self.assertFalse(selected["coverage_promoted"],selected)
