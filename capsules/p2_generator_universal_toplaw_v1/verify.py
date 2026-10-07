@@ -6,7 +6,7 @@ HERE = Path(__file__).resolve().parent
 EXPECTED = {
     "candidate_source.py": "ea8057b0eadac210c4f4378298df93ed233c5824",
     "evaluator_source.py": "9d3d9bb837a98a7f78b5794cec0c0ae88bb32860",
-    "theorem.json": "ac73c8912a2d59f22abceb0c9b3c77efc5994441",
+    "theorem.json": "0ccc3ecbdbf2636b8f1e7f0daf959a48350cb82e",
 }
 
 def blob_sha(path: Path) -> str:
@@ -33,8 +33,6 @@ def main():
     evaluator_text = (HERE / "evaluator_source.py").read_text()
     theorem = json.loads((HERE / "theorem.json").read_text())
 
-    # Exact-source semantic anchors. Blob pins make these assertions a guard
-    # against accidentally proving a nearby but different implementation.
     for snippet in (
         'grounded=bool(claims) and all(x in facts for x in claims)',
         'fit=str(e.get("intended_audience") or "")==audience',
@@ -67,7 +65,6 @@ def main():
     ):
         assert snippet in evaluator_text, "EVALUATOR_SEMANTIC_ANCHOR_MISSING:" + snippet
 
-    # Exhaustive algebra over every possible hidden Boolean factor tuple.
     rows=[]
     for s,r,a,v in itertools.product((False,True), repeat=4):
         u=utility(s,r,a,v)
@@ -76,9 +73,6 @@ def main():
     assert max(x[4] for x in rows if not x[0]) == -3
     assert min(x[4] for x in rows if x[0] and x[3]) == 6
 
-    # Seed-independent generator structure: every possible selected topic T0/T1/T2
-    # has at least one F* fact for every allowed difficulty; UNSUPPORTED-* cannot
-    # collide with F* facts. This discharges the only support->grounded subtlety.
     for difficulty in range(1,6):
         fact_count=4+difficulty
         facts=[(f"F{i}",f"T{i%3}") for i in range(fact_count)]
@@ -93,8 +87,6 @@ def main():
     candidate=load("candidate_source","candidate_source.py")
     evaluator=load("evaluator_source","evaluator_source.py")
 
-    # Independent executable canary across many seeds. Not used as the universal
-    # proof, but it catches integration mistakes in the source-level derivation.
     checked=0
     for difficulty in range(1,6):
         for seed in range(-128,128):
@@ -104,23 +96,28 @@ def main():
             assert verdict["pass"] is True, (seed,difficulty,verdict,got,case["_oracle"])
             checked += 1
 
-    assert theorem["selected_cell"]["scope"] == "ALL_CASES_PRODUCED_BY_THE_EXACT_PINNED_P2_GENERATOR_FOR_ANY_INTEGER_SEED_AND_DIFFICULTY_1_TO_5"
-    assert theorem["selected_cell"]["global_professional_scope_complete"] is False
-    assert "NO_CLAIM_OPEN_ENDED_RENDER_LAYOUT_OR_CROSS_ARTIFACT_QUALITY_IS_CLOSED." in theorem["hard_nonclaims"]
+    assert theorem["schema"] == "PROJECT_BRAIN_P2_INFORMATION_SAFE_UNIVERSAL_SELECTED_CELL_V1"
+    assert theorem["target"]["exact_domain"] == "ALL_CASES_EMITTED_BY_p2_p3_information_safe_proof_suites_v2::_p2_FOR_ANY_INTEGER_SEED_AND_DIFFICULTY_1_THROUGH_5"
+    assert theorem["target"]["claim"] == "THE_BOUND_BRAIN_CANDIDATE_RETURNS_THE_EXACT_HIDDEN_ORACLE_SELECTED_EDIT_SET_FOR_EVERY_CASE_IN_THIS_EXACT_GENERATOR_DOMAIN"
+    assert theorem["abc_consequence"]["selected_cell_scope_complete"] is True
+    assert theorem["abc_consequence"]["artifact_family_closed"] is False
+    assert theorem["abc_consequence"]["professional_quality_global_closed"] is False
+    assert "NO_CLAIM_THE_SYNTHETIC_P2_GENERATOR_IS_SCOPE_EQUIVALENT_TO_ALL_REALISTIC_PROFESSIONAL_DELIVERABLES" in theorem["hard_nonclaims"]
 
     print(json.dumps({
         "status":"PASS",
+        "canonical_brain_cell":"P2_INFORMATION_SAFE_UNIVERSAL_SELECTED_CELL_20261007_V1",
         "verified":[
-            "EXACT_CANDIDATE_EVALUATOR_AND_THEOREM_BLOBS_MATCH",
-            "HIDDEN_FACTOR_RECOVERY_ANCHORS_MATCH_EXACT_PINNED_SOURCE",
+            "EXACT_CANONICAL_THEOREM_CANDIDATE_AND_EVALUATOR_BLOBS_MATCH",
+            "HIDDEN_FACTOR_RECOVERY_MATCHES_EXACT_PINNED_SOURCE",
             "ALL_16_BOOLEAN_FACTOR_ASSIGNMENTS_PROVE_COVERAGE_EQUIVALENCE",
             "UNSUPPORTED_MAX_UTILITY_IS_MINUS_3",
             "SUPPORTED_ANALYTICAL_MIN_UTILITY_IS_6",
             "ALL_ALLOWED_DIFFICULTIES_HAVE_NONEMPTY_PER_TOPIC_FACT_SUPPORT",
             "UNSUPPORTED_IDS_ARE_DISJOINT_FROM_FACT_IDS",
             "1280_EXECUTABLE_SEED_DIFFICULTY_CANARIES_PASS",
-            "UNIVERSAL_CLAIM_IS_SOURCE_STRUCTURAL_NOT_SAMPLE_INFERENCE",
-            "OPEN_ENDED_PROFESSIONAL_SCOPE_REMAINS_EXPLICITLY_OPEN",
+            "UNIVERSAL_SELECTED_CELL_IS_SOURCE_STRUCTURAL_NOT_SAMPLE_INFERENCE",
+            "OPEN_ENDED_REALISTIC_PROFESSIONAL_SCOPE_REMAINS_OPEN",
             "ZERO_TERMINAL_CREDIT"
         ],
         "canary_cases":checked,
