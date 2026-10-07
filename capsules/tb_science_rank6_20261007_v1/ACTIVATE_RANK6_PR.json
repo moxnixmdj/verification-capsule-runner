@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK6_PR_ACTIVATION_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVATE_EXACT_AUTHORIZED_RANK6_ONE_SHOT",
+  "target_predicate": "TB_SCIENCE_GE_58_7",
+  "authorized_slot": "terminal-bench-science/koopman-mfg-id::trial-0",
+  "task_name": "terminal-bench-science/koopman-mfg-id",
+  "task_digest": "sha256:ba37bd6173cc7d21aff84b2124524ef2ec60cb85f5f9cef2c42e6111ad9ed18f",
+  "authority_blob": "3c0193eb50c55d72eaf19dcc0b6f084e84b12ff2",
+  "authority_verification_blob": "1aff0bc47f34c6cd93c1252a0659e48712a22bef",
+  "execution_workflow_blob": "87fa385a48f769967046779837964f99f6010986",
+  "arm_blob": "70f905897cfba3c254dd71bffcb832e024d7caa3",
+  "activation_branch": "activate/tb-science-rank6-execute-20261007",
+  "activation_transport": "PULL_REQUEST_EVENT",
+  "run_attempt_required": 1,
+  "retries": 0,
+  "replacement": false,
+  "denominator_shrink": false,
+  "incremental_spend_usd": 0,
+  "fresh_reality_units_to_consume": 1,
+  "promotion_authority": false
+}
