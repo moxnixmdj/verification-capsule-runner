@@ -1,6 +1,7 @@
 name: verify-livebench-dual-scorer-dispatch-v2
 on:
   pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   verify:
