@@ -1,0 +1,41 @@
+{
+  "schema": "PROJECT_BRAIN_ASTRA_TARGET_COMPARATOR_SEPARATION_INDEPENDENT_CAPSULE_MANIFEST_V1",
+  "date": "2026-10-05",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_branch": "breakthrough/astra-target-comparator-separation-20261005-v1",
+  "brain_pr": 2144,
+  "exact_blobs": {
+    "canonical/laws/ASTRA_DEMONSTRATED_CAPABILITY_OWNERSHIP_MISSION_LOCK_V8.md": "fbcf1adde127ddace5b7cc0e98f1ac3047ec345c",
+    "canonical/capabilities/astra/ASTRA_DEMONSTRATED_CAPABILITY_TARGET_UNIVERSE_V1.json": "a6929dd4d5b4667c959fbc54e552a98e6b745c30",
+    "canonical/runtime/astra_target_universe_compiler_v1.py": "114aedc4bf2296459c3bfd76d5035bf585ac262d",
+    "canonical/tests/test_astra_target_universe_compiler_v1.py": "2ba2da8e24ddb2001a4d0044609c75bbce3757f1",
+    "canonical/governance/LEGACY_OPUS19_TO_ASTRA_DEMONSTRATED_TARGET_CROSSWALK_V1.json": "403e422193d93ac6d10f4e80d45829dfd1204040",
+    "canonical/runtime/astra_legacy_target_crosswalk_verifier_v1.py": "6dc1fd636d0a8d974d17400117cf9ef98ecc522f",
+    "canonical/tests/test_astra_legacy_target_crosswalk_verifier_v1.py": "d66457f182d5e4d8f21850bcc6c6ea2600a09a1e",
+    "canonical/governance/ASTRA_TARGET_COMPARATOR_SEPARATION_CANDIDATE_V1.json": "c9fb4112c1e4345eb2c8f610fbb585f0f017693d",
+    "canonical/governance/ASTRA_TARGET_CURRENT_RESIDUAL_V1.json": "63f52c07e0266e5afb7b84036c4273f19fbfb1ee",
+    "canonical/capabilities/opus55/OPUS_5_5_USEFUL_CAPABILITY_ENVELOPE_V1.json": "661a57f839101fbf54c7e4edc76166c65ce9327d"
+  },
+  "expected": {
+    "target_behavior_count": 13,
+    "legacy_family_count": 19,
+    "dedicated_legacy_gap": [
+      "CYBERSECURITY_PROBLEM_SOLVING"
+    ],
+    "route_component_legacy_rows": 4,
+    "target_comparator_separated": true,
+    "terminal_credit_delta": 0,
+    "ownership_credit_delta": 0
+  },
+  "authority": {
+    "scheduling": false,
+    "execution": false,
+    "promotion": false,
+    "fresh_reality": false
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "new_reality_units_consumed": 0,
+    "terminal_cases_consumed": 0
+  }
+}
