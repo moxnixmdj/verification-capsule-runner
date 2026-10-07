@@ -19,5 +19,6 @@
   "precheck_failure_consumes_slot": false,
   "after_task_start_result_is_irreversible": true,
   "incremental_spend_usd_max": 0,
-  "credit": false
+  "credit": false,
+  "dispatch_nonce": "BASE_WORKFLOW_INSTALLED_C27ADF70974025C4FC0C49F7EE6AAAF5499EE661"
 }
