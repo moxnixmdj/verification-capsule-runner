@@ -1,0 +1,50 @@
+name: Verify TB-Science raw-task controller liveness V2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_controller_liveness_raw_v2/**"
+      - ".github/workflows/verify-tb-science-controller-liveness-raw-v2.yml"
+  push:
+    branches: ["verify/tb-science-controller-liveness-raw-v2-20261007"]
+    paths:
+      - "capsules/tb_science_controller_liveness_raw_v2/**"
+      - ".github/workflows/verify-tb-science-controller-liveness-raw-v2.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact current candidate bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_controller_liveness_raw_v2
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "380e727e66d5fe4a98528734b7e5b4970a455d2c"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "8303210ab3d1692b5380892d679cebe6b4c76e16"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
+          test "$(git hash-object "$C/canonical/runtime/lossless_raw_task_contract_v1.py")" = "d54d5a2f7efa76b653d288f4f53da4883644baa6"
+          test "$(git hash-object "$C/canonical/runtime/raw_task_acceptance_residual_localizer_v1.py")" = "f29616cf7726959aa28db4ed6541a9fc0bc2ac76"
+      - name: Run exact science controller tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/tb_science_controller_liveness_raw_v2"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_agent_v1
+      - name: Replay rank7 and dead-controller falsifiers
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_controller_liveness_raw_v2"
+          PYTHONPATH="$C" python "$C/verify.py" | tee RAW_TASK_CONTROLLER_LIVENESS_REPLAY.json
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-raw-task-controller-liveness-v2
+          path: RAW_TASK_CONTROLLER_LIVENESS_REPLAY.json
+          if-no-files-found: warn
