@@ -15,5 +15,10 @@
   "retries": 0,
   "replacement": false,
   "incremental_spend_usd_required": 0,
-  "promotion_authority": false
+  "promotion_authority": false,
+  "activation_transport_retrigger": {
+    "reason": "INITIAL_PULL_REQUEST_OPEN_EVENT_EMITTED_NO_EXECUTION_WORKFLOW_RUN",
+    "semantics": "TRANSPORT_ONLY__NO_AUTHORITY_TASK_PLANNER_OR_RETRY_CHANGE",
+    "expected_event": "pull_request.synchronize"
+  }
 }
