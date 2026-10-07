@@ -1,0 +1,60 @@
+name: Verify Brain Structured Method universal correctness V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/structured_method_universal_correctness_v1/**"
+      - ".github/workflows/verify-brain-structured-method-universal-correctness-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/structured_method_universal_correctness_v1
+          python - <<'PY'
+          import hashlib,json,pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src,expected in m["exact_brain_blobs"].items():
+              raw=pathlib.Path(src).read_bytes()
+              got=hashlib.sha1(f"blob {len(raw)}\0".encode()+raw).hexdigest()
+              assert got==expected,(src,got,expected)
+          print("exact Brain blobs: PASS",len(m["exact_brain_blobs"]))
+          PY
+      - name: Compile exact candidate and oracle
+        run: |
+          cd capsules/structured_method_universal_correctness_v1
+          python -m py_compile canonical/runtime/structured_method_normalized_rule_graph_v3.py
+          python -m py_compile canonical/runtime/structured_method_normalized_rule_oracle_v3.py
+          python -m py_compile canonical/runtime/structured_method_universal_correctness_certificate_v1.py
+      - name: Run fail-closed theorem mutation tests
+        run: |
+          cd capsules/structured_method_universal_correctness_v1
+          export PYTHONPATH=.
+          python -m unittest canonical.tests.test_structured_method_universal_correctness_certificate_v1 -v
+      - name: Execute universal correctness certificate
+        run: |
+          cd capsules/structured_method_universal_correctness_v1
+          export PYTHONPATH=.
+          python - <<'PY'
+          from canonical.runtime.structured_method_universal_correctness_certificate_v1 import verify
+          out=verify()
+          assert out["universal_correctness_proved_candidate"] is True,out
+          assert out["scope_complete"] is True,out
+          assert out["objective_ceiling_candidate"] is True,out
+          assert out["basis_kind"]=="ABSOLUTE_CEILING_WITH_UNIVERSAL_FORMAL_SCOPE_COMPLETENESS",out
+          assert out["brain_value"]==1 and out["theoretical_upper_bound"]==1,out
+          assert out["uses_empirical_generalization"] is False,out
+          assert out["terminal_wave_load_bearing"] is False,out
+          assert out["new_reality_units_consumed"]==0,out
+          assert out["terminal_cases_consumed"]==0,out
+          assert out["acceptance_credit_delta"]==0,out
+          assert out["promotion_authority"] is False,out
+          print("Structured Method universal correctness candidate: PASS")
+          PY
