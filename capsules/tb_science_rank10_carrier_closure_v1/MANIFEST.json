@@ -70,5 +70,7 @@
   "incremental_spend_usd_max": 0,
   "rank10_authority": false,
   "acceptance_credit": false,
-  "terminal_credit": false
+  "terminal_credit": false,
+  "preflight_verifier_fix_commit_sha": "bc1cba96917b6d4c46b9a83000b00bb45e38ebe9",
+  "preflight_verifier_fix": "CORRECT_TRUNCATED_HARBOR_SCIENCE_AGENT_GIT_BLOB_SHA_ASSERTION_ONLY"
 }
