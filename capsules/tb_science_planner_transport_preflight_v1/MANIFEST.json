@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_PLANNER_LIVE_TRANSPORT_PREFLIGHT_MANIFEST_V1",
+  "date": "2026-10-07",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_source_commit_sha": "a690f3ffd4e8b172f7e10b021a12d92862502cd3",
+  "files": {
+    "canonical/runtime/harbor_science_planner_v1.py": {
+      "git_blob_sha": "01d859c8f27b317893027e693c9aa49e833a256f"
+    },
+    "canonical/tests/test_harbor_science_planner_v1.py": {
+      "git_blob_sha": "3020cc54412c158efe38180025d066b5c2028165"
+    },
+    "canonical/runtime/harbor_command_policy.py": {
+      "git_blob_sha": "a525773417291c7a4841bf35e1baff5370350d0d"
+    }
+  },
+  "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+  "qwen_model": "Qwen3.5-9B-M-TS-Q4_K_M.gguf",
+  "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+  "terminal_benchmark_task_exposure": false,
+  "harbor_execution_authorized": false,
+  "fresh_benchmark_slots_consumed": 0,
+  "incremental_spend_usd_max": 0,
+  "rank10_authority": false,
+  "acceptance_credit": false,
+  "terminal_credit": false
+}
