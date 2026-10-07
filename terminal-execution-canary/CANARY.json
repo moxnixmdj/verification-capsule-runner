@@ -1,0 +1,9 @@
+{
+  "schema": "PROJECT_BRAIN_TERMINAL_EXECUTION_BASE_CANARY_V1",
+  "date": "2026-10-07",
+  "purpose": "MEASURE_PR_WORKFLOW_FANOUT_ON_DEDICATED_EXECUTION_BASE_WITH_ZERO_TERMINAL_CASE_EXPOSURE",
+  "terminal_case_exposure": false,
+  "fresh_target_reality_units_consumed": 0,
+  "incremental_spend_usd": 0,
+  "terminal_credit_delta": 0
+}
