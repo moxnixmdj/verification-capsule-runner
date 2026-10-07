@@ -1,0 +1,18 @@
+{
+  "schema": "BRAIN_UNIVERSAL_ESCAPE_RESOLVER_V1_VERIFIER_INPUT",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_ref": "research/universal-escape-resolver-v1-20261007",
+  "brain_head_sha": "7eaf5dca2ba2afcd11e0af76f5e88953354af4b9",
+  "exact_brain_blobs": {
+    "canonical/runtime/universal_escape_resolver_v1.py": "9043273c97b53a991de8cb418e0c6a58efa0cec3",
+    "canonical/governance/UNIVERSAL_ESCAPE_RESOLVER_V1.json": "1459c9da4e7178ca06a30cf46588bfd5f644b534",
+    "canonical/tests/test_universal_escape_resolver_v1.py": "fd1e9c3adb5132987c71c8f8e7e83e35bf9cefbc"
+  },
+  "reused_authorities": {
+    "universal_learning_v9_router_blob": "e6b594931e6bd6f87c802cd1e18d06e90cac1719",
+    "semantic_elision_db_gate_blob": "35d769b70ab3fadad3be390818f3aadccd5d6aa0",
+    "universal_learning_v9_independent_verifier_commit": "b04e9b138366bb1cb4f13ae478275025ad2d64da",
+    "universal_learning_v8_independent_verifier_commit": "c097af209497b00cf57664473ad44bdd71750eec"
+  },
+  "claim_under_test": "GLOBAL_PLANNING_SCOPE_LIFT_WITHOUT_GLOBAL_ACCEPTANCE_SCOPE_LIFT"
+}
