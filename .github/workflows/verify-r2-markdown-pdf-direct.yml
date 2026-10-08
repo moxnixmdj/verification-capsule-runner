@@ -1,0 +1,29 @@
+name: Verify R2 Markdown PDF direct adequacy
+
+on:
+  push:
+    branches: ["r2-markdown-pdf-direct-adequacy-20261008"]
+    paths:
+      - ".github/workflows/verify-r2-markdown-pdf-direct.yml"
+      - "capsules/r2_markdown_pdf_direct_20261008/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install exact verification dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq pandoc weasyprint
+          python -m pip install --disable-pip-version-check --no-input pypdf==6.19.0
+          pandoc --version | head -1
+          weasyprint --version
+      - name: Execute real producer and independent readback
+        run: python capsules/r2_markdown_pdf_direct_20261008/verify.py
