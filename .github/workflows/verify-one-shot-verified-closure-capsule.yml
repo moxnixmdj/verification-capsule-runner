@@ -1,0 +1,41 @@
+name: Verify one-shot verified closure capsule
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/one_shot_verified_closure_v1/**"
+      - ".github/workflows/verify-one-shot-verified-closure-capsule.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Bind exact private-Brain source and test blobs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import subprocess
+          expected = {
+            "capsules/one_shot_verified_closure_v1/canonical/runtime/root1_default_acquisition_provider_v1.py": "1e1345544bea51caa8f661d08c964abb88418a23",
+            "capsules/one_shot_verified_closure_v1/canonical/runtime/one_shot_verified_closure_v1.py": "a89c6f10f15904780277da65ac69f8ecbde6330c",
+            "capsules/one_shot_verified_closure_v1/canonical/tests/test_one_shot_verified_closure_v1.py": "85d721b5c538479ec7e2a57156463841e71db447",
+          }
+          for path, want in expected.items():
+              got = subprocess.check_output(["git", "hash-object", path], text=True).strip()
+              assert got == want, (path, got, want)
+          print("EXACT_PRIVATE_BRAIN_BLOB_BINDING_PASS")
+          PY
+      - name: Compile exact closure bytes
+        run: |
+          python -m py_compile             capsules/one_shot_verified_closure_v1/canonical/runtime/root1_default_acquisition_provider_v1.py             capsules/one_shot_verified_closure_v1/canonical/runtime/one_shot_verified_closure_v1.py             capsules/one_shot_verified_closure_v1/canonical/tests/test_one_shot_verified_closure_v1.py
+      - name: Run exact one-shot closure suite
+        env:
+          PYTHONPATH: capsules/one_shot_verified_closure_v1
+        run: python -m unittest canonical.tests.test_one_shot_verified_closure_v1 -v
