@@ -161,7 +161,7 @@ class AdmissionStaticBoundaryTests(unittest.TestCase):
         self.assertIn('SCHEMA="PROJECT_BRAIN_P3_REAL_CONTEXT_V3_ADMISSION_V6"',text)
         self.assertIn("REQUIRED_SUPPORT_V5_REALIZATION_CELL_V3",text)
         self.assertIn('"terminal_authority":False',text)
-        self.assertNotIn("terminal_credit_delta":1",text)
+        self.assertNotIn('"terminal_credit_delta":1',text.replace(" ",""))
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
