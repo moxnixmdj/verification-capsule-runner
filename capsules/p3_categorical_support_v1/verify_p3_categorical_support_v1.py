@@ -79,6 +79,11 @@ class CategoricalKernelTests(unittest.TestCase):
         self.assertEqual(out["status"],"UNRESOLVED")
         self.assertFalse(out["claim_in_scope"])
 
+    def test_quantified_explicit_member_form_not_claimed(self):
+        out=parse_relation("Every canary is a member of Bird.")
+        self.assertEqual(out["status"],"UNRESOLVED")
+        self.assertFalse(out["claim_in_scope"])
+
 class SupportPortfolioTests(unittest.TestCase):
     def test_transitive_categorical_support_enters_v5(self):
         out=support_truth(support_payload("Tweety is a member of Animal.",[
@@ -104,6 +109,15 @@ class SupportPortfolioTests(unittest.TestCase):
         out=support_truth(support_payload("Tweety is a member of Bird.",[
             ev("E1","Report states that Tweety is a member of Bird."),
             ev("E2","This prose has no checked semantic relation."),
+        ]))
+        self.assertFalse(out["pass"])
+        self.assertEqual(out["predicate_truth"],"UNKNOWN")
+        self.assertEqual(out["unresolved_evidence_ids"],["E2"])
+
+    def test_categorical_paraphrase_preserves_unknown(self):
+        out=support_truth(support_payload("Tweety is a member of Bird.",[
+            ev("E1","Report states that Tweety is a member of Bird."),
+            ev("E2","Report states that Tweety does not belong to Bird."),
         ]))
         self.assertFalse(out["pass"])
         self.assertEqual(out["predicate_truth"],"UNKNOWN")
