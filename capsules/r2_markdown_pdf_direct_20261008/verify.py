@@ -18,6 +18,7 @@ def git_blob_sha(path:Path)->str:
 copies={
  "canonical/runtime/r2_markdown_pdf_direct_adequacy_v1.py": HERE/"r2_markdown_pdf_direct_adequacy_v1.py",
  "canonical/runtime/goal_compiler.py": HERE/"goal_compiler.py",
+ "canonical/runtime/r2_direct_end_to_end_adequacy_v1.py": HERE/"r2_direct_end_to_end_adequacy_v1.py",
  "canonical/runtime/bound_capabilities/pandoc_weasyprint.py": HERE/"pandoc_weasyprint.py",
  "canonical/runtime/bound_capabilities/pdf_pypdf.py": HERE/"pdf_pypdf.py",
 }
