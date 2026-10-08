@@ -22,7 +22,7 @@ def constraints(max_items=4):
             "max_items":max_items,"max_chars":5000,"heading_level":2,"require_title":False}
 
 def realization_payload(claim,evidence):
-    return {"v3_input":{"schema":INPUT_SCHEMA,"task":{
+    return {"v3_input":{"schema":V3_INPUT_SCHEMA,"task":{
       "claims":[{"claim_id":"C1","text":claim,"required":True}],
       "evidence":evidence,
       "audience_profile":{"profile_id":"EXPLICIT","constraints":constraints()},
