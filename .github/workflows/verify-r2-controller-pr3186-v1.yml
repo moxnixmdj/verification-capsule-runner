@@ -1,0 +1,40 @@
+name: Verify R2 controller PR3186 V1
+
+on:
+  pull_request:
+    paths:
+      - "capsules/r2_general_adequate_decision_controller_pr3186_v1/**"
+      - ".github/workflows/verify-r2-controller-pr3186-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bind exact private Brain source and test blobs
+        run: |
+          set -euo pipefail
+          C="capsules/r2_general_adequate_decision_controller_pr3186_v1"
+          test "$(git hash-object "$C/canonical/runtime/general_adequate_decision_controller_v1.py")" = "17eef307a00a5bd581fcd983263e0780ec7b0841"
+          test "$(git hash-object "$C/canonical/tests/test_general_adequate_decision_controller_v1.py")" = "836e0730c4019654c64b6c2a19656d1efa0ec1e1"
+      - name: Run exact R2 falsification suite
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/r2_general_adequate_decision_controller_pr3186_v1"
+          PYTHONPATH="$C" python3 -m unittest canonical.tests.test_general_adequate_decision_controller_v1 -v 2>&1 | tee R2_CONTROLLER_PR3186_TEST_OUTPUT.txt
+      - name: Preserve verification output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r2-controller-pr3186-v1-output
+          path: R2_CONTROLLER_PR3186_TEST_OUTPUT.txt
+          if-no-files-found: warn
+          retention-days: 30
