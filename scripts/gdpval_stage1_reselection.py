@@ -31,7 +31,7 @@ def fetch_rows():
     rows = []
     for offset, length in ((0, 100), (100, 100), (200, 20)):
         url = f"{ROWS_API}&offset={offset}&length={length}"
-        req = Request(url, headers={"User-Agent": "brain-public-verifier-stage1-reselection/1.0"})
+        req = Request(url, headers={"User-Agent": "brain-public-verifier-stage1-reselection/1.1"})
         with urlopen(req, timeout=45) as r:
             payload = json.loads(r.read().decode("utf-8"))
         page = payload.get("rows")
@@ -62,6 +62,21 @@ def artifact_class(files):
     return None
 
 
+def metadata_record(row):
+    tid = str(row.get("task_id") or "")
+    refs = list(row.get("reference_files") or [])
+    dels = list(row.get("deliverable_files") or [])
+    return {
+        "task_id": tid,
+        "task_id_sha256": hashlib.sha256(tid.encode()).hexdigest(),
+        "sector": row.get("sector"),
+        "occupation": row.get("occupation"),
+        "reference_file_count": len(refs),
+        "deliverable_file_count": len(dels),
+        "extensions": exts(dels),
+    }
+
+
 def candidates(rows, exclusions):
     out = {"XLSX": [], "PPTX": [], "TEXT_CONFIG": []}
     for item in rows:
@@ -76,18 +91,28 @@ def candidates(rows, exclusions):
         cls = artifact_class(dels)
         if not cls:
             continue
-        digest = hashlib.sha256(tid.encode()).hexdigest()
-        out[cls].append({
-            "task_id": tid,
-            "task_id_sha256": digest,
-            "sector": row.get("sector"),
-            "occupation": row.get("occupation"),
-            "reference_file_count": len(refs),
-            "deliverable_file_count": len(dels),
-            "extensions": exts(dels),
-        })
+        out[cls].append(metadata_record(row))
     for cls in out:
         out[cls].sort(key=lambda x: (x["task_id_sha256"], x["task_id"]))
+    return out
+
+
+def pdf_candidates(rows, exclusions):
+    """Apply the separately precommitted 2026-10-08 PDF replacement rule."""
+    out = []
+    for item in rows:
+        row = item.get("row") or {}
+        tid = str(row.get("task_id") or "")
+        if not tid or tid in exclusions:
+            continue
+        refs = list(row.get("reference_files") or [])
+        dels = list(row.get("deliverable_files") or [])
+        if len(refs) > 3 or not (1 <= len(dels) <= 2):
+            continue
+        if ".pdf" not in set(exts(dels)):
+            continue
+        out.append(metadata_record(row))
+    out.sort(key=lambda x: (x["task_id_sha256"], x["task_id"]))
     return out
 
 
@@ -111,9 +136,12 @@ def main():
     repaired_candidates = candidates(rows, repaired_exclusions)
     replacements = pick(repaired_candidates)
 
+    pdf = pdf_candidates(rows, repaired_exclusions)
+    pdf_replacement = pdf[0] if pdf else None
+
     result = {
-        "schema": "PROJECT_BRAIN_GDPVAL_STAGE1_CONTAMINATION_RESELECTION_VERIFICATION_V1",
-        "status": "PASS__ORIGINAL_SELECTION_REPLAYED__REPLACEMENTS_COMPUTED_METADATA_ONLY",
+        "schema": "PROJECT_BRAIN_GDPVAL_STAGE1_CONTAMINATION_RESELECTION_VERIFICATION_V2",
+        "status": "PASS__ORIGINAL_SELECTION_REPLAYED__XLSX_PPTX_REPLACED__PDF_RULE_APPLIED_METADATA_ONLY",
         "population_count": 220,
         "selection_rule_replay": {
             "original_exclusion_count": len(ORIGINAL_EXCLUSIONS),
@@ -129,6 +157,17 @@ def main():
             "class_exhausted": {
                 k: len(v) == 0 for k, v in repaired_candidates.items()
             },
+        },
+        "precommitted_pdf_replacement_rule": {
+            "brain_precommit_commit": "c1af9718fc1025181c350875aba245f676870703",
+            "candidate_count": len(pdf),
+            "replacement": pdf_replacement,
+            "class_exhausted": not bool(pdf),
+        },
+        "repaired_stage1": {
+            "XLSX": replacements["XLSX"],
+            "PPTX": replacements["PPTX"],
+            "PDF": pdf_replacement,
         },
         "privacy_and_contamination_boundary": {
             "fields_read_for_selection": [
@@ -146,6 +185,7 @@ def main():
         "terminal_authority": False,
         "capability_credit_delta": 0,
     }
+    assert pdf_replacement is not None, "PDF_REPLACEMENT_CLASS_EXHAUSTED"
     print(json.dumps(result, indent=2, sort_keys=True))
 
 
