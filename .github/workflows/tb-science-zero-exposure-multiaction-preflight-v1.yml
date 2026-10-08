@@ -104,7 +104,8 @@ jobs:
           assert 7200 <= x["observed_input_tokens"] <= 7600, x
           assert x["selected_input_tokens"]==x["observed_input_tokens"], x
           assert x["effective_timeout_s"] >= 660, x
-          assert x["proposal_candidate_count"]==3, x\n          assert x["dependency_edge_verified"] is True, x
+          assert x["proposal_candidate_count"]==3, x
+          assert x["dependency_edge_verified"] is True, x
           assert x["acceptance_credit_delta"]==0, x
           assert x["terminal_credit_delta"]==0, x
           PY
