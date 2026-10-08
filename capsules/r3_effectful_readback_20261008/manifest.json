@@ -1,0 +1,41 @@
+{
+  "schema": "PROJECT_BRAIN_R3_EFFECTFUL_READBACK_PUBLIC_CAPSULE_V1",
+  "date": "2026-10-08",
+  "source_repository": "moxnixmdj/brain",
+  "source_branch": "r3-effectful-readback-closure-v2-20261008",
+  "source_head": "8fde0bbc2350aa7a848d4b9fca62040c9e773ccc",
+  "scope": "MINIMUM_NONSECRET_EXACT_SOURCE_CAPSULE_FOR_R3_BOUNDED_EFFECT_READBACK",
+  "files": {
+    "canonical/runtime/r3_independent_learning_verifier_v1.py": {
+      "git_blob_sha": "493f2b8147877178d2c87c34a9d9b8bcbaaf39c0",
+      "capsule_path": "capsules/r3_effectful_readback_20261008/canonical__runtime__r3_independent_learning_verifier_v1.py"
+    },
+    "canonical/runtime/autonomous_verified_self_improvement_v1.py": {
+      "git_blob_sha": "2069c0ac5b80a49ef926c3da66abad9f46727b76",
+      "capsule_path": "capsules/r3_effectful_readback_20261008/canonical__runtime__autonomous_verified_self_improvement_v1.py"
+    },
+    "canonical/runtime/universal_verified_adaptive_solver_v1.py": {
+      "git_blob_sha": "c04095ca5aeecc2906c569134bf150d6e7975943",
+      "capsule_path": "capsules/r3_effectful_readback_20261008/canonical__runtime__universal_verified_adaptive_solver_v1.py"
+    },
+    "canonical/tests/test_r3_independent_learning_verifier_v1.py": {
+      "git_blob_sha": "cc82ebe4d4843d7e2f8f6cadd29750f19d0bcb72",
+      "capsule_path": "capsules/r3_effectful_readback_20261008/canonical__tests__test_r3_independent_learning_verifier_v1.py"
+    }
+  },
+  "verified_scope": [
+    "exact copied Python source syntax",
+    "exact _reverify_effect_outcome function success on matching root and bytes",
+    "one-byte drift rejection",
+    "matching-byte root substitution rejection",
+    "missing-root rejection",
+    "solver trace root-binding source presence",
+    "R3 immediate/durable effect-root retention source presence"
+  ],
+  "nonclaims": [
+    "queue-driver file is not published in this capsule",
+    "full private Brain integration is not executed here",
+    "arbitrary network or external-service effects are not covered",
+    "effectful PROVEN_SUPERSET generalization is not authorized"
+  ]
+}
