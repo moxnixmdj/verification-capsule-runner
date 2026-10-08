@@ -1,0 +1,32 @@
+name: Verify current R3 queue driver V2 capsule
+
+on:
+  push:
+    branches: ["r3-queue-driver-v2-capsule-20261008"]
+    paths:
+      - ".github/workflows/verify-r3-queue-driver-v2-capsule.yml"
+      - "capsules/r3_queue_driver_v2_20261008/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blob and execute current queue-driver regressions
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path("capsules/r3_queue_driver_v2_20261008")
+          m=json.loads((root/"manifest.json").read_text())
+          b=(root/"r3_improvement_queue_driver_v1.py").read_bytes()
+          got=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          assert got==m["source_git_blob_sha"], (got,m["source_git_blob_sha"])
+          print("SOURCE_BINDING_PASS",got)
+          PY
+          python capsules/r3_queue_driver_v2_20261008/verify.py
