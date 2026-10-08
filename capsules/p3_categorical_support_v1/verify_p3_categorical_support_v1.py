@@ -98,6 +98,18 @@ class CategoricalKernelTests(unittest.TestCase):
         self.assertEqual(out["relation"],"UNKNOWN")
         self.assertFalse(out["terminal_authority"])
 
+    def test_namespaced_terms_preserved(self):
+        out=parse_relation("ex:Tweety is a member of ex:Bird.")
+        self.assertEqual(out["status"],"RESOLVED")
+        self.assertEqual(out["subject"],"ex:tweety")
+        self.assertEqual(out["category"],"ex:bird")
+        self.assertIsNone(out["source"])
+        prefixed=parse_relation("Taxonomy: ex:Canary is a subclass of ex:Bird.")
+        self.assertEqual(prefixed["status"],"RESOLVED")
+        self.assertEqual(prefixed["subclass"],"ex:canary")
+        self.assertEqual(prefixed["superclass"],"ex:bird")
+        self.assertEqual(prefixed["source"],"Taxonomy")
+
     def test_uncontrolled_every_form_not_claimed(self):
         out=parse_relation("Every canary is a bird.")
         self.assertEqual(out["status"],"UNRESOLVED")
