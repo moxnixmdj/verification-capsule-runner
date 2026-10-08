@@ -5,13 +5,13 @@
   "exact_brain_blobs": {
     "canonical/runtime/bounded_attestation_support_v1.py": "68b47a2526b4fd9bd055c2096b24baacc67968b4",
     "canonical/runtime/bounded_claim_support.py": "197246a50ace8c16b945def9edb1357fb317c393",
-    "canonical/runtime/bounded_explicit_categorical_support_v1.py": "1ae7eda08cf3411e040d44d59fc91b9a9b9bff25",
+    "canonical/runtime/bounded_explicit_categorical_support_v1.py": "c43fef70416b87dbf59ed9d759fcf8596c9f940c",
     "canonical/runtime/bounded_numeric_relation_support_v1.py": "1704da840f821711ce62d6640a6d90777af3a603",
     "canonical/runtime/bounded_source_declared_equivalence_support_v1.py": "d532e11aff1db95b320d29a49eb19eb9567ed2d3",
     "canonical/runtime/explicit_definition_reference_graph.py": "950f073b35b9d7f42c76c518711462f00e89b262",
     "canonical/runtime/p3_real_context_v3_admission_v6.py": "af50c0f355610016f686759962d862a731373441",
     "canonical/runtime/p3_required_claim_grounded_realization_cell_v3.py": "1305a87fec0984a52db1791e9c42314e6faee3c8",
-    "canonical/runtime/selected_support_truth_certificate_v5.py": "eb54ee9746f07dad7dcfc8f165fc0aed95a513d5",
+    "canonical/runtime/selected_support_truth_certificate_v5.py": "2deeeefbd422dcd4a907db1edacc21f024363e26",
     "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "0709b7d43a069eaa9eb3240df28789a9107a36db"
   },
   "expected": {
