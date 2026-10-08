@@ -1,0 +1,32 @@
+{
+  "schema": "PROJECT_BRAIN_R3_ROOT1_ADAPTER_GAP_3350_EXPECTED_BLOBS_V1",
+  "source_repository": "moxnixmdj/brain",
+  "source_ref": "r3-root1-adapter-gap-witness-v2-20261008",
+  "source_pr": 3350,
+  "files": {
+    "canonical/runtime/r3_root1_adapter_gap_witness_v1.py": "d57767f2b0fac0dac1f112dc5dcaf1f9957e2dd9",
+    "canonical/runtime/r3_improvement_queue_driver_v1.py": "1f0b45a405a9c35b2cf00a1c5d8e93c0fac14251",
+    "canonical/runtime/autonomous_verified_self_improvement_v1.py": "84d78909e7282f50a43c589a28a988d0f3f7b9ce",
+    "canonical/runtime/r3_bound_success_adapter_v1.py": "8c73e1ab3486df9ed56fff778ec35401720eb1e7",
+    "canonical/runtime/r3_raw_success_adapter_v1.py": "80a2599a31501db18754e913b763254966b4923e",
+    "canonical/runtime/root1_acquisition_closure_controller_v2.py": "9683d993a99da27dffbb45a30e941e04094e1046",
+    "canonical/runtime/root1_acquisition_closure_controller_v3.py": "7c9ba29c6ba32df782d5d0322dc06b53ea447391",
+    "canonical/runtime/structural_transfer_v3.py": "2c5d854ba88493edcd843ae4ac2994e727319fa7",
+    "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json": "545e6b405e59a77d4fc22049e3e86a286843f63d",
+    "canonical/runtime/r3_independent_learning_verifier_v1.py": "b38b5315ef79a215976144866514cb2a95076c9e",
+    "canonical/runtime/r3_bound_success_checkpoint_verifier_v1.py": "dc1412451d3dbc6747fd51388137a3ac1bba0d4b",
+    "canonical/runtime/r3_raw_success_checkpoint_verifier_v1.py": "3afceda23369a23b2619aabdc8a06f4e749be6c5",
+    "canonical/tests/test_r3_root1_adapter_gap_witness_v1.py": "06aaee9c6a3cc25b4cb8d12175f72806583cef61",
+    "canonical/tests/test_r3_root1_adapter_gap_driver_v1.py": "ad7b7ea7050d17d2456ac5b3bfcd4985c037bec9"
+  },
+  "verification_composition": {
+    "pr3350_candidate_head_sha": "7a554ba50d4165efd39e28252055779ef58bd6c1",
+    "current_main_head_observed": "8b082a3900d2d9e1f9884123dee1b9157a46a094",
+    "dependency_override": {
+      "path": "canonical/runtime/autonomous_verified_self_improvement_v1.py",
+      "source_ref": "main",
+      "git_blob_sha": "84d78909e7282f50a43c589a28a988d0f3f7b9ce"
+    },
+    "all_other_bound_dependencies_match_pr_branch": true
+  }
+}

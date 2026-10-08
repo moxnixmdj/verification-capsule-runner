@@ -1,0 +1,29 @@
+name: Verify Brain PR3350 R3 Root1 adapter gap
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/r3_root1_adapter_gap_3350/**"
+      - ".github/workflows/verify-brain-r3-root1-adapter-gap-3350.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile exact copied Brain control files
+        run: |
+          cd capsules/r3_root1_adapter_gap_3350
+          python -m py_compile             canonical/runtime/r3_root1_adapter_gap_witness_v1.py             canonical/runtime/r3_improvement_queue_driver_v1.py             canonical/runtime/autonomous_verified_self_improvement_v1.py             canonical/runtime/r3_bound_success_adapter_v1.py             canonical/runtime/r3_raw_success_adapter_v1.py             canonical/runtime/root1_acquisition_closure_controller_v2.py             canonical/runtime/root1_acquisition_closure_controller_v3.py             canonical/runtime/structural_transfer_v3.py
+      - name: Verify exact Brain blobs and run focused falsification
+        run: |
+          cd capsules/r3_root1_adapter_gap_3350
+          python run_capsule_tests.py
