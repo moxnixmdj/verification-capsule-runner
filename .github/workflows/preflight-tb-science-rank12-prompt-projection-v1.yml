@@ -26,8 +26,8 @@ jobs:
         run: |
           set -euo pipefail
           C=capsules/tb_science_rank12_20261008_v1
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "9b651589733a54b4144aad5c68be7cb8bdd8a8d5"
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "cc77666f5d1231c356e36362181f375f7336d514"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "884ffe310aa66670a68b6596418f0e22d5f18d5c"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "0698ed709431b553a43da5f21999d3834ac7cf8e"
           test ! -e "$C/ACTIVATE_RANK12_PR.json"
 
       - name: Clean-build exact llama.cpp
