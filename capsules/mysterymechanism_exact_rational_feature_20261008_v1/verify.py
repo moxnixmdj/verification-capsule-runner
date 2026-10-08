@@ -8,7 +8,7 @@ TESTS=ROOT/"canonical/tests/test_exact_rational_symbolic_feature_v1.py"
 GOV=ROOT/"canonical/governance/MYSTERYMECHANISM_EXACT_RATIONAL_SYMBOLIC_FEATURE_20261008_V1.json"
 EXPECTED={
  RUNTIME:"d90110a54f80c1d0d6e6c3baa443f8c057da42ca",
- TESTS:"f21b1f51bb25de1713d7079a78cba38878a0a269",
+ TESTS:"55e0b8ae688bbfc7ee1331c56cd4827bdac74598",
  GOV:"b783c6f91255cce73e3aed0a9c4a15da134b059f",
 }
 def blob(path):
