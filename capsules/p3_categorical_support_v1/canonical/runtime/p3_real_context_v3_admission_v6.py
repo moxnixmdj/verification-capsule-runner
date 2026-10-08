@@ -15,7 +15,10 @@ from typing import Any, Mapping
 
 from canonical.runtime.p3_mechanically_closed_common_policy_cell_v1 import evaluate as evaluate_closed_cell
 from canonical.runtime.p3_explicit_weighted_salience_cell_v1 import evaluate as evaluate_weighted_cell
-from canonical.runtime.p3_required_claim_grounded_realization_cell_v3 import evaluate as evaluate_required_realization
+from canonical.runtime.p3_required_claim_grounded_realization_cell_v3 import (
+    evaluate as evaluate_required_realization,
+    validate_v3_contract_surface,
+)
 from canonical.runtime.p3_real_context_v3_admission_v2 import evaluate as evaluate_v2
 
 SCHEMA="PROJECT_BRAIN_P3_REAL_CONTEXT_V3_ADMISSION_V6"
@@ -57,10 +60,42 @@ def _required_boundary_ok(r:Mapping[str,Any])->bool:
 
 def evaluate(payload:Mapping[str,Any])->dict[str,Any]:
     if not isinstance(payload,Mapping):return _fail("PAYLOAD_MAPPING_REQUIRED")
+    if set(payload)-{"context_id","v3_input","objective_weights","semantic_certificates"}:
+        return _fail("UNMODELED_REAL_CONTEXT_ADMISSION_FIELDS")
     context_id=payload.get("context_id")
     if not isinstance(context_id,str) or not context_id.strip():return _fail("CONTEXT_ID_REQUIRED")
     v3_input=payload.get("v3_input")
     if not isinstance(v3_input,Mapping):return _fail("V3_INPUT_REQUIRED")
+    contract_failure=validate_v3_contract_surface(v3_input)
+    if contract_failure is not None:return _fail(contract_failure)
+
+    # Explicit objective weights are binding on selection AND output order.
+    # Never take an unweighted shortcut while a weighted contract is present.
+    weighted=None
+    if "objective_weights" in payload:
+        weights=payload["objective_weights"]
+        if not isinstance(weights,Mapping):
+            return _fail("OBJECTIVE_WEIGHTS_INVALID")
+        weighted=evaluate_weighted_cell({"v3_input":v3_input,"objective_weights":weights})
+        if weighted.get("pass") is not True:
+            return _fail(
+                "OBJECTIVE_WEIGHTS_UNSATISFIED",
+                weighted_reason=weighted.get("reason") or weighted.get("status"),
+            )
+        if not _legacy_boundary_ok(weighted):
+            return _fail("WEIGHTED_CELL_AUTHORITY_BOUNDARY_INVALID")
+        return {
+          "schema":SCHEMA,"pass":True,
+          "status":"PASS__P3_REAL_CONTEXT_EXPLICIT_WEIGHT_FAST_PATH",
+          "route":"EXPLICIT_WEIGHTED_SALIENCE_CELL_V1","context_id":context_id,
+          "selected_claim_ids":list(weighted.get("selected_claim_ids") or []),
+          "claim_order":list(weighted.get("claim_order") or []),
+          "objective_value":weighted.get("objective_value"),
+          "v3_admission_authorized":True,"p3_contract_cell_authorized":True,"top_law_eligible":True,
+          "source_authorization_verified":False,"policy_adequacy_authority":False,
+          "db_admission_authority":False,"u_subtraction_authority":False,
+          "terminal_authority":False,"terminal_credit_delta":0,"route_receipt":weighted,
+        }
 
     closed=evaluate_closed_cell({"v3_input":v3_input})
     if closed.get("pass") is True:
@@ -74,25 +109,6 @@ def evaluate(payload:Mapping[str,Any])->dict[str,Any]:
           "db_admission_authority":False,"u_subtraction_authority":False,
           "terminal_authority":False,"terminal_credit_delta":0,"route_receipt":closed,
         }
-
-    weights=payload.get("objective_weights")
-    weighted=None
-    if isinstance(weights,Mapping):
-        weighted=evaluate_weighted_cell({"v3_input":v3_input,"objective_weights":weights})
-        if weighted.get("pass") is True:
-            if not _legacy_boundary_ok(weighted):return _fail("WEIGHTED_CELL_AUTHORITY_BOUNDARY_INVALID")
-            return {
-              "schema":SCHEMA,"pass":True,
-              "status":"PASS__P3_REAL_CONTEXT_EXPLICIT_WEIGHT_FAST_PATH",
-              "route":"EXPLICIT_WEIGHTED_SALIENCE_CELL_V1","context_id":context_id,
-              "selected_claim_ids":list(weighted.get("selected_claim_ids") or []),
-              "claim_order":list(weighted.get("claim_order") or []),
-              "objective_value":weighted.get("objective_value"),
-              "v3_admission_authorized":True,"p3_contract_cell_authorized":True,"top_law_eligible":True,
-              "source_authorization_verified":False,"policy_adequacy_authority":False,
-              "db_admission_authority":False,"u_subtraction_authority":False,
-              "terminal_authority":False,"terminal_credit_delta":0,"route_receipt":weighted,
-            }
 
     required=evaluate_required_realization({"v3_input":v3_input})
     if required.get("pass") is True:
