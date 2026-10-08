@@ -12,7 +12,12 @@
     "canonical/runtime/p3_real_context_v3_admission_v6.py": "af50c0f355610016f686759962d862a731373441",
     "canonical/runtime/p3_required_claim_grounded_realization_cell_v3.py": "1305a87fec0984a52db1791e9c42314e6faee3c8",
     "canonical/runtime/selected_support_truth_certificate_v5.py": "2deeeefbd422dcd4a907db1edacc21f024363e26",
-    "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "0709b7d43a069eaa9eb3240df28789a9107a36db"
+    "canonical/runtime/synthesis_grounded_expression_ir_v1.py": "0709b7d43a069eaa9eb3240df28789a9107a36db",
+    "canonical/runtime/synthesis_certified_visible_support_policy_v2.py": "14c7b3f99b6c28b3f28b5356e13907f843f5ee91",
+    "canonical/runtime/synthesis_certified_visible_support_policy_v3.py": "cd81b812f30b46b9889826adbc39df8690bdb40d",
+    "canonical/runtime/p3_mechanically_closed_common_policy_cell_v1.py": "66ce574da0cc8098d7aba8bb26bd18e36fe9784e",
+    "canonical/runtime/p3_explicit_weighted_salience_cell_v1.py": "d06eb50d5247a3ed7bfcc0f10df2c223230bf3b7",
+    "canonical/runtime/p3_real_context_v3_admission_v2.py": "c4728d43a903acb62c6f8c5b0877d99ab12cd844"
   },
   "expected": {
     "categorical_schema": "PROJECT_BRAIN_BOUNDED_EXPLICIT_CATEGORICAL_SUPPORT_V1",
