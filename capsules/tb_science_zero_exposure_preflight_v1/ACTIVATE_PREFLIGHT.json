@@ -1,0 +1,21 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_ZERO_EXPOSURE_PREFLIGHT_ACTIVATION_V1",
+  "date": "2026-10-08",
+  "status": "ACTIVATE_ZERO_BENCHMARK_EXPOSURE_PREFLIGHT_ONLY",
+  "benchmark_task_exposure_authorized": 0,
+  "benchmark_trials_authorized": 0,
+  "exact_brain_blobs": {
+    "planner": "2e9b817c65cb25e17bc61f0a78cc9d9c271da644",
+    "command_policy": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "preflight": "4a024bf03eacd41d5c893a9c8dd87de772935e7d"
+  },
+  "exact_route": {
+    "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "context_tokens": 8192,
+    "threads": 4,
+    "parallel": 1
+  },
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
