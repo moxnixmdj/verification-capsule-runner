@@ -5,6 +5,8 @@ import unittest
 from canonical.runtime.bounded_explicit_categorical_support_v1 import classify_support, parse_relation
 from canonical.runtime.selected_support_truth_certificate_v5 import evaluate as support_truth
 from canonical.runtime.p3_required_claim_grounded_realization_cell_v3 import evaluate as realize
+from canonical.runtime.p3_real_context_v3_admission_v6 import evaluate as admit
+from canonical.runtime.synthesis_certified_visible_support_policy_v3 import INPUT_SCHEMA as V3_INPUT_SCHEMA
 from canonical.runtime.synthesis_grounded_expression_ir_v1 import INPUT_SCHEMA
 
 def ev(i,text,source=None):
@@ -215,3 +217,33 @@ class AdmissionStaticBoundaryTests(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main(verbosity=2)
+
+
+class AdmissionExecutionTests(unittest.TestCase):
+    def test_categorical_route_executes_through_v6_front_door(self):
+        public={
+          "schema":V3_INPUT_SCHEMA,
+          "task":{
+            "claims":[{"claim_id":"C1","text":"Tweety is a member of Animal.","required":True}],
+            "evidence":[
+              ev("E1","Report states that Tweety is a member of Canary.","REPORT"),
+              ev("E2","Taxonomy states that Canary is a subclass of Bird.","TAX"),
+              ev("E3","Taxonomy states that Bird is a subclass of Animal.","TAX"),
+            ],
+            "audience_profile":{"profile_id":"EXPLICIT","constraints":constraints()},
+            "required_uncertainty_units":[],
+          },
+        }
+        out=admit({"context_id":"categorical-e2e","v3_input":public})
+        self.assertTrue(out["pass"],out)
+        self.assertEqual(out["route"],"REQUIRED_SUPPORT_V5_REALIZATION_CELL_V3")
+        self.assertEqual(out["rendered_text"],"- Tweety is a member of Animal. [src:REPORT@p1;TAX@p1]")
+        self.assertFalse(out["v3_admission_authorized"])
+        self.assertTrue(out["p3_contract_cell_authorized"])
+        self.assertFalse(out["top_law_eligible"])
+        self.assertFalse(out["source_authorization_verified"])
+        self.assertFalse(out["policy_adequacy_authority"])
+        self.assertFalse(out["db_admission_authority"])
+        self.assertFalse(out["u_subtraction_authority"])
+        self.assertFalse(out["terminal_authority"])
+        self.assertEqual(out["terminal_credit_delta"],0)
