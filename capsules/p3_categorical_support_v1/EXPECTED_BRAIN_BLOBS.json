@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_P3_CATEGORICAL_SUPPORT_PUBLIC_VERIFIER_INPUT_V1",
   "brain_repository": "moxnixmdj/brain",
-  "brain_ref": "p3-categorical-support-v1-20261008",
+  "brain_ref": "762fb0c158afd37121342406a78af7c4c30fc8de",
   "exact_brain_blobs": {
     "canonical/runtime/bounded_attestation_support_v1.py": "68b47a2526b4fd9bd055c2096b24baacc67968b4",
     "canonical/runtime/bounded_claim_support.py": "197246a50ace8c16b945def9edb1357fb317c393",
@@ -29,5 +29,6 @@
     "grounded_schema": "PROJECT_BRAIN_P3_REQUIRED_CLAIM_GROUNDED_REALIZATION_CELL_V3",
     "admission_schema": "PROJECT_BRAIN_P3_REAL_CONTEXT_V3_ADMISSION_V6",
     "terminal_authority": false
-  }
+  },
+  "brain_candidate_commit": "762fb0c158afd37121342406a78af7c4c30fc8de"
 }
