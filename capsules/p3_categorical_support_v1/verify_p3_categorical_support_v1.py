@@ -136,6 +136,67 @@ class CategoricalKernelTests(unittest.TestCase):
         self.assertEqual(out["status"],"UNRESOLVED")
         self.assertFalse(out["claim_in_scope"])
 
+class ExhaustiveFiniteSetSemanticsTests(unittest.TestCase):
+    def test_exhaustive_three_class_three_individual_set_semantics(self):
+        classes=("A","B","C")
+        individuals=("X0","X1","X2")
+        universe=set(individuals)
+        subsets=[]
+        for mask in range(1 << len(individuals)):
+            subsets.append({individuals[i] for i in range(len(individuals)) if mask & (1 << i)})
+
+        checked_worlds=0
+        checked_claims=0
+        for a in subsets:
+          for b in subsets:
+            for c in subsets:
+              ext={"A":a,"B":b,"C":c}
+              evidence=[]
+              n=0
+              for x in individuals:
+                for cls in classes:
+                  n+=1
+                  if x in ext[cls]:
+                    text=f"T states that {x} is a member of {cls}."
+                  else:
+                    text=f"T states that {x} is not a member of {cls}."
+                  evidence.append({"evidence_id":f"E{n}","text":text})
+              for sub in classes:
+                for sup in classes:
+                  n+=1
+                  if ext[sub] <= ext[sup]:
+                    text=f"T states that {sub} is a subclass of {sup}."
+                  else:
+                    text=f"T states that {sub} is not a subclass of {sup}."
+                  evidence.append({"evidence_id":f"E{n}","text":text})
+
+              for x in individuals:
+                for cls in classes:
+                  truth=x in ext[cls]
+                  pos=classify_support(f"{x} is a member of {cls}.",evidence)
+                  neg=classify_support(f"{x} is not a member of {cls}.",evidence)
+                  self.assertEqual(pos["relation"],"SUPPORTS" if truth else "CONFLICTS",(ext,x,cls,pos))
+                  self.assertEqual(neg["relation"],"CONFLICTS" if truth else "SUPPORTS",(ext,x,cls,neg))
+                  checked_claims+=2
+
+              for sub in classes:
+                for sup in classes:
+                  truth=ext[sub] <= ext[sup]
+                  pos=classify_support(f"{sub} is a subclass of {sup}.",evidence)
+                  neg=classify_support(f"{sub} is not a subclass of {sup}.",evidence)
+                  self.assertEqual(pos["relation"],"SUPPORTS" if truth else "CONFLICTS",(ext,sub,sup,pos))
+                  if sub == sup:
+                    self.assertEqual(neg["status"],"UNRESOLVED",(ext,sub,sup,neg))
+                    self.assertEqual(neg["relation"],"UNKNOWN",(ext,sub,sup,neg))
+                  else:
+                    self.assertEqual(neg["relation"],"CONFLICTS" if truth else "SUPPORTS",(ext,sub,sup,neg))
+                  checked_claims+=2
+
+              checked_worlds+=1
+
+        self.assertEqual(checked_worlds,512)
+        self.assertEqual(checked_claims,18432)
+
 class SupportPortfolioTests(unittest.TestCase):
     def test_transitive_categorical_support_enters_v5(self):
         out=support_truth(support_payload("Tweety is a member of Animal.",[
