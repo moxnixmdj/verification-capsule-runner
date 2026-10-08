@@ -1,0 +1,72 @@
+name: Preflight exact pinned llama-server build cache v1
+
+on:
+  pull_request:
+    branches: ["terminal-execution-v1"]
+    paths: [".github/workflows/preflight-exact-llama-server-build-cache-v1.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  seed-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore immutable exact build cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: llama.cpp/build
+          key: llama-server-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu24-x86_64-gcc13-cpu-release-v1
+
+      - name: Fetch exact source
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+
+      - name: Build only on cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Verify restored or fresh binary against exact source identity
+        run: |
+          set -euo pipefail
+          test -x llama.cpp/build/bin/llama-server
+          sha256sum llama.cpp/build/bin/llama-server | tee LLAMA_SERVER_SHA256.txt
+          llama.cpp/build/bin/llama-server --version 2>&1 | tee LLAMA_SERVER_VERSION.txt
+          grep -qi 'bec4772' LLAMA_SERVER_VERSION.txt
+          python - <<'PY'
+          import json,pathlib,platform,subprocess
+          receipt={
+            "schema":"PROJECT_BRAIN_EXACT_LLAMA_SERVER_BUILD_CACHE_PREFLIGHT_V1",
+            "source_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+            "cache_key":"llama-server-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu24-x86_64-gcc13-cpu-release-v1",
+            "binary_sha256":pathlib.Path("LLAMA_SERVER_SHA256.txt").read_text().split()[0],
+            "version":pathlib.Path("LLAMA_SERVER_VERSION.txt").read_text().strip(),
+            "source_head":subprocess.check_output(["git","-C","llama.cpp","rev-parse","HEAD"],text=True).strip(),
+            "machine":platform.machine(),
+            "benchmark_task_exposure":0,
+            "incremental_spend_usd":0
+          }
+          assert receipt["source_head"]==receipt["source_commit"]
+          assert "bec4772" in receipt["version"].lower()
+          pathlib.Path("LLAMA_SERVER_CACHE_PREFLIGHT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exact-llama-server-build-cache-preflight-v1
+          path: |
+            LLAMA_SERVER_CACHE_PREFLIGHT.json
+            LLAMA_SERVER_SHA256.txt
+            LLAMA_SERVER_VERSION.txt
+          retention-days: 7
