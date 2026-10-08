@@ -49,7 +49,7 @@ def main():
 
  # Fresh 4: tree shape is exact, not permissive.
  out=rt.compile_basis({"trees":[{"op":"var","name":"x","junk":1}],"rows":[{"x":"1"}]})
- req(out["pass"] is False and "VAR_TREE_EXTRA_FIELDS" in out.get("detail",""),"extra tree semantics silently ignored")
+ req(out["pass"] is False and "VAR_TREE_EXTRA_FIELDS" in out.get("detail",{}).get("detail",""),"extra tree semantics silently ignored")
 
  # Fresh 5: exact rational query path.
  out=rt.compile_basis({
