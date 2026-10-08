@@ -1,0 +1,157 @@
+name: Preflight TB-Science explicit output directive live v1
+
+on:
+  pull_request:
+    branches: ["terminal-execution-v1"]
+    paths:
+      - ".github/workflows/preflight-tb-science-output-directive-live-v1.yml"
+      - "capsules/tb_science_rank11_20261008_v1/canonical/runtime/harbor_science_agent_v1.py"
+      - "capsules/tb_science_rank11_20261008_v1/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261008_V4.json"
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-live-planner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Exact repaired carrier gate
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank11_20261008_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "7ce3fd53df4577929bfc046dc397fe0f12bce5c0"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261008_V4.json")" = "cf9cc9fb8830eda991c71381a523b8f67caedaa7"
+          python - <<'PY'
+          import json, pathlib, subprocess
+          C=pathlib.Path("capsules/tb_science_rank11_20261008_v1")
+          m=json.loads((C/"TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261008_V4.json").read_text())
+          assert m["closure_file_count"]==14
+          for row in m["closure"]:
+              p=C/row["path"]
+              assert p.is_file(), row["path"]
+              actual=subprocess.check_output(["git","hash-object",str(p)],text=True).strip()
+              assert actual==row["git_blob_sha"],(row["path"],actual,row["git_blob_sha"])
+          PY
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire and verify exact Qwen model if needed
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+              -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+              'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local cognition endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 \
+            -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" \
+            > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Run zero-benchmark-exposure synthetic output preflight
+        env:
+          PYTHONPATH: capsules/tb_science_rank11_20261008_v1
+        run: |
+          set -euo pipefail
+          rm -f /tmp/brain_output_probe.txt
+          python - <<'PY'
+          import asyncio, json, pathlib
+          from types import SimpleNamespace
+          from canonical.runtime.harbor_science_agent_v1 import run_science_goal
+
+          class LocalEnvironment:
+              async def exec(self, command, timeout_sec=None, **kwargs):
+                  proc=await asyncio.create_subprocess_shell(
+                      command,
+                      stdout=asyncio.subprocess.PIPE,
+                      stderr=asyncio.subprocess.PIPE,
+                  )
+                  try:
+                      out,err=await asyncio.wait_for(proc.communicate(), timeout=timeout_sec or 120)
+                  except asyncio.TimeoutError:
+                      proc.kill()
+                      await proc.wait()
+                      return SimpleNamespace(returncode=124,stdout="",stderr="TIMEOUT")
+                  return SimpleNamespace(
+                      returncode=proc.returncode,
+                      stdout=out.decode("utf-8","replace"),
+                      stderr=err.decode("utf-8","replace"),
+                  )
+
+          goal=(
+              "Create a plain text file containing exactly BRAIN_OK and no other text. "
+              "Write the result to /tmp/brain_output_probe.txt."
+          )
+          result=asyncio.run(run_science_goal(goal,LocalEnvironment(),max_cycles=4))
+          p=pathlib.Path("/tmp/brain_output_probe.txt")
+          receipt={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_EXPLICIT_OUTPUT_DIRECTIVE_LIVE_PREFLIGHT_V1",
+              "status":result.get("status"),
+              "brain_mandated_deliverables":result.get("brain_mandated_deliverables"),
+              "resolved_requirements":result.get("resolved_requirements"),
+              "cycles":result.get("cycles"),
+              "path_exists":p.is_file(),
+              "path_content":p.read_text().strip() if p.is_file() else None,
+              "task_completion_claimed":result.get("task_completion_claimed"),
+              "fresh_benchmark_task_exposure":0,
+              "incremental_spend_usd":0,
+          }
+          pathlib.Path("TB_SCIENCE_OUTPUT_DIRECTIVE_LIVE_PREFLIGHT_RESULT.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          assert result["brain_mandated_deliverables"]=={
+              "BRAIN_DELIVERABLE_01":"/tmp/brain_output_probe.txt"
+          }, receipt
+          assert p.is_file(), receipt
+          assert p.read_text().strip()=="BRAIN_OK", receipt
+          assert "BRAIN_DELIVERABLE_01" in result["resolved_requirements"], receipt
+          assert result["status"]=="SUBMISSION_READY__RAW_TASK_ACCEPTANCE_PENDING_EXTERNAL_INDEPENDENT_VERIFIER", receipt
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-output-directive-live-preflight-v1
+          path: |
+            TB_SCIENCE_OUTPUT_DIRECTIVE_LIVE_PREFLIGHT_RESULT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 7
