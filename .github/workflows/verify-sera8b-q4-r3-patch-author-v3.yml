@@ -1,0 +1,114 @@
+name: Verify SERA8B Q4 R3 patch author V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'verify_sera8b_q4_r3_patch_author_v3.py'
+      - '.github/workflows/verify-sera8b-q4-r3-patch-author-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MODEL_REPO: bartowski/allenai_SERA-8B-GGUF
+  MODEL_REV: d33c5028a268bc02874733215a52a6b68e99fe67
+  MODEL_FILE: allenai_SERA-8B-Q4_K_M.gguf
+  MODEL_BYTES: '5027783840'
+  MODEL_SHA256: 3df33df4dc90d1dd69ce99b182cfab056b43e87a4f8186b98e247859e124dfda
+  MODEL_URL: https://huggingface.co/bartowski/allenai_SERA-8B-GGUF/resolve/d33c5028a268bc02874733215a52a6b68e99fe67/allenai_SERA-8B-Q4_K_M.gguf
+  LLAMA_COMMIT: 0504396140d1c882f5f6ee34466a42db7ae90114
+  SERA_MODEL: allenai_SERA-8B-Q4_K_M.gguf
+  SERA_ENDPOINT: http://127.0.0.1:8080/v1/chat/completions
+  SERA_SEED: '424242'
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify public zero-cost runner geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          nproc
+          free -h
+          df -h .
+          test "$(free -g | awk '/^Mem:/ {print $2}')" -ge 15
+          test "$(df -BG . | awk 'NR==2 {gsub(/G/,"",$4); print $4}')" -ge 10
+
+      - name: Download and verify exact transformed subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 6 --retry-delay 2 --retry-all-errors --connect-timeout 30             -o "$MODEL_FILE" "$MODEL_URL"
+          test "$(stat -c '%s' "$MODEL_FILE")" = "$MODEL_BYTES"
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_FILE" | sha256sum -c -
+
+      - name: Build exact frozen llama.cpp runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_COMMIT"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_COMMIT"
+          cmake -S llama.cpp -B llama.cpp/build             -DCMAKE_BUILD_TYPE=Release             -DGGML_NATIVE=OFF             -DLLAMA_CURL=OFF
+          cmake --build llama.cpp/build --config Release -j 4 --target llama-server
+
+      - name: Start exact local SERA Q4 subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./llama.cpp/build/bin/llama-server             -m "$MODEL_FILE"             -c 4096             -t 4             -np 1             --host 127.0.0.1             --port 8080             > sera_server_v3.log 2>&1 &
+          echo "$!" > sera_server_v3.pid
+          ready=0
+          for _ in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$(cat sera_server_v3.pid)" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if test "$ready" != "1"; then
+            cat sera_server_v3.log
+            exit 1
+          fi
+          curl -fsS http://127.0.0.1:8080/health
+          grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat sera_server_v3.pid)/status" || true
+
+      - name: Execute wrapper-firewall-separated R3 qualification V3
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 verify_sera8b_q4_r3_patch_author_v3.py
+
+      - name: Print qualification evidence
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          test -f sera8b_q4_r3_patch_author_v3_receipt.json && cat sera8b_q4_r3_patch_author_v3_receipt.json || true
+          if test -f sera_server_v3.pid && kill -0 "$(cat sera_server_v3.pid)" 2>/dev/null; then
+            echo "SERVER_MEMORY:"
+            grep -E 'VmPeak|VmHWM|VmRSS' "/proc/$(cat sera_server_v3.pid)/status" || true
+            kill "$(cat sera_server_v3.pid)" || true
+          fi
+          echo "SERVER_LOG_TAIL:"
+          tail -n 120 sera_server_v3.log 2>/dev/null || true
+
+      - name: Upload qualification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sera8b-q4-r3-patch-author-v3-qualification
+          path: sera8b_q4_r3_patch_author_v3_receipt.json
+          if-no-files-found: warn
+          retention-days: 30
