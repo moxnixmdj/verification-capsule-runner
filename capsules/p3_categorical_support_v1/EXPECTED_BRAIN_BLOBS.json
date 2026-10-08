@@ -5,7 +5,7 @@
   "exact_brain_blobs": {
     "canonical/runtime/bounded_attestation_support_v1.py": "68b47a2526b4fd9bd055c2096b24baacc67968b4",
     "canonical/runtime/bounded_claim_support.py": "197246a50ace8c16b945def9edb1357fb317c393",
-    "canonical/runtime/bounded_explicit_categorical_support_v1.py": "d3d0820e188f45714eefad333b8be236230c2f8f",
+    "canonical/runtime/bounded_explicit_categorical_support_v1.py": "54f1a7a1518dd5b0abe178a51e9d2d4dc6318bbd",
     "canonical/runtime/bounded_numeric_relation_support_v1.py": "1704da840f821711ce62d6640a6d90777af3a603",
     "canonical/runtime/bounded_source_declared_equivalence_support_v1.py": "d532e11aff1db95b320d29a49eb19eb9567ed2d3",
     "canonical/runtime/explicit_definition_reference_graph.py": "950f073b35b9d7f42c76c518711462f00e89b262",
