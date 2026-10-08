@@ -1,0 +1,33 @@
+name: Verify R3 current-evidence disposition
+
+on:
+  push:
+    branches: ["r3-current-evidence-disposition-capsule-20261008"]
+    paths:
+      - ".github/workflows/verify-r3-current-evidence-disposition.yml"
+      - "capsules/r3_current_evidence_disposition_20261008/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Bind exact Brain blob and execute disposition regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path("capsules/r3_current_evidence_disposition_20261008")
+          m=json.loads((root/"manifest.json").read_text())
+          b=(root/"r3_improvement_queue_driver_v1.py").read_bytes()
+          got=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\0"+b).hexdigest()
+          assert got==m["source_git_blob_sha"], (got,m["source_git_blob_sha"])
+          print("SOURCE_BINDING_PASS",got)
+          PY
+          python capsules/r3_current_evidence_disposition_20261008/verify.py
