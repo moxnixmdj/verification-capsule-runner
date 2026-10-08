@@ -30,7 +30,11 @@ jobs:
           pdftotext -layout /tmp/opus55.pdf /tmp/opus55.txt
 
           python3 - <<'PY'
-          import hashlib, json, math, pathlib, re
+          import hashlib
+          import json
+          import math
+          import pathlib
+          import re
 
           pdf = pathlib.Path('/tmp/opus55.pdf').read_bytes()
           text = pathlib.Path('/tmp/opus55.txt').read_text(encoding='utf-8', errors='replace')
@@ -38,6 +42,12 @@ jobs:
           assert sha == '7311c9c6bbb16d012f1c12c7418b05949fcf7ae3e30d2c40f22050074b2a7378'
 
           flat = ' '.join(text.split())
+
+          # Prove the rounded 66.4 summary alias occurs in the same exact owner PDF.
+          summary_hits = list(re.finditer(r'Terminal-Bench\s+4\.0.{0,1500}?66\.4(?![0-9])', flat, flags=re.I))
+          assert summary_hits, 'MISSING_SUMMARY_66_4_ALIAS'
+
+          # Select the actual section heading, not the table-of-contents occurrence.
           heads = list(re.finditer(r'8\.5\s+Terminal-Bench\s+4\.0', flat, flags=re.I))
           assert heads, 'MISSING_TERMINAL_BENCH_4_SECTION'
           m = heads[-1]
@@ -55,33 +65,37 @@ jobs:
           score_218 = 100 * 218 / slots
           score_219 = 100 * 219 / slots
           score_220 = 100 * 220 / slots
+
           assert slots == 330
           assert score_218 < 66.36 <= score_219
           assert score_219 < 66.4 <= score_220
           assert round(score_219, 2) == 66.36
           assert round(score_219, 1) == 66.4
+          assert round(66.36, 1) == 66.4
           assert math.ceil(0.6636 * slots) == 219
           assert math.ceil(0.6640 * slots) == 220
 
           out = {
-            'schema':'PROJECT_BRAIN_TB4_OPUS55_TARGET_PRECISION_PUBLIC_RUNNER_V1',
-            'owner_pdf_sha256':sha,
-            'section':'8.5 Terminal-Bench 4.0',
-            'owner_summary_alias_percent':66.4,\n            'owner_detailed_score_percent':66.36,\n            'same_owner_pdf_contains_summary_alias_and_detailed_value':True,
-            'task_count':66,
-            'trials_per_task':5,
-            'trial_slots':330,
-            'successes_218_percent':score_218,
-            'successes_219_percent':score_219,
-            'successes_220_percent':score_220,
-            'minimum_successes_for_owner_detailed_66_36':219,
-            'minimum_successes_for_strict_raw_66_4':220,
-            'round_219_to_2dp':round(score_219,2),
-            'round_219_to_1dp':round(score_219,1),
-            'terminal_cases_consumed':0,
-            'incremental_spend_usd':0,
-            'acceptance_credit_delta':0,
-            'verdict':'PASS_OWNER_BYTES_SECTION_AND_ARITHMETIC__GOVERNANCE_PROMOTION_REMAINS_SEPARATE'
+              'schema': 'PROJECT_BRAIN_TB4_OPUS55_TARGET_PRECISION_PUBLIC_RUNNER_V2',
+              'owner_pdf_sha256': sha,
+              'section': '8.5 Terminal-Bench 4.0',
+              'owner_summary_alias_percent': 66.4,
+              'owner_detailed_score_percent': 66.36,
+              'same_owner_pdf_contains_summary_alias_and_detailed_value': True,
+              'task_count': 66,
+              'trials_per_task': 5,
+              'trial_slots': 330,
+              'successes_218_percent': score_218,
+              'successes_219_percent': score_219,
+              'successes_220_percent': score_220,
+              'minimum_successes_for_owner_detailed_66_36': 219,
+              'minimum_successes_for_strict_raw_66_4': 220,
+              'round_219_to_2dp': round(score_219, 2),
+              'round_219_to_1dp': round(score_219, 1),
+              'terminal_cases_consumed': 0,
+              'incremental_spend_usd': 0,
+              'acceptance_credit_delta': 0,
+              'verdict': 'PASS_SAME_OWNER_BYTES_SUMMARY_DETAIL_AND_ARITHMETIC__GOVERNANCE_PROMOTION_REMAINS_SEPARATE',
           }
           print(json.dumps(out, indent=2, sort_keys=True))
           PY
