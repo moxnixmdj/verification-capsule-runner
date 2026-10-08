@@ -1,0 +1,20 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK11_ACTIVATION_V1",
+  "date": "2026-10-08",
+  "status": "ACTIVATE_EXACTLY_ONE_AUTHORIZED_RANK11_ATTEMPT",
+  "slot_id": "terminal-bench-science/supraglacial-lake-classification::trial-0",
+  "task_digest": "sha256:4a57227f84340ff6e245c3f2efeb8dfb6fb44a89713223d8742433dd569f9e3a",
+  "authority_git_blob_sha": "cdb7d5c6fe7fa028b557077a694346e64bafc434",
+  "intent_git_blob_sha": "91d29a0de0df505af85b8a0d3050cb3fce1e9dc1",
+  "execution_claim_git_blob_sha": "60b63e712e16843e4f22242522c9b5fe032d0e8b",
+  "epoch_git_blob_sha": "659b11f3ffe42c5c24025727145baf3c220719e8",
+  "authority_verification_git_blob_sha": "4f3fcd9df21b793bcf719de8db709b6dad829324",
+  "authority_verification_provider": "SPRITES",
+  "authority_verification_sprite_id": "sprite-5c9d5b63-1140-41a5-b9f0-1b9f6f29db9e",
+  "execution_branch": "execute/tb-science-rank11-20261008-v1",
+  "execution_base": "terminal-execution-v1",
+  "attempts": 1,
+  "retries": 0,
+  "incremental_spend_usd_max": 0,
+  "terminal_credit": false
+}
