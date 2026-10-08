@@ -23,5 +23,6 @@
     "dependency_edge_verified": true
   },
   "acceptance_credit_delta": 0,
-  "terminal_credit_delta": 0
+  "terminal_credit_delta": 0,
+  "activation_trigger": "PULL_REQUEST_SYNCHRONIZE_AFTER_WORKFLOW_PRESENT_V1"
 }
