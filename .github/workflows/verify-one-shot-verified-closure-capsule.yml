@@ -25,7 +25,7 @@ jobs:
           expected = {
             "capsules/one_shot_verified_closure_v1/canonical/runtime/root1_default_acquisition_provider_v1.py": "1e1345544bea51caa8f661d08c964abb88418a23",
             "capsules/one_shot_verified_closure_v1/canonical/runtime/one_shot_verified_closure_v1.py": "a89c6f10f15904780277da65ac69f8ecbde6330c",
-            "capsules/one_shot_verified_closure_v1/canonical/tests/test_one_shot_verified_closure_v1.py": "67445849d2ce9cb34cdd291b841b66142a498309",
+            "capsules/one_shot_verified_closure_v1/canonical/tests/test_one_shot_verified_closure_v1.py": "85d721b5c538479ec7e2a57156463841e71db447",
           }
           for path, want in expected.items():
               got = subprocess.check_output(["git", "hash-object", path], text=True).strip()
