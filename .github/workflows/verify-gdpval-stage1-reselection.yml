@@ -20,29 +20,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Compute metadata-only replacement selection
+      - name: Select task and package safe prompt/reference bundle
         run: |
           set -euo pipefail
           mkdir -p verification-output
-          python scripts/gdpval_stage1_reselection.py | tee verification-output/result.json
-      - name: Validate no terminal credit
+          python scripts/gdpval_stage1_reselection.py
+      - name: Validate contamination firewall and zero credit
         run: |
           python - <<'PY'
-          import json
+          import json, pathlib
           x=json.load(open("verification-output/result.json"))
-          assert x["status"].startswith("PASS__"), x
-          replay=x["selection_rule_replay"]
-          assert replay.get("exact_match", replay.get("original_exact_match")) is True, x
-          if "first_repaired_xlsx_exact_match" in replay:
-              assert replay["first_repaired_xlsx_exact_match"] is True, x
-          assert x["privacy_and_contamination_boundary"]["prompt_used"] is False, x
-          assert x["privacy_and_contamination_boundary"]["rubric_used"] is False, x
-          assert x["privacy_and_contamination_boundary"]["gold_deliverable_content_used"] is False, x
-          assert x["privacy_and_contamination_boundary"]["prior_model_submission_used"] is False, x
+          assert x["status"]=="PASS__THIRD_XLSX_SELECTED__SAFE_PROMPT_AND_REFERENCES_PACKAGED", x
+          assert x["original_selector_exact_replay"] is True, x
+          assert x["first_xlsx_exact_replay"] is True, x
+          assert x["second_xlsx_exact_replay"] is True, x
+          assert x["prompt_printed_to_log"] is False, x
+          assert x["rubric_exported"] is False, x
+          assert x["gold_deliverable_exported"] is False, x
+          assert x["prior_model_output_exported"] is False, x
           assert x["terminal_authority"] is False, x
           assert x["capability_credit_delta"] == 0, x
+          task=json.load(open("verification-output/safe_bundle/task.json"))
+          assert task["selection_precommit_brain_commit"]=="7be0a54aceb8bb3ee111fdbe3eee72747b48a95c", task
+          assert task["forbidden_fields_exported"]==[], task
+          refs=pathlib.Path("verification-output/safe_bundle/references")
+          assert len(list(refs.iterdir()))==len(task["reference_files"]), task
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: gdpval-stage1-reselection
-          path: verification-output/result.json
+          name: gdpval-stage1-safe-bundle
+          path: |
+            verification-output/result.json
+            verification-output/safe_bundle/task.json
+            verification-output/safe_bundle/references/
+          if-no-files-found: error
