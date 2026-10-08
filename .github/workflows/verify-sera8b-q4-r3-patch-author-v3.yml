@@ -1,9 +1,8 @@
 name: Verify SERA8B Q4 R3 patch author V3
 
 on:
-  push:
-    branches:
-      - 'sera8b-q4-r3-patch-author-v1-20261008'
+  pull_request:
+    branches: [main]
     paths:
       - 'verify_sera8b_q4_r3_patch_author_v3.py'
       - '.github/workflows/verify-sera8b-q4-r3-patch-author-v3.yml'
