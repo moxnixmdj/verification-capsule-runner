@@ -1,6 +1,8 @@
 name: Preflight TB-Science spent-rank12 prompt projection v1
 
 on:
+  push:
+    branches: ["preflight/tb-science-rank12-prompt-projection-v1"]
   pull_request:
     branches: ["terminal-execution-v1"]
     paths:
