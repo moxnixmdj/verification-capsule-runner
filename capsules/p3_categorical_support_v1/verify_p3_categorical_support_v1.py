@@ -74,6 +74,30 @@ class CategoricalKernelTests(unittest.TestCase):
         self.assertEqual(out["relation"],"SUPPORTS")
         self.assertEqual(out["support_evidence_ids"],["E1","E2"])
 
+    def test_transitive_non_subset_proof_is_soundly_exposed(self):
+        rows=[
+            {"evidence_id":"E1","text":"T states that Canary is a subclass of Bird."},
+            {"evidence_id":"E2","text":"T states that Bird is a subclass of Animal."},
+            {"evidence_id":"E3","text":"T states that Animal is a subclass of Living."},
+            {"evidence_id":"E4","text":"T states that Canary is not a subclass of Living."},
+        ]
+        p=classify_support("Bird is a subclass of Animal.",rows)
+        self.assertEqual(p["relation"],"BOTH")
+        self.assertEqual(p["support_evidence_ids"],["E2"])
+        self.assertEqual(set(p["conflict_evidence_ids"]),{"E1","E3","E4"})
+        n=classify_support("Bird is not a subclass of Animal.",rows)
+        self.assertEqual(n["relation"],"BOTH")
+        self.assertEqual(set(n["support_evidence_ids"]),{"E1","E3","E4"})
+        self.assertEqual(n["conflict_evidence_ids"],["E2"])
+
+    def test_reflexive_negative_subset_fails_closed(self):
+        out=classify_support("Bird is not a subset of Bird.",[
+            {"evidence_id":"E1","text":"T states that Bird is not a subset of Bird."}
+        ])
+        self.assertEqual(out["status"],"UNRESOLVED")
+        self.assertEqual(out["relation"],"UNKNOWN")
+        self.assertFalse(out["terminal_authority"])
+
     def test_uncontrolled_every_form_not_claimed(self):
         out=parse_relation("Every canary is a bird.")
         self.assertEqual(out["status"],"UNRESOLVED")
