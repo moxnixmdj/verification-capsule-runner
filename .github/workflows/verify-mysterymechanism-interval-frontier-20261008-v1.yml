@@ -1,0 +1,27 @@
+name: Verify MysteryMechanism interval frontier v1
+
+on:
+  push:
+    paths:
+      - 'capsules/mysterymechanism_interval_information_frontier_20261008_v1/**'
+      - '.github/workflows/verify-mysterymechanism-interval-frontier-20261008-v1.yml'
+  pull_request:
+    paths:
+      - 'capsules/mysterymechanism_interval_information_frontier_20261008_v1/**'
+      - '.github/workflows/verify-mysterymechanism-interval-frontier-20261008-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact Brain blobs and noisy minimax fail-closed semantics
+        run: python capsules/mysterymechanism_interval_information_frontier_20261008_v1/verify.py
