@@ -1,0 +1,43 @@
+name: Verify GDPval stage-1 contamination reselection
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/gdpval_stage1_reselection.py"
+      - ".github/workflows/verify-gdpval-stage1-reselection.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compute metadata-only replacement selection
+        run: |
+          set -euo pipefail
+          mkdir -p verification-output
+          python scripts/gdpval_stage1_reselection.py | tee verification-output/result.json
+      - name: Validate no terminal credit
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("verification-output/result.json"))
+          assert x["status"].startswith("PASS__"), x
+          assert x["selection_rule_replay"]["exact_match"] is True, x
+          assert x["privacy_and_contamination_boundary"]["prompt_used"] is False, x
+          assert x["privacy_and_contamination_boundary"]["rubric_used"] is False, x
+          assert x["terminal_authority"] is False, x
+          assert x["capability_credit_delta"] == 0, x
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gdpval-stage1-reselection
+          path: verification-output/result.json
