@@ -8,10 +8,6 @@ on:
       - '.github/workflows/verify-sera8b-q4-r3-patch-author-v3.yml'
   workflow_dispatch:
 
-concurrency:
-  group: verify-sera8b-q4-r3-patch-author-v3
-  cancel-in-progress: true
-
 permissions:
   contents: read
 
