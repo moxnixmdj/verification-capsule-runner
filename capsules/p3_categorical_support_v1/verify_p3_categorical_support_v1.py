@@ -308,3 +308,68 @@ class AdmissionExecutionTests(unittest.TestCase):
         self.assertFalse(out["u_subtraction_authority"])
         self.assertFalse(out["terminal_authority"])
         self.assertEqual(out["terminal_credit_delta"],0)
+
+
+class AdmissionGuardTests(unittest.TestCase):
+    def _v3(self):
+        return {
+          "schema":V3_INPUT_SCHEMA,
+          "task":{
+            "claims":[
+              {"claim_id":"A","text":"Revenue growth is 12.","required":True},
+              {"claim_id":"B","text":"Margin rate is 8.","required":True},
+            ],
+            "evidence":[
+              ev("E1","Report states Revenue growth is 12."),
+              ev("E2","Report states Margin rate is 8."),
+            ],
+            "audience_profile":{"profile_id":"EXPLICIT","constraints":constraints()},
+            "required_uncertainty_units":[],
+          },
+        }
+
+    def test_common_contract_guard_blocks_projection(self):
+        from copy import deepcopy
+        cases=[
+          ("V3_INPUT_SCHEMA_INVALID",lambda p:p["v3_input"].update({"schema":"FORGED"})),
+          ("UNMODELED_V3_INPUT_FIELDS",lambda p:p["v3_input"].update({"hidden_audience_constraints":{"language":"German"}})),
+          ("UNMODELED_TASK_REQUIREMENTS",lambda p:p["v3_input"]["task"].update({"mandatory_semantic_requirement":"Translate to German"})),
+          ("UNMODELED_CLAIM_REQUIREMENTS",lambda p:p["v3_input"]["task"]["claims"][0].update({"forbid_output":True})),
+        ]
+        for reason, mutate in cases:
+            attack={"context_id":"guard","v3_input":deepcopy(self._v3())}
+            mutate(attack)
+            out=admit(attack)
+            self.assertFalse(out["pass"],(reason,out))
+            self.assertEqual(out["reason"],reason,(reason,out))
+            self.assertFalse(out["p3_contract_cell_authorized"])
+            self.assertFalse(out["terminal_authority"])
+            self.assertEqual(out["terminal_credit_delta"],0)
+
+    def test_unmodeled_real_context_requirement_fails_closed(self):
+        p={"context_id":"guard","v3_input":self._v3(),
+           "external_semantic_requirement":"Translate output to German"}
+        out=admit(p)
+        self.assertFalse(out["pass"])
+        self.assertEqual(out["reason"],"UNMODELED_REAL_CONTEXT_ADMISSION_FIELDS")
+        self.assertFalse(out["p3_contract_cell_authorized"])
+        self.assertFalse(out["terminal_authority"])
+
+    def test_explicit_weights_are_binding_on_order(self):
+        p={"context_id":"weighted","v3_input":self._v3(),
+           "objective_weights":{"A":1,"B":100}}
+        out=admit(p)
+        self.assertTrue(out["pass"],out)
+        self.assertEqual(out["route"],"EXPLICIT_WEIGHTED_SALIENCE_CELL_V1")
+        self.assertEqual(out["selected_claim_ids"],["A","B"])
+        self.assertEqual(out["claim_order"],["B","A"])
+        self.assertEqual(out["terminal_credit_delta"],0)
+
+    def test_invalid_weights_do_not_fall_through(self):
+        for bad in (None, [], {"A":1}, {"A":1,"B":"not an integer"}):
+            out=admit({"context_id":"weighted","v3_input":self._v3(),"objective_weights":bad})
+            self.assertFalse(out["pass"],(bad,out))
+            self.assertIn(out["reason"],{"OBJECTIVE_WEIGHTS_INVALID","OBJECTIVE_WEIGHTS_UNSATISFIED"})
+            self.assertFalse(out["v3_admission_authorized"])
+            self.assertFalse(out["p3_contract_cell_authorized"])
+            self.assertFalse(out["terminal_authority"])
