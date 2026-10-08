@@ -4927,7 +4927,6 @@ def _compile_domain_free_authority_source_goal(goal,clauses,registry,root):
 
 
 
-
 def _compile_exact_markdown_pdf_goal(goal, registry, root):
     """Bind the exact repository-local Markdown-to-PDF conversion family.
 
