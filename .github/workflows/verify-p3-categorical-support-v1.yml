@@ -1,7 +1,7 @@
 name: Verify P3 categorical support v1
 on:
   push:
-    branches: ["verify/p3-categorical-support-v1-20261008"]
+    branches: ["verify/p3-categorical-frozen-762fb-v1"]
   pull_request:
     branches: [main]
     paths:
