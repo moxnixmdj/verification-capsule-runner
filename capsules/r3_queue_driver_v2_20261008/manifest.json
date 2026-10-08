@@ -1,0 +1,21 @@
+{
+  "schema": "PROJECT_BRAIN_R3_QUEUE_DRIVER_PUBLIC_CAPSULE_V2",
+  "date": "2026-10-08",
+  "source_repository": "moxnixmdj/brain",
+  "source_head": "c4e0e65802d01d037add0c3c17865c3152e7ba70",
+  "source_path": "canonical/runtime/r3_improvement_queue_driver_v1.py",
+  "source_git_blob_sha": "b548f07b36ed5bf0a3495635046a26049df24f33",
+  "scope": "MINIMUM_NONSECRET_CURRENT_QUEUE_DRIVER_CONTROL_FLOW_CAPSULE",
+  "assertions": [
+    "exact current driver source compiles/imports under contract stubs",
+    "failed verifier work records evidence-bound backoff",
+    "same evidence is not retried",
+    "new observation evidence permits retry",
+    "failed repair does not permanently starve unrelated actionable work",
+    "event-wait work never claims progress"
+  ],
+  "nonclaims": [
+    "does not verify private full-fabric integration",
+    "does not verify confidential episode receipts"
+  ]
+}
