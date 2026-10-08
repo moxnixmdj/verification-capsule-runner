@@ -1,0 +1,130 @@
+name: Verify Chartography Qwen3-VL GGUF zero-case preflight
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-qwen3vl-gguf-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record carrier
+        run: |
+          set -euo pipefail
+          mkdir -p receipt
+          {
+            echo "nproc=$(nproc)"
+            echo "mem_total_kb=$(awk '/MemTotal/{print $2}' /proc/meminfo)"
+            echo "disk_free_kb_before=$(df -Pk . | awk 'NR==2{print $4}')"
+          } | tee receipt/carrier.txt
+
+      - name: Fetch exact model artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p model
+          BASE="https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct-GGUF/resolve/594171a9fa4ab2a90f017aa69a323b270cd8d24f"
+          curl -fL --retry 5 --retry-delay 2 "$BASE/Qwen3VL-4B-Instruct-Q4_K_M.gguf?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-delay 2 "$BASE/mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf?download=true" -o model/mmproj.gguf
+          echo "ce6a2eac86eeb49ffacb19d580ddd26c0d42cd0a0386b311158a5bf4a6996ffe  model/model.gguf" | sha256sum -c -
+          echo "30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d  model/mmproj.gguf" | sha256sum -c -
+          stat -c '%n %s' model/model.gguf model/mmproj.gguf | tee receipt/artifacts.txt
+
+      - name: Build exact llama.cpp mtmd CLI
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp checkout --detach a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+          cmake -S llama.cpp -B llama.cpp/build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_CUDA=OFF
+          cmake --build llama.cpp/build --target llama-mtmd-cli -j"$(nproc)"
+          test -x llama.cpp/build/bin/llama-mtmd-cli
+          llama.cpp/build/bin/llama-mtmd-cli --version | tee receipt/llama-version.txt || true
+
+      - name: Create synthetic non-benchmark image
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import struct
+          w=h=64
+          row=((w*3+3)//4)*4
+          pixels=bytearray()
+          for y in range(h):
+              line=bytearray()
+              for x in range(w):
+                  # BMP is BGR. Red field with a blue 32x32 center square.
+                  if 16 <= x < 48 and 16 <= y < 48:
+                      line += bytes((255,0,0))
+                  else:
+                      line += bytes((0,0,255))
+              line += b'\x00'*(row-w*3)
+              pixels += line
+          size=54+len(pixels)
+          hdr=b'BM'+struct.pack('<IHHI',size,0,0,54)
+          dib=struct.pack('<IIIHHIIIIII',40,w,h,1,24,0,len(pixels),2835,2835,0,0)
+          open('synthetic.bmp','wb').write(hdr+dib+pixels)
+          PY
+          sha256sum synthetic.bmp | tee receipt/synthetic-image-sha256.txt
+
+      - name: Run exact CPU multimodal smoke
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v -o receipt/time.txt             timeout 1200             llama.cpp/build/bin/llama-mtmd-cli               -m model/model.gguf               --mmproj model/mmproj.gguf               --no-mmproj-offload               -ngl 0               --image synthetic.bmp               -p "Describe the image briefly. Mention the two visible colors."               -n 64               --temp 0               > receipt/stdout.txt 2> receipt/stderr.txt
+          test -s receipt/stdout.txt
+          {
+            echo "disk_free_kb_after=$(df -Pk . | awk 'NR==2{print $4}')"
+            echo "stdout_bytes=$(wc -c < receipt/stdout.txt)"
+            echo "stderr_bytes=$(wc -c < receipt/stderr.txt)"
+          } | tee receipt/result.txt
+          tail -c 4000 receipt/stdout.txt
+
+      - name: Build receipt
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, pathlib, platform, os
+          p=pathlib.Path("receipt")
+          def text(name):
+              q=p/name
+              return q.read_text(errors="replace") if q.exists() else None
+          def sha(path):
+              q=pathlib.Path(path)
+              if not q.exists(): return None
+              h=hashlib.sha256()
+              with q.open("rb") as f:
+                  for b in iter(lambda:f.read(1024*1024),b""): h.update(b)
+              return h.hexdigest()
+          out={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_QWEN3VL_GGUF_ZERO_CASE_RECEIPT_V1",
+            "terminal_or_benchmark_case":False,
+            "chartography_case_read":False,
+            "judge_calls":0,
+            "incremental_spend_usd":0,
+            "model_sha256":sha("model/model.gguf"),
+            "mmproj_sha256":sha("model/mmproj.gguf"),
+            "synthetic_image_sha256":sha("synthetic.bmp"),
+            "carrier":text("carrier.txt"),
+            "artifact_sizes":text("artifacts.txt"),
+            "runtime_version":text("llama-version.txt"),
+            "time":text("time.txt"),
+            "result":text("result.txt"),
+            "stdout":text("stdout.txt"),
+            "stderr_tail":(text("stderr.txt") or "")[-12000:],
+          }
+          p.mkdir(exist_ok=True)
+          (p/"receipt.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-qwen3vl-gguf-zero-case
+          path: receipt/
+          if-no-files-found: error
