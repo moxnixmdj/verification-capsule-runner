@@ -2,18 +2,20 @@
   "schema": "PROJECT_BRAIN_R2_MARKDOWN_PDF_DIRECT_ADEQUACY_CAPSULE_V1",
   "date": "2026-10-08",
   "private_repository": "moxnixmdj/brain",
-  "private_branch": "r2-markdown-pdf-direct-adequacy-20261008",
-  "private_head": "9dc80cddc3ddd63bf2e07c6e497b64bfccc86408",
+  "private_branch": "r2-markdown-pdf-direct-adequacy-v2-20261008",
+  "private_head": "760cee86bc85bdfa19728692ac87c690d1fec0db",
   "exact_git_blobs": {
     "canonical/runtime/r2_markdown_pdf_direct_adequacy_v1.py": "5b2c1b2ac72952006bc257b5fda379dbeebd2d21",
-    "canonical/runtime/goal_compiler.py": "5650e770b957ef6556dc1583110a140ab39aa8b4",
+    "canonical/runtime/goal_compiler.py": "983126e65544efa098870afb8cc69898652dcc4c",
     "canonical/runtime/bound_capabilities/pandoc_weasyprint.py": "1d7e867bb4837b7589d8346c85fe97db4c1166be",
-    "canonical/runtime/bound_capabilities/pdf_pypdf.py": "b63f658d269078f37f8a67be31ce4993b6cf3fcc"
+    "canonical/runtime/bound_capabilities/pdf_pypdf.py": "b63f658d269078f37f8a67be31ce4993b6cf3fcc",
+    "canonical/runtime/r2_direct_end_to_end_adequacy_v1.py": "23747316537884718933a61403b7be5383c1242c"
   },
   "scope": "MINIMUM_NONSECRET_REAL_MARKDOWN_TO_PDF_PRODUCER_INDEPENDENT_READBACK_CAPSULE",
   "assertions": [
-    "exact current route source compiles",
-    "exact compiler source compiles",
+    "exact final rebased source blob binding",
+    "exact final compiler source compiles",
+    "exact final direct router source compiles",
     "real Pandoc+WeasyPrint produces PDF",
     "pypdf independently rereads visible text",
     "route-owned plain Markdown semantic projection equals independent extracted text",
