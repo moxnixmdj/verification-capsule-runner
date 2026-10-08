@@ -1,0 +1,80 @@
+name: Verify TB4 Opus 5.5 target precision
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tb4-opus55-target-precision.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Fetch owner system card and verify target precision
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://www-cdn.anthropic.com/fc1b44717c85dc068bc6ba5024219938094694bd/Claude%20Opus%205.5%20System%20Card.pdf'
+          curl --fail --location --retry 3 --silent --show-error "$URL" -o /tmp/opus55.pdf
+          test -s /tmp/opus55.pdf
+          sha256sum /tmp/opus55.pdf | tee /tmp/opus55.sha256
+
+          if ! command -v pdftotext >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq poppler-utils
+          fi
+          pdftotext -layout /tmp/opus55.pdf /tmp/opus55.txt
+
+          python3 - <<'PY'
+          import hashlib, json, math, pathlib, re
+
+          pdf = pathlib.Path('/tmp/opus55.pdf').read_bytes()
+          text = pathlib.Path('/tmp/opus55.txt').read_text(encoding='utf-8', errors='replace')
+          sha = hashlib.sha256(pdf).hexdigest()
+
+          # Scope extraction around the exact Terminal-Bench section only.
+          m = re.search(r'8\.5\s+Terminal-Bench\s+4\.0', text, flags=re.I)
+          assert m, 'MISSING_TERMINAL_BENCH_4_SECTION'
+          window = text[m.start():m.start()+18000]
+
+          assert re.search(r'66\.36\s*%', window), 'MISSING_DETAILED_66_36'
+          assert re.search(r'66\s+tasks', window, flags=re.I), 'MISSING_66_TASKS'
+          assert re.search(r'(5|five)\s+trials\s+per\s+task', window, flags=re.I), 'MISSING_5_TRIALS_PER_TASK'
+
+          slots = 66 * 5
+          score_218 = 100 * 218 / slots
+          score_219 = 100 * 219 / slots
+          score_220 = 100 * 220 / slots
+          assert slots == 330
+          assert score_218 < 66.36 <= score_219
+          assert score_219 < 66.4 <= score_220
+          assert round(score_219, 2) == 66.36
+          assert round(score_219, 1) == 66.4
+          assert math.ceil(0.6636 * slots) == 219
+          assert math.ceil(0.6640 * slots) == 220
+
+          out = {
+            'schema':'PROJECT_BRAIN_TB4_OPUS55_TARGET_PRECISION_PUBLIC_RUNNER_V1',
+            'owner_pdf_url':'https://www-cdn.anthropic.com/fc1b44717c85dc068bc6ba5024219938094694bd/Claude%20Opus%205.5%20System%20Card.pdf',
+            'owner_pdf_sha256':sha,
+            'section':'8.5 Terminal-Bench 4.0',
+            'owner_detailed_score_percent':66.36,
+            'task_count':66,
+            'trials_per_task':5,
+            'trial_slots':330,
+            'successes_218_percent':score_218,
+            'successes_219_percent':score_219,
+            'successes_220_percent':score_220,
+            'minimum_successes_for_owner_detailed_66_36':219,
+            'minimum_successes_for_strict_raw_66_4':220,
+            'round_219_to_2dp':round(score_219,2),
+            'round_219_to_1dp':round(score_219,1),
+            'terminal_cases_consumed':0,
+            'incremental_spend_usd':0,
+            'acceptance_credit_delta':0,
+            'verdict':'PASS_OWNER_BYTES_SECTION_AND_ARITHMETIC__GOVERNANCE_PROMOTION_REMAINS_SEPARATE'
+          }
+          print(json.dumps(out, indent=2, sort_keys=True))
+          pathlib.Path('/tmp/tb4-opus55-target-precision.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          PY
