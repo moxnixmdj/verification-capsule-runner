@@ -25,13 +25,14 @@ FROZEN_STAGE1 = {
 }
 
 NEWLY_EXPOSED = set(FROZEN_STAGE1.values())
+FIRST_REPAIRED_XLSX_SPENT = "17111c03-aac7-45c2-857d-c06d8223d6ad"
 
 
 def fetch_rows():
     rows = []
     for offset, length in ((0, 100), (100, 100), (200, 20)):
         url = f"{ROWS_API}&offset={offset}&length={length}"
-        req = Request(url, headers={"User-Agent": "brain-public-verifier-stage1-reselection/1.1"})
+        req = Request(url, headers={"User-Agent": "brain-public-verifier-stage1-reselection/1.2"})
         with urlopen(req, timeout=45) as r:
             payload = json.loads(r.read().decode("utf-8"))
         page = payload.get("rows")
@@ -51,8 +52,6 @@ def exts(files):
 
 def artifact_class(files):
     e = set(exts(files))
-    # These rules are accepted only if they replay the already-frozen
-    # September-30 selections exactly before applying the new exposures.
     if ".xlsx" in e:
         return "XLSX"
     if ".pptx" in e:
@@ -89,16 +88,14 @@ def candidates(rows, exclusions):
         if len(refs) > 3 or not (1 <= len(dels) <= 2):
             continue
         cls = artifact_class(dels)
-        if not cls:
-            continue
-        out[cls].append(metadata_record(row))
+        if cls:
+            out[cls].append(metadata_record(row))
     for cls in out:
         out[cls].sort(key=lambda x: (x["task_id_sha256"], x["task_id"]))
     return out
 
 
 def pdf_candidates(rows, exclusions):
-    """Apply the separately precommitted 2026-10-08 PDF replacement rule."""
     out = []
     for item in rows:
         row = item.get("row") or {}
@@ -109,9 +106,8 @@ def pdf_candidates(rows, exclusions):
         dels = list(row.get("deliverable_files") or [])
         if len(refs) > 3 or not (1 <= len(dels) <= 2):
             continue
-        if ".pdf" not in set(exts(dels)):
-            continue
-        out.append(metadata_record(row))
+        if ".pdf" in set(exts(dels)):
+            out.append(metadata_record(row))
     out.sort(key=lambda x: (x["task_id_sha256"], x["task_id"]))
     return out
 
@@ -132,41 +128,46 @@ def main():
         "actual": replay_ids,
     }
 
-    repaired_exclusions = ORIGINAL_EXCLUSIONS | NEWLY_EXPOSED
-    repaired_candidates = candidates(rows, repaired_exclusions)
-    replacements = pick(repaired_candidates)
+    first_repair_exclusions = ORIGINAL_EXCLUSIONS | NEWLY_EXPOSED
+    first_repaired_candidates = candidates(rows, first_repair_exclusions)
+    first_replacements = pick(first_repaired_candidates)
+    assert (first_replacements["XLSX"] or {}).get("task_id") == FIRST_REPAIRED_XLSX_SPENT
 
-    pdf = pdf_candidates(rows, repaired_exclusions)
+    # The PDF task remains selected under the earlier, separately precommitted
+    # PDF rule. The additional XLSX exposure must not retroactively move PDF.
+    pdf = pdf_candidates(rows, first_repair_exclusions)
     pdf_replacement = pdf[0] if pdf else None
 
+    second_xlsx_exclusions = first_repair_exclusions | {FIRST_REPAIRED_XLSX_SPENT}
+    second_candidates = candidates(rows, second_xlsx_exclusions)
+    second_replacements = pick(second_candidates)
+
     result = {
-        "schema": "PROJECT_BRAIN_GDPVAL_STAGE1_CONTAMINATION_RESELECTION_VERIFICATION_V2",
-        "status": "PASS__ORIGINAL_SELECTION_REPLAYED__XLSX_PPTX_REPLACED__PDF_RULE_APPLIED_METADATA_ONLY",
+        "schema": "PROJECT_BRAIN_GDPVAL_STAGE1_CONTAMINATION_RESELECTION_VERIFICATION_V3",
+        "status": "PASS__ORIGINAL_AND_FIRST_XLSX_SELECTIONS_REPLAYED__SECOND_XLSX_REPLACEMENT_COMPUTED_METADATA_ONLY",
         "population_count": 220,
         "selection_rule_replay": {
-            "original_exclusion_count": len(ORIGINAL_EXCLUSIONS),
-            "expected": FROZEN_STAGE1,
-            "actual": replay_ids,
-            "exact_match": True,
+            "original_expected": FROZEN_STAGE1,
+            "original_actual": replay_ids,
+            "original_exact_match": True,
+            "first_repaired_xlsx_expected": FIRST_REPAIRED_XLSX_SPENT,
+            "first_repaired_xlsx_actual": (first_replacements["XLSX"] or {}).get("task_id"),
+            "first_repaired_xlsx_exact_match": True,
         },
-        "contamination_repair": {
-            "newly_exposed_task_ids": sorted(NEWLY_EXPOSED),
-            "total_exclusion_count": len(repaired_exclusions),
-            "replacement": replacements,
-            "candidate_counts": {k: len(v) for k, v in repaired_candidates.items()},
-            "class_exhausted": {
-                k: len(v) == 0 for k, v in repaired_candidates.items()
-            },
+        "second_xlsx_repair": {
+            "brain_precommit_commit": "872c68a1f2d67248e58b19dfd7b34ab965d62fa3",
+            "additional_spent_task": FIRST_REPAIRED_XLSX_SPENT,
+            "candidate_count": len(second_candidates["XLSX"]),
+            "replacement": second_replacements["XLSX"],
+            "class_exhausted": len(second_candidates["XLSX"]) == 0,
         },
-        "precommitted_pdf_replacement_rule": {
-            "brain_precommit_commit": "c1af9718fc1025181c350875aba245f676870703",
-            "candidate_count": len(pdf),
-            "replacement": pdf_replacement,
-            "class_exhausted": not bool(pdf),
+        "preserved_clean_tasks": {
+            "PPTX": first_replacements["PPTX"],
+            "PDF": pdf_replacement,
         },
-        "repaired_stage1": {
-            "XLSX": replacements["XLSX"],
-            "PPTX": replacements["PPTX"],
+        "final_repaired_stage1": {
+            "XLSX": second_replacements["XLSX"],
+            "PPTX": first_replacements["PPTX"],
             "PDF": pdf_replacement,
         },
         "privacy_and_contamination_boundary": {
@@ -185,6 +186,7 @@ def main():
         "terminal_authority": False,
         "capability_credit_delta": 0,
     }
+    assert second_replacements["XLSX"] is not None, "XLSX_SECOND_REPLACEMENT_CLASS_EXHAUSTED"
     assert pdf_replacement is not None, "PDF_REPLACEMENT_CLASS_EXHAUSTED"
     print(json.dumps(result, indent=2, sort_keys=True))
 
