@@ -90,6 +90,20 @@ class CategoricalKernelTests(unittest.TestCase):
         self.assertEqual(set(n["support_evidence_ids"]),{"E1","E3","E4"})
         self.assertEqual(n["conflict_evidence_ids"],["E2"])
 
+    def test_explicit_reflexive_subclass_keeps_provenance(self):
+        out=classify_support("Bird is a subclass of Bird.",[
+            {"evidence_id":"E1","text":"Taxonomy states that Bird is a subclass of Bird."}
+        ])
+        self.assertEqual(out["relation"],"SUPPORTS")
+        self.assertEqual(out["support_evidence_ids"],["E1"])
+
+    def test_unevidenced_reflexivity_does_not_mint_support(self):
+        out=classify_support("Bird is a subclass of Bird.",[
+            {"evidence_id":"E1","text":"Taxonomy states that Canary is a subclass of Bird."}
+        ])
+        self.assertEqual(out["relation"],"UNRELATED")
+        self.assertEqual(out["support_evidence_ids"],[])
+
     def test_reflexive_negative_subset_fails_closed(self):
         out=classify_support("Bird is not a subset of Bird.",[
             {"evidence_id":"E1","text":"T states that Bird is not a subset of Bird."}
