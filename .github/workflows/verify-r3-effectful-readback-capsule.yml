@@ -1,0 +1,17 @@
+name: Verify R3 bounded effect readback capsule
+on:
+  push:
+    branches: ["r3-effectful-readback-capsule-20261008"]
+    paths:
+      - ".github/workflows/verify-r3-effectful-readback-capsule.yml"
+      - "capsules/r3_effectful_readback_20261008/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute exact R3 bounded effect readback capsule
+        run: python capsules/r3_effectful_readback_20261008/verify.py
