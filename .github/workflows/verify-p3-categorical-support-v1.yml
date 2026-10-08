@@ -1,0 +1,43 @@
+name: Verify P3 categorical support v1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/p3_categorical_support_v1/**"
+      - ".github/workflows/verify-p3-categorical-support-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blob identities
+        run: |
+          cd capsules/p3_categorical_support_v1
+          python - <<'PY'
+          import hashlib, json, pathlib
+          m=json.load(open("EXPECTED_BRAIN_BLOBS.json",encoding="utf-8"))
+          for src, expected in m["exact_brain_blobs"].items():
+              data=pathlib.Path(src).read_bytes()
+              actual=hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
+              assert actual==expected,(src,actual,expected)
+          print("exact Brain blob identities: PASS")
+          PY
+      - name: Compile candidate runtimes
+        run: |
+          cd capsules/p3_categorical_support_v1
+          export PYTHONPATH=.
+          python -m py_compile \
+            canonical/runtime/bounded_explicit_categorical_support_v1.py \
+            canonical/runtime/selected_support_truth_certificate_v5.py \
+            canonical/runtime/p3_required_claim_grounded_realization_cell_v3.py \
+            canonical/runtime/p3_real_context_v3_admission_v6.py
+      - name: Run independent categorical and grounded-realization tests
+        run: |
+          cd capsules/p3_categorical_support_v1
+          export PYTHONPATH=.
+          python -m unittest verify_p3_categorical_support_v1 -v
