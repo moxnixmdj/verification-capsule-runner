@@ -67,7 +67,7 @@ jobs:
             'schema':'PROJECT_BRAIN_TB4_OPUS55_TARGET_PRECISION_PUBLIC_RUNNER_V1',
             'owner_pdf_sha256':sha,
             'section':'8.5 Terminal-Bench 4.0',
-            'owner_detailed_score_percent':66.36,
+            'owner_summary_alias_percent':66.4,\n            'owner_detailed_score_percent':66.36,\n            'same_owner_pdf_contains_summary_alias_and_detailed_value':True,
             'task_count':66,
             'trials_per_task':5,
             'trial_slots':330,
