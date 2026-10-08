@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_ZERO_EXPOSURE_MULTI_ACTION_PREFLIGHT_ACTIVATION_V1",
+  "date": "2026-10-08",
+  "status": "ACTIVATE_ZERO_BENCHMARK_EXPOSURE_MULTI_ACTION_PREFLIGHT_ONLY",
+  "benchmark_task_exposure_authorized": 0,
+  "benchmark_trials_authorized": 0,
+  "exact_brain_blobs": {
+    "planner": "715aee168f02cb4abff961849b2b26709eef2e64",
+    "command_policy": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "preflight": "a1d641e74cfcc331e8340e253744506aec09f0b8"
+  },
+  "exact_route": {
+    "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "context_tokens": 8192,
+    "threads": 4,
+    "parallel": 1
+  },
+  "required_live_receipt": {
+    "input_tokens_min": 7200,
+    "input_tokens_max": 7600,
+    "proposal_candidate_count": 3,
+    "dependency_edge_verified": true
+  },
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
