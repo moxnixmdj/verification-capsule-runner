@@ -1,19 +1,23 @@
 {
-  "schema": "PROJECT_BRAIN_R3_QUEUE_DRIVER_PUBLIC_CAPSULE_V1",
+  "schema": "PROJECT_BRAIN_R3_QUEUE_DRIVER_PUBLIC_CAPSULE_V2",
   "date": "2026-10-08",
   "source_repository": "moxnixmdj/brain",
-  "source_ref": "r3-autonomous-queue-driver-v2-20261008",
+  "source_ref": "770ab0a9f3e98ccf74e90229ea1e5f0b7774e249",
   "source_path": "canonical/runtime/r3_improvement_queue_driver_v1.py",
-  "source_git_blob_sha": "1a049b263856f52687bdf22010640c3fdbd67c8b",
+  "source_git_blob_sha": "fb1975d746812882bd96b3205a2e85338fe9defb",
   "scope": "MINIMUM_NONSECRET_CONTROL_FLOW_CAPSULE",
   "assertions": [
     "exact driver source parses and imports under contract stubs",
     "blocked high-priority verifier work does not starve lower actionable repair work",
+    "failure repair defaults to the Brain-owned verified repair/replay cycle",
+    "verified scope-generalization work is executed by the same canonical queue driver",
+    "scope-generalization requires independently authenticated PROVEN_SUPERSET plus the bound structural predicate",
     "event-waiting work does not claim progress",
     "drain terminates when no actionable work remains"
   ],
   "nonclaims": [
-    "does not independently verify private verifier receipts",
-    "does not verify private autonomous_verified_self_improvement_v1.py full integration"
+    "does not independently verify private verifier receipt contents",
+    "does not verify private autonomous_verified_self_improvement_v1.py full integration",
+    "does not grant terminal authority"
   ]
 }
