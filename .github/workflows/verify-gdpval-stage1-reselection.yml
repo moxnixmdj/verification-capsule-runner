@@ -31,9 +31,14 @@ jobs:
           import json
           x=json.load(open("verification-output/result.json"))
           assert x["status"].startswith("PASS__"), x
-          assert x["selection_rule_replay"]["exact_match"] is True, x
+          replay=x["selection_rule_replay"]
+          assert replay.get("exact_match", replay.get("original_exact_match")) is True, x
+          if "first_repaired_xlsx_exact_match" in replay:
+              assert replay["first_repaired_xlsx_exact_match"] is True, x
           assert x["privacy_and_contamination_boundary"]["prompt_used"] is False, x
           assert x["privacy_and_contamination_boundary"]["rubric_used"] is False, x
+          assert x["privacy_and_contamination_boundary"]["gold_deliverable_content_used"] is False, x
+          assert x["privacy_and_contamination_boundary"]["prior_model_submission_used"] is False, x
           assert x["terminal_authority"] is False, x
           assert x["capability_credit_delta"] == 0, x
           PY
