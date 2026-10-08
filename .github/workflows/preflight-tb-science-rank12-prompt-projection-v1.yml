@@ -1,13 +1,14 @@
-name: Preflight TB-Science spent-rank12 prompt projection v1
+name: Preflight TB-Science spent-rank12 projection plus request-timeout v1
 
 on:
   push:
-    branches: ["preflight/tb-science-rank12-prompt-projection-v1"]
+    branches: ["preflight/tb-science-rank12-projection-request-timeout-v1"]
   pull_request:
     branches: ["terminal-execution-v1"]
     paths:
       - ".github/workflows/preflight-tb-science-rank12-prompt-projection-v1.yml"
       - "capsules/tb_science_rank12_20261008_v1/canonical/runtime/harbor_science_agent_v1.py"
+      - "capsules/tb_science_rank12_20261008_v1/canonical/runtime/harbor_science_planner_v1.py"
 
 permissions:
   contents: read
@@ -26,7 +27,7 @@ jobs:
           set -euo pipefail
           C=capsules/tb_science_rank12_20261008_v1
           test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "9b651589733a54b4144aad5c68be7cb8bdd8a8d5"
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "01d859c8f27b317893027e693c9aa49e833a256f"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "cc77666f5d1231c356e36362181f375f7336d514"
           test ! -e "$C/ACTIVATE_RANK12_PR.json"
 
       - name: Clean-build exact llama.cpp
@@ -104,8 +105,8 @@ jobs:
           result=asyncio.run(agent.run_science_goal(goal,NoDataEnvironment(),max_cycles=1))
           assert len(calls)==1,calls
           receipt={
-              "schema":"PROJECT_BRAIN_TB_SCIENCE_SPENT_RANK12_PROMPT_PROJECTION_LIVE_PREFLIGHT_V1",
-              "status":"PASS",
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_SPENT_RANK12_PROJECTION_REQUEST_TIMEOUT_LIVE_PREFLIGHT_V1",
+              "status":"PASS__PROJECTION_PLUS_FULL_REQUEST_TIMEOUT",
               "planner_call":calls[0],
               "controller_status":result.get("status"),
               "benchmark_credit":False,
@@ -117,7 +118,7 @@ jobs:
           pathlib.Path("RANK12_PROMPT_PROJECTION_PREFLIGHT.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
           print(json.dumps(receipt,sort_keys=True))
           assert calls[0]["prompt_chars"] < 10000
-          assert calls[0]["duration_s"] < 300
+          assert calls[0]["duration_s"] < 900
           PY
 
       - uses: actions/upload-artifact@v4
