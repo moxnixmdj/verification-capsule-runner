@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK11_PUBLIC_EPOCH_V1",
+  "date": "2026-10-08",
+  "status": "CURRENT__ONE_USE_PREEXPOSURE_GATE",
+  "epoch_id": "TBSCI-RANK11-20261008-E1",
+  "slot_id": "terminal-bench-science/supraglacial-lake-classification::trial-0",
+  "task_digest": "sha256:4a57227f84340ff6e245c3f2efeb8dfb6fb44a89713223d8742433dd569f9e3a",
+  "schedule_rank": 11,
+  "prior_consumed_slots": 10,
+  "benchmark_task_exposure_authorized_by_epoch": false,
+  "execution_authority_required_from_brain": true,
+  "run_attempts_authorized_by_epoch": 0,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit": false,
+  "terminal_credit": false
+}
