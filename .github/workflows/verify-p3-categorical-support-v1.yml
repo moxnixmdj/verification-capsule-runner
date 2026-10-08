@@ -38,6 +38,33 @@ jobs:
             canonical/runtime/selected_support_truth_certificate_v5.py \
             canonical/runtime/p3_required_claim_grounded_realization_cell_v3.py \
             canonical/runtime/p3_real_context_v3_admission_v6.py
+      - name: Replay exact Brain focused tests without pytest
+        run: |
+          cd capsules/p3_categorical_support_v1
+          export PYTHONPATH=.
+          python - <<'PY'
+          import inspect, runpy
+          paths=[
+            "canonical/tests/test_bounded_explicit_categorical_support_v1.py",
+            "canonical/tests/test_selected_support_truth_certificate_v5.py",
+            "canonical/tests/test_p3_required_claim_grounded_realization_cell_v3.py",
+            "canonical/tests/test_p3_real_context_v3_admission_v6.py",
+          ]
+          total=0
+          by_file={}
+          for path in paths:
+              ns=runpy.run_path(path)
+              funcs=[
+                  (name,fn) for name,fn in ns.items()
+                  if name.startswith("test_") and callable(fn)
+                  and len(inspect.signature(fn).parameters)==0
+              ]
+              for name,fn in sorted(funcs):
+                  fn()
+              by_file[path]=len(funcs)
+              total+=len(funcs)
+          print({"focused_assertions_passed":total,"by_file":by_file})
+          PY
       - name: Run independent categorical and grounded-realization tests
         run: |
           cd capsules/p3_categorical_support_v1
