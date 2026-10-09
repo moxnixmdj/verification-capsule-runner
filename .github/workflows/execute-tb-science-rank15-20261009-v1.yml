@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -67,18 +68,33 @@ jobs:
           path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
           key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
 
-      - name: Gate exact portable carrier
+      - name: Restore exact Qwen bytes on cache miss or corruption
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          MODEL=models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          SHA=f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+          mkdir -p models
+          if [ -f "$MODEL" ] && echo "$SHA  $MODEL" | sha256sum -c - >/dev/null 2>&1; then
+            :
+          else
+            rm -f "$MODEL"
+            rm -rf model-parts
+            mkdir -p model-parts
+            gh release download brain-capability-qwen35-9b-m-exact-v1               --repo "$GITHUB_REPOSITORY"               --dir model-parts               --pattern 'Qwen3.5-9B-M-TS-Q4_K_M.gguf.part*of03'
+            cat               model-parts/Qwen3.5-9B-M-TS-Q4_K_M.gguf.part01of03               model-parts/Qwen3.5-9B-M-TS-Q4_K_M.gguf.part02of03               model-parts/Qwen3.5-9B-M-TS-Q4_K_M.gguf.part03of03               > "$MODEL"
+          fi
+          echo "$SHA  $MODEL" | sha256sum -c -
+
+      - name: Gate exact portable carrier bytes
         id: cache
         run: |
           set -euo pipefail
-          ready=false
-          if [ "${{ steps.qwen.outputs.cache-hit }}" = "true" ]; then
-            test -x llama.cpp/build/bin/llama-server
-            test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
-            echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
-            ready=true
-          fi
-          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+          test -x llama.cpp/build/bin/llama-server
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Start exact local cognition endpoint with 16K context
         if: steps.cache.outputs.ready == 'true'
@@ -90,9 +106,14 @@ jobs:
             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b \
             --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui \
             "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
           ok=0
           for i in $(seq 1 240); do
             if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat LOCAL_QWEN_SERVER.pid)" 2>/dev/null; then
+              cat LOCAL_QWEN_SERVER.log
+              exit 1
+            fi
             sleep 1
           done
           test "$ok" = 1
@@ -100,9 +121,56 @@ jobs:
           free_bytes="$(df -B1 "$GITHUB_WORKSPACE" | awk 'NR==2{print $4}')"
           test "$free_bytes" -ge 12884901888
 
+      - name: Qualify exact live planner transport before task exposure
+        id: qualify
+        if: steps.cache.outputs.ready == 'true'
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$C"
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          from canonical.runtime import harbor_science_planner_v1 as planner
+
+          prompt=(
+              "Synthetic zero-benchmark carrier qualification. No benchmark task exists. "
+              "Use exactly material requirement R1. Return exactly one short candidate whose "
+              "command writes synthetic-ok to /tmp/brain-rank15-carrier.txt and whose verify_command "
+              "checks that the file contains synthetic-ok. Do not execute anything."
+          )
+          out=planner.plan(prompt, timeout_s=180)
+          proposal=planner.extract_json_object(out["text"])
+          assert proposal["material_requirements"] == ["R1"], proposal
+          candidates=proposal.get("candidates")
+          assert isinstance(candidates,list) and len(candidates)==1, proposal
+          candidate=candidates[0]
+          assert candidate.get("covers") == ["R1"], candidate
+          assert isinstance(candidate.get("command"),str) and candidate["command"], candidate
+          assert isinstance(candidate.get("verify_command"),str) and candidate["verify_command"], candidate
+          receipt={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_CARRIER_QUALIFICATION_V2",
+              "status":"PASS__LIVE_16K_MODEL__EXACT_PLANNER_TOOL_CALL__ZERO_BENCHMARK_EXPOSURE",
+              "planner_transport":out.get("transport"),
+              "planner_endpoint":out.get("endpoint"),
+              "planner_model":out.get("model"),
+              "input_tokens":out.get("input_tokens"),
+              "planner_duration_s":out.get("duration_s"),
+              "proposal_sha256":hashlib.sha256(out["text"].encode()).hexdigest(),
+              "benchmark_task_exposure":0,
+              "benchmark_trials_executed":0,
+              "incremental_spend_usd":0,
+              "terminal_credit_delta":0,
+          }
+          Path("RANK15_CARRIER_QUALIFICATION.json").write_text(
+              json.dumps(receipt,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+          echo "qualified=true" >> "$GITHUB_OUTPUT"
+
       - name: Read exact rank15 task and enforce prestart token budget
         id: prestart
-        if: steps.cache.outputs.ready == 'true'
+        if: steps.qualify.outputs.qualified == 'true'
         run: |
           set -euo pipefail
           export PYTHONPATH="$C"
@@ -111,7 +179,7 @@ jobs:
 
       - name: Execute exactly frozen rank15 slot
         id: execute
-        if: steps.cache.outputs.ready == 'true' && steps.prestart.outputs.guard_pass == 'true'
+        if: steps.qualify.outputs.qualified == 'true' && steps.prestart.outputs.guard_pass == 'true'
         continue-on-error: true
         env:
           TASK_PATH: ${{ steps.prestart.outputs.task_path }}
@@ -133,7 +201,7 @@ jobs:
       - name: Finalize conservative rank15 receipt
         if: always()
         env:
-          CACHE_READY: ${{ steps.cache.outputs.ready }}
+          CACHE_READY: ${{ steps.qualify.outputs.qualified }}
           HARBOR_OUTCOME: ${{ steps.execute.outcome }}
         run: |
           python "$C/rank15_finalize_receipt_v1.py"
@@ -146,6 +214,7 @@ jobs:
             protein-active-learning-trial-0__SLOT_RECEIPT_V1.json
             RANK15_EXECUTION_PREFLIGHT.json
             RANK15_PRESTART_GUARD.json
+            RANK15_CARRIER_QUALIFICATION.json
             jobs/protein-active-learning-trial-0/
             LOCAL_QWEN_HEALTH.json
             LOCAL_QWEN_SERVER.log
