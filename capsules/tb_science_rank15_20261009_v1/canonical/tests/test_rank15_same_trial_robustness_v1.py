@@ -144,9 +144,7 @@ class AgentReconciliationTests(unittest.IsolatedAsyncioTestCase):
                 "model": "synthetic",
             }
 
-        with patch.object(agent.science_planner, "plan", plan):
-            out = await agent.run_science_goal("Create result.", Env(), max_cycles=1)
-
+        with patch.object(agent.science_planner, "plan", plan), patch.object(\n            agent.science_planner, "count_input_tokens", lambda payload: 1000\n        ):\n            out = await agent.run_science_goal("Create result.", Env(), max_cycles=1)\n
         self.assertEqual(calls.count("effect"), 1)
         self.assertEqual(calls.count("check"), 1)
         row = [x for x in out["trace"] if x.get("kind") == "BRAIN_SELECTED_RESEARCH_ACTION"][0]
