@@ -86,3 +86,19 @@ def test_agent_v10_source_has_lossless_retrieval_path():
     assert "evidence_store.resolve_requests" in source
     assert "PLANNER_EVIDENCE_REQUEST_FULFILLED" in source
     assert "Omission from active context does not delete evidence." in source
+
+
+def test_agent_v10_preserves_full_receipt_bytes_before_prompt_compaction():
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "runtime"
+        / "harbor_science_agent_v10.py"
+    ).read_text(encoding="utf-8")
+    assert '"kind": "BRAIN_FULL_ACTION_RECEIPT_EVIDENCE"' in source
+    assert '"kind": "BRAIN_FULL_VERIFY_RECEIPT_EVIDENCE"' in source
+    assert '"stdout": str(action_receipt.stdout or "")' in source
+    assert '"stderr": str(action_receipt.stderr or "")' in source
+    assert '"stdout": str(verify_receipt.stdout or "")' in source
+    assert '"stderr": str(verify_receipt.stderr or "")' in source
+    assert "str(verify_receipt.stdout or \"\")" in source
+    assert "str(verify_receipt.stderr or \"\")" in source
