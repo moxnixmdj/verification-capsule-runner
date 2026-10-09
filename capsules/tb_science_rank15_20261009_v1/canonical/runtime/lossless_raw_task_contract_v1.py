@@ -50,8 +50,9 @@ def _sha(value: Any) -> str:
 def _segments(text: str) -> list[tuple[int, int, str]]:
     out: list[tuple[int, int, str]] = []
     # Preserve punctuation and line boundaries. Whitespace-only spans are not
-    # independent obligations, but all non-whitespace bytes belong to one.
-    for m in re.finditer(r"[^.!?\n]+(?:[.!?]+|\n|$)", text):
+    # independent obligations, but all non-whitespace bytes belong to one. The
+    # punctuation-only alternative covers standalone runs such as a line of "...".
+    for m in re.finditer(r"[^.!?\n]+(?:[.!?]+|\n|$)|[.!?]+", text):
         s, e = m.span()
         while s < e and text[s].isspace():
             s += 1
