@@ -4,35 +4,23 @@ on:
   pull_request:
     branches: [terminal-execution-v1]
     paths:
-      - "execution_guard/terminal_execution_admission_v1.py"
-      - "execution_guard/test_terminal_execution_admission_v1.py"
+      - "execution_guard/terminal_execution_admission_v3.py"
+      - "execution_guard/test_terminal_execution_admission_v3.py"
       - "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json"
       - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
-      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V2.json"
-      - ".github/workflows/execute-tb-science-rank15-20261009-v1.yml"
-      - ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v6.yml"
       - ".github/workflows/verify-tb-science-execution-ratchet-v1.yml"
-      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_v2_zero_exposure_tests.py"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V2.json"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V21.json"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V2.json"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V2.json"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py"
-  push:
-    branches: [repair/tb-science-execution-ratchet-20261009-v1]
-    paths:
-      - "execution_guard/**"
-      - ".github/workflows/execute-tb-science-rank15-20261009-v1.yml"
-      - ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"
-      - ".github/workflows/verify-tb-science-execution-ratchet-v1.yml"
-      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v2.py"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_v2_zero_exposure_tests.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v8.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v6_runtime_composition_tests.py"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V28.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v6.py"
 
 permissions:
   contents: read
@@ -45,69 +33,104 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Compile and run adversarial admission tests
+      - name: Compile and run current adversarial admission tests
         run: |
           set -euo pipefail
-          python -m py_compile execution_guard/terminal_execution_admission_v1.py
-          python -m unittest execution_guard.test_terminal_execution_admission_v1 -v
+          python -m py_compile execution_guard/terminal_execution_admission_v3.py
+          python execution_guard/test_terminal_execution_admission_v3.py
 
-      - name: Verify exact Rank15 V2 runtime bytes and zero-exposure semantic canaries
+      - name: Verify current surface, runtime bytes, causal invariants, and zero exposure
         env:
           C: capsules/tb_science_rank15_20261009_v1
         run: |
           set -euo pipefail
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v2.py")" = "92161f95f211377ed40c11a38e641046bb45bd26"
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v2.py")" = "fb4d8202192ca7a7ff03b36b9ba31be48f19dfa4"
-          test "$(git hash-object "$C/rank15_prestart_token_guard_v2.py")" = "b296e442535d4cf7770f7c1464da441c80fc65a1"
-          test "$(git hash-object "$C/rank15_v2_zero_exposure_tests.py")" = "d1398ad85d6ea6ac6690fb232866eda5de6e58e8"
-          python -m py_compile             "$C/canonical/runtime/harbor_science_planner_v2.py"             "$C/canonical/runtime/harbor_science_agent_v2.py"             "$C/rank15_prestart_token_guard_v2.py"             "$C/rank15_v2_zero_exposure_tests.py"
-          PYTHONPATH="$GITHUB_WORKSPACE/$C" python "$C/rank15_v2_zero_exposure_tests.py"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$C"
+          python "$C/rank15_execution_preflight_v6.py"
+          python "$C/rank15_v6_runtime_composition_tests.py"
+          python - <<'PY'
+          import hashlib,json,pathlib
+          R=pathlib.Path(".")
+          def blob(rel):
+              raw=(R/rel).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          s=json.loads((R/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text())
+          b=json.loads((R/"execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json").read_text())
+          inv=json.loads((R/"execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json").read_text())
+          assert s["active"] is True
+          assert s["execution_authority"] is True
+          assert s["task_read_authority"] is True
+          assert s["task_started"] is False
+          assert s["benchmark_trials_consumed"] == 0
+          assert s["workflow_path"] == ".github/workflows/execute-tb-science-rank15-20261009-v6.yml"
+          assert s["workflow_git_blob_sha"] == blob(s["workflow_path"])
+          for key in ("behavior","authority","ledger","invariant_registry","admission_guard","epoch","execution_claim","preflight","finalizer"):
+              row=s[key]
+              assert row["git_blob_sha"] == blob(row["path"]), (key,row)
+          ids={x["id"] for x in inv["invariants"]}
+          assert "TB_SCIENCE_LLAMA_CPU_PORTABILITY_V1" in ids
+          assert "TB_SCIENCE_PLANNER_EXECUTION_ENVELOPE_V2" in ids
+          assert "TB_SCIENCE_DURABLE_CAUSAL_EXECUTION_V1" in ids
+          facts=b["behavior"]
+          for key in (
+              "build_llama_server_on_current_runner",
+              "zero_terminal_completion_required",
+              "seeded_request_identity",
+              "seed_identity_excludes_carrier_identity",
+              "slot_bound_logical_attempt_identity",
+              "agent_ready_precedes_start_cas",
+              "child_github_credentials_stripped",
+              "durable_action_intent_ack_before_effect",
+              "durable_state_commit_ack_before_next_action",
+              "uncertain_effect_replay_forbidden",
+          ):
+              assert facts[key] is True, key
+          assert not (R/"capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json").exists()
+          PY
 
-      - name: Prove resealed Rank15 V2 surface has authority but remains activation-gated
+      - name: Prove current admission passes while activation remains closed
         env:
           C: capsules/tb_science_rank15_20261009_v1
         run: |
           set -euo pipefail
-          test ! -e "$C/ACTIVATE_RANK15_V2_PR.json"
-          python execution_guard/terminal_execution_admission_v1.py \
-            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml" \
+          python execution_guard/terminal_execution_admission_v3.py \
+            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v6.yml" \
             --slot "terminal-bench-science/protein-active-learning::trial-0" \
             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
             --require-execution-authority
-          python "$C/rank15_execution_preflight_v2.py"
-          if python execution_guard/terminal_execution_admission_v1.py \
-            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml" \
+          if python execution_guard/terminal_execution_admission_v3.py \
+            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v6.yml" \
             --slot "terminal-bench-science/protein-active-learning::trial-0" \
             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
             --require-execution-authority \
             --require-activation; then
-            echo "resealed surface bypassed activation gate"
+            echo "current surface bypassed activation gate"
             exit 1
           fi
-          grep -F "ACTIVATION_FILE_MISSING" TERMINAL_EXECUTION_ADMISSION.json
+          grep -F "ACTIVATION_FILE_MISSING" TERMINAL_EXECUTION_ADMISSION_V3.json
 
-      - name: Prove V1 carrier is retired and V2 has exactly one guarded terminal launch
+      - name: Prove historical carriers cannot be current
         run: |
           set -euo pipefail
-          ! grep -F "harbor run" .github/workflows/execute-tb-science-rank15-20261009-v1.yml
-          test "$(grep -F -c "harbor run" .github/workflows/execute-tb-science-rank15-20261009-v2.yml)" = "1"
-          grep -F "terminal_execution_admission_v1.py" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
-          grep -F "persist-credentials: false" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
-          grep -F "rank15_prestart_token_guard_v2.py" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
-          grep -F "canonical.runtime.harbor_science_agent_v2:HarborScienceAgent" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
+          python - <<'PY'
+          import json
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"))
+          assert s["workflow_path"] == ".github/workflows/execute-tb-science-rank15-20261009-v6.yml"
+          assert not s["workflow_path"].endswith("-v1.yml")
+          assert not s["workflow_path"].endswith("-v2.yml")
+          assert s["admission_guard"]["path"] == "execution_guard/terminal_execution_admission_v3.py"
+          PY
 
       - name: Emit zero-exposure receipt
         run: |
           python - <<'PY'
           import json
           out={
-            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V1",
-            "status":"PASS__RESEALED_V2_AUTHORITY_ACTIVE__ACTIVATION_GATE_CLOSED__RUNTIME_SEMANTICS_VALID__V1_RETIRED",
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V2",
+            "status":"PASS__CURRENT_V6_PROOF_CARRYING_SURFACE_ACTIVE__ACTIVATION_GATE_CLOSED__CAUSAL_INVARIANTS_RATCHETED__HISTORICAL_CARRIERS_NOT_CURRENT",
             "rank15_task_read":False,
             "rank15_task_started":False,
             "benchmark_trials_consumed":0,
@@ -120,8 +143,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tb-science-execution-ratchet-v1
+          name: tb-science-execution-ratchet-v2
           path: |
             EXECUTION_RATCHET_VERIFICATION.json
-            TERMINAL_EXECUTION_ADMISSION.json
+            TERMINAL_EXECUTION_ADMISSION_V3.json
           retention-days: 7
