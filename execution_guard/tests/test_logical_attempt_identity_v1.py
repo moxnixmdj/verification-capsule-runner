@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import unittest
+from pathlib import Path
 
 from execution_guard.logical_attempt_identity_v1 import (
     LogicalAttemptIdentityError,
@@ -60,6 +62,32 @@ class LogicalAttemptIdentityV1Tests(unittest.TestCase):
             logical_attempt_id(slot_id="", task_digest=D1)
         with self.assertRaises(LogicalAttemptIdentityError):
             logical_attempt_id(slot_id="x" * 4097, task_digest=D1)
+
+    def test_rank15_integration_contract_requires_single_source_chain(self):
+        path = Path("execution_guard/RANK15_LOGICAL_ATTEMPT_IDENTITY_INTEGRATION_CONTRACT_V1.json")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            data["identity"]["canonical_material"],
+            ["schema", "slot_id", "task_digest"],
+        )
+        self.assertIn("goal_text", data["identity"]["forbidden_material"])
+        self.assertEqual(
+            data["single_source_chain"]["law"],
+            "DOWNSTREAM_CONSUMERS_MUST_USE_THE_PRODUCED_LOGICAL_ATTEMPT_ID__NO_GOAL_TEXT_RECOMPUTATION",
+        )
+        consumers = set(data["single_source_chain"]["consumers"])
+        for required in {
+            "prestart planner request identity and seed",
+            "AGENT_READY receipt",
+            "durable start CAS",
+            "START_COMMITTED barrier receipt",
+            "HarborScienceAgent controller",
+            "planner request identity for every cycle",
+            "causal journal namespace and events",
+        }:
+            self.assertIn(required, consumers)
+        self.assertFalse(data["accounting"]["task_started"])
+        self.assertEqual(data["accounting"]["benchmark_trials_consumed"], 0)
 
 
 if __name__ == "__main__":
