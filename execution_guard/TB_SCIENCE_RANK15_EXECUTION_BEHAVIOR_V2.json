@@ -9,7 +9,15 @@
     "model_file_cache_allowed": true,
     "source_checkout_pinned": true,
     "task_read_after_carrier_qualification_only": true,
-    "zero_terminal_completion_required": true
+    "zero_terminal_completion_required": true,
+    "canonical_prompt_builder_shared": true,
+    "production_context_guard_every_planner_call": true,
+    "server_context_tokens": 16384,
+    "reserved_completion_tokens": 4096,
+    "max_action_timeout_s": 3600,
+    "transport_max_action_timeout_s": 3600,
+    "seeded_request_identity": true,
+    "seed_identity_excludes_carrier_identity": true
   },
   "benchmark_trials_executed": 0,
   "date": "2026-10-09",
@@ -19,8 +27,30 @@
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V2",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
-  "status": "STAGED_ZERO_EXPOSURE",
+  "status": "STAGED_ZERO_EXPOSURE__V2_RUNTIME_CONTENT_BOUND__EXECUTION_AUTHORITY_FALSE",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "terminal_benchmark_task_exposure": 0,
-  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"
+  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v2.yml",
+  "runtime_bindings": {
+    "planner": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v2.py",
+      "git_blob_sha": "92161f95f211377ed40c11a38e641046bb45bd26"
+    },
+    "agent": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v2.py",
+      "git_blob_sha": "fb4d8202192ca7a7ff03b36b9ba31be48f19dfa4"
+    },
+    "prestart_guard": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v2.py",
+      "git_blob_sha": "b296e442535d4cf7770f7c1464da441c80fc65a1"
+    },
+    "transport": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_environment_transport.py",
+      "git_blob_sha": "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+    },
+    "zero_exposure_tests": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_v2_zero_exposure_tests.py",
+      "git_blob_sha": "d1398ad85d6ea6ac6690fb232866eda5de6e58e8"
+    }
+  }
 }
