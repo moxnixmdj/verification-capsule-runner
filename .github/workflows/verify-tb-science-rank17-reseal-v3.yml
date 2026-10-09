@@ -1,0 +1,41 @@
+name: Verify TB-Science Rank17 V1 zero-exposure reseal
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank17_20261009_v3/**"
+      - "execution_guard/TB_SCIENCE_RANK17_EXECUTION_BEHAVIOR_V3.json"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - ".github/workflows/execute-tb-science-rank17-20261009-v3.yml"
+      - ".github/workflows/verify-tb-science-rank17-reseal-v3.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      C: capsules/tb_science_rank17_20261009_v3
+      RUNTIME_C: capsules/tb_science_rank15_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile fresh control surface
+        run: |
+          set -euo pipefail
+          python -m py_compile "$C/rank17_execution_preflight_v6.py" "$C/rank17_start_cas_v6.py" "$C/rank17_prestart_token_guard_v4.py" "$C/rank17_v6_status_journal_runner.py" "$C/rank17_finalize_receipt_v6.py"
+      - name: Verify zero-exposure reseal graph
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1:${{ github.workspace }}/capsules/tb_science_rank17_20261009_v3
+        run: |
+          set -euo pipefail
+          test ! -e "$C/ACTIVATE_RANK17_V3_PR.json"
+          python "$C/rank17_v3_zero_exposure_reseal_tests.py"
+          python execution_guard/terminal_execution_admission_v3.py --workflow ".github/workflows/execute-tb-science-rank17-20261009-v3.yml" --slot "terminal-bench-science/variable-star-vetting::trial-0" --task-digest "sha256:51bf2b9d8e87a428772d92c6765d83ad3edc7c24283d2ff75af5f050aaee0c67" --require-execution-authority
+          python "$C/rank17_execution_preflight_v6.py"
+          test ! -e rank17_task_read
+          echo "PASS__RANK17_RESEAL__ZERO_TASK_EXPOSURE"
