@@ -2,26 +2,34 @@ name: Verify TB-Science rank15 execution surface
 on:
   push:
     branches:
-      - tbscience-r15-portable-carrier-v1
+      - tbscience-r15-carrier-qualification-v2
 permissions:
   contents: read
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify inert execution surface
-        env:
-          C: capsules/tb_science_rank15_20261009_v1
+
+      - name: Verify inert execution surface and non-regression contract
         run: |
           set -euo pipefail
           test ! -e "$C/ACTIVATE_RANK15_PR.json"
           test "$(git hash-object "$C/rank15_execution_preflight_v1.py")" = "941445c191880794df739d8e9205497b6e2efd2d"
           test "$(git hash-object "$C/rank15_finalize_receipt_v1.py")" = "9edfdb036f2b2b6282cc492f17f4c192ad442d10"
-          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "4c9bc5a50ee998e5f0aa65fa54a5f5d53ab28d2d"
+          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "75cab71e62f06ca6eb80289111c154258c45cc65"
           python -m py_compile "$C/rank15_execution_preflight_v1.py" "$C/rank15_finalize_receipt_v1.py"
           python "$C/rank15_execution_preflight_v1.py"
           CACHE_READY=false HARBOR_OUTCOME=skipped SAFE_ID=protein-active-learning-trial-0 python "$C/rank15_finalize_receipt_v1.py"
@@ -37,18 +45,119 @@ jobs:
           assert r["benchmark_trials_consumed"]==0
           assert r["rerun_credit"] is False
           PY
-          grep -F 'paths:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
-          grep -F 'ACTIVATE_RANK15_PR.json' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
-          ! grep -F 'workflow_dispatch' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
-          ! grep -F 'schedule:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
-          ! grep -F 'Restore exact llama.cpp cache' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
-          grep -F 'Clean-build exact llama.cpp on live runner' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
+          W=.github/workflows/execute-tb-science-rank15-20261009-v1.yml
+          grep -F 'ACTIVATE_RANK15_PR.json' "$W" >/dev/null
+          grep -F 'persist-credentials: false' "$W" >/dev/null
+          grep -F 'Clean-build exact llama.cpp on live runner' "$W" >/dev/null
+          grep -F 'Restore exact Qwen bytes on cache miss or corruption' "$W" >/dev/null
+          grep -F 'kill -0 "$(cat LOCAL_QWEN_SERVER.pid)"' "$W" >/dev/null
+          grep -F 'Qualify exact live planner transport before task exposure' "$W" >/dev/null
+          ! grep -F 'Restore exact llama.cpp cache' "$W"
+          ! grep -F 'workflow_dispatch' "$W"
+          ! grep -F 'schedule:' "$W"
+
+      - name: Clean-build exact llama.cpp on this runner
+        run: |
+          set -euo pipefail
           rm -rf llama.cpp
           git init llama.cpp
           git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
-          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
           git -C llama.cpp checkout --detach FETCH_HEAD
-          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
           cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build llama.cpp/build -j 2 --target llama-server
-          llama.cpp/build/bin/llama-server --version >/dev/null
+          test -x llama.cpp/build/bin/llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache/restore@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Restore exact Qwen bytes on cache miss or corruption
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          MODEL="models/$MODEL_FILE"
+          mkdir -p models
+          if [ -f "$MODEL" ] && echo "$MODEL_SHA256  $MODEL" | sha256sum -c - >/dev/null 2>&1; then
+            :
+          else
+            rm -f "$MODEL"
+            rm -rf model-parts
+            mkdir -p model-parts
+            gh release download "$RELEASE_TAG"               --repo "$GITHUB_REPOSITORY"               --dir model-parts               --pattern "$MODEL_FILE.part*of03"
+            cat               "model-parts/$MODEL_FILE.part01of03"               "model-parts/$MODEL_FILE.part02of03"               "model-parts/$MODEL_FILE.part03of03"               > "$MODEL"
+          fi
+          echo "$MODEL_SHA256  $MODEL" | sha256sum -c -
+
+      - name: Start exact 16K model and fail fast if process dies
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m "models/$MODEL_FILE" --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui             "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat LOCAL_QWEN_SERVER.pid)" 2>/dev/null; then
+              cat LOCAL_QWEN_SERVER.log
+              exit 1
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+          grep -Eq "n_ctx_slot = 16384|n_ctx_slot = 16[0-9]{3}" LOCAL_QWEN_SERVER.log
+
+      - name: Execute exact planner synthetic tool-call qualification
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$C"
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from canonical.runtime import harbor_science_planner_v1 as planner
+          prompt=(
+              "Synthetic zero-benchmark carrier qualification. No benchmark task exists. "
+              "Use exactly material requirement R1. Return exactly one short candidate whose "
+              "command writes synthetic-ok to /tmp/brain-rank15-carrier.txt and whose verify_command "
+              "checks that the file contains synthetic-ok. Do not execute anything."
+          )
+          out=planner.plan(prompt,timeout_s=180)
+          proposal=planner.extract_json_object(out["text"])
+          assert proposal["material_requirements"]==["R1"],proposal
+          candidates=proposal.get("candidates")
+          assert isinstance(candidates,list) and len(candidates)==1,proposal
+          candidate=candidates[0]
+          assert candidate.get("covers")==["R1"],candidate
+          assert isinstance(candidate.get("command"),str) and candidate["command"],candidate
+          assert isinstance(candidate.get("verify_command"),str) and candidate["verify_command"],candidate
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_CARRIER_QUALIFICATION_V2",
+            "status":"PASS__LIVE_16K_MODEL__EXACT_PLANNER_TOOL_CALL__ZERO_BENCHMARK_EXPOSURE",
+            "input_tokens":out.get("input_tokens"),
+            "planner_duration_s":out.get("duration_s"),
+            "proposal_sha256":hashlib.sha256(out["text"].encode()).hexdigest(),
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          Path("RANK15_CARRIER_QUALIFICATION.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tbscience-rank15-carrier-qualification-v2
+          path: |
+            RANK15_EXECUTION_PREFLIGHT.json
+            RANK15_CARRIER_QUALIFICATION.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 2
