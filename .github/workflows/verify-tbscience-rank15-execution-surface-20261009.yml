@@ -2,7 +2,7 @@ name: Verify TB-Science rank15 execution surface
 on:
   push:
     branches:
-      - stage/tb-science-rank15-execution-surface-20261009-v1
+      - reconcile-rank15-restored-binding-20261009
 permissions:
   contents: read
 jobs:
