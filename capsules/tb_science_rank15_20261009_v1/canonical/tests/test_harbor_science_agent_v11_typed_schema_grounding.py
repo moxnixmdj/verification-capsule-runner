@@ -123,9 +123,28 @@ class V11Tests(unittest.TestCase):
             result = asyncio.run(s.run_science_goal("synthetic science goal", env, max_cycles=2))
         self.assertEqual(env.commands.count("exit 2"), 1, env.commands)
         self.assertTrue(any(
-            row.get("kind") == "BRAIN_REJECTED_CONTENT_ADDRESSED_FAILED_ACTION_REPEAT"
+            row.get("kind") == "BRAIN_REJECTED_CONTENT_ADDRESSED_FAILED_EFFECT_REPEAT"
             for row in result["trace"]
         ), result["trace"])
+
+    def test_changing_verifier_does_not_reauthorize_same_failed_effect(self):
+        env = Env()
+        first = candidate("bad1", "exit 2")
+        second = candidate("bad2", "exit 2")
+        second["verify_command"] = "printf changed-verifier"
+        with tempfile.TemporaryDirectory() as td, patch.dict(
+            os.environ, {"BRAIN_EVIDENCE_STORE_DIR": td}, clear=False
+        ), patch.object(s.science_planner, "plan", planner([
+            {"material_requirements": ["R1"], "candidates": [first]},
+            {"material_requirements": ["R1"], "candidates": [second]},
+        ])):
+            result = asyncio.run(s.run_science_goal("synthetic science goal", env, max_cycles=2))
+        self.assertEqual(env.commands.count("exit 2"), 1, env.commands)
+        rejected = [
+            row for row in result["trace"]
+            if row.get("kind") == "BRAIN_REJECTED_CONTENT_ADDRESSED_FAILED_EFFECT_REPEAT"
+        ]
+        self.assertEqual(len(rejected), 1, result["trace"])
 
     def test_missing_schema_key_blocks_effect_before_execution(self):
         env = Env(fail_schema=True)
