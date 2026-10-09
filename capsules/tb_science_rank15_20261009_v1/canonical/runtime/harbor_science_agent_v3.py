@@ -35,7 +35,7 @@ except ImportError:
 SCHEMA = "PROJECT_BRAIN_HARBOR_SCIENCE_AGENT_TRACE_V3"
 MAX_CYCLES = 12
 MAX_REQUIREMENTS = 16
-MAX_CANDIDATES = 8
+MAX_CANDIDATES = 4
 MAX_OUTPUT_CHARS = 16000
 PLANNER_TIMEOUT_S = 300
 DEFAULT_ACTION_TIMEOUT_S = 1800
@@ -341,6 +341,10 @@ def _nonempty_strings(value: Any, *, maximum: int, field: str) -> list[str]:
         if not isinstance(item, str) or not item.strip():
             raise RuntimeError(f"SCIENCE_{field}_INVALID")
         s = item.strip()
+        if field in {"MATERIAL_REQUIREMENTS", "COVERS"} and not re.fullmatch(
+            r"[A-Za-z0-9_.:-]{1,32}", s
+        ):
+            raise RuntimeError(f"SCIENCE_{field}_INVALID")
         if s in out:
             raise RuntimeError(f"SCIENCE_{field}_DUPLICATE")
         out.append(s)
