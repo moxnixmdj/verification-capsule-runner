@@ -140,7 +140,7 @@ jobs:
         run: |
           set -euo pipefail
           export PYTHONPATH="$C"
-          python "$C/rank15_prestart_token_guard_v1.py"
+          python "$C/rank15_prestart_token_guard_v2.py"
           cat RANK15_PRESTART_GUARD.json
 
       - name: Execute exactly frozen rank15 slot
@@ -155,7 +155,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
           harbor run \
             -p "$TASK_PATH" \
-            -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent \
+            -a canonical.runtime.harbor_science_agent_v2:HarborScienceAgent \
             -k 1 -n 1 -r 0 \
             --agent-timeout-multiplier 0.48 \
             --environment-build-timeout-multiplier 1.0 \
