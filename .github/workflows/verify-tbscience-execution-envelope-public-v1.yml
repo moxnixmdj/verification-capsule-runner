@@ -1,0 +1,82 @@
+name: Verify TB-Science execution envelope public replay V1
+
+on:
+  push:
+    branches: ["verify/tbscience-execution-envelope-v1-20261009"]
+    paths:
+      - "capsules/tb_science_execution_envelope_v1/**"
+      - ".github/workflows/verify-tbscience-execution-envelope-public-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      C: capsules/tb_science_execution_envelope_v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact candidate bytes and zero-exposure scope
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "c50c7e3605f19f1be539c20dc546a95257f1ff76"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "4aac3888e163aa6c2d3cc183f2725fe8db9f27bd"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "befc046691f52d00e6aece26a0b5c4663a19af11"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "1f07325dcd7510c954022376fe2053fd910569b1"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_environment_transport.py")" = "fdd7d5b75af65cbd4359f2d2afadc43c95ac09d7"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "8ab475d4d4fdb996f688110e0552bc95d1aecd0b"
+          test ! -e "$C/ACTIVATE_RANK15_PR.json"
+          test ! -e "$C/ACTIVATE_RANK15_PORTABLE_V2_PR.json"
+          python -m py_compile "$C"/canonical/runtime/*.py "$C"/canonical/tests/*.py
+      - name: Run exact focused adversarial suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_execution_envelope_v1
+        run: |
+          set -euo pipefail
+          python -m unittest -v             canonical.tests.test_harbor_science_planner_v1             canonical.tests.test_harbor_environment_transport             canonical.tests.test_harbor_science_agent_v1
+      - name: Emit exact zero-exposure receipt
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          C=pathlib.Path("capsules/tb_science_execution_envelope_v1")
+          files=[
+            "canonical/runtime/harbor_environment_transport.py",
+            "canonical/runtime/harbor_science_planner_v1.py",
+            "canonical/runtime/harbor_science_agent_v1.py",
+            "canonical/tests/test_harbor_science_planner_v1.py",
+            "canonical/tests/test_harbor_environment_transport.py",
+            "canonical/tests/test_harbor_science_agent_v1.py",
+          ]
+          blobs={rel:subprocess.check_output(["git","hash-object",str(C/rel)],text=True).strip() for rel in files}
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_ENVELOPE_PUBLIC_REPLAY_V1",
+            "status":"PASS__EXACT_CONTEXT_AND_TIMEOUT_ENVELOPES__ZERO_BENCHMARK_EXPOSURE",
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "candidate_blobs":blobs,
+            "server_context_tokens":16384,
+            "reserved_completion_tokens":4096,
+            "maximum_input_tokens":12288,
+            "maximum_environment_exec_timeout_s":3600,
+            "proved":["OVERFLOW_REJECTED_BEFORE_INFERENCE","EXACT_BOUNDARY_ACCEPTED","PLANNER_CONTROLLER_TRANSPORT_TIMEOUT_BOUND_EQUAL"],
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          pathlib.Path("TBSCIENCE_EXECUTION_ENVELOPE_PUBLIC_REPLAY_V1.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-execution-envelope-public-replay-v1
+          path: TBSCIENCE_EXECUTION_ENVELOPE_PUBLIC_REPLAY_V1.json
+          retention-days: 7
