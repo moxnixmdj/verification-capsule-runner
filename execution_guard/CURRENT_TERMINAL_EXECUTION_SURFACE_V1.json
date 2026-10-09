@@ -2,8 +2,8 @@
   "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V2_PR.json",
   "active": true,
   "authority": {
-    "git_blob_sha": "61629b854f4be1e940a3f68d1a676e40b4e61ebf",
-    "path": "capsules/tb_science_rank15_20261009_v1/TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V1.json"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V2.json",
+    "git_blob_sha": "710abe99e5ff92c3b0ec0086123edade248a6477"
   },
   "behavior": {
     "git_blob_sha": "5caedddb7b5714fe74c4ba5709a43391e66dcf3a",
@@ -15,14 +15,14 @@
   },
   "benchmark_trials_consumed": 0,
   "date": "2026-10-09",
-  "execution_authority": false,
+  "execution_authority": true,
   "family": "TB_SCIENCE",
   "hard_nonclaims": [
-    "NO_FRESH_RANK15_V2_EXECUTION_CLAIM_YET",
     "NO_RANK15_V2_ACTIVATION_FILE",
     "NO_RANK15_TASK_READ",
     "NO_RANK15_TASK_START",
-    "NO_EXECUTION_AUTHORITY"
+    "NO_RANK15_RESULT",
+    "NO_ACCEPTANCE_OR_TERMINAL_CREDIT"
   ],
   "incremental_spend_usd": 0,
   "invariant_registry": {
@@ -30,16 +30,32 @@
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json"
   },
   "ledger": {
-    "git_blob_sha": "c9b887ac4fb57046be666492748d25ca96056378",
-    "path": "capsules/tb_science_rank15_20261009_v1/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V19.json"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V21.json",
+    "git_blob_sha": "62eec1814fa9b1682772f096c36200c0069b9f00"
   },
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
-  "status": "STAGED_ZERO_EXPOSURE__RANK15_V2_TWO_VERIFIED_INVARIANTS_RATCHETED__EXECUTION_AUTHORITY_FALSE",
+  "status": "ACTIVE_ZERO_EXPOSURE__RANK15_V2_RATCHET_RESEALED__FRESH_V2_EPOCH_AND_CLAIM_BOUND__ACTIVATION_NOT_YET_ARMED",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "task_read_authority": false,
   "task_started": false,
   "terminal_credit_delta": 0,
-  "workflow_git_blob_sha": "13d9e4a402b10f43d22b7c8cdbc80ec9e75dffb9",
-  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"
+  "workflow_git_blob_sha": "77b4f822a4785f185453a18a1de69256254736bd",
+  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v2.yml",
+  "epoch": {
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V2.json",
+    "git_blob_sha": "029fb6e958e8ab451fcd2fa75da64c8cff5f11b6"
+  },
+  "execution_claim": {
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V2.json",
+    "git_blob_sha": "fda33be2c4b75ba397a55ee912bbcfab5c5e3c97"
+  },
+  "preflight": {
+    "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py",
+    "git_blob_sha": "47652d7dd8f9bedfd8df3736b1bf96548f274aee"
+  },
+  "finalizer": {
+    "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py",
+    "git_blob_sha": "d05cb230372528e1e64e1b9a24fd68206f4bbaaf"
+  }
 }

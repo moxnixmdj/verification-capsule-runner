@@ -49,7 +49,7 @@ jobs:
             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
             --require-activation \
             --require-execution-authority
-          python "$C/rank15_execution_preflight_v1.py" --require-activation
+          python "$C/rank15_execution_preflight_v2.py" --require-activation
 
       - name: Install exact Harbor
         run: |
@@ -170,14 +170,14 @@ jobs:
           CACHE_READY: ${{ steps.carrier.outputs.ready }}
           HARBOR_OUTCOME: ${{ steps.execute.outcome }}
         run: |
-          python "$C/rank15_finalize_receipt_v1.py"
+          python "$C/rank15_finalize_receipt_v2.py"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: tb-science-protein-active-learning-trial-0-rank15-v2
           path: |
-            protein-active-learning-trial-0__SLOT_RECEIPT_V1.json
+            protein-active-learning-trial-0__SLOT_RECEIPT_V2.json
             TERMINAL_EXECUTION_ADMISSION.json
             RANK15_EXECUTION_PREFLIGHT.json
             RANK15_PRESTART_GUARD.json
