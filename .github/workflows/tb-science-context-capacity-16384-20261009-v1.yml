@@ -1,0 +1,178 @@
+name: TB-Science 16384 context capacity zero-exposure preflight v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_context_capacity_16384_20261009_v1/ACTIVATE.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-context-capacity-16384-20261009-v1-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prove zero exposure and exact route identity before model start
+        run: |
+          set -euo pipefail
+          P=capsules/tb_science_context_capacity_16384_20261009_v1
+          R=capsules/tb_science_rank13_20261009_v1
+
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path("capsules/tb_science_context_capacity_16384_20261009_v1/ACTIVATE.json")
+          x=json.loads(p.read_text())
+          assert x["status"]=="ACTIVE_ZERO_EXPOSURE_PREFLIGHT_ONLY"
+          assert x["observed_rank13_request_tokens"]==9202
+          assert x["prior_context_tokens"]==8192
+          assert x["candidate_context_tokens"]==16384
+          assert x["headroom_tokens"]==4096
+          assert x["strict_required_context_tokens"]==13299
+          assert x["safety"]["benchmark_task_exposure_authorized"] is False
+          assert x["safety"]["benchmark_task_exposure_count"]==0
+          assert x["safety"]["benchmark_trials_authorized"]==0
+          assert x["safety"]["harbor_execution_authorized"] is False
+          assert x["safety"]["rank14_task_start_authorized"] is False
+          assert x["safety"]["incremental_spend_usd_max"]==0
+          assert x["authority"]["rank14_execution_authority"] is False
+          PY
+
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_planner_v1.py")" = "715aee168f02cb4abff961849b2b26709eef2e64"
+          test "$(git hash-object "$R/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$R/RANK13_EPOCH_V1.json")" = "47ba6fe1583b59152860504ab58720ffdb00a1f0"
+          test "$(git hash-object "$R/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+
+          test "$(nproc)" -ge 4
+          awk '/MemTotal/{exit !($2 >= 12000000)}' /proc/meminfo
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire and verify exact Qwen model if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error \
+              -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+              'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+
+      - name: Start exact local cognition endpoint with only context capacity changed
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b --host 127.0.0.1 --port 8080 \
+            -c 16384 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}" \
+            > CONTEXT_CAPACITY_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 300); do
+            if curl -fsS http://127.0.0.1:8080/health > CONTEXT_CAPACITY_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Run synthetic request above observed rank13 context class
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank13_20261009_v1
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_context_capacity_16384_20261009_v1/run_preflight.py
+          ! grep -Fq 'exceeds the available context size' CONTEXT_CAPACITY_SERVER.log
+
+      - name: Independently validate context-capacity receipt
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,pathlib,re
+          p=pathlib.Path("CONTEXT_CAPACITY_RECEIPT.json")
+          r=json.loads(p.read_text())
+          assert r["pass"] is True and r["live_probe_pass"] is True
+          assert r["benchmark_exposure_count"]==0
+          assert r["benchmark_trials_executed"]==0
+          assert r["harbor_execution"] is False
+          assert r["rank14_task_started"] is False
+          assert r["observed_rank13_request_tokens"]==9202
+          assert r["prior_context_tokens"]==8192
+          assert r["candidate_context_tokens"]==16384
+          assert r["headroom_tokens"]==4096
+          assert r["strict_required_context_tokens"]==13299
+          assert r["observed_probe_tokens"]>=9202
+          assert r["selected_input_tokens"]>=9250
+          assert r["selected_input_tokens"]<=9400
+          assert r["model_sha256"]=="f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c"
+          assert r["runtime_commit"]=="bec4772f6a2527d371557b5d2032641e5ff7619c"
+          assert r["planner_git_blob_sha"]=="715aee168f02cb4abff961849b2b26709eef2e64"
+          assert r["command_policy_git_blob_sha"]=="a525773417291c7a4841bf35e1baff5370350d0d"
+          assert r["verification_authority_mutated"] is False
+          assert re.fullmatch(r"[0-9a-f]{64}",r["receipt_sha256"])
+          assert r["candidate_context_tokens"] >= r["strict_required_context_tokens"]
+
+          core=dict(r); claimed=core.pop("receipt_sha256")
+          actual=hashlib.sha256(json.dumps(core,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False).encode()).hexdigest()
+          assert actual==claimed,(actual,claimed)
+
+          gate={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_CONTEXT_CAPACITY_16384_PUBLIC_GATE_V1",
+            "status":"PASS__ZERO_EXPOSURE_16384_CONTEXT_ROUTE_COMPLETED_ABOVE_RANK13_REQUEST_CLASS",
+            "pass":True,
+            "receipt_sha256":claimed,
+            "observed_probe_tokens":r["observed_probe_tokens"],
+            "candidate_context_tokens":r["candidate_context_tokens"],
+            "strict_required_context_tokens":r["strict_required_context_tokens"],
+            "model_sha256":r["model_sha256"],
+            "llama_cpp_commit":r["runtime_commit"],
+            "benchmark_exposure_count":0,
+            "benchmark_trials_executed":0,
+            "rank14_task_started":False,
+            "incremental_spend_usd":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0
+          }
+          pathlib.Path("CONTEXT_CAPACITY_GATE.json").write_text(json.dumps(gate,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(gate,sort_keys=True))
+          PY
+
+      - name: Upload zero-exposure context-capacity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-context-capacity-16384-zero-exposure-v1
+          path: |
+            CONTEXT_CAPACITY_RECEIPT.json
+            CONTEXT_CAPACITY_GATE.json
+            CONTEXT_CAPACITY_PROPOSAL.json
+            CONTEXT_CAPACITY_HEALTH.json
+            CONTEXT_CAPACITY_SERVER.log
+          if-no-files-found: warn
+          retention-days: 7
