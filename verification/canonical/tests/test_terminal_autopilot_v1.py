@@ -30,7 +30,7 @@ def manifest():
         "max_concurrency": 16,
         "obligations": [{"id": x, "status": "OPEN"} for x in OPEN],
         "blockers": [],
-        "routes": [{"id": "SCOPE_COMPLETE_UNIVERSAL_COVER", "status": "OPEN", "can_discharge": OPEN}],
+        "routes": [{"id": "SCOPE_COMPLETE_UNIVERSAL_COVER", "status": "OPEN", "can_discharge": OPEN, "proof_cost_bound": True, "estimated_wall_clock_units": 1.0}],
         "active_jobs": [],
     }
 
