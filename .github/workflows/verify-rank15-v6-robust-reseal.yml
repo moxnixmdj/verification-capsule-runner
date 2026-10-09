@@ -6,11 +6,9 @@ on:
     paths:
       - ".github/workflows/execute-tb-science-rank15-20261009-v6.yml"
       - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json"
+      - "execution_guard/TB_SCIENCE_RANK15_CONSUMED_PUBLIC_QUARANTINE_V1.json"
       - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json"
-      - "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json"
-      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py"
+      - "capsules/tb_science_rank15_20261009_v1/**"
       - ".github/workflows/verify-rank15-v6-robust-reseal.yml"
 
 permissions:
@@ -27,57 +25,87 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Compile exact control plane
-        run: |
-          set -euo pipefail
-          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
-          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
-          python -m py_compile "$C/rank15_execution_preflight_v6.py" "$C/rank15_start_cas_v6.py" "$C/rank15_finalize_receipt_v6.py" "$C/rank15_v6_status_journal_runner.py"
-      - name: Verify staged proof-carrying preflight
-        run: |
-          set -euo pipefail
-          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
-          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
-          python "$C/rank15_execution_preflight_v6.py"
-      - name: Verify runtime-derived admission without activation
-        run: |
-          set -euo pipefail
-          python execution_guard/terminal_execution_admission_v3.py \
-            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v6.yml" \
-            --slot "terminal-bench-science/protein-active-learning::trial-0" \
-            --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
-            --require-execution-authority
-      - name: Re-run runtime composition falsifiers
-        run: |
-          set -euo pipefail
-          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
-          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
-          PYTHONPATH="$GITHUB_WORKSPACE" python execution_guard/test_terminal_execution_admission_v3.py
-          python "$C/rank15_v6_runtime_composition_tests.py"
-      - name: Prove V6 permissions and zero exposure
+
+      - name: Verify irreversible Rank15 historical quarantine
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, pathlib
-          root=pathlib.Path(".")
-          surface=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text())
-          assert surface["execution_authority"] is True
-          assert surface["task_read_authority"] is True
-          assert surface["task_started"] is False
-          assert surface["benchmark_trials_consumed"] == 0
-          behavior=json.loads((root/"execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json").read_text())
-          assert behavior["execution_authority"] is True
-          assert behavior["behavior"]["agent_ready_precedes_start_cas"] is True
-          assert behavior["behavior"]["child_github_credentials_stripped"] is True
-          assert behavior["behavior"]["durable_action_intent_ack_before_effect"] is True
-          assert behavior["behavior"]["durable_state_commit_ack_before_next_action"] is True
-          assert behavior["behavior"]["uncertain_effect_replay_forbidden"] is True
-          w=(root/".github/workflows/execute-tb-science-rank15-20261009-v6.yml").read_text()
-          assert "contents: read" in w
-          assert "statuses: write" in w
-          assert "contents: write" not in w
-          assert "persist-credentials: false" in w
-          assert "rank15_v6_status_journal_runner.py" in w
-          assert "rank15_start_cas_v6.py --acquire" not in w
-          assert not (root/"capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json").exists()
+          import hashlib, json, pathlib
+          R=pathlib.Path(".")
+          SLOT="terminal-bench-science/protein-active-learning::trial-0"
+          DIGEST="sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
+          def blob(rel):
+              p=R/rel
+              raw=p.read_bytes()
+              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          qpath="execution_guard/TB_SCIENCE_RANK15_CONSUMED_PUBLIC_QUARANTINE_V1.json"
+          q=json.loads((R/qpath).read_text())
+          assert q["schema"]=="PROJECT_BRAIN_TB_SCIENCE_RANK15_CONSUMED_PUBLIC_QUARANTINE_V1"
+          assert q["slot_id"]==SLOT and q["task_digest"]==DIGEST
+          ir=q["irreversible_result"]
+          assert ir["reward"]==0
+          assert ir["final_status"]=="FINAL_ZERO"
+          assert ir["durable_start_cas_acquired"] is True
+          assert ir["replay_authority"] is False
+          assert ir["replacement_carrier_authority"] is False
+          z=q["quarantine"]
+          assert z["current_surface_must_be_inactive"] is True
+          assert z["execution_authority"] is False
+          assert z["task_read_authority"] is False
+          assert z["task_start_authority"] is False
+          assert z["rank15_reactivation_authority"] is False
+          assert z["rank15_replay_authority"] is False
+          assert z["rank15_replacement_authority"] is False
+          assert z["fresh_rank16_reseal_required"] is True
+
+          surface=json.loads((R/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text())
+          if surface["slot_id"]==SLOT:
+              # Rank15 may only appear as inactive historical quarantine now.
+              assert surface["active"] is False
+              assert surface["execution_authority"] is False
+              assert surface["task_read_authority"] is False
+              assert surface["task_started"] is True
+              assert surface["benchmark_trials_consumed"]==1
+          else:
+              # A successor surface is legitimate only if Rank15 remains sealed.
+              assert surface["slot_id"] != SLOT
+              assert surface["task_digest"] != DIGEST
+          assert not (R/"capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json").exists()
+
+          # Historical bytes remain immutable/readable, but no longer current.
+          behavior="execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json"
+          assert blob(behavior)=="c715fdf39e94eb5f7dbab8e099dfbc62fcab61bc"
+          workflow=".github/workflows/execute-tb-science-rank15-20261009-v6.yml"
+          assert blob(workflow)=="7fb38b0e110455a2115034254ec4e77a13a66afa"
+          print("PASS__RANK15_V6_HISTORICAL_QUARANTINE__NO_REPLAY_OR_REPLACEMENT")
           PY
+
+      - name: Preserve admission and controller regression coverage
+        run: |
+          set -euo pipefail
+          python -m py_compile execution_guard/terminal_execution_admission_v3.py
+          PYTHONPATH="$GITHUB_WORKSPACE" python execution_guard/test_terminal_execution_admission_v3.py
+
+      - name: Emit historical quarantine receipt
+        run: |
+          python - <<'PY'
+          import json
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_V6_HISTORICAL_QUARANTINE_VERIFICATION_V1",
+            "status":"PASS__RANK15_FINAL_ZERO_QUARANTINED__SUCCESSOR_SURFACE_ALLOWED__NO_REPLAY_OR_REPLACEMENT",
+            "rank15_task_started":True,
+            "rank15_benchmark_trials_consumed":1,
+            "rank15_reward":0,
+            "rank15_replay_authority":False,
+            "rank15_replacement_authority":False,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          open("RANK15_HISTORICAL_QUARANTINE_VERIFICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-rank15-v6-historical-quarantine
+          path: RANK15_HISTORICAL_QUARANTINE_VERIFICATION.json
+          retention-days: 7
