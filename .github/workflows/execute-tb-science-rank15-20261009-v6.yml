@@ -51,7 +51,7 @@ jobs:
           assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank15-20261009-v6"
           assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
           PY
-          python execution_guard/terminal_execution_admission_v2.py \
+          python execution_guard/terminal_execution_admission_v3.py \
             --workflow ".github/workflows/execute-tb-science-rank15-20261009-v6.yml" \
             --slot "terminal-bench-science/protein-active-learning::trial-0" \
             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
@@ -179,7 +179,7 @@ jobs:
           name: tb-science-protein-active-learning-trial-0-rank15-v6
           path: |
             protein-active-learning-trial-0__SLOT_RECEIPT_V6.json
-            TERMINAL_EXECUTION_ADMISSION_V2.json
+            TERMINAL_EXECUTION_ADMISSION_V3.json
             RANK15_EXECUTION_PREFLIGHT_V6.json
             RANK15_START_CAS_CHECK_V6.json
             RANK15_START_CAS_V6.json

@@ -1,41 +1,41 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-09",
-  "status": "QUARANTINED_V6_SLOT_BOUND_JOURNALED_RESEAL__ZERO_EXPOSURE__VERIFICATION_REQUIRED",
+  "status": "ACTIVE_V6_QUOTE_SAFE_PROOF_CARRYING_SLOT_BOUND_JOURNALED_RUNTIME__FINAL_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v6.yml",
-  "workflow_git_blob_sha": "225ad2cadd536bdae94bbb5c3b7e79216438feb9",
+  "workflow_git_blob_sha": "7fb38b0e110455a2115034254ec4e77a13a66afa",
   "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json",
-    "git_blob_sha": "c7af2a492c94d8648434bd8044256d7a1da65ac7"
+    "git_blob_sha": "c715fdf39e94eb5f7dbab8e099dfbc62fcab61bc"
   },
   "authority": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json",
-    "git_blob_sha": "d8790fc5097c24f7a3030d1531a48149b5b3113e"
+    "git_blob_sha": "e50a434c0caf92c752407f7ce7a990461a5eb968"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V25.json",
-    "git_blob_sha": "224f98878b874908305b303de863a909a8e71185"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V28.json",
+    "git_blob_sha": "5ec135b173476298f52abc30f8e5a885fee8fc21"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
-    "git_blob_sha": "3d156b5b3274ea7fe6542206137ddc7c782903b5"
+    "git_blob_sha": "639eb816769624f5941f15863d75ca0b265bc0df"
   },
   "admission_guard": {
-    "path": "execution_guard/terminal_execution_admission_v2.py",
-    "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+    "path": "execution_guard/terminal_execution_admission_v3.py",
+    "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
   },
   "epoch": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json",
-    "git_blob_sha": "fd793f71ecaf50a9ede714231a2160ce4692fe5f"
+    "git_blob_sha": "a996f76a06a104570375d4703d79274ba8786f7d"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json",
-    "git_blob_sha": "800bd5aeecc75105bc6b3c3804780c6f26fff04e"
+    "git_blob_sha": "bebd667e92c3e1f0bba2bcb7acc25858e816fee7"
   },
   "preflight": {
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py",
@@ -45,14 +45,14 @@
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v6.py",
     "git_blob_sha": "30a0b2f6ca1b9bc0d9419b40db5084457876c881"
   },
-  "execution_authority": false,
-  "task_read_authority": false,
+  "execution_authority": true,
+  "task_read_authority": true,
   "task_started": false,
   "benchmark_trials_consumed": 0,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
   "hard_nonclaims": [
-    "NO_RANK15_V6_ACTIVATION_FILE_ON_QUARANTINED_RESEAL",
+    "NO_RANK15_V6_ACTIVATION_FILE_ON_FINAL_RESEAL",
     "NO_RANK15_TASK_READ",
     "NO_RANK15_TASK_START",
     "NO_RANK15_RESULT",
@@ -60,11 +60,18 @@
     "NO_REPLAY_OR_REPLACEMENT_AFTER_DURABLE_START_CAS"
   ],
   "reseal": {
-    "brain_authority_v9_blob": "c98bc25882279a12aece65fb1bbd827b90148b82",
-    "brain_ledger_v25_blob": "e41984176986421042a93527b21be4d6a4f10b63",
-    "public_authority_v6_blob": "d8790fc5097c24f7a3030d1531a48149b5b3113e",
-    "epoch_v6_blob": "fd793f71ecaf50a9ede714231a2160ce4692fe5f",
-    "execution_claim_v6_blob": "800bd5aeecc75105bc6b3c3804780c6f26fff04e",
-    "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca"
+    "brain_authority_v12_blob": "04e2c15b143dd0e4f80bb96c82b7573b780dd56f",
+    "brain_ledger_v28_blob": "d5bcd21a6a8ab977f72a1a0e10b364ead61ceb3e",
+    "public_authority_v6_blob": "e50a434c0caf92c752407f7ce7a990461a5eb968",
+    "public_ledger_v28_blob": "5ec135b173476298f52abc30f8e5a885fee8fc21",
+    "epoch_v6_blob": "a996f76a06a104570375d4703d79274ba8786f7d",
+    "execution_claim_v6_blob": "bebd667e92c3e1f0bba2bcb7acc25858e816fee7",
+    "workflow_v6_blob": "7fb38b0e110455a2115034254ec4e77a13a66afa",
+    "behavior_v6_blob": "c715fdf39e94eb5f7dbab8e099dfbc62fcab61bc",
+    "invariant_registry_blob": "639eb816769624f5941f15863d75ca0b265bc0df",
+    "admission_guard_v3_blob": "f8f3346a8863abdd4a15a5553fc6a49726642c81",
+    "admission_guard_test_v3_blob": "44b01477ef6c100ced26dd03588dc6387c2a4865",
+    "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca",
+    "quarantined_reseal_merge": "2ce17ebe2617a5c18453c16e002f16c15411f369"
   }
 }

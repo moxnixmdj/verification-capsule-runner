@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6",
   "date": "2026-10-09",
-  "status": "STAGED_ZERO_EXPOSURE__SLOT_BOUND_IDENTITY__AGENT_READY_START__DURABLE_CAUSAL_JOURNAL__EXECUTION_AUTHORITY_FALSE",
+  "status": "FINAL_RESEAL_CANDIDATE__V6_SLOT_BOUND_IDENTITY__AGENT_READY_START__DURABLE_CAUSAL_JOURNAL__ZERO_EXPOSURE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
@@ -39,7 +39,14 @@
     "uncertain_effect_replay_forbidden": true,
     "parent_owns_durable_writer_credentials": true,
     "child_owns_no_github_credentials": true,
-    "aggregate_acceptance_credit_from_single_slot_forbidden": true
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true,
+    "zero_terminal_completion_required": true,
+    "seeded_request_identity": true,
+    "seed_identity_excludes_carrier_identity": true,
+    "pre_task_read_cas_absence_check_required": true,
+    "start_cas_occurs_after_prestart_guard": true,
+    "durable_start_record_binds_logical_attempt_id": true,
+    "start_cas_postwrite_readback_required": true
   },
   "runtime_bindings": {
     "planner": {
@@ -111,14 +118,14 @@
       "git_blob_sha": "42526da63dba9dd4e1417e9045542369179c49f2"
     },
     "admission_guard": {
-      "path": "execution_guard/terminal_execution_admission_v2.py",
-      "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+      "path": "execution_guard/terminal_execution_admission_v3.py",
+      "git_blob_sha": "e4c501cea12173bd89958e4e98217f1265af6604"
     }
   },
   "task_read": false,
   "task_started": false,
   "benchmark_trials_executed": 0,
-  "execution_authority": false,
+  "execution_authority": true,
   "promotion_authority": false,
   "acceptance_credit_delta": 0,
   "terminal_credit_delta": 0,
