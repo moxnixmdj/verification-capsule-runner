@@ -1,0 +1,190 @@
+name: Verify TB-Science 16K zero-exposure context capacity
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_context_16k_preflight_20261009_v1/RUN_CONTEXT_16K_V1.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-context-16k-preflight-20261009-v1
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact current Brain planner bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_context_16k_preflight_20261009_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "715aee168f02cb4abff961849b2b26709eef2e64"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "c2aeed8fcef24126035cd8d90a436fae116e964d"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_planner_v1
+
+      - name: Clean-build exact llama.cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Acquire and verify exact Qwen model if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p models
+          if [ ! -f models/Qwen3.5-9B-M-TS-Q4_K_M.gguf ]; then
+            curl -L --fail --retry 3 --retry-delay 3 --silent --show-error -o models/Qwen3.5-9B-M-TS-Q4_K_M.gguf 'https://huggingface.co/TheStageAI/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-M-TS-Q4_K_M.gguf?download=true'
+          fi
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          free_bytes="$(df --output=avail -B1 . | tail -1 | tr -d ' ')"
+          test "$free_bytes" -ge 12884901888
+          printf '{"post_model_free_bytes":%s}\n' "$free_bytes" > CONTEXT_16K_RESOURCE_GATE.json
+
+      - name: Start exact route at 16384 context
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf \
+            --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 \
+            -c 16384 -t 4 --parallel 1 --jinja --no-webui \
+            "${EXTRA[@]}" > CONTEXT_16K_SERVER.log 2>&1 &
+          echo $! > CONTEXT_16K_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > CONTEXT_16K_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Measure and execute zero-exposure 9459+ token synthetic request
+        shell: bash
+        env:
+          PYTHONPATH: capsules/tb_science_context_16k_preflight_20261009_v1
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          from canonical.runtime import harbor_science_planner_v1 as planner
+          from canonical.runtime.harbor_command_policy import validate_environment_command
+
+          MIN_TOKENS = 9459
+          MAX_TOKENS = 12000
+          CANDIDATE_CONTEXT = 16384
+
+          instruction = (
+              "Synthetic zero-exposure context-capacity verification only. "
+              "There is no benchmark task, hidden task, scientific problem, or evaluation case here. "
+              "Use submit_science_proposal exactly once. Use material requirement CAPACITY_ONLY. "
+              "Return one harmless candidate with command 'echo capacity-ok' and verify_command 'test true'. "
+              "Ignore the repetitive padding below; it exists only to measure transport context capacity. "
+          )
+          suffix = (
+              " End synthetic padding. Again: submit one harmless CAPACITY_ONLY proposal, "
+              "command 'echo capacity-ok', verify_command 'test true'."
+          )
+
+          def make_prompt(n):
+              return instruction + (" capacity" * n) + suffix
+
+          lo, hi = 0, 15000
+          while lo < hi:
+              mid = (lo + hi) // 2
+              tokens = planner.count_input_tokens(planner._request_payload(make_prompt(mid)))
+              if tokens < MIN_TOKENS:
+                  lo = mid + 1
+              else:
+                  hi = mid
+
+          prompt = make_prompt(lo)
+          measured = planner.count_input_tokens(planner._request_payload(prompt))
+          assert MIN_TOKENS <= measured <= MAX_TOKENS, measured
+
+          out = planner.plan(prompt, timeout_s=300)
+          assert out["input_tokens"] == measured, (out["input_tokens"], measured)
+          assert out["model"] == "brain-qwen3.5-9b", out["model"]
+          proposal = planner.extract_json_object(out["text"])
+          reqs = proposal.get("material_requirements")
+          candidates = proposal.get("candidates")
+          assert isinstance(reqs, list) and reqs
+          assert isinstance(candidates, list) and 1 <= len(candidates) <= planner.MAX_CANDIDATES_PER_PROPOSAL
+          for candidate in candidates:
+              validate_environment_command(candidate["command"])
+              validate_environment_command(candidate["verify_command"])
+
+          receipt = {
+              "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT_16K_ZERO_EXPOSURE_LIVE_RECEIPT_V1",
+              "status": "PASS__EXACT_ROUTE_ACCEPTED_MEASURED_9459_PLUS_TOKEN_SYNTHETIC_REQUEST_AT_16384_CONTEXT",
+              "live_probe_pass": True,
+              "planner_git_blob_sha": "715aee168f02cb4abff961849b2b26709eef2e64",
+              "command_policy_git_blob_sha": "a525773417291c7a4841bf35e1baff5370350d0d",
+              "planner_tests_git_blob_sha": "c2aeed8fcef24126035cd8d90a436fae116e964d",
+              "model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "runtime_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "candidate_context_tokens": CANDIDATE_CONTEXT,
+              "observed_probe_tokens": measured,
+              "required_minimum_probe_tokens": MIN_TOKENS,
+              "planner_effective_timeout_s": out["effective_timeout_s"],
+              "planner_duration_s": out["duration_s"],
+              "planner_transport": out["transport"],
+              "candidate_count": len(candidates),
+              "benchmark_exposure_count": 0,
+              "benchmark_task_exposure": 0,
+              "rank14_task_exposure": False,
+              "incremental_spend_usd": 0,
+              "acceptance_credit_delta": 0,
+              "family_credit_delta": 0,
+              "terminal_credit_delta": 0,
+          }
+          canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
+          receipt["receipt_sha256"] = hashlib.sha256(canonical).hexdigest()
+          Path("CONTEXT_16K_LIVE_RECEIPT.json").write_text(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+          ! grep -qi 'exceeds the available context size' CONTEXT_16K_SERVER.log
+
+      - name: Upload context-capacity receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-context-16k-zero-exposure-v1
+          path: |
+            CONTEXT_16K_LIVE_RECEIPT.json
+            CONTEXT_16K_RESOURCE_GATE.json
+            CONTEXT_16K_HEALTH.json
+            CONTEXT_16K_SERVER.log
+          if-no-files-found: warn
+          retention-days: 1
