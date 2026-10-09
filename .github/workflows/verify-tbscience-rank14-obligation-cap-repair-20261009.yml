@@ -1,0 +1,96 @@
+name: Verify TB-Science rank14 lossless obligation ceiling repair
+
+on:
+  push:
+    branches: ["verify-tbscience-rank14-obligation-cap-repair-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-rank14-obligation-cap-repair-20261009.yml"
+      - "capsules/tb_science_rank14_20261009_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_rank14_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact repaired bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "16e8ab7918c4f8d052698282dddf674b54a23016"
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK14_LOSSLESS_OBLIGATION_CAP_REPAIR_20261009_V1.json")" = "e95b02e183b52943610b93e943ce613977bf28b6"
+          test "$(git hash-object "$C/load_bearing_primary_admission.py")" = "21fa45aa775ca5d51e5f2d3fec7ab9d3da01eabf"
+          test "$(git hash-object "$C/FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json")" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
+          ! grep -q "MAX_RAW_TASK_OBLIGATIONS" "$C/canonical/runtime/harbor_science_agent_v1.py"
+          python -m py_compile "$C"/canonical/runtime/*.py "$C/load_bearing_primary_admission.py"
+
+      - name: Prove greater-than-64 lossless scope and small-scope preservation
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python - <<'PY' | tee OBLIGATION_CAP_REPAIR_VERIFY.json
+          import hashlib,json
+          from canonical.runtime import harbor_science_agent_v1 as s
+
+          goal=" ".join(f"Create item{i:03d}." for i in range(80))
+          contract,localized,rows=s._compile_lossless_task_scope(goal)
+          assert contract["pass"] is True,contract
+          assert localized["pass"] is True,localized
+          assert len(rows)==80,len(rows)
+          assert localized["required_obligation_count"]==80,localized
+          assert localized["accounted_obligation_count"]==80,localized
+          required=set(contract["acceptance_contract"]["required_obligation_ids"])
+          assert {r["obligation_id"] for r in rows}==required
+          assert all(r["acceptance_receipt_required"] is True for r in rows)
+          assert all("text" not in r for r in rows)
+          for row in rows:
+              a,b=row["span"]
+              assert hashlib.sha256(goal[a:b].encode()).hexdigest()==row["segment_sha256"]
+
+          small="Create alpha. Create beta."
+          c2,l2,r2=s._compile_lossless_task_scope(small)
+          assert c2["pass"] is True and l2["pass"] is True
+          assert len(r2)==2 and l2["accounted_obligation_count"]==2
+
+          out={
+            "status":"PASS__80_OF_80_LOSSLESS_OBLIGATIONS_ACCOUNTED__SMALL_SCOPE_PRESERVED",
+            "pass":True,
+            "large_required_obligations":80,
+            "large_accounted_obligations":80,
+            "small_required_obligations":2,
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Replay load-bearing admission
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python - <<'PY' | tee ADMISSION_VERIFY.json
+          import json,os
+          from load_bearing_primary_admission import admission_errors
+          c=os.environ["C"]
+          intent=json.load(open(c+"/ACTION_INTENT_TB_SCIENCE_RANK14_LOSSLESS_OBLIGATION_CAP_REPAIR_20261009_V1.json"))
+          q=json.load(open(c+"/FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json"))
+          errors=admission_errors(intent,q["independent_open_obligations"])
+          assert errors==[],errors
+          print(json.dumps({"status":"PASS__LOAD_BEARING_ADMISSION","pass":True,"errors":errors},sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank14-obligation-cap-repair-20261009
+          path: |
+            OBLIGATION_CAP_REPAIR_VERIFY.json
+            ADMISSION_VERIFY.json
+          retention-days: 2
