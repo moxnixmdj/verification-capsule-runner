@@ -1,0 +1,76 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK10_CURRENT_TRANSITIVE_CARRIER_CLOSURE_MANIFEST_V1",
+  "date": "2026-10-07",
+  "brain_repository": "moxnixmdj/brain",
+  "brain_source_commit_sha": "09a112bbb521047abf7f709e78c4a8339f306217",
+  "rank": 10,
+  "slot_id": "terminal-bench-science/rdkit-ic-constraints::trial-0",
+  "task_digest": "sha256:17e356ab255088712c7dfa9765bf077b33a3da221f4a03d4770576857f9c0b6f",
+  "roots": [
+    "canonical/runtime/harbor_science_agent_v1.py",
+    "canonical/runtime/harbor_science_planner_v1.py",
+    "canonical/runtime/lossless_raw_task_contract_v1.py",
+    "canonical/runtime/raw_task_acceptance_residual_localizer_v1.py"
+  ],
+  "expected_closure_file_count": 14,
+  "files": {
+    "canonical/runtime/bounded_imperative_directive_semantics_v1.py": {
+      "git_blob_sha": "3f08b2703723537e5a146346eead6a387424687f"
+    },
+    "canonical/runtime/bounded_predicate_argument_semantics.py": {
+      "git_blob_sha": "8303231779d6fe8c7fb740e3bbaa492914d4eba9"
+    },
+    "canonical/runtime/explicit_requirement_index_v2.py": {
+      "git_blob_sha": "30629b10fdbf3c337eb3252c043ec13123ca66a1"
+    },
+    "canonical/runtime/harbor_command_policy.py": {
+      "git_blob_sha": "a525773417291c7a4841bf35e1baff5370350d0d"
+    },
+    "canonical/runtime/harbor_environment_transport.py": {
+      "git_blob_sha": "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+    },
+    "canonical/runtime/harbor_science_agent_v1.py": {
+      "git_blob_sha": "5bc8ebac26bb7c809d4698f535eff43b667b30df"
+    },
+    "canonical/runtime/harbor_science_planner_v1.py": {
+      "git_blob_sha": "01d859c8f27b317893027e693c9aa49e833a256f"
+    },
+    "canonical/runtime/instruction_constraint_compiler_v1.py": {
+      "git_blob_sha": "a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"
+    },
+    "canonical/runtime/lossless_raw_task_contract_v1.py": {
+      "git_blob_sha": "d54d5a2f7efa76b653d288f4f53da4883644baa6"
+    },
+    "canonical/runtime/raw_task_acceptance_residual_localizer_v1.py": {
+      "git_blob_sha": "f29616cf7726959aa28db4ed6541a9fc0bc2ac76"
+    },
+    "canonical/runtime/source_aligned_acceptance_program_v1.py": {
+      "git_blob_sha": "742c183cccc2ec4bb5f94e88048590e2991dacd4"
+    },
+    "canonical/runtime/source_contract_compiler.py": {
+      "git_blob_sha": "ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231"
+    },
+    "canonical/runtime/structured_method_expression_ast_candidate_v2.py": {
+      "git_blob_sha": "7623f68bab3c1b207e237389841a4b688e509ff3"
+    },
+    "canonical/runtime/typed_acceptance_program_v1.py": {
+      "git_blob_sha": "7fd2e575bd2d5c36f48c713f15177d5b0d7e68c5"
+    },
+    "canonical/runtime/python_transitive_runtime_closure_v1.py": {
+      "git_blob_sha": "43d502c621c219632fa0f9a19632dfc0228e4847"
+    }
+  },
+  "planner_live_transport_preflight": {
+    "status": "PASS",
+    "workflow_run_id": 37624915990,
+    "result_sha256": "6133fac69e9d2c02337464bee874975236f788df19d426611a59e02b9f0fa59b"
+  },
+  "terminal_benchmark_task_exposure": false,
+  "fresh_benchmark_slots_consumed": 0,
+  "incremental_spend_usd_max": 0,
+  "rank10_authority": false,
+  "acceptance_credit": false,
+  "terminal_credit": false,
+  "preflight_verifier_fix_commit_sha": "bc1cba96917b6d4c46b9a83000b00bb45e38ebe9",
+  "preflight_verifier_fix": "CORRECT_TRUNCATED_HARBOR_SCIENCE_AGENT_GIT_BLOB_SHA_ASSERTION_ONLY"
+}
