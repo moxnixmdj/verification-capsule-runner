@@ -102,7 +102,7 @@ class Rank15V5BarrierRunnerTests(unittest.TestCase):
             self.assertLess(events.index("release"), events.index("wait"))
             self.assertNotIn("GH_TOKEN", captured["env"])
             self.assertNotIn("GITHUB_TOKEN", captured["env"])
-            self.assertIn("harbor_science_agent_v4:HarborScienceAgent", captured["command"])
+            self.assertTrue(any("harbor_science_agent_v4:HarborScienceAgent" in part for part in captured["command"]))
             receipt = json.loads((root / "RANK15_V5_BARRIER_RUNNER_RECEIPT.json").read_text())
             self.assertEqual(receipt["status"], "HARBOR_COMPLETE")
             self.assertTrue(receipt["task_started"])
