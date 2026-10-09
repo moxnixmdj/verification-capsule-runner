@@ -1,0 +1,88 @@
+name: Verify TB-Science all-cycle fit V3
+
+on:
+  push:
+    branches: ["repair/tb-science-all-cycle-fit-20261009-v1"]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_all_cycle_fit_guard_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v3_all_cycle_fit_zero_exposure_tests.py"
+      - ".github/workflows/verify-tb-science-all-cycle-fit-v3.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact V3 candidate bytes and zero-exposure state
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v3.py")" = "fb5c12ff1607b45f2ccd7060b41308ba560cc554"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v3.py")" = "63ea1116e754be99edde62a4d4f06a3c34c47995"
+          test "$(git hash-object "$C/rank15_prestart_all_cycle_fit_guard_v3.py")" = "0aa6058f514bd3ab07ad2e55127f51f116d805c2"
+          test "$(git hash-object "$C/rank15_v3_all_cycle_fit_zero_exposure_tests.py")" = "a0073b8f772ae5aa26ae6adbfd83fa535a002dba"
+          test ! -e "$C/ACTIVATE_RANK15_V3_PR.json"
+          test ! -e "$C/ACTIVATE_RANK15_V2_PR.json"
+          python -m py_compile             "$C/canonical/runtime/harbor_science_planner_v3.py"             "$C/canonical/runtime/harbor_science_agent_v3.py"             "$C/rank15_prestart_all_cycle_fit_guard_v3.py"             "$C/rank15_v3_all_cycle_fit_zero_exposure_tests.py"
+
+      - name: Run V3 all-cycle fit adversarial tests
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$GITHUB_WORKSPACE/$C" python "$C/rank15_v3_all_cycle_fit_zero_exposure_tests.py"
+
+      - name: Prove current V2 terminal surface remains staged and non-executable
+        run: |
+          set -euo pipefail
+          python execution_guard/terminal_execution_admission_v1.py             --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"             --slot "terminal-bench-science/protein-active-learning::trial-0"             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
+          if python execution_guard/terminal_execution_admission_v1.py             --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"             --slot "terminal-bench-science/protein-active-learning::trial-0"             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"             --require-execution-authority; then
+            echo "V2 surface unexpectedly executable"
+            exit 1
+          fi
+          grep -F "EXECUTION_AUTHORITY_NOT_ACTIVE" TERMINAL_EXECUTION_ADMISSION.json
+
+      - name: Emit zero-exposure V3 semantic receipt
+        run: |
+          python - <<'PY'
+          import json,os,pathlib
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_ALL_CYCLE_FIT_V3_ZERO_EXPOSURE_VERIFICATION",
+            "status":"PASS__LOSSLESS_EVIDENCE_ADDRESSING__BOUNDED_HISTORY_VIEW__EXACT_DYNAMIC_PACK_POLICY__V2_AUTHORITY_UNCHANGED",
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "candidate_blobs":{
+              "planner_v3":"fb5c12ff1607b45f2ccd7060b41308ba560cc554",
+              "agent_v3":"63ea1116e754be99edde62a4d4f06a3c34c47995",
+              "prestart_v3":"0aa6058f514bd3ab07ad2e55127f51f116d805c2",
+              "tests_v3":"a0073b8f772ae5aa26ae6adbfd83fa535a002dba"
+            },
+            "rank15_task_read":False,
+            "rank15_task_started":False,
+            "benchmark_trials_consumed":0,
+            "execution_authority":False,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          pathlib.Path("ALL_CYCLE_FIT_V3_VERIFY.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-all-cycle-fit-v3-zero-exposure
+          path: |
+            ALL_CYCLE_FIT_V3_VERIFY.json
+            TERMINAL_EXECUTION_ADMISSION.json
+          retention-days: 7
