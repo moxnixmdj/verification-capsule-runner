@@ -1,0 +1,33 @@
+name: Verify TB-Science rank14 V3 authority candidate
+on:
+  push:
+    branches:
+      - verify-tbscience-r14-authority-v3-summary-20261009
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact V3 candidate bindings
+        env:
+          C: capsules/tb_science_rank14_20261009_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "d397324f411d002bdbdca348aaad708b5b40c9c2"
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK14_POST_PROMPT_SUMMARY_REAUTHORIZE_20261009_V1.json")" = "70dc5962595a464e4df0b1cfb8f6c49fc160470d"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V3.json")" = "c740f16395328edad175c234bb7b52b011a2b89f"
+          test "$(git hash-object "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V18.json")" = "566a3756392ee2d4cc41947b66617acbc6f6ce92"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V11.json")" = "1172b57ac436d64027d06fb4897878ae274febb1"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V11_PUBLIC_VERIFICATION_20261009_V1.json")" = "d1b3bc55c2ead9137a2368337eb58d96e9b44a17"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_PLANNER_MANIFEST_SUMMARY_PUBLIC_VERIFICATION_20261009_V1.json")" = "721c78aabac58565afa37d734705d652073d99ae"
+          PYTHONPATH="$C" python "$C/verify_rank14_authority_v3_candidate.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank14-v3-authority-candidate
+          path: RANK14_AUTHORITY_V3_CANDIDATE_VERIFY.json
+          retention-days: 2
