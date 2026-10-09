@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import time
+import urllib.error
 import urllib.request
 from typing import Any
 
@@ -425,18 +426,30 @@ def _plan_once(
 
 
 def _retryable_transport_failure(exc: BaseException) -> bool:
-    """True only for transport-route failures, never proposal/semantic failures."""
+    """True only for transient transport loss, never deterministic request bugs."""
     if not isinstance(exc, SciencePlannerError):
         return False
     msg = str(exc)
-    if msg.startswith("SCIENCE_PLANNER_TOKEN_COUNT_ROUTE_FAILED:"):
-        return True
-    if msg.startswith("SCIENCE_PLANNER_LOCAL_ROUTE_FAILED:"):
-        return True
-    for code in (408, 425, 429, 500, 502, 503, 504):
+    retryable_status = {408, 425, 429, 500, 502, 503, 504}
+    for code in retryable_status:
         if msg == f"SCIENCE_PLANNER_HTTP_STATUS:{code}":
             return True
-    return False
+
+    if not (
+        msg.startswith("SCIENCE_PLANNER_TOKEN_COUNT_ROUTE_FAILED:")
+        or msg.startswith("SCIENCE_PLANNER_LOCAL_ROUTE_FAILED:")
+    ):
+        return False
+
+    cause = exc.__cause__
+    if isinstance(cause, urllib.error.HTTPError):
+        return int(cause.code) in retryable_status
+    if isinstance(cause, (urllib.error.URLError, TimeoutError, ConnectionError)):
+        return True
+    # urlopen/socket failures can surface as OSError subclasses. They are safe to
+    # replay because this route is loopback-only and planner inference has no
+    # environment side effects.
+    return isinstance(cause, OSError)
 
 
 def plan(
