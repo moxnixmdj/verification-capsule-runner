@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_ONE_SHOT_REALITY_CLOSURE_V2_SEMANTIC_HANDOFF_RUN_V1",
+  "date": "2026-10-09",
+  "status": "AUTHORIZE_EXACT_BYTE_PUBLIC_REPLAY_ONLY",
+  "runtime_blob": "eaf72cac913df786a54b18fb4fe4ff8c3d77a5a0",
+  "tests_blob": "5c82da3e95ac7eae71697d6ad99e30b52ca41443",
+  "benchmark_exposure": 0,
+  "incremental_spend_usd": 0,
+  "authority": false,
+  "credit": false
+}
