@@ -1,5 +1,6 @@
 from __future__ import annotations
-import importlib.util, json, pathlib, tempfile
+import importlib.util, json, pathlib, tempfile, urllib.request, urllib.parse
+import xml.etree.ElementTree as ET
 from unittest.mock import patch
 
 ROOT=pathlib.Path(__file__).resolve().parent
@@ -145,13 +146,26 @@ with tempfile.TemporaryDirectory() as td:
     ok("authority_self_promotion_rejected",authority)
 
 # Live SEC replay through the exact production producer.
+# Discover the issuer namespace from the source XSD itself, then require the
+# production extractor and independent verifier to reproduce that exact binding.
+req=urllib.request.Request(XSD_URL,headers={"User-Agent":UA,"Accept":"application/xml,text/xml;q=0.9,*/*;q=0.1","Accept-Encoding":"identity"})
+with urllib.request.urlopen(req,timeout=30) as rr:
+    live_xsd=rr.read(4_000_001)
+    assert rr.status==200 and rr.geturl()==XSD_URL
+live_root=ET.fromstring(live_xsd)
+live_ns=live_root.attrib["targetNamespace"]
+parsed_ns=urllib.parse.urlsplit(live_ns)
+assert parsed_ns.hostname=="www.apple.com",(live_ns,parsed_ns)
+assert parsed_ns.path=="/20240928",live_ns
+assert parsed_ns.scheme in {"http","https"},live_ns
+
 with tempfile.TemporaryDirectory() as td:
     root=pathlib.Path(td)
-    cfg(root)
+    cfg(root,ns=live_ns)
     out=p.run(args(),root)
     got=v.verify(root=root,xsd_path="xsd.xml",label_path="lab.xml",semantic_path="sem.json")
     assert got["verified"] is True,got
-    assert out["concept_qname"]=="{"+NS+"}"+LOCAL
+    assert out["concept_qname"]=="{"+live_ns+"}"+LOCAL
     assert out["documentation_label"]==DOC,out["documentation_label"]
     assert out["concept_metadata"]["xsd_type"]=="xbrli:monetaryItemType",out["concept_metadata"]
     assert out["concept_metadata"]["period_type"]=="instant",out["concept_metadata"]
@@ -159,6 +173,7 @@ with tempfile.TemporaryDirectory() as td:
     assert out["semantic_truth_authority"] is False
     assert out["terminal_credit_delta"]==0
     passes.append("live_sec_exact_production_replay")
+    print("LIVE_NAMESPACE="+live_ns)
     print("LIVE_XSD_SHA256="+out["xsd_sha256"])
     print("LIVE_LABEL_SHA256="+out["label_sha256"])
     print("LIVE_ELEMENT_ID="+out["concept_metadata"]["element_id"])
