@@ -1,0 +1,22 @@
+name: verify-professional-quality-domain-defeaters-v2
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - PROFESSIONAL_QUALITY_ASSURANCE_GRAPH_20261009_V2.json
+      - PROFESSIONAL_QUALITY_DOMAIN_DEFEATER_CATALOG_20261009_V2.json
+      - verify_professional_quality_domain_defeaters_v2.py
+      - .github/workflows/verify-professional-quality-domain-defeaters-v2.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python verify_professional_quality_domain_defeaters_v2.py
