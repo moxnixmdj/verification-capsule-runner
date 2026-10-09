@@ -8,7 +8,7 @@ MANIFEST = json.loads((ROOT / "CAPSULE_MANIFEST.json").read_text(encoding="utf-8
 
 def blob_sha(path: Path) -> str:
     raw = path.read_bytes()
-    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + bytes([0]) + raw).hexdigest()
 
 for rel, expected in MANIFEST["exact_files"].items():
     path = ROOT / rel
