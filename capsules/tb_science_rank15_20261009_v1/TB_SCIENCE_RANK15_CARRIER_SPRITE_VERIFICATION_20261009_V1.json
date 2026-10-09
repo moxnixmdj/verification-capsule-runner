@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_CARRIER_SPRITE_VERIFICATION_20261009_V1",
+  "date": "2026-10-09",
+  "status": "PASS__EXACT_RANK15_ZERO_EXPOSURE_CARRIER__15_OF_15__PY_COMPILE_PASS",
+  "repository": "moxnixmdj/verification-capsule-runner",
+  "verified_head_sha": "fab46cefe1d5c3f89436941a109a3ba5d6d1f763",
+  "branch": "stage-tb-science-rank15-carrier-20261009",
+  "independent_carrier": {
+    "provider": "SPRITES",
+    "name": "brain-live-integrated-v1-run-20261008",
+    "id": "sprite-d16c7eaa-8234-45f3-af6a-3751e0749c34"
+  },
+  "verification": {
+    "exact_runtime_closure_file_count": 15,
+    "exact_runtime_closure_blob_matches": 15,
+    "mismatches": 0,
+    "authority_blob_match": true,
+    "intent_blob_match": true,
+    "ledger_v19_blob_match": true,
+    "v12_manifest_blob_match": true,
+    "frozen_requirements_repair_receipt_blob_match": true,
+    "epoch_blob_match": true,
+    "execution_claim_blob_match": true,
+    "prestart_guard_blob_match": true,
+    "py_compile": "PASS"
+  },
+  "benchmark_task_exposure": 0,
+  "benchmark_trials_executed": 0,
+  "task_read": false,
+  "task_started": false,
+  "execution_authority_consumed": false,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "note": "Verification executed against the exact public staging commit. The prestart guard was compiled but deliberately not executed."
+}
