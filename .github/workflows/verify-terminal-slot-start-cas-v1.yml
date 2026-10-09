@@ -1,0 +1,67 @@
+name: Verify terminal slot start CAS V1
+
+on:
+  push:
+    branches: ["repair/tb-science-start-cas-20261009-v1"]
+    paths:
+      - "execution_guard/terminal_slot_start_cas_v1.py"
+      - "execution_guard/test_terminal_slot_start_cas_v1.py"
+      - ".github/workflows/verify-terminal-slot-start-cas-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile and run start-CAS falsifiers
+        run: |
+          set -euo pipefail
+          python -m py_compile             execution_guard/github_ref_store_live.py             execution_guard/terminal_slot_start_cas_v1.py             execution_guard/test_terminal_slot_start_cas_v1.py
+          python execution_guard/test_terminal_slot_start_cas_v1.py
+      - name: Prove no terminal execution or activation surface was introduced
+        run: |
+          set -euo pipefail
+          ! grep -R "harbor run" execution_guard/terminal_slot_start_cas_v1.py
+          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V2_PR.json
+      - name: Emit zero-exposure receipt
+        run: |
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          files=[
+            "execution_guard/terminal_slot_start_cas_v1.py",
+            "execution_guard/test_terminal_slot_start_cas_v1.py",
+            "execution_guard/github_ref_store_live.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_TERMINAL_SLOT_START_CAS_VERIFICATION_V1",
+            "status":"PASS__CREATE_ONCE_SLOT_START_INTENT__SECOND_START_AND_UNCERTAINTY_FAIL_CLOSED__ZERO_EXPOSURE",
+            "github_sha":os.environ["GITHUB_SHA"],
+            "git_blobs":{p:subprocess.check_output(["git","hash-object",p],text=True).strip() for p in files},
+            "stable_key_fields":["slot_id","task_digest"],
+            "excluded_from_key":["github_run_id","authority_git_blob_sha","github_sha"],
+            "replay_authority":False,
+            "replacement_carrier_authority":False,
+            "rank15_task_read":False,
+            "rank15_task_started":False,
+            "benchmark_trials_consumed":0,
+            "execution_authority":False,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          pathlib.Path("TERMINAL_SLOT_START_CAS_VERIFY.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: terminal-slot-start-cas-v1
+          path: TERMINAL_SLOT_START_CAS_VERIFY.json
+          retention-days: 7
