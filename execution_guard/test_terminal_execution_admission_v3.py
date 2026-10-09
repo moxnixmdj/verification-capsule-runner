@@ -78,10 +78,11 @@ class AdmissionV3Tests(unittest.TestCase):
         self.assertIn("WORKFLOW_DELEGATION_BYPASS:DIRECT_HARBOR_RUN", errors)
 
     def test_phase_reordering_fails_closed(self):
-        text=delegated_workflow().replace(
-            'python "$C/rank15_start_cas_v6.py" --check-absent\\npython "$C/rank15_prestart_token_guard_v4.py"',
-            'python "$C/rank15_prestart_token_guard_v4.py"\\npython "$C/rank15_start_cas_v6.py" --check-absent',
-        )
+        lines = delegated_workflow().splitlines()
+        start_i = next(i for i, line in enumerate(lines) if "rank15_start_cas_v6.py" in line and "--check-absent" in line)
+        prestart_i = next(i for i, line in enumerate(lines) if "rank15_prestart_token_guard_v4.py" in line)
+        lines[start_i], lines[prestart_i] = lines[prestart_i], lines[start_i]
+        text = "\n".join(lines) + "\n"
         self.assertIn("WORKFLOW_PHASE_ORDER_INVALID", guard.check_workflow(text, delegated_behavior()))
 
     def test_contents_write_is_forbidden(self):
