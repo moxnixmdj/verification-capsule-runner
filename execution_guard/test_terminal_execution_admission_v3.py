@@ -48,10 +48,10 @@ rank15_finalize_receipt_v4.py
 
 def delegated_workflow() -> str:
     return STATIC + """\
-rank15_start_cas_v6.py --check-absent
-rank15_prestart_token_guard_v4.py
-rank15_v6_status_journal_runner.py
-rank15_finalize_receipt_v6.py
+python "$C/rank15_start_cas_v6.py" --check-absent
+python "$C/rank15_prestart_token_guard_v4.py"
+python "$C/rank15_v6_status_journal_runner.py"
+python "$C/rank15_finalize_receipt_v6.py"
 """
 
 class AdmissionV3Tests(unittest.TestCase):
@@ -79,8 +79,8 @@ class AdmissionV3Tests(unittest.TestCase):
 
     def test_phase_reordering_fails_closed(self):
         text=delegated_workflow().replace(
-            "rank15_start_cas_v6.py --check-absent\nrank15_prestart_token_guard_v4.py",
-            "rank15_prestart_token_guard_v4.py\nrank15_start_cas_v6.py --check-absent",
+            'python "$C/rank15_start_cas_v6.py" --check-absent\\npython "$C/rank15_prestart_token_guard_v4.py"',
+            'python "$C/rank15_prestart_token_guard_v4.py"\\npython "$C/rank15_start_cas_v6.py" --check-absent',
         )
         self.assertIn("WORKFLOW_PHASE_ORDER_INVALID", guard.check_workflow(text, delegated_behavior()))
 
