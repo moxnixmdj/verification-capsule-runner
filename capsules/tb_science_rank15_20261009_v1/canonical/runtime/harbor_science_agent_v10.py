@@ -1101,6 +1101,16 @@ async def run_science_goal(
                     cycles=cycle + 1,
                 )
 
+            full_action_evidence = {
+                "cycle": cycle,
+                "kind": "BRAIN_FULL_ACTION_RECEIPT_EVIDENCE",
+                "action_id": chosen["action_id"],
+                "returncode": action_receipt.returncode,
+                "stdout": str(action_receipt.stdout or ""),
+                "stderr": str(action_receipt.stderr or ""),
+                "transport_uncertain": False,
+            }
+            record_observation(full_action_evidence)
             action_observed = {
                 "returncode": action_receipt.returncode,
                 "stdout": action_receipt.stdout[-MAX_OUTPUT_CHARS:],
@@ -1108,6 +1118,7 @@ async def run_science_goal(
                 "transport_uncertain": False,
             }
             verify_observed = None
+            verify_receipt = None
             verified = False
             verified_covers: list[str] = []
             deliverable_checks: list[dict[str, Any]] = []
@@ -1159,6 +1170,16 @@ async def run_science_goal(
                         cycles=cycle + 1,
                     )
 
+                full_verify_evidence = {
+                    "cycle": cycle,
+                    "kind": "BRAIN_FULL_VERIFY_RECEIPT_EVIDENCE",
+                    "action_id": chosen["action_id"],
+                    "returncode": verify_receipt.returncode,
+                    "stdout": str(verify_receipt.stdout or ""),
+                    "stderr": str(verify_receipt.stderr or ""),
+                    "transport_uncertain": False,
+                }
+                record_observation(full_verify_evidence)
                 verify_observed = {
                     "returncode": verify_receipt.returncode,
                     "stdout": verify_receipt.stdout[-MAX_OUTPUT_CHARS:],
@@ -1200,13 +1221,13 @@ async def run_science_goal(
                 action_stdout = str(action_receipt.stdout or "")
                 action_stderr = str(action_receipt.stderr or "")
                 verify_stdout = (
-                    str(verify_observed.get("stdout") or "")
-                    if isinstance(verify_observed, dict)
+                    str(verify_receipt.stdout or "")
+                    if verify_receipt is not None
                     else ""
                 )
                 verify_stderr = (
-                    str(verify_observed.get("stderr") or "")
-                    if isinstance(verify_observed, dict)
+                    str(verify_receipt.stderr or "")
+                    if verify_receipt is not None
                     else ""
                 )
                 state_payload = {
