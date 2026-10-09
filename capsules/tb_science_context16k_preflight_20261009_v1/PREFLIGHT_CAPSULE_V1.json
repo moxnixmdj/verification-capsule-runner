@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT16K_PREFLIGHT_CAPSULE_V1",
   "date": "2026-10-09",
-  "status": "ZERO_EXPOSURE_REPAIR_GATE_ONLY",
+  "status": "ZERO_EXPOSURE_CONTEXT_PLUS_TIMEOUT_REPAIR_GATE_ONLY",
   "source_brain_main_sha": "7b290a3734e12c4821a8198e0b63abe0f75624f0",
   "causal_input": {
     "rank13_workflow_run_id": 37870603497,
@@ -13,10 +13,16 @@
     "server_context_tokens": 16384,
     "synthetic_target_input_min": 10000,
     "synthetic_target_input_max": 10200,
-    "reserved_max_output_tokens": 4096
+    "reserved_max_output_tokens": 4096,
+    "timeout_envelope": {
+      "max_timeout_s": 1800,
+      "prefill_tokens_per_second_floor": 8,
+      "generation_and_transport_margin_s": 240,
+      "exact_10000_input_timeout_s": 1490
+    }
   },
   "exact_route": {
-    "planner_blob": "715aee168f02cb4abff961849b2b26709eef2e64",
+    "planner_blob": "11755fb568df5a07478c7fa7fd9e40a3e1643ccf",
     "command_policy_blob": "a525773417291c7a4841bf35e1baff5370350d0d",
     "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
     "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c"
@@ -27,5 +33,15 @@
     "rank14_task_read_authority": false,
     "rank14_execution_authority": false,
     "incremental_spend_usd_max": 0
+  },
+  "prior_zero_exposure_failure": {
+    "workflow_run_id": 37872005534,
+    "artifact_id": 11591606311,
+    "failure": "SCIENCE_PLANNER_LOCAL_ROUTE_FAILED:TimeoutError:timed out",
+    "server_context_rejection_observed": false,
+    "server_context_tokens": 16384,
+    "furthest_observed_prompt_tokens": 9488,
+    "observed_prefill_tokens_per_second_at_9488": 11.71,
+    "causal_classification": "TIMEOUT_ESTIMATOR_FLOOR_15_TPS_FALSIFIED_BY_LIVE_LONG_CONTEXT_PREFILL__CONTEXT16K_NOT_FALSIFIED"
   }
 }
