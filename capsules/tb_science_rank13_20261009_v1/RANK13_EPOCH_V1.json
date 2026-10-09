@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK13_EPOCH_V1",
   "date": "2026-10-09",
-  "status": "PREPARED__NONEXECUTABLE__FRESH_LIVE_V8_GATE_PENDING",
+  "status": "CURRENT__ONE_USE_PREEXPOSURE_GATE__ACTIVE_BRAIN_AUTHORITY_STILL_REQUIRED",
   "predicate": "TB_SCIENCE_GE_58_7",
   "slot_id": "terminal-bench-science/dapi-he-alignment::trial-0",
   "task_digest": "sha256:a4291c3f09b0fc2a1c8713129d3afd1b46929482f6c03df630c25814b53b755e",
@@ -18,8 +18,14 @@
   "v8_two_sprite_verification_blob": "ab4531a5efb4dd0034f499eeeb5bbcd226f7ebb5",
   "fresh_live_v8_gate": {
     "workflow_run_id": 37867504619,
+    "workflow_job_id": 113617666635,
     "workflow_head_sha": "b0beac12e46091395824ba1e3f9f898e066958e5",
-    "receipt_bound": false
+    "artifact_id": 11588634226,
+    "artifact_digest": "sha256:6703bda3c20d16a401dbe6dbcf2ee8f562c8ec8fbb4a81fe0b1a7475a1feb9eb",
+    "receipt_blob": "84e51e8f1079d364275747f8afeb0996453b608d",
+    "receipt_bound": true,
+    "conclusion": "success",
+    "benchmark_task_exposure": 0
   },
   "exact_route": {
     "agent": "5e851d884b9784c6dc6fc9f83c08c502e41c3bdc",
