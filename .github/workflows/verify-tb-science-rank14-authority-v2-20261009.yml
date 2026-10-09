@@ -1,0 +1,133 @@
+name: Verify TB-Science rank14 authority v2
+on:
+  push:
+    branches: ["verify-tb-science-rank14-authority-v2-20261009"]
+    paths:
+      - ".github/workflows/verify-tb-science-rank14-authority-v2-20261009.yml"
+      - "capsules/tb_science_rank14_authority_v2_20261009_v1/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_rank14_authority_v2_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact authority and runtime bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/ACTION_INTENT.json")" = "f0071f0b283cf7b9ca1308c4762b08e8d051d091"
+          test "$(git hash-object "$C/AUTHORITY.json")" = "2d63c846692bb513d283da730fc03456e0b718b2"
+          test "$(git hash-object "$C/CLOSURE_V9.json")" = "4785c42631ea6feae6297e97f03263fd3c7ca384"
+          test "$(git hash-object "$C/LEDGER_V16.json")" = "748232e21b081083d353e4f901b8607a32c32b55"
+          test "$(git hash-object "$C/REPAIR_VERIFY.json")" = "8b8cdc3fc112bd0a253af795fb79c0f641b8b3b4"
+          test "$(git hash-object "$C/TERMINAL_MANIFEST.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$C/QUOTIENT.json")" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
+          test "$(git hash-object "$C/load_bearing_primary_admission.py")" = "21fa45aa775ca5d51e5f2d3fec7ab9d3da01eabf"
+          test "$(git hash-object "$C/canonical/runtime/bounded_imperative_directive_semantics_v1.py")" = "3f08b2703723537e5a146346eead6a387424687f"
+          test "$(git hash-object "$C/canonical/runtime/bounded_predicate_argument_semantics.py")" = "c7f190927e31fa2ab32f129b43402e98ea836498"
+          test "$(git hash-object "$C/canonical/runtime/bounded_task_directive_semantics_v1.py")" = "e3a4c01cc08e7a569692a5d6f03a6feec69934bf"
+          test "$(git hash-object "$C/canonical/runtime/explicit_requirement_index_v2.py")" = "30629b10fdbf3c337eb3252c043ec13123ca66a1"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "5e851d884b9784c6dc6fc9f83c08c502e41c3bdc"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          test "$(git hash-object "$C/canonical/runtime/instruction_constraint_compiler_v1.py")" = "a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f"
+          test "$(git hash-object "$C/canonical/runtime/lossless_raw_task_contract_v1.py")" = "d54d5a2f7efa76b653d288f4f53da4883644baa6"
+          test "$(git hash-object "$C/canonical/runtime/raw_task_acceptance_residual_localizer_v1.py")" = "f29616cf7726959aa28db4ed6541a9fc0bc2ac76"
+          test "$(git hash-object "$C/canonical/runtime/source_aligned_acceptance_program_v1.py")" = "742c183cccc2ec4bb5f94e88048590e2991dacd4"
+          test "$(git hash-object "$C/canonical/runtime/source_contract_compiler.py")" = "ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231"
+          test "$(git hash-object "$C/canonical/runtime/structured_method_expression_ast_candidate_v2.py")" = "7623f68bab3c1b207e237389841a4b688e509ff3"
+          test "$(git hash-object "$C/canonical/runtime/typed_acceptance_program_v1.py")" = "7fd2e575bd2d5c36f48c713f15177d5b0d7e68c5"
+          python -m py_compile "$C"/canonical/runtime/*.py "$C/load_bearing_primary_admission.py"
+      - name: Verify exact V9 transitive runtime closure
+        run: |
+          set -euo pipefail
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py"             --repo-root "$C" --carrier-root "$C"             --root canonical/runtime/harbor_science_agent_v1.py             --root canonical/runtime/harbor_science_planner_v1.py             --root canonical/runtime/lossless_raw_task_contract_v1.py             --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py             | tee CLOSURE_RESULT.json
+          python - <<'PY'
+          import json, os
+          c=os.environ["C"]
+          r=json.load(open("CLOSURE_RESULT.json"))
+          m=json.load(open(c+"/CLOSURE_V9.json"))
+          assert r["pass"] is True,r
+          assert r["status"]=="PASS__CARRIER_CONTAINS_EXACT_TRANSITIVE_RUNTIME_CLOSURE",r
+          assert r["closure"]["closure_file_count"]==15,r
+          assert r["missing_paths"]==[],r
+          assert r["mismatched"]==[],r
+          assert r["closure"]["unresolved_dynamic_imports"]==[],r
+          got={x["path"]:x["git_blob_sha"] for x in r["closure"]["files"]}
+          exp={x["path"]:x["git_blob_sha"] for x in m["closure"]}
+          assert got==exp,(got,exp)
+          print("PASS__V9_15_FILE_TRANSITIVE_CLOSURE_EXACT")
+          PY
+      - name: Replay trusted admission and rank14 authority invariants
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python - <<'PY'
+          import json, os
+          from load_bearing_primary_admission import admission_errors
+          c=os.environ["C"]
+          intent=json.load(open(c+"/ACTION_INTENT.json"))
+          auth=json.load(open(c+"/AUTHORITY.json"))
+          ledger=json.load(open(c+"/LEDGER_V16.json"))
+          repair=json.load(open(c+"/REPAIR_VERIFY.json"))
+          quotient=json.load(open(c+"/QUOTIENT.json"))
+          assert admission_errors(intent,quotient["independent_open_obligations"])==[]
+          assert intent["highest_leverage_now"] is True
+          assert intent["load_bearing_primary"]["constructive_gap_for_open_obligation_ids"]==["TB_SCIENCE_GE_58_7"]
+          assert auth["slot"]["id"]=="terminal-bench-science/inverse-lithography::trial-0"
+          assert auth["slot"]["ledger_schedule_rank"]==14
+          assert auth["slot"]["digest"]=="sha256:8c4da4b5b3a00283335e83dda92584aaf9293ff773bc43f2bf95eb0e2c0f8530"
+          assert auth["exact_route"]["planner_blob"]=="58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          assert auth["exact_route"]["server_context_tokens"]==16384
+          assert auth["controls"]["attempts_authorized"]==1
+          assert auth["controls"]["retries_authorized"]==0
+          assert auth["controls"]["replacement_allowed"] is False
+          assert auth["controls"]["prestart_token_budget_guard_required"] is True
+          g=auth["prestart_token_budget_guard"]
+          assert g["server_context_tokens"]==16384
+          assert g["reserved_completion_tokens"]==4096
+          assert g["maximum_admissible_input_tokens"]==12288
+          assert g["pass_condition"]=="input_tokens + 4096 <= 16384"
+          assert g["fail_action"]=="PREEXPOSURE_ABORT_NONCONSUMING"
+          assert g["failure_consumes_slot"] is False
+          assert auth["state"]["task_read_authority"] is False
+          assert auth["state"]["task_content_read"] is False
+          assert auth["state"]["task_started"] is False
+          assert auth["state"]["result_present"] is False
+          assert auth["state"]["authority_consumed"] is False
+          assert ledger["rank14"]["repair_gate_satisfied"] is True
+          assert ledger["rank14"]["task_read_authority"] is False
+          assert ledger["rank14"]["execution_authority"] is False
+          assert repair["public_live_gate"]["observed_input_tokens"]==10004
+          assert repair["public_live_gate"]["context_headroom_after_input_plus_reserved_output"]==2284
+          assert repair["public_live_gate"]["benchmark_task_exposure"]==0
+          assert repair["public_live_gate"]["benchmark_trials_executed"]==0
+          print("PASS__RANK14_AUTHORITY_STATIC_INVARIANTS__ZERO_EXPOSURE")
+          PY
+      - name: Preserve zero-exposure authority receipt
+        run: |
+          cat > RANK14_AUTHORITY_VERIFY.json <<'JSON'
+          {
+            "status":"PASS__RANK14_BRAIN_SIDE_AUTHORITY__V9_CLOSURE_EXACT__ADMISSION_PASS__TOKEN_GUARD_BOUND__ZERO_EXPOSURE",
+            "pass":true,
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "rank14_task_read":false,
+            "rank14_task_started":false,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0
+          }
+          JSON
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-rank14-authority-v2-20261009
+          path: |
+            RANK14_AUTHORITY_VERIFY.json
+            CLOSURE_RESULT.json
+          retention-days: 2
