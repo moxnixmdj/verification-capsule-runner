@@ -19,7 +19,9 @@ def _canon(x:Any)->str:
 
 def _segments(text:str)->list[tuple[int,int,str]]:
     out=[]
-    for m in re.finditer(r"[^.!?\n]+(?:[.!?]+|\n|$)",text):
+    # Keep this segmentation identical to lossless_raw_task_contract_v1 so
+    # structured requirement segment_index values cannot drift from raw obligations.
+    for m in re.finditer(r"[^.!?\n]+(?:[.!?]+|\n|$)|[.!?]+",text):
         s,e=m.span()
         while s<e and text[s].isspace():s+=1
         while e>s and text[e-1].isspace():e-=1
