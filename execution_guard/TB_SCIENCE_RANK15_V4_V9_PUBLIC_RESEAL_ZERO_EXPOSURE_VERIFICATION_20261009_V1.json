@@ -1,0 +1,39 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_V4_V9_PUBLIC_RESEAL_ZERO_EXPOSURE_VERIFICATION_20261009_V1",
+  "date": "2026-10-09",
+  "status": "PASS__ADMISSION__V4_PREFLIGHT__EXACT_V9_V25_BINDINGS__ACTIVATION_ABSENT__ZERO_EXPOSURE",
+  "subject_branch": "stage/tb-science-rank15-v4-v9-reseal-20261009",
+  "subject_head": "d15813fb920e3529b70a07e1db701c110f8b0e43",
+  "bindings": {
+    "brain_authority_v9": "c98bc25882279a12aece65fb1bbd827b90148b82",
+    "brain_ledger_v25": "e41984176986421042a93527b21be4d6a4f10b63",
+    "public_authority_v5": "c82de56006f233f63683341795d3cd085b5a7890",
+    "public_ledger_v25": "224f98878b874908305b303de863a909a8e71185",
+    "epoch_v4": "a0d3ce5473fde032fe7831f6edc2b65df4c80e15",
+    "execution_claim_v4": "1b3e5a9b5cf98bea517433fa041b7147f9b49a79",
+    "current_surface": "005ab215b69e06e3c9b7533eb14333fecde499c5",
+    "workflow_v4": "59fc3bff5890a505e8a221c53321de12d98f0802",
+    "behavior_v4": "bf5464d8079ad479b7dab574e86e09a12ff55fad",
+    "admission_guard_v2": "cf0472ece25186099fc2748bbd237c7e76260395"
+  },
+  "isolated_replay": {
+    "sprite": "brain-live-integrated-v1-run-20261008",
+    "sprite_id": "sprite-d16c7eaa-8234-45f3-af6a-3751e0749c34",
+    "py_compile": "PASS",
+    "terminal_execution_admission_v2": "PASS",
+    "rank15_execution_preflight_v4": "PASS",
+    "exact_surface_binding_assertions": "PASS",
+    "activation_file_absent": true
+  },
+  "state": {
+    "task_read": false,
+    "task_started": false,
+    "benchmark_trials_consumed": 0,
+    "activation_armed": false
+  },
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "acceptance_credit_delta": 0,
+    "terminal_credit_delta": 0
+  }
+}
