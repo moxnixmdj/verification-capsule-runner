@@ -1,41 +1,41 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-09",
-  "status": "ACTIVE_V6_SLOT_BOUND_JOURNALED_RUNTIME__FINAL_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
+  "status": "ACTIVE_V6_PROOF_CARRYING_SLOT_BOUND_JOURNALED_RUNTIME__FINAL_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v6.yml",
-  "workflow_git_blob_sha": "225ad2cadd536bdae94bbb5c3b7e79216438feb9",
+  "workflow_git_blob_sha": "7fb38b0e110455a2115034254ec4e77a13a66afa",
   "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json",
-    "git_blob_sha": "7ec35ed0464cec7407174a3742c4a61e8b0c7c27"
+    "git_blob_sha": "0b984075b15b935df55d555e123f94c5261c53d6"
   },
   "authority": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json",
-    "git_blob_sha": "f259a2fbd06a653b05f7d7f12fe5134141b9185c"
+    "git_blob_sha": "b7a05fb21dd113096d408b7cbd41ad3c924cfbd0"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V26.json",
-    "git_blob_sha": "60c5e1e84213d8641cc0c74c32f235ebea498249"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V27.json",
+    "git_blob_sha": "0e323a70d6a64709a854da477bf5fbdbc151390d"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
-    "git_blob_sha": "3d156b5b3274ea7fe6542206137ddc7c782903b5"
+    "git_blob_sha": "639eb816769624f5941f15863d75ca0b265bc0df"
   },
   "admission_guard": {
-    "path": "execution_guard/terminal_execution_admission_v2.py",
-    "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+    "path": "execution_guard/terminal_execution_admission_v3.py",
+    "git_blob_sha": "e4c501cea12173bd89958e4e98217f1265af6604"
   },
   "epoch": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json",
-    "git_blob_sha": "d89331cb0add8944b45c11306cf140f21a5a1ec7"
+    "git_blob_sha": "05b3b1acbcf64b022fa56fc70831953ca39be4e2"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json",
-    "git_blob_sha": "4085f31fb9d2dfb239f804543a6649fbd87c9a1a"
+    "git_blob_sha": "c3ce1771f47b03a1ef0db1bb05d0827616ad0b40"
   },
   "preflight": {
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py",
@@ -60,14 +60,17 @@
     "NO_REPLAY_OR_REPLACEMENT_AFTER_DURABLE_START_CAS"
   ],
   "reseal": {
-    "brain_authority_v10_blob": "5b08582c214367d0282158bb883e7a33aadeaf97",
-    "brain_ledger_v26_blob": "043ea9c1904a7fab8bbed04c3fc36eff2c2ee951",
-    "public_authority_v6_blob": "f259a2fbd06a653b05f7d7f12fe5134141b9185c",
-    "public_ledger_v26_blob": "60c5e1e84213d8641cc0c74c32f235ebea498249",
-    "epoch_v6_blob": "d89331cb0add8944b45c11306cf140f21a5a1ec7",
-    "execution_claim_v6_blob": "4085f31fb9d2dfb239f804543a6649fbd87c9a1a",
-    "workflow_v6_blob": "225ad2cadd536bdae94bbb5c3b7e79216438feb9",
-    "behavior_v6_blob": "7ec35ed0464cec7407174a3742c4a61e8b0c7c27",
+    "brain_authority_v11_blob": "3753953af66de8bfdbd4902f636a8cb4b6ec1a6d",
+    "brain_ledger_v27_blob": "0e9e1e8ac90a2678f13a58014cb9d5cf370de9c0",
+    "public_authority_v6_blob": "b7a05fb21dd113096d408b7cbd41ad3c924cfbd0",
+    "public_ledger_v27_blob": "0e323a70d6a64709a854da477bf5fbdbc151390d",
+    "epoch_v6_blob": "05b3b1acbcf64b022fa56fc70831953ca39be4e2",
+    "execution_claim_v6_blob": "c3ce1771f47b03a1ef0db1bb05d0827616ad0b40",
+    "workflow_v6_blob": "7fb38b0e110455a2115034254ec4e77a13a66afa",
+    "behavior_v6_blob": "0b984075b15b935df55d555e123f94c5261c53d6",
+    "invariant_registry_blob": "639eb816769624f5941f15863d75ca0b265bc0df",
+    "admission_guard_v3_blob": "e4c501cea12173bd89958e4e98217f1265af6604",
+    "admission_guard_test_v3_blob": "84c8eed0074ef4fe80cae50c93b09715cd8ddb9a",
     "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca",
     "quarantined_reseal_merge": "2ce17ebe2617a5c18453c16e002f16c15411f369"
   }
