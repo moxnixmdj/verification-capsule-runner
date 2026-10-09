@@ -1,0 +1,38 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT_CAPACITY_16384_ZERO_EXPOSURE_ACTIVATION_V1",
+  "date": "2026-10-09",
+  "status": "ACTIVE_ZERO_EXPOSURE_PREFLIGHT_ONLY",
+  "purpose": "PROVE_THE_EXACT_RANK13_LOCAL_QWEN_LLAMA_CPP_ROUTE_CAN_ACCEPT_AND_COMPLETE_A_SYNTHETIC_REQUEST_STRICTLY_ABOVE_THE_OBSERVED_9202_TOKEN_CONTEXT_CLASS_WITH_16384_SERVER_CONTEXT_BEFORE_ANY_RANK14_EXPOSURE",
+  "observed_rank13_request_tokens": 9202,
+  "prior_context_tokens": 8192,
+  "candidate_context_tokens": 16384,
+  "headroom_tokens": 4096,
+  "strict_required_context_tokens": 13299,
+  "target_probe_input_tokens": {
+    "min": 9250,
+    "max": 9400
+  },
+  "exact_route": {
+    "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "planner_git_blob_sha": "715aee168f02cb4abff961849b2b26709eef2e64",
+    "command_policy_git_blob_sha": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "model_alias": "brain-qwen3.5-9b",
+    "threads": 4,
+    "parallel": 1
+  },
+  "safety": {
+    "benchmark_task_exposure_authorized": false,
+    "benchmark_task_exposure_count": 0,
+    "benchmark_trials_authorized": 0,
+    "harbor_execution_authorized": false,
+    "rank14_task_start_authorized": false,
+    "incremental_spend_usd_max": 0
+  },
+  "authority": {
+    "context_capacity_gate_only": true,
+    "rank14_execution_authority": false,
+    "acceptance_credit": false,
+    "terminal_authority": false
+  }
+}
