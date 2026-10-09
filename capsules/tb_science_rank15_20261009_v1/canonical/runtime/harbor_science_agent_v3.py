@@ -340,6 +340,8 @@ def _nonempty_strings(value: Any, *, maximum: int, field: str) -> list[str]:
         if not isinstance(item, str) or not item.strip():
             raise RuntimeError(f"SCIENCE_{field}_INVALID")
         s = item.strip()
+        if len(s) > 64 or re.fullmatch(r"[A-Za-z0-9_.:-]+", s) is None:
+            raise RuntimeError(f"SCIENCE_{field}_INVALID")
         if s in out:
             raise RuntimeError(f"SCIENCE_{field}_DUPLICATE")
         out.append(s)
@@ -403,6 +405,46 @@ def _candidate_rows(raw: Any, requirements: set[str]) -> list[dict[str, Any]]:
             raise RuntimeError("SCIENCE_DEPENDS_ON_UNKNOWN_ACTION")
     return rows
 
+def _requirement_alias_maps(requirements: list[str]) -> tuple[dict[str, str], dict[str, str]]:
+    alias_to_original: dict[str, str] = {}
+    original_to_alias: dict[str, str] = {}
+    for index, requirement_id in enumerate(requirements):
+        alias = f"R{index + 1:02d}"
+        alias_to_original[alias] = requirement_id
+        original_to_alias[requirement_id] = alias
+    return alias_to_original, original_to_alias
+
+
+def _translate_candidate_covers_from_aliases(
+    candidate_rows: Any,
+    prior_requirements: list[str] | None,
+) -> Any:
+    if prior_requirements is None or not isinstance(candidate_rows, list):
+        return candidate_rows
+    alias_to_original, _ = _requirement_alias_maps(prior_requirements)
+    originals = set(prior_requirements)
+    translated = []
+    for row in candidate_rows:
+        if not isinstance(row, dict):
+            translated.append(row)
+            continue
+        copy = dict(row)
+        covers = copy.get("covers")
+        if isinstance(covers, list):
+            mapped = []
+            for item in covers:
+                text = str(item or "").strip()
+                if text in alias_to_original:
+                    mapped.append(alias_to_original[text])
+                elif text in originals:
+                    mapped.append(text)
+                else:
+                    mapped.append(text)
+            copy["covers"] = mapped
+        translated.append(copy)
+    return translated
+
+
 def _extract_contract(raw: dict[str, Any], prior_requirements: list[str] | None, mandatory_requirements: list[str] | None = None) -> tuple[list[str], list[dict[str, Any]], str | None]:
     mandatory = list(mandatory_requirements or [])
     if len(mandatory) > MAX_REQUIREMENTS:
@@ -435,6 +477,9 @@ def _extract_contract(raw: dict[str, Any], prior_requirements: list[str] | None,
     if primary_candidates is not None and alias_candidates is not None and primary_candidates != alias_candidates:
         raise RuntimeError("SCIENCE_CANDIDATE_ALIAS_CONFLICT")
     candidate_rows = primary_candidates if primary_candidates is not None else alias_candidates
+    candidate_rows = _translate_candidate_covers_from_aliases(
+        candidate_rows, prior_requirements
+    )
     if candidate_rows is not None:
         candidates = _candidate_rows(candidate_rows, set(requirements))
     return requirements, candidates, summary
@@ -635,11 +680,39 @@ def _normalize_evidence_requests(
     return known, rejected
 
 
+def _requirement_prompt_view(
+    requirements: list[str] | None,
+    unresolved: list[str],
+    evidence_store: dict[str, str],
+) -> tuple[list[dict[str, Any]] | None, list[str]]:
+    if requirements is None:
+        return None, []
+    alias_to_original, original_to_alias = _requirement_alias_maps(requirements)
+    unresolved_set = set(unresolved)
+    rows = []
+    for alias, original in alias_to_original.items():
+        label_ref = _put_evidence(evidence_store, {
+            "schema": "PROJECT_BRAIN_REQUIREMENT_LABEL_V1",
+            "alias": alias,
+            "label": original,
+        })
+        rows.append({
+            "id": alias,
+            "label_preview": original[:16],
+            "label_ref": label_ref,
+            "resolved": original not in unresolved_set,
+        })
+    unresolved_aliases = [
+        original_to_alias[x] for x in unresolved if x in original_to_alias
+    ]
+    return rows, unresolved_aliases
+
+
 def build_science_planner_prompt(
     *,
     goal: str,
-    requirements: list[str] | None,
-    unresolved: list[str],
+    frozen_requirement_view: list[dict[str, Any]] | None,
+    unresolved_aliases: list[str],
     raw_task_prompt_summary: dict[str, Any],
     declared_inputs: list[str],
     brain_deliverables: dict[str, str],
@@ -661,7 +734,7 @@ def build_science_planner_prompt(
         "after its independent verify_command succeeds. Brain alone decides completion after "
         "independent verification resolves every frozen material requirement. finish_summary is optional "
         "descriptive metadata only and never execution or finish authority. "
-        f"Goal: {goal}\nFrozen requirements: {requirements!r}\nUnresolved: {unresolved!r}\n"
+        f"Goal: {goal}\nFrozen requirement aliases: {frozen_requirement_view!r}\nUnresolved aliases: {unresolved_aliases!r}\n"
         "Brain lossless raw-task acceptance manifest summary (non-droppable; exact task semantics are the Goal text above): "
         + json.dumps(raw_task_prompt_summary, sort_keys=True)
         + "\nEvery original raw obligation remains separately acceptance-pending in Brain state until exact candidate-bound independent acceptance exists. "
@@ -692,12 +765,15 @@ def build_fitting_science_planner_prompt(
     cycle: int,
 ) -> tuple[str, dict[str, Any]]:
     catalog_context = _catalog_context(evidence_catalog, evidence_store)
+    frozen_requirement_view, unresolved_aliases = _requirement_prompt_view(
+        requirements, unresolved, evidence_store
+    )
 
     def make(payloads: list[dict[str, str]]) -> tuple[str, int]:
         prompt = build_science_planner_prompt(
             goal=goal,
-            requirements=requirements,
-            unresolved=unresolved,
+            frozen_requirement_view=frozen_requirement_view,
+            unresolved_aliases=unresolved_aliases,
             raw_task_prompt_summary=raw_task_prompt_summary,
             declared_inputs=declared_inputs,
             brain_deliverables=brain_deliverables,
