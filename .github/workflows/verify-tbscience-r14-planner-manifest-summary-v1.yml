@@ -1,0 +1,28 @@
+name: Verify TB-Science rank14 planner manifest summary
+on:
+  push:
+    branches:
+      - verify-tbscience-r14-planner-manifest-summary-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact repaired agent and invariants
+        env:
+          C: capsules/tb_science_rank14_20261009_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "d397324f411d002bdbdca348aaad708b5b40c9c2"
+          python -m py_compile "$C/canonical/runtime/harbor_science_agent_v1.py"
+          PYTHONPATH="$C" python "$C/verify_planner_manifest_summary_v1.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-r14-planner-manifest-summary-v1
+          path: RANK14_PLANNER_MANIFEST_SUMMARY_VERIFY.json
+          retention-days: 2
