@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-09",
+  "incremental_spend_usd": 0,
+  "invariants": [
+    {
+      "id": "TB_SCIENCE_LLAMA_CPU_PORTABILITY_V1",
+      "proof": {
+        "independent_verification_git_blob_sha": "7497bc7249431a832a0e938fcf6d575bfbfaf5f3",
+        "independent_verification_path": "capsules/tb_science_v4_closed/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_PUBLIC_RUNNER_VERIFICATION_20261003_V1.json",
+        "repair_git_blob_sha": "7e44ab43908860703a478df2ec8646246620260a",
+        "repair_path": "capsules/tb_science_cpu_portability_v1/TB_SCIENCE_LOCAL_SUBSTRATE_CPU_PORTABILITY_REPAIR_V1.json"
+      },
+      "requires": {
+        "build_llama_server_on_current_runner": true,
+        "cache_compiled_build_directory": false,
+        "configure_on_current_runner": true,
+        "delete_build_directory_before_configure": true,
+        "health_endpoint_required": true,
+        "zero_terminal_completion_required": true
+      },
+      "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+      "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
+    }
+  ],
+  "schema": "PROJECT_BRAIN_CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1",
+  "status": "ACTIVE_FAIL_CLOSED",
+  "terminal_credit_delta": 0
+}
