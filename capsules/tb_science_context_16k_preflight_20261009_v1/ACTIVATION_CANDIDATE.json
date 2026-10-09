@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT_16K_PREFLIGHT_CANDIDATE_V1",
+  "date": "2026-10-09",
+  "status": "INERT__WORKFLOW_INSTALL_ONLY__NO_RUN_AUTHORITY",
+  "source_brain_main": "ef22fcec6996479761071e0f97d4a4ddbe7ac4bb",
+  "exact_blobs": {
+    "planner": "715aee168f02cb4abff961849b2b26709eef2e64",
+    "command_policy": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "planner_tests": "c2aeed8fcef24126035cd8d90a436fae116e964d"
+  },
+  "route": {
+    "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "candidate_context_tokens": 16384,
+    "minimum_measured_synthetic_request_tokens": 9459,
+    "maximum_measured_synthetic_request_tokens": 12000
+  },
+  "benchmark_task_exposure": 0,
+  "rank14_authority": false,
+  "incremental_spend_usd": 0,
+  "credit": false
+}
