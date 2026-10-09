@@ -4,8 +4,8 @@ from pathlib import Path
 
 GRAPH_PATH=Path("PROFESSIONAL_QUALITY_ASSURANCE_GRAPH_20261009_V2.json")
 CATALOG_PATH=Path("PROFESSIONAL_QUALITY_DOMAIN_DEFEATER_CATALOG_20261009_V2.json")
-EXPECTED_GRAPH_BLOB="dda332bd918b9c80b659b0108016f5e7df9d45ba"
-EXPECTED_CATALOG_BLOB="cb9544397bf10b0b1eb7d9cb2a7997a58d2df2e3"
+EXPECTED_GRAPH_BLOB="affa5085b6927489fef530bc89d0256694a46bac"
+EXPECTED_CATALOG_BLOB="a218ae63418ff525fcb0e4b3c9b884cc2be0fbbe"
 PRIMITIVES={"CLAIM","OBLIGATION","ASSUMPTION","EVIDENCE","DEPENDENCY","DEFEATER","EFFECT","AUTHORITY","RESOURCE","MONITOR","EPOCH","TRANSITION"}
 STATUSES={"SUPPORTED","OPEN","STALE","PROVEN_IRRELEVANT","REJECTED"}
 LEAF_TYPES={"EVIDENCE","ASSUMPTION","EPOCH"}
@@ -73,7 +73,7 @@ def validate(graph, catalog):
         visit(rid)
 
     challenges=catalog.get("challenges")
-    if not isinstance(challenges,list) or len(challenges)!=66 or catalog.get("challenge_count")!=66:
+    if not isinstance(challenges,list) or len(challenges)!=70 or catalog.get("challenge_count")!=70:
         errors.append("CHALLENGE_COUNT_INVALID")
         challenges=[]
     seen=set(); covered=set()
@@ -168,7 +168,7 @@ def main():
     # Canary 2: unmapped catalog challenge must fail binding validation.
     c=copy.deepcopy(catalog)
     c["challenges"].append({"id":"C999","root_ids":["R999"],"attack":"canary","status":"OPEN","terminal_pass_forbidden":True})
-    c["challenge_count"]=67
+    c["challenge_count"]=71
     assert any("CHALLENGE_ROOT_MAPPING_INVALID:C999"==e for e in validate(graph,c)),validate(graph,c)
 
     # Canary 3: deleting a referenced defeater must fail exact binding.
@@ -201,7 +201,7 @@ def main():
         "brain_graph_git_blob_sha":EXPECTED_GRAPH_BLOB,
         "brain_catalog_git_blob_sha":EXPECTED_CATALOG_BLOB,
         "root_count":12,
-        "challenge_count":66,
+        "challenge_count":70,
         "representation_closure":True,
         "proof_closure":False,
         "execution_closure":False,
