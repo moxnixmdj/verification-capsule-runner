@@ -601,7 +601,13 @@ def build_science_planner_prompt(
     )
 
 
-async def run_science_goal(\n    goal: str,\n    environment: BaseEnvironment,\n    *,\n    max_cycles: int = 8,\n    journal_session: causal_bridge.JournalSession | None = None,\n) -> dict[str, Any]:
+async def run_science_goal(
+    goal: str,
+    environment: BaseEnvironment,
+    *,
+    max_cycles: int = 8,
+    journal_session: causal_bridge.JournalSession | None = None,
+) -> dict[str, Any]:
     goal = str(goal or "").strip()
     if not goal:
         raise ValueError("SCIENCE_GOAL_REQUIRED")
@@ -737,9 +743,6 @@ async def run_science_goal(\n    goal: str,\n    environment: BaseEnvironment,\n
             scored.sort(key=lambda x:(x[0],x[1]))
             chosen = scored[0][2]
 
-            # Durable intent MUST precede the first causal effect. The agent has
-            # no repository credential; it publishes a local request and waits
-            # until the trusted parent durably commits and ACKs it.
             if journal_session is not None:
                 proposal_bytes = json.dumps(
                     raw,
@@ -826,6 +829,8 @@ async def run_science_goal(\n    goal: str,\n    environment: BaseEnvironment,\n
                 "coverage_promoted": verified,
             }
             if journal_session is not None:
+                action_stdout = str(action_receipt.stdout or "")
+                action_stderr = str(action_receipt.stderr or "")
                 verify_stdout = (
                     str(verify_observed.get("stdout") or "")
                     if isinstance(verify_observed, dict)
@@ -841,10 +846,10 @@ async def run_science_goal(\n    goal: str,\n    environment: BaseEnvironment,\n
                     "action_id": chosen["action_id"],
                     "action_returncode": action_receipt.returncode,
                     "action_stdout_sha256": hashlib.sha256(
-                        action_receipt.stdout.encode("utf-8", "replace")
+                        action_stdout.encode("utf-8", "replace")
                     ).hexdigest(),
                     "action_stderr_sha256": hashlib.sha256(
-                        action_receipt.stderr.encode("utf-8", "replace")
+                        action_stderr.encode("utf-8", "replace")
                     ).hexdigest(),
                     "verification_performed": verify_observed is not None,
                     "verification_returncode": (
