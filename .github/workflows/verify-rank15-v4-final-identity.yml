@@ -1,0 +1,135 @@
+name: Verify Rank15 V4 final identity closure
+
+on:
+  push:
+    branches: [repair/tb-science-rank15-v4-final-identity-20261009]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json"
+      - ".github/workflows/verify-rank15-v4-final-identity.yml"
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json"
+      - ".github/workflows/verify-rank15-v4-final-identity.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rank15-v4-final-identity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile exact final identity path
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v4.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py
+
+      - name: Run V4 stale and exact identity adversarial tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py
+
+      - name: Preserve inherited V3 execution invariants
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank15_20261009_v1/rank15_v3_zero_exposure_tests.py
+          python capsules/tb_science_rank15_20261009_v1/rank15_v3_start_cas_tests.py
+
+      - name: Verify behavior pins exact repaired bytes
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V4_PR.json
+          python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path(".")
+          def blob(p):
+              raw=p.read_bytes()
+              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          p=root/"execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json"
+          b=json.loads(p.read_text())
+          assert b["schema"]=="PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4"
+          assert b["execution_authority"] is False
+          assert b["task_read"] is False and b["task_started"] is False
+          for name,row in b["runtime_bindings"].items():
+              q=root/row["path"]
+              assert q.is_file(), name
+              got=blob(q)
+              assert got==row["git_blob_sha"], (name,got,row["git_blob_sha"])
+          facts=b["behavior"]
+          assert facts["finalizer_recomputes_runtime_identity_from_current_bound_bytes"] is True
+          assert facts["finalizer_requires_current_workflow_authority_activation_identity"] is True
+          PY
+
+      - name: Kill stale V3 schema and weak finalizer canaries
+        run: |
+          set -euo pipefail
+          P=capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py
+          F=capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py
+          grep -F 'PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4' "$P"
+          ! grep -F 'PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3' "$P"
+          grep -F 'start_cas._runtime_identity(root, surface)' "$F"
+          grep -F 'RUNTIME_IDENTITY_RECOMPUTED_MATCH' "$F"
+          grep -F 'RUNTIME_IDENTITY_MATERIAL_EXACT_MATCH' "$F"
+          grep -F 'WORKFLOW_CAS_MATCH' "$F"
+          grep -F 'AUTHORITY_CAS_MATCH' "$F"
+          grep -F 'ACTIVATION_CAS_MATCH' "$F"
+
+      - name: Emit zero-exposure receipt
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          paths=[
+            "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py",
+            "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py",
+            "capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py",
+            "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_V4_FINAL_IDENTITY_VERIFICATION_V1",
+            "status":"PASS__V4_FINALIZER_RECOMPUTES_EXACT_CURRENT_RUNTIME_WORKFLOW_AUTHORITY_ACTIVATION_IDENTITY__ZERO_EXPOSURE",
+            "sha256":{p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in paths},
+            "task_read":False,
+            "task_started":False,
+            "benchmark_trials_consumed":0,
+            "execution_authority":False,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0,
+            "incremental_spend_usd":0,
+          }
+          pathlib.Path("RANK15_V4_FINAL_IDENTITY_VERIFICATION.json").write_text(
+              json.dumps(out,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rank15-v4-final-identity-verification
+          path: RANK15_V4_FINAL_IDENTITY_VERIFICATION.json
+          retention-days: 7
