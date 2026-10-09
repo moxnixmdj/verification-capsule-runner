@@ -38,7 +38,8 @@ jobs:
           assert r["rerun_credit"] is False
           PY
           grep -F 'paths:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
-          test "$(git hash-object \"$C/RANK15_EPOCH_V2.json\")" = "3ead70cc5c625b5523292de6f43446a836944a87"\n          test "$(git hash-object \"$C/RANK15_EXECUTION_CLAIM_V2.json\")" = "f377aba4612ed86330c2de05d5adbec3aeb922c6"
+          test "$(git hash-object "$C/RANK15_EPOCH_V2.json")" = "3ead70cc5c625b5523292de6f43446a836944a87"
+          test "$(git hash-object "$C/RANK15_EXECUTION_CLAIM_V2.json")" = "f377aba4612ed86330c2de05d5adbec3aeb922c6"
           ! grep -F 'workflow_dispatch' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
           ! grep -F 'schedule:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
           ! grep -F 'Restore exact llama.cpp cache' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
