@@ -1,0 +1,1 @@
+# inert existence stub for exact V1 load-bearing digest replay\n

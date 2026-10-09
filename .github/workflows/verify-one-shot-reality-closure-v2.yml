@@ -1,0 +1,102 @@
+name: Verify one-shot reality closure v2 capsule
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/one_shot_reality_closure_v2/**"
+      - ".github/workflows/verify-one-shot-reality-closure-v2.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+      - name: Bind exact private Brain blobs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import subprocess
+          expected = {
+            "capsules/one_shot_reality_closure_v2/canonical/runtime/one_shot_reality_closure_v2.py": "0a654f49bce081de1c7b53eedac390e7e3b77018",
+            "capsules/one_shot_reality_closure_v2/canonical/runtime/one_shot_verified_closure_v1.py": "2540e940bf9bc8ce3212e9910161bed814101f33",
+            "capsules/one_shot_reality_closure_v2/canonical/tests/test_one_shot_reality_closure_v2.py": "8270f74407cff9a592c942e8934b6cfa420489a4",
+            "capsules/one_shot_reality_closure_v2/canonical/tests/test_one_shot_reality_closure_v2_integration.py": "07752cea3a1953d7e4f33c43d95da384572bdc83",
+          }
+          for path, want in expected.items():
+              got = subprocess.check_output(["git", "hash-object", path], text=True).strip()
+              assert got == want, (path, got, want)
+          print("EXACT_PRIVATE_BRAIN_V2_BLOB_BINDING_PASS")
+          PY
+      - name: Compile exact Brain V2 and tests
+        run: |
+          python -m py_compile \
+            capsules/one_shot_reality_closure_v2/canonical/runtime/one_shot_reality_closure_v2.py \
+            capsules/one_shot_reality_closure_v2/canonical/runtime/one_shot_verified_closure_v1.py \
+            capsules/one_shot_reality_closure_v2/canonical/tests/test_one_shot_reality_closure_v2.py \
+            capsules/one_shot_reality_closure_v2/canonical/tests/test_one_shot_reality_closure_v2_integration.py
+      - name: Run exact V2 contract suite
+        env:
+          PYTHONPATH: capsules/one_shot_reality_closure_v2
+        run: python -m unittest canonical.tests.test_one_shot_reality_closure_v2 -v
+      - name: Run exact V2 through real V1 cleanroom
+        env:
+          PYTHONPATH: capsules/one_shot_reality_closure_v2
+        run: python -m unittest canonical.tests.test_one_shot_reality_closure_v2_integration -v
+      - name: Fresh adversarial context-gate canaries
+        env:
+          PYTHONPATH: capsules/one_shot_reality_closure_v2
+        run: |
+          python - <<'PY'
+          from canonical.runtime import one_shot_reality_closure_v2 as v2
+
+          low = v2.certify_context_capacity_repair(
+              observed_request_tokens=9202,
+              configured_context_tokens=8192,
+              candidate_context_tokens=9202,
+          )
+          assert low["pass"] is False
+          assert low["arithmetic_capacity_pass"] is False
+
+          exposed = v2.certify_context_capacity_repair(
+              observed_request_tokens=9202,
+              configured_context_tokens=8192,
+              candidate_context_tokens=16384,
+              live_probe_receipt={
+                  "benchmark_exposure_count": 1,
+                  "observed_probe_tokens": 10000,
+                  "candidate_context_tokens": 16384,
+                  "live_probe_pass": True,
+                  "model_sha256": "m",
+                  "runtime_commit": "r",
+                  "receipt_sha256": "a" * 64,
+              },
+              expected_model_sha256="m",
+              expected_runtime_commit="r",
+          )
+          assert exposed["pass"] is False
+
+          mismatch = v2.certify_context_capacity_repair(
+              observed_request_tokens=9202,
+              configured_context_tokens=8192,
+              candidate_context_tokens=16384,
+              live_probe_receipt={
+                  "benchmark_exposure_count": 0,
+                  "observed_probe_tokens": 10000,
+                  "candidate_context_tokens": 16384,
+                  "live_probe_pass": True,
+                  "model_sha256": "wrong",
+                  "runtime_commit": "r",
+                  "receipt_sha256": "b" * 64,
+              },
+              expected_model_sha256="m",
+              expected_runtime_commit="r",
+          )
+          assert mismatch["pass"] is False
+          print("FRESH_ADVERSARIAL_CANARIES_PASS__3_OF_3")
+          PY
