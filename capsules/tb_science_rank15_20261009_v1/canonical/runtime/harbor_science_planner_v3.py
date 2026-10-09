@@ -76,9 +76,9 @@ TOOL = {
                     "type": "array",
                     "minItems": 1,
                     "maxItems": 16,
-                    "items": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "items": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.:-]+$"},
                     "description": (
-                        "Stable short material requirement IDs. Repeat the exact same "
+                        "Stable short ASCII material requirement IDs. Repeat the exact same "
                         "frozen list on later cycles."
                     ),
                 },
@@ -107,7 +107,7 @@ TOOL = {
                                 "type": "array",
                                 "minItems": 1,
                                 "maxItems": 16,
-                                "items": {"type": "string", "minLength": 1, "maxLength": 64},
+                                "items": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.:-]+$"},
                             },
                             # Do not encode MAX_COMMAND_CHARS as JSON-schema maxLength here.
                             # llama.cpp compiles tool schemas into grammars and rejects very
