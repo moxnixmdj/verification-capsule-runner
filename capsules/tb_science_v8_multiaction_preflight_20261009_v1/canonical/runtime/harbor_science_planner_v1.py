@@ -82,6 +82,10 @@ TOOL = {
                                 "maxItems": 16,
                                 "items": {"type": "string", "minLength": 1, "maxLength": 64},
                             },
+                            # Do not encode MAX_COMMAND_CHARS as JSON-schema maxLength here.
+                            # llama.cpp compiles tool schemas into grammars and rejects very
+                            # large repetition bounds before generation. Brain enforces the
+                            # exact bound immediately after decoding instead.
                             "depends_on": {
                                 "type": "array",
                                 "maxItems": MAX_CANDIDATES_PER_PROPOSAL,
@@ -298,6 +302,7 @@ def plan(prompt: str, *, timeout_s: int = 180) -> dict[str, Any]:
                         raise SciencePlannerError(f"SCIENCE_PLANNER_{field.upper()}_REQUIRED")
                     if len(value) > MAX_COMMAND_CHARS:
                         raise SciencePlannerError(f"SCIENCE_PLANNER_{field.upper()}_TOO_LONG")
+        # Keep the controller boundary unchanged: it consumes untrusted JSON text.
         text = json.dumps(proposal, sort_keys=True, separators=(",", ":"))
         extract_json_object(text)
         return {
