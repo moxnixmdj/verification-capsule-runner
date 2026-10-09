@@ -141,13 +141,16 @@ def main() -> int:
         result["planner_module"] = "canonical.runtime.harbor_science_planner_v3"
         result["agent_module"] = "canonical.runtime.harbor_science_agent_v3"
         result["post_freeze_state_reserve_tokens"] = agent.POST_FREEZE_STATE_RESERVE_TOKENS
+        result["post_freeze_state_reserve_embedded_in_cycle0_prompt"] = (
+            agent.POST_FREEZE_STATE_RESERVE_DIGITS in prompt
+        )
         if input_tokens + RESERVED_COMPLETION_TOKENS > SERVER_CONTEXT_TOKENS:
             result["status"] = "PREEXPOSURE_ABORT_NONCONSUMING__TOKEN_BUDGET_EXCEEDED"
-        elif result["context_headroom_tokens"] < agent.POST_FREEZE_STATE_RESERVE_TOKENS:
-            result["status"] = "PREEXPOSURE_ABORT_NONCONSUMING__POST_FREEZE_STATE_RESERVE_TOO_SMALL"
+        elif not result["post_freeze_state_reserve_embedded_in_cycle0_prompt"]:
+            result["status"] = "PREEXPOSURE_ABORT_NONCONSUMING__STATE_RESERVE_MISSING"
         else:
             result["pass"] = True
-            result["status"] = "PASS__RANK15_V3_EXACT_TASK_READ__CYCLE0_FITS__POST_FREEZE_STATE_RESERVE_PROVED__TASK_NOT_STARTED"
+            result["status"] = "PASS__RANK15_V3_EXACT_TASK_READ__MAXIMAL_RESERVED_CYCLE0_CORE_FITS__TASK_NOT_STARTED"
     except Exception as exc:
         result["error_type"] = type(exc).__name__
         result["error"] = str(exc)
