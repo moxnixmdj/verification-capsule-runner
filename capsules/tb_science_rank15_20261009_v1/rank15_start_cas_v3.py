@@ -208,6 +208,8 @@ def _runtime_identity(root: Path, surface: dict[str, Any]) -> tuple[str, dict[st
         "zero_exposure_tests",
         "all_cycle_proof",
         "start_cas",
+        "generic_start_cas",
+        "generic_ref_store",
         "finalizer",
         "preflight",
         "admission_guard",
