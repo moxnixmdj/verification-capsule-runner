@@ -1,0 +1,56 @@
+name: Verify TB-Science rank15 carrier package
+on:
+  push:
+    branches:
+      - stage/tb-science-rank15-20261009-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact rank15 carrier package without task exposure
+        env:
+          C: capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          test ! -e "$C/ACTIVATE_RANK15_PR.json"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V1.json")" = "61629b854f4be1e940a3f68d1a676e40b4e61ebf"
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK15_20261009_V1.json")" = "ce2c7aeb17c450e17b02a3b616ce8a8374edabe4"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK15_AUTHORITY_CANDIDATE_PUBLIC_VERIFICATION_20261009_V1.json")" = "75f2ca9b52e256e13551977e99784dca868c11a7"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V1.json")" = "88ffb2b0117a9fb7f8885118171b53b187bc581d"
+          test "$(git hash-object "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V19.json")" = "c9b887ac4fb57046be666492748d25ca96056378"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V12.json")" = "8008b1e2382c1235e3b788e0f8d4ab9a48487409"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V12_VERIFICATION_20261009_V1.json")" = "2f604985baa7f88c61b23958d59dc2ecd4c0990b"
+          test "$(git hash-object "$C/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$C/FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json")" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
+          test "$(git hash-object "$C/RANK15_EPOCH_V1.json")" = "ad0c76996163e5ee75553af7a9c00276dbe607c9"
+          test "$(git hash-object "$C/RANK15_EXECUTION_CLAIM_V1.json")" = "a37da97fbc06ffdbb937996eaf1615dd56af1c0d"
+          test "$(git hash-object "$C/rank15_prestart_token_guard_v1.py")" = "0139a20070cd1a51866c309bac1976b27ce7ac0d"
+          python -m py_compile "$C/rank15_prestart_token_guard_v1.py" "$C/canonical/runtime/harbor_science_agent_v1.py" "$C/canonical/runtime/harbor_science_planner_v1.py"
+          python - <<'PY'
+          import json,pathlib,subprocess,os
+          C=pathlib.Path(os.environ["C"])
+          m=json.loads((C/"TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V12.json").read_text())
+          a=json.loads((C/"TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V1.json").read_text())
+          e=json.loads((C/"RANK15_EPOCH_V1.json").read_text())
+          claim=json.loads((C/"RANK15_EXECUTION_CLAIM_V1.json").read_text())
+          assert len(m["closure"])==15 and m["closure_file_count"]==15 and m["unresolved_dynamic_imports"]==[]
+          for row in m["closure"]:
+              p=C/row["path"]
+              assert p.is_file(),row["path"]
+              actual=subprocess.check_output(["git","hash-object",str(p)],text=True).strip()
+              assert actual==row["git_blob_sha"],(row["path"],actual,row["git_blob_sha"])
+          assert a["execution_authority"] is True and a["task_read_authority"] is False
+          assert a["state"]["task_started"] is False and a["state"]["benchmark_trials_consumed"]==0
+          assert e["execution_authority"] is False and e["task_read_under_this_epoch"] is False
+          assert e["run_attempts_authorized_by_epoch"]==0
+          assert claim["consumed"] is False and claim["task_started"] is False
+          assert claim["retries_authorized"]==0 and claim["precheck_failure_consumes_slot"] is False
+          assert claim["epoch_git_blob_sha"]=="ad0c76996163e5ee75553af7a9c00276dbe607c9"
+          print("RANK15_CARRIER_ZERO_EXPOSURE_PASS")
+          PY
