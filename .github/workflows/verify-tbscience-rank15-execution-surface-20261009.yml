@@ -2,7 +2,7 @@ name: Verify TB-Science rank15 execution surface
 on:
   push:
     branches:
-      - tbscience-r15-portable-carrier-v1
+      - stage/tb-science-rank15-portable-v2-20261009
 permissions:
   contents: read
 jobs:
@@ -18,17 +18,17 @@ jobs:
           C: capsules/tb_science_rank15_20261009_v1
         run: |
           set -euo pipefail
-          test ! -e "$C/ACTIVATE_RANK15_PR.json"
-          test "$(git hash-object "$C/rank15_execution_preflight_v1.py")" = "941445c191880794df739d8e9205497b6e2efd2d"
-          test "$(git hash-object "$C/rank15_finalize_receipt_v1.py")" = "9edfdb036f2b2b6282cc492f17f4c192ad442d10"
+          test ! -e "$C/ACTIVATE_RANK15_PORTABLE_V2_PR.json"
+          test "$(git hash-object "$C/rank15_execution_preflight_v2.py")" = "250f550b653561baf5d7c98726a6e9562abb56cf"
+          test "$(git hash-object "$C/rank15_finalize_receipt_v2.py")" = "4bd9d1a25cb92c25d15753b352ffd644ed9c6b8e"
           test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "4c9bc5a50ee998e5f0aa65fa54a5f5d53ab28d2d"
-          python -m py_compile "$C/rank15_execution_preflight_v1.py" "$C/rank15_finalize_receipt_v1.py"
-          python "$C/rank15_execution_preflight_v1.py"
-          CACHE_READY=false HARBOR_OUTCOME=skipped SAFE_ID=protein-active-learning-trial-0 python "$C/rank15_finalize_receipt_v1.py"
+          python -m py_compile "$C/rank15_execution_preflight_v2.py" "$C/rank15_finalize_receipt_v2.py"
+          python "$C/rank15_execution_preflight_v2.py"
+          CARRIER_READY=false HARBOR_OUTCOME=skipped SAFE_ID=protein-active-learning-trial-0 python "$C/rank15_finalize_receipt_v2.py"
           python - <<'PY'
           import json
-          p=json.load(open("RANK15_EXECUTION_PREFLIGHT.json"))
-          r=json.load(open("protein-active-learning-trial-0__SLOT_RECEIPT_V1.json"))
+          p=json.load(open("RANK15_EXECUTION_PREFLIGHT_V2.json"))
+          r=json.load(open("protein-active-learning-trial-0__SLOT_RECEIPT_V2.json"))
           assert p["pass"] is True and p["activation_present"] is False
           assert p["task_read"] is False and p["benchmark_trials_consumed"]==0
           assert r["status"]=="PREEXPOSURE_ABORT_NONCONSUMING"
@@ -38,7 +38,7 @@ jobs:
           assert r["rerun_credit"] is False
           PY
           grep -F 'paths:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
-          grep -F 'ACTIVATE_RANK15_PR.json' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
+          test "$(git hash-object \"$C/RANK15_EPOCH_V2.json\")" = "3ead70cc5c625b5523292de6f43446a836944a87"\n          test "$(git hash-object \"$C/RANK15_EXECUTION_CLAIM_V2.json\")" = "f377aba4612ed86330c2de05d5adbec3aeb922c6"
           ! grep -F 'workflow_dispatch' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
           ! grep -F 'schedule:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
           ! grep -F 'Restore exact llama.cpp cache' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
