@@ -6,6 +6,10 @@ def load(name): return json.loads((ROOT/name).read_text())
 c=load("CANDIDATE.json"); l=load("LEDGER_V17.json"); r=load("REPAIR_VERIFY.json"); v=load("CLOSURE_V10.json")
 errors=[]
 
+
+def need(cond,msg):
+    if not cond: errors.append(msg)
+
 a=load("AUTHORITY_V2.json"); bv=load("BRAIN_VERIFY.json")
 need(a.get("schema")=="PROJECT_BRAIN_TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_V2","AUTHORITY_SCHEMA")
 need(a.get("execution_authority") is True,"ACTIVE_EXECUTION_AUTHORITY_REQUIRED")
@@ -20,9 +24,6 @@ need(a["exact_route"]["carrier_closure_blob"]=="ae37559320105277e017ff17af7c3dbe
 need(a["candidate"]["git_blob_sha"]=="e57e8588048b58c7fad5f273608f463bc586be9e","AUTHORITY_CANDIDATE_BINDING")
 need(a["candidate"]["verification_git_blob_sha"]=="a7ae7e35e34595e0fcd096a61f410e485b2af268","AUTHORITY_VERIFICATION_BINDING")
 need(bv.get("status","").startswith("PASS__REPAIRED_RANK14_AUTHORITY_CANDIDATE_INDEPENDENTLY_VERIFIED"),"BRAIN_VERIFY_PASS")
-
-def need(cond,msg):
-    if not cond: errors.append(msg)
 
 need(c.get("schema")=="PROJECT_BRAIN_TB_SCIENCE_RANK14_REPAIRED_ONE_SLOT_AUTHORITY_CANDIDATE_V2","CANDIDATE_SCHEMA")
 need(c.get("execution_authority") is False,"CANDIDATE_MUST_NOT_SELF_AUTHORIZE")
