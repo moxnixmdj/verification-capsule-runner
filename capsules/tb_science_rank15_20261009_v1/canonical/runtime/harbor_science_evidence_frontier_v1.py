@@ -128,12 +128,12 @@ class EvidenceLedger:
         })
 
     def prompt_index(self) -> dict[str, Any]:
+        # Keep the mandatory prompt footprint essentially constant. The manifest
+        # ref reaches every historical record; latest records are optional
+        # expansions and may be dropped by the exact token fitter.
         return {
             "record_count": len(self._record_refs),
             "manifest_ref": self.manifest_ref(),
-            "latest_record_refs": list(
-                self._record_refs[-LATEST_RECORD_REFS:]
-            ),
         }
 
     def validate_requests(self, refs: Any) -> list[str]:
