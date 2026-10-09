@@ -200,12 +200,12 @@ class Rank15V3RuntimeTests(unittest.TestCase):
     def test_identifier_schema_is_generation_bounded_ascii(self):
         params = planner.TOOL["function"]["parameters"]["properties"]
         req = params["material_requirements"]["items"]
-        self.assertEqual(req["maxLength"], 32)
+        self.assertEqual(req["maxLength"], 8)
         self.assertEqual(req["pattern"], planner.REQUIREMENT_ID_PATTERN)
         action = params["candidates"]["items"]["properties"]["action_id"]
         self.assertEqual(action["maxLength"], 32)
         self.assertEqual(action["pattern"], planner.ACTION_ID_PATTERN)
-        self.assertEqual(agent._nonempty_strings(["BRAIN_DELIVERABLE_01"], maximum=16, field="MATERIAL_REQUIREMENTS"), ["BRAIN_DELIVERABLE_01"])
+        self.assertEqual(agent._nonempty_strings(["BD01"], maximum=16, field="MATERIAL_REQUIREMENTS"), ["BD01"])
         with self.assertRaisesRegex(RuntimeError, "IDENTIFIER_INVALID"):
             agent._nonempty_strings(["contains spaces"], maximum=16, field="MATERIAL_REQUIREMENTS")
 
@@ -270,6 +270,14 @@ class Rank15V3RuntimeTests(unittest.TestCase):
                     logical_attempt_id=LOGICAL_ID,
                     cycle=1,
                 )
+
+    def test_post_freeze_requirement_repr_growth_is_below_reserve(self):
+        ids = [f"R{i:07d}" for i in range(16)]
+        self.assertTrue(all(len(x) == planner.MAX_REQUIREMENT_ID_CHARS for x in ids))
+        cycle0 = f"Frozen requirements: {None!r}\\nUnresolved: {[]!r}\\n"
+        frozen = f"Frozen requirements: {ids!r}\\nUnresolved: {ids!r}\\n"
+        growth_bytes = len(frozen.encode("ascii")) - len(cycle0.encode("ascii"))
+        self.assertLess(growth_bytes, agent.POST_FREEZE_STATE_RESERVE_TOKENS)
 
     def test_post_freeze_reserve_is_positive_and_bounded(self):
         self.assertGreater(agent.POST_FREEZE_STATE_RESERVE_TOKENS, 0)
