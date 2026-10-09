@@ -1,0 +1,94 @@
+name: Verify rank15 v3 all-cycle start CAS candidate
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v3_start_cas_tests.py"
+      - "execution_guard/terminal_execution_admission_v2.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3.json"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v3.yml"
+      - ".github/workflows/verify-rank15-v3-start-cas-candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-exposure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile and replay V3 zero-exposure contracts
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            "$C/rank15_start_cas_v3.py" \
+            "$C/rank15_finalize_receipt_v3.py" \
+            "$C/rank15_execution_preflight_v3.py" \
+            "execution_guard/terminal_execution_admission_v2.py"
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C"
+          python "$C/rank15_v3_zero_exposure_tests.py"
+          python "$C/rank15_v3_start_cas_tests.py"
+
+      - name: Verify exact behavior bindings and quarantine preservation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path(".").resolve()
+          behavior=json.load(open("execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3.json"))
+          assert behavior["execution_authority"] is False
+          assert behavior["task_read"] is False
+          assert behavior["task_started"] is False
+          assert behavior["benchmark_trials_executed"] == 0
+          facts=behavior["behavior"]
+          for key in (
+              "all_cycle_context_fit_by_construction",
+              "durable_start_cas_required",
+              "task_start_defined_by_cas_acquisition",
+              "aggregate_acceptance_credit_from_single_slot_forbidden",
+          ):
+              assert facts[key] is True
+          def blob(path):
+              raw=Path(path).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          for key,row in behavior["runtime_bindings"].items():
+              assert blob(row["path"]) == row["git_blob_sha"], (key,row)
+          surface=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"))
+          assert surface["execution_authority"] is False
+          assert surface["task_read_authority"] is False
+          assert surface["task_started"] is False
+          assert surface["benchmark_trials_consumed"] == 0
+          assert not Path("capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V3_PR.json").exists()
+          PY
+
+      - name: Verify candidate execution workflow is fail-closed and correctly ordered
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          p=Path("execution_guard/terminal_execution_admission_v2.py")
+          spec=importlib.util.spec_from_file_location("admission_v2",p)
+          m=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(m)
+          text=Path(".github/workflows/execute-tb-science-rank15-20261009-v3.yml").read_text()
+          assert m.check_workflow(text) == [], m.check_workflow(text)
+          assert text.index("rank15_start_cas_v3.py --check-absent") < text.index("rank15_prestart_token_guard_v3.py")
+          assert text.index("rank15_prestart_token_guard_v3.py") < text.index("rank15_start_cas_v3.py --acquire")
+          assert text.index("rank15_start_cas_v3.py --acquire") < text.index("harbor run")
+          PY
