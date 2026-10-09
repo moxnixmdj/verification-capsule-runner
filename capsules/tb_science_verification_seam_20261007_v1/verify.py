@@ -3,7 +3,7 @@ import asyncio, hashlib, importlib.util, json, pathlib, sys, types
 
 ROOT = pathlib.Path(__file__).resolve().parent
 TARGET = ROOT / "harbor_science_agent_v1.py"
-EXPECTED_BLOB = "7d54d67f7c4b62cd0c3477dc945bc7c2385b5289"
+EXPECTED_BLOB = "7f6fa33f8f10e0697496865bab1e16ddf0fdca70"
 
 raw = TARGET.read_bytes()
 git_blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
@@ -51,6 +51,8 @@ class Env:
             return Receipt(0, "", "bash: line 22: warning: here-document at line 1 delimited by end-of-file")
         if command == "verify-bad":
             return Receipt(1, "", "bad")
+        if command.startswith("test -s /app/submission/"):
+            return Receipt(1, "", "missing")
         return Receipt(0, "ok", "")
 
 def install_planner(outputs):
@@ -100,5 +102,18 @@ async def run_cases():
     assert r["status"] == "FINISHED"
     assert r["resolved_requirements"] == ["R1"]
 
+    env=Env()
+    install_planner([
+        {"material_requirements":["R1"],"candidates":[{"action_id":"a","covers":["R1","BRAIN_DELIVERABLE_01"],"command":"echo work","verify_command":"test -d /tmp"}]}
+    ])
+    r=await candidate.run_science_goal("Create /app/submission/controller.py.",env,max_cycles=1)
+    assert r["status"] != "FINISHED"
+    assert "R1" in r["resolved_requirements"]
+    assert "BRAIN_DELIVERABLE_01" not in r["resolved_requirements"]
+    a=[x for x in r["trace"] if x.get("kind")=="BRAIN_SELECTED_RESEARCH_ACTION"][0]
+    assert a["verification_block_reason"] == "BRAIN_MANDATED_DELIVERABLE_CHECK_FAILED"
+    assert a["coverage_promoted"] is False
+    assert a["brain_deliverable_checks"][0]["verified"] is False
+
 asyncio.run(run_cases())
-print(json.dumps({"status":"PASS","exact_git_blob_sha":git_blob,"cases":3},sort_keys=True))
+print(json.dumps({"status":"PASS","exact_git_blob_sha":git_blob,"cases":4},sort_keys=True))
