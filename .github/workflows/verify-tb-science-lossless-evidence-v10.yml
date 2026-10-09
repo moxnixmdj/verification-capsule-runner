@@ -1,0 +1,37 @@
+name: Verify TB-Science lossless evidence V10
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_evidence_store_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v5.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v10.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_lossless_evidence_v10.py"
+      - ".github/workflows/verify-tb-science-lossless-evidence-v10.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile exact candidate modules
+        run: |
+          set -euo pipefail
+          R=capsules/tb_science_rank15_20261009_v1
+          python -m py_compile             "$R/canonical/runtime/harbor_science_evidence_store_v1.py"             "$R/canonical/runtime/harbor_science_planner_v5.py"             "$R/canonical/runtime/harbor_science_agent_v10.py"
+      - name: Run focused lossless-evidence tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          export PYTHONPATH="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1:$GITHUB_WORKSPACE"
+          python -m pytest -q             capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_lossless_evidence_v10.py
