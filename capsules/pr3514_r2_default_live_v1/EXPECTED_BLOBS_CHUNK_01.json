@@ -1,0 +1,15 @@
+{
+  "schema": "PR3514_BLOB_CHUNK_V1",
+  "chunk": 1,
+  "source_head_sha": "c2083e5d62f8221d08174490f41ac61c56102e7a",
+  "files": {
+    "canonical/governance/CURRENT_R2_DECISION_INTELLIGENCE.json": "32e34fc7b1799b4cbf3f346a717f2c944e8949c0",
+    "canonical/governance/CURRENT_R2_DIRECT_ROUTE_ADMISSIONS.json": "3c7219306811215ce080f12d6ee4f55945e547e5",
+    "canonical/governance/CURRENT_R2_DIRECT_ROUTE_REGISTRY.json": "f34fd8f18472f2be2e0dc60d763095eec1071df7",
+    "canonical/governance/R2_DIRECT_ROUTE_DYNAMIC_ADMISSIONS_20261009_V1.json": "f610fc1275a9241794328d649bcd507a44cdbab7",
+    "canonical/governance/R2_DIRECT_ROUTE_REGISTRY_20261009_V2.json": "47886a2f3d6ae23707aa30efd47c953a19b92e8c",
+    "canonical/governance/R2_DIRECT_END_TO_END_ADEQUACY_ROUTES_ACTIVATION_20261009_V24.json": "3a9668be458507e4295e733bc692b65b8ed7a866",
+    "canonical/runtime/general_adequate_decision_fixed_point_v2.py": "6b719dd7bc23738885759650034302f96704d13f",
+    "canonical/runtime/promote_r2_direct_route_v1.py": "85be8711c55243a8355094d766ced625a30062c7"
+  }
+}

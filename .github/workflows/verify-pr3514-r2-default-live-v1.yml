@@ -1,0 +1,30 @@
+name: Verify PR3514 R2 default-live public capsule
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/pr3514_r2_default_live_v1/**"
+      - ".github/workflows/verify-pr3514-r2-default-live-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile changed integration modules
+        run: |
+          cd capsules/pr3514_r2_default_live_v1
+          python -m py_compile \
+            canonical/runtime/r2_direct_route_registry_v1.py \
+            canonical/runtime/r2_direct_route_dynamic_admission_v1.py \
+            canonical/runtime/promote_r2_direct_route_v1.py \
+            canonical/runtime/r2_direct_route_live_integration_closure_v2.py
+      - name: Execute hash-bound public failover capsule
+        run: |
+          cd capsules/pr3514_r2_default_live_v1
+          python verify_capsule.py
