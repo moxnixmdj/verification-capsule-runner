@@ -139,7 +139,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python "$C/rank15_start_cas_v3.py" --check-absent
+          python $C/rank15_start_cas_v3.py --check-absent
 
       - name: Read exact rank15 task and prove all-cycle V3 context envelope
         id: prestart
@@ -147,7 +147,7 @@ jobs:
         run: |
           set -euo pipefail
           export PYTHONPATH="$C"
-          python "$C/rank15_prestart_token_guard_v3.py"
+          python $C/rank15_prestart_token_guard_v3.py
           cat RANK15_PRESTART_GUARD.json
 
       - name: Acquire durable one-use task-start CAS
@@ -157,7 +157,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python "$C/rank15_start_cas_v3.py" --acquire
+          python $C/rank15_start_cas_v3.py --acquire
 
       - name: Execute exactly frozen rank15 slot after CAS
         id: execute
@@ -186,7 +186,7 @@ jobs:
           CACHE_READY: ${{ steps.carrier.outputs.ready }}
           HARBOR_OUTCOME: ${{ steps.execute.outcome }}
         run: |
-          python "$C/rank15_finalize_receipt_v3.py"
+          python $C/rank15_finalize_receipt_v3.py
 
       - uses: actions/upload-artifact@v4
         if: always()
