@@ -1,0 +1,39 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK14_CARRIER_PREPARATION_V1",
+  "date": "2026-10-09",
+  "status": "PREPARED_INERT_EXACT_V9_CARRIER__ZERO_RUNS_AUTHORIZED__NO_TASK_READ_OR_START",
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "slot_id": "terminal-bench-science/inverse-lithography::trial-0",
+  "task_digest": "sha256:8c4da4b5b3a00283335e83dda92584aaf9293ff773bc43f2bf95eb0e2c0f8530",
+  "schedule_rank": 14,
+  "execution_base": "terminal-execution-v1",
+  "exact_blobs": {
+    "candidate_intent": "1deaeeeb9e9c1a176a2c7ab7b875a2aade38139e",
+    "candidate_authority": "aa31ecf115c47cbd0d3dcc79e121e7588c2c5fba",
+    "candidate_verification": "b2442f912821b7fb1701ab688f86204d2b2b74cf",
+    "ledger_v16": "748232e21b081083d353e4f901b8607a32c32b55",
+    "terminal_manifest": "6dfa880b1f68881531afbba6ca211681801fd19b",
+    "terminal_manifest_existing_base_path": "capsules/tb_science_rank13_20261009_v1/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json",
+    "closure_v9": "0ee0a9a3a9dd2bf6ffeaf3c2702ebc4648d950ab",
+    "closure_v9_verification": "5520ff26ae3067f7334e59642217e102adf11ec3",
+    "context16k_repair": "8b8cdc3fc112bd0a253af795fb79c0f641b8b3b4"
+  },
+  "route": {
+    "agent": "5e851d884b9784c6dc6fc9f83c08c502e41c3bdc",
+    "planner": "58964dc8d6b5eed5c202081cd800035c791eeb1d",
+    "command_policy": "a525773417291c7a4841bf35e1baff5370350d0d",
+    "qwen_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+    "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+    "context_tokens": 16384,
+    "runtime_file_count": 15
+  },
+  "safety": {
+    "attempts_authorized": 0,
+    "task_read_authority": false,
+    "task_started": false,
+    "activation_present": false,
+    "benchmark_task_exposure": 0,
+    "incremental_spend_usd": 0
+  },
+  "terminal_credit": false
+}
