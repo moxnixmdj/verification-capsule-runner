@@ -1,0 +1,61 @@
+name: Diagnose Actions terminal-start CAS write
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/diagnose-actions-terminal-start-cas-20261009-v1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build synthetic zero-exposure intent
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          run_id=os.environ["GITHUB_RUN_ID"]
+          sha=os.environ["GITHUB_SHA"]
+          value={
+            "slot_id":"diagnostic/actions-terminal-start-cas-"+run_id+"::trial-0",
+            "task_digest":"sha256:"+"1"*64,
+            "logical_attempt_id":"2"*64,
+            "workflow_git_blob_sha":"3"*40,
+            "authority_git_blob_sha":"4"*40,
+            "activation_git_blob_sha":"5"*40,
+            "runtime_identity_sha256":"6"*64,
+            "prestart_receipt_sha256":"7"*64,
+            "github_run_id":run_id,
+            "github_sha":sha,
+          }
+          open("DIAGNOSTIC_START_INTENT.json","w").write(json.dumps(value,sort_keys=True)+"\n")
+          PY
+
+      - name: Execute exact existing V1 durable-ref CAS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python execution_guard/terminal_slot_start_cas_v1.py \
+            --intent DIAGNOSTIC_START_INTENT.json \
+            --receipt DIAGNOSTIC_START_CAS_RECEIPT.json
+          cat DIAGNOSTIC_START_CAS_RECEIPT.json
+
+      - name: Assert no benchmark exposure
+        run: |
+          set -euo pipefail
+          test ! -d rank15_task_read
+          test ! -d jobs/protein-active-learning-trial-0
