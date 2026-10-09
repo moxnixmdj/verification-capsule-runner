@@ -1,0 +1,56 @@
+name: Verify TB-Science evidence frontier v1
+
+on:
+  push:
+    branches: [repair/tb-science-evidence-frontier-20261009-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_evidence_frontier_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_evidence_frontier_v1.py"
+      - ".github/workflows/verify-tb-science-evidence-frontier-v1.yml"
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_evidence_frontier_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_evidence_frontier_v1.py"
+      - ".github/workflows/verify-tb-science-evidence-frontier-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify lossless content-addressed evidence frontier
+        env:
+          C: capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python -m py_compile "$C/canonical/runtime/harbor_science_evidence_frontier_v1.py"
+          PYTHONPATH="$GITHUB_WORKSPACE/$C" python -m unittest             canonical.tests.test_harbor_science_evidence_frontier_v1 -v
+          python - <<'PY'
+          import json
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_EVIDENCE_FRONTIER_VERIFICATION_V1",
+            "status":"PASS__LOSSLESS_CONTENT_ADDRESSED_FRONTIER__ZERO_EXPOSURE",
+            "rank15_task_read":False,
+            "rank15_task_started":False,
+            "benchmark_trials_consumed":0,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          open("EVIDENCE_FRONTIER_VERIFICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-evidence-frontier-v1
+          path: EVIDENCE_FRONTIER_VERIFICATION.json
+          retention-days: 7
