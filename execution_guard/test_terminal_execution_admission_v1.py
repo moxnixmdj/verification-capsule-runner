@@ -19,7 +19,7 @@ echo $! > LOCAL_QWEN_SERVER.pid
 kill -0 "$(cat LOCAL_QWEN_SERVER.pid)"
 http://127.0.0.1:8080/health
 SYNTHETIC_COMPLETION.json
-rank15_prestart_token_guard_v1.py
+rank15_prestart_token_guard_v2.py
 harbor run
 """
 
@@ -181,8 +181,8 @@ class Tests(unittest.TestCase):
 
     def test_phase_reordering_is_rejected(self):
         text = BASE_WORKFLOW.replace(
-            "http://127.0.0.1:8080/health\nSYNTHETIC_COMPLETION.json\nrank15_prestart_token_guard_v1.py",
-            "rank15_prestart_token_guard_v1.py\nhttp://127.0.0.1:8080/health\nSYNTHETIC_COMPLETION.json",
+            "http://127.0.0.1:8080/health\nSYNTHETIC_COMPLETION.json\nrank15_prestart_token_guard_v2.py",
+            "rank15_prestart_token_guard_v2.py\nhttp://127.0.0.1:8080/health\nSYNTHETIC_COMPLETION.json",
         )
         self.workflow.write_text(text)
         self.surface["workflow_git_blob_sha"] = guard.git_blob(self.workflow)
