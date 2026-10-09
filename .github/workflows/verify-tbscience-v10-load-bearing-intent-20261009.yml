@@ -1,0 +1,41 @@
+name: Verify TB-Science V10 load-bearing intent
+on:
+  push:
+    branches: ["verify-tbscience-v10-load-bearing-intent-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-v10-load-bearing-intent-20261009.yml"
+      - "capsules/tb_science_v10_load_bearing_intent_verify_20261009_v1/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      C: capsules/tb_science_v10_load_bearing_intent_verify_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact admission bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/ACTION_INTENT.json")" = "3bed0a3f4d62066407a3644c5b67496d56e48fec"
+          test "$(git hash-object "$C/load_bearing_primary_admission.py")" = "21fa45aa775ca5d51e5f2d3fec7ab9d3da01eabf"
+          test "$(git hash-object "$C/QUOTIENT.json")" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
+      - name: Replay trusted admission predicate
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python - <<'PY'
+          import json
+          from load_bearing_primary_admission import admission_errors
+          c="capsules/tb_science_v10_load_bearing_intent_verify_20261009_v1"
+          intent=json.load(open(c+"/ACTION_INTENT.json"))
+          quotient=json.load(open(c+"/QUOTIENT.json"))
+          errors=admission_errors(intent, quotient["independent_open_obligations"])
+          assert errors==[], errors
+          assert intent["load_bearing_primary"]["constructive_gap_for_open_obligation_ids"]==["TB_SCIENCE_GE_58_7"]
+          assert intent["highest_leverage_now"] is True
+          print("PASS__ZERO_ERRORS__TB_SCIENCE_LOAD_BEARING_INTENT_ADMITTED")
+          PY
