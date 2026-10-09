@@ -115,33 +115,21 @@ async def _validate_brain_deliverable(
     environment: BaseEnvironment,
 ) -> dict[str, Any]:
     transport = HarborEnvironmentTransport(environment)
-    quoted = shlex.quote(path)
-    checks = [f"test -s {quoted}"]
-    if path.lower().endswith(".json"):
-        checks.append(f"python -m json.tool {quoted} >/dev/null")
-    elif path.lower().endswith(".py"):
-        checks.append(f"python -m py_compile {quoted}")
-    observed: list[dict[str, Any]] = []
-    for command in checks:
-        receipt = await transport.exec(command, timeout_sec=60)
-        row = {
-            "command": command,
-            "returncode": receipt.returncode,
-            "stdout": receipt.stdout[-MAX_OUTPUT_CHARS:],
-            "stderr": receipt.stderr[-MAX_OUTPUT_CHARS:],
-        }
-        observed.append(row)
-        if receipt.returncode != 0:
-            return {
-                "requirement_id": requirement_id,
-                "path": path,
-                "verified": False,
-                "checks": observed,
-            }
+    fmt = typed_action.inferred_format_from_path(path)
+    command = typed_action.deliverable_check_command({"path": path, "format": fmt})
+    receipt = await transport.exec(command, timeout_sec=60)
+    observed = [{
+        "command": command,
+        "format": fmt,
+        "returncode": receipt.returncode,
+        "stdout": receipt.stdout[-MAX_OUTPUT_CHARS:],
+        "stderr": receipt.stderr[-MAX_OUTPUT_CHARS:],
+    }]
     return {
         "requirement_id": requirement_id,
         "path": path,
-        "verified": True,
+        "format": fmt,
+        "verified": receipt.returncode == 0,
         "checks": observed,
     }
 
@@ -216,7 +204,7 @@ for p in sorted(Path('/app').rglob('*.json'))[:64]:
             if isinstance(v,str) and len(v)<=512:
                 selected[k]=v
         rows.append({'path':str(p),'keys':sorted(str(k) for k in d.keys())[:128],
-                     'types':{str(k):type(v).__name__ for k,v in list(d.items())[:128]},
+                     'types':{str(k):type(v).__name__ for k,v in sorted(d.items(),key=lambda kv:str(kv[0]))[:128]},
                      'selected_scalars':selected})
     except Exception:
         continue
@@ -295,17 +283,13 @@ async def _declared_output_gate(
     transport = HarborEnvironmentTransport(environment)
     failures: list[dict[str, Any]] = []
     for path in paths:
-        q = shlex.quote(path)
-        checks = [f"test -s {q}"]
-        if path.lower().endswith(".json"):
-            checks.append(f"python -m json.tool {q} >/dev/null")
-        elif path.lower().endswith(".py"):
-            checks.append(f"python -m py_compile {q}")
-        command = validate_environment_command(" && ".join(checks))
+        fmt = typed_action.inferred_format_from_path(path)
+        command = typed_action.deliverable_check_command({"path": path, "format": fmt})
         receipt = await transport.exec(command, timeout_sec=60)
         if receipt.returncode != 0:
             failures.append({
                 "path": path,
+                "format": fmt,
                 "returncode": receipt.returncode,
                 "stdout": receipt.stdout[-2000:],
                 "stderr": receipt.stderr[-2000:],
@@ -1186,7 +1170,6 @@ async def run_science_goal(
                     "action_id": chosen["action_id"],
                     "action_fingerprint_sha256": action_fingerprint,
                     "command_sha256": chosen_command_sha256,
-                    "action_fingerprint_sha256": action_fingerprint,
                     "executor": chosen["executor"],
                     "verify_executor": chosen["verify_executor"],
                     "schema_requirements": chosen["schema_requirements"],
