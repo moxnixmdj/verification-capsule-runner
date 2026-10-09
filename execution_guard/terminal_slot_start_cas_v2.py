@@ -23,6 +23,8 @@ import terminal_slot_start_cas_v1 as v1
 
 SCHEMA = "PROJECT_BRAIN_TERMINAL_SLOT_START_INTENT_V2"
 NAMESPACE = v1.NAMESPACE
+GitHubRefStore = v1.GitHubRefStore
+request_factory = v1.request_factory
 
 
 class StartAdmissionDenied(RuntimeError):
