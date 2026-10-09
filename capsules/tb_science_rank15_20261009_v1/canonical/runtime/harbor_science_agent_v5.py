@@ -601,7 +601,13 @@ def build_science_planner_prompt(
     )
 
 
-async def run_science_goal(\n    goal: str,\n    environment: BaseEnvironment,\n    *,\n    max_cycles: int = 8,\n    journal_session: causal_bridge.JournalSession | None = None,\n) -> dict[str, Any]:
+async def run_science_goal(
+    goal: str,
+    environment: BaseEnvironment,
+    *,
+    max_cycles: int = 8,
+    journal_session: causal_bridge.JournalSession | None = None,
+) -> dict[str, Any]:
     goal = str(goal or "").strip()
     if not goal:
         raise ValueError("SCIENCE_GOAL_REQUIRED")
