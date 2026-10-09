@@ -1,0 +1,64 @@
+{
+  "schema": "PROJECT_BRAIN_RANK15_LOGICAL_ATTEMPT_IDENTITY_INTEGRATION_CONTRACT_V1",
+  "date": "2026-10-09",
+  "status": "ZERO_EXPOSURE_CANDIDATE__IDENTITY_PRIMITIVE_VERIFIED_SEPARATELY__RUNTIME_INTEGRATION_PENDING",
+  "identity": {
+    "schema": "PROJECT_BRAIN_LOGICAL_ATTEMPT_IDENTITY_V1",
+    "canonical_material": [
+      "schema",
+      "slot_id",
+      "task_digest"
+    ],
+    "forbidden_material": [
+      "goal_text",
+      "github_run_id",
+      "github_sha",
+      "runner_id",
+      "pid",
+      "timestamp",
+      "workflow_blob",
+      "execution_claim_blob",
+      "authority_blob"
+    ],
+    "rationale": "Logical attempt identity names the semantic benchmark attempt. Runtime and authority identity are independently bound by the durable start CAS."
+  },
+  "single_source_chain": {
+    "producer": "authorized prestart guard after exact digest-pinned task identity is known",
+    "consumers": [
+      "prestart planner request identity and seed",
+      "AGENT_READY receipt",
+      "durable start CAS",
+      "START_COMMITTED barrier receipt",
+      "HarborScienceAgent controller",
+      "planner request identity for every cycle",
+      "causal journal namespace and events"
+    ],
+    "law": "DOWNSTREAM_CONSUMERS_MUST_USE_THE_PRODUCED_LOGICAL_ATTEMPT_ID__NO_GOAL_TEXT_RECOMPUTATION"
+  },
+  "required_fail_closed_checks": [
+    "PRESTART_SLOT_AND_TASK_DIGEST_MATCH_ACTIVE_EXECUTION_SURFACE",
+    "AGENT_ENV_SLOT_AND_TASK_DIGEST_MATCH_PRESTART",
+    "AGENT_LOGICAL_ATTEMPT_ID_EQUALS_PRESTART_LOGICAL_ATTEMPT_ID",
+    "START_CAS_LOGICAL_ATTEMPT_ID_EQUALS_AGENT_READY_AND_PRESTART",
+    "JOURNAL_LOGICAL_ATTEMPT_ID_EQUALS_START_COMMIT",
+    "PLANNER_LOGICAL_ATTEMPT_ID_EQUALS_START_COMMIT"
+  ],
+  "seed_effect": {
+    "statement": "Changing logical attempt identity changes deterministic planner seed but not the seed domain.",
+    "bound": "seed = int(request_identity_sha256[:8],16) & 0x7fffffff, therefore decimal serialization is at most 10 digits",
+    "requirement": "Production exact token counting remains authoritative on every planner call; any static all-cycle proof should explicitly include seed-width variance."
+  },
+  "accounting": {
+    "task_read": false,
+    "task_started": false,
+    "benchmark_trials_consumed": 0,
+    "acceptance_credit_delta": 0,
+    "terminal_credit_delta": 0
+  },
+  "hard_nonclaims": [
+    "NO_RUNTIME_WIRING_IN_THIS_PRIMITIVE_PR",
+    "NO_ACTIVE_EXECUTION_SURFACE_CHANGE",
+    "NO_ACTIVATION_FILE",
+    "NO_PROCESS_OR_VM_RECOVERY_THEOREM"
+  ]
+}
