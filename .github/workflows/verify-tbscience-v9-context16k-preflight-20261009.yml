@@ -1,0 +1,139 @@
+name: Verify TB-Science V9 16K context zero-exposure preflight
+
+on:
+  push:
+    branches: ["verify-tbscience-v9-context16k-preflight-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-v9-context16k-preflight-20261009.yml"
+      - "capsules/tb_science_context16k_preflight_20261009_v1/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tbscience-v9-context16k-zero-exposure-20261009
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      C: capsules/tb_science_context16k_preflight_20261009_v1
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact repair bytes and zero-exposure contract
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "715aee168f02cb4abff961849b2b26709eef2e64"
+          test "$(git hash-object "$C/canonical/runtime/tb_science_context16k_zero_exposure_preflight_v1.py")" = "98f07d6cb069397176159b1dd96c57fbdd22131f"
+          test "$(git hash-object "$C/PREFLIGHT_CAPSULE_V1.json")" = "32680764f64da22c54a409f31994e0c60bbd1a5c"
+          python - <<'PY'
+          import json
+          p=json.load(open("capsules/tb_science_context16k_preflight_20261009_v1/PREFLIGHT_CAPSULE_V1.json"))
+          assert p["causal_input"]["observed_request_tokens"]==9202
+          assert p["causal_input"]["failed_server_context_tokens"]==8192
+          assert p["candidate_repair"]["server_context_tokens"]==16384
+          assert p["candidate_repair"]["synthetic_target_input_min"]==10000
+          assert p["safety"]["benchmark_task_exposure"]==0
+          assert p["safety"]["benchmark_trials_executed"]==0
+          assert p["safety"]["rank14_task_read_authority"] is False
+          assert p["safety"]["rank14_execution_authority"] is False
+          PY
+          python -m py_compile "$C"/canonical/runtime/*.py
+
+      - name: Verify runner envelope
+        run: |
+          set -euo pipefail
+          test "$(nproc)" -ge 4
+          awk '/MemTotal/{exit !($2 >= 12000000)}' /proc/meminfo
+          df -Pk "$GITHUB_WORKSPACE" | awk 'NR==2{exit !($4 >= 12000000)}'
+
+      - name: Clean-build exact llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Reassemble exact model if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models model-parts
+          if [ ! -f "models/$MODEL_FILE" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model-parts --pattern "$MODEL_FILE.part*of03"
+            cat "model-parts/$MODEL_FILE.part01of03" "model-parts/$MODEL_FILE.part02of03" "model-parts/$MODEL_FILE.part03of03" > "models/$MODEL_FILE"
+          fi
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+      - name: Start exact model with 16384-token server context
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m "models/$MODEL_FILE" --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui             "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          grep -Eq "n_ctx_slot = 16384|n_ctx_slot = 16[0-9]{3}" LOCAL_QWEN_SERVER.log
+
+      - name: Execute synthetic >9202-token context-capacity gate
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python "$C/canonical/runtime/tb_science_context16k_zero_exposure_preflight_v1.py" | tee CONTEXT16K_PREFLIGHT.json
+          python - <<'PY'
+          import json
+          p=json.load(open("CONTEXT16K_PREFLIGHT.json"))
+          assert p["pass"] is True,p
+          assert p["status"]=="PASS__ZERO_BENCHMARK_EXPOSURE__CONTEXT16K_ACCEPTS_GT9202_MULTI_ACTION_REQUEST"
+          assert p["benchmark_task_exposure"]==0
+          assert p["benchmark_trials_executed"]==0
+          assert p["observed_rank13_failure_tokens"]==9202
+          assert p["server_context_tokens"]==16384
+          assert 10000 <= p["observed_input_tokens"] <= 10200
+          assert p["observed_input_tokens"] > 9202
+          assert p["observed_input_tokens"] + p["reserved_max_output_tokens"] < 16384
+          assert p["context_headroom_after_input_plus_reserved_output"] > 0
+          assert p["proposal_candidate_count"]==3
+          assert p["proposal_action_ids"]==["PREFLIGHT_A","PREFLIGHT_B","PREFLIGHT_C"]
+          assert p["dependency_edge_verified"] is True
+          assert p["acceptance_credit_delta"]==0
+          assert p["terminal_credit_delta"]==0
+          PY
+
+      - name: Preserve zero-exposure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-v9-context16k-zero-exposure-20261009
+          path: |
+            CONTEXT16K_PREFLIGHT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 2
