@@ -73,6 +73,18 @@ class Rank15AgentStartCASPlugin(BaseJobPlugin):
         path = self.token_path
         if not path.is_absolute():
             raise AgentStartCASError("TOKEN_PATH_MUST_BE_ABSOLUTE")
+        runner_temp_raw = os.environ.get("RUNNER_TEMP")
+        if not runner_temp_raw:
+            raise AgentStartCASError("RUNNER_TEMP_REQUIRED")
+        runner_temp = Path(runner_temp_raw).resolve()
+        parent = path.parent.resolve()
+        if parent != runner_temp and runner_temp not in parent.parents:
+            raise AgentStartCASError("TOKEN_PATH_MUST_BE_UNDER_RUNNER_TEMP")
+        workspace_raw = os.environ.get("GITHUB_WORKSPACE")
+        if workspace_raw:
+            workspace = Path(workspace_raw).resolve()
+            if parent == workspace or workspace in parent.parents:
+                raise AgentStartCASError("TOKEN_PATH_MUST_BE_OUTSIDE_WORKSPACE")
         try:
             info = path.lstat()
         except FileNotFoundError as exc:
