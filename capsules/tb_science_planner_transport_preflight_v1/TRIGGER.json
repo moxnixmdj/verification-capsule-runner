@@ -1,0 +1,12 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_PLANNER_LIVE_TRANSPORT_PREFLIGHT_TRIGGER_V1",
+  "date": "2026-10-07",
+  "purpose": "VERIFY_REPAIRED_PLANNER_TOOL_SCHEMA_ON_EXACT_LLAMA_CPP_TRANSPORT_WITH_SYNTHETIC_INPUT_ONLY",
+  "brain_planner_git_blob_sha": "01d859c8f27b317893027e693c9aa49e833a256f",
+  "terminal_benchmark_task_exposure": false,
+  "harbor_execution": false,
+  "fresh_benchmark_slots_consumed": 0,
+  "incremental_spend_usd": 0,
+  "rank10_authority": false,
+  "terminal_credit": false
+}
