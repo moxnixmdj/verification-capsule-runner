@@ -1,0 +1,57 @@
+name: Verify Rank15 V9 slot-bound runtime composition
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v8.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v6_status_journal_runner.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v6.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v6.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v6_runtime_composition_tests.py"
+      - ".github/workflows/verify-rank15-v9-runtime-composition.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile exact candidate runtime
+        run: |
+          set -euo pipefail
+          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python -m py_compile             "$C/canonical/runtime/harbor_science_agent_v8.py"             "$C/rank15_prestart_token_guard_v4.py"             "$C/rank15_v6_status_journal_runner.py"             "$C/rank15_start_cas_v6.py"             "$C/rank15_finalize_receipt_v6.py"             "$C/rank15_execution_preflight_v6.py"             "$C/rank15_v6_runtime_composition_tests.py"
+      - name: Run slot-bound composition falsifiers
+        run: |
+          set -euo pipefail
+          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python "$C/rank15_v6_runtime_composition_tests.py"
+      - name: Re-run inherited start-barrier and uncertainty falsifiers
+        run: |
+          set -euo pipefail
+          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python "$C/rank15_v5_agent_start_barrier_tests.py"
+          python "$C/rank15_v5_ready_bound_cas_tests.py"
+          python "$C/rank15_v5_causal_ordering_tests.py"
+          python "$C/rank15_v5_uncertainty_tests.py"
+      - name: Prove zero exposure
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json
+          test ! -e RANK15_PRESTART_GUARD.json
+          test ! -e RANK15_START_CAS_V6.json
+          ! grep -q "harbor task download" capsules/tb_science_rank15_20261009_v1/rank15_v6_runtime_composition_tests.py
