@@ -726,7 +726,7 @@ def build_science_planner_prompt(
         "git fetch/clone/pull, secrets, or host escape. "
         "On the first cycle provide material_requirements (1-16 stable short IDs). "
         "Provide 1-4 candidate actions as {action_id,covers,depends_on?,timeout_sec?,verify_timeout_sec?,command,verify_command}. "
-        "Use depends_on only for true within-proposal sequencing. covers must name only frozen material_requirements. "
+        "Use depends_on only for true within-proposal sequencing. On cycle 0, covers use the material requirement IDs you declared. On later cycles, covers use the frozen R01..R16 aliases shown in the prompt. "
         "Evidence catalog refs are content-addressed Brain evidence. If omitted bytes are needed, request only listed refs "
         "through evidence_requests; Brain may defer requested payloads that do not fit the current exact token budget. "
         "Brain may execute multiple nonredundant candidates from one proposal, but promotes each claimed effect only "
