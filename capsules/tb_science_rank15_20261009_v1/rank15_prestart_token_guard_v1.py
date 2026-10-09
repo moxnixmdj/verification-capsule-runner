@@ -1,7 +1,7 @@
-"""One-use prestart token-budget guard for TB-Science rank15 V1.
+"""Post-summary one-use prestart token-budget guard for TB-Science rank15 V3.
 
 This script is outside the benchmark runtime closure. It may read the exact
-digest-pinned task only after a fresh rank15 public lease is active. It never starts a
+digest-pinned task only after a fresh V3 public lease is active. It never starts a
 Harbor trial. It reconstructs the exact first-cycle planner prompt used by the
 merged manifest-summary agent, counts it with the exact local planner tokenizer,
 and either proves the 16K envelope fits or emits a nonconsuming abort receipt.
@@ -20,7 +20,7 @@ DATASET_TASK = "terminal-bench-science/protein-active-learning"
 TASK_DIGEST = "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
 SERVER_CONTEXT_TOKENS = 16384
 RESERVED_COMPLETION_TOKENS = 4096
-SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK15_PRESTART_TOKEN_BUDGET_GUARD_V1"
+SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK15_PRESTART_TOKEN_BUDGET_GUARD_V2"
 
 
 def _sha_text(text: str) -> str:
