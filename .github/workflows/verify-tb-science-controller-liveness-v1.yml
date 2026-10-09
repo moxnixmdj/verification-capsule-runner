@@ -1,0 +1,51 @@
+name: Verify TB-Science controller liveness V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_controller_liveness_20261007_v1/**"
+      - ".github/workflows/verify-tb-science-controller-liveness-v1.yml"
+  push:
+    branches: ["verify/tb-science-controller-liveness-20261007-v1"]
+    paths:
+      - "capsules/tb_science_controller_liveness_20261007_v1/**"
+      - ".github/workflows/verify-tb-science-controller-liveness-v1.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain bytes
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_controller_liveness_20261007_v1
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "daedf663fcf850ea9b2c305e4dd30f86a678ae18"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "d9aacc68341016772a3ab47d28e46878e572a19f"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "c3e36eba57c450f325c8a9476ee048c841bbdbc8"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport.py")" = "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+      - name: Run exact unit tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          C="$GITHUB_WORKSPACE/capsules/tb_science_controller_liveness_20261007_v1"
+          PYTHONPATH="$C" python -m unittest -v canonical.tests.test_harbor_science_agent_v1
+      - name: Replay rank7 falsifier and dead-controller boundary
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_controller_liveness_20261007_v1"
+          PYTHONPATH="$C" python "$C/verify.py" | tee CONTROLLER_LIVENESS_REPLAY.json
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-controller-liveness-v1
+          path: CONTROLLER_LIVENESS_REPLAY.json
+          if-no-files-found: warn
