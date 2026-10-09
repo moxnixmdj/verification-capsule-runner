@@ -1,4 +1,4 @@
-name: Verify Rank15 V6 robust reseal
+name: Verify Rank15 V6 final robust reseal
 
 on:
   pull_request:
@@ -38,12 +38,21 @@ jobs:
           set -euo pipefail
           export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
           export PYTHONPATH="$GITHUB_WORKSPACE:$C"
-          python "$C/rank15_execution_preflight_v6.py" --allow-staged
+          python "$C/rank15_execution_preflight_v6.py"
+      - name: Verify runtime-derived admission without activation
+        run: |
+          set -euo pipefail
+          python execution_guard/terminal_execution_admission_v3.py \
+            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v6.yml" \
+            --slot "terminal-bench-science/protein-active-learning::trial-0" \
+            --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
+            --require-execution-authority
       - name: Re-run runtime composition falsifiers
         run: |
           set -euo pipefail
           export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
           export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          PYTHONPATH="$GITHUB_WORKSPACE" python execution_guard/test_terminal_execution_admission_v3.py
           python "$C/rank15_v6_runtime_composition_tests.py"
       - name: Prove V6 permissions and zero exposure
         run: |
@@ -52,11 +61,12 @@ jobs:
           import json, pathlib
           root=pathlib.Path(".")
           surface=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text())
-          assert surface["execution_authority"] is False
-          assert surface["task_read_authority"] is False
+          assert surface["execution_authority"] is True
+          assert surface["task_read_authority"] is True
           assert surface["task_started"] is False
           assert surface["benchmark_trials_consumed"] == 0
           behavior=json.loads((root/"execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json").read_text())
+          assert behavior["execution_authority"] is True
           assert behavior["behavior"]["agent_ready_precedes_start_cas"] is True
           assert behavior["behavior"]["child_github_credentials_stripped"] is True
           assert behavior["behavior"]["durable_action_intent_ack_before_effect"] is True
