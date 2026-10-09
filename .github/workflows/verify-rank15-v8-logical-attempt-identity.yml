@@ -1,0 +1,39 @@
+name: Verify Rank15 V8 logical attempt identity
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "execution_guard/logical_attempt_identity_v1.py"
+      - "execution_guard/tests/test_logical_attempt_identity_v1.py"
+      - "execution_guard/RANK15_LOGICAL_ATTEMPT_IDENTITY_INTEGRATION_CONTRACT_V1.json"
+      - ".github/workflows/verify-rank15-v8-logical-attempt-identity.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile identity primitive
+        run: |
+          set -euo pipefail
+          python -m py_compile             execution_guard/logical_attempt_identity_v1.py             execution_guard/tests/test_logical_attempt_identity_v1.py
+      - name: Run adversarial identity tests
+        run: |
+          set -euo pipefail
+          python -m unittest -v execution_guard.tests.test_logical_attempt_identity_v1
+      - name: Prove zero-exposure scope
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V8_PR.json
+          ! grep -q "harbor task download" execution_guard/logical_attempt_identity_v1.py
+          ! grep -q "harbor run" execution_guard/logical_attempt_identity_v1.py
