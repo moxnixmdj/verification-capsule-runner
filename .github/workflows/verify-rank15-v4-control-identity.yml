@@ -1,0 +1,137 @@
+name: Verify Rank15 V4 control identity
+
+on:
+  push:
+    branches: [repair/tb-science-rank15-v4-control-identity-20261009]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_identity_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v4_control_identity_tests.py"
+      - "execution_guard/terminal_execution_admission_v3.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v4.yml"
+      - ".github/workflows/verify-rank15-v4-control-identity.yml"
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_identity_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v4_control_identity_tests.py"
+      - "execution_guard/terminal_execution_admission_v3.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v4.yml"
+      - ".github/workflows/verify-rank15-v4-control-identity.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rank15-v4-control-identity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile V4 control-bound execution path
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            capsules/tb_science_rank15_20261009_v1/rank15_execution_identity_v1.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v4.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_v4_control_identity_tests.py \
+            execution_guard/terminal_execution_admission_v3.py
+
+      - name: Run inherited V3 semantic and durable-start regressions
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank15_20261009_v1/rank15_v3_zero_exposure_tests.py
+          python capsules/tb_science_rank15_20261009_v1/rank15_v3_start_cas_tests.py
+
+      - name: Kill stale epoch claim ledger and surface identities
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank15_20261009_v1/rank15_v4_control_identity_tests.py
+
+      - name: Verify exact V4 behavior bindings and inert activation state
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank15_20261009_v1
+          test ! -e "$C/ACTIVATE_RANK15_V4_PR.json"
+          python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path(".")
+          def blob(p):
+              raw=p.read_bytes()
+              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          b=json.load(open("execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json"))
+          assert b["schema"]=="PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4"
+          assert b["execution_authority"] is False
+          assert b["task_read"] is False and b["task_started"] is False
+          for name,row in b["runtime_bindings"].items():
+              p=root/row["path"]
+              assert p.is_file(),name
+              assert blob(p)==row["git_blob_sha"],(name,blob(p),row["git_blob_sha"])
+          facts=b["behavior"]
+          assert facts["control_identity_binds_surface_epoch_claim_authority_ledger_behavior_and_guards"] is True
+          assert facts["runtime_identity_transitively_binds_control_identity"] is True
+          assert facts["finalizer_recomputes_current_control_and_runtime_identity"] is True
+          PY
+
+      - name: Verify V4 workflow is inert and uses only V4 irreversible boundary
+        run: |
+          set -euo pipefail
+          W=.github/workflows/execute-tb-science-rank15-20261009-v4.yml
+          test "$(grep -F -c "harbor run" "$W")" = "1"
+          grep -F "persist-credentials: false" "$W"
+          grep -F "terminal_execution_admission_v3.py" "$W"
+          grep -F "rank15_execution_preflight_v4.py" "$W"
+          grep -F "rank15_start_cas_v4.py --check-absent" "$W"
+          grep -F "rank15_start_cas_v4.py --acquire" "$W"
+          grep -F "rank15_finalize_receipt_v4.py" "$W"
+          grep -F "rank15_prestart_token_guard_v3.py" "$W"
+          grep -F "canonical.runtime.harbor_science_agent_v3:HarborScienceAgent" "$W"
+          ! grep -F "rank15_start_cas_v3.py" "$W"
+          ! grep -F "rank15_finalize_receipt_v3.py" "$W"
+
+      - name: Emit zero-exposure verification receipt
+        run: |
+          python - <<'PY'
+          import json
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_V4_CONTROL_IDENTITY_PUBLIC_VERIFICATION_V1",
+            "status":"PASS__V4_CONTROL_IDENTITY_BOUND_START_AND_FINALIZER__STALE_CONTROL_MUTATIONS_KILLED__ZERO_EXPOSURE",
+            "task_read":False,
+            "task_started":False,
+            "benchmark_trials_consumed":0,
+            "execution_authority":False,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0,
+            "incremental_spend_usd":0,
+          }
+          open("RANK15_V4_CONTROL_IDENTITY_VERIFICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rank15-v4-control-identity-verification
+          path: RANK15_V4_CONTROL_IDENTITY_VERIFICATION.json
+          retention-days: 7
