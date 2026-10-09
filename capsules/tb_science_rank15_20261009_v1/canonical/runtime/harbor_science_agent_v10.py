@@ -803,7 +803,7 @@ async def run_science_goal(
     evidence_directory: list[dict[str, Any]] = []
     evidence_ids: set[str] = set()
     requested_evidence_context: list[dict[str, Any]] = []
-    last_failed_effect: dict[str, Any] | None = None
+    last_nonpromoted_effect: dict[str, Any] | None = None
 
     def record_observation(row: dict[str, Any]) -> None:
         observations.append(row)
@@ -1033,18 +1033,18 @@ async def run_science_goal(
             ).hexdigest()
 
             if (
-                last_failed_effect is not None
-                and last_failed_effect.get("command_sha256") == chosen_command_sha256
+                last_nonpromoted_effect is not None
+                and last_nonpromoted_effect.get("command_sha256") == chosen_command_sha256
             ):
                 executed_action_ids.add(chosen["action_id"])
                 rejected_repeat = {
                     "cycle": cycle,
-                    "kind": "BRAIN_REJECTED_KNOWN_FAILED_EFFECT_REPEAT",
+                    "kind": "BRAIN_REJECTED_KNOWN_NONPROMOTED_EFFECT_REPEAT",
                     "action_id": chosen["action_id"],
                     "command_sha256": chosen_command_sha256,
-                    "prior_failure_cycle": last_failed_effect.get("cycle"),
-                    "prior_failure_action_id": last_failed_effect.get("action_id"),
-                    "reason": "IDENTICAL_COMMAND_ALREADY_FAILED_WITHOUT_INTERVENING_SUCCESSFUL_EFFECT",
+                    "prior_nonpromotion_cycle": last_nonpromoted_effect.get("cycle"),
+                    "prior_nonpromotion_action_id": last_nonpromoted_effect.get("action_id"),
+                    "reason": "IDENTICAL_COMMAND_ALREADY_EXECUTED_WITHOUT_PROMOTION_AND_WITHOUT_INTERVENING_VERIFIED_EFFECT",
                     "effect_executed": False,
                     "coverage_promoted": False,
                 }
@@ -1156,9 +1156,6 @@ async def run_science_goal(
                 action_receipt.returncode, action_receipt.stdout, action_receipt.stderr
             )
             if action_transport_clean:
-                # A different trustworthy successful effect changes the local state
-                # sufficiently to permit reconsidering an older failed command.
-                last_failed_effect = None
                 try:
                     verify_receipt = await transport.exec(
                         chosen["verify_command"],
@@ -1233,12 +1230,23 @@ async def run_science_goal(
                     verified = len(verified_covers) == len(chosen["covers"])
                     if verified:
                         verified_action_ids.add(chosen["action_id"])
+
+            if verified:
+                # Only independently verified promotion proves an intervening state
+                # transition strong enough to clear the replay-suppression ledger.
+                last_nonpromoted_effect = None
             else:
-                last_failed_effect = {
+                last_nonpromoted_effect = {
                     "cycle": cycle,
                     "action_id": chosen["action_id"],
                     "command_sha256": chosen_command_sha256,
                     "returncode": action_receipt.returncode,
+                    "verification_performed": verify_observed is not None,
+                    "verification_returncode": (
+                        verify_observed.get("returncode")
+                        if isinstance(verify_observed, dict)
+                        else None
+                    ),
                 }
 
             record = {
