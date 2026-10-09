@@ -41,7 +41,7 @@ class Env:
 
     async def exec(self, command, timeout_sec=None, **kwargs):
         self.commands.append(command)
-        if "rglob('*.json')" in command:
+        if "rglob" in command and "selected_scalars" in command:
             return Receipt(0, json.dumps(self.catalog), "")
         if self.fail_schema and "spec.json" in command and "assert not m" in command:
             return Receipt(1, "", "missing schema key")
@@ -191,7 +191,14 @@ class V11Tests(unittest.TestCase):
             row.get("kind") == "BRAIN_REJECTED_UNAUTHENTICATED_SCHEMA_DEREFERENCE"
             for row in result["trace"]
         ))
-        self.assertFalse(any(cmd.startswith("python -c") and "print" in cmd for cmd in env.commands))
+        compiled_effect, _ = s.typed_action.compile_typed_source(
+            "python",
+            "print(spec['box'])",
+            schema_requirements=[
+                {"path": "/app/spec.json", "format": "json", "keys": ["box"]}
+            ],
+        )
+        self.assertNotIn(compiled_effect, env.commands)
 
     def test_declared_npz_deliverable_must_exist_and_load(self):
         env = Env(fail_deliverable=True)
