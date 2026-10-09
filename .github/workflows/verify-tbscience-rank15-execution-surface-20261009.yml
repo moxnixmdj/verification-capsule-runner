@@ -52,3 +52,4 @@ jobs:
           cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build llama.cpp/build -j 2 --target llama-server
           llama.cpp/build/bin/llama-server --version >/dev/null
+# rank15-portable-v2-staging-trigger
