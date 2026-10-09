@@ -1,0 +1,116 @@
+name: Verify TB-Science execution ratchet v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "execution_guard/terminal_execution_admission_v1.py"
+      - "execution_guard/test_terminal_execution_admission_v1.py"
+      - "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V2.json"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v1.yml"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"
+      - ".github/workflows/verify-tb-science-execution-ratchet-v1.yml"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v2_zero_exposure_tests.py"
+  push:
+    branches: [repair/tb-science-execution-ratchet-20261009-v1]
+    paths:
+      - "execution_guard/**"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v1.yml"
+      - ".github/workflows/execute-tb-science-rank15-20261009-v2.yml"
+      - ".github/workflows/verify-tb-science-execution-ratchet-v1.yml"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v2_zero_exposure_tests.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile and run adversarial admission tests
+        run: |
+          set -euo pipefail
+          python -m py_compile execution_guard/terminal_execution_admission_v1.py
+          python -m unittest execution_guard.test_terminal_execution_admission_v1 -v
+
+      - name: Verify exact Rank15 V2 runtime bytes and zero-exposure semantic canaries
+        env:
+          C: capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v2.py")" = "92161f95f211377ed40c11a38e641046bb45bd26"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v2.py")" = "fb4d8202192ca7a7ff03b36b9ba31be48f19dfa4"
+          test "$(git hash-object "$C/rank15_prestart_token_guard_v2.py")" = "b296e442535d4cf7770f7c1464da441c80fc65a1"
+          test "$(git hash-object "$C/rank15_v2_zero_exposure_tests.py")" = "d1398ad85d6ea6ac6690fb232866eda5de6e58e8"
+          python -m py_compile             "$C/canonical/runtime/harbor_science_planner_v2.py"             "$C/canonical/runtime/harbor_science_agent_v2.py"             "$C/rank15_prestart_token_guard_v2.py"             "$C/rank15_v2_zero_exposure_tests.py"
+          PYTHONPATH="$GITHUB_WORKSPACE/$C" python "$C/rank15_v2_zero_exposure_tests.py"
+
+      - name: Prove staged Rank15 V2 surface is invariant-valid but non-executable
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V2_PR.json
+          python execution_guard/terminal_execution_admission_v1.py \
+            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml" \
+            --slot "terminal-bench-science/protein-active-learning::trial-0" \
+            --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
+          if python execution_guard/terminal_execution_admission_v1.py \
+            --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml" \
+            --slot "terminal-bench-science/protein-active-learning::trial-0" \
+            --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
+            --require-execution-authority; then
+            echo "staged surface unexpectedly executable"
+            exit 1
+          fi
+          grep -F "EXECUTION_AUTHORITY_NOT_ACTIVE" TERMINAL_EXECUTION_ADMISSION.json
+
+      - name: Prove V1 carrier is retired and V2 has exactly one guarded terminal launch
+        run: |
+          set -euo pipefail
+          ! grep -F "harbor run" .github/workflows/execute-tb-science-rank15-20261009-v1.yml
+          test "$(grep -F -c "harbor run" .github/workflows/execute-tb-science-rank15-20261009-v2.yml)" = "1"
+          grep -F "terminal_execution_admission_v1.py" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
+          grep -F "persist-credentials: false" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
+          grep -F "rank15_prestart_token_guard_v2.py" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
+          grep -F "canonical.runtime.harbor_science_agent_v2:HarborScienceAgent" .github/workflows/execute-tb-science-rank15-20261009-v2.yml
+
+      - name: Emit zero-exposure receipt
+        run: |
+          python - <<'PY'
+          import json
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V1",
+            "status":"PASS__STAGED_V2_INVARIANT_AND_RUNTIME_SEMANTICS_VALID__EXECUTION_AUTHORITY_FALSE__V1_RETIRED",
+            "rank15_task_read":False,
+            "rank15_task_started":False,
+            "benchmark_trials_consumed":0,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          open("EXECUTION_RATCHET_VERIFICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-execution-ratchet-v1
+          path: |
+            EXECUTION_RATCHET_VERIFICATION.json
+            TERMINAL_EXECUTION_ADMISSION.json
+          retention-days: 7

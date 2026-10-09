@@ -1,0 +1,57 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_V2_RUNTIME_SEMANTIC_VERIFICATION_V1",
+  "date": "2026-10-09",
+  "status": "PASS__7_OF_7_ADMISSION__8_OF_8_RUNTIME_SEMANTICS__ZERO_EXPOSURE__EXECUTION_AUTHORITY_FALSE",
+  "subject": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "branch": "repair/tb-science-execution-ratchet-20261009-v1",
+    "head_sha": "1e87d8d79ebcc4340cf932ea01982e010ee8bae8",
+    "workflow_run_id": 37902668717,
+    "workflow_job_id": 113728620607,
+    "artifact_id": 11603210936,
+    "artifact_digest": "sha256:434c015c4bcba153b533976b3e2d64f4e2f026ba38c2c82b28d8bc8bbb7383f7"
+  },
+  "exact_runtime_blobs": {
+    "planner_v2": "92161f95f211377ed40c11a38e641046bb45bd26",
+    "agent_v2": "fb4d8202192ca7a7ff03b36b9ba31be48f19dfa4",
+    "prestart_guard_v2": "b296e442535d4cf7770f7c1464da441c80fc65a1",
+    "zero_exposure_tests": "d1398ad85d6ea6ac6690fb232866eda5de6e58e8",
+    "behavior_contract": "5caedddb7b5714fe74c4ba5709a43391e66dcf3a",
+    "workflow_v2": "13d9e4a402b10f43d22b7c8cdbc80ec9e75dffb9"
+  },
+  "verified_properties": {
+    "same_semantic_request_same_seeded_wire_payload": true,
+    "cycle_changes_request_identity": true,
+    "carrier_identity_excluded_from_request_identity": true,
+    "context_overflow_blocks_before_inference_endpoint": true,
+    "exact_12288_input_plus_4096_completion_boundary_admitted": true,
+    "action_timeout_controller_planner_transport_ceiling_seconds": 3600,
+    "prestart_calls_runtime_prompt_builder": true,
+    "prompt_builder_deterministic": true,
+    "logical_attempt_identity_goal_bound": true,
+    "compiled_cross_runner_llama_binary_cache_rejected": true,
+    "workflow_blob_drift_rejected": true,
+    "semantic_invariant_lie_rejected_even_with_recomputed_hash": true,
+    "staged_surface_execution_rejected": true
+  },
+  "test_accounting": {
+    "admission_tests_passed": 7,
+    "runtime_semantic_tests_passed": 8,
+    "failed_tests": 0
+  },
+  "reality_accounting": {
+    "rank15_task_read": false,
+    "rank15_task_started": false,
+    "benchmark_trials_consumed": 0,
+    "incremental_spend_usd": 0,
+    "terminal_credit_delta": 0
+  },
+  "execution_authority": false,
+  "promotion_authority": false,
+  "hard_nonclaims": [
+    "NO_RANK15_TASK_FIT_CLAIM_FROM_REAL_TASK_BYTES",
+    "NO_ALL_CYCLE_FIT_BY_CONSTRUCTION_CLAIM_YET",
+    "NO_POST_START_CARRIER_REPLAY_AUTHORITY",
+    "NO_TERMINAL_OR_ACCEPTANCE_CREDIT"
+  ]
+}
