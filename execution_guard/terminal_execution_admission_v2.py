@@ -101,7 +101,27 @@ def check_behavior(behavior: Mapping[str, Any], invariants: Mapping[str, Any], e
             errors.append("BEHAVIOR_V3_REQUIRED_FALSE:" + key)
 
 
-def check_workflow(text: str) -> list[str]:
+def _runtime_marker(behavior: Mapping[str, Any], key: str) -> str:
+    bindings = behavior.get("runtime_bindings")
+    if not isinstance(bindings, Mapping):
+        raise AdmissionError("BEHAVIOR_RUNTIME_BINDINGS_MISSING")
+    row = bindings.get(key)
+    if not isinstance(row, Mapping):
+        raise AdmissionError("BEHAVIOR_RUNTIME_BINDING_MISSING:" + key)
+    rel = row.get("path")
+    if not isinstance(rel, str) or not rel:
+        raise AdmissionError("BEHAVIOR_RUNTIME_BINDING_INVALID:" + key)
+    return Path(rel).name
+
+
+def check_workflow(text: str, behavior: Mapping[str, Any]) -> list[str]:
+    """Validate workflow phases against the exact behavior-bound runtime version.
+
+    The guard must not hard-code a historical runtime generation. Exact runtime
+    bytes are already content-addressed by the behavior manifest; this function
+    derives the required workflow markers from those bindings and then checks
+    ordering plus the permanent safety invariants.
+    """
     errors: list[str] = []
     forbidden = {
         "PERSISTED_CHECKOUT_CREDENTIALS": "persist-credentials: true",
@@ -113,6 +133,17 @@ def check_workflow(text: str) -> list[str]:
         if marker in text:
             errors.append("WORKFLOW_FORBIDDEN:" + label)
 
+    try:
+        start_cas = _runtime_marker(behavior, "start_cas")
+        prestart = _runtime_marker(behavior, "prestart_guard")
+        finalizer = _runtime_marker(behavior, "finalizer")
+        agent_file = _runtime_marker(behavior, "agent")
+        agent_stem = Path(agent_file).stem
+        agent_marker = f"canonical.runtime.{agent_stem}:HarborScienceAgent"
+    except Exception as exc:
+        errors.append(type(exc).__name__ + ":" + str(exc))
+        return sorted(set(errors))
+
     required = [
         "persist-credentials: false",
         "rm -rf llama.cpp",
@@ -121,31 +152,32 @@ def check_workflow(text: str) -> list[str]:
         "cmake --build llama.cpp/build",
         "http://127.0.0.1:8080/health",
         "SYNTHETIC_COMPLETION.json",
-        "rank15_start_cas_v3.py --check-absent",
-        "rank15_prestart_token_guard_v3.py",
-        "rank15_start_cas_v3.py --acquire",
-        "canonical.runtime.harbor_science_agent_v3:HarborScienceAgent",
-        "rank15_finalize_receipt_v3.py",
+        start_cas + " --check-absent",
+        prestart,
+        start_cas + " --acquire",
+        agent_marker,
+        finalizer,
         "harbor run",
     ]
     for marker in required:
         if marker not in text:
             errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + marker)
+
     order = [
         "http://127.0.0.1:8080/health",
         "SYNTHETIC_COMPLETION.json",
-        "rank15_start_cas_v3.py --check-absent",
-        "rank15_prestart_token_guard_v3.py",
-        "rank15_start_cas_v3.py --acquire",
+        start_cas + " --check-absent",
+        prestart,
+        start_cas + " --acquire",
         "harbor run",
-        "rank15_finalize_receipt_v3.py",
+        finalizer,
     ]
     positions = [text.find(x) for x in order]
     if any(x < 0 for x in positions) or positions != sorted(positions):
         errors.append("WORKFLOW_PHASE_ORDER_INVALID")
     if text.count("harbor run") != 1:
         errors.append("WORKFLOW_HARBOR_RUN_COUNT_NOT_ONE")
-    return errors
+    return sorted(set(errors))
 
 
 def admission_errors(
@@ -171,7 +203,6 @@ def admission_errors(
         expected = surface.get("workflow_git_blob_sha")
         if git_blob(workflow) != expected:
             errors.append("SURFACE_WORKFLOW_BLOB_MISMATCH")
-        errors.extend(check_workflow(workflow.read_text(encoding="utf-8")))
 
     for key in ("behavior", "authority", "ledger", "invariant_registry", "admission_guard"):
         row = surface.get(key)
@@ -192,6 +223,8 @@ def admission_errors(
         if behavior.get("workflow_path") != workflow_rel:
             errors.append("BEHAVIOR_WORKFLOW_MISMATCH")
         check_behavior(behavior, invariants, errors)
+        if workflow.is_file():
+            errors.extend(check_workflow(workflow.read_text(encoding="utf-8"), behavior))
 
     if require_activation:
         rel = surface.get("activation_path")
