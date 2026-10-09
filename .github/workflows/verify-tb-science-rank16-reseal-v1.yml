@@ -4,6 +4,7 @@ on:
     branches: [terminal-execution-v1]
     paths:
       - "capsules/tb_science_rank16_20261009_v1/**"
+      - "!capsules/tb_science_rank16_20261009_v1/ACTIVATE_RANK16_V1_PR.json"
       - "execution_guard/TB_SCIENCE_RANK16_EXECUTION_BEHAVIOR_V1.json"
       - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
       - ".github/workflows/execute-tb-science-rank16-20261009-v1.yml"
