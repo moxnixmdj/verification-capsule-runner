@@ -106,7 +106,7 @@ class TerminalSlotStartCASV2Tests(unittest.TestCase):
         store.raise_create = True
         with self.assertRaisesRegex(
             v2.StartAdmissionDenied,
-            "START_COMMIT_UNCONFIRMED__NO_AGENT_RELEASE",
+            "START_COMMIT_CONFIRMED_ABSENT__NO_AGENT_RELEASE",
         ):
             v2.reserve_start_once(store, intent_v2())
 
