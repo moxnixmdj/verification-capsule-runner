@@ -44,11 +44,13 @@ class Tests(unittest.TestCase):
         verification = self.root / "capsules/proof/verification.json"
         authority = self.root / "capsules/rank15/authority.json"
         ledger = self.root / "capsules/rank15/ledger.json"
+        admission_guard = self.root / "execution_guard/admission_guard.py"
         for p, body in [
             (repair, {"repair": True}),
             (verification, {"verification": True}),
             (authority, {"authority": True}),
             (ledger, {"ledger": True}),
+            (admission_guard, {"guard": True}),
         ]:
             p.write_text(json.dumps(body) + "\n")
 
@@ -107,6 +109,7 @@ class Tests(unittest.TestCase):
             "authority": {"path": "capsules/rank15/authority.json", "git_blob_sha": guard.git_blob(authority)},
             "ledger": {"path": "capsules/rank15/ledger.json", "git_blob_sha": guard.git_blob(ledger)},
             "invariant_registry": {"path": self.invariant_rel, "git_blob_sha": guard.git_blob(invariant_path)},
+            "admission_guard": {"path": "execution_guard/admission_guard.py", "git_blob_sha": guard.git_blob(admission_guard)},
             "execution_authority": False,
         }
         self._write_surface()
