@@ -22,7 +22,7 @@ from canonical.runtime.harbor_environment_transport_v2 import (
     HarborTransportUncertainError,
 )
 from execution_guard import terminal_agent_start_barrier_v1 as start_barrier
-from execution_guard import terminal_causal_journal_filebridge_v1 as causal_bridge
+from execution_guard import terminal_causal_journal_filebridge_v2 as causal_bridge
 from execution_guard.logical_attempt_identity_v1 import logical_attempt_id as canonical_logical_attempt_id
 from canonical.runtime.lossless_raw_task_contract_v1 import compile_contract as compile_raw_task_contract
 from canonical.runtime.raw_task_acceptance_residual_localizer_v1 import localize as localize_raw_task_acceptance
