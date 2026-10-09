@@ -1,9 +1,9 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-09",
-  "status": "ACTIVE_V6_QUOTE_SAFE_PROOF_CARRYING_SLOT_BOUND_JOURNALED_RUNTIME__FINAL_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
+  "status": "QUARANTINED__RANK15_CONSUMED_FINAL_ZERO__NO_EXECUTION_OR_TASK_READ_AUTHORITY__AWAIT_FRESH_RANK16_RESEAL",
   "family": "TB_SCIENCE",
-  "active": true,
+  "active": false,
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v6.yml",
@@ -45,19 +45,17 @@
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v6.py",
     "git_blob_sha": "30a0b2f6ca1b9bc0d9419b40db5084457876c881"
   },
-  "execution_authority": true,
-  "task_read_authority": true,
-  "task_started": false,
-  "benchmark_trials_consumed": 0,
+  "execution_authority": false,
+  "task_read_authority": false,
+  "task_started": true,
+  "benchmark_trials_consumed": 1,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
   "hard_nonclaims": [
-    "NO_RANK15_V6_ACTIVATION_FILE_ON_FINAL_RESEAL",
-    "NO_RANK15_TASK_READ",
-    "NO_RANK15_TASK_START",
-    "NO_RANK15_RESULT",
-    "NO_ACCEPTANCE_OR_TERMINAL_CREDIT",
-    "NO_REPLAY_OR_REPLACEMENT_AFTER_DURABLE_START_CAS"
+    "NO_RANK15_REPLAY_OR_REPLACEMENT_AUTHORITY",
+    "NO_RANK15_EXECUTION_OR_TASK_READ_AUTHORITY",
+    "NO_RANK16_EXECUTION_OR_TASK_READ_AUTHORITY_FROM_THIS_QUARANTINE",
+    "NO_ACCEPTANCE_OR_TERMINAL_CREDIT"
   ],
   "reseal": {
     "brain_authority_v12_blob": "04e2c15b143dd0e4f80bb96c82b7573b780dd56f",
@@ -73,5 +71,11 @@
     "admission_guard_test_v3_blob": "44b01477ef6c100ced26dd03588dc6387c2a4865",
     "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca",
     "quarantined_reseal_merge": "2ce17ebe2617a5c18453c16e002f16c15411f369"
-  }
+  },
+  "consumed": true,
+  "consumed_quarantine": {
+    "path": "execution_guard/TB_SCIENCE_RANK15_CONSUMED_PUBLIC_QUARANTINE_V1.json",
+    "git_blob_sha": "c6469f3e1816724e36278a485a5f01108b1c987c"
+  },
+  "next": "FRESH_RANK16_ZERO_EXPOSURE_RESEAL_REQUIRED_BEFORE_ANY_NEW_TASK_READ"
 }
