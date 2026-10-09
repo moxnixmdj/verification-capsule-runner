@@ -1,6 +1,9 @@
 name: Verify finance source-native semantic replay
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - finance-semantic-replay-20261009
