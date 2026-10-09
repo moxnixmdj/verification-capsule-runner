@@ -44,6 +44,7 @@ MAX_VERIFY_TIMEOUT_S = 3600
 MAX_PLANNER_EVIDENCE_STRING_CHARS = 1024
 MAX_PLANNER_EVIDENCE_OBSERVATIONS = 8
 POST_FREEZE_STATE_RESERVE_TOKENS = 512
+POST_FREEZE_STATE_RESERVE_DIGITS = "0" * POST_FREEZE_STATE_RESERVE_TOKENS
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 _FATAL_ACTION_STDERR_MARKERS = (
@@ -559,6 +560,12 @@ def build_science_planner_prompt(
     observations: list[dict[str, Any]],
 ) -> str:
     """Single canonical planner prompt builder shared by runtime and prestart."""
+    state_reserve = (
+        "\nCycle-0 post-freeze state reserve (ignored; digits are tokenizer-isolated): "
+        + POST_FREEZE_STATE_RESERVE_DIGITS
+        if requirements is None
+        else ""
+    )
     return (
         "You are an OPTIONAL semantic proposal source inside Project Brain, not execution authority. "
         "Return one structured proposal object only. Project Brain owns action selection, command policy, verification, "
@@ -571,8 +578,9 @@ def build_science_planner_prompt(
         "after its independent verify_command succeeds. Brain alone decides completion after "
         "independent verification resolves every frozen material requirement. finish_summary is optional "
         "descriptive metadata only and never execution or finish authority. "
-        f"Goal: {goal}\nFrozen requirements: {requirements!r}\nUnresolved: {unresolved!r}\n"
-        "Brain lossless raw-task acceptance manifest summary (non-droppable; exact task semantics are the Goal text above): "
+        f"Goal: {goal}\nFrozen requirements: {requirements!r}\nUnresolved: {unresolved!r}"
+        + state_reserve
+        + "\nBrain lossless raw-task acceptance manifest summary (non-droppable; exact task semantics are the Goal text above): "
         + json.dumps(raw_task_prompt_summary, sort_keys=True)
         + "\nEvery original raw obligation remains separately acceptance-pending in Brain state until exact candidate-bound independent acceptance exists. "
         "The optional planner has no acceptance or finish authority; omitted per-obligation IDs/hashes are metadata only.\n"
