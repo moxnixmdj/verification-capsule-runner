@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK17_PUBLIC_LEDGER_BINDING_V31",
+  "date": "2026-10-09",
+  "status": "CURRENT_PUBLIC_BINDING__BRAIN_LEDGER_V31__SIXTEEN_CONSUMED__RANK17_UNREAD_UNSTARTED",
+  "brain_ledger": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V31.json",
+    "git_blob_sha": "8f01d3f68664ca64ce727f69845b8db6eb9ce903"
+  },
+  "consumed_slots": 16,
+  "consumed_successes": 0,
+  "consumed_final_failures": 16,
+  "next_unconsumed_slot": {
+    "ledger_schedule_rank": 17,
+    "slot_id": "terminal-bench-science/variable-star-vetting::trial-0",
+    "task_digest": "sha256:51bf2b9d8e87a428772d92c6765d83ad3edc7c24283d2ff75af5f050aaee0c67"
+  },
+  "rank17_task_read": false,
+  "rank17_task_started": false,
+  "rank17_benchmark_trials_consumed": 0,
+  "terminal_credit_delta": 0
+}
