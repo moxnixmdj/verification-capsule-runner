@@ -364,7 +364,12 @@ def _candidate_rows(raw: Any, requirements: set[str]) -> list[dict[str, Any]]:
         if not isinstance(item, dict):
             raise RuntimeError("SCIENCE_CANDIDATE_INVALID")
         aid = str(item.get("action_id") or "").strip()
-        if not aid or aid in ids:
+        if (
+            not aid
+            or len(aid) > 64
+            or re.fullmatch(r"[A-Za-z0-9_.:-]+", aid) is None
+            or aid in ids
+        ):
             raise RuntimeError("SCIENCE_ACTION_ID_INVALID_OR_DUPLICATE")
         ids.add(aid)
         covers = _nonempty_strings(item.get("covers"), maximum=MAX_REQUIREMENTS, field="COVERS")
@@ -494,7 +499,7 @@ def logical_attempt_id_for_goal(goal: str) -> str:
 
 
 EVIDENCE_CHUNK_CHARS = 1200
-EVIDENCE_PREVIEW_CHARS = 240
+EVIDENCE_PREVIEW_CHARS = 240\nEVIDENCE_ACTION_ID_PREVIEW_CHARS = 16\nREQUIREMENT_LABEL_PREVIEW_CHARS = 8
 EVIDENCE_REF_FANOUT = 16
 RECENT_EVIDENCE_CATALOG_ENTRIES = 12
 ARCHIVE_CATALOG_PAGE_ENTRIES = 12
@@ -592,7 +597,7 @@ def _catalog_entry(record: dict[str, Any], evidence_ref: str) -> dict[str, Any]:
         "ref": evidence_ref,
         "kind": str(record.get("kind") or "EVIDENCE")[:64],
         "cycle": record.get("cycle") if isinstance(record.get("cycle"), int) else None,
-        "action_id": str(record.get("action_id") or "")[:64],
+        "action_id": str(record.get("action_id") or "")[:EVIDENCE_ACTION_ID_PREVIEW_CHARS],
         "returncode": (
             record.get("returncode")
             if isinstance(record.get("returncode"), int)
@@ -697,7 +702,7 @@ def _requirement_prompt_view(
         })
         rows.append({
             "id": alias,
-            "label_preview": original[:16],
+            "label_preview": original[:REQUIREMENT_LABEL_PREVIEW_CHARS],
             "label_ref": label_ref,
             "resolved": original not in unresolved_set,
         })
