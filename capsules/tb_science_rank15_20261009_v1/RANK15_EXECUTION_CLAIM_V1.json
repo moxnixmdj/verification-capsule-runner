@@ -7,7 +7,7 @@
   "task_name": "terminal-bench-science/protein-active-learning",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "schedule_rank": 15,
-  "execution_branch": "execute-tb-science-rank15-v1-20261009",
+  "execution_branch": "execute/tb-science-rank15-20261009-v1",
   "execution_base": "terminal-execution-v1",
   "authority_git_blob_sha": "61629b854f4be1e940a3f68d1a676e40b4e61ebf",
   "intent_git_blob_sha": "ce2c7aeb17c450e17b02a3b616ce8a8374edabe4",
