@@ -15,14 +15,17 @@
   },
   "benchmark_trials_consumed": 0,
   "date": "2026-10-09",
-  "execution_authority": true,
+  "execution_authority": false,
   "family": "TB_SCIENCE",
   "hard_nonclaims": [
     "NO_RANK15_V2_ACTIVATION_FILE",
     "NO_RANK15_TASK_READ",
     "NO_RANK15_TASK_START",
     "NO_RANK15_RESULT",
-    "NO_ACCEPTANCE_OR_TERMINAL_CREDIT"
+    "NO_ACCEPTANCE_OR_TERMINAL_CREDIT",
+    "NO_RANK15_V2_REACTIVATION_AUTHORITY",
+    "NO_ALL_CYCLE_FIT_BY_CONSTRUCTION_CREDIT",
+    "NO_DURABLE_TASK_START_CAS_BOUND_TO_ACTIVE_SURFACE"
   ],
   "incremental_spend_usd": 0,
   "invariant_registry": {
@@ -35,7 +38,7 @@
   },
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
-  "status": "ACTIVE_ZERO_EXPOSURE__RANK15_V2_RATCHET_RESEALED__FRESH_V2_EPOCH_AND_CLAIM_BOUND__ACTIVATION_NOT_YET_ARMED",
+  "status": "QUARANTINED_AFTER_PREEXPOSURE_V2_CANCELLATION__AWAIT_V3_ALL_CYCLE_FIT_AND_START_CAS_RESEAL",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "task_read_authority": false,
   "task_started": false,
@@ -57,5 +60,15 @@
   "finalizer": {
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py",
     "git_blob_sha": "d05cb230372528e1e64e1b9a24fd68206f4bbaaf"
+  },
+  "incident": {
+    "workflow_run_id": "37906384473",
+    "activation_pr": 2479,
+    "result": "PREEXPOSURE_ABORT_NONCONSUMING",
+    "task_read": false,
+    "task_started": false,
+    "benchmark_trials_consumed": 0,
+    "execution_authority_consumed": false,
+    "revocation_reason": "V2_ACTIVATED_BEFORE_ALL_CYCLE_CONTEXT_FIT_AND_GLOBAL_TASK_START_CAS_WERE_JOINTLY_VERIFIED"
   }
 }
