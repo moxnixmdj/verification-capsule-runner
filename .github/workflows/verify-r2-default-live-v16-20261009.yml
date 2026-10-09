@@ -1,0 +1,18 @@
+name: verify-r2-default-live-v16-20261009
+on:
+  push:
+    branches:
+      - verify-pr3514-default-live-20261009-v1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run exact public capsule
+        run: python3 capsules/r2-default-live-v16-20261009-v1/verify_capsule.py
