@@ -2,10 +2,15 @@ name: Verify terminal causal journal v1
 
 on:
   pull_request:
-    branches: [repair/rank15-v5-agent-start-barrier-20261009]
+    branches: [repair/rank15-v5-agent-start-barrier-20261009, repair/rank15-v5-status-store-20261009]
     paths:
       - "execution_guard/terminal_causal_journal_v1.py"
       - "execution_guard/tests/test_terminal_causal_journal_v1.py"
+      - "execution_guard/terminal_causal_journal_filebridge_v1.py"
+      - "execution_guard/tests/test_terminal_causal_journal_filebridge_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v5.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v5_status_journal_runner.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v5_causal_ordering_tests.py"
       - ".github/workflows/verify-terminal-causal-journal-v1.yml"
 
 permissions:
@@ -29,12 +34,21 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             execution_guard/terminal_causal_journal_v1.py \
-            execution_guard/tests/test_terminal_causal_journal_v1.py
+            execution_guard/terminal_causal_journal_filebridge_v1.py \
+            execution_guard/tests/test_terminal_causal_journal_v1.py \
+            execution_guard/tests/test_terminal_causal_journal_filebridge_v1.py \
+            capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v5.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_v5_status_journal_runner.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_v5_causal_ordering_tests.py
 
       - name: Run adversarial journal tests
         run: |
           set -euo pipefail
-          python -m unittest -v execution_guard.tests.test_terminal_causal_journal_v1
+          python -m unittest -v \
+            execution_guard.tests.test_terminal_causal_journal_v1 \
+            execution_guard.tests.test_terminal_causal_journal_filebridge_v1
+          PYTHONPATH="capsules/tb_science_rank15_20261009_v1:." \
+            python capsules/tb_science_rank15_20261009_v1/rank15_v5_causal_ordering_tests.py
 
       - name: Assert zero-exposure scope
         run: |

@@ -17,8 +17,6 @@ from typing import Any, Protocol
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
-from github_ref_store_live import GitHubRefStore
-
 SCHEMA = "PROJECT_BRAIN_TERMINAL_CAUSAL_JOURNAL_EVENT_V1"
 NAMESPACE = "terminal-journal-v1"
 MAX_EVENT_BYTES = 32768
