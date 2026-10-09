@@ -187,7 +187,14 @@ class CrossDocumentRouteTests(unittest.TestCase):
             self.assertEqual(out["route_id"], direct.ROUTE_ID)
 
     def test_fixed_point_step_zero_reaches_v4_route(self):
-        # Stub only machinery that is downstream of a successful direct match.
+        # Stub only older fallback machinery and downstream repair paths.
+        fake_v3 = types.ModuleType("canonical.runtime.r2_direct_end_to_end_adequacy_v3")
+        fake_v3.ROUTES = {"sentinel": {"capability_id": "old"}}
+        fake_v3.preflight = lambda request, repo_root=None: {"matched": False}
+        fake_v3.run = lambda request, repo_root=None: {"matched": False}
+        sys.modules["canonical.runtime.r2_direct_end_to_end_adequacy_v3"] = fake_v3
+        sys.modules.pop("canonical.runtime.r2_direct_end_to_end_adequacy_v4", None)
+
         fake_controller = types.ModuleType("canonical.runtime.general_adequate_decision_controller_v1")
         def forbidden_controller(*args, **kwargs):
             raise AssertionError("controller should not run after direct step-zero closure")
