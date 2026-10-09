@@ -62,8 +62,8 @@ def test_v2_filebridge_round_trip_for_new_kind():
         assert ack["event_sha256"] == event["event_sha256"]
         assert Path(ack_path).exists()
         observed = bridge.wait_for_ack(
-            ack_path,
-            expected_event_sha256=event["event_sha256"],
+            td,
+            event,
             timeout_s=1.0,
             poll_s=0.01,
         )
