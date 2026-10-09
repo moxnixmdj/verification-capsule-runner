@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT_16K_PREFLIGHT_RUN_V1",
+  "date": "2026-10-09",
+  "status": "AUTHORIZE_ZERO_EXPOSURE_SYNTHETIC_CONTEXT_CAPACITY_PREFLIGHT_ONLY",
+  "exact_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+  "exact_llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+  "exact_planner_blob": "715aee168f02cb4abff961849b2b26709eef2e64",
+  "candidate_context_tokens": 16384,
+  "minimum_synthetic_request_tokens": 9459,
+  "maximum_synthetic_request_tokens": 12000,
+  "benchmark_task_exposure": 0,
+  "rank14_task_exposure": false,
+  "rank14_execution_authority": false,
+  "incremental_spend_usd": 0,
+  "terminal_credit": false
+}
