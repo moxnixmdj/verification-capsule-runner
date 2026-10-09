@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile execution_guard/terminal_execution_admission_v3.py
-          python execution_guard/test_terminal_execution_admission_v3.py
+          PYTHONPATH="$GITHUB_WORKSPACE" python execution_guard/test_terminal_execution_admission_v3.py
 
       - name: Verify current surface, runtime bytes, causal invariants, and zero exposure
         env:
