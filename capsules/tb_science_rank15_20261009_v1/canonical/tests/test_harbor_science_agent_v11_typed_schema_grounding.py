@@ -78,6 +78,13 @@ def candidate(action_id, command, *, covers=None, schema=None, deliverables=None
 
 
 class V11Tests(unittest.TestCase):
+    def setUp(self):
+        token_patch = patch.object(
+            s.science_planner, "count_input_tokens", return_value=100
+        )
+        token_patch.start()
+        self.addCleanup(token_patch.stop)
+
     def test_untyped_candidate_is_rejected(self):
         rows, rejected = s._candidate_rows(
             [{
