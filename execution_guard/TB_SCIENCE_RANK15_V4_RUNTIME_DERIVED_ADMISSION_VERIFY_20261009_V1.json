@@ -1,0 +1,37 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_V4_RUNTIME_DERIVED_ADMISSION_VERIFY_20261009_V1",
+  "date": "2026-10-09",
+  "status": "PASS__PY_COMPILE__ADMISSION_TESTS_6_OF_6__EXACT_V4_WORKFLOW_BOUND_BEHAVIOR_PASS__ZERO_EXPOSURE",
+  "branch": "repair/rank15-admission-runtime-derived-20261009",
+  "head_commit": "b8e6a7fb01483aca9ec083cd8df80192a0aaea83",
+  "admission_guard": {
+    "path": "execution_guard/terminal_execution_admission_v2.py",
+    "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+  },
+  "behavior_v4": {
+    "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json",
+    "git_blob_sha": "bf5464d8079ad479b7dab574e86e09a12ff55fad"
+  },
+  "tests": {
+    "path": "execution_guard/test_terminal_execution_admission_v2.py",
+    "focused": "6_OF_6_PASS",
+    "exact_v4_workflow_check": "PASS",
+    "py_compile": "PASS"
+  },
+  "verified_properties": [
+    "WORKFLOW_RUNTIME_MARKERS_DERIVED_FROM_CONTENT_ADDRESSED_BEHAVIOR_BINDINGS",
+    "V3_BOUND_WORKFLOW_REMAINS_ADMISSIBLE",
+    "V4_BOUND_WORKFLOW_IS_ADMISSIBLE_WITHOUT_GUARD_SOURCE_VERSION_EDIT",
+    "RUNTIME_VERSION_MISMATCH_FAILS_CLOSED",
+    "PHASE_REORDERING_FAILS_CLOSED",
+    "V2_REGRESSION_MARKERS_REMAIN_FORBIDDEN",
+    "MISSING_RUNTIME_BINDING_FAILS_CLOSED"
+  ],
+  "task_read": false,
+  "task_started": false,
+  "benchmark_trials_consumed": 0,
+  "execution_authority_changed": false,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}

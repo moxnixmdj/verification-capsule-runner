@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4",
   "date": "2026-10-09",
-  "status": "STAGED_ZERO_EXPOSURE__V4_EPOCH_CLAIM_AND_FINAL_CURRENT_IDENTITY_BOUND__EXECUTION_AUTHORITY_FALSE",
+  "status": "STAGED_ZERO_EXPOSURE__V4_EPOCH_CLAIM_AND_FINAL_CURRENT_IDENTITY_BOUND__RUNTIME_DERIVED_ADMISSION_GUARD__EXECUTION_AUTHORITY_FALSE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
@@ -85,7 +85,7 @@
     },
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v2.py",
-      "git_blob_sha": "5a30e330900182880ade14ad4c9a0a00f6870420"
+      "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
     },
     "generic_start_cas": {
       "path": "execution_guard/terminal_slot_start_cas_v1.py",
@@ -136,5 +136,6 @@
   "promotion_authority": false,
   "acceptance_credit_delta": 0,
   "terminal_credit_delta": 0,
-  "incremental_spend_usd": 0
+  "incremental_spend_usd": 0,
+  "hardening_note": "Admission workflow phase markers are derived from exact content-addressed behavior runtime bindings rather than a historical V3 filename set."
 }
