@@ -19,6 +19,11 @@ jobs:
     env:
       C: capsules/tb_science_rank15_20261009_v1
       SAFE_ID: protein-active-learning-trial-0
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - uses: actions/checkout@v4
@@ -47,13 +52,6 @@ jobs:
           assert importlib.metadata.version("harbor")=="0.23.0"
           PY
 
-      - name: Restore exact llama.cpp cache
-        id: llama
-        uses: actions/cache/restore@v4
-        with:
-          path: llama.cpp
-          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
-
       - name: Restore exact Qwen cache
         id: qwen
         uses: actions/cache/restore@v4
@@ -61,21 +59,34 @@ jobs:
           path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
           key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
 
-      - name: Gate exact warm carrier
-        id: cache
+      - name: Prepare exact clean-built carrier
+        id: carrier
         run: |
           set -euo pipefail
           ready=false
-          if [ "${{ steps.llama.outputs.cache-hit }}" = "true" ] && [ "${{ steps.qwen.outputs.cache-hit }}" = "true" ]; then
-            test -x llama.cpp/build/bin/llama-server
-            test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
-            echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
-            ready=true
+          test "$(nproc)" -ge 4
+          awk '/MemTotal/{exit !($2 >= 12000000)}' /proc/meminfo
+          mkdir -p models model-parts
+          if [ ! -f "models/$MODEL_FILE" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model-parts --pattern "$MODEL_FILE.part*of03"
+            cat "model-parts/$MODEL_FILE.part01of03" "model-parts/$MODEL_FILE.part02of03" "model-parts/$MODEL_FILE.part03of03" > "models/$MODEL_FILE"
           fi
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          test -x llama.cpp/build/bin/llama-server
+          ready=true
           echo "ready=$ready" >> "$GITHUB_OUTPUT"
 
       - name: Start exact local cognition endpoint with 16K context
-        if: steps.cache.outputs.ready == 'true'
+        if: steps.carrier.outputs.ready == 'true'
         run: |
           set -euo pipefail
           EXTRA=()
@@ -96,7 +107,7 @@ jobs:
 
       - name: Read exact rank15 task and enforce prestart token budget
         id: prestart
-        if: steps.cache.outputs.ready == 'true'
+        if: steps.carrier.outputs.ready == 'true'
         run: |
           set -euo pipefail
           export PYTHONPATH="$C"
@@ -105,7 +116,7 @@ jobs:
 
       - name: Execute exactly frozen rank15 slot
         id: execute
-        if: steps.cache.outputs.ready == 'true' && steps.prestart.outputs.guard_pass == 'true'
+        if: steps.carrier.outputs.ready == 'true' && steps.prestart.outputs.guard_pass == 'true'
         continue-on-error: true
         env:
           TASK_PATH: ${{ steps.prestart.outputs.task_path }}
@@ -127,7 +138,7 @@ jobs:
       - name: Finalize conservative rank15 receipt
         if: always()
         env:
-          CACHE_READY: ${{ steps.cache.outputs.ready }}
+          CACHE_READY: ${{ steps.carrier.outputs.ready }}
           HARBOR_OUTCOME: ${{ steps.execute.outcome }}
         run: |
           python "$C/rank15_finalize_receipt_v1.py"
