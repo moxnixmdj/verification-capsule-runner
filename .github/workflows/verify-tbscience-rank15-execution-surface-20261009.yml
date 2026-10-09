@@ -2,7 +2,7 @@ name: Verify TB-Science rank15 execution surface
 on:
   push:
     branches:
-      - stage/tb-science-rank15-execution-surface-20261009-v1
+      - reconcile-rank15-lease-surface-20261009
 permissions:
   contents: read
 jobs:
@@ -19,9 +19,9 @@ jobs:
         run: |
           set -euo pipefail
           test ! -e "$C/ACTIVATE_RANK15_PR.json"
-          test "$(git hash-object "$C/rank15_execution_preflight_v1.py")" = "941445c191880794df739d8e9205497b6e2efd2d"
-          test "$(git hash-object "$C/rank15_finalize_receipt_v1.py")" = "9edfdb036f2b2b6282cc492f17f4c192ad442d10"
-          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "26d0d7c9735e54ce028f6c53711ec87db566978f"
+          test "$(git hash-object "$C/rank15_execution_preflight_v1.py")" = "345d891b3635931f5cc161c61ed190c740838ac1"
+          test "$(git hash-object "$C/rank15_finalize_receipt_v1.py")" = "30636f07cccdc5dafc11bd46b0d65ff83ee16b9a"
+          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "43a3e7f0b4ab757aaa31b4aed7cb87f3fcaa113c"
           python -m py_compile "$C/rank15_execution_preflight_v1.py" "$C/rank15_finalize_receipt_v1.py"
           python "$C/rank15_execution_preflight_v1.py"
           CACHE_READY=false HARBOR_OUTCOME=skipped SAFE_ID=protein-active-learning-trial-0 python "$C/rank15_finalize_receipt_v1.py"
