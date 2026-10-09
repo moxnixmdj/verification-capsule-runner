@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+from pathlib import Path
+from typing import Any
+
+import rank15_execution_identity_v1 as bound_identity
+
+SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_RANK15_V4"
+SLOT = "terminal-bench-science/protein-active-learning::trial-0"
+TASK = "terminal-bench-science/protein-active-learning"
+DIGEST = "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        return value if isinstance(value, dict) else {}
+    except Exception:
+        return {}
+
+
+def _sha256(path: Path) -> str | None:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def _slot_start_key() -> str:
+    material = json.dumps(
+        {"slot_id": SLOT, "task_digest": DIGEST},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return "terminal-start/" + hashlib.sha256(material.encode()).hexdigest()
+
+
+def _hex(value: Any, n: int) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{%d}" % n, value) is not None
+
+
+def main() -> int:
+    root = Path(os.environ.get("GITHUB_WORKSPACE") or ".").resolve()
+    safe_id = os.environ.get("SAFE_ID") or "protein-active-learning-trial-0"
+    base = root / "jobs" / safe_id
+    guard_path = root / "RANK15_PRESTART_GUARD.json"
+    cas_path = root / "RANK15_START_CAS_V4.json"
+    guard = _read_json(guard_path)
+    cas = _read_json(cas_path)
+
+    cas_claimed_acquired = (
+        cas.get("pass") is True
+        and cas.get("acquired") is True
+        and cas.get("task_started") is True
+        and cas.get("slot_id") == SLOT
+        and cas.get("task_digest") == DIGEST
+    )
+
+    cas_binding_errors: list[str] = []
+    current_identity: dict[str, Any] = {}
+    if cas_claimed_acquired:
+        try:
+            bound_errors, current_identity = bound_identity.validate_bound_start(
+                root, guard=guard, cas=cas
+            )
+            cas_binding_errors.extend(bound_errors)
+        except Exception as exc:
+            cas_binding_errors.append(
+                "BOUND_START_IDENTITY_RECOMPUTE_FAILED:"
+                + type(exc).__name__
+                + ":"
+                + str(exc)
+            )
+        checks = {
+            "GENERIC_CAS_KEY": cas.get("generic_cas_key") == _slot_start_key(),
+            "LOGICAL_ATTEMPT_ID_FORMAT": _hex(cas.get("logical_attempt_id"), 64),
+            "RUNTIME_IDENTITY_FORMAT": _hex(cas.get("runtime_identity_sha256"), 64),
+            "CONTROL_IDENTITY_FORMAT": _hex(cas.get("control_identity_sha256"), 64),
+            "PRESTART_RECEIPT_SHA_FORMAT": _hex(cas.get("prestart_receipt_sha256"), 64),
+            "DURABLE_RECORD_SHA_FORMAT": _hex(cas.get("durable_record_sha256"), 64),
+            "WORKFLOW_BLOB_FORMAT": _hex(cas.get("workflow_git_blob_sha"), 40),
+            "AUTHORITY_BLOB_FORMAT": _hex(cas.get("authority_git_blob_sha"), 40),
+            "ACTIVATION_BLOB_FORMAT": _hex(cas.get("activation_git_blob_sha"), 40),
+            "REPLAY_AUTHORITY_FALSE": cas.get("replay_authority") is False,
+            "REPLACEMENT_AUTHORITY_FALSE": cas.get("replacement_carrier_authority") is False,
+        }
+        cas_binding_errors.extend(
+            "START_CAS_IDENTITY_INVALID:" + label
+            for label, passed in checks.items()
+            if not passed
+        )
+    cas_identity_valid = cas_claimed_acquired and not cas_binding_errors
+
+    # CAS acquisition is the irreversible accounting boundary. A malformed or
+    # partially lost local identity receipt can never restore retry authority.
+    task_started = cas_claimed_acquired
+
+    results: list[tuple[Path, dict[str, Any]]] = []
+    if base.exists():
+        for path in base.rglob("result.json"):
+            try:
+                obj = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if isinstance(obj, dict):
+                results.append((path, obj))
+
+    scored: list[tuple[Path, dict[str, Any]]] = []
+    exception_info: list[dict[str, Any]] = []
+    for path, obj in results:
+        vr = obj.get("verifier_result")
+        if isinstance(vr, dict) and isinstance(vr.get("rewards"), dict):
+            scored.append((path, obj))
+        ex = obj.get("exception_info")
+        if isinstance(ex, dict):
+            exception_info.append({
+                "path": str(path.relative_to(root)),
+                "exception_type": ex.get("exception_type"),
+                "exception_message": ex.get("exception_message"),
+            })
+
+    reward = None
+    errors: list[str] = list(cas_binding_errors)
+    if task_started:
+        if len(scored) == 1:
+            raw = scored[0][1]["verifier_result"]["rewards"].get("reward")
+            if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+                reward = float(raw)
+            else:
+                errors.append("REWARD_MISSING_OR_NONNUMERIC")
+        elif not scored:
+            errors.append("NO_TRIAL_RESULT_WITH_VERIFIER_REWARD")
+        else:
+            errors.append("MULTIPLE_TRIAL_RESULTS_WITH_VERIFIER_REWARD")
+
+    carrier_ready = os.environ.get("CACHE_READY") == "true"
+    harbor_outcome = os.environ.get("HARBOR_OUTCOME") or "skipped"
+    success = (
+        task_started
+        and cas_identity_valid
+        and reward is not None
+        and reward >= 1.0
+        and not errors
+    )
+
+    if not task_started:
+        errors = ["TASK_NOT_STARTED__NO_DURABLE_START_CAS"]
+        status = "PREEXPOSURE_ABORT_NONCONSUMING"
+    else:
+        status = "SUCCESS" if success else "FINAL_ZERO"
+
+    hashes = {
+        str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path, _ in results
+    }
+    receipt = {
+        "schema": SCHEMA,
+        "slot_id": SLOT,
+        "task_name": TASK,
+        "task_digest": DIGEST,
+        "status": status,
+        "reward": None if not task_started else (reward if reward is not None else 0.0),
+        "carrier_ready": carrier_ready,
+        "task_read": bool(guard.get("task_read")),
+        "task_started": task_started,
+        "start_cas_acquired": cas_claimed_acquired,
+        "start_cas_identity_valid": cas_identity_valid,
+        "start_cas_status": cas.get("status"),
+        "start_cas_generic_key": cas.get("generic_cas_key"),
+        "start_cas_logical_attempt_id": cas.get("logical_attempt_id"),
+        "start_cas_runtime_identity_sha256": cas.get("runtime_identity_sha256"),
+        "start_cas_control_identity_sha256": cas.get("control_identity_sha256"),
+        "current_surface_git_blob_sha": current_identity.get("surface_git_blob_sha"),
+        "current_control_identity_sha256": current_identity.get("control_identity_sha256"),
+        "current_runtime_identity_sha256": current_identity.get("runtime_identity_sha256"),
+        "current_authority_git_blob_sha": (current_identity.get("control_binding_blobs") or {}).get("authority"),
+        "current_ledger_git_blob_sha": (current_identity.get("control_binding_blobs") or {}).get("ledger"),
+        "current_epoch_git_blob_sha": (current_identity.get("control_binding_blobs") or {}).get("epoch"),
+        "current_execution_claim_git_blob_sha": (current_identity.get("control_binding_blobs") or {}).get("execution_claim"),
+        "start_cas_prestart_receipt_sha256": cas.get("prestart_receipt_sha256"),
+        "start_cas_durable_record_sha256": cas.get("durable_record_sha256"),
+        "start_cas_workflow_git_blob_sha": cas.get("workflow_git_blob_sha"),
+        "start_cas_authority_git_blob_sha": cas.get("authority_git_blob_sha"),
+        "start_cas_activation_git_blob_sha": cas.get("activation_git_blob_sha"),
+        "start_cas_replay_authority": cas.get("replay_authority"),
+        "start_cas_replacement_carrier_authority": cas.get("replacement_carrier_authority"),
+        "prestart_guard_sha256": _sha256(guard_path),
+        "prestart_guard_status": guard.get("status"),
+        "prestart_guard_pass": guard.get("pass"),
+        "prestart_input_tokens": guard.get("input_tokens"),
+        "prestart_context_headroom_tokens": guard.get("context_headroom_tokens"),
+        "prestart_instruction_sha256": guard.get("instruction_sha256"),
+        "prestart_first_cycle_prompt_sha256": guard.get("first_cycle_prompt_sha256"),
+        "prestart_logical_attempt_id": guard.get("logical_attempt_id"),
+        "prestart_payload_sha256": guard.get("payload_sha256"),
+        "prestart_request_identity_sha256": guard.get("request_identity_sha256"),
+        "raw_task_obligation_count": guard.get("raw_task_obligation_count"),
+        "errors": errors,
+        "exception_info": exception_info,
+        "harbor_step_outcome": harbor_outcome,
+        "result_hashes": hashes,
+        "github_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+        "github_sha": os.environ.get("GITHUB_SHA"),
+        "execution_authority_consumed": task_started,
+        "benchmark_trials_consumed": 1 if task_started else 0,
+        "consumed_successes_delta": 1 if success else 0,
+        "consumed_final_failures_delta": 1 if task_started and not success else 0,
+        "rerun_credit": False,
+        "incremental_spend_usd": 0,
+        "promotion_authority": False,
+        "acceptance_credit_delta": 0,
+        "terminal_credit_delta": 0,
+        "aggregate_acceptance_requires_independent_reducer": True,
+        "strict_timeout_semantics": (
+            "BOUND_CAS_ACQUISITION_DEFINES_IRREVERSIBLE_START__"
+            "INVALID_OR_MISSING_IDENTITY_CAN_NEVER_PRODUCE_SUCCESS_OR_RETRY__"
+            "ANY_NON_SUCCESS_AFTER_CAS_COUNTS_FINAL_ZERO"
+        ),
+    }
+    out = root / (safe_id + "__SLOT_RECEIPT_V3.json")
+    out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(receipt, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
