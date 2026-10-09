@@ -6,6 +6,21 @@ def load(name): return json.loads((ROOT/name).read_text())
 c=load("CANDIDATE.json"); l=load("LEDGER_V17.json"); r=load("REPAIR_VERIFY.json"); v=load("CLOSURE_V10.json")
 errors=[]
 
+a=load("AUTHORITY_V2.json"); bv=load("BRAIN_VERIFY.json")
+need(a.get("schema")=="PROJECT_BRAIN_TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_V2","AUTHORITY_SCHEMA")
+need(a.get("execution_authority") is True,"ACTIVE_EXECUTION_AUTHORITY_REQUIRED")
+need(a.get("task_read_authority") is False,"TASK_READ_MUST_WAIT_FOR_FRESH_LEASE")
+need(a.get("fresh_reality_authority") is True,"FRESH_REALITY_AUTHORITY")
+need(a.get("promotion_authority") is False,"NO_PROMOTION_AUTHORITY")
+need(a["state"]["fresh_public_execution_lease_published"] is False,"NO_PRETEND_FRESH_LEASE")
+need(a["state"]["authority_consumed"] is False,"AUTHORITY_NOT_CONSUMED")
+need(a["ledger"]["rank14_slot_consumed"] is False,"AUTHORITY_SLOT_UNCONSUMED")
+need(a["exact_route"]["agent_blob"]=="16e8ab7918c4f8d052698282dddf674b54a23016","AUTHORITY_REPAIRED_AGENT")
+need(a["exact_route"]["carrier_closure_blob"]=="ae37559320105277e017ff17af7c3dbeae2f9c27","AUTHORITY_V10_CLOSURE")
+need(a["candidate"]["git_blob_sha"]=="e57e8588048b58c7fad5f273608f463bc586be9e","AUTHORITY_CANDIDATE_BINDING")
+need(a["candidate"]["verification_git_blob_sha"]=="a7ae7e35e34595e0fcd096a61f410e485b2af268","AUTHORITY_VERIFICATION_BINDING")
+need(bv.get("status","").startswith("PASS__REPAIRED_RANK14_AUTHORITY_CANDIDATE_INDEPENDENTLY_VERIFIED"),"BRAIN_VERIFY_PASS")
+
 def need(cond,msg):
     if not cond: errors.append(msg)
 
@@ -47,14 +62,17 @@ for run_id, expected_conclusion in [(37880547075,"success"),(37881878913,"succes
 result={
   "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK14_REPAIRED_AUTHORITY_CANDIDATE_PUBLIC_VERIFY_V1",
   "pass":not errors,
-  "status":"PASS__REPAIRED_RANK14_CANDIDATE_STATIC_AND_PUBLIC_CAUSAL_BINDINGS_VERIFIED__ZERO_EXECUTION_AUTHORITY" if not errors else "FAIL_CLOSED",
+  "status":"PASS__REPAIRED_RANK14_ACTIVE_AUTHORITY_EXACT_BINDINGS_VERIFIED__TASK_READ_STILL_LEASE_GATED" if not errors else "FAIL_CLOSED",
   "errors":errors,
   "ledger_blob":"c8e9720e3f53c0eb483552c902b7841821f335b0",
   "candidate_blob":"e57e8588048b58c7fad5f273608f463bc586be9e",
   "repair_blob":"6e8e3938b00e3fe39e38ac4a1b38a21eeb25c96f",
   "v10_closure_blob":"ae37559320105277e017ff17af7c3dbeae2f9c27",
   "public_runs_verified":[37880547075,37881878913],
-  "execution_authority":False,
+  "active_authority_blob":"65bad902596c39b98acbd81446fb1014437ef8f3",
+  "brain_verification_blob":"a7ae7e35e34595e0fcd096a61f410e485b2af268",
+  "execution_authority":True,
+  "task_read_authority":False,
   "task_start_authority":False,
   "benchmark_trials_consumed_delta":0,
   "acceptance_credit_delta":0,
