@@ -1,0 +1,22 @@
+name: Verify repaired TB-Science rank14 authority candidate
+on:
+  push:
+    branches:
+      - verify-tbscience-r14-repaired-authority-v2
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact repaired authority bindings
+        run: python capsules/tbscience_r14_repaired_authority_v2/verify.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-r14-repaired-authority-v2
+          path: RANK14_REPAIRED_AUTHORITY_VERIFY_RESULT.json
+          retention-days: 2
