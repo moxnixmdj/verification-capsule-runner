@@ -1,0 +1,39 @@
+name: verify-r2-v34-crossdoc
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify exact source blob identities
+        run: |
+          test "$(git hash-object canonical/runtime/finance_task_role_raw_fact_unless_branch_v1.py)" = "4fa8f18402efe08c5553bf019f64abc176429c08"
+          test "$(git hash-object canonical/runtime/finance_task_role_raw_fact_unless_verify_v1.py)" = "e38ee6d9e84e8a29c3777aa8a51660145bfedc91"
+          test "$(git hash-object canonical/runtime/r2_finance_task_role_raw_fact_unless_direct_adequacy_v1.py)" = "549957867493a342b2b41da27cce34af69a9948e"
+          test "$(git hash-object canonical/runtime/r2_direct_end_to_end_adequacy_v4.py)" = "20b78cf7343773fa8afaf33674dc2c8c339cd38e"
+          test "$(git hash-object canonical/runtime/general_adequate_decision_fixed_point_v2.py)" = "9b2978c54712eabd0c7d55919be12be22937a81d"
+      - name: Compile exact load-bearing bytes
+        run: |
+          python -m py_compile             canonical/runtime/finance_task_role_raw_fact_unless_branch_v1.py             canonical/runtime/finance_task_role_raw_fact_unless_verify_v1.py             canonical/runtime/r2_finance_task_role_raw_fact_unless_direct_adequacy_v1.py             canonical/runtime/r2_direct_end_to_end_adequacy_v4.py             canonical/runtime/general_adequate_decision_fixed_point_v2.py
+      - name: Run isolated independent harness
+        run: |
+          set -o pipefail
+          python verify_r2_v34_crossdoc.py 2>&1 | tee verify-r2-v34-crossdoc.log
+      - name: Publish verification log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-r2-v34-crossdoc-log
+          path: verify-r2-v34-crossdoc.log
+          if-no-files-found: warn
