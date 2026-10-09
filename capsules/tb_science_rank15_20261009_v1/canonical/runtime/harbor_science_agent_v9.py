@@ -556,7 +556,11 @@ def _candidate_rows(
     rejections.sort(key=lambda row: int(row["candidate_index"]))
     return rows, rejections
 
-def _extract_contract(raw: dict[str, Any], prior_requirements: list[str] | None, mandatory_requirements: list[str] | None = None) -> tuple[list[str], list[dict[str, Any]], str | None, list[dict[str, Any]]]:
+def _extract_contract(
+    raw: dict[str, Any],
+    prior_requirements: list[str] | None,
+    mandatory_requirements: list[str] | None = None,
+) -> tuple[list[str], list[dict[str, Any]], str | None, list[dict[str, Any]]]:
     mandatory = list(mandatory_requirements or [])
     if len(mandatory) > MAX_REQUIREMENTS:
         raise RuntimeError("SCIENCE_MANDATORY_REQUIREMENTS_OVERFLOW")
@@ -575,22 +579,34 @@ def _extract_contract(raw: dict[str, Any], prior_requirements: list[str] | None,
         # Brain owns the requirement set after the first successful freeze.
         # Later substrate material_requirements are non-authoritative metadata:
         # they cannot add, remove, reorder, or fatal-abort Brain requirements.
-        # Candidate covers below remain validated strictly against this frozen set.
         requirements = list(prior_requirements)
+
     summary = raw.get("finish_summary")
     if summary is not None:
         if not isinstance(summary, str) or not summary.strip():
             raise RuntimeError("SCIENCE_FINISH_SUMMARY_INVALID")
         summary = summary.strip()
-    candidates = []
+
+    candidates: list[dict[str, Any]] = []
+    candidate_rejections: list[dict[str, Any]] = []
     primary_candidates = raw.get("candidates")
     alias_candidates = raw.get("candidate_actions")
-    if primary_candidates is not None and alias_candidates is not None and primary_candidates != alias_candidates:
+    if (
+        primary_candidates is not None
+        and alias_candidates is not None
+        and primary_candidates != alias_candidates
+    ):
         raise RuntimeError("SCIENCE_CANDIDATE_ALIAS_CONFLICT")
-    candidate_rows = primary_candidates if primary_candidates is not None else alias_candidates
+
+    candidate_rows = (
+        primary_candidates if primary_candidates is not None else alias_candidates
+    )
     if candidate_rows is not None:
-        candidates = _candidate_rows(candidate_rows, set(requirements))
-    return requirements, candidates, summary
+        candidates, candidate_rejections = _candidate_rows(
+            candidate_rows,
+            set(requirements),
+        )
+    return requirements, candidates, summary, candidate_rejections
 
 def logical_attempt_id_for_goal(goal: str) -> str:
     """Return the one authorized attempt identity; goal text is never identity material."""
@@ -832,8 +848,29 @@ async def run_science_goal(
         )
         if not isinstance(raw, dict):
             raise RuntimeError("SCIENCE_PLANNER_OBJECT_REQUIRED")
-        requirements, candidates, finish_summary = _extract_contract(raw, requirements, mandatory_requirement_ids)
+        requirements, candidates, finish_summary, candidate_rejections = _extract_contract(
+            raw,
+            requirements,
+            mandatory_requirement_ids,
+        )
         unresolved_set = set(requirements) - resolved
+
+        # Planner candidates are untrusted optional metadata. Preserve local
+        # rejections as evidence, but never execute/promote them and never let
+        # one malformed candidate abort valid siblings or later cycles.
+        for candidate_rejection in candidate_rejections:
+            rejected = {
+                "cycle": cycle,
+                **candidate_rejection,
+            }
+            trace.append(rejected)
+            observations.append(rejected)
+            if journal_session is not None:
+                await asyncio.to_thread(
+                    journal_session.append,
+                    "PLANNER_CANDIDATE_REJECTED",
+                    rejected,
+                )
 
         if finish_summary is not None:
             if unresolved_set:
