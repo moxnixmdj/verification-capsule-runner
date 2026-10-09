@@ -30,7 +30,11 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             execution_guard/github_status_object_store_v1.py \
+            execution_guard/terminal_slot_start_cas_v2.py \
+            execution_guard/terminal_agent_start_barrier_v1.py \
             execution_guard/tests/test_github_status_object_store_v1.py \
+            execution_guard/tests/test_terminal_slot_start_cas_v2.py \
+            execution_guard/tests/test_terminal_agent_start_barrier_v1.py \
             execution_guard/terminal_slot_start_cas_v2.py \
             execution_guard/tests/test_terminal_slot_start_status_backend_v1.py \
             capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v5.py
