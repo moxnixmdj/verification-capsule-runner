@@ -1,0 +1,56 @@
+name: Verify GDPval stage-1 contamination reselection
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/gdpval_stage1_reselection.py"
+      - ".github/workflows/verify-gdpval-stage1-reselection.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Select task and package safe prompt/reference bundle
+        run: |
+          set -euo pipefail
+          mkdir -p verification-output
+          python scripts/gdpval_stage1_reselection.py
+      - name: Validate contamination firewall and zero credit
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          x=json.load(open("verification-output/result.json"))
+          assert x["status"]=="PASS__THIRD_XLSX_SELECTED__SAFE_PROMPT_AND_REFERENCES_PACKAGED", x
+          assert x["original_selector_exact_replay"] is True, x
+          assert x["first_xlsx_exact_replay"] is True, x
+          assert x["second_xlsx_exact_replay"] is True, x
+          assert x["prompt_printed_to_log"] is False, x
+          assert x["rubric_exported"] is False, x
+          assert x["gold_deliverable_exported"] is False, x
+          assert x["prior_model_output_exported"] is False, x
+          assert x["terminal_authority"] is False, x
+          assert x["capability_credit_delta"] == 0, x
+          task=json.load(open("verification-output/safe_bundle/task.json"))
+          assert task["selection_precommit_brain_commit"]=="7be0a54aceb8bb3ee111fdbe3eee72747b48a95c", task
+          assert task["forbidden_fields_exported"]==[], task
+          refs=pathlib.Path("verification-output/safe_bundle/references")
+          assert len(list(refs.iterdir()))==len(task["reference_files"]), task
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gdpval-stage1-safe-bundle
+          path: |
+            verification-output/result.json
+            verification-output/safe_bundle/task.json
+            verification-output/safe_bundle/references/
+          if-no-files-found: error
