@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
-          python -m py_compile             "$C/canonical/runtime/science_typed_action_protocol_v1.py"             "$C/canonical/runtime/harbor_science_planner_v6.py"             "$C/canonical/runtime/harbor_science_agent_v11.py"
+          python -m py_compile             "$C/canonical/runtime/science_typed_action_protocol_v1.py"             "$C/canonical/runtime/harbor_science_planner_v6.py"             "$C/canonical/runtime/harbor_science_agent_v11.py"             "$C/canonical/runtime/lossless_raw_task_contract_v1.py"             "$C/canonical/runtime/explicit_requirement_index_v2.py"
       - name: Run typed protocol and V11 adversarial tests
         shell: bash
         run: |
@@ -32,6 +32,7 @@ jobs:
           export PYTHONPATH="$GITHUB_WORKSPACE:$C"
           python "$C/canonical/tests/test_science_typed_action_protocol_v1.py"
           python "$C/canonical/tests/test_harbor_science_agent_v11_typed_schema_grounding.py"
+          python "$C/canonical/tests/test_lossless_raw_task_punctuation_coverage_v1.py"
       - name: Preserve candidate-local rejection regression
         shell: bash
         run: |
