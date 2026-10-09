@@ -11,11 +11,11 @@
   "activation_path": "capsules/tb_science_rank16_20261009_v1/ACTIVATE_RANK16_V1_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK16_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "384f0a445a293ddc657f27bb528723fe394c8f04"
+    "git_blob_sha": "9f0ba7c8c4cb836bf4e11e683015b3563d4aeaff"
   },
   "authority": {
     "path": "capsules/tb_science_rank16_20261009_v1/RANK16_PUBLIC_AUTHORITY_BINDING_V1.json",
-    "git_blob_sha": "37d282f46a942d6f28e18ee174595999ca079e70"
+    "git_blob_sha": "edfc9c1f9dcfd7fc94a2808af08e70b7a62a1840"
   },
   "ledger": {
     "path": "capsules/tb_science_rank16_20261009_v1/RANK16_PUBLIC_LEDGER_BINDING_V30.json",
@@ -31,15 +31,15 @@
   },
   "epoch": {
     "path": "capsules/tb_science_rank16_20261009_v1/RANK16_EPOCH_V6.json",
-    "git_blob_sha": "b8080af2fc2ae101d26b6d046f1aa3dc07028014"
+    "git_blob_sha": "2ddc3e422570306db3fef3c15df36f5a7d411443"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank16_20261009_v1/RANK16_EXECUTION_CLAIM_V6.json",
-    "git_blob_sha": "d0bc8751aa908c7fef6bcdf8920b9dcadac32e28"
+    "git_blob_sha": "295ff199c4f5896a1c5c05f4afa7e525f366b100"
   },
   "preflight": {
     "path": "capsules/tb_science_rank16_20261009_v1/rank16_execution_preflight_v6.py",
-    "git_blob_sha": "caf6951c00cfa9b5079ba774ee9d6f523eb161be"
+    "git_blob_sha": "9e96db4dc49ce6d52fcb05c08047e4c5c5febe2c"
   },
   "finalizer": {
     "path": "capsules/tb_science_rank16_20261009_v1/rank16_finalize_receipt_v6.py",
@@ -63,12 +63,12 @@
     "brain_authority_v1_blob": "20ebbe8ed593a7ead08b27a1c57864ede429cb46",
     "brain_ledger_v30_blob": "7e46f2a5c0c418a4d3be4360c8a85b7be7611abb",
     "agent_v9_qualification_blob": "999f4adc79bba0e4477126ccb34139f9292c46ce",
-    "public_authority_v1_blob": "37d282f46a942d6f28e18ee174595999ca079e70",
+    "public_authority_v1_blob": "edfc9c1f9dcfd7fc94a2808af08e70b7a62a1840",
     "public_ledger_v30_blob": "d682f56b4f225740cee952dca875bd0c9d014e42",
-    "epoch_v6_blob": "b8080af2fc2ae101d26b6d046f1aa3dc07028014",
-    "execution_claim_v6_blob": "d0bc8751aa908c7fef6bcdf8920b9dcadac32e28",
+    "epoch_v6_blob": "2ddc3e422570306db3fef3c15df36f5a7d411443",
+    "execution_claim_v6_blob": "295ff199c4f5896a1c5c05f4afa7e525f366b100",
     "workflow_v1_blob": "571e3641f89d35d12bd5b9895e4e6b52a2506b7b",
-    "behavior_v1_blob": "384f0a445a293ddc657f27bb528723fe394c8f04",
+    "behavior_v1_blob": "9f0ba7c8c4cb836bf4e11e683015b3563d4aeaff",
     "invariant_registry_blob": "639eb816769624f5941f15863d75ca0b265bc0df",
     "admission_guard_v3_blob": "f8f3346a8863abdd4a15a5553fc6a49726642c81",
     "admission_guard_test_v3_blob": "44b01477ef6c100ced26dd03588dc6387c2a4865",

@@ -25,7 +25,7 @@
   },
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK16_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "384f0a445a293ddc657f27bb528723fe394c8f04"
+    "git_blob_sha": "9f0ba7c8c4cb836bf4e11e683015b3563d4aeaff"
   },
   "admission_guard": {
     "path": "execution_guard/terminal_execution_admission_v3.py",
