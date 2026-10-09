@@ -1,0 +1,24 @@
+name: Emergency stop TB-Science rank15 V2 stale activation
+
+on:
+  push:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/emergency-stop-tb-science-rank15-v2.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank15-v2-ratcheted-one-shot
+  cancel-in-progress: true
+
+jobs:
+  stop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Confirm emergency concurrency takeover only
+        run: |
+          echo "Cancels stale Rank15 V2 run through repository-wide concurrency group."
+          echo "No task read. No benchmark execution. No terminal credit."
