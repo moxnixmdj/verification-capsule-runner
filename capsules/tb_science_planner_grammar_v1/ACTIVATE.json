@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_PLANNER_GRAMMAR_LIVE_PROBE_ACTIVATION_V1",
+  "date": "2026-10-07",
+  "status": "ACTIVE_ZERO_EXPOSURE_LIVE_TRANSPORT_PROBE",
+  "planner_git_blob_sha": "01d859c8f27b317893027e693c9aa49e833a256f",
+  "planner_test_git_blob_sha": "3020cc54412c158efe38180025d066b5c2028165",
+  "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+  "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+  "terminal_case_exposure": false,
+  "benchmark_task_content_read": false,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
