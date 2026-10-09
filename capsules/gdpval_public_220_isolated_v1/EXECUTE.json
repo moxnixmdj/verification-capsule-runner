@@ -1,0 +1,11 @@
+{
+  "schema": "PROJECT_BRAIN_GDPVAL_PUBLIC_220_ISOLATED_EXECUTION_TRIGGER_V1",
+  "date": "2026-10-07",
+  "brain_commit_sha": "faf0e0a2a9034bdb7df85924333f7fc47ae0a2a2",
+  "terminal_case_exposure": false,
+  "fresh_target_model_queries": 0,
+  "provider_evaluation_queries": 0,
+  "incremental_spend_usd": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
