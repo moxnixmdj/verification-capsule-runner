@@ -85,6 +85,40 @@ def check_behavior_against_invariants(
     return errors
 
 
+def check_runtime_bindings(
+    behavior_doc: Mapping[str, Any],
+    errors: list[str],
+) -> None:
+    bindings = behavior_doc.get("runtime_bindings")
+    required = {
+        "planner",
+        "agent",
+        "prestart_guard",
+        "transport",
+        "zero_exposure_tests",
+    }
+    if not isinstance(bindings, Mapping):
+        errors.append("BEHAVIOR_RUNTIME_BINDINGS_MISSING")
+        return
+    missing = sorted(required - set(bindings))
+    if missing:
+        errors.append("BEHAVIOR_RUNTIME_BINDINGS_INCOMPLETE:" + ",".join(missing))
+    unknown = sorted(set(bindings) - required)
+    if unknown:
+        errors.append("BEHAVIOR_RUNTIME_BINDINGS_UNKNOWN:" + ",".join(unknown))
+    for key in sorted(required):
+        row = bindings.get(key)
+        if not isinstance(row, Mapping):
+            errors.append("BEHAVIOR_RUNTIME_BINDING_INVALID:" + key)
+            continue
+        rel = row.get("path")
+        sha = row.get("git_blob_sha")
+        if not isinstance(rel, str) or not isinstance(sha, str):
+            errors.append("BEHAVIOR_RUNTIME_BINDING_INVALID:" + key)
+            continue
+        require_blob(rel, sha, errors)
+
+
 def check_rank15_workflow_text(text: str) -> list[str]:
     errors: list[str] = []
     forbidden = {
@@ -109,6 +143,7 @@ def check_rank15_workflow_text(text: str) -> list[str]:
         "http://127.0.0.1:8080/health",
         "SYNTHETIC_COMPLETION.json",
         "rank15_prestart_token_guard_v2.py",
+        "canonical.runtime.harbor_science_agent_v2:HarborScienceAgent",
         "harbor run",
     ]
     for marker in required:
@@ -199,6 +234,7 @@ def admission_errors(
             if behavior_doc.get("workflow_path") != workflow_rel:
                 errors.append("BEHAVIOR_WORKFLOW_MISMATCH")
             errors.extend(check_behavior_against_invariants(behavior_doc, invariants))
+            check_runtime_bindings(behavior_doc, errors)
         except Exception as exc:
             errors.append("BEHAVIOR_READ_FAILED:" + type(exc).__name__ + ":" + str(exc))
 
