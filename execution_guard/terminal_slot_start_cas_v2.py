@@ -12,9 +12,14 @@ import argparse
 import dataclasses
 import json
 import os
+import sys
+from pathlib import Path
 from typing import Any, Protocol
 
-from execution_guard import terminal_slot_start_cas_v1 as v1
+HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+import terminal_slot_start_cas_v1 as v1
 
 SCHEMA = "PROJECT_BRAIN_TERMINAL_SLOT_START_INTENT_V2"
 NAMESPACE = v1.NAMESPACE
