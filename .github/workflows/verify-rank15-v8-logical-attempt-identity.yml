@@ -6,6 +6,7 @@ on:
     paths:
       - "execution_guard/logical_attempt_identity_v1.py"
       - "execution_guard/tests/test_logical_attempt_identity_v1.py"
+      - "execution_guard/RANK15_LOGICAL_ATTEMPT_IDENTITY_INTEGRATION_CONTRACT_V1.json"
       - ".github/workflows/verify-rank15-v8-logical-attempt-identity.yml"
 
 permissions:
