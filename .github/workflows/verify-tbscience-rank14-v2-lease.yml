@@ -1,0 +1,84 @@
+name: Verify TB-Science rank14 V2 repaired lease
+on:
+  push:
+    branches:
+      - lease/tb-science-rank14-20261009-v2
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify repaired V2 lease without task exposure
+        env:
+          C: capsules/tb_science_rank14_20261009_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V2.json")" = "7a4899ce37c97a806c081bd660aaa644e3f64ecb"
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK14_POSTREPAIR_REAUTHORIZE_20261009_V1.json")" = "ae89489197b51a0abaf5b7943861f1d6e9cd3675"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_AUTHORITY_V2_POSTREPAIR_PUBLIC_VERIFICATION_20261009_V1.json")" = "bfb02e03b34974a9efdece47699235b28af5b36f"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V2.json")" = "614eeefce5987e1574dbdfa2eb0c749251fe51af"
+          test "$(git hash-object "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V17.json")" = "b57989db7874cad9fa13306a0a1e0f9f2dcc42fe"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V10.json")" = "ae37559320105277e017ff17af7c3dbeae2f9c27"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V10_PUBLIC_VERIFICATION_20261009_V1.json")" = "d0000dd7cb3c866a42a4eb08632613ed53940fca"
+          test "$(git hash-object "$C/RANK14_EPOCH_V2.json")" = "69f79486ac419571378bef16c2037e2799b576ab"
+          test "$(git hash-object "$C/RANK14_EXECUTION_CLAIM_V2.json")" = "3ff9578c3074ac9c0a3dec8744e67398507126ec"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "16e8ab7918c4f8d052698282dddf674b54a23016"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          python - <<'PY'
+          import json, pathlib, os
+          C=pathlib.Path(os.environ["C"])
+          a=json.loads((C/"TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V2.json").read_text())
+          l=json.loads((C/"TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V17.json").read_text())
+          e=json.loads((C/"RANK14_EPOCH_V2.json").read_text())
+          c=json.loads((C/"RANK14_EXECUTION_CLAIM_V2.json").read_text())
+          assert a["execution_authority"] is True
+          assert a["task_read_authority"] is False
+          assert a["state"]["authority_consumed"] is False
+          assert a["exact_route"]["agent_blob"]=="16e8ab7918c4f8d052698282dddf674b54a23016"
+          assert a["exact_route"]["carrier_closure_blob"]=="ae37559320105277e017ff17af7c3dbeae2f9c27"
+          assert l["current_counts"]["consumed_slots"]==13
+          assert l["rank14_history"]["task_started"] is False
+          assert l["rank14_history"]["execution_authority_consumed"] is False
+          assert l["rank14"]["public_execution_lease_published"] is False
+          assert e["run_attempts_authorized_by_epoch"]==0 and e["task_started"] is False
+          assert c["attempts_authorized"]==1 and c["retries_authorized"]==0
+          assert c["precheck_failure_consumes_slot"] is False
+          assert c["consumed"] is False and c["task_started"] is False
+          PY
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py" --repo-root "$C" --carrier-root "$C" \
+            --root canonical/runtime/harbor_science_agent_v1.py \
+            --root canonical/runtime/harbor_science_planner_v1.py \
+            --root canonical/runtime/lossless_raw_task_contract_v1.py \
+            --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py > V2_LEASE_CLOSURE.json
+          python - <<'PY'
+          import json
+          x=json.load(open("V2_LEASE_CLOSURE.json"))
+          assert x["pass"] is True
+          assert not x.get("missing_paths")
+          assert not x.get("mismatched")
+          assert x["closure"]["closure_file_count"]==15
+          assert x["closure"]["unresolved_dynamic_imports"]==[]
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK14_V2_LEASE_PUBLIC_VERIFY_V1",
+            "status":"PASS__V2_REPAIRED_LEASE_EXACT__ZERO_TASK_EXPOSURE",
+            "pass":True,
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0
+          }
+          open("V2_LEASE_VERIFY.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank14-v2-lease-verify
+          path: |
+            V2_LEASE_VERIFY.json
+            V2_LEASE_CLOSURE.json
+          retention-days: 2
