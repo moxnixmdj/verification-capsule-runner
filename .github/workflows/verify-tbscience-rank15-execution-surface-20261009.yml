@@ -2,7 +2,7 @@ name: Verify TB-Science rank15 execution surface
 on:
   push:
     branches:
-      - stage/tb-science-rank15-execution-surface-20261009-v1
+      - tbscience-r15-portable-carrier-v1
 permissions:
   contents: read
 jobs:
@@ -21,7 +21,7 @@ jobs:
           test ! -e "$C/ACTIVATE_RANK15_PR.json"
           test "$(git hash-object "$C/rank15_execution_preflight_v1.py")" = "941445c191880794df739d8e9205497b6e2efd2d"
           test "$(git hash-object "$C/rank15_finalize_receipt_v1.py")" = "9edfdb036f2b2b6282cc492f17f4c192ad442d10"
-          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "26d0d7c9735e54ce028f6c53711ec87db566978f"
+          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "4c9bc5a50ee998e5f0aa65fa54a5f5d53ab28d2d"
           python -m py_compile "$C/rank15_execution_preflight_v1.py" "$C/rank15_finalize_receipt_v1.py"
           python "$C/rank15_execution_preflight_v1.py"
           CACHE_READY=false HARBOR_OUTCOME=skipped SAFE_ID=protein-active-learning-trial-0 python "$C/rank15_finalize_receipt_v1.py"
@@ -41,3 +41,14 @@ jobs:
           grep -F 'ACTIVATE_RANK15_PR.json' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
           ! grep -F 'workflow_dispatch' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
           ! grep -F 'schedule:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
+          ! grep -F 'Restore exact llama.cpp cache' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
+          grep -F 'Clean-build exact llama.cpp on live runner' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          llama.cpp/build/bin/llama-server --version >/dev/null
