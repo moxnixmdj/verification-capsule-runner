@@ -1,0 +1,106 @@
+name: Verify one-shot reality closure V2 semantic handoff
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/one_shot_reality_closure_v2_semantic_handoff_20261009_v1/RUN_V1.json"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact semantic handoff blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=capsules/one_shot_reality_closure_v2_semantic_handoff_20261009_v1
+          test "$(git hash-object "$C/canonical/runtime/one_shot_reality_closure_v2.py")" = "eaf72cac913df786a54b18fb4fe4ff8c3d77a5a0"
+          test "$(git hash-object "$C/canonical/tests/test_one_shot_reality_closure_v2.py")" = "5c82da3e95ac7eae71697d6ad99e30b52ca41443"
+
+      - name: Build replay tree from previously verified V1 capsule
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v2sem
+          cp -a capsules/one_shot_reality_closure_v2 /tmp/v2sem
+          cp capsules/one_shot_reality_closure_v2_semantic_handoff_20261009_v1/canonical/runtime/one_shot_reality_closure_v2.py /tmp/v2sem/canonical/runtime/one_shot_reality_closure_v2.py
+          cp capsules/one_shot_reality_closure_v2_semantic_handoff_20261009_v1/canonical/tests/test_one_shot_reality_closure_v2.py /tmp/v2sem/canonical/tests/test_one_shot_reality_closure_v2.py
+          test "$(git hash-object /tmp/v2sem/canonical/runtime/one_shot_verified_closure_v1.py)" = "2540e940bf9bc8ce3212e9910161bed814101f33"
+
+      - name: Compile exact changed and load-bearing bytes
+        run: |
+          python -m py_compile \
+            /tmp/v2sem/canonical/runtime/one_shot_reality_closure_v2.py \
+            /tmp/v2sem/canonical/runtime/one_shot_verified_closure_v1.py \
+            /tmp/v2sem/canonical/tests/test_one_shot_reality_closure_v2.py \
+            /tmp/v2sem/canonical/tests/test_one_shot_reality_closure_v2_integration.py
+
+      - name: Run semantic handoff contract suite
+        env:
+          PYTHONPATH: /tmp/v2sem
+        run: python -m unittest canonical.tests.test_one_shot_reality_closure_v2 -v
+
+      - name: Run exact V2 through real V1 cleanroom
+        env:
+          PYTHONPATH: /tmp/v2sem
+        run: python -m unittest canonical.tests.test_one_shot_reality_closure_v2_integration -v
+
+      - name: Fresh semantic preservation canary
+        env:
+          PYTHONPATH: /tmp/v2sem
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+          from canonical.runtime import one_shot_reality_closure_v2 as v2
+
+          with TemporaryDirectory() as td:
+              state=Path(td)/"state.json"
+              state.write_text(json.dumps({
+                  "improvement_queue":{
+                      "repair-1":{
+                          "kind":"REPAIR_FAILURE_CLASS",
+                          "status":"PARKED",
+                          "observations":7,
+                          "last_attempt_status":"REPAIR_CYCLE_UNRESOLVED_AT_SYNTHESIS",
+                          "verification_frontier_sha256":"1"*64,
+                          "adapter_frontier_sha256":"2"*64,
+                          "verification_authority_sha256":"3"*64,
+                          "payload":{
+                              "required_result":"VERIFIED_REPAIR",
+                              "repair_class":"ACQUIRE_COMPOSE_OR_INVENT_VERIFIABLE_CAPABILITY",
+                              "failure_fingerprint":"fresh-canary-failure",
+                              "failure_status":"FAIL",
+                              "falsified_capability_ids":["cap.old"],
+                              "counterexamples":[{"input":"alpha","expected":"beta"}],
+                              "retry_capsule_sha256":"4"*64,
+                              "proof_capsule_sha256":"5"*64
+                          }
+                      }
+                  }
+              }),encoding="utf-8")
+              rows=v2._pending_semantic_work(state_path=state)
+              assert len(rows)==1
+              contract=v2._constructive_capability_contracts(rows)[0]
+              basis=contract["basis"]
+              assert basis["failure_fingerprint"]=="fresh-canary-failure"
+              assert basis["counterexamples"]==[{"input":"alpha","expected":"beta"}]
+              assert basis["retry_capsule_sha256"]=="4"*64
+              assert basis["proof_capsule_sha256"]=="5"*64
+              assert basis["verification_authority_sha256"]=="3"*64
+              assert contract["verification_authority_mutation_allowed"] is False
+              assert contract["self_verification_allowed"] is False
+              assert contract["promotion_authority"] is False
+          print("FRESH_SEMANTIC_HANDOFF_CANARY_PASS")
+          PY
