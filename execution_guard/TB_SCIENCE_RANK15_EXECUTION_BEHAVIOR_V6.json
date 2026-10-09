@@ -39,7 +39,14 @@
     "uncertain_effect_replay_forbidden": true,
     "parent_owns_durable_writer_credentials": true,
     "child_owns_no_github_credentials": true,
-    "aggregate_acceptance_credit_from_single_slot_forbidden": true
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true,
+    "zero_terminal_completion_required": true,
+    "seeded_request_identity": true,
+    "seed_identity_excludes_carrier_identity": true,
+    "pre_task_read_cas_absence_check_required": true,
+    "start_cas_occurs_after_prestart_guard": true,
+    "durable_start_record_binds_logical_attempt_id": true,
+    "start_cas_postwrite_readback_required": true
   },
   "runtime_bindings": {
     "planner": {
@@ -111,8 +118,8 @@
       "git_blob_sha": "42526da63dba9dd4e1417e9045542369179c49f2"
     },
     "admission_guard": {
-      "path": "execution_guard/terminal_execution_admission_v2.py",
-      "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+      "path": "execution_guard/terminal_execution_admission_v3.py",
+      "git_blob_sha": "e4c501cea12173bd89958e4e98217f1265af6604"
     }
   },
   "task_read": false,
