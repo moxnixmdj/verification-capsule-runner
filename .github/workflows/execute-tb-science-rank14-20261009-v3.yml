@@ -1,0 +1,306 @@
+name: Execute TB-Science rank14 v3 prompt-summary one-shot isolated
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank14_20261009_v1/ACTIVATE_RANK14_V3_PR.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank14-v3-summary-one-shot
+  cancel-in-progress: false
+
+jobs:
+  terminal-slot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    env:
+      C: capsules/tb_science_rank14_20261009_v1
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pre-exposure exact V3 authority, fresh lease, summary repair, and V11 closure
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          test "$GITHUB_BASE_REF" = "terminal-execution-v1"
+          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank14-v3-summary-20261009"
+
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V3.json")" = "0fc01e230e0d11b8aa5156ba88ffb459471b7b3c"
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK14_POST_PROMPT_SUMMARY_REAUTHORIZE_20261009_V1.json")" = "70dc5962595a464e4df0b1cfb8f6c49fc160470d"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_AUTHORITY_V3_CANDIDATE_PUBLIC_VERIFICATION_20261009_V1.json")" = "de04f72f3d6b985a766a0caccdb29ecaa2c972f4"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V3.json")" = "c740f16395328edad175c234bb7b52b011a2b89f"
+          test "$(git hash-object "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V18.json")" = "566a3756392ee2d4cc41947b66617acbc6f6ce92"
+          test "$(git hash-object "$C/TB_SCIENCE_TERMINAL_EXECUTION_MANIFEST_V1.json")" = "6dfa880b1f68881531afbba6ca211681801fd19b"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V11.json")" = "1172b57ac436d64027d06fb4897878ae274febb1"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V11_PUBLIC_VERIFICATION_20261009_V1.json")" = "d1b3bc55c2ead9137a2368337eb58d96e9b44a17"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_PLANNER_MANIFEST_SUMMARY_PUBLIC_VERIFICATION_20261009_V1.json")" = "721c78aabac58565afa37d734705d652073d99ae"
+          test "$(git hash-object "$C/TB_SCIENCE_CONTEXT16K_SCOPED_TIMEOUT_REPAIR_FINAL_VERIFICATION_20261009_V2.json")" = "8b8cdc3fc112bd0a253af795fb79c0f641b8b3b4"
+          test "$(git hash-object "$C/FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json")" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
+          test "$(git hash-object "$C/RANK14_EPOCH_V3.json")" = "883017c0ba02509f7ebcafce3bdb86c6402c83f8"
+          test "$(git hash-object "$C/RANK14_EXECUTION_CLAIM_V3.json")" = "133e0ac94f44142342366577da16b1fd724ceb7d"
+          test "$(git hash-object "$C/rank14_prestart_token_guard_v2.py")" = "be94a01cecaab2377491a27704e188b9ac8f37c0"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "d397324f411d002bdbdca348aaad708b5b40c9c2"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+
+          python - <<'PY'
+          import json,pathlib,subprocess,os
+          C=pathlib.Path(os.environ["C"])
+          a=json.loads((C/"TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V3.json").read_text())
+          claim=json.loads((C/"RANK14_EXECUTION_CLAIM_V3.json").read_text())
+          e=json.loads((C/"RANK14_EPOCH_V3.json").read_text())
+          l=json.loads((C/"TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V18.json").read_text())
+          cm=json.loads((C/"TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V11.json").read_text())
+          slot="terminal-bench-science/inverse-lithography::trial-0"
+          digest="sha256:8c4da4b5b3a00283335e83dda92584aaf9293ff773bc43f2bf95eb0e2c0f8530"
+          assert a["execution_authority"] is True
+          assert a["slot"]=={"id":slot,"schedule_rank":14,"digest":digest}
+          assert a["state"]["task_started"] is False and a["state"]["authority_consumed"] is False
+          assert a["controls"]["attempts_authorized"]==1 and a["controls"]["retries_authorized"]==0
+          assert a["controls"]["precheck_failure_consumes_slot"] is False
+          assert l["current_counts"]["consumed_slots"]==13
+          assert l["rank14"]["task_started"] is False and l["rank14"]["execution_authority_consumed"] is False
+          assert e["authority_blob"]=="0fc01e230e0d11b8aa5156ba88ffb459471b7b3c"
+          assert e["run_attempts_authorized_by_epoch"]==0 and e["task_started"] is False
+          assert claim["execution_branch"]=="execute/tb-science-rank14-v3-summary-20261009"
+          assert claim["authority_git_blob_sha"]=="0fc01e230e0d11b8aa5156ba88ffb459471b7b3c"
+          assert claim["epoch_git_blob_sha"]=="883017c0ba02509f7ebcafce3bdb86c6402c83f8"
+          assert claim["consumed"] is False and claim["task_started"] is False
+          assert cm["closure_file_count"]==15 and len(cm["closure"])==15
+          for row in cm["closure"]:
+              p=C/row["path"]; assert p.is_file(),row["path"]
+              actual=subprocess.check_output(["git","hash-object",str(p)],text=True).strip()
+              assert actual==row["git_blob_sha"],(row["path"],actual,row["git_blob_sha"])
+          PY
+
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py" --repo-root "$C" --carrier-root "$C" \
+            --root canonical/runtime/harbor_science_agent_v1.py \
+            --root canonical/runtime/harbor_science_planner_v1.py \
+            --root canonical/runtime/lossless_raw_task_contract_v1.py \
+            --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py > RANK14_V3_CARRIER_CLOSURE.json
+
+          test "$(nproc)" -ge 4
+          awk '/MemTotal/{exit !($2 >= 12000000)}' /proc/meminfo
+          docker version >/dev/null
+          docker info >/dev/null
+
+      - name: Install exact Harbor
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Reassemble exact model if cache misses
+        run: |
+          set -euo pipefail
+          mkdir -p models model-parts
+          if [ ! -f "models/$MODEL_FILE" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model-parts --pattern "$MODEL_FILE.part*of03"
+            cat "model-parts/$MODEL_FILE.part01of03" "model-parts/$MODEL_FILE.part02of03" "model-parts/$MODEL_FILE.part03of03" > "models/$MODEL_FILE"
+          fi
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+      - name: Start exact local cognition endpoint with 16K context
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m "models/$MODEL_FILE" --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui             "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          grep -Eq "n_ctx_slot = 16384|n_ctx_slot = 16[0-9]{3}" LOCAL_QWEN_SERVER.log
+
+      - name: Post-model storage and immediate live V3 epoch/lease/runtime gate
+        run: |
+          set -euo pipefail
+          free_bytes="$(df -B1 "$GITHUB_WORKSPACE" | awk 'NR==2{print $4}')"
+          test "$free_bytes" -ge 12884901888
+
+          epoch_sha="$(curl -fsSL -H 'Accept: application/vnd.github+json'             "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$C/RANK14_EPOCH_V3.json?ref=terminal-execution-v1"             | python -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+          test "$epoch_sha" = "883017c0ba02509f7ebcafce3bdb86c6402c83f8"
+          claim_sha="$(curl -fsSL -H 'Accept: application/vnd.github+json'             "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/$C/RANK14_EXECUTION_CLAIM_V3.json?ref=terminal-execution-v1"             | python -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+          test "$claim_sha" = "133e0ac94f44142342366577da16b1fd724ceb7d"
+
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V3.json")" = "0fc01e230e0d11b8aa5156ba88ffb459471b7b3c"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "d397324f411d002bdbdca348aaad708b5b40c9c2"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+
+      - name: Read exact rank14 task and enforce prestart token budget
+        id: prestart
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$C"
+          python "$C/rank14_prestart_token_guard_v2.py"
+          cat RANK14_PRESTART_GUARD.json
+          python - <<'PY'
+          import json
+          x=json.load(open("RANK14_PRESTART_GUARD.json"))
+          assert x.get("task_started") is False
+          if x.get("task_read"):
+              assert x.get("instruction_sha256")=="0a5b758ec1933d8fb2cb2d736dcb6a365c239a16aa2c1158fd0f0487231eade1"
+          PY
+
+      - name: Execute exactly frozen rank14 slot
+        id: execute
+        if: steps.prestart.outputs.guard_pass == 'true'
+        continue-on-error: true
+        env:
+          TASK_PATH: ${{ steps.prestart.outputs.task_path }}
+          SAFE_ID: inverse-lithography-trial-0
+        run: |
+          set -uo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C"
+          mkdir -p "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
+          harbor run             -p "$TASK_PATH"             -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent             -k 1 -n 1 -r 0             --agent-timeout-multiplier 0.48             --environment-build-timeout-multiplier 1.0             --verifier-timeout-multiplier 1.0             --job-name "$SAFE_ID"             --jobs-dir "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
+          echo "harbor_exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize irreversible conservative rank14 V3 receipt
+        if: always()
+        env:
+          SLOT_ID: terminal-bench-science/inverse-lithography::trial-0
+          TASK_NAME: terminal-bench-science/inverse-lithography
+          SAFE_ID: inverse-lithography-trial-0
+          HARBOR_OUTCOME: ${{ steps.execute.outcome }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          base=root/"jobs"/os.environ["SAFE_ID"]
+          guard_path=root/"RANK14_PRESTART_GUARD.json"
+          try: guard=json.loads(guard_path.read_text())
+          except Exception: guard={}
+          results=[]
+          for p in base.rglob("result.json") if base.exists() else []:
+              try: obj=json.loads(p.read_text())
+              except Exception: continue
+              results.append((p,obj))
+          scored=[]; exception_info=[]
+          for p,obj in results:
+              vr=obj.get("verifier_result")
+              if isinstance(vr,dict) and isinstance(vr.get("rewards"),dict):
+                  scored.append((p,obj))
+              ex=obj.get("exception_info")
+              if isinstance(ex,dict):
+                  exception_info.append({
+                      "path":str(p.relative_to(root)),
+                      "exception_type":ex.get("exception_type"),
+                      "exception_message":ex.get("exception_message"),
+                  })
+          reward=None; errors=[]
+          if len(scored)==1:
+              raw=scored[0][1]["verifier_result"]["rewards"].get("reward")
+              if isinstance(raw,(int,float)) and not isinstance(raw,bool):
+                  reward=float(raw)
+              else: errors.append("REWARD_MISSING_OR_NONNUMERIC")
+          elif not scored: errors.append("NO_TRIAL_RESULT_WITH_VERIFIER_REWARD")
+          else: errors.append("MULTIPLE_TRIAL_RESULTS_WITH_VERIFIER_REWARD")
+          harbor_outcome=os.environ.get("HARBOR_OUTCOME")
+          task_started=harbor_outcome in {"success","failure"}
+          success=(task_started and reward is not None and reward>=1.0 and not errors)
+          if not task_started: errors=["TASK_NOT_STARTED__PREEXPOSURE_ABORT"]
+          hashes={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p,_ in results}
+          receipt={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_RANK14_V3",
+            "slot_id":os.environ["SLOT_ID"],
+            "task_name":os.environ["TASK_NAME"],
+            "task_digest":"sha256:8c4da4b5b3a00283335e83dda92584aaf9293ff773bc43f2bf95eb0e2c0f8530",
+            "status":("PREEXPOSURE_ABORT_NONCONSUMING" if not task_started else ("SUCCESS" if success else "FINAL_ZERO")),
+            "reward":(None if not task_started else (reward if reward is not None else 0.0)),
+            "historical_task_read_before_v3":True,
+            "task_read_under_v3":bool(guard.get("task_read")),
+            "task_started":task_started,
+            "prestart_guard_status":guard.get("status"),
+            "prestart_guard_pass":guard.get("pass"),
+            "prestart_input_tokens":guard.get("input_tokens"),
+            "prestart_context_headroom_tokens":guard.get("context_headroom_tokens"),
+            "prestart_instruction_sha256":guard.get("instruction_sha256"),
+            "prestart_first_cycle_prompt_sha256":guard.get("first_cycle_prompt_sha256"),
+            "raw_task_obligation_count":guard.get("raw_task_obligation_count"),
+            "errors":errors,
+            "exception_info":exception_info,
+            "harbor_step_outcome":harbor_outcome,
+            "authority_blob":"0fc01e230e0d11b8aa5156ba88ffb459471b7b3c",
+            "intent_blob":"70dc5962595a464e4df0b1cfb8f6c49fc160470d",
+            "authority_verification_blob":"de04f72f3d6b985a766a0caccdb29ecaa2c972f4",
+            "ledger_v18_blob":"566a3756392ee2d4cc41947b66617acbc6f6ce92",
+            "epoch_blob":"883017c0ba02509f7ebcafce3bdb86c6402c83f8",
+            "execution_claim_blob":"133e0ac94f44142342366577da16b1fd724ceb7d",
+            "closure_manifest_blob":"1172b57ac436d64027d06fb4897878ae274febb1",
+            "closure_verification_blob":"d1b3bc55c2ead9137a2368337eb58d96e9b44a17",
+            "planner_manifest_summary_verification_blob":"721c78aabac58565afa37d734705d652073d99ae",
+            "context_repair_verification_blob":"8b8cdc3fc112bd0a253af795fb79c0f641b8b3b4",
+            "prestart_guard_blob":"be94a01cecaab2377491a27704e188b9ac8f37c0",
+            "agent_blob":"d397324f411d002bdbdca348aaad708b5b40c9c2",
+            "planner_blob":"58964dc8d6b5eed5c202081cd800035c791eeb1d",
+            "command_policy_blob":"a525773417291c7a4841bf35e1baff5370350d0d",
+            "qwen_model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+            "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+            "server_context_tokens":16384,
+            "reserved_completion_tokens":4096,
+            "strict_timeout_semantics":"SUCCESS_IS_EXACT_POSITIVE_EVIDENCE__ANY_FINAL_NON_SUCCESS_AFTER_TASK_START_COUNTS_ZERO",
+            "github_run_id":os.environ["GITHUB_RUN_ID"],
+            "github_run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+            "github_sha":os.environ["GITHUB_SHA"],
+            "result_hashes":hashes,
+            "execution_authority_consumed":task_started,
+            "rerun_credit":False,
+            "incremental_spend_usd":0,
+            "promotion_authority":False,
+          }
+          pathlib.Path("inverse-lithography-trial-0__SLOT_RECEIPT_V3.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-inverse-lithography-trial-0-rank14-v3
+          path: |
+            inverse-lithography-trial-0__SLOT_RECEIPT_V3.json
+            RANK14_PRESTART_GUARD.json
+            RANK14_V3_CARRIER_CLOSURE.json
+            jobs/inverse-lithography-trial-0/
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 7
