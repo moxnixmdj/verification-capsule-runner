@@ -14,7 +14,10 @@ from typing import Any
 
 from canonical.runtime import harbor_science_planner_v3 as science_planner
 from canonical.runtime.harbor_command_policy import validate_environment_command
-from canonical.runtime.harbor_environment_transport_v2 import (\n    HarborEnvironmentTransport,\n    HarborTransportUncertainError,\n)
+from canonical.runtime.harbor_environment_transport_v2 import (
+    HarborEnvironmentTransport,
+    HarborTransportUncertainError,
+)
 from canonical.runtime.lossless_raw_task_contract_v1 import compile_contract as compile_raw_task_contract
 from canonical.runtime.raw_task_acceptance_residual_localizer_v1 import localize as localize_raw_task_acceptance
 
