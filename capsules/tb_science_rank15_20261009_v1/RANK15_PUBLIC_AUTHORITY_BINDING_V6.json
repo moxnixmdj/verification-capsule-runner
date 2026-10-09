@@ -1,30 +1,30 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_PUBLIC_AUTHORITY_BINDING_V6",
   "date": "2026-10-09",
-  "status": "STAGED_PUBLIC_BINDING__BRAIN_AUTHORITY_V9__V6_ROBUST_RUNTIME__ZERO_EXPOSURE__NOT_ACTIVE",
+  "status": "ACTIVE_PUBLIC_BINDING__BRAIN_V12_V28__V6_QUOTE_SAFE_PROOF_CARRYING_ROBUST_RUNTIME__ZERO_TASK_EXPOSURE",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "brain_authority": {
     "repository": "moxnixmdj/brain",
-    "path": "canonical/governance/TB_SCIENCE_RANK15_RUNTIME_DERIVED_ADMISSION_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V9.json",
-    "git_blob_sha": "c98bc25882279a12aece65fb1bbd827b90148b82"
+    "path": "canonical/governance/TB_SCIENCE_RANK15_V6_QUOTE_SAFE_PROOF_CARRYING_ADMISSION_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V12.json",
+    "git_blob_sha": "04e2c15b143dd0e4f80bb96c82b7573b780dd56f"
   },
   "brain_ledger": {
     "repository": "moxnixmdj/brain",
-    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V25.json",
-    "git_blob_sha": "e41984176986421042a93527b21be4d6a4f10b63"
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V28.json",
+    "git_blob_sha": "d5bcd21a6a8ab977f72a1a0e10b364ead61ceb3e"
   },
   "workflow": {
     "path": ".github/workflows/execute-tb-science-rank15-20261009-v6.yml",
-    "git_blob_sha": "225ad2cadd536bdae94bbb5c3b7e79216438feb9"
+    "git_blob_sha": "7fb38b0e110455a2115034254ec4e77a13a66afa"
   },
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json",
-    "git_blob_sha": "c7af2a492c94d8648434bd8044256d7a1da65ac7"
+    "git_blob_sha": "c715fdf39e94eb5f7dbab8e099dfbc62fcab61bc"
   },
   "admission_guard": {
-    "path": "execution_guard/terminal_execution_admission_v2.py",
-    "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+    "path": "execution_guard/terminal_execution_admission_v3.py",
+    "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
   },
   "execution_branch": "execute/tb-science-rank15-20261009-v6",
   "activation_filename": "ACTIVATE_RANK15_V6_PR.json",
@@ -34,8 +34,8 @@
   "task_read": false,
   "task_started": false,
   "benchmark_trials_consumed": 0,
-  "execution_authority": false,
-  "task_read_authority": false,
+  "execution_authority": true,
+  "task_read_authority": true,
   "acceptance_credit_delta": 0,
   "terminal_credit_delta": 0,
   "incremental_spend_usd": 0

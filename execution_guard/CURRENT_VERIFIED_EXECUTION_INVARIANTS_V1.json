@@ -41,9 +41,31 @@
         "independent_verification_git_blob_sha": "30b854d096e597a332cf183394a8b67c84a30e53"
       },
       "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
+    },
+    {
+      "id": "TB_SCIENCE_DURABLE_CAUSAL_EXECUTION_V1",
+      "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+      "requires": {
+        "slot_bound_logical_attempt_identity": true,
+        "goal_text_excluded_from_logical_attempt_identity": true,
+        "carrier_identity_excluded_from_logical_attempt_identity": true,
+        "child_github_credentials_stripped": true,
+        "parent_owns_durable_writer_credentials": true,
+        "agent_ready_precedes_start_cas": true,
+        "no_agent_action_before_start_commit": true,
+        "durable_action_intent_ack_before_effect": true,
+        "durable_state_commit_ack_before_next_action": true,
+        "uncertain_effect_replay_forbidden": true
+      },
+      "proof": {
+        "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca",
+        "remote_composition_run_id": 37930243941,
+        "remote_reseal_run_id": 37930835150
+      },
+      "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
     }
   ],
   "schema": "PROJECT_BRAIN_CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1",
-  "status": "ACTIVE_FAIL_CLOSED__CPU_PORTABILITY_AND_PLANNER_ENVELOPE_RATCHETED",
+  "status": "ACTIVE_FAIL_CLOSED__CPU_PORTABILITY_PLANNER_ENVELOPE_AND_DURABLE_CAUSAL_EXECUTION_RATCHETED",
   "terminal_credit_delta": 0
 }
