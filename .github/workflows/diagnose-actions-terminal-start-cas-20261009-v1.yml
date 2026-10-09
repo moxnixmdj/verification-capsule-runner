@@ -137,6 +137,74 @@ jobs:
           print("START_STATUS_CONTEXT="+context)
           PY
 
+      - name: Prove chunked commit-status object store
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python - <<'PY'
+          import base64, hashlib, json, os
+          from terminal_slot_start_cas_v1 import request_factory
+          repo=os.environ["GITHUB_REPOSITORY"]
+          sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          value={
+              "schema":"PROJECT_BRAIN_SYNTHETIC_STATUS_OBJECT_V1",
+              "logical_attempt_id":"a"*64,
+              "sequence":7,
+              "kind":"ACTION_VERIFY_STATE_COMMIT",
+              "payload":{
+                  "action_id":"A1",
+                  "command_sha256":"b"*64,
+                  "stdout_sha256":"c"*64,
+                  "stderr_sha256":"d"*64,
+                  "resolved_requirement_ids":["R1","R2"],
+              },
+          }
+          raw=json.dumps(value,sort_keys=True,separators=(",",":")).encode()
+          object_sha=hashlib.sha256(raw).hexdigest()
+          encoded=base64.urlsafe_b64encode(raw).decode()
+          chunks=[encoded[i:i+100] for i in range(0,len(encoded),100)]
+          prefix="project-brain/diagnostic-object/"+run_id
+          req=request_factory(os.environ["GH_TOKEN"])
+          for i,chunk in enumerate(chunks):
+              st, body, _=req("POST", f"/repos/{repo}/statuses/{sha}", {
+                  "state":"success",
+                  "context":prefix+"/chunk-"+str(i),
+                  "description":"C:"+chunk,
+              })
+              assert st == 201, (st, body)
+          manifest="M:"+object_sha+":"+str(len(chunks))+":"+str(len(raw))
+          st, body, _=req("POST", f"/repos/{repo}/statuses/{sha}", {
+              "state":"success",
+              "context":prefix+"/manifest",
+              "description":manifest,
+          })
+          assert st == 201, (st, body)
+          st, rows, _=req("GET", f"/repos/{repo}/commits/{sha}/statuses?per_page=100")
+          assert st == 200 and isinstance(rows,list)
+          by_context={}
+          for row in rows:
+              if isinstance(row,dict) and isinstance(row.get("context"),str) and row["context"].startswith(prefix+"/"):
+                  by_context.setdefault(row["context"],[]).append(row)
+          manifests=by_context.get(prefix+"/manifest",[])
+          assert len(manifests)==1 and manifests[0].get("description")==manifest
+          recovered=[]
+          for i in range(len(chunks)):
+              rows_i=by_context.get(prefix+"/chunk-"+str(i),[])
+              assert len(rows_i)==1
+              desc=rows_i[0].get("description")
+              assert isinstance(desc,str) and desc.startswith("C:")
+              recovered.append(desc[2:])
+          decoded=base64.urlsafe_b64decode("".join(recovered).encode())
+          assert decoded==raw
+          assert hashlib.sha256(decoded).hexdigest()==object_sha
+          print("STATUS_OBJECT_SHA256="+object_sha)
+          print("STATUS_OBJECT_CHUNKS="+str(len(chunks)))
+          print("STATUS_OBJECT_BYTES="+str(len(raw)))
+          PY
+
       - name: Assert no benchmark exposure
         if: always()
         run: |
