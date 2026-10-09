@@ -102,3 +102,17 @@ def test_agent_v10_preserves_full_receipt_bytes_before_prompt_compaction():
     assert '"stderr": str(verify_receipt.stderr or "")' in source
     assert "str(verify_receipt.stdout or \"\")" in source
     assert "str(verify_receipt.stderr or \"\")" in source
+
+
+def test_agent_v10_rejects_identical_known_failed_effect_across_cycles():
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "runtime"
+        / "harbor_science_agent_v10.py"
+    ).read_text(encoding="utf-8")
+    assert "last_failed_effect: dict[str, Any] | None = None" in source
+    assert '"kind": "BRAIN_REJECTED_KNOWN_FAILED_EFFECT_REPEAT"' in source
+    assert "IDENTICAL_COMMAND_ALREADY_FAILED_WITHOUT_INTERVENING_SUCCESSFUL_EFFECT" in source
+    assert '"effect_executed": False' in source
+    assert 'last_failed_effect = {' in source
+    assert "last_failed_effect = None" in source
