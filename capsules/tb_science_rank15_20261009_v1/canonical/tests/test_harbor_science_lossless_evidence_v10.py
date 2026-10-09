@@ -104,15 +104,30 @@ def test_agent_v10_preserves_full_receipt_bytes_before_prompt_compaction():
     assert "str(verify_receipt.stderr or \"\")" in source
 
 
-def test_agent_v10_rejects_identical_known_failed_effect_across_cycles():
+def test_agent_v10_rejects_identical_known_nonpromoted_effect_across_cycles():
     source = (
         Path(__file__).resolve().parents[1]
         / "runtime"
         / "harbor_science_agent_v10.py"
     ).read_text(encoding="utf-8")
-    assert "last_failed_effect: dict[str, Any] | None = None" in source
-    assert '"kind": "BRAIN_REJECTED_KNOWN_FAILED_EFFECT_REPEAT"' in source
-    assert "IDENTICAL_COMMAND_ALREADY_FAILED_WITHOUT_INTERVENING_SUCCESSFUL_EFFECT" in source
+    assert "last_nonpromoted_effect: dict[str, Any] | None = None" in source
+    assert '"kind": "BRAIN_REJECTED_KNOWN_NONPROMOTED_EFFECT_REPEAT"' in source
+    assert "IDENTICAL_COMMAND_ALREADY_EXECUTED_WITHOUT_PROMOTION_AND_WITHOUT_INTERVENING_VERIFIED_EFFECT" in source
     assert '"effect_executed": False' in source
-    assert 'last_failed_effect = {' in source
-    assert "last_failed_effect = None" in source
+    assert 'last_nonpromoted_effect = {' in source
+    assert "last_nonpromoted_effect = None" in source
+
+
+def test_agent_v10_clears_repeat_suppression_only_after_verified_promotion():
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "runtime"
+        / "harbor_science_agent_v10.py"
+    ).read_text(encoding="utf-8")
+    promotion_block = """if verified:
+                # Only independently verified promotion proves an intervening state
+                # transition strong enough to clear the replay-suppression ledger.
+                last_nonpromoted_effect = None"""
+    assert promotion_block in source
+    assert "if action_transport_clean:\n                last_nonpromoted_effect = None" not in source
+    assert '"verification_performed": verify_observed is not None' in source
