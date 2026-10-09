@@ -2,7 +2,7 @@
   "schema": "PROJECT_BRAIN_ACTION_INTENT_TB_SCIENCE_LONG_CONTEXT_TIMEOUT_ENVELOPE_REPAIR_20261009_V1",
   "date": "2026-10-09",
   "action_id": "TB_SCIENCE_LONG_CONTEXT_TIMEOUT_ENVELOPE_REPAIR",
-  "status": "VERIFIED_INTENT__SCOPED_LONG_CONTEXT_REPAIR_PROVED__READY_FOR_PROMOTION__NO_RANK14_AUTHORITY",
+  "status": "VERIFIED_INTENT__SCOPED_LONG_CONTEXT_REPAIR_PROVED__FROZEN_FOR_PROMOTION__NO_RANK14_AUTHORITY",
   "canonical_base_commit": "6fb62a229014bab394c0742e1b3c6a9ccadfb2c1",
   "mission_objective": "BUILD_THE_MOST_CAPABLE_GENERAL_RELIABLE_AND_RESOURCE_EFFICIENT_PROBLEM_SOLVING_SYSTEM_POSSIBLE",
   "checkpoint_obligation": "TB_SCIENCE_GE_58_7",
@@ -33,8 +33,7 @@
     "prior_global_profile_live_pass_run_id": 37874908316,
     "final_exact_byte_public_zero_exposure_run_id": 37876839032,
     "status": "PASS__EXACT_FINAL_ZERO_EXPOSURE_LIVE_GATE_AND_FOCUSED_REGRESSION",
-    "final_exact_byte_public_zero_exposure_artifact_id": 11592294318,
-    "final_verification_blob": "bcc0bf23a707b4019481d1d1b1116fe0d3a95a95"
+    "final_exact_byte_public_zero_exposure_artifact_id": 11592294318
   },
   "stop_condition": "PUBLIC_ZERO_EXPOSURE_RUN_PASSES_GT9202_INPUT_WITH_16K_CONTEXT_AND_EXACT_CANDIDATE_BYTES",
   "safety": {

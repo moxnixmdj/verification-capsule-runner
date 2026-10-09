@@ -21,7 +21,7 @@ jobs:
       - name: Bind exact admission bytes
         run: |
           set -euo pipefail
-          test "$(git hash-object "$C/ACTION_INTENT.json")" = "c2799a6286e5ffcff031ba0fe50f93cd5f588faf"
+          test "$(git hash-object "$C/ACTION_INTENT.json")" = "7a10b6fa23327b6ef249db0e7f019a06316f07bf"
           test "$(git hash-object "$C/load_bearing_primary_admission.py")" = "21fa45aa775ca5d51e5f2d3fec7ab9d3da01eabf"
           test "$(git hash-object "$C/QUOTIENT.json")" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
       - name: Replay trusted admission predicate
