@@ -184,7 +184,7 @@ assert len(passes)==11,passes
 print("PASS__EXACT_BRAIN_SEC_ISSUER_EXTENSION_SEMANTICS__11_OF_11")
 print(json.dumps({
     "tests":passes,
-    "concept_qname":"{"+NS+"}"+LOCAL,
+    "concept_qname":"{"+live_ns+"}"+LOCAL,
     "public_live_source":"SEC_APPLE_2024_10K_EXTENSION_TAXONOMY",
     "semantic_truth_authority":False,
     "terminal_credit_delta":0,
