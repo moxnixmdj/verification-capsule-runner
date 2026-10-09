@@ -1,0 +1,145 @@
+name: Verify TB-Science rank14 post-repair authority V2
+
+on:
+  push:
+    branches: ["verify-tbscience-rank14-authority-v2-postrepair-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-rank14-authority-v2-postrepair-20261009.yml"
+      - "capsules/tb_science_rank14_20261009_v1/ACTION_INTENT_TB_SCIENCE_RANK14_POSTREPAIR_REAUTHORIZE_20261009_V1.json"
+      - "capsules/tb_science_rank14_20261009_v1/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V2.json"
+      - "capsules/tb_science_rank14_20261009_v1/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V10_PUBLIC_VERIFICATION_20261009_V1.json"
+      - "capsules/tb_science_rank14_20261009_v1/TB_SCIENCE_RANK14_LOSSLESS_OBLIGATION_CAP_REPAIR_VERIFY_20261009_V1.json"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_rank14_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact post-repair authority candidate bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK14_POSTREPAIR_REAUTHORIZE_20261009_V1.json")" = "ae89489197b51a0abaf5b7943861f1d6e9cd3675"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V2.json")" = "614eeefce5987e1574dbdfa2eb0c749251fe51af"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V10.json")" = "ae37559320105277e017ff17af7c3dbeae2f9c27"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V10_PUBLIC_VERIFICATION_20261009_V1.json")" = "d0000dd7cb3c866a42a4eb08632613ed53940fca"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_LOSSLESS_OBLIGATION_CAP_REPAIR_VERIFY_20261009_V1.json")" = "6e8e3938b00e3fe39e38ac4a1b38a21eeb25c96f"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "16e8ab7918c4f8d052698282dddf674b54a23016"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          python -m py_compile "$C"/canonical/runtime/*.py
+
+      - name: Verify authority semantics and repaired closure
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python - <<'PY'
+          import json, pathlib, subprocess, os
+          C=pathlib.Path(os.environ["C"])
+          intent=json.loads((C/"ACTION_INTENT_TB_SCIENCE_RANK14_POSTREPAIR_REAUTHORIZE_20261009_V1.json").read_text())
+          cand=json.loads((C/"TB_SCIENCE_RANK14_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V2.json").read_text())
+          v10=json.loads((C/"TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V10.json").read_text())
+          v10v=json.loads((C/"TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V10_PUBLIC_VERIFICATION_20261009_V1.json").read_text())
+          repair=json.loads((C/"TB_SCIENCE_RANK14_LOSSLESS_OBLIGATION_CAP_REPAIR_VERIFY_20261009_V1.json").read_text())
+          ledger=json.loads((C/"TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V16.json").read_text())
+          slot="terminal-bench-science/inverse-lithography::trial-0"
+          digest="sha256:8c4da4b5b3a00283335e83dda92584aaf9293ff773bc43f2bf95eb0e2c0f8530"
+
+          assert intent["target_obligation"]=="TB_SCIENCE_GE_58_7"
+          assert intent["evidence"]["historical_task_read"] is True
+          assert intent["evidence"]["task_started"] is False
+          assert intent["evidence"]["execution_authority_consumed"] is False
+          assert intent["safety"]["new_benchmark_task_read_authority"] is False
+          assert intent["safety"]["rank14_task_start_authority"] is False
+
+          assert cand["slot"]=={"id":slot,"schedule_rank":14,"digest":digest}
+          assert cand["historical_state"]["task_read"] is True
+          assert cand["historical_state"]["task_started"] is False
+          assert cand["historical_state"]["execution_authority_consumed"] is False
+          assert cand["historical_state"]["benchmark_trials_consumed"]==0
+          assert cand["repaired_route"]["agent_blob"]=="16e8ab7918c4f8d052698282dddf674b54a23016"
+          assert cand["repaired_route"]["planner_blob"]=="58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          assert cand["repaired_route"]["carrier_closure_blob"]=="ae37559320105277e017ff17af7c3dbeae2f9c27"
+          assert cand["repaired_route"]["carrier_closure_verification_blob"]=="d0000dd7cb3c866a42a4eb08632613ed53940fca"
+          assert cand["proposed_controls"]["attempts_authorized"]==1
+          assert cand["proposed_controls"]["retries_authorized"]==0
+          assert cand["proposed_controls"]["replacement_allowed"] is False
+          assert cand["proposed_controls"]["fresh_public_execution_claim_required"] is True
+          assert cand["proposed_controls"]["fresh_epoch_required"] is True
+          assert cand["proposed_controls"]["fresh_activation_pr_required"] is True
+          assert cand["proposed_controls"]["prestart_exact_planner_token_budget_gate"] is True
+          assert cand["proposed_controls"]["precheck_failure_consumes_slot"] is False
+          assert cand["execution_authority"] is False
+          assert cand["task_read_authority"] is False
+          assert cand["task_start_authority"] is False
+
+          assert repair["status"].startswith("PASS__FALSE_64_OBLIGATION_CEILING_REMOVED")
+          assert repair["causal_input"]["task_read"] is True
+          assert repair["causal_input"]["task_started"] is False
+          assert repair["causal_input"]["execution_authority_consumed"] is False
+          assert repair["exact_repair_blobs"]["agent"]=="16e8ab7918c4f8d052698282dddf674b54a23016"
+          assert repair["public_independent_verification"]["large_required_obligations"]==80
+          assert repair["public_independent_verification"]["large_accounted_obligations"]==80
+
+          assert v10["closure_file_count"]==15
+          assert v10["causal_delta"]["changed_file"]["new_git_blob_sha"]=="16e8ab7918c4f8d052698282dddf674b54a23016"
+          assert v10v["status"]=="PASS__V10_15_FILE_TRANSITIVE_CLOSURE_EXACT__ZERO_EXPOSURE"
+          assert v10v["public_runner"]["workflow_run_id"]==37881878913
+          assert v10v["benchmark_task_exposure"]==0
+          assert v10v["benchmark_trials_executed"]==0
+
+          nxt=ledger["current_counts"]["next_untouched_slot"]
+          assert ledger["current_counts"]["consumed_slots"]==13
+          assert nxt["ledger_schedule_rank"]==14 and nxt["slot_id"]==slot and nxt["task_digest"]==digest
+
+          for row in v10["closure"]:
+              p=C/row["path"]
+              assert p.is_file(),row["path"]
+              actual=subprocess.check_output(["git","hash-object",str(p)],text=True).strip()
+              assert actual==row["git_blob_sha"],(row["path"],actual,row["git_blob_sha"])
+          PY
+
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py" --repo-root "$C" --carrier-root "$C"             --root canonical/runtime/harbor_science_agent_v1.py             --root canonical/runtime/harbor_science_planner_v1.py             --root canonical/runtime/lossless_raw_task_contract_v1.py             --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py > RANK14_AUTHORITY_V2_CLOSURE.json
+
+          python - <<'PY'
+          import json
+          x=json.load(open("RANK14_AUTHORITY_V2_CLOSURE.json"))
+          assert x["pass"] is True,x
+          assert x["closure"]["closure_file_count"]==15,x
+          assert x["missing_paths"]==[],x
+          assert x["mismatched"]==[],x
+          assert x["closure"]["unresolved_dynamic_imports"]==[],x
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK14_AUTHORITY_V2_PUBLIC_VERIFY_V1",
+            "status":"PASS__POSTREPAIR_NONEXECUTABLE_AUTHORITY_CANDIDATE__V10_EXACT__ZERO_EXPOSURE",
+            "pass":True,
+            "historical_task_read":True,
+            "task_started":False,
+            "execution_authority_consumed":False,
+            "benchmark_trials_consumed":0,
+            "agent_blob":"16e8ab7918c4f8d052698282dddf674b54a23016",
+            "planner_blob":"58964dc8d6b5eed5c202081cd800035c791eeb1d",
+            "v10_manifest_blob":"ae37559320105277e017ff17af7c3dbeae2f9c27",
+            "candidate_blob":"614eeefce5987e1574dbdfa2eb0c749251fe51af",
+            "benchmark_task_exposure_delta":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0
+          }
+          open("RANK14_AUTHORITY_V2_VERIFY.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank14-authority-v2-postrepair-20261009
+          path: |
+            RANK14_AUTHORITY_V2_VERIFY.json
+            RANK14_AUTHORITY_V2_CLOSURE.json
+          retention-days: 2
