@@ -43,7 +43,7 @@ DEFAULT_VERIFY_TIMEOUT_S = 600
 MAX_VERIFY_TIMEOUT_S = 3600
 MAX_PLANNER_EVIDENCE_STRING_CHARS = 1024
 MAX_PLANNER_EVIDENCE_OBSERVATIONS = 8
-POST_FREEZE_STATE_RESERVE_TOKENS = 1536
+POST_FREEZE_STATE_RESERVE_TOKENS = 512
 _IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 _FATAL_ACTION_STDERR_MARKERS = (
@@ -96,7 +96,7 @@ def _brain_mandated_deliverables(goal: str) -> dict[str, str]:
     for match in _EXPLICIT_OUTPUT_DIRECTIVE_RE.finditer(text):
         add(match.group("path"))
 
-    return {f"BRAIN_DELIVERABLE_{i + 1:02d}": path for i, path in enumerate(paths)}
+    return {f"BD{i + 1:02d}": path for i, path in enumerate(paths)}
 
 async def _validate_brain_deliverable(
     requirement_id: str,
