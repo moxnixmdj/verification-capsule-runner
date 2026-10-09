@@ -1,0 +1,24 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK16_PUBLIC_LEDGER_BINDING_V30",
+  "date": "2026-10-09",
+  "status": "CURRENT_PUBLIC_BINDING__BRAIN_LEDGER_V30__FIFTEEN_CONSUMED__RANK16_UNREAD_UNSTARTED",
+  "brain_ledger": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V30.json",
+    "git_blob_sha": "7e46f2a5c0c418a4d3be4360c8a85b7be7611abb"
+  },
+  "consumed_slots": 15,
+  "consumed_successes": 0,
+  "consumed_final_failures": 15,
+  "next_unconsumed_slot": {
+    "ledger_schedule_rank": 16,
+    "frozen_manifest_schedule_order": 15,
+    "task_rank": 15,
+    "slot_id": "terminal-bench-science/sparse-network-assimilation::trial-0",
+    "task_digest": "sha256:52ba7089dc32952df08c478af76b732fa82468c125431388adbf9798d869826f"
+  },
+  "rank16_task_read": false,
+  "rank16_task_started": false,
+  "rank16_benchmark_trials_consumed": 0,
+  "terminal_credit_delta": 0
+}
