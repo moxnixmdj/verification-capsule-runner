@@ -1,4 +1,5 @@
-name: Execute TB-Science rank15 v1 cache-sealed one-shot
+name: Retired TB-Science rank15 v1 execution surface
+
 on:
   pull_request:
     branches: [terminal-execution-v1]
@@ -8,140 +9,12 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: tb-science-rank15-v1-one-shot
-  cancel-in-progress: false
-
 jobs:
-  terminal-slot:
+  retired:
     runs-on: ubuntu-24.04
-    timeout-minutes: 355
-    env:
-      C: capsules/tb_science_rank15_20261009_v1
-      SAFE_ID: protein-active-learning-trial-0
-
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Enforce exact one-file activation delta and frozen authority
+      - name: Fail closed because V1 carrier was retired after pre-exposure CPU portability failure
         run: |
-          set -euo pipefail
-          test "$GITHUB_RUN_ATTEMPT" = "1"
-          test "$GITHUB_EVENT_NAME" = "pull_request"
-          test "$GITHUB_BASE_REF" = "terminal-execution-v1"
-          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank15-20261009-v1"
-          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK15_PR.json"
-          python "$C/rank15_execution_preflight_v1.py" --require-activation
-
-      - name: Install exact Harbor
-        run: |
-          set -euo pipefail
-          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
-          python - <<'PY'
-          import importlib.metadata
-          assert importlib.metadata.version("harbor")=="0.23.0"
-          PY
-
-      - name: Restore exact llama.cpp cache
-        id: llama
-        uses: actions/cache/restore@v4
-        with:
-          path: llama.cpp
-          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
-
-      - name: Restore exact Qwen cache
-        id: qwen
-        uses: actions/cache/restore@v4
-        with:
-          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
-          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
-
-      - name: Gate exact warm carrier
-        id: cache
-        run: |
-          set -euo pipefail
-          ready=false
-          if [ "${{ steps.llama.outputs.cache-hit }}" = "true" ] && [ "${{ steps.qwen.outputs.cache-hit }}" = "true" ]; then
-            test -x llama.cpp/build/bin/llama-server
-            test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
-            echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
-            ready=true
-          fi
-          echo "ready=$ready" >> "$GITHUB_OUTPUT"
-
-      - name: Start exact local cognition endpoint with 16K context
-        if: steps.cache.outputs.ready == 'true'
-        run: |
-          set -euo pipefail
-          EXTRA=()
-          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
-          nohup llama.cpp/build/bin/llama-server \
-            -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf --alias brain-qwen3.5-9b \
-            --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui \
-            "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
-          ok=0
-          for i in $(seq 1 240); do
-            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
-            sleep 1
-          done
-          test "$ok" = 1
-          grep -Eq "n_ctx_slot = 16384|n_ctx_slot = 16[0-9]{3}" LOCAL_QWEN_SERVER.log
-          free_bytes="$(df -B1 "$GITHUB_WORKSPACE" | awk 'NR==2{print $4}')"
-          test "$free_bytes" -ge 12884901888
-
-      - name: Read exact rank15 task and enforce prestart token budget
-        id: prestart
-        if: steps.cache.outputs.ready == 'true'
-        run: |
-          set -euo pipefail
-          export PYTHONPATH="$C"
-          python "$C/rank15_prestart_token_guard_v1.py"
-          cat RANK15_PRESTART_GUARD.json
-
-      - name: Execute exactly frozen rank15 slot
-        id: execute
-        if: steps.cache.outputs.ready == 'true' && steps.prestart.outputs.guard_pass == 'true'
-        continue-on-error: true
-        env:
-          TASK_PATH: ${{ steps.prestart.outputs.task_path }}
-        run: |
-          set -uo pipefail
-          export PYTHONPATH="$GITHUB_WORKSPACE/$C"
-          mkdir -p "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
-          harbor run \
-            -p "$TASK_PATH" \
-            -a canonical.runtime.harbor_science_agent_v1:HarborScienceAgent \
-            -k 1 -n 1 -r 0 \
-            --agent-timeout-multiplier 0.48 \
-            --environment-build-timeout-multiplier 1.0 \
-            --verifier-timeout-multiplier 1.0 \
-            --job-name "$SAFE_ID" \
-            --jobs-dir "$GITHUB_WORKSPACE/jobs/$SAFE_ID"
-          echo "harbor_exit=$?" >> "$GITHUB_OUTPUT"
-
-      - name: Finalize conservative rank15 receipt
-        if: always()
-        env:
-          CACHE_READY: ${{ steps.cache.outputs.ready }}
-          HARBOR_OUTCOME: ${{ steps.execute.outcome }}
-        run: |
-          python "$C/rank15_finalize_receipt_v1.py"
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: tb-science-protein-active-learning-trial-0-rank15-v1
-          path: |
-            protein-active-learning-trial-0__SLOT_RECEIPT_V1.json
-            RANK15_EXECUTION_PREFLIGHT.json
-            RANK15_PRESTART_GUARD.json
-            jobs/protein-active-learning-trial-0/
-            LOCAL_QWEN_HEALTH.json
-            LOCAL_QWEN_SERVER.log
-          if-no-files-found: warn
-          retention-days: 7
+          echo "REVOKED_EXECUTION_SURFACE__USE_RANK15_V2_AFTER_FRESH_ZERO_EXPOSURE_RESEAL"
+          exit 1
