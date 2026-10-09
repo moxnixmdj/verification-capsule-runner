@@ -26,7 +26,8 @@
     "static_adversarial_run": {
       "workflow_run_id": 37906973743,
       "status": "SUCCESS",
-      "tests_passed": 16
+      "tests_passed": 15,
+      "workflow_job_id": 113742669136
     },
     "exact_model_tokenizer_run": {
       "workflow_run_id": 37907072018,
