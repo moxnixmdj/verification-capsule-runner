@@ -9,6 +9,21 @@ from unittest.mock import patch
 
 from canonical.runtime import harbor_science_agent_v11 as s
 
+SYNTHETIC_SLOT = "terminal-bench-science/synthetic-v11-fixture::trial-0"
+SYNTHETIC_DIGEST = "sha256:" + "a" * 64
+SYNTHETIC_ATTEMPT = s.canonical_logical_attempt_id(
+    slot_id=SYNTHETIC_SLOT,
+    task_digest=SYNTHETIC_DIGEST,
+)
+
+def brain_env(evidence_dir: str) -> dict[str, str]:
+    return {
+        "BRAIN_EVIDENCE_STORE_DIR": evidence_dir,
+        "BRAIN_SLOT_ID": SYNTHETIC_SLOT,
+        "BRAIN_TASK_DIGEST": SYNTHETIC_DIGEST,
+        "BRAIN_LOGICAL_ATTEMPT_ID": SYNTHETIC_ATTEMPT,
+    }
+
 
 class Receipt:
     def __init__(self, returncode=0, stdout="", stderr=""):
@@ -118,7 +133,7 @@ class V11Tests(unittest.TestCase):
             {"material_requirements": ["R1"], "candidates": [candidate("bad2", "exit 2")]},
         ]
         with tempfile.TemporaryDirectory() as td, patch.dict(
-            os.environ, {"BRAIN_EVIDENCE_STORE_DIR": td}, clear=False
+            os.environ, brain_env(td), clear=False
         ), patch.object(s.science_planner, "plan", planner(outputs)):
             result = asyncio.run(s.run_science_goal("synthetic science goal", env, max_cycles=2))
         self.assertEqual(env.commands.count("exit 2"), 1, env.commands)
@@ -133,7 +148,7 @@ class V11Tests(unittest.TestCase):
         second = candidate("bad2", "exit 2")
         second["verify_command"] = "printf changed-verifier"
         with tempfile.TemporaryDirectory() as td, patch.dict(
-            os.environ, {"BRAIN_EVIDENCE_STORE_DIR": td}, clear=False
+            os.environ, brain_env(td), clear=False
         ), patch.object(s.science_planner, "plan", planner([
             {"material_requirements": ["R1"], "candidates": [first]},
             {"material_requirements": ["R1"], "candidates": [second]},
@@ -160,7 +175,7 @@ class V11Tests(unittest.TestCase):
             ],
         }
         with tempfile.TemporaryDirectory() as td, patch.dict(
-            os.environ, {"BRAIN_EVIDENCE_STORE_DIR": td}, clear=False
+            os.environ, brain_env(td), clear=False
         ), patch.object(s.science_planner, "plan", planner([
             {"material_requirements": ["R1"], "candidates": [cand]}
         ])):
@@ -179,7 +194,7 @@ class V11Tests(unittest.TestCase):
             deliverables=[{"path": "/app/result.npz", "format": "npz"}],
         )
         with tempfile.TemporaryDirectory() as td, patch.dict(
-            os.environ, {"BRAIN_EVIDENCE_STORE_DIR": td}, clear=False
+            os.environ, brain_env(td), clear=False
         ), patch.object(s.science_planner, "plan", planner([
             {"material_requirements": ["R1"], "candidates": [cand]}
         ])):
@@ -197,7 +212,7 @@ class V11Tests(unittest.TestCase):
             "selected_scalars": {"output": "/app/result.npz"},
         }], fail_deliverable=True)
         with tempfile.TemporaryDirectory() as td, patch.dict(
-            os.environ, {"BRAIN_EVIDENCE_STORE_DIR": td}, clear=False
+            os.environ, brain_env(td), clear=False
         ), patch.object(s.science_planner, "plan", planner([
             {"material_requirements": ["R1"], "candidates": [candidate("a", "true")]}
         ])):
