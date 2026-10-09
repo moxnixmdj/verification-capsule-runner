@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -15,6 +16,38 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/execute-tb-science-rank15-20261009-v3.yml"
 
 
+def git_blob(path: Path) -> str:
+    raw = path.read_bytes()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+
+
+class MemoryStore:
+    def __init__(self):
+        self.rows = {}
+        self.raise_create = False
+        self.raise_read = False
+        self.corrupt_after_create = False
+
+    def create(self, key, value):
+        if self.raise_create:
+            raise RuntimeError("create transport")
+        if key in self.rows:
+            return False
+        self.rows[key] = json.loads(json.dumps(value))
+        return True
+
+    def read(self, key):
+        if self.raise_read:
+            raise RuntimeError("read transport")
+        value = self.rows.get(key)
+        if value is None:
+            return None
+        out = json.loads(json.dumps(value))
+        if self.corrupt_after_create:
+            out["runtime_identity_sha256"] = "0" * 64
+        return out
+
+
 class Rank15V3StartCASTests(unittest.TestCase):
     def _workspace(self, root: Path) -> dict[str, str]:
         activation = root / cas.ACTIVATION_REL
@@ -25,6 +58,13 @@ class Rank15V3StartCASTests(unittest.TestCase):
             "slot_id": cas.SLOT_ID,
             "task_digest": cas.TASK_DIGEST,
         }), encoding="utf-8")
+
+        workflow = root / ".github/workflows/execute-tb-science-rank15-20261009-v3.yml"
+        workflow.parent.mkdir(parents=True, exist_ok=True)
+        workflow.write_text("synthetic exact workflow\n", encoding="utf-8")
+        authority = root / "authority.json"
+        authority.write_text("{}\n", encoding="utf-8")
+
         surface = root / cas.SURFACE_REL
         surface.parent.mkdir(parents=True, exist_ok=True)
         surface.write_text(json.dumps({
@@ -32,7 +72,14 @@ class Rank15V3StartCASTests(unittest.TestCase):
             "task_started": False,
             "slot_id": cas.SLOT_ID,
             "task_digest": cas.TASK_DIGEST,
+            "workflow_path": str(workflow.relative_to(root)),
+            "workflow_git_blob_sha": git_blob(workflow),
+            "authority": {
+                "path": str(authority.relative_to(root)),
+                "git_blob_sha": git_blob(authority),
+            },
         }), encoding="utf-8")
+
         event = root / "event.json"
         event.write_text(json.dumps({
             "pull_request": {
@@ -43,6 +90,7 @@ class Rank15V3StartCASTests(unittest.TestCase):
                 "base": {"ref": cas.EXPECTED_BASE},
             }
         }), encoding="utf-8")
+
         return {
             "GITHUB_WORKSPACE": str(root),
             "GITHUB_EVENT_NAME": "pull_request",
@@ -52,59 +100,137 @@ class Rank15V3StartCASTests(unittest.TestCase):
             "GITHUB_REPOSITORY": cas.EXPECTED_REPOSITORY,
             "GITHUB_EVENT_PATH": str(event),
             "GITHUB_SHA": "1" * 40,
+            "GITHUB_RUN_ID": "100",
+            "GH_TOKEN": "synthetic",
         }
 
-    def test_pre_task_read_check_passes_only_when_lock_absent(self):
+    def _prestart(self, root: Path, logical: str = "a" * 64) -> None:
+        (root / cas.PREFLIGHT_RECEIPT).write_text(json.dumps({
+            "pass": True,
+            "status": "PASS__RANK15_V3_EXACT_TASK_READ__MAXIMAL_RESERVED_CYCLE0_CORE_FITS__TASK_NOT_STARTED",
+            "task_read": True,
+            "task_started": False,
+            "task_digest": cas.TASK_DIGEST,
+            "logical_attempt_id": logical,
+            "payload_sha256": "b" * 64,
+            "request_identity_sha256": "c" * 64,
+            "input_tokens": 7000,
+        }), encoding="utf-8")
+
+    def _run(self, root: Path, env: dict[str, str], store: MemoryStore, arg: str) -> tuple[int, dict]:
+        with (
+            patch.dict(os.environ, env, clear=False),
+            patch.object(cas, "_open_store", return_value=store),
+            patch.object(
+                cas,
+                "_runtime_identity",
+                return_value=("d" * 64, {"schema": "SYNTHETIC_RUNTIME_IDENTITY"}),
+            ),
+            patch.object(sys, "argv", ["cas", arg]),
+        ):
+            rc = cas.main()
+        name = cas.CHECK_RECEIPT if arg == "--check-absent" else cas.ACQUIRE_RECEIPT
+        return rc, json.loads((root / name).read_text())
+
+    def test_pre_task_read_check_uses_global_generic_slot_key(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             env = self._workspace(root)
-            with patch.dict(os.environ, env, clear=False), patch.object(
-                cas, "_api", return_value=(404, {"message": "Not Found"})
-            ), patch.object(sys, "argv", ["cas", "--check-absent"]):
-                rc = cas.main()
+            store = MemoryStore()
+            rc, out = self._run(root, env, store, "--check-absent")
             self.assertEqual(rc, 0)
-            out = json.loads((root / cas.CHECK_RECEIPT).read_text())
             self.assertTrue(out["lock_absent"])
             self.assertFalse(out["acquired"])
-            self.assertFalse(out["task_started"])
+            self.assertEqual(out["generic_cas_namespace"], cas.generic_cas.NAMESPACE)
+            self.assertEqual(
+                out["generic_cas_key"],
+                cas.generic_cas.slot_start_key(cas.SLOT_ID, cas.TASK_DIGEST),
+            )
             self.assertEqual(out["benchmark_trials_consumed"], 0)
 
-    def test_acquire_is_atomic_start_boundary(self):
+    def test_acquire_persists_exact_dynamic_start_identity(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             env = self._workspace(root)
-            (root / cas.PREFLIGHT_RECEIPT).write_text(json.dumps({
-                "pass": True,
-                "status": "PASS__RANK15_V3_EXACT_TASK_READ__MAXIMAL_RESERVED_CYCLE0_CORE_FITS__TASK_NOT_STARTED",
-                "task_read": True,
-                "task_started": False,
-                "task_digest": cas.TASK_DIGEST,
-            }), encoding="utf-8")
-            responses = [(404, {"message": "Not Found"}), (201, {"ref": cas.LOCK_REF})]
-            with patch.dict(os.environ, env, clear=False), patch.object(
-                cas, "_api", side_effect=responses
-            ), patch.object(sys, "argv", ["cas", "--acquire"]):
-                rc = cas.main()
+            self._prestart(root)
+            store = MemoryStore()
+            rc, out = self._run(root, env, store, "--acquire")
             self.assertEqual(rc, 0)
-            out = json.loads((root / cas.ACQUIRE_RECEIPT).read_text())
             self.assertTrue(out["acquired"])
             self.assertTrue(out["task_started"])
             self.assertEqual(out["benchmark_trials_consumed"], 1)
-            self.assertEqual(out["acceptance_credit_delta"], 0)
+            self.assertEqual(out["logical_attempt_id"], "a" * 64)
+            self.assertEqual(out["runtime_identity_sha256"], "d" * 64)
+            self.assertEqual(out["prestart_payload_sha256"], "b" * 64)
+            self.assertEqual(out["prestart_request_identity_sha256"], "c" * 64)
 
-    def test_existing_lock_fails_closed_without_start(self):
+            row = store.rows[out["generic_cas_key"]]
+            self.assertEqual(row["logical_attempt_id"], "a" * 64)
+            self.assertEqual(row["runtime_identity_sha256"], "d" * 64)
+            self.assertEqual(
+                row["prestart_receipt_sha256"],
+                hashlib.sha256((root / cas.PREFLIGHT_RECEIPT).read_bytes()).hexdigest(),
+            )
+            self.assertEqual(row["workflow_git_blob_sha"], out["workflow_git_blob_sha"])
+            self.assertEqual(row["authority_git_blob_sha"], out["authority_git_blob_sha"])
+            self.assertEqual(row["activation_git_blob_sha"], out["activation_git_blob_sha"])
+            self.assertFalse(row["replay_authority"])
+            self.assertFalse(row["replacement_carrier_authority"])
+
+    def test_second_run_same_slot_is_rejected_by_same_global_key(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             env = self._workspace(root)
-            with patch.dict(os.environ, env, clear=False), patch.object(
-                cas, "_api", return_value=(200, {"ref": cas.LOCK_REF})
-            ), patch.object(sys, "argv", ["cas", "--acquire"]):
-                rc = cas.main()
+            self._prestart(root)
+            store = MemoryStore()
+            rc1, _ = self._run(root, env, store, "--acquire")
+            self.assertEqual(rc1, 0)
+            env2 = dict(env)
+            env2["GITHUB_RUN_ID"] = "101"
+            rc2, out2 = self._run(root, env2, store, "--acquire")
+            self.assertEqual(rc2, 1)
+            self.assertFalse(out2["acquired"])
+            self.assertFalse(out2["task_started"])
+            self.assertEqual(out2["benchmark_trials_consumed"], 0)
+            self.assertIn("START_CAS_ALREADY_EXISTS", out2["status"])
+
+    def test_postwrite_corruption_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            env = self._workspace(root)
+            self._prestart(root)
+            store = MemoryStore()
+            store.corrupt_after_create = True
+            rc, out = self._run(root, env, store, "--acquire")
             self.assertEqual(rc, 1)
-            out = json.loads((root / cas.ACQUIRE_RECEIPT).read_text())
+            self.assertFalse(out["acquired"])
+            self.assertFalse(out["task_started"])
+            self.assertIn("POSTWRITE_BINDING_MISMATCH", out["error"])
+
+    def test_store_create_uncertainty_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            env = self._workspace(root)
+            self._prestart(root)
+            store = MemoryStore()
+            store.raise_create = True
+            rc, out = self._run(root, env, store, "--acquire")
+            self.assertEqual(rc, 1)
             self.assertFalse(out["acquired"])
             self.assertFalse(out["task_started"])
             self.assertEqual(out["benchmark_trials_consumed"], 0)
+
+    def test_invalid_logical_attempt_id_never_reaches_store(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            env = self._workspace(root)
+            self._prestart(root, logical="bad")
+            store = MemoryStore()
+            rc, out = self._run(root, env, store, "--acquire")
+            self.assertEqual(rc, 1)
+            self.assertFalse(out["acquired"])
+            self.assertEqual(store.rows, {})
+            self.assertIn("LOGICAL_ATTEMPT_ID_INVALID", out["error"])
 
     def _finalize(self, *, cas_acquired: bool, reward=None) -> dict:
         td = tempfile.TemporaryDirectory()
@@ -125,9 +251,14 @@ class Rank15V3StartCASTests(unittest.TestCase):
                 "task_started": True,
                 "slot_id": finalizer.SLOT,
                 "task_digest": finalizer.DIGEST,
-                "status": "PASS__DURABLE_START_CAS_ACQUIRED__IRREVERSIBLE_SLOT_START",
-                "lock_ref": cas.LOCK_REF,
-                "lock_commit_sha": "1" * 40,
+                "status": "PASS__DURABLE_BOUND_START_INTENT_COMMITTED__IRREVERSIBLE_SLOT_START",
+                "generic_cas_key": "terminal-start/" + "e" * 64,
+                "logical_attempt_id": "a" * 64,
+                "runtime_identity_sha256": "d" * 64,
+                "prestart_receipt_sha256": "f" * 64,
+                "durable_record_sha256": "1" * 64,
+                "replay_authority": False,
+                "replacement_carrier_authority": False,
             }), encoding="utf-8")
         if reward is not None:
             p = root / "jobs/protein-active-learning-trial-0/trial/result.json"
