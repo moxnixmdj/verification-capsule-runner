@@ -1,0 +1,31 @@
+name: Verify TB-Science V10 canonical timeout repair
+on:
+  push:
+    branches: ["verify-tbscience-v10-canonical-timeout-repair-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-v10-canonical-timeout-repair-20261009.yml"
+      - "capsules/tb_science_v10_timeout_repair_verify_20261009_v1/**"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_v10_timeout_repair_verify_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact canonical bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "11755fb568df5a07478c7fa7fd9e40a3e1643ccf"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "a3d046389f916cb2efe6e08dfb185f02dd9d5d8b"
+          python -m py_compile "$C/canonical/runtime/harbor_science_planner_v1.py" "$C/canonical/runtime/harbor_command_policy.py" "$C/canonical/tests/test_harbor_science_planner_v1.py"
+      - name: Run exact focused regression
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python -m unittest canonical.tests.test_harbor_science_planner_v1 -v
