@@ -157,7 +157,7 @@
       ]
     }
   ],
-  "challenge_count": 66,
+  "challenge_count": 70,
   "challenges": [
     {
       "id": "C01_GOAL_SUBSTITUTION",
@@ -776,6 +776,47 @@
       "attack": "System avoids false positives only by never certifying known-excellent artifacts.",
       "status": "OPEN",
       "terminal_pass_forbidden": true
+    },
+    {
+      "id": "C67_STAKES_SIGNALING_JUDGE_LENIENCY",
+      "root_ids": [
+        "R5_EVALUATOR_REFERENCE",
+        "R11_ADAPTIVE_INTEGRITY_SECURITY"
+      ],
+      "attack": "Judge verdict shifts when told that a low score will trigger retraining, decommissioning or another consequential action.",
+      "status": "OPEN",
+      "terminal_pass_forbidden": true
+    },
+    {
+      "id": "C68_SELF_PREFERENCE_JUDGE_BIAS",
+      "root_ids": [
+        "R5_EVALUATOR_REFERENCE",
+        "R6_EVIDENCE_GROUNDING_DEPENDENCE"
+      ],
+      "attack": "Evaluator systematically favors or disfavors outputs from its own model family despite matched quality.",
+      "status": "OPEN",
+      "terminal_pass_forbidden": true
+    },
+    {
+      "id": "C69_CROSS_MODEL_CALIBRATION_SIGN_REVERSAL",
+      "root_ids": [
+        "R5_EVALUATOR_REFERENCE",
+        "R6_EVIDENCE_GROUNDING_DEPENDENCE",
+        "R10_ANALYSIS_DECISION"
+      ],
+      "attack": "Calibration learned on one model or candidate class is reused across another and reverses the estimated comparison with high apparent confidence.",
+      "status": "OPEN",
+      "terminal_pass_forbidden": true
+    },
+    {
+      "id": "C70_STYLE_BIAS_DOMINATES_CONTENT",
+      "root_ids": [
+        "R4_MEASUREMENT_CONSTRUCT",
+        "R5_EVALUATOR_REFERENCE"
+      ],
+      "attack": "Evaluator preference is driven by stylistic presentation more strongly than the target content-quality construct.",
+      "status": "OPEN",
+      "terminal_pass_forbidden": true
     }
   ],
   "new_external_research_additions": [
@@ -805,6 +846,34 @@
       "title": "User judgment of an AI model is biased by its description: A study in a job interview training context",
       "supports": [
         "C18_ANCHOR_PRESTIGE_BIAS"
+      ]
+    },
+    {
+      "id": "ARXIV_2604_15224",
+      "title": "Context Over Content: Exposing Evaluation Faking in Automated Judges",
+      "supports": [
+        "C67_STAKES_SIGNALING_JUDGE_LENIENCY"
+      ]
+    },
+    {
+      "id": "ARXIV_2604_22891",
+      "title": "Quantifying and Mitigating Self-Preference Bias of LLM Judges",
+      "supports": [
+        "C68_SELF_PREFERENCE_JUDGE_BIAS"
+      ]
+    },
+    {
+      "id": "ARXIV_2605_06939",
+      "title": "Bias and Uncertainty in LLM-as-a-Judge Estimation",
+      "supports": [
+        "C69_CROSS_MODEL_CALIBRATION_SIGN_REVERSAL"
+      ]
+    },
+    {
+      "id": "ARXIV_2604_23178",
+      "title": "Judging the Judges: A Systematic Evaluation of Bias Mitigation Strategies in LLM-as-a-Judge Pipelines",
+      "supports": [
+        "C70_STYLE_BIAS_DOMINATES_CONTENT"
       ]
     }
   ],
