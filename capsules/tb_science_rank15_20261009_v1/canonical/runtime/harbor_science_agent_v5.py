@@ -16,7 +16,10 @@ from typing import Any
 
 from canonical.runtime import harbor_science_planner_v3 as science_planner
 from canonical.runtime.harbor_command_policy import validate_environment_command
-from canonical.runtime.harbor_environment_transport import HarborEnvironmentTransport
+from canonical.runtime.harbor_environment_transport_v2 import (
+    HarborEnvironmentTransport,
+    HarborTransportUncertainError,
+)
 from execution_guard import terminal_agent_start_barrier_v1 as start_barrier
 from execution_guard import terminal_causal_journal_filebridge_v1 as causal_bridge
 from canonical.runtime.lossless_raw_task_contract_v1 import compile_contract as compile_raw_task_contract
@@ -627,6 +630,42 @@ async def run_science_goal(
     )
     trace: list[dict[str, Any]] = []
 
+    def blocked_result(status: str, summary: str, *, cycles: int) -> dict[str, Any]:
+        return {
+            "schema": SCHEMA,
+            "status": status,
+            "controller_mode": "BRAIN_OWNED_RESEARCH_CONTROL__OPTIONAL_GENERAL_COGNITION_SUBSTRATE",
+            "model_has_terminal_authority": False,
+            "material_requirements": requirements or [],
+            "brain_mandated_deliverables": brain_deliverables,
+            "resolved_requirements": sorted(resolved),
+            "cycles": cycles,
+            "trace": trace,
+            "task_completion_claimed": False,
+            "finish_authority": "RAW_TASK_ACCEPTANCE_V1_REQUIRED",
+            "raw_task_contract_sha256": raw_task_contract.get("task_contract_sha256"),
+            "raw_task_required_obligation_count": len(raw_task_obligations),
+            "raw_task_prompt_manifest_sha256": raw_task_prompt_summary["ordered_manifest_sha256"],
+            "raw_task_acceptance_receipts_present": False,
+            "effect_replay_authority": False,
+            "verification_replay_authority": False,
+            "summary": summary,
+        }
+
+    async def journal_fault(*, cycle: int, action_id: str, stage: str, exc: Exception) -> None:
+        if journal_session is None:
+            return
+        payload = {
+            "cycle": cycle,
+            "action_id": action_id,
+            "stage": stage,
+            "error_type": type(exc).__name__,
+            "error_sha256": hashlib.sha256(str(exc).encode("utf-8", "replace")).hexdigest(),
+            "effect_replayed": False,
+            "verification_replayed": False,
+        }
+        await asyncio.to_thread(journal_session.append, "FAULT", payload)
+
     for cycle in range(max_cycles):
         unresolved = [] if requirements is None else sorted(set(requirements) - resolved)
         output_gate_failures: list[dict[str, Any]] = []
@@ -772,13 +811,55 @@ async def run_science_goal(
             executed_action_ids.add(chosen["action_id"])
             executed_any = True
 
-            action_receipt = await transport.exec(
-                chosen["command"], timeout_sec=chosen["timeout_sec"]
-            )
+            try:
+                action_receipt = await transport.exec(
+                    chosen["command"], timeout_sec=chosen["timeout_sec"]
+                )
+            except HarborTransportUncertainError as exc:
+                await journal_fault(
+                    cycle=cycle,
+                    action_id=chosen["action_id"],
+                    stage="ACTION_EFFECT",
+                    exc=exc,
+                )
+                record = {
+                    "cycle": cycle,
+                    "kind": "BRAIN_SELECTED_RESEARCH_ACTION",
+                    "action_id": chosen["action_id"],
+                    "covers": chosen["covers"],
+                    "depends_on": chosen["depends_on"],
+                    "action_timeout_sec": chosen["timeout_sec"],
+                    "verify_timeout_sec": chosen["verify_timeout_sec"],
+                    "selection_reason": "MAX_DECLARED_UNRESOLVED_COVERAGE_THEN_ACTION_ID__DEPENDENCY_GATED__STRUCTURAL_CONTROL_ONLY",
+                    "action_result": {
+                        "returncode": None,
+                        "stdout": "",
+                        "stderr": "",
+                        "transport_uncertain": True,
+                    },
+                    "action_transport_clean": False,
+                    "verify_result": None,
+                    "verified_covers": [],
+                    "brain_deliverable_checks": [],
+                    "coverage_promoted": False,
+                    "effect_replayed": False,
+                    "verification_replayed": False,
+                }
+                trace.append(record)
+                observations.append(record)
+                return blocked_result(
+                    "BLOCKED_ACTION_EFFECT_OUTCOME_UNCERTAIN",
+                    "The action was dispatched but no trustworthy execution receipt exists. "
+                    "The action was not replayed and no planner-provided verifier was used to infer success; "
+                    "Harbor's independent benchmark verifier remains the scoring authority over the actual environment.",
+                    cycles=cycle + 1,
+                )
+
             action_observed = {
                 "returncode": action_receipt.returncode,
                 "stdout": action_receipt.stdout[-MAX_OUTPUT_CHARS:],
                 "stderr": action_receipt.stderr[-MAX_OUTPUT_CHARS:],
+                "transport_uncertain": False,
             }
             verify_observed = None
             verified = False
@@ -788,14 +869,55 @@ async def run_science_goal(
                 action_receipt.returncode, action_receipt.stdout, action_receipt.stderr
             )
             if action_transport_clean:
-                verify_receipt = await transport.exec(
-                    chosen["verify_command"],
-                    timeout_sec=chosen["verify_timeout_sec"],
-                )
+                try:
+                    verify_receipt = await transport.exec(
+                        chosen["verify_command"],
+                        timeout_sec=chosen["verify_timeout_sec"],
+                    )
+                except HarborTransportUncertainError as exc:
+                    await journal_fault(
+                        cycle=cycle,
+                        action_id=chosen["action_id"],
+                        stage="VERIFY_COMMAND",
+                        exc=exc,
+                    )
+                    record = {
+                        "cycle": cycle,
+                        "kind": "BRAIN_SELECTED_RESEARCH_ACTION",
+                        "action_id": chosen["action_id"],
+                        "covers": chosen["covers"],
+                        "depends_on": chosen["depends_on"],
+                        "action_timeout_sec": chosen["timeout_sec"],
+                        "verify_timeout_sec": chosen["verify_timeout_sec"],
+                        "selection_reason": "MAX_DECLARED_UNRESOLVED_COVERAGE_THEN_ACTION_ID__DEPENDENCY_GATED__STRUCTURAL_CONTROL_ONLY",
+                        "action_result": action_observed,
+                        "action_transport_clean": True,
+                        "verify_result": {
+                            "returncode": None,
+                            "stdout": "",
+                            "stderr": "",
+                            "transport_uncertain": True,
+                        },
+                        "verified_covers": [],
+                        "brain_deliverable_checks": [],
+                        "coverage_promoted": False,
+                        "effect_replayed": False,
+                        "verification_replayed": False,
+                    }
+                    trace.append(record)
+                    observations.append(record)
+                    return blocked_result(
+                        "BLOCKED_VERIFICATION_OUTCOME_UNCERTAIN",
+                        "The action has a trustworthy successful receipt but its verification transport outcome is uncertain. "
+                        "Verification was not replayed; Harbor's independent benchmark verifier remains live.",
+                        cycles=cycle + 1,
+                    )
+
                 verify_observed = {
                     "returncode": verify_receipt.returncode,
                     "stdout": verify_receipt.stdout[-MAX_OUTPUT_CHARS:],
                     "stderr": verify_receipt.stderr[-MAX_OUTPUT_CHARS:],
+                    "transport_uncertain": False,
                 }
                 if verify_receipt.returncode == 0:
                     for requirement_id in chosen["covers"]:
@@ -968,15 +1090,65 @@ class HarborScienceAgent(BaseAgent):
             journal_dir,
             logical_attempt_id,
         )
-        result = await run_science_goal(
-            instruction,
-            environment,
-            journal_session=journal_session,
-        )
-        self.logs_dir.mkdir(parents=True, exist_ok=True)
-        (self.logs_dir / "project_brain_science_trace.json").write_text(
-            json.dumps(result, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        try:
+            result = await run_science_goal(
+                instruction,
+                environment,
+                journal_session=journal_session,
+            )
+        except Exception as exc:
+            # Keep internal controller/provider failures inside this one Harbor
+            # trial so the independent benchmark verifier can still score the
+            # actual task environment. BaseException subclasses such as
+            # cancellation remain outside this containment boundary.
+            result = {
+                "schema": SCHEMA,
+                "status": "BLOCKED_INTERNAL_CONTROLLER_OR_TRANSPORT_EXCEPTION",
+                "internal_unsolved": True,
+                "externality_proved": False,
+                "task_completion_claimed": False,
+                "model_has_terminal_authority": False,
+                "effect_replay_authority": False,
+                "verification_replay_authority": False,
+                "exception_type": type(exc).__name__,
+                "exception_sha256": hashlib.sha256(
+                    str(exc).encode("utf-8", "replace")
+                ).hexdigest(),
+                "summary": (
+                    "Internal controller/provider failure was contained inside "
+                    "the single Harbor trial. No retry, replacement trial, "
+                    "effect replay, or terminal claim was created."
+                ),
+            }
+            try:
+                await asyncio.to_thread(
+                    journal_session.append,
+                    "FAULT",
+                    {
+                        "cycle": -1,
+                        "action_id": "CONTROLLER",
+                        "stage": "CONTROLLER_EXCEPTION",
+                        "error_type": type(exc).__name__,
+                        "error_sha256": result["exception_sha256"],
+                        "effect_replayed": False,
+                        "verification_replayed": False,
+                    },
+                )
+            except Exception:
+                pass
+
+        # Evidence logging must not turn a verifiable environment into an agent
+        # crash. The Harbor verifier, not this host log, owns benchmark scoring.
+        try:
+            self.logs_dir.mkdir(parents=True, exist_ok=True)
+            (self.logs_dir / "project_brain_science_trace.json").write_text(
+                json.dumps(result, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
         if hasattr(context, "cost_usd"):
-            context.cost_usd = 0.0
+            try:
+                context.cost_usd = 0.0
+            except Exception:
+                pass
