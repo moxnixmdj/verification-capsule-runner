@@ -1,21 +1,21 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-09",
-  "status": "ACTIVE_V4_RUNTIME_DERIVED_ADMISSION_RESEALED__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
+  "status": "QUARANTINED_V6_SLOT_BOUND_JOURNALED_RESEAL__ZERO_EXPOSURE__VERIFICATION_REQUIRED",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
-  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v4.yml",
-  "workflow_git_blob_sha": "59fc3bff5890a505e8a221c53321de12d98f0802",
-  "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V4_PR.json",
+  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v6.yml",
+  "workflow_git_blob_sha": "225ad2cadd536bdae94bbb5c3b7e79216438feb9",
+  "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json",
   "behavior": {
-    "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json",
-    "git_blob_sha": "bf5464d8079ad479b7dab574e86e09a12ff55fad"
+    "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json",
+    "git_blob_sha": "c7af2a492c94d8648434bd8044256d7a1da65ac7"
   },
   "authority": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V5.json",
-    "git_blob_sha": "c82de56006f233f63683341795d3cd085b5a7890"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json",
+    "git_blob_sha": "d8790fc5097c24f7a3030d1531a48149b5b3113e"
   },
   "ledger": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V25.json",
@@ -30,29 +30,29 @@
     "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
   },
   "epoch": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V4.json",
-    "git_blob_sha": "a0d3ce5473fde032fe7831f6edc2b65df4c80e15"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json",
+    "git_blob_sha": "fd793f71ecaf50a9ede714231a2160ce4692fe5f"
   },
   "execution_claim": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V4.json",
-    "git_blob_sha": "1b3e5a9b5cf98bea517433fa041b7147f9b49a79"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json",
+    "git_blob_sha": "800bd5aeecc75105bc6b3c3804780c6f26fff04e"
   },
   "preflight": {
-    "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py",
-    "git_blob_sha": "d45d917a108ef567fa72e296c15d17cbd8652b49"
+    "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py",
+    "git_blob_sha": "42526da63dba9dd4e1417e9045542369179c49f2"
   },
   "finalizer": {
-    "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py",
-    "git_blob_sha": "d376e1826b549c108ab51a326a2d30a7e388277a"
+    "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v6.py",
+    "git_blob_sha": "30a0b2f6ca1b9bc0d9419b40db5084457876c881"
   },
-  "execution_authority": true,
-  "task_read_authority": true,
+  "execution_authority": false,
+  "task_read_authority": false,
   "task_started": false,
   "benchmark_trials_consumed": 0,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
   "hard_nonclaims": [
-    "NO_RANK15_V4_ACTIVATION_FILE_ON_RESEALED_BASE",
+    "NO_RANK15_V6_ACTIVATION_FILE_ON_QUARANTINED_RESEAL",
     "NO_RANK15_TASK_READ",
     "NO_RANK15_TASK_START",
     "NO_RANK15_RESULT",
@@ -62,11 +62,9 @@
   "reseal": {
     "brain_authority_v9_blob": "c98bc25882279a12aece65fb1bbd827b90148b82",
     "brain_ledger_v25_blob": "e41984176986421042a93527b21be4d6a4f10b63",
-    "public_authority_v5_blob": "c82de56006f233f63683341795d3cd085b5a7890",
-    "public_ledger_v25_blob": "224f98878b874908305b303de863a909a8e71185",
-    "epoch_v4_blob": "a0d3ce5473fde032fe7831f6edc2b65df4c80e15",
-    "execution_claim_v4_blob": "1b3e5a9b5cf98bea517433fa041b7147f9b49a79",
-    "guard_repair_pr": 2491,
-    "trusted_base_before_reseal": "b31f113995aec8218e769a6601b31ac767c75023"
+    "public_authority_v6_blob": "d8790fc5097c24f7a3030d1531a48149b5b3113e",
+    "epoch_v6_blob": "fd793f71ecaf50a9ede714231a2160ce4692fe5f",
+    "execution_claim_v6_blob": "800bd5aeecc75105bc6b3c3804780c6f26fff04e",
+    "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca"
   }
 }

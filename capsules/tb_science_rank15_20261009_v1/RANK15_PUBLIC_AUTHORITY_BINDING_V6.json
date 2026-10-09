@@ -1,0 +1,42 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_PUBLIC_AUTHORITY_BINDING_V6",
+  "date": "2026-10-09",
+  "status": "STAGED_PUBLIC_BINDING__BRAIN_AUTHORITY_V9__V6_ROBUST_RUNTIME__ZERO_EXPOSURE__NOT_ACTIVE",
+  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
+  "brain_authority": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_RANK15_RUNTIME_DERIVED_ADMISSION_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V9.json",
+    "git_blob_sha": "c98bc25882279a12aece65fb1bbd827b90148b82"
+  },
+  "brain_ledger": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V25.json",
+    "git_blob_sha": "e41984176986421042a93527b21be4d6a4f10b63"
+  },
+  "workflow": {
+    "path": ".github/workflows/execute-tb-science-rank15-20261009-v6.yml",
+    "git_blob_sha": "225ad2cadd536bdae94bbb5c3b7e79216438feb9"
+  },
+  "behavior": {
+    "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json",
+    "git_blob_sha": "c7af2a492c94d8648434bd8044256d7a1da65ac7"
+  },
+  "admission_guard": {
+    "path": "execution_guard/terminal_execution_admission_v2.py",
+    "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
+  },
+  "execution_branch": "execute/tb-science-rank15-20261009-v6",
+  "activation_filename": "ACTIVATE_RANK15_V6_PR.json",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "task_read": false,
+  "task_started": false,
+  "benchmark_trials_consumed": 0,
+  "execution_authority": false,
+  "task_read_authority": false,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}

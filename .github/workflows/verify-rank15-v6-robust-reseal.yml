@@ -1,0 +1,73 @@
+name: Verify Rank15 V6 robust reseal
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/execute-tb-science-rank15-20261009-v6.yml"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py"
+      - ".github/workflows/verify-rank15-v6-robust-reseal.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile exact control plane
+        run: |
+          set -euo pipefail
+          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python -m py_compile "$C/rank15_execution_preflight_v6.py" "$C/rank15_start_cas_v6.py" "$C/rank15_finalize_receipt_v6.py" "$C/rank15_v6_status_journal_runner.py"
+      - name: Verify staged proof-carrying preflight
+        run: |
+          set -euo pipefail
+          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python "$C/rank15_execution_preflight_v6.py" --allow-staged
+      - name: Re-run runtime composition falsifiers
+        run: |
+          set -euo pipefail
+          export C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python "$C/rank15_v6_runtime_composition_tests.py"
+      - name: Prove V6 permissions and zero exposure
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path(".")
+          surface=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text())
+          assert surface["execution_authority"] is False
+          assert surface["task_read_authority"] is False
+          assert surface["task_started"] is False
+          assert surface["benchmark_trials_consumed"] == 0
+          behavior=json.loads((root/"execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json").read_text())
+          assert behavior["behavior"]["agent_ready_precedes_start_cas"] is True
+          assert behavior["behavior"]["child_github_credentials_stripped"] is True
+          assert behavior["behavior"]["durable_action_intent_ack_before_effect"] is True
+          assert behavior["behavior"]["durable_state_commit_ack_before_next_action"] is True
+          assert behavior["behavior"]["uncertain_effect_replay_forbidden"] is True
+          w=(root/".github/workflows/execute-tb-science-rank15-20261009-v6.yml").read_text()
+          assert "contents: read" in w
+          assert "statuses: write" in w
+          assert "contents: write" not in w
+          assert "persist-credentials: false" in w
+          assert "rank15_v6_status_journal_runner.py" in w
+          assert "rank15_start_cas_v6.py --acquire" not in w
+          assert not (root/"capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json").exists()
+          PY
