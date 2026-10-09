@@ -8,6 +8,8 @@ on:
       - "execution_guard/terminal_slot_start_cas_v2.py"
       - "execution_guard/tests/test_terminal_agent_start_barrier_v1.py"
       - "execution_guard/tests/test_terminal_slot_start_cas_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v4.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v5_agent_start_barrier_tests.py"
       - ".github/workflows/verify-terminal-agent-start-barrier-v1.yml"
 
 permissions:
@@ -17,6 +19,8 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,19 +37,28 @@ jobs:
             execution_guard/terminal_agent_start_barrier_v1.py \
             execution_guard/terminal_slot_start_cas_v2.py \
             execution_guard/tests/test_terminal_agent_start_barrier_v1.py \
-            execution_guard/tests/test_terminal_slot_start_cas_v2.py
+            execution_guard/tests/test_terminal_slot_start_cas_v2.py \
+            "$C/canonical/runtime/harbor_science_agent_v4.py" \
+            "$C/rank15_v5_agent_start_barrier_tests.py"
 
-      - name: Run focused adversarial tests
+      - name: Run generic barrier and CAS adversarial tests
         run: |
           set -euo pipefail
           python -m unittest -v \
             execution_guard.tests.test_terminal_agent_start_barrier_v1 \
             execution_guard.tests.test_terminal_slot_start_cas_v2
 
+      - name: Run exact Rank15 agent call-site tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1:${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          python "$C/rank15_v5_agent_start_barrier_tests.py"
+
       - name: Assert zero-exposure scope
         run: |
           set -euo pipefail
-          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V5_PR.json
+          test ! -e "$C/ACTIVATE_RANK15_V5_PR.json"
           ! grep -q "harbor task download" execution_guard/terminal_agent_start_barrier_v1.py
           ! grep -q "harbor run" execution_guard/terminal_agent_start_barrier_v1.py
           ! grep -q "harbor task download" execution_guard/terminal_slot_start_cas_v2.py
