@@ -150,7 +150,7 @@ def run(request, repo_root=None): return {'pass':True,'route_id':'DYNAMIC'}
     rec_path=ver/"receipt.json"; dump(rec_path,receipt)
     compiled=admission.compile_admission(repo_root=root,current_manifest=adm,
       candidate_path="canonical/governance/candidate.json",receipt_path="canonical/verification/receipt.json")
-    assert compiled["admission_count"]==1 and compiled["admissions"][0]["route_id"]=="NEW", compiled
+    assert compiled["manifest"]["admission_count"]==1 and compiled["manifest"]["admissions"][0]["route_id"]=="NEW", compiled
 
     reg_path.write_text(reg_path.read_text()+"\n")
     try:
