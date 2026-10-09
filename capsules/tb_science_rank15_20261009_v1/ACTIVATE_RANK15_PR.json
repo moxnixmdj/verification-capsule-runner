@@ -1,0 +1,16 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_ACTIVATION_V1",
+  "date": "2026-10-09",
+  "status": "ARMED__EXACT_ONE_USE_RANK15_PUBLIC_ACTIVATION",
+  "activate": true,
+  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
+  "authority_git_blob_sha": "61629b854f4be1e940a3f68d1a676e40b4e61ebf",
+  "epoch_git_blob_sha": "ad0c76996163e5ee75553af7a9c00276dbe607c9",
+  "execution_claim_git_blob_sha": "a37da97fbc06ffdbb937996eaf1615dd56af1c0d",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "promotion_authority": false,
+  "terminal_authority": false
+}
