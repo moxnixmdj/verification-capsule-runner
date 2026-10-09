@@ -70,7 +70,7 @@
     },
     "finalizer": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py",
-      "git_blob_sha": "863da1dd083ca0ad98607b2ccd1329afe095e23e"
+      "git_blob_sha": "b336cd72aa211f46eed615c375a46c4e94a5e527"
     },
     "preflight": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v3.py",
@@ -87,6 +87,10 @@
     "generic_ref_store": {
       "path": "execution_guard/github_ref_store_live.py",
       "git_blob_sha": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    },
+    "start_cas_tests": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_v3_start_cas_tests.py",
+      "git_blob_sha": "beee2ec6413b11b45e5930b374b3605f4589c842"
     }
   },
   "all_cycle_proof": {
