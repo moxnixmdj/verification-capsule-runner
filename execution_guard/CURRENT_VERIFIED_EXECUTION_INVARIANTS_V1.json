@@ -20,9 +20,30 @@
       },
       "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
       "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
+    },
+    {
+      "id": "TB_SCIENCE_PLANNER_EXECUTION_ENVELOPE_V2",
+      "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+      "requires": {
+        "canonical_prompt_builder_shared": true,
+        "production_context_guard_every_planner_call": true,
+        "server_context_tokens": 16384,
+        "reserved_completion_tokens": 4096,
+        "max_action_timeout_s": 3600,
+        "transport_max_action_timeout_s": 3600,
+        "seeded_request_identity": true,
+        "seed_identity_excludes_carrier_identity": true
+      },
+      "proof": {
+        "repair_path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V2.json",
+        "repair_git_blob_sha": "5caedddb7b5714fe74c4ba5709a43391e66dcf3a",
+        "independent_verification_path": "execution_guard/TB_SCIENCE_RANK15_V2_RUNTIME_SEMANTIC_VERIFICATION_20261009_V1.json",
+        "independent_verification_git_blob_sha": "30b854d096e597a332cf183394a8b67c84a30e53"
+      },
+      "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
     }
   ],
   "schema": "PROJECT_BRAIN_CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1",
-  "status": "ACTIVE_FAIL_CLOSED",
+  "status": "ACTIVE_FAIL_CLOSED__CPU_PORTABILITY_AND_PLANNER_ENVELOPE_RATCHETED",
   "terminal_credit_delta": 0
 }
