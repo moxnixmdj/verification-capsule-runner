@@ -35,7 +35,7 @@
   },
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
-  "status": "ACTIVE_ZERO_EXPOSURE__RANK15_V2_RATCHET_RESEALED__FRESH_V2_EPOCH_AND_CLAIM_BOUND__ACTIVATION_NOT_YET_ARMED",
+  "status": "ACTIVE_ZERO_EXPOSURE__RANK15_V2_RATCHET_RESEALED__FINALIZER_ACCOUNTING_HARDENED__ACTIVATION_NOT_YET_ARMED",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "task_read_authority": false,
   "task_started": false,
@@ -52,10 +52,10 @@
   },
   "preflight": {
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py",
-    "git_blob_sha": "47652d7dd8f9bedfd8df3736b1bf96548f274aee"
+    "git_blob_sha": "807d47cb35a718ec70303b52be34c54d5e52d5fc"
   },
   "finalizer": {
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py",
-    "git_blob_sha": "d05cb230372528e1e64e1b9a24fd68206f4bbaaf"
+    "git_blob_sha": "270ab499d6ecdb1106eaba15b724efbb872eee96"
   }
 }

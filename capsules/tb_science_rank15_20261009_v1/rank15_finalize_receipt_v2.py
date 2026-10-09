@@ -113,10 +113,12 @@ def main() -> int:
         "result_hashes":hashes,
         "execution_authority_consumed":task_started,
         "benchmark_trials_consumed":1 if task_started else 0,
+        "consumed_successes_delta":1 if success else 0,
+        "consumed_final_failures_delta":1 if task_started and not success else 0,
         "rerun_credit":False,
         "incremental_spend_usd":0,
         "promotion_authority":False,
-        "acceptance_credit_delta":1 if success else 0,
+        "acceptance_credit_delta":0,
         "terminal_credit_delta":0,
     }
     out=root/(safe_id+"__SLOT_RECEIPT_V2.json")

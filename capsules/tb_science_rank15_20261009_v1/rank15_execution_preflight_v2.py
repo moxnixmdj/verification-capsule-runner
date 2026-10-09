@@ -108,6 +108,11 @@ def main() -> int:
         assert surface["ledger"]["git_blob_sha"]==EXPECTED["RANK15_PUBLIC_LEDGER_BINDING_V21.json"]
         assert surface["epoch"]["git_blob_sha"]==EXPECTED["RANK15_EPOCH_V2.json"]
         assert surface["execution_claim"]["git_blob_sha"]==EXPECTED["RANK15_EXECUTION_CLAIM_V2.json"]
+        assert surface["preflight"]["path"]=="capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py"
+        assert surface["preflight"]["git_blob_sha"]==git_blob(Path(__file__).resolve())
+        finalizer_path=C/"rank15_finalize_receipt_v2.py"
+        assert surface["finalizer"]["path"]=="capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py"
+        assert surface["finalizer"]["git_blob_sha"]==git_blob(finalizer_path)
     except Exception as exc:
         errors.append("STRUCTURAL_CHECK:"+type(exc).__name__+":"+str(exc))
 

@@ -1,0 +1,42 @@
+name: Verify rank15 v2 finalizer accounting
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/test_rank15_finalize_receipt_v2.py"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - ".github/workflows/verify-rank15-v2-finalizer-accounting.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prove slot accounting cannot self-promote aggregate acceptance
+        run: |
+          set -euo pipefail
+          python -m py_compile "$C/rank15_finalize_receipt_v2.py" "$C/rank15_execution_preflight_v2.py" "$C/test_rank15_finalize_receipt_v2.py"
+          PYTHONPATH="$C" python "$C/test_rank15_finalize_receipt_v2.py"
+          python "$C/rank15_execution_preflight_v2.py"
+          python - <<'PY'
+          import json
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"))
+          assert s["task_read_authority"] is False
+          assert s["task_started"] is False
+          assert s["benchmark_trials_consumed"] == 0
+          assert s["terminal_credit_delta"] == 0
+          PY
