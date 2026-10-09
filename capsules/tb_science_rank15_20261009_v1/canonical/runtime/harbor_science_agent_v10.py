@@ -803,6 +803,7 @@ async def run_science_goal(
     evidence_directory: list[dict[str, Any]] = []
     evidence_ids: set[str] = set()
     requested_evidence_context: list[dict[str, Any]] = []
+    last_failed_effect: dict[str, Any] | None = None
 
     def record_observation(row: dict[str, Any]) -> None:
         observations.append(row)
@@ -1027,6 +1028,35 @@ async def run_science_goal(
 
             scored.sort(key=lambda x:(x[0],x[1]))
             chosen = scored[0][2]
+            chosen_command_sha256 = hashlib.sha256(
+                chosen["command"].encode("utf-8")
+            ).hexdigest()
+
+            if (
+                last_failed_effect is not None
+                and last_failed_effect.get("command_sha256") == chosen_command_sha256
+            ):
+                executed_action_ids.add(chosen["action_id"])
+                rejected_repeat = {
+                    "cycle": cycle,
+                    "kind": "BRAIN_REJECTED_KNOWN_FAILED_EFFECT_REPEAT",
+                    "action_id": chosen["action_id"],
+                    "command_sha256": chosen_command_sha256,
+                    "prior_failure_cycle": last_failed_effect.get("cycle"),
+                    "prior_failure_action_id": last_failed_effect.get("action_id"),
+                    "reason": "IDENTICAL_COMMAND_ALREADY_FAILED_WITHOUT_INTERVENING_SUCCESSFUL_EFFECT",
+                    "effect_executed": False,
+                    "coverage_promoted": False,
+                }
+                trace.append(rejected_repeat)
+                record_observation(rejected_repeat)
+                if journal_session is not None:
+                    await asyncio.to_thread(
+                        journal_session.append,
+                        "PLANNER_CANDIDATE_REJECTED",
+                        rejected_repeat,
+                    )
+                continue
 
             if journal_session is not None:
                 proposal_bytes = json.dumps(
@@ -1041,7 +1071,7 @@ async def run_science_goal(
                     "planner_request_identity_sha256": planned.get("request_identity_sha256"),
                     "proposal_sha256": hashlib.sha256(proposal_bytes).hexdigest(),
                     "action_id": chosen["action_id"],
-                    "command_sha256": hashlib.sha256(chosen["command"].encode("utf-8")).hexdigest(),
+                    "command_sha256": chosen_command_sha256,
                     "verify_command_sha256": hashlib.sha256(chosen["verify_command"].encode("utf-8")).hexdigest(),
                     "covers": list(chosen["covers"]),
                     "depends_on": list(chosen["depends_on"]),
@@ -1126,6 +1156,9 @@ async def run_science_goal(
                 action_receipt.returncode, action_receipt.stdout, action_receipt.stderr
             )
             if action_transport_clean:
+                # A different trustworthy successful effect changes the local state
+                # sufficiently to permit reconsidering an older failed command.
+                last_failed_effect = None
                 try:
                     verify_receipt = await transport.exec(
                         chosen["verify_command"],
@@ -1200,6 +1233,13 @@ async def run_science_goal(
                     verified = len(verified_covers) == len(chosen["covers"])
                     if verified:
                         verified_action_ids.add(chosen["action_id"])
+            else:
+                last_failed_effect = {
+                    "cycle": cycle,
+                    "action_id": chosen["action_id"],
+                    "command_sha256": chosen_command_sha256,
+                    "returncode": action_receipt.returncode,
+                }
 
             record = {
                 "cycle": cycle,
