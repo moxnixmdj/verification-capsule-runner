@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK16_ACTIVATION_V6",
+  "date": "2026-10-09",
+  "activate": true,
+  "slot_id": "terminal-bench-science/sparse-network-assimilation::trial-0",
+  "task_digest": "sha256:52ba7089dc32952df08c478af76b732fa82468c125431388adbf9798d869826f",
+  "execution_branch": "execute/tb-science-rank16-20261009-v1",
+  "execution_base": "terminal-execution-v1",
+  "execution_base_commit": "eba00b63ba9ee9a5081ed43fb5daa8b51a5a2ea2",
+  "brain_authority_blob": "20ebbe8ed593a7ead08b27a1c57864ede429cb46",
+  "brain_ledger_blob": "7e46f2a5c0c418a4d3be4360c8a85b7be7611abb",
+  "public_surface_blob": "df4a7158e717ee64a4b42c70d39ff19423d545dc",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
