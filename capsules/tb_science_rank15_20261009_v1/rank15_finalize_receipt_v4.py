@@ -220,7 +220,7 @@ def main() -> int:
             "ANY_NON_SUCCESS_AFTER_CAS_COUNTS_FINAL_ZERO"
         ),
     }
-    out = root / (safe_id + "__SLOT_RECEIPT_V3.json")
+    out = root / (safe_id + "__SLOT_RECEIPT_V4.json")
     out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(receipt, sort_keys=True))
     return 0
