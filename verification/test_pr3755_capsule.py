@@ -17,7 +17,7 @@ VER = CANON / "verification"
 EXPECTED = {
     "canonical/runtime/r2_direct_route_dynamic_admission_v1.py": "65fc5bdb5283944d058c6c6a2ff1fe360aa17489",
     "canonical/runtime/promote_r2_direct_route_v1.py": "85be8711c55243a8355094d766ced625a30062c7",
-    "canonical/runtime/r2_direct_live_admission_v1.py": "c995e4cad77e68268e18b059c97f00936283e6b6",
+    "canonical/runtime/r2_direct_live_admission_v1.py": "baf62086f6258d24ae933a900c43ae62c438c503",
     "canonical/runtime/unified_cognitive_fabric_v1.py": "5eaea605c4e441ef33180bd76a951a9f973dc40f",
 }
 
@@ -52,7 +52,7 @@ sys.path.insert(0, str(ROOT))
 # ---------------------------------------------------------------------------
 # Part A: exact route-admission + promotion source over a synthetic V20 carrier.
 # ---------------------------------------------------------------------------
-legacy = types.ModuleType("canonical.runtime.r2_direct_end_to_end_adequacy_v20")
+legacy = types.ModuleType("canonical.runtime.r2_direct_end_to_end_adequacy_v21")
 legacy.ROUTES = {"LEGACY": {"capability_id": "legacy"}}
 legacy_state = {"preflight": {"matched": False, "status": "NO"}, "runs": 0}
 def legacy_preflight(request, repo_root=None):
@@ -172,7 +172,7 @@ eq(out["status"], "PASS_DYNAMIC", "dynamic run status")
 legacy_state["preflight"] = {"matched": True, "route_id": "LEGACY", "status": "LEGACY_MATCH"}
 collision = wrapper.preflight({"task_id":"t","goal":"overlap"}, repo_root=ROOT)
 eq(collision["status"], "FAIL_CLOSED__DIRECT_ROUTE_COLLISION", "dynamic legacy overlap closed")
-eq(collision["reason"], "DYNAMIC_ROUTE_OVERLAPS_LEGACY_V20", "overlap reason")
+eq(collision["reason"], "DYNAMIC_ROUTE_OVERLAPS_LEGACY_V21", "overlap reason")
 
 legacy_state["preflight"] = {"matched": False, "direct_route_semantic_open": True, "route_id":"LEGACY_OPEN"}
 collision2 = wrapper.preflight({"task_id":"t","goal":"overlap"}, repo_root=ROOT)
@@ -333,7 +333,7 @@ eq(out["auto_one_shot_closure"],None,"user clarification no one shot")
 print(json.dumps({
     "status":"PASS__PR3755_EXACT_CONTROL_LOGIC_ISOLATED_EXECUTION",
     "source_blobs":EXPECTED,
-    "route_v20_exact_delegation_verified":True,
+    "route_v21_exact_delegation_verified":True,
     "dynamic_promotion_and_pointer_replay_verified":True,
     "dynamic_unique_execution_verified":True,
     "dynamic_legacy_collision_fail_closed_verified":True,
