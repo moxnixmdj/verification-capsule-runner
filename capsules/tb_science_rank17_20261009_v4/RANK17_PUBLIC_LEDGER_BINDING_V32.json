@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK17_PUBLIC_LEDGER_BINDING_V32",
+  "date": "2026-10-09",
+  "status": "CURRENT_PUBLIC_BINDING__BRAIN_LEDGER_V32__SIXTEEN_CONSUMED__RANK17_TASK_READ_HISTORY_TRUE__UNSTARTED_UNCONSUMED",
+  "brain_ledger": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V32.json",
+    "git_blob_sha": "9c2f95b2d7946e374811321cde58d11f53704fd2"
+  },
+  "consumed_slots": 16,
+  "consumed_successes": 0,
+  "consumed_final_failures": 16,
+  "next_unconsumed_slot": {
+    "ledger_schedule_rank": 17,
+    "slot_id": "terminal-bench-science/variable-star-vetting::trial-0",
+    "task_digest": "sha256:51bf2b9d8e87a428772d92c6765d83ad3edc7c24283d2ff75af5f050aaee0c67"
+  },
+  "rank17_task_read_history": true,
+  "rank17_last_preexposure_run_id": 37963724913,
+  "rank17_task_started": false,
+  "rank17_benchmark_trials_consumed": 0,
+  "rank17_prior_activation_pr": 2537,
+  "rank17_prior_activation_reuse_authority": false,
+  "generic_repair_verified": true,
+  "public_v4_reseal_required": true,
+  "terminal_credit_delta": 0
+}

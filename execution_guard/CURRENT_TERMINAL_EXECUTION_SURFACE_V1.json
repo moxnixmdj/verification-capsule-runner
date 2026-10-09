@@ -1,25 +1,25 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-09",
-  "status": "ACTIVE_RANK17_V3_AGENT_V11_PLANNER_V6_TYPED_SCHEMA_V6_DURABLE_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
+  "status": "ACTIVE_RANK17_V4_AGENT_V11_PLANNER_V6_REPAIRED_RAW_TASK_RUNTIME_V6_DURABLE_RESEAL__ZERO_NEW_EXPOSURE__AWAIT_EXACT_ONE_FILE_V4_ACTIVATION_PR",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/variable-star-vetting::trial-0",
   "task_digest": "sha256:51bf2b9d8e87a428772d92c6765d83ad3edc7c24283d2ff75af5f050aaee0c67",
-  "workflow_path": ".github/workflows/execute-tb-science-rank17-20261009-v3.yml",
-  "workflow_git_blob_sha": "024ad08b172735e639e55de80c85c44622a3657d",
-  "activation_path": "capsules/tb_science_rank17_20261009_v3/ACTIVATE_RANK17_V3_PR.json",
+  "workflow_path": ".github/workflows/execute-tb-science-rank17-20261009-v4.yml",
+  "workflow_git_blob_sha": "d41e86c9f7fc5dbe02186b7429cb22eb04ef564e",
+  "activation_path": "capsules/tb_science_rank17_20261009_v4/ACTIVATE_RANK17_V4_PR.json",
   "behavior": {
-    "path": "execution_guard/TB_SCIENCE_RANK17_EXECUTION_BEHAVIOR_V3.json",
-    "git_blob_sha": "7640cc4752bc2492adf4368ad340740b3f09515c"
+    "path": "execution_guard/TB_SCIENCE_RANK17_EXECUTION_BEHAVIOR_V4.json",
+    "git_blob_sha": "644b8b8988bf12a03da2088a782828d999388420"
   },
   "authority": {
-    "path": "capsules/tb_science_rank17_20261009_v3/RANK17_PUBLIC_AUTHORITY_BINDING_V3.json",
-    "git_blob_sha": "28e7fb96c2cdb9dd52afba74dc8a8f43a4afa7fe"
+    "path": "capsules/tb_science_rank17_20261009_v4/RANK17_PUBLIC_AUTHORITY_BINDING_V4.json",
+    "git_blob_sha": "f8d0c1c74d27f0146be62eab3fec622640b1e665"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank17_20261009_v3/RANK17_PUBLIC_LEDGER_BINDING_V31.json",
-    "git_blob_sha": "4fa4c7440043f852bd6c0bff20be37c004128b83"
+    "path": "capsules/tb_science_rank17_20261009_v4/RANK17_PUBLIC_LEDGER_BINDING_V32.json",
+    "git_blob_sha": "0e0d32f574d0d4f01081719054d9016a8d078558"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
@@ -30,52 +30,58 @@
     "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
   },
   "epoch": {
-    "path": "capsules/tb_science_rank17_20261009_v3/RANK17_EPOCH_V6.json",
-    "git_blob_sha": "2243995f41c9a43de945406d4b8db6279ce181b9"
+    "path": "capsules/tb_science_rank17_20261009_v4/RANK17_EPOCH_V6_V4.json",
+    "git_blob_sha": "288c1c71d3da02e319299ba923d780befefb724c"
   },
   "execution_claim": {
-    "path": "capsules/tb_science_rank17_20261009_v3/RANK17_EXECUTION_CLAIM_V6.json",
-    "git_blob_sha": "ef7d505add505581b354b7c9cdb2947f5a8834f9"
+    "path": "capsules/tb_science_rank17_20261009_v4/RANK17_EXECUTION_CLAIM_V6_V4.json",
+    "git_blob_sha": "d12d8cf9a2410abd8201e0ad832a536f5401ad26"
   },
   "preflight": {
-    "path": "capsules/tb_science_rank17_20261009_v3/rank17_execution_preflight_v6.py",
-    "git_blob_sha": "e9ded48043850d052d99b3ff36f7cea22284b493"
+    "path": "capsules/tb_science_rank17_20261009_v4/rank17_execution_preflight_v6.py",
+    "git_blob_sha": "ab4b9d4b851523eb2b1a5706ea20b428ed20ea89"
   },
   "finalizer": {
-    "path": "capsules/tb_science_rank17_20261009_v3/rank17_finalize_receipt_v6.py",
+    "path": "capsules/tb_science_rank17_20261009_v4/rank17_finalize_receipt_v6.py",
     "git_blob_sha": "36dea2a6eaaae346d61977ff7818407b0ba89513"
   },
   "execution_authority": true,
   "task_read_authority": true,
+  "task_read_history": true,
   "task_started": false,
   "benchmark_trials_consumed": 0,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
   "hard_nonclaims": [
-    "NO_RANK17_V3_ACTIVATION_FILE_ON_RESEAL",
-    "NO_RANK17_TASK_READ",
+    "NO_RANK17_V4_ACTIVATION_FILE_ON_RESEAL",
+    "NO_NEW_RANK17_V4_TASK_READ",
     "NO_RANK17_TASK_START",
     "NO_RANK17_RESULT",
     "NO_ACCEPTANCE_OR_TERMINAL_CREDIT",
+    "NO_RANK17_V3_ACTIVATION_REUSE_AUTHORITY",
     "NO_RANK15_OR_RANK16_REPLAY_OR_REPLACEMENT_AUTHORITY"
   ],
   "reseal": {
-    "brain_authority_v3_blob": "f10ae44652cab95db1ad271ba6ae388aae137760",
-    "brain_authority_verify_v3_blob": "0f562dfa69a726ae14916b94e4e552fcd8a36730",
-    "brain_ledger_v31_blob": "8f01d3f68664ca64ce727f69845b8db6eb9ce903",
-    "brain_runtime_v11_closure_blob": "93a98c32a5e5b94a497264698b30bb9efac6fbb9",
-    "public_authority_v3_blob": "28e7fb96c2cdb9dd52afba74dc8a8f43a4afa7fe",
-    "public_ledger_v31_blob": "4fa4c7440043f852bd6c0bff20be37c004128b83",
-    "epoch_v6_blob": "2243995f41c9a43de945406d4b8db6279ce181b9",
-    "execution_claim_v6_blob": "ef7d505add505581b354b7c9cdb2947f5a8834f9",
-    "workflow_v3_blob": "024ad08b172735e639e55de80c85c44622a3657d",
-    "behavior_v3_blob": "7640cc4752bc2492adf4368ad340740b3f09515c",
+    "brain_authority_v4_blob": "1f0e1e7739eeaff67cac8ca5781a94c0f6ea8cf9",
+    "brain_authority_verify_v4_blob": "d41a4f2e32f7ba94ea5dcc78aad8bc0a73394826",
+    "brain_ledger_v32_blob": "9c2f95b2d7946e374811321cde58d11f53704fd2",
+    "brain_repair_verify_blob": "28ec71862357908bd2c868ca6494a9d89439a223",
+    "brain_preexposure_abort_truth_blob": "7bb8e234fbe4458c9a1e97c82aba2becfa1c895e",
+    "public_authority_v4_blob": "f8d0c1c74d27f0146be62eab3fec622640b1e665",
+    "public_ledger_v32_blob": "0e0d32f574d0d4f01081719054d9016a8d078558",
+    "epoch_v6_v4_blob": "288c1c71d3da02e319299ba923d780befefb724c",
+    "execution_claim_v6_v4_blob": "d12d8cf9a2410abd8201e0ad832a536f5401ad26",
+    "workflow_v4_blob": "d41e86c9f7fc5dbe02186b7429cb22eb04ef564e",
+    "behavior_v4_blob": "644b8b8988bf12a03da2088a782828d999388420",
     "invariant_registry_blob": "639eb816769624f5941f15863d75ca0b265bc0df",
     "admission_guard_v3_blob": "f8f3346a8863abdd4a15a5553fc6a49726642c81",
     "typed_action_protocol_v1_blob": "f29e347ccc5f52bfd474c816b03afa6d4dc520be",
     "agent_v11_blob": "124d13a7449281c9781c39df8f02c2e8f74226b4",
-    "planner_v6_blob": "ecfaa7523347ba0e902baa9d411e333d3e2853e4"
+    "planner_v6_blob": "ecfaa7523347ba0e902baa9d411e333d3e2853e4",
+    "lossless_raw_task_contract_blob": "53a440fccf91aa08f18abfff4f283e5fd18d9fcd",
+    "explicit_requirement_index_blob": "525fac941302254a47710aaae30b0174fab2cb40",
+    "punctuation_regression_test_blob": "1ed5160a49f9d8942ae840cb277ad26dd9cef099"
   },
   "consumed": false,
-  "next": "EXACT_ONE_FILE_RANK17_V3_ACTIVATION_PR_ONLY_AFTER_ZERO_EXPOSURE_RESEAL_VERIFICATION"
+  "next": "EXACT_ONE_FILE_RANK17_V4_ACTIVATION_PR_ONLY_AFTER_V4_ZERO_EXPOSURE_RESEAL_VERIFICATION"
 }
