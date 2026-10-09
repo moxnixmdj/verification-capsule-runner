@@ -271,13 +271,37 @@ class Rank15V3RuntimeTests(unittest.TestCase):
                     cycle=1,
                 )
 
-    def test_post_freeze_requirement_repr_growth_is_below_reserve(self):
+    def test_cycle0_prepaid_state_reserve_dominates_worst_case_serialization_bytes(self):
         ids = [f"R{i:07d}" for i in range(16)]
         self.assertTrue(all(len(x) == planner.MAX_REQUIREMENT_ID_CHARS for x in ids))
-        cycle0 = f"Frozen requirements: {None!r}\\nUnresolved: {[]!r}\\n"
-        frozen = f"Frozen requirements: {ids!r}\\nUnresolved: {ids!r}\\n"
-        growth_bytes = len(frozen.encode("ascii")) - len(cycle0.encode("ascii"))
-        self.assertLess(growth_bytes, agent.POST_FREEZE_STATE_RESERVE_TOKENS)
+        cycle0_state = (
+            f"Frozen requirements: {None!r}\\nUnresolved: {[]!r}"
+            + "\\nCycle-0 post-freeze state reserve (ignored; digits are tokenizer-isolated): "
+            + agent.POST_FREEZE_STATE_RESERVE_DIGITS
+        )
+        frozen_state = f"Frozen requirements: {ids!r}\\nUnresolved: {ids!r}"
+        self.assertLess(len(frozen_state.encode("ascii")), len(cycle0_state.encode("ascii")))
+        self.assertLess(
+            len(frozen_state.encode("ascii")),
+            agent.POST_FREEZE_STATE_RESERVE_TOKENS,
+        )
+
+    def test_cycle0_prompt_contains_reserve_and_frozen_prompt_removes_it(self):
+        common = dict(
+            goal="synthetic goal",
+            unresolved=[],
+            raw_task_prompt_summary={"ordered_manifest_sha256": "c" * 64},
+            declared_inputs=[],
+            brain_deliverables={},
+            observations=[],
+        )
+        cycle0 = agent.build_science_planner_prompt(requirements=None, **common)
+        frozen = agent.build_science_planner_prompt(
+            requirements=["R0000000"],
+            **{**common, "unresolved": ["R0000000"]},
+        )
+        self.assertIn(agent.POST_FREEZE_STATE_RESERVE_DIGITS, cycle0)
+        self.assertNotIn(agent.POST_FREEZE_STATE_RESERVE_DIGITS, frozen)
 
     def test_post_freeze_reserve_is_positive_and_bounded(self):
         self.assertGreater(agent.POST_FREEZE_STATE_RESERVE_TOKENS, 0)
