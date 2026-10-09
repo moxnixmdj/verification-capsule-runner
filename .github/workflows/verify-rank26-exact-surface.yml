@@ -27,9 +27,9 @@ jobs:
             test -d /app/vllm/vllm
             test -L "$(python3 -c "import os, vllm; print(os.path.dirname(vllm.__file__))")" || true
             python3 - <<'"'"'PY'"'"'
-import importlib.metadata, pathlib
-assert importlib.metadata.version("vllm") == "0.21.0"
-assert pathlib.Path("/app/vllm/vllm/reasoning").is_dir()
-print("RANK26_EXACT_SURFACE_PASS")
-PY
+          import importlib.metadata, pathlib
+          assert importlib.metadata.version("vllm") == "0.21.0"
+          assert pathlib.Path("/app/vllm/vllm/reasoning").is_dir()
+          print("RANK26_EXACT_SURFACE_PASS")
+          PY
           '
