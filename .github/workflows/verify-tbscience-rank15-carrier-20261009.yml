@@ -26,9 +26,9 @@ jobs:
           test "$(git hash-object "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V19.json")" = "c9b887ac4fb57046be666492748d25ca96056378"
           test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V12.json")" = "8008b1e2382c1235e3b788e0f8d4ab9a48487409"
           test "$(git hash-object "$C/SCIENCE_FROZEN_REQUIREMENTS_REPAIR_VERIFY_20261009_V1.json")" = "d60c84676de7dfa090810b3b65132d324ac49f38"
-          test "$(git hash-object "$C/RANK15_EPOCH_V1.json")" = "063761501704d31db73428200bc559f9eb2b038a"
-          test "$(git hash-object "$C/RANK15_EXECUTION_CLAIM_V1.json")" = "5818601880d54efd856e5a27b9cb14e9b6021e7e"
-          test "$(git hash-object "$C/rank15_prestart_token_guard_v1.py")" = "6956c6dd1f7b6e6a964bc927876d96aa479de476"
+          test "$(git hash-object "$C/RANK15_EPOCH_V1.json")" = "ad0c76996163e5ee75553af7a9c00276dbe607c9"
+          test "$(git hash-object "$C/RANK15_EXECUTION_CLAIM_V1.json")" = "a37da97fbc06ffdbb937996eaf1615dd56af1c0d"
+          test "$(git hash-object "$C/rank15_prestart_token_guard_v1.py")" = "0139a20070cd1a51866c309bac1976b27ce7ac0d"
           test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "e7e258f567499bd7356c0276d6293aa30dbd338c"
           python - <<'PY'
           import json,os,pathlib,subprocess
