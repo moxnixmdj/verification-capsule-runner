@@ -1,0 +1,57 @@
+name: Preflight TB-Science rank12 storage headroom v1
+
+on:
+  pull_request:
+    branches: ["terminal-execution-v1"]
+    paths:
+      - ".github/workflows/preflight-tb-science-rank12-storage-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  storage-headroom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore exact cached model
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+          fail-on-cache-miss: true
+
+      - name: Measure post-model storage headroom
+        run: |
+          set -euo pipefail
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          python - <<'PY'
+          import json,os,pathlib,shutil
+          u=shutil.disk_usage(os.environ["GITHUB_WORKSPACE"])
+          task=10240*1024*1024
+          model=pathlib.Path("models/Qwen3.5-9B-M-TS-Q4_K_M.gguf")
+          obj={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK12_STORAGE_PREFLIGHT_V1",
+            "status":"ZERO_BENCHMARK_EXPOSURE_STORAGE_MEASUREMENT_ONLY",
+            "post_model_total_bytes":u.total,
+            "post_model_used_bytes":u.used,
+            "post_model_free_bytes":u.free,
+            "rank12_declared_task_storage_bytes":task,
+            "model_file_bytes":model.stat().st_size,
+            "free_minus_rank12_declared_task_storage_bytes":u.free-task,
+            "declared_task_storage_fits_arithmetically_after_model":u.free>=task,
+            "declared_task_storage_plus_2GiB_headroom_fits":u.free>=task+2*1024*1024*1024,
+            "benchmark_task_exposure":0,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("RANK12_STORAGE_PREFLIGHT.json").write_text(json.dumps(obj,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(obj,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-rank12-storage-preflight-v1
+          path: RANK12_STORAGE_PREFLIGHT.json
+          retention-days: 7
