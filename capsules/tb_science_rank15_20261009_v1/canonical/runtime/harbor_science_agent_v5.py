@@ -993,11 +993,44 @@ class HarborScienceAgent(BaseAgent):
         return None
 
     async def run(self, instruction: str, environment: BaseEnvironment, context: AgentContext) -> None:
-        result = await run_science_goal(instruction, environment)
-        self.logs_dir.mkdir(parents=True, exist_ok=True)
-        (self.logs_dir / "project_brain_science_trace.json").write_text(
-            json.dumps(result, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        # Never turn an ordinary internal controller/provider exception into a
+        # Harbor agent crash. Harbor's independent verifier is the terminal
+        # scoring authority and must still see the actual environment state.
+        # asyncio.CancelledError/SystemExit/KeyboardInterrupt inherit BaseException
+        # and deliberately remain outside this containment boundary.
+        try:
+            result = await run_science_goal(instruction, environment)
+        except Exception as exc:
+            result = {
+                "schema": SCHEMA,
+                "status": "BLOCKED_INTERNAL_CONTROLLER_OR_TRANSPORT_EXCEPTION",
+                "internal_unsolved": True,
+                "externality_proved": False,
+                "task_completion_claimed": False,
+                "model_has_terminal_authority": False,
+                "effect_replay_authority": False,
+                "exception_type": type(exc).__name__,
+                "exception": str(exc),
+                "summary": (
+                    "Internal controller/provider failure was contained inside the "
+                    "single Harbor trial. No retry, replacement trial, or terminal "
+                    "claim was created; independent Harbor verification remains live."
+                ),
+            }
+
+        # Logging is evidence, not scoring authority. A host log-write failure
+        # must not convert an otherwise verifiable environment into agent failure.
+        try:
+            self.logs_dir.mkdir(parents=True, exist_ok=True)
+            (self.logs_dir / "project_brain_science_trace.json").write_text(
+                json.dumps(result, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+
         if hasattr(context, "cost_usd"):
-            context.cost_usd = 0.0
+            try:
+                context.cost_usd = 0.0
+            except Exception:
+                pass
