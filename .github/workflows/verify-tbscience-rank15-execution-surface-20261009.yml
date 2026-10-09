@@ -1,0 +1,43 @@
+name: Verify TB-Science rank15 execution surface
+on:
+  push:
+    branches:
+      - stage/tb-science-rank15-execution-surface-20261009-v1
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify inert execution surface
+        env:
+          C: capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          test ! -e "$C/ACTIVATE_RANK15_PR.json"
+          test "$(git hash-object "$C/rank15_execution_preflight_v1.py")" = "941445c191880794df739d8e9205497b6e2efd2d"
+          test "$(git hash-object "$C/rank15_finalize_receipt_v1.py")" = "9edfdb036f2b2b6282cc492f17f4c192ad442d10"
+          test "$(git hash-object ".github/workflows/execute-tb-science-rank15-20261009-v1.yml")" = "26d0d7c9735e54ce028f6c53711ec87db566978f"
+          python -m py_compile "$C/rank15_execution_preflight_v1.py" "$C/rank15_finalize_receipt_v1.py"
+          python "$C/rank15_execution_preflight_v1.py"
+          CACHE_READY=false HARBOR_OUTCOME=skipped SAFE_ID=protein-active-learning-trial-0 python "$C/rank15_finalize_receipt_v1.py"
+          python - <<'PY'
+          import json
+          p=json.load(open("RANK15_EXECUTION_PREFLIGHT.json"))
+          r=json.load(open("protein-active-learning-trial-0__SLOT_RECEIPT_V1.json"))
+          assert p["pass"] is True and p["activation_present"] is False
+          assert p["task_read"] is False and p["benchmark_trials_consumed"]==0
+          assert r["status"]=="PREEXPOSURE_ABORT_NONCONSUMING"
+          assert r["task_read"] is False and r["task_started"] is False
+          assert r["execution_authority_consumed"] is False
+          assert r["benchmark_trials_consumed"]==0
+          assert r["rerun_credit"] is False
+          PY
+          grep -F 'paths:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
+          grep -F 'ACTIVATE_RANK15_PR.json' .github/workflows/execute-tb-science-rank15-20261009-v1.yml >/dev/null
+          ! grep -F 'workflow_dispatch' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
+          ! grep -F 'schedule:' .github/workflows/execute-tb-science-rank15-20261009-v1.yml
