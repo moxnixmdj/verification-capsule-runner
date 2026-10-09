@@ -1,0 +1,71 @@
+name: Verify TB-Science rank14 V11 summary closure
+
+on:
+  push:
+    branches: ["verify-tbscience-rank14-v11-summary-closure-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-rank14-v11-summary-closure-20261009.yml"
+      - "capsules/tb_science_rank14_20261009_v1/canonical/runtime/harbor_science_agent_v1.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_rank14_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact merged summary-repair bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "d397324f411d002bdbdca348aaad708b5b40c9c2"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          test "$(git hash-object "$C/canonical/runtime/lossless_raw_task_contract_v1.py")" = "d54d5a2f7efa76b653d288f4f53da4883644baa6"
+          test "$(git hash-object "$C/canonical/runtime/raw_task_acceptance_residual_localizer_v1.py")" = "f29616cf7726959aa28db4ed6541a9fc0bc2ac76"
+          python -m py_compile "$C"/canonical/runtime/*.py
+
+      - name: Recompute V11 exact transitive closure
+        run: |
+          set -euo pipefail
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py" --repo-root "$C" --carrier-root "$C"             --root canonical/runtime/harbor_science_agent_v1.py             --root canonical/runtime/harbor_science_planner_v1.py             --root canonical/runtime/lossless_raw_task_contract_v1.py             --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py > RANK14_V11_CLOSURE.json
+          python - <<'PY'
+          import json
+          x=json.load(open("RANK14_V11_CLOSURE.json"))
+          assert x["pass"] is True,x
+          assert x["closure"]["closure_file_count"]==15,x
+          assert x["missing_paths"]==[],x
+          assert x["mismatched"]==[],x
+          assert x["closure"]["unresolved_dynamic_imports"]==[],x
+          by={r["path"]:r["git_blob_sha"] for r in x["closure"]["files"]}
+          assert by["canonical/runtime/harbor_science_agent_v1.py"]=="d397324f411d002bdbdca348aaad708b5b40c9c2"
+          assert by["canonical/runtime/harbor_science_planner_v1.py"]=="58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_V11_SUMMARY_CLOSURE_PUBLIC_VERIFY_V1",
+            "status":"PASS__15_FILE_TRANSITIVE_CLOSURE__SUMMARY_AGENT_EXACT__ZERO_EXPOSURE",
+            "pass":True,
+            "closure_file_count":15,
+            "agent_blob":"d397324f411d002bdbdca348aaad708b5b40c9c2",
+            "planner_blob":"58964dc8d6b5eed5c202081cd800035c791eeb1d",
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0,
+          }
+          open("RANK14_V11_VERIFY.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank14-v11-summary-closure-20261009
+          path: |
+            RANK14_V11_CLOSURE.json
+            RANK14_V11_VERIFY.json
+          retention-days: 2
