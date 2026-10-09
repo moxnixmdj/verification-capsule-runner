@@ -8,6 +8,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import rank15_start_cas_v4 as start_cas
+
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_RANK15_V4"
 SLOT = "terminal-bench-science/protein-active-learning::trial-0"
 TASK = "terminal-bench-science/protein-active-learning"
@@ -30,7 +32,7 @@ def _git_blob(path: Path) -> str | None:
     if not path.is_file():
         return None
     raw = path.read_bytes()
-    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 
 def _slot_start_key() -> str:
@@ -70,6 +72,36 @@ def main() -> int:
         expected_prestart_sha = _sha256(guard_path)
         expected_logical = guard.get("logical_attempt_id")
         runtime_material = cas.get("runtime_identity_material")
+        expected_runtime_sha = None
+        expected_runtime_material = None
+        runtime_recompute_error = None
+        try:
+            expected_runtime_sha, expected_runtime_material = start_cas._runtime_identity(root, surface)
+        except Exception as exc:
+            runtime_recompute_error = type(exc).__name__ + ":" + str(exc)
+
+        workflow_rel = surface.get("workflow_path") if isinstance(surface, dict) else None
+        workflow_expected = surface.get("workflow_git_blob_sha") if isinstance(surface, dict) else None
+        workflow_actual = (
+            _git_blob(root / workflow_rel)
+            if isinstance(workflow_rel, str)
+            else None
+        )
+        authority_row = surface.get("authority") if isinstance(surface, dict) else None
+        authority_rel = authority_row.get("path") if isinstance(authority_row, dict) else None
+        authority_expected = authority_row.get("git_blob_sha") if isinstance(authority_row, dict) else None
+        authority_actual = (
+            _git_blob(root / authority_rel)
+            if isinstance(authority_rel, str)
+            else None
+        )
+        activation_rel = surface.get("activation_path") if isinstance(surface, dict) else None
+        activation_actual = (
+            _git_blob(root / activation_rel)
+            if isinstance(activation_rel, str)
+            else None
+        )
+
         epoch_row = surface.get("epoch") if isinstance(surface, dict) else None
         claim_row = surface.get("execution_claim") if isinstance(surface, dict) else None
         epoch_rel = epoch_row.get("path") if isinstance(epoch_row, dict) else None
@@ -86,6 +118,36 @@ def main() -> int:
                 and cas.get("logical_attempt_id") == expected_logical
             ),
             "RUNTIME_IDENTITY_FORMAT": _hex(cas.get("runtime_identity_sha256"), 64),
+            "RUNTIME_IDENTITY_RECOMPUTE_OK": runtime_recompute_error is None,
+            "RUNTIME_IDENTITY_RECOMPUTED_MATCH": (
+                expected_runtime_sha is not None
+                and cas.get("runtime_identity_sha256") == expected_runtime_sha
+            ),
+            "RUNTIME_IDENTITY_MATERIAL_EXACT_MATCH": (
+                isinstance(runtime_material, dict)
+                and expected_runtime_material is not None
+                and runtime_material == expected_runtime_material
+            ),
+            "WORKFLOW_SURFACE_BINDING_VALID": (
+                isinstance(workflow_expected, str)
+                and workflow_actual == workflow_expected
+            ),
+            "WORKFLOW_CAS_MATCH": (
+                isinstance(workflow_expected, str)
+                and cas.get("workflow_git_blob_sha") == workflow_expected
+            ),
+            "AUTHORITY_SURFACE_BINDING_VALID": (
+                isinstance(authority_expected, str)
+                and authority_actual == authority_expected
+            ),
+            "AUTHORITY_CAS_MATCH": (
+                isinstance(authority_expected, str)
+                and cas.get("authority_git_blob_sha") == authority_expected
+            ),
+            "ACTIVATION_CAS_MATCH": (
+                activation_actual is not None
+                and cas.get("activation_git_blob_sha") == activation_actual
+            ),
             "PRESTART_RECEIPT_SHA_FORMAT": _hex(cas.get("prestart_receipt_sha256"), 64),
             "PRESTART_RECEIPT_SHA_MATCH": (
                 expected_prestart_sha is not None
@@ -201,6 +263,11 @@ def main() -> int:
         "start_cas_logical_attempt_id": cas.get("logical_attempt_id"),
         "start_cas_runtime_identity_sha256": cas.get("runtime_identity_sha256"),
         "start_cas_runtime_identity_material": cas.get("runtime_identity_material"),
+        "recomputed_runtime_identity_sha256": expected_runtime_sha if cas_claimed_acquired else None,
+        "runtime_identity_recompute_error": runtime_recompute_error if cas_claimed_acquired else None,
+        "surface_workflow_git_blob_sha": workflow_expected if cas_claimed_acquired else None,
+        "surface_authority_git_blob_sha": authority_expected if cas_claimed_acquired else None,
+        "surface_activation_git_blob_sha": activation_actual if cas_claimed_acquired else None,
         "surface_epoch_git_blob_sha": (
             surface.get("epoch", {}).get("git_blob_sha")
             if isinstance(surface.get("epoch"), dict) else None

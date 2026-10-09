@@ -162,7 +162,7 @@ def main() -> int:
 
         behavior_row = surface.get("behavior")
         behavior = read_json(safe(behavior_row["path"])) if isinstance(behavior_row, Mapping) else {}
-        if behavior.get("schema") != "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3":
+        if behavior.get("schema") != "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4":
             errors.append("BEHAVIOR_SCHEMA_INVALID")
         if behavior.get("slot_id") != SLOT or behavior.get("task_digest") != DIGEST:
             errors.append("BEHAVIOR_SLOT_OR_DIGEST_MISMATCH")

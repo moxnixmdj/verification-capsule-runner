@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4",
   "date": "2026-10-09",
-  "status": "STAGED_ZERO_EXPOSURE__V4_EPOCH_CLAIM_BOUND_DURABLE_START_INTENT__EXECUTION_AUTHORITY_FALSE",
+  "status": "STAGED_ZERO_EXPOSURE__V4_EPOCH_CLAIM_AND_FINAL_CURRENT_IDENTITY_BOUND__EXECUTION_AUTHORITY_FALSE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
@@ -42,7 +42,9 @@
     "fresh_execution_claim_binding_required": true,
     "epoch_claim_bound_into_preflight": true,
     "epoch_claim_bound_into_start_runtime_identity": true,
-    "finalizer_rechecks_epoch_claim_identity": true
+    "finalizer_rechecks_epoch_claim_identity": true,
+    "finalizer_recomputes_runtime_identity_from_current_bound_bytes": true,
+    "finalizer_requires_current_workflow_authority_activation_identity": true
   },
   "runtime_bindings": {
     "planner": {
@@ -75,11 +77,11 @@
     },
     "finalizer": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py",
-      "git_blob_sha": "54a01a6caa4ca817584e255ca8dcb3b8537bd7f4"
+      "git_blob_sha": "d376e1826b549c108ab51a326a2d30a7e388277a"
     },
     "preflight": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py",
-      "git_blob_sha": "aeebd9bb3fb2fbd8b8188f695e435b8b3cfd1dee"
+      "git_blob_sha": "d45d917a108ef567fa72e296c15d17cbd8652b49"
     },
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v2.py",
@@ -99,7 +101,7 @@
     },
     "epoch_claim_binding_tests": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py",
-      "git_blob_sha": "48c2828a5fa8b037eb5787fff7cb6060bda8ca91"
+      "git_blob_sha": "cb11568b60644356cf0a6732d5800663cefbddef"
     }
   },
   "all_cycle_proof": {
