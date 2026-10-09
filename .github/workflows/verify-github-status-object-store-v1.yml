@@ -6,6 +6,9 @@ on:
     paths:
       - "execution_guard/github_status_object_store_v1.py"
       - "execution_guard/tests/test_github_status_object_store_v1.py"
+      - "execution_guard/terminal_slot_start_cas_v2.py"
+      - "execution_guard/tests/test_terminal_slot_start_status_backend_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v5.py"
       - ".github/workflows/verify-github-status-object-store-v1.yml"
 
 permissions:
@@ -27,8 +30,13 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             execution_guard/github_status_object_store_v1.py \
-            execution_guard/tests/test_github_status_object_store_v1.py
+            execution_guard/tests/test_github_status_object_store_v1.py \
+            execution_guard/terminal_slot_start_cas_v2.py \
+            execution_guard/tests/test_terminal_slot_start_status_backend_v1.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v5.py
       - name: Run adversarial tests
         run: |
           set -euo pipefail
-          python -m unittest -v execution_guard.tests.test_github_status_object_store_v1
+          python -m unittest -v \
+            execution_guard.tests.test_github_status_object_store_v1 \
+            execution_guard.tests.test_terminal_slot_start_status_backend_v1
