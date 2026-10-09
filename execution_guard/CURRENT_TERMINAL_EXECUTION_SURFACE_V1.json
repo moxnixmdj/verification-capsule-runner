@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-09",
-  "status": "ACTIVE_V6_PROOF_CARRYING_SLOT_BOUND_JOURNALED_RUNTIME__FINAL_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
+  "status": "ACTIVE_V6_QUOTE_SAFE_PROOF_CARRYING_SLOT_BOUND_JOURNALED_RUNTIME__FINAL_RESEAL__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
@@ -11,15 +11,15 @@
   "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V6_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V6.json",
-    "git_blob_sha": "0b984075b15b935df55d555e123f94c5261c53d6"
+    "git_blob_sha": "c715fdf39e94eb5f7dbab8e099dfbc62fcab61bc"
   },
   "authority": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V6.json",
-    "git_blob_sha": "b7a05fb21dd113096d408b7cbd41ad3c924cfbd0"
+    "git_blob_sha": "e50a434c0caf92c752407f7ce7a990461a5eb968"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V27.json",
-    "git_blob_sha": "0e323a70d6a64709a854da477bf5fbdbc151390d"
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V28.json",
+    "git_blob_sha": "5ec135b173476298f52abc30f8e5a885fee8fc21"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
@@ -27,15 +27,15 @@
   },
   "admission_guard": {
     "path": "execution_guard/terminal_execution_admission_v3.py",
-    "git_blob_sha": "e4c501cea12173bd89958e4e98217f1265af6604"
+    "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
   },
   "epoch": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V6.json",
-    "git_blob_sha": "05b3b1acbcf64b022fa56fc70831953ca39be4e2"
+    "git_blob_sha": "a996f76a06a104570375d4703d79274ba8786f7d"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V6.json",
-    "git_blob_sha": "c3ce1771f47b03a1ef0db1bb05d0827616ad0b40"
+    "git_blob_sha": "bebd667e92c3e1f0bba2bcb7acc25858e816fee7"
   },
   "preflight": {
     "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v6.py",
@@ -60,17 +60,17 @@
     "NO_REPLAY_OR_REPLACEMENT_AFTER_DURABLE_START_CAS"
   ],
   "reseal": {
-    "brain_authority_v11_blob": "3753953af66de8bfdbd4902f636a8cb4b6ec1a6d",
-    "brain_ledger_v27_blob": "0e9e1e8ac90a2678f13a58014cb9d5cf370de9c0",
-    "public_authority_v6_blob": "b7a05fb21dd113096d408b7cbd41ad3c924cfbd0",
-    "public_ledger_v27_blob": "0e323a70d6a64709a854da477bf5fbdbc151390d",
-    "epoch_v6_blob": "05b3b1acbcf64b022fa56fc70831953ca39be4e2",
-    "execution_claim_v6_blob": "c3ce1771f47b03a1ef0db1bb05d0827616ad0b40",
+    "brain_authority_v12_blob": "04e2c15b143dd0e4f80bb96c82b7573b780dd56f",
+    "brain_ledger_v28_blob": "d5bcd21a6a8ab977f72a1a0e10b364ead61ceb3e",
+    "public_authority_v6_blob": "e50a434c0caf92c752407f7ce7a990461a5eb968",
+    "public_ledger_v28_blob": "5ec135b173476298f52abc30f8e5a885fee8fc21",
+    "epoch_v6_blob": "a996f76a06a104570375d4703d79274ba8786f7d",
+    "execution_claim_v6_blob": "bebd667e92c3e1f0bba2bcb7acc25858e816fee7",
     "workflow_v6_blob": "7fb38b0e110455a2115034254ec4e77a13a66afa",
-    "behavior_v6_blob": "0b984075b15b935df55d555e123f94c5261c53d6",
+    "behavior_v6_blob": "c715fdf39e94eb5f7dbab8e099dfbc62fcab61bc",
     "invariant_registry_blob": "639eb816769624f5941f15863d75ca0b265bc0df",
-    "admission_guard_v3_blob": "e4c501cea12173bd89958e4e98217f1265af6604",
-    "admission_guard_test_v3_blob": "84c8eed0074ef4fe80cae50c93b09715cd8ddb9a",
+    "admission_guard_v3_blob": "f8f3346a8863abdd4a15a5553fc6a49726642c81",
+    "admission_guard_test_v3_blob": "44b01477ef6c100ced26dd03588dc6387c2a4865",
     "runtime_composition_merge": "14f7447e9f159787062fedfb05598bad8f952cca",
     "quarantined_reseal_merge": "2ce17ebe2617a5c18453c16e002f16c15411f369"
   }
