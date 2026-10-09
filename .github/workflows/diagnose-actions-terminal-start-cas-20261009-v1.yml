@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  statuses: write
 
 jobs:
   diagnose:
@@ -45,6 +46,8 @@ jobs:
           PY
 
       - name: Execute exact existing V1 durable-ref CAS
+        id: refcas
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -61,7 +64,7 @@ jobs:
         run: |
           set -euo pipefail
           PYTHONPATH=execution_guard python - <<'PY'
-          import os, sys
+          import os
           from terminal_slot_start_cas_v1 import request_factory
           repo=os.environ["GITHUB_REPOSITORY"]
           sha=os.environ["GITHUB_SHA"]
@@ -70,29 +73,72 @@ jobs:
           st, commit, _=req("GET", f"/repos/{repo}/git/commits/{sha}")
           print("GET_COMMIT_STATUS="+str(st))
           tree=(commit.get("tree") or {}).get("sha") if isinstance(commit,dict) else None
-          if st != 200 or not tree:
-              sys.exit(21)
+          assert st == 200 and tree
           st, created, _=req("POST", f"/repos/{repo}/git/commits", {
               "message":"zero-exposure Actions ref diagnostic",
               "tree":tree,
               "parents":[sha],
           })
           print("CREATE_COMMIT_STATUS="+str(st))
-          commit_sha=created.get("sha") if isinstance(created,dict) else None
-          if st != 201 or not commit_sha:
-              print("CREATE_COMMIT_MESSAGE="+str(created.get("message") if isinstance(created,dict) else "NON_OBJECT"))
-              sys.exit(22)
+          assert st == 201 and isinstance(created,dict) and created.get("sha")
+          commit_sha=created["sha"]
           ref="refs/heads/execution-guard/diagnostic-actions-status-v1/"+run_id
           st, body, _=req("POST", f"/repos/{repo}/git/refs", {"ref":ref,"sha":commit_sha})
           print("CREATE_REF_STATUS="+str(st))
           print("CREATE_REF_MESSAGE="+str(body.get("message") if isinstance(body,dict) else "NON_OBJECT"))
-          if isinstance(body,dict) and body.get("errors") is not None:
-              print("CREATE_REF_ERRORS="+str(body.get("errors")))
-          if st != 201:
-              sys.exit(23)
+          # The current pull_request Actions token is expected to reject arbitrary ref creation.
+          assert st == 403
+          assert isinstance(body,dict) and body.get("message") == "Resource not accessible by integration"
+          PY
+
+      - name: Prove durable commit-status start record
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python - <<'PY'
+          import hashlib, json, os
+          from terminal_slot_start_cas_v1 import request_factory
+          repo=os.environ["GITHUB_REPOSITORY"]
+          sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          record={
+              "schema":"PROJECT_BRAIN_SYNTHETIC_TERMINAL_START_STATUS_V1",
+              "state":"START_COMMITTED_SYNTHETIC_ZERO_EXPOSURE",
+              "github_run_id":run_id,
+              "github_sha":sha,
+          }
+          raw=json.dumps(record,sort_keys=True,separators=(",",":")).encode()
+          record_sha=hashlib.sha256(raw).hexdigest()
+          context="project-brain/diagnostic-terminal-start/"+run_id
+          description="START_COMMITTED:"+record_sha
+          req=request_factory(os.environ["GH_TOKEN"])
+          st, body, _=req("POST", f"/repos/{repo}/statuses/{sha}", {
+              "state":"success",
+              "context":context,
+              "description":description,
+          })
+          print("CREATE_STATUS_STATUS="+str(st))
+          print("CREATE_STATUS_MESSAGE="+str(body.get("message") if isinstance(body,dict) else "NON_OBJECT"))
+          assert st == 201
+          st, rows, _=req("GET", f"/repos/{repo}/commits/{sha}/statuses")
+          print("READ_STATUS_STATUS="+str(st))
+          assert st == 200 and isinstance(rows,list)
+          matches=[
+              row for row in rows
+              if isinstance(row,dict)
+              and row.get("context")==context
+              and row.get("description")==description
+              and row.get("state")=="success"
+          ]
+          assert len(matches) == 1
+          print("START_STATUS_RECORD_SHA256="+record_sha)
+          print("START_STATUS_CONTEXT="+context)
           PY
 
       - name: Assert no benchmark exposure
+        if: always()
         run: |
           set -euo pipefail
           test ! -d rank15_task_read
