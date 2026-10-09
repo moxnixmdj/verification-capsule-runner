@@ -1,0 +1,110 @@
+name: Verify TB-Science carrier dependency closure v2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/tb_science_carrier_closure_v2/VERIFY.json"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-carrier-closure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exact Harbor only
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+      - name: Verify exact transitive Brain runtime closure
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_carrier_closure_v2/canonical/runtime
+          python - <<'PY'
+          import ast, importlib, json, os, pathlib, shutil, subprocess, sys, tempfile
+          C=pathlib.Path("capsules/tb_science_carrier_closure_v2/canonical/runtime")
+          expected={
+            "harbor_science_agent_v1.py":"5bc8ebac26bb7c809d4698f535eff43b667b30df",
+            "harbor_science_planner_v1.py":"c3e36eba57c450f325c8a9476ee048c841bbdbc8",
+            "lossless_raw_task_contract_v1.py":"d54d5a2f7efa76b653d288f4f53da4883644baa6",
+            "raw_task_acceptance_residual_localizer_v1.py":"f29616cf7726959aa28db4ed6541a9fc0bc2ac76",
+            "harbor_command_policy.py":"a525773417291c7a4841bf35e1baff5370350d0d",
+            "harbor_environment_transport.py":"ec46f648214a37bb16025d5ef2593efdf59f0d79",
+            "explicit_requirement_index_v2.py":"30629b10fdbf3c337eb3252c043ec13123ca66a1",
+            "instruction_constraint_compiler_v1.py":"a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f",
+            "source_aligned_acceptance_program_v1.py":"742c183cccc2ec4bb5f94e88048590e2991dacd4",
+            "bounded_predicate_argument_semantics.py":"8303231779d6fe8c7fb740e3bbaa492914d4eba9",
+            "bounded_imperative_directive_semantics_v1.py":"3f08b2703723537e5a146346eead6a387424687f",
+            "source_contract_compiler.py":"ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231",
+            "typed_acceptance_program_v1.py":"7fd2e575bd2d5c36f48c713f15177d5b0d7e68c5",
+            "structured_method_expression_ast_candidate_v2.py":"7623f68bab3c1b207e237389841a4b688e509ff3",
+          }
+          got={p.name:p for p in C.glob("*.py")}
+          assert set(got)==set(expected), (sorted(got),sorted(expected))
+          for name,sha in expected.items():
+              actual=subprocess.check_output(["git","hash-object",str(got[name])],text=True).strip()
+              assert actual==sha,(name,actual,sha)
+
+          missing=[]
+          for path in got.values():
+              tree=ast.parse(path.read_text(),filename=str(path))
+              for node in ast.walk(tree):
+                  mods=[]
+                  if isinstance(node,ast.ImportFrom) and node.module:
+                      if node.module.startswith("canonical.runtime."):
+                          mods=[node.module.removeprefix("canonical.runtime.")]
+                      elif node.module=="canonical.runtime":
+                          mods=[a.name for a in node.names]
+                  elif isinstance(node,ast.Import):
+                      mods=[a.name.removeprefix("canonical.runtime.") for a in node.names if a.name.startswith("canonical.runtime.")]
+                  for mod in mods:
+                      top=mod.split(".")[0]+".py"
+                      if top not in expected:
+                          missing.append(f"{path.name}:canonical.runtime.{mod}")
+          assert not missing, missing
+
+          tmp=pathlib.Path(tempfile.mkdtemp(prefix="brain-closure-"))
+          (tmp/"canonical/runtime").mkdir(parents=True)
+          (tmp/"canonical/__init__.py").write_text("")
+          (tmp/"canonical/runtime/__init__.py").write_text("")
+          for p in got.values(): shutil.copy2(p,tmp/"canonical/runtime"/p.name)
+          sys.path.insert(0,str(tmp))
+          agent=importlib.import_module("canonical.runtime.harbor_science_agent_v1")
+          planner=importlib.import_module("canonical.runtime.harbor_science_planner_v1")
+          contract=importlib.import_module("canonical.runtime.lossless_raw_task_contract_v1")
+          localizer=importlib.import_module("canonical.runtime.raw_task_acceptance_residual_localizer_v1")
+          assert hasattr(agent,"HarborScienceAgent")
+          result={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_CARRIER_DEPENDENCY_CLOSURE_PUBLIC_REPLAY_V2",
+            "status":"PASS__EXACT_14_FILE_TRANSITIVE_RUNTIME_CLOSURE__CLEAN_IMPORT__ZERO_TASK_EXPOSURE",
+            "harbor_version":"0.23.0",
+            "runtime_file_count":14,
+            "missing_canonical_runtime_imports":missing,
+            "agent_importable":True,
+            "planner_importable":True,
+            "contract_importable":True,
+            "localizer_importable":True,
+            "benchmark_task_exposure":0,
+            "verifier_invocations":0,
+            "incremental_spend_usd":0,
+            "acceptance_credit":False,
+            "terminal_credit":False
+          }
+          pathlib.Path("TB_SCIENCE_CARRIER_DEPENDENCY_CLOSURE_VERIFICATION_V2.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(result,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tb-science-carrier-dependency-closure-v2
+          path: TB_SCIENCE_CARRIER_DEPENDENCY_CLOSURE_VERIFICATION_V2.json
+          retention-days: 1
