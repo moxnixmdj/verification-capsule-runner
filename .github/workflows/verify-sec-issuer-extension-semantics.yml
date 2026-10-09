@@ -1,0 +1,22 @@
+name: Verify SEC issuer-extension semantics
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - verification/run.sh
+      - verification/test_sec_issuer_extension_exact_branch.py
+      - verification/source/sec_issuer_extension_concept_semantics_v1.py
+      - verification/source/sec_issuer_extension_concept_semantics_verify_v1.py
+      - .github/workflows/verify-sec-issuer-extension-semantics.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run exact issuer-extension verification capsule
+        run: bash verification/run.sh
