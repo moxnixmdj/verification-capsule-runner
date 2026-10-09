@@ -1,0 +1,22 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_PUBLIC_LEDGER_BINDING_V28",
+  "date": "2026-10-09",
+  "status": "CURRENT_PUBLIC_BINDING__BRAIN_LEDGER_V28__FOURTEEN_CONSUMED__RANK15_UNREAD_UNSTARTED",
+  "brain_ledger": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V28.json",
+    "git_blob_sha": "d5bcd21a6a8ab977f72a1a0e10b364ead61ceb3e"
+  },
+  "consumed_slots": 14,
+  "consumed_successes": 0,
+  "consumed_final_failures": 14,
+  "next_unconsumed_slot": {
+    "ledger_schedule_rank": 15,
+    "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+    "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
+  },
+  "rank15_task_read": false,
+  "rank15_task_started": false,
+  "rank15_benchmark_trials_consumed": 0,
+  "terminal_credit_delta": 0
+}
