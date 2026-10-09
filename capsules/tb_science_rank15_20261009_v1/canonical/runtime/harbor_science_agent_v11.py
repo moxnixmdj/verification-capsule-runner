@@ -629,6 +629,9 @@ def _candidate_rows(
         normalized_row["action_fingerprint_sha256"] = typed_action.action_fingerprint(
             normalized_row
         )
+        normalized_row["effect_fingerprint_sha256"] = typed_action.effect_fingerprint(
+            executor, command
+        )
         rows.append(normalized_row)
 
     # Dependency validity is defined over the candidates that survived all
@@ -931,7 +934,8 @@ async def run_science_goal(
     evidence_directory: list[dict[str, Any]] = []
     evidence_ids: set[str] = set()
     requested_evidence_context: list[dict[str, Any]] = []
-    failed_action_fingerprints: dict[str, dict[str, Any]] = {}
+    failed_effect_fingerprints: dict[str, dict[str, Any]] = {}
+    failed_precondition_fingerprints: dict[str, dict[str, Any]] = {}
 
     def record_observation(row: dict[str, Any]) -> None:
         observations.append(row)
@@ -1160,23 +1164,35 @@ async def run_science_goal(
                 chosen["command"].encode("utf-8")
             ).hexdigest()
             action_fingerprint = chosen["action_fingerprint_sha256"]
+            effect_fingerprint = chosen["effect_fingerprint_sha256"]
 
-            if action_fingerprint in failed_action_fingerprints:
+            prior_failure = failed_effect_fingerprints.get(effect_fingerprint)
+            prior_precondition = failed_precondition_fingerprints.get(action_fingerprint)
+            if prior_failure is not None or prior_precondition is not None:
                 executed_action_ids.add(chosen["action_id"])
-                prior_failure = failed_action_fingerprints[action_fingerprint]
+                prior = prior_failure if prior_failure is not None else prior_precondition
                 rejected_repeat = {
                     "cycle": cycle,
-                    "kind": "BRAIN_REJECTED_CONTENT_ADDRESSED_FAILED_ACTION_REPEAT",
+                    "kind": (
+                        "BRAIN_REJECTED_CONTENT_ADDRESSED_FAILED_EFFECT_REPEAT"
+                        if prior_failure is not None
+                        else "BRAIN_REJECTED_CONTENT_ADDRESSED_FAILED_PRECONDITION_REPEAT"
+                    ),
                     "action_id": chosen["action_id"],
                     "action_fingerprint_sha256": action_fingerprint,
+                    "effect_fingerprint_sha256": effect_fingerprint,
                     "command_sha256": chosen_command_sha256,
                     "executor": chosen["executor"],
                     "verify_executor": chosen["verify_executor"],
                     "schema_requirements": chosen["schema_requirements"],
                     "deliverables": chosen["deliverables"],
-                    "prior_failure_cycle": prior_failure.get("cycle"),
-                    "prior_failure_action_id": prior_failure.get("action_id"),
-                    "reason": "EXACT_TYPED_ACTION_BYTES_ALREADY_PROVED_NONPROMOTABLE__BYTES_MUST_CHANGE",
+                    "prior_failure_cycle": prior.get("cycle"),
+                    "prior_failure_action_id": prior.get("action_id"),
+                    "reason": (
+                        "EXACT_EFFECT_BYTES_ALREADY_EXECUTED_WITHOUT_VERIFIED_PROMOTION__COMMAND_BYTES_MUST_CHANGE"
+                        if prior_failure is not None
+                        else "EXACT_TYPED_PRECONDITION_ALREADY_FAILED__DECLARATION_BYTES_MUST_CHANGE"
+                    ),
                     "effect_executed": False,
                     "coverage_promoted": False,
                 }
@@ -1194,7 +1210,7 @@ async def run_science_goal(
                 chosen["schema_requirements"], environment
             )
             if not schema_ok:
-                failed_action_fingerprints[action_fingerprint] = {
+                failed_precondition_fingerprints[action_fingerprint] = {
                     "cycle": cycle,
                     "action_id": chosen["action_id"],
                     "reason": "SCHEMA_PRECONDITION_FAILED",
@@ -1403,9 +1419,10 @@ async def run_science_goal(
                         verified_action_ids.add(chosen["action_id"])
 
             if not verified:
-                failed_action_fingerprints[action_fingerprint] = {
+                failed_effect_fingerprints[effect_fingerprint] = {
                     "cycle": cycle,
                     "action_id": chosen["action_id"],
+                    "effect_fingerprint_sha256": effect_fingerprint,
                     "command_sha256": chosen_command_sha256,
                     "returncode": action_receipt.returncode,
                     "verification_performed": verify_observed is not None,
