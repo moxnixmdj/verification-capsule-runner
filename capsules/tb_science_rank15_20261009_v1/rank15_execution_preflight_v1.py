@@ -16,9 +16,9 @@ EXPECTED = {
     "TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V12.json":"8008b1e2382c1235e3b788e0f8d4ab9a48487409",
     "TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V12_VERIFICATION_20261009_V1.json":"2f604985baa7f88c61b23958d59dc2ecd4c0990b",
     "FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json":"b20c5cd6965f7ea7e5ca019d1e828ac6eced042c",
-    "RANK15_EPOCH_V1.json":"ad0c76996163e5ee75553af7a9c00276dbe607c9",
-    "RANK15_EXECUTION_CLAIM_V1.json":"a37da97fbc06ffdbb937996eaf1615dd56af1c0d",
-    "rank15_prestart_token_guard_v1.py":"0139a20070cd1a51866c309bac1976b27ce7ac0d",
+    "RANK15_EPOCH_V1.json":"063761501704d31db73428200bc559f9eb2b038a",
+    "RANK15_EXECUTION_CLAIM_V1.json":"5818601880d54efd856e5a27b9cb14e9b6021e7e",
+    "rank15_prestart_token_guard_v1.py":"6956c6dd1f7b6e6a964bc927876d96aa479de476",
     "canonical/runtime/harbor_science_agent_v1.py":"e7e258f567499bd7356c0276d6293aa30dbd338c",
     "canonical/runtime/harbor_science_planner_v1.py":"58964dc8d6b5eed5c202081cd800035c791eeb1d",
     "canonical/runtime/harbor_command_policy.py":"a525773417291c7a4841bf35e1baff5370350d0d",
@@ -67,7 +67,7 @@ def main() -> int:
         assert l["rank15"]["benchmark_trials_consumed"]==0
         assert e["authority_blob"]==EXPECTED["TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V1.json"]
         assert e["run_attempts_authorized_by_epoch"]==0 and e["task_started"] is False
-        assert claim["execution_branch"]=="execute/tb-science-rank15-20261009-v1"
+        assert claim["execution_branch"]=="execute-tb-science-rank15-v1-20261009"
         assert claim["authority_git_blob_sha"]==EXPECTED["TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V1.json"]
         assert claim["epoch_git_blob_sha"]==EXPECTED["RANK15_EPOCH_V1.json"]
         assert claim["consumed"] is False and claim["task_started"] is False
@@ -98,7 +98,7 @@ def main() -> int:
             assert os.environ.get("GITHUB_RUN_ATTEMPT")=="1"
             assert os.environ.get("GITHUB_EVENT_NAME")=="pull_request"
             assert os.environ.get("GITHUB_BASE_REF")=="terminal-execution-v1"
-            assert os.environ.get("GITHUB_HEAD_REF")=="execute/tb-science-rank15-20261009-v1"
+            assert os.environ.get("GITHUB_HEAD_REF")=="execute-tb-science-rank15-v1-20261009"
         except Exception as exc:
             errors.append("ACTIVATION_CHECK:"+type(exc).__name__+":"+str(exc))
     elif activation_present:
