@@ -26,7 +26,7 @@
   ],
   "incremental_spend_usd": 0,
   "invariant_registry": {
-    "git_blob_sha": "0c159af52ea754be869db5c8021d8b9d3fc4c30c",
+    "git_blob_sha": "3d156b5b3274ea7fe6542206137ddc7c782903b5",
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json"
   },
   "ledger": {
@@ -35,7 +35,7 @@
   },
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
-  "status": "STAGED_ZERO_EXPOSURE__RANK15_V2_RUNTIME_CONTENT_BOUND__EXECUTION_AUTHORITY_FALSE",
+  "status": "STAGED_ZERO_EXPOSURE__RANK15_V2_TWO_VERIFIED_INVARIANTS_RATCHETED__EXECUTION_AUTHORITY_FALSE",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
   "task_read_authority": false,
   "task_started": false,
