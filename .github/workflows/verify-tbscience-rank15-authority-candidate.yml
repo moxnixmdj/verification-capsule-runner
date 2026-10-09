@@ -1,0 +1,94 @@
+name: Verify TB-Science rank15 authority candidate
+on:
+  push:
+    branches:
+      - verify-tbscience-r15-authority-v1-20261009
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact rank15 zero-exposure authority bindings
+        env:
+          C: capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_RANK15_20261009_V1.json")" = "ce2c7aeb17c450e17b02a3b616ce8a8374edabe4"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V1.json")" = "88ffb2b0117a9fb7f8885118171b53b187bc581d"
+          test "$(git hash-object "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V19.json")" = "c9b887ac4fb57046be666492748d25ca96056378"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V12.json")" = "8008b1e2382c1235e3b788e0f8d4ab9a48487409"
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V12_VERIFICATION_20261009_V1.json")" = "2f604985baa7f88c61b23958d59dc2ecd4c0990b"
+
+          jq -e '
+            .schema == "PROJECT_BRAIN_TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V1" and
+            .execution_authority == false and
+            .task_read_authority == false and
+            .task_start_authority == false and
+            .fresh_reality_authority == false and
+            .promotion_authority == false and
+            .slot.id == "terminal-bench-science/protein-active-learning::trial-0" and
+            .slot.ledger_schedule_rank == 15 and
+            .slot.digest == "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" and
+            .intent.git_blob_sha == "ce2c7aeb17c450e17b02a3b616ce8a8374edabe4" and
+            .current_ledger.git_blob_sha == "c9b887ac4fb57046be666492748d25ca96056378" and
+            .repaired_route.agent_blob == "e7e258f567499bd7356c0276d6293aa30dbd338c" and
+            .repaired_route.v12_closure_blob == "8008b1e2382c1235e3b788e0f8d4ab9a48487409" and
+            .repaired_route.v12_closure_verification_blob == "2f604985baa7f88c61b23958d59dc2ecd4c0990b" and
+            .repaired_route.frozen_requirements_repair_verification_blob == "d60c84676de7dfa090810b3b65132d324ac49f38" and
+            .proposed_controls.retries_authorized == 0 and
+            .proposed_controls.precheck_failure_consumes_slot == false and
+            .proposed_controls.frozen_requirements_after_first_cycle == true and
+            .proposed_controls.later_substrate_requirement_redeclaration_authority == false and
+            .proposed_controls.candidate_covers_outside_frozen_set_fail_closed == true
+          ' "$C/TB_SCIENCE_RANK15_ONE_SLOT_EXECUTION_AUTHORITY_CANDIDATE_20261009_V1.json" >/dev/null
+
+          jq -e '
+            .current_counts.consumed_slots == 14 and
+            .current_counts.next_unconsumed_slot.ledger_schedule_rank == 15 and
+            .current_counts.next_unconsumed_slot.slot_id == "terminal-bench-science/protein-active-learning::trial-0" and
+            .current_counts.next_unconsumed_slot.task_digest == "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" and
+            .rank15.task_started == false and
+            .rank15.execution_authority_consumed == false and
+            .rank15.benchmark_trials_consumed == 0
+          ' "$C/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V19.json" >/dev/null
+
+          jq -e '
+            .schema == "PROJECT_BRAIN_TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_V12" and
+            .closure_file_count == 15 and
+            (.unresolved_dynamic_imports|length) == 0 and
+            ([.closure[] | select(.path=="canonical/runtime/harbor_science_agent_v1.py" and .git_blob_sha=="e7e258f567499bd7356c0276d6293aa30dbd338c")]|length) == 1
+          ' "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V12.json" >/dev/null
+
+          jq -e '
+            (.status|startswith("PASS__V12_15_FILE_TRANSITIVE_RUNTIME_CLOSURE_EXACT") or startswith("PASS__V12_15_FILE_TRANSITIVE_CLOSURE_EXACT")) and
+            .exact_blob_matches == 15 and
+            .mismatches == 0 and
+            .imports_changed == false and
+            .repair_verification.git_blob_sha == "d60c84676de7dfa090810b3b65132d324ac49f38" and
+            .repair_verification.science_agent_suite == "26_OF_26_PASS" and
+            .repair_verification.py_compile == "PASS"
+          ' "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_V12_VERIFICATION_20261009_V1.json" >/dev/null
+
+          jq -n '{
+            schema:"PROJECT_BRAIN_TB_SCIENCE_RANK15_AUTHORITY_CANDIDATE_PUBLIC_VERIFY_V1",
+            status:"PASS__RANK15_CANDIDATE__V19_LEDGER__V12_CLOSURE__FROZEN_REQUIREMENTS_REPAIR__ZERO_EXPOSURE",
+            pass:true,
+            candidate_blob:"88ffb2b0117a9fb7f8885118171b53b187bc581d",
+            intent_blob:"ce2c7aeb17c450e17b02a3b616ce8a8374edabe4",
+            ledger_v19_blob:"c9b887ac4fb57046be666492748d25ca96056378",
+            v12_closure_blob:"8008b1e2382c1235e3b788e0f8d4ab9a48487409",
+            v12_closure_verification_blob:"2f604985baa7f88c61b23958d59dc2ecd4c0990b",
+            benchmark_task_exposure:0,
+            benchmark_trials_executed:0,
+            execution_authority:false,
+            task_read_authority:false,
+            acceptance_credit_delta:0,
+            terminal_credit_delta:0
+          }' > RANK15_AUTHORITY_CANDIDATE_VERIFY.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank15-authority-candidate
+          path: RANK15_AUTHORITY_CANDIDATE_VERIFY.json
+          retention-days: 2
