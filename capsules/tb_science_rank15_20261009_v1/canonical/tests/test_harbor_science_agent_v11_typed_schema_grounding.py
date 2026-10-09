@@ -5,7 +5,7 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from canonical.runtime import harbor_science_agent_v11 as s
 
@@ -84,6 +84,12 @@ class V11Tests(unittest.TestCase):
         )
         token_patch.start()
         self.addCleanup(token_patch.stop)
+
+        catalog_patch = patch.object(
+            s, "_discover_source_contract_catalog", AsyncMock(return_value=[])
+        )
+        self.catalog_mock = catalog_patch.start()
+        self.addCleanup(catalog_patch.stop)
 
     def test_untyped_candidate_is_rejected(self):
         rows, rejected = s._candidate_rows(
@@ -219,12 +225,13 @@ class V11Tests(unittest.TestCase):
         self.assertTrue(any(x.get("path") == "/app/result.npz" for x in selected["brain_deliverable_checks"]))
 
     def test_source_native_output_path_becomes_fail_closed_finish_postcondition(self):
-        env = Env(catalog=[{
+        self.catalog_mock.return_value = [{
             "path": "/app/spec.json",
             "keys": ["output"],
             "types": {"output": "str"},
             "selected_scalars": {"output": "/app/result.npz"},
-        }], fail_deliverable=True)
+        }]
+        env = Env(fail_deliverable=True)
         with tempfile.TemporaryDirectory() as td, patch.dict(
             os.environ, brain_env(td), clear=False
         ), patch.object(s.science_planner, "plan", planner([
