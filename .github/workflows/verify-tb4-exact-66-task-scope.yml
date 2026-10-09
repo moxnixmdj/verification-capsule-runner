@@ -1,0 +1,67 @@
+name: Verify TB4 exact 66-task target scope
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tb4-exact-66-task-scope.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify frozen top-level task universe
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, urllib.request
+
+          commit = "452bf305c6daa62fc59061d22133a7cbc7c1572e"
+          url = f"https://api.github.com/repos/harbor-framework/terminal-bench/contents/tasks?ref={commit}"
+          req = urllib.request.Request(url, headers={
+              "User-Agent": "project-brain-tb4-scope-verifier",
+              "Accept": "application/vnd.github+json",
+          })
+          with urllib.request.urlopen(req, timeout=60) as r:
+              entries = json.load(r)
+
+          dirs = sorted(
+              [{"task": x["name"], "tree_sha": x["sha"]} for x in entries if x.get("type") == "dir"],
+              key=lambda x: x["task"],
+          )
+          nondirs = sorted(
+              [{"name": x["name"], "git_blob_sha": x["sha"], "type": x["type"]} for x in entries if x.get("type") != "dir"],
+              key=lambda x: x["name"],
+          )
+
+          assert len(dirs) == 66, f"EXPECTED_66_TASK_DIRS_GOT_{len(dirs)}"
+          assert nondirs == [
+              {"name":"README.md","git_blob_sha":"c5abc9dd6a3792fb14883d122bd940035ac8f697","type":"file"},
+              {"name":"dataset.toml","git_blob_sha":"f93d1456609f74dfae967cd6c0d8ef4b5b057f3a","type":"file"},
+          ], nondirs
+
+          normalized = json.dumps(dirs, sort_keys=True, separators=(",", ":")).encode()
+          digest = hashlib.sha256(normalized).hexdigest()
+          out = {
+              "schema": "PROJECT_BRAIN_TB4_EXACT_66_TASK_TARGET_SCOPE_PUBLIC_RUNNER_V1",
+              "repository": "harbor-framework/terminal-bench",
+              "release_commit": commit,
+              "retrieval_scope": "TOP_LEVEL_TASKS_DIRECTORY_METADATA_ONLY",
+              "directory_count": len(dirs),
+              "only_non_directory_entries": nondirs,
+              "normalized_task_tree_list_sha256": digest,
+              "tasks": dirs,
+              "task_contents_requested": False,
+              "instructions_requested": False,
+              "solutions_requested": False,
+              "tests_requested": False,
+              "hidden_verifier_requested": False,
+              "terminal_cases_consumed": 0,
+              "incremental_spend_usd": 0,
+              "acceptance_credit_delta": 0,
+              "verdict": "PASS_EXACT_PUBLIC_FINITE_TASK_UNIVERSE_ENUMERATED",
+          }
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
