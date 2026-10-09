@@ -1,0 +1,34 @@
+name: Verify TB-Science candidate-local rejection V9
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v9.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_agent_v9_candidate_local_rejection.py"
+      - ".github/workflows/verify-tb-science-candidate-local-rejection-v9.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile repaired controller
+        run: |
+          set -euo pipefail
+          python -m py_compile capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v9.py
+      - name: Run exact Rank15-failure falsifiers
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1:${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_agent_v9_candidate_local_rejection.py
