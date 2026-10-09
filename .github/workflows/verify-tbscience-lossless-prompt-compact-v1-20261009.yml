@@ -1,0 +1,106 @@
+name: Verify TB-Science lossless prompt compaction V1
+
+on:
+  push:
+    branches: ["verify-tbscience-lossless-prompt-compact-v1-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-lossless-prompt-compact-v1-20261009.yml"
+      - "capsules/tb_science_rank14_20261009_v1/canonical/runtime/harbor_science_agent_v1.py"
+      - "capsules/tb_science_rank14_20261009_v1/canonical/runtime/acceptance_capability_source_gate_v2.py"
+      - "capsules/tb_science_rank14_20261009_v1/canonical/tests/test_harbor_science_agent_v1.py"
+      - "capsules/tb_science_rank14_20261009_v1/ACTION_INTENT_TB_SCIENCE_LOSSLESS_PROMPT_COMPACTION_20261009_V1.json"
+      - "capsules/tb_science_rank14_20261009_v1/TB_SCIENCE_LOSSLESS_PROMPT_COMPACTION_CANDIDATE_20261009_V1.json"
+      - "capsules/tb_science_rank14_20261009_v1/TB_SCIENCE_RANK14_V2_PRESTART_RESULT_TRUTH_20261009_V1.json"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      C: capsules/tb_science_rank14_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact compact-view candidate bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "066728adce1fb89f370737cab1878a218100bf6c"
+          test "$(git hash-object "$C/canonical/runtime/acceptance_capability_source_gate_v2.py")" = "b168b131f6383e158bdc0d931439d14e61f2a5de"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v1.py")" = "8c50a76ec944e6cc75524ad34b08f82e2efcf2a7"
+          test "$(git hash-object "$C/ACTION_INTENT_TB_SCIENCE_LOSSLESS_PROMPT_COMPACTION_20261009_V1.json")" = "7ba2a2982abaed389111dd1e6da590390e245640"
+          test "$(git hash-object "$C/TB_SCIENCE_LOSSLESS_PROMPT_COMPACTION_CANDIDATE_20261009_V1.json")" = "345e028d008b10d95535b101c7b3a0538c8d7ed7"
+          test "$(git hash-object "$C/TB_SCIENCE_RANK14_V2_PRESTART_RESULT_TRUTH_20261009_V1.json")" = "d284f4824f7f448b25e5e6f1aa810aa99d05f69f"
+          python -m py_compile "$C"/canonical/runtime/*.py "$C"/canonical/tests/test_harbor_science_agent_v1.py
+
+      - name: Replay full science-agent regression
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python -m unittest canonical.tests.test_harbor_science_agent_v1 -v | tee AGENT_TESTS.txt
+
+      - name: Prove one-to-one compact representation and quantify metadata reduction
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$C" python - <<'PY' | tee COMPACTION_RESULT.json
+          import json
+          from canonical.runtime import harbor_science_agent_v1 as s
+          goal=" ".join(f"Create synthetic item{i:03d}." for i in range(87))
+          contract,localized,rows=s._compile_lossless_task_scope(goal)
+          view=s._planner_obligation_view(goal,contract,rows)
+          verbose=json.dumps(rows,sort_keys=True,separators=(",",":"))
+          compact=json.dumps(view,sort_keys=True,separators=(",",":"))
+          assert len(rows)==87
+          assert view["count"]==87
+          assert localized["accounted_obligation_count"]==87
+          assert len(compact) < len(verbose)//3,(len(compact),len(verbose))
+          assert all(r["obligation_id"] not in compact for r in rows)
+          assert all(r["segment_sha256"] not in compact for r in rows)
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_LOSSLESS_PROMPT_COMPACTION_PUBLIC_VERIFY_V1",
+            "status":"PASS__87_OF_87_ONE_TO_ONE__COMPACT_ROUTING_VIEW__FULL_ACCEPTANCE_AUTHORITY_PRESERVED",
+            "pass":True,
+            "obligation_count":87,
+            "verbose_metadata_chars":len(verbose),
+            "compact_metadata_chars":len(compact),
+            "char_reduction":len(verbose)-len(compact),
+            "compact_fraction":len(compact)/len(verbose),
+            "exact_goal_preserved":True,
+            "full_acceptance_contract_preserved_out_of_band":True,
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0,
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Recompute exact transitive runtime closure
+        run: |
+          set -euo pipefail
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py" --repo-root "$C" --carrier-root "$C"             --root canonical/runtime/harbor_science_agent_v1.py             --root canonical/runtime/harbor_science_planner_v1.py             --root canonical/runtime/lossless_raw_task_contract_v1.py             --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py > COMPACT_CLOSURE.json
+          python - <<'PY'
+          import json
+          x=json.load(open("COMPACT_CLOSURE.json"))
+          assert x["pass"] is True,x
+          assert x["closure"]["closure_file_count"]==15,x
+          assert x["missing_paths"]==[],x
+          assert x["mismatched"]==[],x
+          assert x["closure"]["unresolved_dynamic_imports"]==[],x
+          by={r["path"]:r["git_blob_sha"] for r in x["closure"]["closure"]}
+          assert by["canonical/runtime/harbor_science_agent_v1.py"]=="066728adce1fb89f370737cab1878a218100bf6c"
+          assert by["canonical/runtime/harbor_science_planner_v1.py"]=="58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-lossless-prompt-compact-v1-20261009
+          path: |
+            AGENT_TESTS.txt
+            COMPACTION_RESULT.json
+            COMPACT_CLOSURE.json
+          retention-days: 2
