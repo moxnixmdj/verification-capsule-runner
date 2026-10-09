@@ -1,0 +1,201 @@
+name: Verify TB-Science rank15 V3 live tokenizer bound
+
+on:
+  push:
+    branches: [repair/tb-science-rank15-all-cycle-envelope-20261009-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v3.py"
+      - ".github/workflows/verify-tb-science-rank15-v3-live-tokenizer-bound.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank15-v3-live-tokenizer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Assert zero exposure
+        run: |
+          set -euo pipefail
+          test ! -e "$C/ACTIVATE_RANK15_V2_PR.json"
+          test ! -e "$C/ACTIVATE_RANK15_V3_PR.json"
+          ! find . -path './rank15_task_read*' -print -quit | grep .
+
+      - name: Clean-build exact llama.cpp on this runner
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          rm -rf llama.cpp/build
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        id: qwen
+        uses: actions/cache/restore@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Reassemble exact model if cache misses and verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p models model-parts
+          if [ ! -f "models/$MODEL_FILE" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model-parts --pattern "$MODEL_FILE.part*of03"
+            cat "model-parts/$MODEL_FILE.part01of03" "model-parts/$MODEL_FILE.part02of03" "model-parts/$MODEL_FILE.part03of03" > "models/$MODEL_FILE"
+          fi
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+      - name: Start exact local tokenizer surface
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m "models/$MODEL_FILE" --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui \
+            "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 300); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat LOCAL_QWEN_SERVER.pid)" 2>/dev/null; then
+              cat LOCAL_QWEN_SERVER.log
+              exit 1
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Prove exact-model reserve and maximal-state token dominance
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          python - <<'PY'
+          import hashlib,json,string,urllib.request,pathlib
+          from canonical.runtime import harbor_science_agent_v3 as agent
+          from canonical.runtime import harbor_science_planner_v3 as planner
+
+          def tokenize(text):
+              req=urllib.request.Request(
+                  "http://127.0.0.1:8080/tokenize",
+                  data=json.dumps({"content":text,"add_special":False}).encode(),
+                  headers={"Content-Type":"application/json"},
+                  method="POST",
+              )
+              with urllib.request.urlopen(req,timeout=60) as r:
+                  return json.loads(r.read())["tokens"]
+
+          reserve=agent.POST_FREEZE_STATE_RESERVE_DIGITS
+          reserve_tokens=tokenize(reserve)
+          assert len(reserve)==512
+          assert len(reserve_tokens)==512, len(reserve_tokens)
+
+          alphabet=string.ascii_letters+string.digits+"_-"
+          char_counts={c:len(tokenize(c)) for c in alphabet}
+          assert all(v==1 for v in char_counts.values()), char_counts
+
+          ids=[f"R{i:07d}" for i in range(16)]
+          assert all(len(x)==planner.MAX_REQUIREMENT_ID_CHARS for x in ids)
+
+          common=dict(
+              goal="synthetic fixed goal",
+              raw_task_prompt_summary={
+                  "schema":"PROJECT_BRAIN_SCIENCE_RAW_TASK_PLANNER_MANIFEST_SUMMARY_V1",
+                  "task_contract_sha256":"a"*64,
+                  "required_obligation_count":1,
+                  "objective_route_obligation_count":1,
+                  "semantic_residual_obligation_count":0,
+                  "ordered_manifest_sha256":"b"*64,
+                  "source_task_sha256":"c"*64,
+                  "raw_goal_is_authoritative_planner_semantic_source":True,
+                  "brain_retains_full_per_obligation_acceptance_contract":True,
+                  "every_original_obligation_still_requires_independent_acceptance":True,
+                  "planner_acceptance_or_finish_authority":False,
+                  "individual_content_address_rows_omitted_from_prompt_metadata_only":True,
+              },
+              declared_inputs=[],
+              brain_deliverables={},
+              observations=[],
+          )
+          logical=agent.logical_attempt_id_for_goal(common["goal"])
+          p0=agent.build_science_planner_prompt(requirements=None,unresolved=[],**common)
+          pmax=agent.build_science_planner_prompt(requirements=ids,unresolved=ids,**common)
+          w0,_=planner.build_request_payload(p0,logical_attempt_id=logical,cycle=0)
+          wmax,_=planner.build_request_payload(pmax,logical_attempt_id=logical,cycle=1)
+          t0=planner.count_input_tokens(w0)
+          tmax=planner.count_input_tokens(wmax)
+          assert tmax <= t0, (t0,tmax)
+          assert t0 + planner.MAX_TOOL_COMPLETION_TOKENS <= planner.SERVER_CONTEXT_TOKENS
+
+          state0=(
+              f"Frozen requirements: {None!r}\nUnresolved: {[]!r}"
+              + "\nCycle-0 post-freeze state reserve (ignored; digits are tokenizer-isolated): "
+              + reserve
+          )
+          statemax=f"Frozen requirements: {ids!r}\nUnresolved: {ids!r}"
+          assert len(statemax.encode("ascii")) < 512
+          assert len(tokenize(statemax)) < len(reserve_tokens)
+
+          out={
+              "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_V3_LIVE_TOKENIZER_BOUND_V1",
+              "status":"PASS__EXACT_PINNED_GGUF_TOKENIZER__RESERVED_CYCLE0_DOMINATES_MAX_FROZEN_STATE__ZERO_EXPOSURE",
+              "llama_cpp_commit":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "qwen_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "reserve_chars":len(reserve),
+              "reserve_tokens":len(reserve_tokens),
+              "allowed_identifier_alphabet_single_char_token_max":max(char_counts.values()),
+              "max_state_ascii_bytes":len(statemax.encode("ascii")),
+              "max_state_tokens":len(tokenize(statemax)),
+              "cycle0_reserved_payload_input_tokens":t0,
+              "max_frozen_state_payload_input_tokens":tmax,
+              "cycle0_dominates_max_frozen_state":t0>=tmax,
+              "rank15_task_read":False,
+              "rank15_task_started":False,
+              "benchmark_trials_consumed":0,
+              "execution_authority":False,
+              "incremental_spend_usd":0,
+          }
+          pathlib.Path("RANK15_V3_LIVE_TOKENIZER_BOUND.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rank15-v3-live-tokenizer-bound-zero-exposure
+          path: |
+            RANK15_V3_LIVE_TOKENIZER_BOUND.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,81 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1",
+  "date": "2026-10-09",
+  "status": "PASS__STATIC_ADVERSARIAL_AND_EXACT_PINNED_GGUF_TOKENIZER_PROOF__ALL_CYCLE_CONTEXT_ENVELOPE_BY_CONSTRUCTION__ZERO_EXPOSURE",
+  "subject": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "candidate_branch": "repair/tb-science-rank15-all-cycle-envelope-20261009-v1",
+    "planner": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py",
+      "git_blob_sha": "428e4cd38cd14cdda6af517de946969150b15bf3"
+    },
+    "agent": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py",
+      "git_blob_sha": "827164ea322483b21a6c215bc71963a778a57394"
+    },
+    "prestart_guard": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v3.py",
+      "git_blob_sha": "b284da73050bb9fa24502f33c7c5c7e0c1f518ce"
+    },
+    "tests": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_v3_zero_exposure_tests.py",
+      "git_blob_sha": "88abdc96e34d422fbafa9aada90d570b4c5971b0"
+    }
+  },
+  "proof": {
+    "static_adversarial_run": {
+      "workflow_run_id": 37906973743,
+      "status": "SUCCESS",
+      "tests_passed": 15,
+      "workflow_job_id": 113742669136
+    },
+    "exact_model_tokenizer_run": {
+      "workflow_run_id": 37907072018,
+      "workflow_job_id": 113742993303,
+      "status": "SUCCESS"
+    },
+    "exact_model": {
+      "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+      "qwen_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c"
+    },
+    "measured": {
+      "reserve_chars": 512,
+      "reserve_tokens": 512,
+      "allowed_identifier_alphabet_single_char_token_max": 1,
+      "max_frozen_state_ascii_bytes": 418,
+      "max_frozen_state_tokens": 327,
+      "synthetic_cycle0_reserved_payload_input_tokens": 1929,
+      "synthetic_max_frozen_state_payload_input_tokens": 1716,
+      "cycle0_reserved_payload_dominates_max_frozen_state": true
+    }
+  },
+  "theorem": {
+    "premises": [
+      "MATERIAL_REQUIREMENT_IDS_ARE_GRAMMAR_AND_HOST_BOUNDED_TO_8_ASCII_CHARS",
+      "AT_MOST_16_FROZEN_REQUIREMENTS",
+      "CYCLE0_PROMPT_PREPAYS_A_512_DIGIT_TOKENIZER_ISOLATED_STATE_RESERVE",
+      "EXACT_PINNED_GGUF_TOKENIZER_MEASURES_THE_RESERVE_AS_512_TOKENS",
+      "MAXIMAL_SERIALIZED_FROZEN_REQUIREMENT_PLUS_UNRESOLVED_STATE_IS_418_ASCII_BYTES_AND_327_EXACT_MODEL_TOKENS",
+      "ALL_NON_EVIDENCE_PROMPT_FIELDS_OTHER_THAN_FROZEN_REQUIREMENT_STATE_ARE_ALREADY_PRESENT_OR_FIXED_AT_CYCLE0",
+      "EVIDENCE_IS_ADDED_ONLY_WHILE_THE_EXACT_PRODUCTION_TOKEN_COUNTER_PROVES_INPUT_PLUS_4096_LE_16384",
+      "PLANNER_PLAN_INDEPENDENTLY_RECOUNTS_THE_FINAL_WIRE_PAYLOAD_BEFORE_INFERENCE"
+    ],
+    "conclusion": "IF_THE_EXACT_RESERVED_CYCLE0_PAYLOAD_PASSES_PRESTART_THEN_EVERY_REACHABLE_LATER_PLANNER_WIRE_PAYLOAD_IS_CONTEXT_ADMISSIBLE_BY_CONSTRUCTION",
+    "server_context_tokens": 16384,
+    "reserved_completion_tokens": 4096
+  },
+  "accounting": {
+    "rank15_task_read": false,
+    "rank15_task_started": false,
+    "benchmark_trials_consumed": 0,
+    "incremental_spend_usd": 0,
+    "terminal_credit_delta": 0
+  },
+  "execution_authority": false,
+  "promotion_authority": false,
+  "hard_nonclaims": [
+    "NO_RANK15_REAL_TASK_FIT_CLAIM_UNTIL_FRESH_AUTHORIZED_PRESTART_READ",
+    "NO_POST_START_NEW_CARRIER_REPLAY_AUTHORITY",
+    "NO_TERMINAL_OR_ACCEPTANCE_CREDIT"
+  ]
+}

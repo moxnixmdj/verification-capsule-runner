@@ -1,0 +1,102 @@
+name: Verify TB-Science rank15 all-cycle envelope V1
+
+on:
+  push:
+    branches: [repair/tb-science-rank15-all-cycle-envelope-20261009-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v3.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_v3_zero_exposure_tests.py"
+      - ".github/workflows/verify-tb-science-rank15-all-cycle-envelope-v1.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tb-science-rank15-all-cycle-envelope-v1-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      C: capsules/tb_science_rank15_20261009_v1
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prove zero benchmark exposure and compile V3
+        run: |
+          set -euo pipefail
+          test ! -e "$C/ACTIVATE_RANK15_V2_PR.json"
+          test ! -e "$C/ACTIVATE_RANK15_V3_PR.json"
+          python -m py_compile \
+            "$C/canonical/runtime/harbor_science_planner_v3.py" \
+            "$C/canonical/runtime/harbor_science_agent_v3.py" \
+            "$C/rank15_prestart_token_guard_v3.py" \
+            "$C/rank15_v3_zero_exposure_tests.py"
+
+      - name: Run V3 all-cycle envelope adversarial tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python "$C/rank15_v3_zero_exposure_tests.py"
+
+      - name: Reject old character-truncation context policy
+        run: |
+          set -euo pipefail
+          ! grep -F 'json.dumps(observations[-8:], sort_keys=True)[:30000]' "$C/canonical/runtime/harbor_science_agent_v3.py"
+          grep -F 'build_fitting_science_planner_prompt' "$C/canonical/runtime/harbor_science_agent_v3.py"
+          grep -F 'POST_FREEZE_STATE_RESERVE_TOKENS = 512' "$C/canonical/runtime/harbor_science_agent_v3.py"
+          grep -F 'MAX_REQUIREMENT_ID_CHARS = 8' "$C/canonical/runtime/harbor_science_planner_v3.py"
+          grep -F 'pattern' "$C/canonical/runtime/harbor_science_planner_v3.py"
+
+      - name: Emit zero-exposure receipt
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          C=pathlib.Path("capsules/tb_science_rank15_20261009_v1")
+          paths=[
+            C/"canonical/runtime/harbor_science_planner_v3.py",
+            C/"canonical/runtime/harbor_science_agent_v3.py",
+            C/"rank15_prestart_token_guard_v3.py",
+            C/"rank15_v3_zero_exposure_tests.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_ALL_CYCLE_ENVELOPE_ZERO_EXPOSURE_VERIFICATION_V1",
+            "status":"PASS__STATIC_AND_ADVERSARIAL_UNIT_PROOF__ZERO_EXPOSURE",
+            "sha256":{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
+            "properties":{
+              "bounded_ascii_material_requirement_ids":True,
+              "post_freeze_state_reserve_tokens":512,
+              "exact_token_frontier_packing_each_cycle":True,
+              "full_trace_separate_from_planner_frontier":True,
+              "base_context_overflow_fail_closed":True,
+            },
+            "rank15_task_read":False,
+            "rank15_task_started":False,
+            "benchmark_trials_consumed":0,
+            "incremental_spend_usd":0,
+            "execution_authority":False,
+            "terminal_credit_delta":0,
+          }
+          pathlib.Path("RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION.json").write_text(
+            json.dumps(out,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rank15-v3-all-cycle-envelope-zero-exposure
+          path: RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION.json
+          retention-days: 7
