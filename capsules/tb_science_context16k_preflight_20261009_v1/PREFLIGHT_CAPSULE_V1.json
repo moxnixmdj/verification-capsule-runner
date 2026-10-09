@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT16K_PREFLIGHT_CAPSULE_V1",
   "date": "2026-10-09",
-  "status": "ZERO_EXPOSURE_CONTEXT_PLUS_TIMEOUT_REPAIR_GATE_ONLY",
+  "status": "ZERO_EXPOSURE_CONTEXT_PLUS_SCOPED_LONG_CONTEXT_TIMEOUT_REPAIR_GATE_ONLY",
   "source_brain_main_sha": "7b290a3734e12c4821a8198e0b63abe0f75624f0",
   "causal_input": {
     "rank13_workflow_run_id": 37870603497,
@@ -15,14 +15,18 @@
     "synthetic_target_input_max": 10200,
     "reserved_max_output_tokens": 4096,
     "timeout_envelope": {
-      "max_timeout_s": 1800,
-      "prefill_tokens_per_second_floor": 8,
-      "generation_and_transport_margin_s": 240,
+      "legacy_max_timeout_s": 900,
+      "legacy_prefill_tokens_per_second_floor": 15,
+      "legacy_generation_and_transport_margin_s": 180,
+      "long_context_threshold_tokens": 8192,
+      "long_context_max_timeout_s": 1800,
+      "long_context_prefill_tokens_per_second_floor": 8,
+      "long_context_generation_and_transport_margin_s": 240,
       "exact_10000_input_timeout_s": 1490
     }
   },
   "exact_route": {
-    "planner_blob": "11755fb568df5a07478c7fa7fd9e40a3e1643ccf",
+    "planner_blob": "58964dc8d6b5eed5c202081cd800035c791eeb1d",
     "command_policy_blob": "a525773417291c7a4841bf35e1baff5370350d0d",
     "qwen_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
     "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c"
@@ -43,5 +47,14 @@
     "furthest_observed_prompt_tokens": 9488,
     "observed_prefill_tokens_per_second_at_9488": 11.71,
     "causal_classification": "TIMEOUT_ESTIMATOR_FLOOR_15_TPS_FALSIFIED_BY_LIVE_LONG_CONTEXT_PREFILL__CONTEXT16K_NOT_FALSIFIED"
+  },
+  "prior_zero_exposure_pass": {
+    "workflow_run_id": 37874908316,
+    "artifact_id": 11592596396,
+    "planner_blob": "11755fb568df5a07478c7fa7fd9e40a3e1643ccf",
+    "selected_input_tokens": 10004,
+    "effective_timeout_s": 1491,
+    "planner_duration_s": 593.292,
+    "note": "PROVED_LONG_CONTEXT_PROFILE_SUFFICIENT_BUT_GLOBAL_APPLICATION_REGRESSED_SMALL_PROMPT_TIMEOUT_POLICY"
   }
 }

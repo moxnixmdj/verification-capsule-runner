@@ -37,9 +37,9 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "11755fb568df5a07478c7fa7fd9e40a3e1643ccf"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
           test "$(git hash-object "$C/canonical/runtime/tb_science_context16k_zero_exposure_preflight_v1.py")" = "98f07d6cb069397176159b1dd96c57fbdd22131f"
-          test "$(git hash-object "$C/PREFLIGHT_CAPSULE_V1.json")" = "dd4e97c0cbbe8189576b7830e0eb543046acdbfd"
+          test "$(git hash-object "$C/PREFLIGHT_CAPSULE_V1.json")" = "9c7bc4b84b9c4df347be3309da0db3c8bb105096"
           python - <<'PY'
           import json
           p=json.load(open("capsules/tb_science_context16k_preflight_20261009_v1/PREFLIGHT_CAPSULE_V1.json"))
@@ -47,9 +47,13 @@ jobs:
           assert p["causal_input"]["failed_server_context_tokens"]==8192
           assert p["candidate_repair"]["server_context_tokens"]==16384
           assert p["candidate_repair"]["synthetic_target_input_min"]==10000
-          assert p["candidate_repair"]["timeout_envelope"]["max_timeout_s"]==1800
-          assert p["candidate_repair"]["timeout_envelope"]["prefill_tokens_per_second_floor"]==8
-          assert p["candidate_repair"]["timeout_envelope"]["generation_and_transport_margin_s"]==240
+          assert p["candidate_repair"]["timeout_envelope"]["legacy_max_timeout_s"]==900
+          assert p["candidate_repair"]["timeout_envelope"]["legacy_prefill_tokens_per_second_floor"]==15
+          assert p["candidate_repair"]["timeout_envelope"]["legacy_generation_and_transport_margin_s"]==180
+          assert p["candidate_repair"]["timeout_envelope"]["long_context_threshold_tokens"]==8192
+          assert p["candidate_repair"]["timeout_envelope"]["long_context_max_timeout_s"]==1800
+          assert p["candidate_repair"]["timeout_envelope"]["long_context_prefill_tokens_per_second_floor"]==8
+          assert p["candidate_repair"]["timeout_envelope"]["long_context_generation_and_transport_margin_s"]==240
           assert p["prior_zero_exposure_failure"]["workflow_run_id"]==37872005534
           assert p["prior_zero_exposure_failure"]["server_context_rejection_observed"] is False
           assert p["safety"]["benchmark_task_exposure"]==0
@@ -60,9 +64,15 @@ jobs:
           python -m py_compile "$C"/canonical/runtime/*.py
           PYTHONPATH="$C" python - <<'PY'
           from canonical.runtime import harbor_science_planner_v1 as p
-          assert p.MAX_TIMEOUT_S==1800
-          assert p.PREFILL_TOKENS_PER_SECOND_FLOOR==8
-          assert p.GENERATION_AND_TRANSPORT_MARGIN_S==240
+          assert p.MAX_TIMEOUT_S==900
+          assert p.PREFILL_TOKENS_PER_SECOND_FLOOR==15
+          assert p.GENERATION_AND_TRANSPORT_MARGIN_S==180
+          assert p.LONG_CONTEXT_THRESHOLD_TOKENS==8192
+          assert p.LONG_CONTEXT_MAX_TIMEOUT_S==1800
+          assert p.LONG_CONTEXT_PREFILL_TOKENS_PER_SECOND_FLOOR==8
+          assert p.LONG_CONTEXT_GENERATION_AND_TRANSPORT_MARGIN_S==240
+          assert p.effective_timeout_s(1000,180)==300
+          assert p.effective_timeout_s(7142,300)==657
           assert p.effective_timeout_s(10000,300)==1490
           PY
 
