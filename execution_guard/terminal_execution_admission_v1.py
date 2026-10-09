@@ -211,6 +211,7 @@ def admission_errors(
         "authority",
         "ledger",
         "invariant_registry",
+        "admission_guard",
     ):
         row = surface.get(key)
         if not isinstance(row, Mapping):
