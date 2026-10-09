@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK13_CARRIER_PREPARATION_V1",
   "date": "2026-10-09",
-  "status": "PASS__EXACT_15_FILE_CARRIER_PREPARED__NO_ACTIVATION_FILE__NO_EXECUTION_AUTHORITY",
+  "status": "PASS__EXACT_15_FILE_CARRIER_PREPARED__FRESH_LIVE_V8_GATE_BOUND__NO_ACTIVATION_FILE__NO_EXECUTION_AUTHORITY",
   "branch": "prepare/tb-science-rank13-carrier-20261009-v1",
   "execution_base": "terminal-execution-v1",
   "capsule_path": "capsules/tb_science_rank13_20261009_v1",
@@ -26,12 +26,13 @@
   "activation_file_present": false,
   "active_execution_claim_present": false,
   "active_authority_present": false,
-  "fresh_live_v8_gate_receipt_bound": false,
+  "fresh_live_v8_gate_receipt_bound": true,
   "task_started": false,
   "benchmark_task_exposure": 0,
   "benchmark_trials_executed": 0,
   "execution_authority": false,
   "acceptance_credit_delta": 0,
   "terminal_credit_delta": 0,
-  "incremental_spend_usd": 0
+  "incremental_spend_usd": 0,
+  "fresh_live_v8_gate_receipt_blob": "84e51e8f1079d364275747f8afeb0996453b608d"
 }
