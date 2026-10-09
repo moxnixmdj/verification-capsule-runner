@@ -31,7 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v3.py")" = "fb5c12ff1607b45f2ccd7060b41308ba560cc554"
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v3.py")" = "63ea1116e754be99edde62a4d4f06a3c34c47995"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v3.py")" = "66ff927e9e0c69b1904411d7f5533ca866f8a1d9"
           test "$(git hash-object "$C/rank15_prestart_all_cycle_fit_guard_v3.py")" = "0aa6058f514bd3ab07ad2e55127f51f116d805c2"
           test "$(git hash-object "$C/rank15_v3_all_cycle_fit_zero_exposure_tests.py")" = "a0073b8f772ae5aa26ae6adbfd83fa535a002dba"
           test ! -e "$C/ACTIVATE_RANK15_V3_PR.json"
