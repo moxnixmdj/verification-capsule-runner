@@ -72,6 +72,35 @@ def slot_start_key(slot_id: str, task_digest: str) -> str:
     return v1.slot_start_key(slot_id, task_digest)
 
 
+def _record_matches(record: Any, expected: dict[str, Any]) -> bool:
+    return (
+        isinstance(record, dict)
+        and all(record.get(key) == value for key, value in expected.items())
+    )
+
+
+def _success_receipt(
+    *,
+    key: str,
+    intent: StartIntent,
+    persisted: dict[str, Any],
+    status: str,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "key": key,
+        "slot_id": intent.slot_id,
+        "task_digest": intent.task_digest,
+        "logical_attempt_id": intent.logical_attempt_id,
+        "agent_ready_receipt_sha256": intent.agent_ready_receipt_sha256,
+        "task_started": True,
+        "benchmark_trials_consumed": 1,
+        "replay_authority": False,
+        "replacement_carrier_authority": False,
+        "durable_record": persisted,
+    }
+
+
 def reserve_start_once(store: AtomicStore, intent: StartIntent) -> dict[str, Any]:
     intent.validate()
     key = slot_start_key(intent.slot_id, intent.task_digest)
@@ -96,8 +125,33 @@ def reserve_start_once(store: AtomicStore, intent: StartIntent) -> dict[str, Any
     }
     try:
         created = store.create(key, record)
-    except Exception as exc:
-        raise StartAdmissionDenied("START_COMMIT_UNCONFIRMED__NO_AGENT_RELEASE") from exc
+    except Exception as create_exc:
+        # The write transport may fail after the immutable ref was created.
+        # Reconcile against durable truth before deciding whether the agent may
+        # cross its pre-action barrier. Exact persisted bytes mean COMMITTED;
+        # confirmed absence means NOT COMMITTED; unreadable state remains
+        # deliberately uncertain and cannot release the agent.
+        try:
+            existing = store.read(key)
+        except Exception as read_exc:
+            raise StartAdmissionDenied(
+                "START_COMMIT_OUTCOME_UNCONFIRMED__NO_AGENT_RELEASE"
+            ) from read_exc
+        if existing is None:
+            raise StartAdmissionDenied(
+                "START_COMMIT_CONFIRMED_ABSENT__NO_AGENT_RELEASE"
+            ) from create_exc
+        if not _record_matches(existing, record):
+            raise StartAdmissionDenied(
+                "START_COMMIT_CONFLICT_AFTER_CREATE_ERROR__NO_AGENT_RELEASE"
+            ) from create_exc
+        return _success_receipt(
+            key=key,
+            intent=intent,
+            persisted=existing,
+            status="AGENT_READY_BOUND_START_COMMITTED_RECONCILED_AFTER_CREATE_ERROR",
+        )
+
     if created is not True:
         try:
             existing = store.read(key)
@@ -105,35 +159,42 @@ def reserve_start_once(store: AtomicStore, intent: StartIntent) -> dict[str, Any
             raise StartAdmissionDenied(
                 "START_ALREADY_COMMITTED_OR_READ_UNCONFIRMED__NO_AGENT_RELEASE"
             ) from exc
+        if _record_matches(existing, record):
+            # A second invocation of the exact same immutable commit is safe to
+            # recognize as already committed, but it does not mint another
+            # benchmark attempt. The same durable record is the authority.
+            return _success_receipt(
+                key=key,
+                intent=intent,
+                persisted=existing,
+                status="AGENT_READY_BOUND_START_COMMITTED_IDEMPOTENT",
+            )
         existing_run = existing.get("github_run_id") if isinstance(existing, dict) else None
         raise StartAdmissionDenied(
             "START_ALREADY_COMMITTED__NO_SECOND_AGENT_RELEASE"
             + (":" + str(existing_run) if existing_run else "")
         )
+
     try:
         persisted = store.read(key)
     except Exception as exc:
-        raise StartAdmissionDenied("START_POSTWRITE_READ_UNCONFIRMED__NO_AGENT_RELEASE") from exc
-    if not isinstance(persisted, dict):
-        raise StartAdmissionDenied("START_POSTWRITE_RECORD_MISSING__NO_AGENT_RELEASE")
-    for field, expected in record.items():
-        if persisted.get(field) != expected:
+        raise StartAdmissionDenied(
+            "START_POSTWRITE_READ_UNCONFIRMED__NO_AGENT_RELEASE"
+        ) from exc
+    if not _record_matches(persisted, record):
+        if persisted is None:
             raise StartAdmissionDenied(
-                "START_POSTWRITE_BINDING_MISMATCH__NO_AGENT_RELEASE:" + field
+                "START_POSTWRITE_RECORD_MISSING__NO_AGENT_RELEASE"
             )
-    return {
-        "status": "AGENT_READY_BOUND_START_COMMITTED",
-        "key": key,
-        "slot_id": intent.slot_id,
-        "task_digest": intent.task_digest,
-        "logical_attempt_id": intent.logical_attempt_id,
-        "agent_ready_receipt_sha256": intent.agent_ready_receipt_sha256,
-        "task_started": True,
-        "benchmark_trials_consumed": 1,
-        "replay_authority": False,
-        "replacement_carrier_authority": False,
-        "durable_record": persisted,
-    }
+        raise StartAdmissionDenied(
+            "START_POSTWRITE_BINDING_MISMATCH__NO_AGENT_RELEASE"
+        )
+    return _success_receipt(
+        key=key,
+        intent=intent,
+        persisted=persisted,
+        status="AGENT_READY_BOUND_START_COMMITTED",
+    )
 
 
 def _load_intent(path: str) -> StartIntent:
