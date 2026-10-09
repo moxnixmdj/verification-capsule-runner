@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3",
   "date": "2026-10-09",
-  "status": "STAGED_ZERO_EXPOSURE__V3_ALL_CYCLE_AND_DURABLE_START_CAS_BOUND__EXECUTION_AUTHORITY_FALSE",
+  "status": "STAGED_ZERO_EXPOSURE__V3_ALL_CYCLE_AND_BOUND_DURABLE_START_INTENT__EXECUTION_AUTHORITY_FALSE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
@@ -32,8 +32,12 @@
     "pre_task_read_cas_absence_check_required": true,
     "start_cas_occurs_after_prestart_guard": true,
     "start_cas_occurs_immediately_before_harbor": true,
-    "start_cas_ref_kind": "LIGHTWEIGHT_GIT_TAG",
-    "start_cas_ref": "refs/tags/project-brain-start-locks/tb-science-rank15-protein-active-learning-trial-0-v3"
+    "start_cas_ref_kind": "IMMUTABLE_GITHUB_REF_STORE_RECORD",
+    "durable_start_record_binds_logical_attempt_id": true,
+    "durable_start_record_binds_prestart_receipt_sha256": true,
+    "durable_start_record_binds_runtime_identity_sha256": true,
+    "durable_start_record_binds_workflow_authority_activation_blobs": true,
+    "start_cas_postwrite_readback_required": true
   },
   "runtime_bindings": {
     "planner": {
@@ -62,7 +66,7 @@
     },
     "start_cas": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v3.py",
-      "git_blob_sha": "c5a9ac902bf84e4ac38405e7ac5cd676a3012618"
+      "git_blob_sha": "11b950561299a8696470611dbc50cd881ddc9f9d"
     },
     "finalizer": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py",
@@ -75,6 +79,14 @@
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v2.py",
       "git_blob_sha": "5a30e330900182880ade14ad4c9a0a00f6870420"
+    },
+    "generic_start_cas": {
+      "path": "execution_guard/terminal_slot_start_cas_v1.py",
+      "git_blob_sha": "da67f089dae61aed6b3354db79d3ff989be4ed5c"
+    },
+    "generic_ref_store": {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
     }
   },
   "all_cycle_proof": {
