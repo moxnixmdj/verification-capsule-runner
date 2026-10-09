@@ -20,6 +20,7 @@ kill -0 "$(cat LOCAL_QWEN_SERVER.pid)"
 http://127.0.0.1:8080/health
 SYNTHETIC_COMPLETION.json
 rank15_prestart_token_guard_v2.py
+canonical.runtime.harbor_science_agent_v2:HarborScienceAgent
 harbor run
 """
 
@@ -81,6 +82,13 @@ class Tests(unittest.TestCase):
             "behavior": {
                 "cache_compiled_build_directory": False,
                 "configure_on_current_runner": True,
+            },
+            "runtime_bindings": {
+                "planner": {"path": "capsules/proof/repair.json", "git_blob_sha": guard.git_blob(repair)},
+                "agent": {"path": "capsules/proof/verification.json", "git_blob_sha": guard.git_blob(verification)},
+                "prestart_guard": {"path": "capsules/rank15/authority.json", "git_blob_sha": guard.git_blob(authority)},
+                "transport": {"path": "capsules/rank15/ledger.json", "git_blob_sha": guard.git_blob(ledger)},
+                "zero_exposure_tests": {"path": "capsules/proof/repair.json", "git_blob_sha": guard.git_blob(repair)},
             },
         }
         behavior_path = self.root / self.behavior_rel
