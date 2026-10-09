@@ -102,7 +102,7 @@ TOOL = {
                     "items": {
                         "type": "object",
                         "properties": {
-                            "action_id": {"type": "string", "minLength": 1, "maxLength": 64},
+                            "action_id": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.:-]+$"},
                             "covers": {
                                 "type": "array",
                                 "minItems": 1,
