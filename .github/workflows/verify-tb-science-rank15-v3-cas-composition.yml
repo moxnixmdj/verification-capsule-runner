@@ -1,0 +1,126 @@
+name: Verify TB-Science rank15 V3 CAS composition
+
+on:
+  push:
+    branches: [repair/tb-science-rank15-v3-cas-composition-20261009-v1]
+    paths:
+      - ".github/workflows/execute-tb-science-rank15-20261009-v3.yml"
+      - ".github/workflows/verify-tb-science-rank15-v3-cas-composition.yml"
+      - "execution_guard/terminal_execution_admission_v2.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3.json"
+      - "execution_guard/test_rank15_v3_cas_composition.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py"
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/execute-tb-science-rank15-20261009-v3.yml"
+      - ".github/workflows/verify-tb-science-rank15-v3-cas-composition.yml"
+      - "execution_guard/terminal_execution_admission_v2.py"
+      - "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3.json"
+      - "execution_guard/test_rank15_v3_cas_composition.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rank15-v3-cas-composition-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prove zero benchmark exposure
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank15_20261009_v1
+          test ! -e "$C/ACTIVATE_RANK15_V3_PR.json"
+          test ! -d rank15_task_read
+          ! find . -maxdepth 2 -name 'RANK15_START_INTENT.json' -print -quit | grep .
+          ! find . -maxdepth 2 -name 'TERMINAL_SLOT_START_CAS_RECEIPT.json' -print -quit | grep .
+
+      - name: Compile exact composition bytes
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            execution_guard/terminal_execution_admission_v2.py \
+            execution_guard/terminal_slot_start_cas_v1.py \
+            execution_guard/test_terminal_slot_start_cas_v1.py \
+            execution_guard/test_rank15_v3_cas_composition.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py \
+            capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py \
+            capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py \
+            capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v3.py
+
+      - name: Replay all-cycle, CAS, and joint composition falsifiers
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/tb_science_rank15_20261009_v1
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank15_20261009_v1/rank15_v3_zero_exposure_tests.py
+          PYTHONPATH=execution_guard python execution_guard/test_terminal_slot_start_cas_v1.py
+          python execution_guard/test_rank15_v3_cas_composition.py
+
+      - name: Emit composition receipt
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          files=[
+            ".github/workflows/execute-tb-science-rank15-20261009-v3.yml",
+            "execution_guard/terminal_execution_admission_v2.py",
+            "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V3.json",
+            "execution_guard/terminal_slot_start_cas_v1.py",
+            "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
+            "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py",
+            "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py",
+            "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v3.py",
+            "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v3.py",
+          ]
+          out={
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_RANK15_V3_CAS_COMPOSITION_VERIFICATION_V1",
+            "status":"PASS__ALL_CYCLE_ENVELOPE_PLUS_CREATE_ONCE_START_CAS_COMPOSED__ZERO_EXPOSURE",
+            "github_sha":os.environ["GITHUB_SHA"],
+            "git_blobs":{
+              p:subprocess.check_output(["git","hash-object",p],text=True).strip()
+              for p in files
+            },
+            "phase_order":[
+              "CARRIER_QUALIFICATION",
+              "TASK_READ_AND_V3_PRESTART",
+              "START_INTENT_BUILD",
+              "DURABLE_CREATE_ONCE_START_CAS",
+              "HARBOR_RUN",
+              "CONSERVATIVE_FINALIZE"
+            ],
+            "single_slot_aggregate_acceptance_credit":False,
+            "replay_authority":False,
+            "replacement_carrier_authority":False,
+            "rank15_activation_present":False,
+            "rank15_task_read":False,
+            "rank15_task_started":False,
+            "benchmark_trials_consumed":0,
+            "execution_authority":False,
+            "incremental_spend_usd":0,
+            "terminal_credit_delta":0,
+          }
+          pathlib.Path("RANK15_V3_CAS_COMPOSITION_VERIFY.json").write_text(
+            json.dumps(out,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rank15-v3-cas-composition-zero-exposure
+          path: RANK15_V3_CAS_COMPOSITION_VERIFY.json
+          retention-days: 7
