@@ -1,0 +1,15 @@
+{
+  "schema": "PR3514_BLOB_CHUNK_V1",
+  "chunk": 5,
+  "source_head_sha": "c2083e5d62f8221d08174490f41ac61c56102e7a",
+  "files": {
+    "canonical/runtime/r2_ror_authority_identity_direct_adequacy_v1.py": "30a661044f4c18ff14c2f15cdc46187c3be184f5",
+    "canonical/runtime/r2_structured_binary_direct_adequacy_v1.py": "d3d687fbd1d049b1162520f96c7ba4fb57927f42",
+    "canonical/runtime/r2_structured_table_direct_adequacy_v1.py": "2db9a7b10fab4410e08f8f59a8f414817b4f51c3",
+    "canonical/runtime/r2_typed_decision_direct_adequacy_v1.py": "fae1ff72fb5b1369e3fae43ed468ba879fb24f5a",
+    "canonical/runtime/r2_typed_json_transform_direct_adequacy_v1.py": "6c89b82321525689b27fd08b730a19567b864fe7",
+    "canonical/runtime/r2_unit_normalized_numeric_comparison_direct_adequacy_v1.py": "2cc68f8c9d52255f4d09a9f5ea93985ca49a0506",
+    "canonical/runtime/r2_visual_code_direct_adequacy_v1.py": "59f574d5e6726330f29bc41bf2afeb2044c7f7ea",
+    "canonical/verification/R2_DOCX_DIRECT_ADEQUACY_VERIFY_20261008_V1.json": "f47ba33f5d8aed21bd856315380fc5b391a7e314"
+  }
+}

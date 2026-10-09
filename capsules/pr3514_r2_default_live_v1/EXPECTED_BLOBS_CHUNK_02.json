@@ -1,0 +1,15 @@
+{
+  "schema": "PR3514_BLOB_CHUNK_V1",
+  "chunk": 2,
+  "source_head_sha": "c2083e5d62f8221d08174490f41ac61c56102e7a",
+  "files": {
+    "canonical/runtime/r2_direct_route_dynamic_admission_v1.py": "65fc5bdb5283944d058c6c6a2ff1fe360aa17489",
+    "canonical/runtime/r2_direct_route_live_integration_closure_v2.py": "a3afe027a8aaa2ab4af24b2fbe026488c03c74c9",
+    "canonical/runtime/r2_direct_route_registry_v1.py": "151641160bb6623a89e2584f2b3cd5cb62050bd4",
+    "canonical/runtime/r2_cross_document_effect_direct_adequacy_v1.py": "0377f5b533fba3966f4ba9b9eb53acf49a38b4a0",
+    "canonical/runtime/r2_cross_document_effect_worldset_direct_adequacy_v1.py": "a6c8f965cedda0d42e47b0d71667af5f2c9cf8df",
+    "canonical/runtime/r2_direct_end_to_end_adequacy_v1.py": "ee0f2e786bb58d6547dff98840c9ff8afa5f0b50",
+    "canonical/runtime/r2_docx_direct_adequacy_v1.py": "631fcf2aa82d090d1f3ade6199829f060b000937",
+    "canonical/runtime/r2_docx_json_direct_adequacy_v1.py": "27fdb096b00bd5dda21e912a1b740ac79bf35cd4"
+  }
+}

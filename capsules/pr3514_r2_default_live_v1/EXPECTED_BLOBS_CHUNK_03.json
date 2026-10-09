@@ -1,0 +1,15 @@
+{
+  "schema": "PR3514_BLOB_CHUNK_V1",
+  "chunk": 3,
+  "source_head_sha": "c2083e5d62f8221d08174490f41ac61c56102e7a",
+  "files": {
+    "canonical/runtime/r2_exact_evidence_claim_support_direct_adequacy_v1.py": "1ee84b6e1fd4dad3296d034315936e21b2d6c658",
+    "canonical/runtime/r2_explicit_numeric_comparison_direct_adequacy_v1.py": "ad688f55d86e3d995e9f1e3851913833a453ad66",
+    "canonical/runtime/r2_finance_contextual_reference_direct_adequacy_v1.py": "f02b16830b70b1138ba2ea8acab5a047b7d11dee",
+    "canonical/runtime/r2_finance_controlled_typed_unless_direct_adequacy_v1.py": "77ce6472a8a923a805d21e09b7bc40fc0e8ba6e3",
+    "canonical/runtime/r2_finance_cross_document_json_direct_adequacy_v1.py": "8a4616e140409f40bcf8645d1e4b3416fc7bfcc7",
+    "canonical/runtime/r2_finance_explicit_alias_unless_direct_adequacy_v1.py": "a46eb2d7038060cd773c0f1b060dc340387b6254",
+    "canonical/runtime/r2_finance_explicit_definition_unless_direct_adequacy_v1.py": "ece0f13678afddfd2f93ffe375f6483f5f0ebb4f",
+    "canonical/runtime/r2_finance_external_json_policy_direct_adequacy_v1.py": "6ad117814488685418f4e090b924a59bcb89ea9f"
+  }
+}

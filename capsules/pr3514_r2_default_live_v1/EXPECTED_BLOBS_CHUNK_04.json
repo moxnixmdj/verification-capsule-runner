@@ -1,0 +1,15 @@
+{
+  "schema": "PR3514_BLOB_CHUNK_V1",
+  "chunk": 4,
+  "source_head_sha": "c2083e5d62f8221d08174490f41ac61c56102e7a",
+  "files": {
+    "canonical/runtime/r2_finance_former_latter_direct_adequacy_v1.py": "c47cf50d69e24bc1490b9c6c1ce2e5683a03d68f",
+    "canonical/runtime/r2_finance_normalized_if_direct_adequacy_v1.py": "44502069bf0430106f2c6cbcfe8da410195c67e9",
+    "canonical/runtime/r2_finance_normalized_source_universe_direct_adequacy_v1.py": "7530b3717eda4429a7903bf5d317384d727b8de7",
+    "canonical/runtime/r2_finance_normalized_unless_direct_adequacy_v1.py": "eb33e45d31d984a3339d7390827853366eb55ddb",
+    "canonical/runtime/r2_http_json_observation_direct_adequacy_v1.py": "a633bb191ec27493bee30eb8ba6f9f800e97a427",
+    "canonical/runtime/r2_knowledge_consistency_direct_adequacy_v1.py": "14c87718111c4fc235eb697624a98b2a95fa8968",
+    "canonical/runtime/r2_markdown_pdf_direct_adequacy_v1.py": "5b2c1b2ac72952006bc257b5fda379dbeebd2d21",
+    "canonical/runtime/r2_pypi_provenance_direct_adequacy_v1.py": "2ead573756663bbb119e7319eff64b9ffcbc4da0"
+  }
+}
