@@ -1,0 +1,44 @@
+name: Verify terminal causal journal v1
+
+on:
+  pull_request:
+    branches: [repair/rank15-v5-agent-start-barrier-20261009]
+    paths:
+      - "execution_guard/terminal_causal_journal_v1.py"
+      - "execution_guard/tests/test_terminal_causal_journal_v1.py"
+      - ".github/workflows/verify-terminal-causal-journal-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            execution_guard/terminal_causal_journal_v1.py \
+            execution_guard/tests/test_terminal_causal_journal_v1.py
+
+      - name: Run adversarial journal tests
+        run: |
+          set -euo pipefail
+          python -m unittest -v execution_guard.tests.test_terminal_causal_journal_v1
+
+      - name: Assert zero-exposure scope
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V5_PR.json
+          ! grep -q "harbor task download" execution_guard/terminal_causal_journal_v1.py
+          ! grep -q "harbor run" execution_guard/terminal_causal_journal_v1.py
