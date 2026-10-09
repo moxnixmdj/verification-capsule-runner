@@ -1,74 +1,72 @@
 {
-  "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V2_PR.json",
+  "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
+  "date": "2026-10-09",
+  "status": "ACTIVE_V4_RUNTIME_DERIVED_ADMISSION_RESEALED__ZERO_EXPOSURE__AWAIT_EXACT_ONE_FILE_ACTIVATION_PR",
+  "family": "TB_SCIENCE",
   "active": true,
-  "authority": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V2.json",
-    "git_blob_sha": "710abe99e5ff92c3b0ec0086123edade248a6477"
-  },
+  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
+  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v4.yml",
+  "workflow_git_blob_sha": "59fc3bff5890a505e8a221c53321de12d98f0802",
+  "activation_path": "capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V4_PR.json",
   "behavior": {
-    "git_blob_sha": "5caedddb7b5714fe74c4ba5709a43391e66dcf3a",
-    "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V2.json"
+    "path": "execution_guard/TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4.json",
+    "git_blob_sha": "bf5464d8079ad479b7dab574e86e09a12ff55fad"
+  },
+  "authority": {
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V5.json",
+    "git_blob_sha": "c82de56006f233f63683341795d3cd085b5a7890"
+  },
+  "ledger": {
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V25.json",
+    "git_blob_sha": "224f98878b874908305b303de863a909a8e71185"
+  },
+  "invariant_registry": {
+    "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
+    "git_blob_sha": "3d156b5b3274ea7fe6542206137ddc7c782903b5"
   },
   "admission_guard": {
-    "git_blob_sha": "84d1186b012d51fa5faafa37cf52e87467e80857",
-    "path": "execution_guard/terminal_execution_admission_v1.py"
+    "path": "execution_guard/terminal_execution_admission_v2.py",
+    "git_blob_sha": "cf0472ece25186099fc2748bbd237c7e76260395"
   },
+  "epoch": {
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V4.json",
+    "git_blob_sha": "a0d3ce5473fde032fe7831f6edc2b65df4c80e15"
+  },
+  "execution_claim": {
+    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V4.json",
+    "git_blob_sha": "1b3e5a9b5cf98bea517433fa041b7147f9b49a79"
+  },
+  "preflight": {
+    "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py",
+    "git_blob_sha": "d45d917a108ef567fa72e296c15d17cbd8652b49"
+  },
+  "finalizer": {
+    "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py",
+    "git_blob_sha": "d376e1826b549c108ab51a326a2d30a7e388277a"
+  },
+  "execution_authority": true,
+  "task_read_authority": true,
+  "task_started": false,
   "benchmark_trials_consumed": 0,
-  "date": "2026-10-09",
-  "execution_authority": false,
-  "family": "TB_SCIENCE",
+  "incremental_spend_usd": 0,
+  "terminal_credit_delta": 0,
   "hard_nonclaims": [
-    "NO_RANK15_V2_ACTIVATION_FILE",
+    "NO_RANK15_V4_ACTIVATION_FILE_ON_RESEALED_BASE",
     "NO_RANK15_TASK_READ",
     "NO_RANK15_TASK_START",
     "NO_RANK15_RESULT",
     "NO_ACCEPTANCE_OR_TERMINAL_CREDIT",
-    "NO_RANK15_V2_REACTIVATION_AUTHORITY",
-    "NO_ALL_CYCLE_FIT_BY_CONSTRUCTION_CREDIT",
-    "NO_DURABLE_TASK_START_CAS_BOUND_TO_ACTIVE_SURFACE"
+    "NO_REPLAY_OR_REPLACEMENT_AFTER_DURABLE_START_CAS"
   ],
-  "incremental_spend_usd": 0,
-  "invariant_registry": {
-    "git_blob_sha": "3d156b5b3274ea7fe6542206137ddc7c782903b5",
-    "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json"
-  },
-  "ledger": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V21.json",
-    "git_blob_sha": "62eec1814fa9b1682772f096c36200c0069b9f00"
-  },
-  "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
-  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
-  "status": "QUARANTINED_AFTER_PREEXPOSURE_V2_CANCELLATION__AWAIT_V3_ALL_CYCLE_FIT_AND_START_CAS_RESEAL",
-  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
-  "task_read_authority": false,
-  "task_started": false,
-  "terminal_credit_delta": 0,
-  "workflow_git_blob_sha": "77b4f822a4785f185453a18a1de69256254736bd",
-  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v2.yml",
-  "epoch": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V2.json",
-    "git_blob_sha": "029fb6e958e8ab451fcd2fa75da64c8cff5f11b6"
-  },
-  "execution_claim": {
-    "path": "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V2.json",
-    "git_blob_sha": "fda33be2c4b75ba397a55ee912bbcfab5c5e3c97"
-  },
-  "preflight": {
-    "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py",
-    "git_blob_sha": "47652d7dd8f9bedfd8df3736b1bf96548f274aee"
-  },
-  "finalizer": {
-    "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py",
-    "git_blob_sha": "d05cb230372528e1e64e1b9a24fd68206f4bbaaf"
-  },
-  "incident": {
-    "workflow_run_id": "37906384473",
-    "activation_pr": 2479,
-    "result": "PREEXPOSURE_ABORT_NONCONSUMING",
-    "task_read": false,
-    "task_started": false,
-    "benchmark_trials_consumed": 0,
-    "execution_authority_consumed": false,
-    "revocation_reason": "V2_ACTIVATED_BEFORE_ALL_CYCLE_CONTEXT_FIT_AND_GLOBAL_TASK_START_CAS_WERE_JOINTLY_VERIFIED"
+  "reseal": {
+    "brain_authority_v9_blob": "c98bc25882279a12aece65fb1bbd827b90148b82",
+    "brain_ledger_v25_blob": "e41984176986421042a93527b21be4d6a4f10b63",
+    "public_authority_v5_blob": "c82de56006f233f63683341795d3cd085b5a7890",
+    "public_ledger_v25_blob": "224f98878b874908305b303de863a909a8e71185",
+    "epoch_v4_blob": "a0d3ce5473fde032fe7831f6edc2b65df4c80e15",
+    "execution_claim_v4_blob": "1b3e5a9b5cf98bea517433fa041b7147f9b49a79",
+    "guard_repair_pr": 2491,
+    "trusted_base_before_reseal": "b31f113995aec8218e769a6601b31ac767c75023"
   }
 }
