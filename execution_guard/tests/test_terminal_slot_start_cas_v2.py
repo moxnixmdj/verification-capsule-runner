@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import unittest
 
-from execution_guard import terminal_slot_start_cas_v1 as v1
 from execution_guard import terminal_slot_start_cas_v2 as v2
+
+v1 = v2.v1
 
 
 class MemoryStore:
