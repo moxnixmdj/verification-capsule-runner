@@ -21,9 +21,9 @@ jobs:
       - name: Bind exact canonical bytes
         run: |
           set -euo pipefail
-          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "11755fb568df5a07478c7fa7fd9e40a3e1643ccf"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
           test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
-          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "a3d046389f916cb2efe6e08dfb185f02dd9d5d8b"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_planner_v1.py")" = "ad5a0a7c7f3d549e4b196590eddb31f77c755015"
           python -m py_compile "$C/canonical/runtime/harbor_science_planner_v1.py" "$C/canonical/runtime/harbor_command_policy.py" "$C/canonical/tests/test_harbor_science_planner_v1.py"
       - name: Run exact focused regression
         run: |
