@@ -1,0 +1,40 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_CARRIER_PUBLIC_VERIFICATION_20261009_V1",
+  "date": "2026-10-09",
+  "status": "PASS__RANK15_V12_CARRIER__15_OF_15_EXACT__EPOCH_AND_CLAIM_INERT__ZERO_TASK_EXPOSURE",
+  "public_runner": {
+    "repository": "moxnixmdj/verification-capsule-runner",
+    "branch": "stage/tb-science-rank15-20261009-v1",
+    "workflow_run_id": 37889160175,
+    "workflow_job_id": 113685913470,
+    "conclusion": "success"
+  },
+  "bindings": {
+    "authority_blob": "61629b854f4be1e940a3f68d1a676e40b4e61ebf",
+    "intent_blob": "ce2c7aeb17c450e17b02a3b616ce8a8374edabe4",
+    "authority_verification_blob": "75f2ca9b52e256e13551977e99784dca868c11a7",
+    "candidate_blob": "88ffb2b0117a9fb7f8885118171b53b187bc581d",
+    "ledger_v19_blob": "c9b887ac4fb57046be666492748d25ca96056378",
+    "v12_closure_blob": "8008b1e2382c1235e3b788e0f8d4ab9a48487409",
+    "v12_closure_verification_blob": "2f604985baa7f88c61b23958d59dc2ecd4c0990b",
+    "epoch_blob": "ad0c76996163e5ee75553af7a9c00276dbe607c9",
+    "execution_claim_blob": "a37da97fbc06ffdbb937996eaf1615dd56af1c0d",
+    "prestart_guard_blob": "0139a20070cd1a51866c309bac1976b27ce7ac0d",
+    "agent_blob": "e7e258f567499bd7356c0276d6293aa30dbd338c"
+  },
+  "verification": {
+    "runtime_files_expected": 15,
+    "runtime_files_exact": 15,
+    "runtime_mismatches": 0,
+    "py_compile": true,
+    "activation_file_present": false,
+    "task_read": false,
+    "task_started": false,
+    "benchmark_trials_consumed": 0
+  },
+  "execution_authority": false,
+  "task_read_authority": false,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
