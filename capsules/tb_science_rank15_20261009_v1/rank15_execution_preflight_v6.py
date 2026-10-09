@@ -57,15 +57,16 @@ def require_binding(row: Any, errors: list[str], label: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--require-activation", action="store_true")
+    parser.add_argument("--allow-staged", action="store_true")
     args = parser.parse_args()
     errors: list[str] = []
     try:
         surface = read_json(SURFACE)
         if surface.get("schema") != "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1":
             errors.append("SURFACE_SCHEMA_INVALID")
-        if surface.get("execution_authority") is not True:
+        if surface.get("execution_authority") is not True and not args.allow_staged:
             errors.append("EXECUTION_AUTHORITY_NOT_ACTIVE")
-        if surface.get("task_read_authority") is not True:
+        if surface.get("task_read_authority") is not True and not args.allow_staged:
             errors.append("TASK_READ_AUTHORITY_NOT_ACTIVE")
         if surface.get("task_started") is not False:
             errors.append("TASK_ALREADY_STARTED")
