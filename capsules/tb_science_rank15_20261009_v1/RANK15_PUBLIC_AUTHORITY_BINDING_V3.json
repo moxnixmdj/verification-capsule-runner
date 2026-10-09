@@ -1,0 +1,44 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_PUBLIC_AUTHORITY_BINDING_V3",
+  "date": "2026-10-09",
+  "status": "ACTIVE_PUBLIC_BINDING__BRAIN_RATCHET_AUTHORITY_V3__V3_ALL_CYCLE_AND_DURABLE_START_CAS_BOUND__ZERO_TASK_EXPOSURE",
+  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
+  "brain_authority": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_RANK15_RATCHET_ONE_SLOT_EXECUTION_AUTHORITY_20261009_V3.json",
+    "git_blob_sha": "a292a898231973204f66bf92c3f70ce2bf422449"
+  },
+  "brain_ledger": {
+    "repository": "moxnixmdj/brain",
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261009_V21.json",
+    "git_blob_sha": "475f56128d6e9f22a540db1f007b2dfe47e723f7"
+  },
+  "workflow": {
+    "path": ".github/workflows/execute-tb-science-rank15-20261009-v3.yml",
+    "git_blob_sha": "306fb3d4042d1db898031f41c5b3f2138386b644"
+  },
+  "all_cycle_envelope_verification": {
+    "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
+    "git_blob_sha": "a1abdbf3a08b192359da2d0a6ff01939ba20678b"
+  },
+  "durable_start_cas": {
+    "path": "execution_guard/terminal_slot_start_cas_v1.py",
+    "git_blob_sha": "da67f089dae61aed6b3354db79d3ff989be4ed5c",
+    "store_path": "execution_guard/github_ref_store_live.py",
+    "store_git_blob_sha": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+  },
+  "execution_branch": "execute/tb-science-rank15-20261009-v3",
+  "activation_filename": "ACTIVATE_RANK15_V3_PR.json",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "task_read": false,
+  "task_started": false,
+  "benchmark_trials_consumed": 0,
+  "execution_authority": true,
+  "task_read_authority": "ONLY_AFTER_EXACT_V3_ACTIVATION_PR_AND_LIVE_CARRIER_QUALIFICATION",
+  "task_start_authority": "ONLY_AFTER_V3_PRESTART_PASS_AND_DURABLE_GLOBAL_START_CAS_COMMIT",
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
