@@ -1,0 +1,14 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_CONTEXT_16K_PREFLIGHT_RUN_TRIGGER_V1",
+  "date": "2026-10-09",
+  "purpose": "Trigger exact zero-benchmark-exposure 16384-context capacity preflight only.",
+  "source_brain_main": "a770cedc267f814e8acca64d17538b4460c4a306",
+  "benchmark_task_exposure_authorized": 0,
+  "rank14_task_start_authorized": false,
+  "incremental_spend_usd_max": 0,
+  "required_model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+  "required_llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+  "required_context_tokens": 16384,
+  "required_minimum_synthetic_input_tokens": 9459,
+  "terminal_credit_delta": 0
+}
