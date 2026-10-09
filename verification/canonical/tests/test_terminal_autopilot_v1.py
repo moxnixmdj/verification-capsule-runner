@@ -95,9 +95,10 @@ class TerminalAutopilotTests(unittest.TestCase):
             }
             self.assertIn("SCOPE_COMPLETE_UNIVERSAL_COVER", routes)
             self.assertIn("OBJECTIVE_ACCEPTANCE_COMMON_LAW", routes)
-            self.assertIn("CODING_TRIAD_SCOPE_COMPLETE_COVER", routes)
-            self.assertIn("FINANCE_MYSTERY_COMMON_POLICY_COVER", routes)
-            self.assertIn("PROFESSIONAL_QUALITATIVE_ROBUST_DOMINANCE", routes)
+            self.assertNotIn("CODING_TRIAD_SCOPE_COMPLETE_COVER", routes)
+            self.assertNotIn("FINANCE_MYSTERY_COMMON_POLICY_COVER", routes)
+            self.assertNotIn("PROFESSIONAL_QUALITATIVE_ROBUST_DOMINANCE", routes)
+            self.assertNotIn("GDPVAL_FINITE_PUBLIC_ACCEPTANCE_COVER", routes)
             self.assertLessEqual(len(direct), 12)
 
 
