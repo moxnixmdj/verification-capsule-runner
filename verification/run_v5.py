@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 ROOT=Path.cwd()
+sys.path.insert(0,str(ROOT))
 EXPECTED={
 "canonical/runtime/certificate_gated_selected_route_runtime_entrypoint_v5.py":"38f3ed4c32fd4f54698267372cc6869204d00bd9",
 "canonical/governance/CURRENT_CERTIFICATE_GATED_SELECTED_ROUTE_REGISTRY.json":"16fcc1efc9a50345af895cb8c29114a37f470298",
