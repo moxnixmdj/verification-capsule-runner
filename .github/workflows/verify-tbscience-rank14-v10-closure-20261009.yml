@@ -1,0 +1,80 @@
+name: Verify TB-Science V10 repaired runtime closure
+
+on:
+  push:
+    branches: ["verify-tbscience-rank14-v10-closure-20261009"]
+    paths:
+      - ".github/workflows/verify-tbscience-rank14-v10-closure-20261009.yml"
+      - "capsules/tb_science_rank14_20261009_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      C: capsules/tb_science_rank14_20261009_v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bind exact V10 candidate bytes
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V10.json")" = "ae37559320105277e017ff17af7c3dbeae2f9c27"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v1.py")" = "16e8ab7918c4f8d052698282dddf674b54a23016"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          test "$(git hash-object "$C/canonical/runtime/python_transitive_runtime_closure_v1.py")" = "43d502c621c219632fa0f9a19632dfc0228e4847"
+          python -m py_compile "$C"/canonical/runtime/*.py
+
+      - name: Verify exact V10 transitive closure
+        run: |
+          set -euo pipefail
+          python "$C/canonical/runtime/python_transitive_runtime_closure_v1.py" \
+            --repo-root "$C" --carrier-root "$C" \
+            --root canonical/runtime/harbor_science_agent_v1.py \
+            --root canonical/runtime/harbor_science_planner_v1.py \
+            --root canonical/runtime/lossless_raw_task_contract_v1.py \
+            --root canonical/runtime/raw_task_acceptance_residual_localizer_v1.py \
+            | tee V10_CLOSURE_RESULT.json
+          python - <<'PY' | tee V10_CLOSURE_VERIFY.json
+          import json,os
+          c=os.environ["C"]
+          r=json.load(open("V10_CLOSURE_RESULT.json"))
+          m=json.load(open(c+"/TB_SCIENCE_TRANSITIVE_RUNTIME_CLOSURE_MANIFEST_20261009_V10.json"))
+          assert r["pass"] is True,r
+          assert r["status"]=="PASS__CARRIER_CONTAINS_EXACT_TRANSITIVE_RUNTIME_CLOSURE",r
+          assert r["closure"]["closure_file_count"]==15,r
+          assert r["missing_paths"]==[],r
+          assert r["mismatched"]==[],r
+          assert r["closure"]["unresolved_dynamic_imports"]==[],r
+          got={x["path"]:x["git_blob_sha"] for x in r["closure"]["files"]}
+          exp={x["path"]:x["git_blob_sha"] for x in m["closure"]}
+          assert got==exp,(got,exp)
+          assert got["canonical/runtime/harbor_science_agent_v1.py"]=="16e8ab7918c4f8d052698282dddf674b54a23016"
+          out={
+            "status":"PASS__V10_15_FILE_TRANSITIVE_CLOSURE_EXACT__ZERO_EXPOSURE",
+            "pass":True,
+            "closure_file_count":15,
+            "missing_path_count":0,
+            "mismatched_path_count":0,
+            "unresolved_dynamic_import_count":0,
+            "benchmark_task_exposure":0,
+            "benchmark_trials_executed":0,
+            "acceptance_credit_delta":0,
+            "terminal_credit_delta":0
+          }
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tbscience-rank14-v10-closure-20261009
+          path: |
+            V10_CLOSURE_RESULT.json
+            V10_CLOSURE_VERIFY.json
+          retention-days: 2
