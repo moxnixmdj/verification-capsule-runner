@@ -119,7 +119,7 @@
     },
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v3.py",
-      "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
+      "git_blob_sha": "e4c501cea12173bd89958e4e98217f1265af6604"
     }
   },
   "task_read": false,

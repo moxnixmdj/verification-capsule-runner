@@ -133,32 +133,21 @@ def _runtime_marker(behavior: Mapping[str, Any], key: str) -> str:
 
 
 def check_workflow(text: str, behavior: Mapping[str, Any]) -> list[str]:
-    """Validate phases from proof-carrying behavior, independent of shell quoting."""
+    """Validate phases from the proof-carrying behavior, not historical filenames."""
     errors: list[str] = []
     facts = behavior.get("behavior")
     if not isinstance(facts, Mapping):
         return ["BEHAVIOR_FACTS_INVALID"]
 
-    lines = text.splitlines()
-
-    def line_pos(*tokens: str) -> int:
-        for i, line in enumerate(lines):
-            if all(token in line for token in tokens):
-                return i
-        return -1
-
-    def line_count(*tokens: str) -> int:
-        return sum(1 for line in lines if all(token in line for token in tokens))
-
     forbidden = {
-        "PERSISTED_CHECKOUT_CREDENTIALS": ("persist-credentials: true",),
-        "CONTENTS_WRITE_AUTHORITY": ("contents: write",),
-        "V2_PRESTART": ("rank15_prestart_token_guard_v2.py",),
-        "V2_AGENT": ("harbor_science_agent_v2:HarborScienceAgent",),
-        "V2_FINALIZER": ("rank15_finalize_receipt_v2.py",),
+        "PERSISTED_CHECKOUT_CREDENTIALS": "persist-credentials: true",
+        "CONTENTS_WRITE_AUTHORITY": "contents: write",
+        "V2_PRESTART": "rank15_prestart_token_guard_v2.py",
+        "V2_AGENT": "harbor_science_agent_v2:HarborScienceAgent",
+        "V2_FINALIZER": "rank15_finalize_receipt_v2.py",
     }
-    for label, tokens in forbidden.items():
-        if line_pos(*tokens) >= 0:
+    for label, marker in forbidden.items():
+        if marker in text:
             errors.append("WORKFLOW_FORBIDDEN:" + label)
 
     try:
@@ -173,64 +162,63 @@ def check_workflow(text: str, behavior: Mapping[str, Any]) -> list[str]:
         errors.append(type(exc).__name__ + ":" + str(exc))
         return sorted(set(errors))
 
-    common_lines = [
-        ("persist-credentials: false",),
-        ("rm -rf llama.cpp",),
-        ("git init llama.cpp",),
-        ("cmake -S llama.cpp -B llama.cpp/build",),
-        ("cmake --build llama.cpp/build",),
-        ("http://127.0.0.1:8080/health",),
-        ("SYNTHETIC_COMPLETION.json",),
-        (start_cas, "--check-absent"),
-        (prestart,),
-        (finalizer,),
+    common = [
+        "persist-credentials: false",
+        "rm -rf llama.cpp",
+        "git init llama.cpp",
+        "cmake -S llama.cpp -B llama.cpp/build",
+        "cmake --build llama.cpp/build",
+        "http://127.0.0.1:8080/health",
+        "SYNTHETIC_COMPLETION.json",
+        start_cas + " --check-absent",
+        prestart,
+        finalizer,
     ]
-    for tokens in common_lines:
-        if line_pos(*tokens) < 0:
-            errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + " + ".join(tokens))
+    for marker in common:
+        if marker not in text:
+            errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + marker)
 
     if delegated:
-        if line_pos(status_runner) < 0:
+        if status_runner not in text:
             errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + str(status_runner))
-        for label, tokens in (
-            ("DIRECT_START_ACQUIRE", (start_cas, "--acquire")),
-            ("DIRECT_HARBOR_RUN", ("harbor run",)),
-            ("DIRECT_AGENT_ENTRYPOINT", (agent_marker,)),
+        # In delegated mode the workflow must not bypass the barrier by directly
+        # acquiring start or invoking Harbor/agent itself.
+        for label, marker in (
+            ("DIRECT_START_ACQUIRE", start_cas + " --acquire"),
+            ("DIRECT_HARBOR_RUN", "harbor run"),
+            ("DIRECT_AGENT_ENTRYPOINT", agent_marker),
         ):
-            if line_pos(*tokens) >= 0:
+            if marker in text:
                 errors.append("WORKFLOW_DELEGATION_BYPASS:" + label)
-        order_tokens = [
-            ("http://127.0.0.1:8080/health",),
-            ("SYNTHETIC_COMPLETION.json",),
-            (start_cas, "--check-absent"),
-            (prestart,),
-            (status_runner,),
-            (finalizer,),
+
+        order = [
+            "http://127.0.0.1:8080/health",
+            "SYNTHETIC_COMPLETION.json",
+            start_cas + " --check-absent",
+            prestart,
+            status_runner,
+            finalizer,
         ]
-        if line_count(status_runner) != 1:
+        if text.count(status_runner) != 1:
             errors.append("WORKFLOW_STATUS_RUNNER_COUNT_NOT_ONE")
     else:
-        direct_required = [
-            (start_cas, "--acquire"),
-            (agent_marker,),
-            ("harbor run",),
+        required = [start_cas + " --acquire", agent_marker, "harbor run"]
+        for marker in required:
+            if marker not in text:
+                errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + marker)
+        order = [
+            "http://127.0.0.1:8080/health",
+            "SYNTHETIC_COMPLETION.json",
+            start_cas + " --check-absent",
+            prestart,
+            start_cas + " --acquire",
+            "harbor run",
+            finalizer,
         ]
-        for tokens in direct_required:
-            if line_pos(*tokens) < 0:
-                errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + " + ".join(tokens))
-        order_tokens = [
-            ("http://127.0.0.1:8080/health",),
-            ("SYNTHETIC_COMPLETION.json",),
-            (start_cas, "--check-absent"),
-            (prestart,),
-            (start_cas, "--acquire"),
-            ("harbor run",),
-            (finalizer,),
-        ]
-        if line_count("harbor run") != 1:
+        if text.count("harbor run") != 1:
             errors.append("WORKFLOW_HARBOR_RUN_COUNT_NOT_ONE")
 
-    positions = [line_pos(*tokens) for tokens in order_tokens]
+    positions = [text.find(x) for x in order]
     if any(x < 0 for x in positions) or positions != sorted(positions):
         errors.append("WORKFLOW_PHASE_ORDER_INVALID")
     return sorted(set(errors))
