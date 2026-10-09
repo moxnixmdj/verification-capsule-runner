@@ -16,6 +16,12 @@ on:
       - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v2.py"
       - "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v2.py"
       - "capsules/tb_science_rank15_20261009_v1/rank15_v2_zero_exposure_tests.py"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_AUTHORITY_BINDING_V2.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_PUBLIC_LEDGER_BINDING_V21.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_EPOCH_V2.json"
+      - "capsules/tb_science_rank15_20261009_v1/RANK15_EXECUTION_CLAIM_V2.json"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v2.py"
   push:
     branches: [repair/tb-science-execution-ratchet-20261009-v1]
     paths:
@@ -62,23 +68,28 @@ jobs:
           python -m py_compile             "$C/canonical/runtime/harbor_science_planner_v2.py"             "$C/canonical/runtime/harbor_science_agent_v2.py"             "$C/rank15_prestart_token_guard_v2.py"             "$C/rank15_v2_zero_exposure_tests.py"
           PYTHONPATH="$GITHUB_WORKSPACE/$C" python "$C/rank15_v2_zero_exposure_tests.py"
 
-      - name: Prove staged Rank15 V2 surface is invariant-valid but non-executable
+      - name: Prove resealed Rank15 V2 surface has authority but remains activation-gated
+        env:
+          C: capsules/tb_science_rank15_20261009_v1
         run: |
           set -euo pipefail
-          test ! -e capsules/tb_science_rank15_20261009_v1/ACTIVATE_RANK15_V2_PR.json
+          test ! -e "$C/ACTIVATE_RANK15_V2_PR.json"
           python execution_guard/terminal_execution_admission_v1.py \
             --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml" \
             --slot "terminal-bench-science/protein-active-learning::trial-0" \
-            --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f"
+            --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
+            --require-execution-authority
+          python "$C/rank15_execution_preflight_v2.py"
           if python execution_guard/terminal_execution_admission_v1.py \
             --workflow ".github/workflows/execute-tb-science-rank15-20261009-v2.yml" \
             --slot "terminal-bench-science/protein-active-learning::trial-0" \
             --task-digest "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f" \
-            --require-execution-authority; then
-            echo "staged surface unexpectedly executable"
+            --require-execution-authority \
+            --require-activation; then
+            echo "resealed surface bypassed activation gate"
             exit 1
           fi
-          grep -F "EXECUTION_AUTHORITY_NOT_ACTIVE" TERMINAL_EXECUTION_ADMISSION.json
+          grep -F "ACTIVATION_FILE_MISSING" TERMINAL_EXECUTION_ADMISSION.json
 
       - name: Prove V1 carrier is retired and V2 has exactly one guarded terminal launch
         run: |
@@ -96,7 +107,7 @@ jobs:
           import json
           out={
             "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V1",
-            "status":"PASS__STAGED_V2_INVARIANT_AND_RUNTIME_SEMANTICS_VALID__EXECUTION_AUTHORITY_FALSE__V1_RETIRED",
+            "status":"PASS__RESEALED_V2_AUTHORITY_ACTIVE__ACTIVATION_GATE_CLOSED__RUNTIME_SEMANTICS_VALID__V1_RETIRED",
             "rank15_task_read":False,
             "rank15_task_started":False,
             "benchmark_trials_consumed":0,
