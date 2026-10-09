@@ -210,6 +210,17 @@ def deliverable_check_command(row: Mapping[str, Any]) -> str:
     return validate_environment_command(f"test -s {q} && python -c " + shlex.quote(code))
 
 
+def effect_fingerprint(executor: Any, compiled_command: Any) -> str:
+    kind = str(executor or "").strip().lower()
+    if kind not in EXECUTOR_KINDS:
+        raise ScienceTypedActionError("EXECUTOR_KIND_INVALID")
+    if not isinstance(compiled_command, str) or not compiled_command:
+        raise ScienceTypedActionError("EFFECT_COMMAND_INVALID")
+    material = {"executor": kind, "compiled_command": compiled_command}
+    raw = json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def action_fingerprint(row: Mapping[str, Any]) -> str:
     material = {
         "executor": row.get("executor"),
