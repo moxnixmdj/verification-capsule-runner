@@ -1,0 +1,49 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_POSTSTART_CARRIER_REPLAY_SCOPE_20261009_V1",
+  "date": "2026-10-09",
+  "status": "PASS__CURRENT_OFFICIAL_TB_SCIENCE_RUN_PATH_HAS_NO_PROVED_SAME_TRIAL_CARRIER_REPLAY_AUTHORITY",
+  "official_source": {
+    "repository": "harbor-framework/terminal-bench-science",
+    "commit": "8ef49c8a64cf57f9913755b41ed6a0fe1a667192",
+    "llm_config": {
+      "path": ".github/llm-config.yml",
+      "git_blob_sha": "2afe6de7a869dd7804cf17dd384b07a090d0685c"
+    },
+    "run_trials": {
+      "path": ".github/workflows/run-trials.yml",
+      "git_blob_sha": "55c7fb17ae7e3f360295a6429916466ff6477662"
+    }
+  },
+  "observed": {
+    "configured_harbor_run_trials": 1,
+    "max_retries_occurrences_in_llm_config": 0,
+    "max_retries_occurrences_in_run_trials_workflow": 0,
+    "docker_path_semantics": "ONE_HARBOR_RUN_INVOCATION_PER_TASK_AGENT_TRIAL_MATRIX_CELL__FAILED_INVOCATION_RECORDED_AS_REWARD_ZERO",
+    "remote_path_semantics": "JOB_CONFIG_N_ATTEMPTS_DERIVED_FROM_REQUESTED_TRIAL_COUNT__NO_RETRY_FIELD_OBSERVED",
+    "rollout_warning": "OFFICIAL_WORKFLOW_COMMENT_EXPLICITLY_STATES_HARBOR_K_ROLLOUTS_ARE_NOT_RETRY_ON_FAILURE"
+  },
+  "rank15_policy": {
+    "post_start_carrier_replacement_authorized": false,
+    "harbor_retries_authorized": 0,
+    "required_harbor_retry_flag": "-r 0",
+    "transport_failure_after_task_start": "NO_REPLAY_CREDIT__CONSERVATIVE_TERMINAL_OUTCOME_UNLESS_FUTURE_EXPLICIT_BENCHMARK_AUTHORITY_PROVES_OTHERWISE"
+  },
+  "rationale": [
+    "GENERIC_HARBOR_RETRY_CAPABILITY_IS_NOT_BENCHMARK_PERMISSION",
+    "N_ATTEMPTS_OR_ROLLOUT_COUNT_CREATES_INDEPENDENT_TRIALS_OR_ROLLOUTS_NOT_A_FREE_REPLACEMENT_CARRIER",
+    "ABSENCE_OF_A_SAME_TRIAL_REPLAY_CONTRACT_MUST_FAIL_CLOSED_FOR_ONE_SLOT_BENCHMARK_GOVERNANCE"
+  ],
+  "hard_nonclaims": [
+    "DOES_NOT_CLAIM_TERMINAL_BENCH_SCIENCE_CAN_NEVER_DEFINE_REPLAY_IN_A_FUTURE_VERSION",
+    "DOES_NOT_CLAIM_TRANSPORT_FAILURES_ARE_LOGICAL_MODEL_FAILURES",
+    "DOES_NOT_GRANT_ANY_EXECUTION_TASK_READ_OR_RETRY_AUTHORITY"
+  ],
+  "accounting": {
+    "rank15_task_read": false,
+    "rank15_task_started": false,
+    "benchmark_trials_consumed": 0,
+    "incremental_spend_usd": 0,
+    "terminal_credit_delta": 0
+  },
+  "execution_authority": false
+}
