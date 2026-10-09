@@ -1,17 +1,17 @@
-# Isolated P1 verifier entrypoint; deterministic spent fixtures only.
 #!/usr/bin/env bash
 set -euo pipefail
-python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_preflight_v1
-python -m canonical.runtime.p1_shared_failure_semantics_batch_preflight_v1
-python -m unittest -v canonical.tests.test_p1_shared_failure_semantics_batch_v1
+cd "$(dirname "$0")"
 python - <<'PY'
-import json
 from pathlib import Path
-d=json.loads(Path("canonical/governance/P1_SHARED_FAILURE_SEMANTICS_BATCH_FREEZE_V1.json").read_text())
-assert d["new_reality_units_consumed"] == 0
-assert d["execution_authority"] is False
-assert d["promotion_authority"] is False
-assert d["terminal_results_replayed"] == 0
-assert d["incremental_spend_usd"] == 0
-print("ZERO_FRESH_REALITY_PREFLIGHT_CONFIRMED")
+from hashlib import sha1
+expected = {
+    "canonical/runtime/terminal_autopilot_v1.py": "6a3309dc598a1f7587d1bec09006729edbf7440e",
+    "canonical/tests/test_terminal_autopilot_v1.py": "01f4808cde3bcf118a6316b5991cbdca1aea08ca",
+}
+for rel, want in expected.items():
+    data = Path(rel).read_bytes()
+    got = sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+    assert got == want, (rel, got, want)
+    print("EXACT_BLOB_PASS", rel, got)
 PY
+PYTHONPATH=. python -m unittest canonical.tests.test_terminal_autopilot_v1 -v
