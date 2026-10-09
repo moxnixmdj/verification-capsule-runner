@@ -160,15 +160,13 @@ def check_rank15_v3_workflow_text(text: str) -> list[str]:
             errors.append("WORKFLOW_REQUIRED_MARKER_MISSING:" + marker)
 
     order = [
-        "rm -rf llama.cpp",
-        "cmake -S llama.cpp -B llama.cpp/build",
-        "nohup llama.cpp/build/bin/llama-server",
-        "http://127.0.0.1:8080/health",
-        "SYNTHETIC_COMPLETION.json",
-        "rank15_prestart_token_guard_v3.py",
-        "RANK15_START_INTENT.json",
-        "terminal_slot_start_cas_v1.py",
-        "harbor run",
+        "- name: Clean-build exact llama.cpp on this runner",
+        "- name: Qualify cognition carrier before any task read",
+        "- name: Read exact rank15 task and enforce V3 all-cycle prestart envelope",
+        "- name: Build exact durable task-start intent",
+        "- name: Commit create-once durable task-start intent",
+        "- name: Execute exactly frozen rank15 slot after durable start commit",
+        "- name: Finalize conservative rank15 V3 receipt",
     ]
     positions = [text.find(x) for x in order]
     if any(p < 0 for p in positions) or positions != sorted(positions):
