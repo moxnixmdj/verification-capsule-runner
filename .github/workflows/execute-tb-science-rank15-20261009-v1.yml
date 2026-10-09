@@ -47,12 +47,18 @@ jobs:
           assert importlib.metadata.version("harbor")=="0.23.0"
           PY
 
-      - name: Restore exact llama.cpp cache
-        id: llama
-        uses: actions/cache/restore@v4
-        with:
-          path: llama.cpp
-          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
+      - name: Clean-build exact llama.cpp on live runner
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          test -x llama.cpp/build/bin/llama-server
 
       - name: Restore exact Qwen cache
         id: qwen
@@ -61,12 +67,12 @@ jobs:
           path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
           key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
 
-      - name: Gate exact warm carrier
+      - name: Gate exact portable carrier
         id: cache
         run: |
           set -euo pipefail
           ready=false
-          if [ "${{ steps.llama.outputs.cache-hit }}" = "true" ] && [ "${{ steps.qwen.outputs.cache-hit }}" = "true" ]; then
+          if [ "${{ steps.qwen.outputs.cache-hit }}" = "true" ]; then
             test -x llama.cpp/build/bin/llama-server
             test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
             echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
