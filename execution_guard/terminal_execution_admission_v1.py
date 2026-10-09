@@ -108,7 +108,7 @@ def check_rank15_workflow_text(text: str) -> list[str]:
         'kill -0 "$(cat LOCAL_QWEN_SERVER.pid)"',
         "http://127.0.0.1:8080/health",
         "SYNTHETIC_COMPLETION.json",
-        "rank15_prestart_token_guard_v1.py",
+        "rank15_prestart_token_guard_v2.py",
         "harbor run",
     ]
     for marker in required:
@@ -121,7 +121,7 @@ def check_rank15_workflow_text(text: str) -> list[str]:
         "nohup llama.cpp/build/bin/llama-server",
         "http://127.0.0.1:8080/health",
         "SYNTHETIC_COMPLETION.json",
-        "rank15_prestart_token_guard_v1.py",
+        "rank15_prestart_token_guard_v2.py",
         "harbor run",
     ]
     positions = [text.find(x) for x in order]
