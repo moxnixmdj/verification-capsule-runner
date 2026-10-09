@@ -634,22 +634,21 @@ def _catalog_context(
 ) -> dict[str, Any]:
     recent = list(catalog[-RECENT_EVIDENCE_CATALOG_ENTRIES:])
     older = catalog[:-RECENT_EVIDENCE_CATALOG_ENTRIES]
-    archive_pages = []
+    archive_page_refs: list[str] = []
     for i in range(0, len(older), ARCHIVE_CATALOG_PAGE_ENTRIES):
         rows = older[i:i + ARCHIVE_CATALOG_PAGE_ENTRIES]
-        page_ref = _put_evidence(store, {
+        archive_page_refs.append(_put_evidence(store, {
             "schema": "PROJECT_BRAIN_EVIDENCE_CATALOG_PAGE_V1",
             "entries": rows,
-        })
-        archive_pages.append({
-            "ref": page_ref,
-            "entry_count": len(rows),
-            "first_cycle": rows[0].get("cycle") if rows else None,
-            "last_cycle": rows[-1].get("cycle") if rows else None,
-        })
+        }))
+    archive_root_ref = (
+        _store_ref_tree(store, archive_page_refs, label="evidence_catalog_archive")
+        if archive_page_refs else None
+    )
     return {
         "recent": recent,
-        "archive_pages": archive_pages,
+        "archive_root_ref": archive_root_ref,
+        "archive_page_count": len(archive_page_refs),
         "total_evidence_records": len(catalog),
     }
 
