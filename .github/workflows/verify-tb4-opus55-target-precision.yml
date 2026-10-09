@@ -1,0 +1,101 @@
+name: Verify TB4 Opus 5.5 target precision
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-tb4-opus55-target-precision.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Fetch owner system card and verify target precision
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://www-cdn.anthropic.com/fc1b44717c85dc068bc6ba5024219938094694bd/Claude%20Opus%205.5%20System%20Card.pdf'
+          EXPECTED_SHA='7311c9c6bbb16d012f1c12c7418b05949fcf7ae3e30d2c40f22050074b2a7378'
+          curl --fail --location --retry 3 --silent --show-error "$URL" -o /tmp/opus55.pdf
+          test -s /tmp/opus55.pdf
+          ACTUAL_SHA="$(sha256sum /tmp/opus55.pdf | awk '{print $1}')"
+          echo "owner_pdf_sha256=$ACTUAL_SHA"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+
+          if ! command -v pdftotext >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq poppler-utils
+          fi
+          pdftotext -layout /tmp/opus55.pdf /tmp/opus55.txt
+
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import math
+          import pathlib
+          import re
+
+          pdf = pathlib.Path('/tmp/opus55.pdf').read_bytes()
+          text = pathlib.Path('/tmp/opus55.txt').read_text(encoding='utf-8', errors='replace')
+          sha = hashlib.sha256(pdf).hexdigest()
+          assert sha == '7311c9c6bbb16d012f1c12c7418b05949fcf7ae3e30d2c40f22050074b2a7378'
+
+          flat = ' '.join(text.split())
+
+          # Prove the rounded 66.4 summary alias occurs in the same exact owner PDF.
+          summary_hits = list(re.finditer(r'Terminal-Bench\s+4\.0.{0,1500}?66\.4(?![0-9])', flat, flags=re.I))
+          assert summary_hits, 'MISSING_SUMMARY_66_4_ALIAS'
+
+          # Select the actual section heading, not the table-of-contents occurrence.
+          heads = list(re.finditer(r'8\.5\s+Terminal-Bench\s+4\.0', flat, flags=re.I))
+          assert heads, 'MISSING_TERMINAL_BENCH_4_SECTION'
+          m = heads[-1]
+          n = re.search(r'\s8\.6\s+', flat[m.end():], flags=re.I)
+          end = m.end() + n.start() if n else min(len(flat), m.start() + 40000)
+          section = flat[m.start():end]
+          print('SECTION_8_5_PREFIX=', section[:5000])
+
+          assert re.search(r'66\.36\s*%', section), 'MISSING_DETAILED_66_36'
+          assert re.search(r'66\s+tasks', section, flags=re.I), 'MISSING_66_TASKS'
+          assert re.search(r'(5|five)\s+trials\s+per\s+task', section, flags=re.I), 'MISSING_5_TRIALS_PER_TASK'
+          assert re.search(r'330\s+trials', section, flags=re.I), 'MISSING_330_TRIALS'
+
+          slots = 66 * 5
+          score_218 = 100 * 218 / slots
+          score_219 = 100 * 219 / slots
+          score_220 = 100 * 220 / slots
+
+          assert slots == 330
+          assert score_218 < 66.36 <= score_219
+          assert score_219 < 66.4 <= score_220
+          assert round(score_219, 2) == 66.36
+          assert round(score_219, 1) == 66.4
+          assert round(66.36, 1) == 66.4
+          assert math.ceil(0.6636 * slots) == 219
+          assert math.ceil(0.6640 * slots) == 220
+
+          out = {
+              'schema': 'PROJECT_BRAIN_TB4_OPUS55_TARGET_PRECISION_PUBLIC_RUNNER_V2',
+              'owner_pdf_sha256': sha,
+              'section': '8.5 Terminal-Bench 4.0',
+              'owner_summary_alias_percent': 66.4,
+              'owner_detailed_score_percent': 66.36,
+              'same_owner_pdf_contains_summary_alias_and_detailed_value': True,
+              'task_count': 66,
+              'trials_per_task': 5,
+              'trial_slots': 330,
+              'successes_218_percent': score_218,
+              'successes_219_percent': score_219,
+              'successes_220_percent': score_220,
+              'minimum_successes_for_owner_detailed_66_36': 219,
+              'minimum_successes_for_strict_raw_66_4': 220,
+              'round_219_to_2dp': round(score_219, 2),
+              'round_219_to_1dp': round(score_219, 1),
+              'terminal_cases_consumed': 0,
+              'incremental_spend_usd': 0,
+              'acceptance_credit_delta': 0,
+              'verdict': 'PASS_SAME_OWNER_BYTES_SUMMARY_DETAIL_AND_ARITHMETIC__GOVERNANCE_PROMOTION_REMAINS_SEPARATE',
+          }
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
