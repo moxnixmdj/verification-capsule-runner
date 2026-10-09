@@ -177,7 +177,7 @@ jobs:
         with:
           name: tb-science-protein-active-learning-trial-0-rank15-v2
           path: |
-            protein-active-learning-trial-0__SLOT_RECEIPT_V1.json
+            protein-active-learning-trial-0__SLOT_RECEIPT_V2.json
             TERMINAL_EXECUTION_ADMISSION.json
             RANK15_EXECUTION_PREFLIGHT.json
             RANK15_PRESTART_GUARD.json
