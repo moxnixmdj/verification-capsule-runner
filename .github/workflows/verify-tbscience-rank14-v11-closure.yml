@@ -30,10 +30,10 @@ jobs:
           assert raw["pass"] is True,raw
           c=raw["closure"]
           assert c["closure_file_count"]==15,c
-          assert c["missing_paths"]==[],c
-          assert c["mismatched_paths"]==[],c
+          assert raw["missing_paths"]==[],raw
+          assert raw["mismatched"]==[],raw
           assert c["unresolved_dynamic_imports"]==[],c
-          rows=c["closure"]
+          rows=c["files"]
           by={x["path"]:x["git_blob_sha"] for x in rows}
           assert by["canonical/runtime/harbor_science_agent_v1.py"]=="d397324f411d002bdbdca348aaad708b5b40c9c2"
           out={
