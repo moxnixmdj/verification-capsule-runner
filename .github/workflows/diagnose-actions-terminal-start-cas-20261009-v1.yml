@@ -54,6 +54,44 @@ jobs:
             --receipt DIAGNOSTIC_START_CAS_RECEIPT.json
           cat DIAGNOSTIC_START_CAS_RECEIPT.json
 
+      - name: Diagnose safe Git API status classes
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python - <<'PY'
+          import os, sys
+          from terminal_slot_start_cas_v1 import request_factory
+          repo=os.environ["GITHUB_REPOSITORY"]
+          sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          req=request_factory(os.environ["GH_TOKEN"])
+          st, commit, _=req("GET", f"/repos/{repo}/git/commits/{sha}")
+          print("GET_COMMIT_STATUS="+str(st))
+          tree=(commit.get("tree") or {}).get("sha") if isinstance(commit,dict) else None
+          if st != 200 or not tree:
+              sys.exit(21)
+          st, created, _=req("POST", f"/repos/{repo}/git/commits", {
+              "message":"zero-exposure Actions ref diagnostic",
+              "tree":tree,
+              "parents":[sha],
+          })
+          print("CREATE_COMMIT_STATUS="+str(st))
+          commit_sha=created.get("sha") if isinstance(created,dict) else None
+          if st != 201 or not commit_sha:
+              print("CREATE_COMMIT_MESSAGE="+str(created.get("message") if isinstance(created,dict) else "NON_OBJECT"))
+              sys.exit(22)
+          ref="refs/heads/execution-guard/diagnostic-actions-status-v1/"+run_id
+          st, body, _=req("POST", f"/repos/{repo}/git/refs", {"ref":ref,"sha":commit_sha})
+          print("CREATE_REF_STATUS="+str(st))
+          print("CREATE_REF_MESSAGE="+str(body.get("message") if isinstance(body,dict) else "NON_OBJECT"))
+          if isinstance(body,dict) and body.get("errors") is not None:
+              print("CREATE_REF_ERRORS="+str(body.get("errors")))
+          if st != 201:
+              sys.exit(23)
+          PY
+
       - name: Assert no benchmark exposure
         run: |
           set -euo pipefail
