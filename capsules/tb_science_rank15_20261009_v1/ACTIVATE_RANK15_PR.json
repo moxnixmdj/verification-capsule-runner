@@ -1,0 +1,23 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_ACTIVATION_V1",
+  "date": "2026-10-09",
+  "activate": true,
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+  "task_name": "terminal-bench-science/protein-active-learning",
+  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
+  "ledger_schedule_rank": 15,
+  "authority_git_blob_sha": "61629b854f4be1e940a3f68d1a676e40b4e61ebf",
+  "epoch_git_blob_sha": "063761501704d31db73428200bc559f9eb2b038a",
+  "execution_claim_git_blob_sha": "5818601880d54efd856e5a27b9cb14e9b6021e7e",
+  "prestart_guard_git_blob_sha": "6956c6dd1f7b6e6a964bc927876d96aa479de476",
+  "trusted_base_sha": "403e7a81e6655fe36613be7300eed773790bccce",
+  "execution_branch": "execute-tb-science-rank15-v1-20261009",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "precheck_failure_consumes_slot": false,
+  "post_task_start_result_irreversible": true,
+  "incremental_spend_usd_max": 0,
+  "promotion_authority": false
+}
