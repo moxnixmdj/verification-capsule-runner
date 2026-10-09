@@ -91,7 +91,7 @@ jobs:
           assert x["missing_paths"]==[],x
           assert x["mismatched"]==[],x
           assert x["closure"]["unresolved_dynamic_imports"]==[],x
-          by={r["path"]:r["git_blob_sha"] for r in x["closure"]["closure"]}
+          by={r["path"]:r["git_blob_sha"] for r in x["closure"]["files"]}
           assert by["canonical/runtime/harbor_science_agent_v1.py"]=="066728adce1fb89f370737cab1878a218100bf6c"
           assert by["canonical/runtime/harbor_science_planner_v1.py"]=="58964dc8d6b5eed5c202081cd800035c791eeb1d"
           PY
