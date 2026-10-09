@@ -243,7 +243,11 @@ class Rank15V3StartCASTests(unittest.TestCase):
             "task_started": False,
             "task_digest": finalizer.DIGEST,
             "input_tokens": 7000,
+            "logical_attempt_id": "a" * 64,
+            "payload_sha256": "b" * 64,
+            "request_identity_sha256": "c" * 64,
         }), encoding="utf-8")
+        prestart_sha = hashlib.sha256((root / "RANK15_PRESTART_GUARD.json").read_bytes()).hexdigest()
         if cas_acquired:
             (root / "RANK15_START_CAS_V3.json").write_text(json.dumps({
                 "pass": True,
@@ -252,11 +256,14 @@ class Rank15V3StartCASTests(unittest.TestCase):
                 "slot_id": finalizer.SLOT,
                 "task_digest": finalizer.DIGEST,
                 "status": "PASS__DURABLE_BOUND_START_INTENT_COMMITTED__IRREVERSIBLE_SLOT_START",
-                "generic_cas_key": "terminal-start/" + "e" * 64,
+                "generic_cas_key": finalizer._slot_start_key(),
                 "logical_attempt_id": "a" * 64,
                 "runtime_identity_sha256": "d" * 64,
-                "prestart_receipt_sha256": "f" * 64,
+                "prestart_receipt_sha256": prestart_sha,
                 "durable_record_sha256": "1" * 64,
+                "workflow_git_blob_sha": "2" * 40,
+                "authority_git_blob_sha": "3" * 40,
+                "activation_git_blob_sha": "4" * 40,
                 "replay_authority": False,
                 "replacement_carrier_authority": False,
             }), encoding="utf-8")
@@ -305,6 +312,55 @@ class Rank15V3StartCASTests(unittest.TestCase):
         self.assertEqual(out["consumed_successes_delta"], 0)
         self.assertEqual(out["consumed_final_failures_delta"], 0)
         self.assertEqual(out["acceptance_credit_delta"], 0)
+
+
+    def test_cas_identity_mismatch_is_consumed_final_zero_not_retryable(self):
+        td = tempfile.TemporaryDirectory()
+        self.addCleanup(td.cleanup)
+        root = Path(td.name)
+        guard_path = root / "RANK15_PRESTART_GUARD.json"
+        guard_path.write_text(json.dumps({
+            "pass": True,
+            "task_read": True,
+            "task_started": False,
+            "logical_attempt_id": "a" * 64,
+        }), encoding="utf-8")
+        (root / "RANK15_START_CAS_V3.json").write_text(json.dumps({
+            "pass": True,
+            "acquired": True,
+            "task_started": True,
+            "slot_id": finalizer.SLOT,
+            "task_digest": finalizer.DIGEST,
+            "generic_cas_key": finalizer._slot_start_key(),
+            "logical_attempt_id": "a" * 64,
+            "runtime_identity_sha256": "d" * 64,
+            "prestart_receipt_sha256": "0" * 64,
+            "durable_record_sha256": "1" * 64,
+            "workflow_git_blob_sha": "2" * 40,
+            "authority_git_blob_sha": "3" * 40,
+            "activation_git_blob_sha": "4" * 40,
+            "replay_authority": False,
+            "replacement_carrier_authority": False,
+        }), encoding="utf-8")
+        p = root / "jobs/protein-active-learning-trial-0/trial/result.json"
+        p.parent.mkdir(parents=True)
+        p.write_text(json.dumps({"verifier_result":{"rewards":{"reward":1.0}}}), encoding="utf-8")
+        env = {
+            "GITHUB_WORKSPACE": str(root),
+            "SAFE_ID": "protein-active-learning-trial-0",
+            "CACHE_READY": "true",
+            "HARBOR_OUTCOME": "success",
+        }
+        with patch.dict(os.environ, env, clear=False):
+            self.assertEqual(finalizer.main(), 0)
+        out=json.loads((root/"protein-active-learning-trial-0__SLOT_RECEIPT_V3.json").read_text())
+        self.assertEqual(out["status"], "FINAL_ZERO")
+        self.assertEqual(out["benchmark_trials_consumed"], 1)
+        self.assertEqual(out["consumed_successes_delta"], 0)
+        self.assertEqual(out["consumed_final_failures_delta"], 1)
+        self.assertFalse(out["start_cas_identity_valid"])
+        self.assertFalse(out["rerun_credit"])
+        self.assertTrue(any("PRESTART_RECEIPT_SHA_MATCH" in x for x in out["errors"]))
 
     def test_execution_workflow_orders_cas_between_prestart_and_harbor(self):
         text = WORKFLOW.read_text(encoding="utf-8")
