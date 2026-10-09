@@ -77,7 +77,7 @@
     },
     "finalizer": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py",
-      "git_blob_sha": "550c2085a30d913d67cfd32c5d15998e4a5c9cc8"
+      "git_blob_sha": "d376e1826b549c108ab51a326a2d30a7e388277a"
     },
     "preflight": {
       "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py",
