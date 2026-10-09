@@ -508,6 +508,74 @@ def fit_science_planner_prompt(
             "index": evidence_ledger.prompt_index(),
             "expanded": evidence_ledger.expansion_rows(refs),
         }
+        prompt = build_science_planner_prompt(
+            goal=goal,
+            requirements=requirements,
+            unresolved=unresolved,
+            raw_task_prompt_summary=raw_task_prompt_summary,
+            declared_inputs=declared_inputs,
+            brain_deliverables=brain_deliverables,
+            evidence_context=evidence_context,
+        )
+        payload, meta = science_planner.build_request_payload(
+            prompt,
+            logical_attempt_id=logical_attempt_id,
+            cycle=cycle,
+        )
+        input_tokens = science_planner.count_input_tokens(payload)
+        required = input_tokens + science_planner.MAX_TOOL_COMPLETION_TOKENS
+        if required <= science_planner.SERVER_CONTEXT_TOKENS:
+            return prompt, {
+                "input_tokens": input_tokens,
+                "required_context_tokens": required,
+                "context_headroom_tokens": science_planner.SERVER_CONTEXT_TOKENS - required,
+                "included_evidence_refs": list(refs),
+                "omitted_evidence_refs": list(reversed(omitted)),
+                "payload_sha256": hashlib.sha256(
+                    science_planner._payload_bytes(payload)
+                ).hexdigest(),
+                "request_identity_sha256": meta["request_identity_sha256"],
+                "evidence_manifest_ref": evidence_context["index"]["manifest_ref"],
+                "evidence_record_count": evidence_context["index"]["record_count"],
+            }
+        if not refs:
+            raise RuntimeError(
+                "SCIENCE_PLANNER_FIXED_CONTEXT_ENVELOPE_EXCEEDED:"
+                f"{input_tokens}+{science_planner.MAX_TOOL_COMPLETION_TOKENS}>"
+                f"{science_planner.SERVER_CONTEXT_TOKENS}"
+            )
+        omitted.append(refs.pop())
+
+
+async def run_science_goal(goal: str, environment: BaseEnvironment, *, max_cycles: int = 8) -> dict[str, Any]:
+    goal = str(goal or "").strip()
+    if not goal:
+        raise ValueError("SCIENCE_GOAL_REQUIRED")
+    logical_attempt_id = logical_attempt_id_for_goal(goal)
+    max_cycles = max(1, min(int(max_cycles), MAX_CYCLES))
+    raw_task_contract, raw_task_localization, raw_task_obligations = _compile_lossless_task_scope(goal)
+    raw_task_prompt_summary = _planner_raw_task_manifest_summary(
+        goal, raw_task_contract, raw_task_localization, raw_task_obligations
+    )
+    brain_deliverables = _brain_mandated_deliverables(goal)
+    mandatory_requirement_ids = list(brain_deliverables)
+    requirements: list[str] | None = None
+    resolved: set[str] = set()
+    declared_inputs, declared_outputs = _declared_task_paths(goal)
+    evidence_ledger = EvidenceLedger()
+    for row in await _snapshot_declared_inputs(environment, declared_inputs):
+        evidence_ledger.add_record(row)
+    requested_evidence_refs: list[str] = []
+    trace: list[dict[str, Any]] = []
+    last_fit_receipt: dict[str, Any] | None = None
+
+    for cycle in range(max_cycles):
+        unresolved = [] if requirements is None else sorted(set(requirements) - resolved)
+        output_gate_failures: list[dict[str, Any]] = []
+        if requirements is not None and not unresolved and declared_outputs:
+            output_gate_failures = await _declared_output_gate(
+                environment, declared_outputs
+            )
         prompt, fit_receipt = fit_science_planner_prompt(
             goal=goal,
             requirements=requirements,
