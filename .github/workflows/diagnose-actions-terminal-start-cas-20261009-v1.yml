@@ -1,0 +1,213 @@
+name: Diagnose Actions terminal-start CAS write
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/diagnose-actions-terminal-start-cas-20261009-v1.yml"
+
+permissions:
+  contents: write
+  statuses: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build synthetic zero-exposure intent
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          run_id=os.environ["GITHUB_RUN_ID"]
+          sha=os.environ["GITHUB_SHA"]
+          value={
+            "slot_id":"diagnostic/actions-terminal-start-cas-"+run_id+"::trial-0",
+            "task_digest":"sha256:"+"1"*64,
+            "logical_attempt_id":"2"*64,
+            "workflow_git_blob_sha":"3"*40,
+            "authority_git_blob_sha":"4"*40,
+            "activation_git_blob_sha":"5"*40,
+            "runtime_identity_sha256":"6"*64,
+            "prestart_receipt_sha256":"7"*64,
+            "github_run_id":run_id,
+            "github_sha":sha,
+          }
+          open("DIAGNOSTIC_START_INTENT.json","w").write(json.dumps(value,sort_keys=True)+"\n")
+          PY
+
+      - name: Execute exact existing V1 durable-ref CAS
+        id: refcas
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python execution_guard/terminal_slot_start_cas_v1.py \
+            --intent DIAGNOSTIC_START_INTENT.json \
+            --receipt DIAGNOSTIC_START_CAS_RECEIPT.json
+          cat DIAGNOSTIC_START_CAS_RECEIPT.json
+
+      - name: Diagnose safe Git API status classes
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python - <<'PY'
+          import os
+          from terminal_slot_start_cas_v1 import request_factory
+          repo=os.environ["GITHUB_REPOSITORY"]
+          sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          req=request_factory(os.environ["GH_TOKEN"])
+          st, commit, _=req("GET", f"/repos/{repo}/git/commits/{sha}")
+          print("GET_COMMIT_STATUS="+str(st))
+          tree=(commit.get("tree") or {}).get("sha") if isinstance(commit,dict) else None
+          assert st == 200 and tree
+          st, created, _=req("POST", f"/repos/{repo}/git/commits", {
+              "message":"zero-exposure Actions ref diagnostic",
+              "tree":tree,
+              "parents":[sha],
+          })
+          print("CREATE_COMMIT_STATUS="+str(st))
+          assert st == 201 and isinstance(created,dict) and created.get("sha")
+          commit_sha=created["sha"]
+          ref="refs/heads/execution-guard/diagnostic-actions-status-v1/"+run_id
+          st, body, _=req("POST", f"/repos/{repo}/git/refs", {"ref":ref,"sha":commit_sha})
+          print("CREATE_REF_STATUS="+str(st))
+          print("CREATE_REF_MESSAGE="+str(body.get("message") if isinstance(body,dict) else "NON_OBJECT"))
+          # The current pull_request Actions token is expected to reject arbitrary ref creation.
+          assert st == 403
+          assert isinstance(body,dict) and body.get("message") == "Resource not accessible by integration"
+          PY
+
+      - name: Prove durable commit-status start record
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python - <<'PY'
+          import hashlib, json, os
+          from terminal_slot_start_cas_v1 import request_factory
+          repo=os.environ["GITHUB_REPOSITORY"]
+          sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          record={
+              "schema":"PROJECT_BRAIN_SYNTHETIC_TERMINAL_START_STATUS_V1",
+              "state":"START_COMMITTED_SYNTHETIC_ZERO_EXPOSURE",
+              "github_run_id":run_id,
+              "github_sha":sha,
+          }
+          raw=json.dumps(record,sort_keys=True,separators=(",",":")).encode()
+          record_sha=hashlib.sha256(raw).hexdigest()
+          context="project-brain/diagnostic-terminal-start/"+run_id
+          description="START_COMMITTED:"+record_sha
+          req=request_factory(os.environ["GH_TOKEN"])
+          st, body, _=req("POST", f"/repos/{repo}/statuses/{sha}", {
+              "state":"success",
+              "context":context,
+              "description":description,
+          })
+          print("CREATE_STATUS_STATUS="+str(st))
+          print("CREATE_STATUS_MESSAGE="+str(body.get("message") if isinstance(body,dict) else "NON_OBJECT"))
+          assert st == 201
+          st, rows, _=req("GET", f"/repos/{repo}/commits/{sha}/statuses")
+          print("READ_STATUS_STATUS="+str(st))
+          assert st == 200 and isinstance(rows,list)
+          matches=[
+              row for row in rows
+              if isinstance(row,dict)
+              and row.get("context")==context
+              and row.get("description")==description
+              and row.get("state")=="success"
+          ]
+          assert len(matches) == 1
+          print("START_STATUS_RECORD_SHA256="+record_sha)
+          print("START_STATUS_CONTEXT="+context)
+          PY
+
+      - name: Prove chunked commit-status object store
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PYTHONPATH=execution_guard python - <<'PY'
+          import base64, hashlib, json, os
+          from terminal_slot_start_cas_v1 import request_factory
+          repo=os.environ["GITHUB_REPOSITORY"]
+          sha=os.environ["GITHUB_SHA"]
+          run_id=os.environ["GITHUB_RUN_ID"]
+          value={
+              "schema":"PROJECT_BRAIN_SYNTHETIC_STATUS_OBJECT_V1",
+              "logical_attempt_id":"a"*64,
+              "sequence":7,
+              "kind":"ACTION_VERIFY_STATE_COMMIT",
+              "payload":{
+                  "action_id":"A1",
+                  "command_sha256":"b"*64,
+                  "stdout_sha256":"c"*64,
+                  "stderr_sha256":"d"*64,
+                  "resolved_requirement_ids":["R1","R2"],
+              },
+          }
+          raw=json.dumps(value,sort_keys=True,separators=(",",":")).encode()
+          object_sha=hashlib.sha256(raw).hexdigest()
+          encoded=base64.urlsafe_b64encode(raw).decode()
+          chunks=[encoded[i:i+100] for i in range(0,len(encoded),100)]
+          prefix="project-brain/diagnostic-object/"+run_id
+          req=request_factory(os.environ["GH_TOKEN"])
+          for i,chunk in enumerate(chunks):
+              st, body, _=req("POST", f"/repos/{repo}/statuses/{sha}", {
+                  "state":"success",
+                  "context":prefix+"/chunk-"+str(i),
+                  "description":"C:"+chunk,
+              })
+              assert st == 201, (st, body)
+          manifest="M:"+object_sha+":"+str(len(chunks))+":"+str(len(raw))
+          st, body, _=req("POST", f"/repos/{repo}/statuses/{sha}", {
+              "state":"success",
+              "context":prefix+"/manifest",
+              "description":manifest,
+          })
+          assert st == 201, (st, body)
+          st, rows, _=req("GET", f"/repos/{repo}/commits/{sha}/statuses?per_page=100")
+          assert st == 200 and isinstance(rows,list)
+          by_context={}
+          for row in rows:
+              if isinstance(row,dict) and isinstance(row.get("context"),str) and row["context"].startswith(prefix+"/"):
+                  by_context.setdefault(row["context"],[]).append(row)
+          manifests=by_context.get(prefix+"/manifest",[])
+          assert len(manifests)==1 and manifests[0].get("description")==manifest
+          recovered=[]
+          for i in range(len(chunks)):
+              rows_i=by_context.get(prefix+"/chunk-"+str(i),[])
+              assert len(rows_i)==1
+              desc=rows_i[0].get("description")
+              assert isinstance(desc,str) and desc.startswith("C:")
+              recovered.append(desc[2:])
+          decoded=base64.urlsafe_b64decode("".join(recovered).encode())
+          assert decoded==raw
+          assert hashlib.sha256(decoded).hexdigest()==object_sha
+          print("STATUS_OBJECT_SHA256="+object_sha)
+          print("STATUS_OBJECT_CHUNKS="+str(len(chunks)))
+          print("STATUS_OBJECT_BYTES="+str(len(raw)))
+          PY
+
+      - name: Assert no benchmark exposure
+        if: always()
+        run: |
+          set -euo pipefail
+          test ! -d rank15_task_read
+          test ! -d jobs/protein-active-learning-trial-0
