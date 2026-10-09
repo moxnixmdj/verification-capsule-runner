@@ -1,23 +1,26 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EPOCH_V1",
   "date": "2026-10-09",
-  "status": "CURRENT__RANK15_ONE_USE_TASK_READ_AND_PRESTART_GATE__EXACT_ACTIVE_BRAIN_AUTHORITY_REQUIRED",
+  "status": "CURRENT__ONE_USE_TASK_READ_AND_PRESTART_GATE__ACTIVE_BRAIN_AUTHORITY_V1_REQUIRED",
   "predicate": "TB_SCIENCE_GE_58_7",
   "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
   "task_name": "terminal-bench-science/protein-active-learning",
   "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
-  "schedule_rank": 15,
+  "ledger_schedule_rank": 15,
+  "frozen_manifest_schedule_order": 14,
+  "task_rank": 14,
   "execution_base": "terminal-execution-v1",
-  "prepared_branch": "stage-tb-science-rank15-carrier-20261009",
+  "prepared_branch": "stage/tb-science-rank15-20261009-v1",
   "authority_blob": "61629b854f4be1e940a3f68d1a676e40b4e61ebf",
   "intent_blob": "ce2c7aeb17c450e17b02a3b616ce8a8374edabe4",
   "authority_verification_blob": "75f2ca9b52e256e13551977e99784dca868c11a7",
   "candidate_authority_blob": "88ffb2b0117a9fb7f8885118171b53b187bc581d",
-  "ledger_v19_blob": "c9b887ac4fb57046be666492748d25ca96056378",
+  "ledger_blob": "c9b887ac4fb57046be666492748d25ca96056378",
+  "terminal_manifest_blob": "6dfa880b1f68881531afbba6ca211681801fd19b",
   "carrier_closure_blob": "8008b1e2382c1235e3b788e0f8d4ab9a48487409",
   "carrier_closure_verification_blob": "2f604985baa7f88c61b23958d59dc2ecd4c0990b",
   "frozen_requirements_repair_verification_blob": "d60c84676de7dfa090810b3b65132d324ac49f38",
-  "prestart_guard_blob": "6956c6dd1f7b6e6a964bc927876d96aa479de476",
+  "prestart_guard_blob": "0139a20070cd1a51866c309bac1976b27ce7ac0d",
   "exact_route": {
     "agent": "e7e258f567499bd7356c0276d6293aa30dbd338c",
     "planner": "58964dc8d6b5eed5c202081cd800035c791eeb1d",
@@ -28,12 +31,16 @@
     "reserved_completion_tokens": 4096,
     "runtime_file_count": 15
   },
-  "historical_state": {
-    "predecessor_rank": 14,
+  "predecessor_state": {
+    "ledger_v19_blob": "c9b887ac4fb57046be666492748d25ca96056378",
     "consumed_slots": 14,
     "consumed_successes": 0,
     "consumed_final_failures": 14,
-    "rank14_rerun_forbidden": true
+    "rank14_rerun_authority": false,
+    "rank15_task_read": false,
+    "rank15_task_started": false,
+    "rank15_execution_authority_consumed": false,
+    "rank15_benchmark_trials_consumed": 0
   },
   "task_read_authority": "ONLY_AFTER_EXACT_RANK15_EXECUTION_CLAIM_AND_ACTIVATION_PR",
   "task_start_authority": "ONLY_AFTER_PRESTART_GUARD_PASS",
@@ -43,6 +50,5 @@
   "result_present": false,
   "benchmark_trials_executed": 0,
   "execution_authority": false,
-  "acceptance_credit": false,
   "terminal_credit": false
 }
