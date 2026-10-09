@@ -1,0 +1,138 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_EXECUTION_BEHAVIOR_V4",
+  "date": "2026-10-09",
+  "status": "STAGED_ZERO_EXPOSURE__V4_EPOCH_CLAIM_BOUND_DURABLE_START_INTENT__EXECUTION_AUTHORITY_FALSE",
+  "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+  "slot_id": "terminal-bench-science/protein-active-learning::trial-0",
+  "task_digest": "sha256:d7e16b7c468551b468364cf2a86dba2383b007f3f2f01c6d2ce01d99ff30d48f",
+  "workflow_path": ".github/workflows/execute-tb-science-rank15-20261009-v4.yml",
+  "behavior": {
+    "build_llama_server_on_current_runner": true,
+    "cache_compiled_build_directory": false,
+    "checkout_persist_credentials": false,
+    "configure_on_current_runner": true,
+    "delete_build_directory_before_configure": true,
+    "health_endpoint_required": true,
+    "model_file_cache_allowed": true,
+    "source_checkout_pinned": true,
+    "task_read_after_carrier_qualification_only": true,
+    "zero_terminal_completion_required": true,
+    "canonical_prompt_builder_shared": true,
+    "production_context_guard_every_planner_call": true,
+    "server_context_tokens": 16384,
+    "reserved_completion_tokens": 4096,
+    "max_action_timeout_s": 3600,
+    "transport_max_action_timeout_s": 3600,
+    "seeded_request_identity": true,
+    "seed_identity_excludes_carrier_identity": true,
+    "all_cycle_context_fit_by_construction": true,
+    "durable_start_cas_required": true,
+    "task_start_defined_by_cas_acquisition": true,
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true,
+    "pre_task_read_cas_absence_check_required": true,
+    "start_cas_occurs_after_prestart_guard": true,
+    "start_cas_occurs_immediately_before_harbor": true,
+    "start_cas_ref_kind": "IMMUTABLE_GITHUB_REF_STORE_RECORD",
+    "durable_start_record_binds_logical_attempt_id": true,
+    "durable_start_record_binds_prestart_receipt_sha256": true,
+    "durable_start_record_binds_runtime_identity_sha256": true,
+    "durable_start_record_binds_workflow_authority_activation_blobs": true,
+    "start_cas_postwrite_readback_required": true,
+    "fresh_epoch_binding_required": true,
+    "fresh_execution_claim_binding_required": true,
+    "epoch_claim_bound_into_preflight": true,
+    "epoch_claim_bound_into_start_runtime_identity": true,
+    "finalizer_rechecks_epoch_claim_identity": true
+  },
+  "runtime_bindings": {
+    "planner": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v3.py",
+      "git_blob_sha": "428e4cd38cd14cdda6af517de946969150b15bf3"
+    },
+    "agent": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v3.py",
+      "git_blob_sha": "827164ea322483b21a6c215bc71963a778a57394"
+    },
+    "prestart_guard": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_prestart_token_guard_v3.py",
+      "git_blob_sha": "b284da73050bb9fa24502f33c7c5c7e0c1f518ce"
+    },
+    "transport": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_environment_transport.py",
+      "git_blob_sha": "ec46f648214a37bb16025d5ef2593efdf59f0d79"
+    },
+    "zero_exposure_tests": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_v3_zero_exposure_tests.py",
+      "git_blob_sha": "88abdc96e34d422fbafa9aada90d570b4c5971b0"
+    },
+    "all_cycle_proof": {
+      "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
+      "git_blob_sha": "a1abdbf3a08b192359da2d0a6ff01939ba20678b"
+    },
+    "start_cas": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_start_cas_v4.py",
+      "git_blob_sha": "ff9a838551361131a7b590b4d73911ee652de533"
+    },
+    "finalizer": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_finalize_receipt_v4.py",
+      "git_blob_sha": "54a01a6caa4ca817584e255ca8dcb3b8537bd7f4"
+    },
+    "preflight": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_execution_preflight_v4.py",
+      "git_blob_sha": "aeebd9bb3fb2fbd8b8188f695e435b8b3cfd1dee"
+    },
+    "admission_guard": {
+      "path": "execution_guard/terminal_execution_admission_v2.py",
+      "git_blob_sha": "5a30e330900182880ade14ad4c9a0a00f6870420"
+    },
+    "generic_start_cas": {
+      "path": "execution_guard/terminal_slot_start_cas_v1.py",
+      "git_blob_sha": "da67f089dae61aed6b3354db79d3ff989be4ed5c"
+    },
+    "generic_ref_store": {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    },
+    "start_cas_tests": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_v3_start_cas_tests.py",
+      "git_blob_sha": "beee2ec6413b11b45e5930b374b3605f4589c842"
+    },
+    "epoch_claim_binding_tests": {
+      "path": "capsules/tb_science_rank15_20261009_v1/rank15_v4_epoch_claim_binding_tests.py",
+      "git_blob_sha": "48c2828a5fa8b037eb5787fff7cb6060bda8ca91"
+    }
+  },
+  "all_cycle_proof": {
+    "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
+    "git_blob_sha": "a1abdbf3a08b192359da2d0a6ff01939ba20678b",
+    "status": "PASS__STATIC_ADVERSARIAL_AND_EXACT_PINNED_GGUF_TOKENIZER_PROOF__ALL_CYCLE_CONTEXT_ENVELOPE_BY_CONSTRUCTION__ZERO_EXPOSURE"
+  },
+  "accounting_law": {
+    "cas_not_acquired": {
+      "benchmark_trials_consumed": 0,
+      "acceptance_credit_delta": 0,
+      "terminal_credit_delta": 0
+    },
+    "cas_acquired_success": {
+      "benchmark_trials_consumed": 1,
+      "consumed_successes_delta": 1,
+      "acceptance_credit_delta": 0,
+      "terminal_credit_delta": 0
+    },
+    "cas_acquired_non_success": {
+      "benchmark_trials_consumed": 1,
+      "consumed_final_failures_delta": 1,
+      "acceptance_credit_delta": 0,
+      "terminal_credit_delta": 0
+    },
+    "aggregate_acceptance": "SEPARATE_INDEPENDENT_REDUCER_ONLY"
+  },
+  "task_read": false,
+  "task_started": false,
+  "benchmark_trials_executed": 0,
+  "execution_authority": false,
+  "promotion_authority": false,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
