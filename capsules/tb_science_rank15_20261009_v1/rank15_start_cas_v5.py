@@ -166,7 +166,8 @@ def _event_context(root: Path) -> dict[str, Any]:
     }
 
 
-def _open_store():
+def _open_stores():
+    """Open new status store plus read-only legacy ref store for migration guard."""
     repo = os.environ.get("GITHUB_REPOSITORY") or ""
     if repo != EXPECTED_REPOSITORY:
         raise StartCASError("GITHUB_REPOSITORY_MISMATCH")
@@ -176,18 +177,23 @@ def _open_store():
     github_sha = os.environ.get("GITHUB_SHA") or ""
     if not re.fullmatch(r"[0-9a-f]{40}", github_sha):
         raise StartCASError("GITHUB_SHA_INVALID")
+
     req = generic_cas.request_factory(token)
     status, commit, _headers = req("GET", f"/repos/{repo}/git/commits/{github_sha}")
     tree = (commit.get("tree") or {}).get("sha") if status == 200 and isinstance(commit, dict) else None
     if not isinstance(tree, str) or not re.fullmatch(r"[0-9a-f]{40}", tree):
         raise StartCASError("BASE_TREE_UNCONFIRMED__NO_START")
-    return generic_cas.GitHubRefStore(
-        req,
-        repo,
-        github_sha,
-        tree,
-        generic_cas.NAMESPACE,
+
+    status_store = generic_cas.SerializedStatusObjectStore(
+        req, repo, github_sha, generic_cas.NAMESPACE
     )
+    # V4 wrote into this legacy ref namespace. Reads remain required during
+    # migration so a historical start can never disappear merely because the
+    # writable backend changed.
+    legacy_ref_store = generic_cas.v1.GitHubRefStore(
+        req, repo, github_sha, tree, generic_cas.NAMESPACE
+    )
+    return status_store, legacy_ref_store
 
 
 def _key() -> str:
@@ -238,6 +244,7 @@ def _runtime_identity(root: Path, surface: dict[str, Any]) -> tuple[str, dict[st
         "start_cas",
         "generic_start_cas",
         "start_barrier",
+        "generic_status_store",
         "generic_ref_store",
         "finalizer",
         "preflight",
@@ -255,7 +262,7 @@ def _runtime_identity(root: Path, surface: dict[str, Any]) -> tuple[str, dict[st
     del epoch_path, claim_path
 
     material = {
-        "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_RUNTIME_IDENTITY_V3",
+        "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK15_RUNTIME_IDENTITY_V4",
         "behavior_git_blob_sha": behavior_blob,
         "epoch_git_blob_sha": epoch_blob,
         "execution_claim_git_blob_sha": claim_blob,
@@ -358,6 +365,9 @@ def _result(mode: str) -> dict[str, Any]:
         "generic_cas_schema": generic_cas.SCHEMA,
         "generic_cas_namespace": generic_cas.NAMESPACE,
         "generic_cas_key": _key(),
+        "durable_backend": "GITHUB_COMMIT_STATUS_OBJECT_STORE_V1",
+        "legacy_ref_migration_guard_required": True,
+        "legacy_ref_absent": False,
         "pass": False,
         "lock_absent": False,
         "acquired": False,
@@ -384,10 +394,20 @@ def main() -> int:
     rc = 1
     try:
         context = _event_context(root)
-        store = _open_store()
+        store, legacy_store = _open_stores()
+
+        legacy_existing = _read_start_record(legacy_store)
+        legacy_absent = legacy_existing is None
+        result["legacy_ref_absent"] = legacy_absent
+        if legacy_existing is not None:
+            result["legacy_existing_record_run_id"] = legacy_existing.get("github_run_id")
+            result["legacy_existing_record_logical_attempt_id"] = legacy_existing.get("logical_attempt_id")
+
         existing = _read_start_record(store)
-        absent = existing is None
+        status_absent = existing is None
+        absent = legacy_absent and status_absent
         result["lock_absent"] = absent
+        result["status_record_absent"] = status_absent
         if existing is not None:
             result["existing_record_run_id"] = existing.get("github_run_id")
             result["existing_record_logical_attempt_id"] = existing.get("logical_attempt_id")
@@ -395,13 +415,15 @@ def main() -> int:
         if args.check_absent:
             result["pass"] = absent
             result["status"] = (
-                "PASS__START_CAS_ABSENT__NO_TASK_START"
+                "PASS__LEGACY_REF_AND_STATUS_START_RECORD_ABSENT__NO_TASK_START"
                 if absent
-                else "FAIL_CLOSED__START_CAS_ALREADY_EXISTS"
+                else "FAIL_CLOSED__START_RECORD_ALREADY_EXISTS"
             )
             rc = 0 if absent else 1
-        elif not absent:
-            result["status"] = "FAIL_CLOSED__START_CAS_ALREADY_EXISTS"
+        elif not legacy_absent:
+            result["status"] = "FAIL_CLOSED__LEGACY_REF_START_ALREADY_EXISTS"
+        elif not status_absent:
+            result["status"] = "FAIL_CLOSED__STATUS_START_ALREADY_EXISTS"
         else:
             intent, binding = _build_start_intent(root, context)
             receipt = generic_cas.reserve_start_once(store, intent)

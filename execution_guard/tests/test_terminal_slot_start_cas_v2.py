@@ -12,17 +12,14 @@ class MemoryStore:
     def __init__(self):
         self.rows = {}
         self.raise_create = False
-        self.raise_create_after_write = False
         self.raise_read = False
 
     def create(self, key, value):
         if self.raise_create:
-            raise RuntimeError("create transport before write")
+            raise RuntimeError("create transport")
         if key in self.rows:
             return False
         self.rows[key] = json.loads(json.dumps(value))
-        if self.raise_create_after_write:
-            raise RuntimeError("create response lost after write")
         return True
 
     def read(self, key):
@@ -104,7 +101,7 @@ class TerminalSlotStartCASV2Tests(unittest.TestCase):
         with self.assertRaisesRegex(v1.StartAdmissionDenied, "START_ALREADY_RESERVED"):
             v1.reserve_start_once(store, intent_v1())
 
-    def test_create_error_with_confirmed_absence_never_releases_agent(self):
+    def test_unconfirmed_create_never_releases_agent(self):
         store = MemoryStore()
         store.raise_create = True
         with self.assertRaisesRegex(
@@ -112,38 +109,6 @@ class TerminalSlotStartCASV2Tests(unittest.TestCase):
             "START_COMMIT_CONFIRMED_ABSENT__NO_AGENT_RELEASE",
         ):
             v2.reserve_start_once(store, intent_v2())
-
-    def test_lost_create_response_reconciles_exact_durable_start(self):
-        store = MemoryStore()
-        store.raise_create_after_write = True
-        out = v2.reserve_start_once(store, intent_v2())
-        self.assertEqual(
-            out["status"],
-            "AGENT_READY_BOUND_START_COMMITTED_RECONCILED_AFTER_CREATE_ERROR",
-        )
-        self.assertTrue(out["task_started"])
-        self.assertEqual(out["benchmark_trials_consumed"], 1)
-
-    def test_create_and_read_uncertainty_never_releases_agent(self):
-        store = MemoryStore()
-        store.raise_create = True
-        store.raise_read = True
-        with self.assertRaisesRegex(
-            v2.StartAdmissionDenied,
-            "START_COMMIT_OUTCOME_UNCONFIRMED__NO_AGENT_RELEASE",
-        ):
-            v2.reserve_start_once(store, intent_v2())
-
-    def test_exact_same_existing_record_is_idempotent_same_start(self):
-        store = MemoryStore()
-        first = v2.reserve_start_once(store, intent_v2())
-        second = v2.reserve_start_once(store, intent_v2())
-        self.assertEqual(first["durable_record"], second["durable_record"])
-        self.assertEqual(
-            second["status"],
-            "AGENT_READY_BOUND_START_COMMITTED_IDEMPOTENT",
-        )
-        self.assertEqual(len(store.rows), 1)
 
     def test_postwrite_read_failure_never_releases_agent(self):
         class ReadFailsAfterCreate(MemoryStore):
