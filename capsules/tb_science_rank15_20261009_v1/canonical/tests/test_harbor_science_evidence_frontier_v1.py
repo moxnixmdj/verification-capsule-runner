@@ -60,13 +60,19 @@ class EvidenceFrontierTests(unittest.TestCase):
         self.assertEqual(manifest["record_count"], 2)
         self.assertEqual(manifest["record_refs"], [first, second])
 
-    def test_prompt_index_has_constant_shape_and_bounded_latest_refs(self):
+    def test_prompt_index_is_constant_shape_and_manifest_reaches_all_records(self):
         ledger = EvidenceLedger()
         refs = [ledger.add_record({"kind": "OBS", "n": i}) for i in range(12)]
         index = ledger.prompt_index()
+        self.assertEqual(set(index), {"record_count", "manifest_ref"})
         self.assertEqual(index["record_count"], 12)
-        self.assertEqual(index["latest_record_refs"], refs[-LATEST_RECORD_REFS:])
         self.assertEqual(len(index["manifest_ref"]), 71)
+        manifest = ledger.get(index["manifest_ref"])
+        self.assertEqual(manifest["record_refs"], refs)
+        self.assertEqual(
+            ledger.expansion_candidates([]),
+            refs[-LATEST_RECORD_REFS:],
+        )
 
     def test_request_validation_rejects_unknown_duplicate_and_overflow(self):
         ledger = EvidenceLedger()
