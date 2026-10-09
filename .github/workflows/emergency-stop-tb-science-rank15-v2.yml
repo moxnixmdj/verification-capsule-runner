@@ -1,4 +1,4 @@
-name: Emergency stop TB-Science rank15 V2 stale activation
+name: Emergency stop TB-Science rank15 V4 stale activation
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: tb-science-rank15-v2-ratcheted-one-shot
+  group: tb-science-rank15-v4-durable-one-shot
   cancel-in-progress: true
 
 jobs:
@@ -20,5 +20,5 @@ jobs:
     steps:
       - name: Confirm emergency concurrency takeover only
         run: |
-          echo "Cancels stale Rank15 V2 run through repository-wide concurrency group."
-          echo "No task read. No benchmark execution. No terminal credit."
+          echo "Cancels stale Rank15 V4 run through repository-wide concurrency group."
+          echo "No benchmark execution. No terminal credit."
