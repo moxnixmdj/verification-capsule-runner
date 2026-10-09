@@ -1,0 +1,32 @@
+name: Verify TB-Science rank15 warm carrier caches
+on:
+  push:
+    branches:
+      - verify-tbscience-rank15-cache-carrier-20261009
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore exact llama.cpp cache
+        id: llama
+        uses: actions/cache/restore@v4
+        with:
+          path: llama.cpp
+          key: brain-llama-cpp-bec4772f6a2527d371557b5d2032641e5ff7619c-ubuntu2404
+      - name: Restore exact Qwen cache
+        id: qwen
+        uses: actions/cache/restore@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      - name: Verify cache identities
+        run: |
+          set -euo pipefail
+          test "${{ steps.llama.outputs.cache-hit }}" = "true"
+          test "${{ steps.qwen.outputs.cache-hit }}" = "true"
+          test -x llama.cpp/build/bin/llama-server
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
