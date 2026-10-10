@@ -1,0 +1,196 @@
+name: Execute TB-Science rank19 V2 V13 claim-bound journaled one-shot
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V2_PR.json"
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: tb-science-terminal-durable-one-shot-global
+  cancel-in-progress: false
+
+jobs:
+  terminal-slot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    env:
+      C: capsules/tb_science_rank19_20261010_v1
+      RUNTIME_C: capsules/tb_science_rank15_20261009_v1
+      SAFE_ID: diag-chipseq-trial-0
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fail closed unless exact current Rank19 V13 execution surface is active
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          test "$GITHUB_BASE_REF" = "terminal-execution-v1"
+          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank19-20261010-v2"
+          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK19_V2_PR.json"
+          python - <<'PY'
+          import json, os
+          event=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+          assert event["pull_request"]["head"]["repo"]["full_name"] == os.environ["GITHUB_REPOSITORY"]
+          assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank19-20261010-v2"
+          assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
+          PY
+          python execution_guard/terminal_execution_admission_v3.py \
+            --workflow ".github/workflows/execute-tb-science-rank19-20261010-v2.yml" \
+            --slot "terminal-bench-science/diag-chipseq::trial-0" \
+            --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b" \
+            --require-activation \
+            --require-execution-authority
+          python "$C/rank19_execution_preflight_v7.py" --require-activation
+
+      - name: Install exact Harbor
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+
+      - name: Clean-build exact llama.cpp on this runner
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          rm -rf llama.cpp/build
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          test -x llama.cpp/build/bin/llama-server
+
+      - name: Restore exact Qwen model cache only
+        uses: actions/cache/restore@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Reassemble exact Qwen model if cache misses, then verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p models model-parts
+          if [ ! -f "models/$MODEL_FILE" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model-parts --pattern "$MODEL_FILE.part*of03"
+            cat "model-parts/$MODEL_FILE.part01of03" "model-parts/$MODEL_FILE.part02of03" "model-parts/$MODEL_FILE.part03of03" > "models/$MODEL_FILE"
+          fi
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+      - name: Qualify cognition carrier before any task read
+        id: carrier
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server \
+            -m "models/$MODEL_FILE" --alias brain-qwen3.5-9b \
+            --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui \
+            "${EXTRA[@]}" > LOCAL_QWEN_SERVER.log 2>&1 &
+          echo $! > LOCAL_QWEN_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > LOCAL_QWEN_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat LOCAL_QWEN_SERVER.pid)" 2>/dev/null; then cat LOCAL_QWEN_SERVER.log; exit 1; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          grep -Eq "n_ctx_slot = 16384|n_ctx_slot = 16[0-9]{3}" LOCAL_QWEN_SERVER.log
+          curl -fsS http://127.0.0.1:8080/v1/chat/completions \
+            -H 'Content-Type: application/json' \
+            -d '{"model":"brain-qwen3.5-9b","messages":[{"role":"user","content":"Return exactly the token READY."}],"temperature":0,"max_tokens":16}' \
+            > SYNTHETIC_COMPLETION.json
+          python - <<'PY'
+          import json
+          x=json.load(open("SYNTHETIC_COMPLETION.json"))
+          assert "READY" in x["choices"][0]["message"]["content"]
+          PY
+          free_bytes="$(df -B1 "$GITHUB_WORKSPACE" | awk 'NR==2{print $4}')"
+          test "$free_bytes" -ge 12884901888
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Prove durable start CAS is absent before any task read
+        id: cascheck
+        if: steps.carrier.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python "$C/rank19_start_cas_v7.py" --check-absent
+
+      - name: Read exact rank19 task and prove slot-bound all-cycle context envelope
+        id: prestart
+        if: steps.carrier.outputs.ready == 'true' && steps.cascheck.outputs.lock_absent == 'true'
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$RUNTIME_C:$GITHUB_WORKSPACE/$C"
+          python "$C/rank19_prestart_token_guard_v5.py"
+          cat RANK19_PRESTART_GUARD.json
+
+      - name: Enter Harbor then commit start only after AGENT_READY
+        id: execute
+        if: steps.carrier.outputs.ready == 'true' && steps.prestart.outputs.guard_pass == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK_PATH: ${{ steps.prestart.outputs.task_path }}
+          BRAIN_LOGICAL_ATTEMPT_ID: ${{ steps.prestart.outputs.logical_attempt_id }}
+        run: |
+          set -uo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$RUNTIME_C:$GITHUB_WORKSPACE/$C"
+          python "$C/rank19_v7_status_journal_runner.py"
+          echo "runner_exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize conservative rank19 V6 receipt
+        if: always()
+        env:
+          CACHE_READY: ${{ steps.carrier.outputs.ready }}
+          HARBOR_OUTCOME: ${{ steps.execute.outcome }}
+        run: |
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$RUNTIME_C:$GITHUB_WORKSPACE/$C"
+          python "$C/rank19_finalize_receipt_v7.py"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-diag-chipseq-trial-0-rank19-v3-claim-bound
+          path: |
+            diag-chipseq-trial-0__SLOT_RECEIPT_V7.json
+            TERMINAL_EXECUTION_ADMISSION_V3.json
+            RANK19_EXECUTION_PREFLIGHT_V6.json
+            RANK19_START_CAS_CHECK_V7.json
+            RANK19_START_CAS_V7.json
+            RANK19_PRESTART_GUARD.json
+            RANK19_AGENT_START_BARRIER/
+            RANK19_CAUSAL_JOURNAL_BRIDGE/
+            RANK19_V7_STATUS_JOURNAL_RUNNER_RECEIPT.json
+            LOCAL_QWEN_HEALTH.json
+            LOCAL_QWEN_SERVER.log
+            SYNTHETIC_COMPLETION.json
+            jobs/diag-chipseq-trial-0/
+          if-no-files-found: warn
+          retention-days: 7
