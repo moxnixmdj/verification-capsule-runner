@@ -1,0 +1,33 @@
+name: Verify Rank20 bound START-CAS caller v1
+
+on:
+  pull_request:
+    branches:
+      - terminal-execution-v1
+    paths:
+      - 'execution_guard/content_addressed_runtime_binding_v1.py'
+      - 'capsules/tb_science_rank20_20261010_v1/rank20_v8_status_journal_runner.py'
+      - 'capsules/tb_science_rank20_20261010_v1/rank20_bound_start_cas_caller_regression_v1.py'
+      - '.github/workflows/verify-rank20-bound-start-cas-caller-v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile repair
+        run: |
+          python -m py_compile \
+            execution_guard/content_addressed_runtime_binding_v1.py \
+            capsules/tb_science_rank20_20261010_v1/rank20_v8_status_journal_runner.py \
+            capsules/tb_science_rank20_20261010_v1/rank20_bound_start_cas_caller_regression_v1.py
+      - name: Run adversarial bound caller regression
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE" \
+            python capsules/tb_science_rank20_20261010_v1/rank20_bound_start_cas_caller_regression_v1.py
