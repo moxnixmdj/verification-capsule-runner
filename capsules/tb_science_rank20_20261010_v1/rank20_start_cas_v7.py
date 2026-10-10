@@ -11,6 +11,11 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+# Support both repository-package imports (execution_guard.foo) and the legacy
+# top-level guard-module imports used by the generic CAS modules.  Do not rely
+# on the workflow cwd or PYTHONPATH: the start barrier must bootstrap itself.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 EXECUTION_GUARD = ROOT / "execution_guard"
 if str(EXECUTION_GUARD) not in sys.path:
     sys.path.insert(0, str(EXECUTION_GUARD))
