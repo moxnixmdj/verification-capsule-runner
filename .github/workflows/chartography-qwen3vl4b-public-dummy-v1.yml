@@ -76,11 +76,11 @@ jobs:
           /usr/bin/time -v "$CLI" -m model/model.gguf --mmproj model/mmproj.gguf --no-mmproj-offload \
             --image chartography/task_packs/sample_charts/charts/sample_chart_1.png \
             -p "How long would it take an environment of 1100 degC / 0.03 K/m to deform 4 metres vertically. Answer in years with 1 decimal place" \
-            -c 4096 --image-min-tokens 1024 --image-max-tokens 1024 -n 96 -t 4 > out/task1.txt 2> out/task1.stderr.txt
+            -c 4096 --image-min-tokens 1024 --image-max-tokens 1024 -n 256 -t 4 > out/task1.txt 2> out/task1.stderr.txt
           /usr/bin/time -v "$CLI" -m model/model.gguf --mmproj model/mmproj.gguf --no-mmproj-offload \
             --image chartography/task_packs/sample_charts/charts/sample_chart_2.jpg \
             -p "Using Mg-9 wt % Al alloy, at what temperature does Mg17Al12 precipitate? Round to the nearest 10 degrees." \
-            -c 4096 --image-min-tokens 1024 --image-max-tokens 1024 -n 96 -t 4 > out/task2.txt 2> out/task2.stderr.txt
+            -c 4096 --image-min-tokens 1024 --image-max-tokens 1024 -n 256 -t 4 > out/task2.txt 2> out/task2.stderr.txt
           test -s out/task1.txt
           test -s out/task2.txt
           cat out/task1.txt
