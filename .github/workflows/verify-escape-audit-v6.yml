@@ -1,0 +1,26 @@
+name: verify-escape-audit-v6
+on:
+  push:
+    branches: [verify-escape-audit-v6]
+    paths:
+      - "capsules/escape_audit_v6_repo/**"
+      - ".github/workflows/verify-escape-audit-v6.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile exact successor audit
+        run: python -m py_compile capsules/escape_audit_v6_repo/canonical/runtime/escape_progress_shared_gap_audit_v6.py
+      - name: Run exact successor tests
+        working-directory: capsules/escape_audit_v6_repo
+        run: python -m pytest -q canonical/tests/test_escape_progress_shared_gap_audit_v6.py
+      - name: Replay exact successor audit
+        working-directory: capsules/escape_audit_v6_repo
+        run: python canonical/runtime/escape_progress_shared_gap_audit_v6.py
