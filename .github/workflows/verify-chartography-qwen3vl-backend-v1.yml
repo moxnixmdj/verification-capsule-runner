@@ -1,0 +1,24 @@
+name: Verify Chartography Qwen offline backend V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "capsules/chartography_qwen3vl_backend_v1/**"
+      - "triggers/chartography_qwen3vl_backend_v1.txt"
+      - ".github/workflows/verify-chartography-qwen3vl-backend-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest capsules/chartography_qwen3vl_backend_v1/test_backend.py -v
