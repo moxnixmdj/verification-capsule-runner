@@ -4,6 +4,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -161,6 +162,22 @@ def main() -> None:
         raise SystemExit(json.dumps(fail("SOURCE_ARTIFACT_HASH_MISMATCH")))
     if sha256_file(output_path) != (evidence.get("output_artifact") or {}).get("sha256"):
         raise SystemExit(json.dumps(fail("OUTPUT_ARTIFACT_HASH_MISMATCH")))
+    try:
+        embedded_source = base64.b64decode((evidence.get("source_artifact") or {}).get("bytes_b64") or "", validate=True)
+        embedded_output = base64.b64decode((evidence.get("output_artifact") or {}).get("bytes_b64") or "", validate=True)
+    except Exception:
+        raise SystemExit(json.dumps(fail("EMBEDDED_ARTIFACT_BYTES_INVALID")))
+    if embedded_source != source_path.read_bytes() or embedded_output != output_path.read_bytes():
+        raise SystemExit(json.dumps(fail("EMBEDDED_ARTIFACT_BYTES_MISMATCH")))
+
+    carrier = evidence.get("carrier") or {}
+    if (
+        carrier.get("repository") != os.environ.get("GITHUB_REPOSITORY")
+        or carrier.get("workflow_run_id") != os.environ.get("GITHUB_RUN_ID")
+        or carrier.get("workflow_run_attempt") != os.environ.get("GITHUB_RUN_ATTEMPT")
+        or carrier.get("workflow_sha") != os.environ.get("GITHUB_SHA")
+    ):
+        raise SystemExit(json.dumps(fail("CARRIER_IDENTITY_MISMATCH")))
 
     case = structural.generate_case("pdf", SEED)
     reconstructed_source = base64.b64decode(case["task"]["document_b64"], validate=True)
@@ -205,6 +222,12 @@ def main() -> None:
                     raise SystemExit(json.dumps(fail("AUDIENCE_VIEW_FILE_MISSING", file=row.get("file"))))
                 if sha256_file(stored) != row.get("sha256"):
                     raise SystemExit(json.dumps(fail("AUDIENCE_VIEW_HASH_MISMATCH", file=row.get("file"))))
+                try:
+                    embedded = base64.b64decode(row.get("bytes_b64") or "", validate=True)
+                except Exception:
+                    raise SystemExit(json.dumps(fail("EMBEDDED_AUDIENCE_VIEW_BYTES_INVALID", file=row.get("file"))))
+                if embedded != stored.read_bytes():
+                    raise SystemExit(json.dumps(fail("EMBEDDED_AUDIENCE_VIEW_BYTES_MISMATCH", file=row.get("file"))))
                 if not pixel_equal(stored, check):
                     raise SystemExit(json.dumps(fail("AUDIENCE_VIEW_INDEPENDENT_RASTER_MISMATCH", file=row.get("file"))))
 
