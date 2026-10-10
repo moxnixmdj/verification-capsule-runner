@@ -11,11 +11,11 @@
   "activation_path": "capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "4746f6ea3fe7c9f53f7b8a7cc1979cddef9e6f8d"
+    "git_blob_sha": "407108656d1640397e0aa0e982d766ca54e9356d"
   },
   "authority": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json",
-    "git_blob_sha": "0eac6cb12f7f5172c1d24c96734735ce556cb30f"
+    "git_blob_sha": "bcef1b71b34ed613d97e8d8b8f39daa7232e0695"
   },
   "ledger": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json",
@@ -31,11 +31,11 @@
   },
   "epoch": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json",
-    "git_blob_sha": "0ec6d223d0f70f1e965d0ec178e77663b3fbd9f4"
+    "git_blob_sha": "28a6891fa18efee0ad439da6a490b89b493337f0"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json",
-    "git_blob_sha": "ff7687e2800c2138d44f87d0d1fabf7e5a57653f"
+    "git_blob_sha": "b90ef39eb2dabfa7cea00a49360bac3d4912a6b9"
   },
   "preflight": {
     "path": "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
@@ -65,12 +65,12 @@
     "brain_authority_v1_blob": "ea76756ea30084c7f8291747ae9d204485a0186a",
     "brain_ledger_v38_blob": "137a2f61d911321365bd80613e3806a77dbe7eca",
     "planner_v7_verification_blob": "9797cc625e3e33bb905cf23fa6c79f66dc9794db",
-    "public_authority_v1_blob": "0eac6cb12f7f5172c1d24c96734735ce556cb30f",
+    "public_authority_v1_blob": "bcef1b71b34ed613d97e8d8b8f39daa7232e0695",
     "public_ledger_v38_blob": "357bbd1a26be73200b6076e6751c58e23d95f325",
-    "epoch_v6_v1_blob": "0ec6d223d0f70f1e965d0ec178e77663b3fbd9f4",
-    "execution_claim_v6_v1_blob": "ff7687e2800c2138d44f87d0d1fabf7e5a57653f",
+    "epoch_v6_v1_blob": "28a6891fa18efee0ad439da6a490b89b493337f0",
+    "execution_claim_v6_v1_blob": "b90ef39eb2dabfa7cea00a49360bac3d4912a6b9",
     "workflow_v1_blob": "73d30930712396e056187de130551cae2bea00a6",
-    "behavior_v1_blob": "4746f6ea3fe7c9f53f7b8a7cc1979cddef9e6f8d",
+    "behavior_v1_blob": "407108656d1640397e0aa0e982d766ca54e9356d",
     "planner_v7_blob": "e5d6ab78b6cf5bacee568cd3701410a8745b9ce8",
     "agent_v13_blob": "8deede8adb960b6ebf7ee747a5e9ff1016238b7e",
     "logical_attempt_id": "def7e2921acf58d4ef03e3183512996c718a5a13069482cb825464c0c963a8b4",
