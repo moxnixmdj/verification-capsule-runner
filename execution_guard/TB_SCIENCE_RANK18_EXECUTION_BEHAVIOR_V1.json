@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V1",
   "date": "2026-10-10",
-  "status": "FINAL_RESEAL_CANDIDATE__RANK18_V1__V6_DURABLE_EXECUTION__AGENT_V12_PLANNER_V6_TYPED_SCHEMA_V2__AUTHORITATIVE_TASK_ARTIFACT_FINISH_GATE__ZERO_EXPOSURE",
+  "status": "FINAL_RESEAL_CANDIDATE__RANK18_V1__V6_DURABLE_EXECUTION__AGENT_V12_PLANNER_V6_TYPED_SCHEMA_V2__HARBOR_ARTIFACT_CONFIG_TABLE_BRIDGE__AUTHORITATIVE_TASK_ARTIFACT_FINISH_GATE__ZERO_EXPOSURE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
   "task_digest": "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9",
@@ -65,7 +65,11 @@
     "authoritative_task_artifacts_injected_before_agent_start": true,
     "authoritative_artifact_safe_absolute_postcondition_required": true,
     "material_requirement_closure_cannot_bypass_mandatory_artifact_gate": true,
-    "planner_proposed_deliverables_remain_app_scoped": true
+    "planner_proposed_deliverables_remain_app_scoped": true,
+    "harbor_artifact_config_string_and_table_forms_supported": true,
+    "main_service_artifact_source_paths_injected_as_agent_deliverables": true,
+    "sidecar_service_artifacts_not_misclassified_as_agent_deliverables": true,
+    "artifact_source_traversal_fail_closed": true
   },
   "runtime_bindings": {
     "planner": {
@@ -94,7 +98,7 @@
     },
     "zero_exposure_tests": {
       "path": "capsules/tb_science_rank18_20261010_v1/rank18_v1_zero_exposure_reseal_tests.py",
-      "git_blob_sha": "5ae5b0cd1f9a18d3bd23c738ddf909a3a3a723d3"
+      "git_blob_sha": "a340fed2618b12cce377f298fe3e6939934c1a5a"
     },
     "all_cycle_proof": {
       "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
@@ -134,7 +138,7 @@
     },
     "status_journal_runner": {
       "path": "capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py",
-      "git_blob_sha": "d9cf2e70a9d8ebb53dcd32d815185aa2b865f930"
+      "git_blob_sha": "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
     },
     "finalizer": {
       "path": "capsules/tb_science_rank18_20261010_v1/rank18_finalize_receipt_v6.py",
