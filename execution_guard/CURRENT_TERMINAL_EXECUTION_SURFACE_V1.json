@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-10",
-  "status": "RANK20_V13_CLAIM_V3_STAGED__PROOF_ONLY_BEHAVIOR_REFINEMENT_CERTIFIED__ZERO_EXPOSURE",
+  "status": "RANK20_V13_CLAIM_V3_STAGED__BRAIN_AUTHORITY_V2_LEDGER_V43_BOUND__EXACT_BEHAVIOR__ZERO_EXPOSURE",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
@@ -11,15 +11,15 @@
   "activation_path": "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V1_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V2.json",
-    "git_blob_sha": "dc20b4ef740eaeb6741c834d9c74634653c69193"
+    "git_blob_sha": "9012d4bf1c84e157cdfa27ec04fd1a5afd7c78c7"
   },
   "authority": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V2.json",
-    "git_blob_sha": "a5186b7e46e47f7f391f8d9d39485a95d83a3824"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V3.json",
+    "git_blob_sha": "c4f47d32e119c7f50177812164a6fce29f0ea50c"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V1.json",
-    "git_blob_sha": "289f496bdc9c90a94a8ec488f28c7ecaf9db9f6d"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V2.json",
+    "git_blob_sha": "be57de4a15b6ffe3f2d3a494a652c488a5c48d1d"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
@@ -34,12 +34,12 @@
     "git_blob_sha": "59fa5616f1754f90ded1c3b30cb53c98b4348cee"
   },
   "epoch": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_V3.json",
-    "git_blob_sha": "31882225445bd8a8e2db306bb4ec5d90c02403bf"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_V4.json",
+    "git_blob_sha": "8d5f7432f6201034e90566fc69a9cff03ec50247"
   },
   "execution_claim": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_V3.json",
-    "git_blob_sha": "241148ab473702b82deedcf75b4ae160885e9f16"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_V4.json",
+    "git_blob_sha": "c00171e5065034c5fb077109116d295ac90df023"
   },
   "preflight": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v7.py",
@@ -72,9 +72,5 @@
   "task_read_authority": false,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
-  "next": "ZERO_EXPOSURE_VERIFY_CERTIFIED_RANK20_CLAIM_V3_SURFACE__NO_ACTIVATION_OR_TASK_READ",
-  "behavior_refinement_verification": {
-    "path": "capsules/tb_science_rank20_20261010_v1/rank20_behavior_refinement_verify_v1.py",
-    "git_blob_sha": "b15a9d9ba3a717a9758f56aef75e5e14764d9221"
-  }
+  "next": "ZERO_EXPOSURE_VERIFY_RANK20_CLAIM_V3_SURFACE_BOUND_TO_BRAIN_AUTHORITY_V2_LEDGER_V43__NO_ACTIVATION_OR_TASK_READ"
 }
