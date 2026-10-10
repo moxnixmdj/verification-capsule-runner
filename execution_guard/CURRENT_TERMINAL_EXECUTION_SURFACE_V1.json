@@ -15,7 +15,7 @@
   },
   "authority": {
     "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V3.json",
-    "git_blob_sha": "a9502035da90e9a7c3bbc26859794d99632fe8f4"
+    "git_blob_sha": "fcd77d4db9570e8ab7c3898ad82ffd69216d81b3"
   },
   "ledger": {
     "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V44.json",
@@ -35,11 +35,11 @@
   },
   "epoch": {
     "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_PROMOTED_V1.json",
-    "git_blob_sha": "79d9ff740c72121f6e76c6577f07dbda28135105"
+    "git_blob_sha": "e9d85cc9c737c904e8c7e2b17ed2e2787d2a00e3"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_PROMOTED_V1.json",
-    "git_blob_sha": "b5c5afd8997f62c2cf79bade40376e5d326b98d3"
+    "git_blob_sha": "f377c3b4cb6d0941cb963794010cd01b31789efd"
   },
   "preflight": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v7.py",
@@ -79,7 +79,7 @@
   },
   "promotion_verification": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_v3_promoted_pre_activation_tests.py",
-    "git_blob_sha": "dac87a18aa288eaec8a7165369526ca4aff239b5"
+    "git_blob_sha": "ef71df0295129bb5b34df55895dd167ea174015e"
   },
   "hard_nonclaims": [
     "NO_RANK20_ACTIVATION_FILE_ON_PROMOTION",
