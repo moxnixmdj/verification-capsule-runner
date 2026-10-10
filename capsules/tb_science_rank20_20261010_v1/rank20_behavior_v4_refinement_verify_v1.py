@@ -13,8 +13,11 @@ OLD = "execution_guard/TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V3.json"
 NEW = "execution_guard/TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V4.json"
 ACTIVATION = "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json"
 CAS = "capsules/tb_science_rank20_20261010_v1/rank20_start_cas_v7.py"
+PREFLIGHT = "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v7.py"
 EXPECTED_OLD_CAS = "35cd4c7a31d5ffbafa755dcdf888c2dee1beeb1b"
-EXPECTED_NEW_CAS = "0476919d1619c34168b25df98bcd93f6c64585ce"
+EXPECTED_NEW_CAS = "50602966063a7e2c58761faa4798f5ec4f2eb0e3"
+EXPECTED_OLD_PREFLIGHT = "74d55719d01f3f434b0b75001548f56a4ed83ff6"
+EXPECTED_NEW_PREFLIGHT = "e6e6a8fa27f8f4def629b43612933c17f95053f6"
 
 
 def load(rel: str):
@@ -36,8 +39,9 @@ def main() -> int:
     assert old["behavior"] == new["behavior"]
 
     assert set(old["runtime_bindings"]) == set(new["runtime_bindings"])
+    changed = {"start_cas", "preflight"}
     for key in old["runtime_bindings"]:
-        if key == "start_cas":
+        if key in changed:
             continue
         assert old["runtime_bindings"][key] == new["runtime_bindings"][key], key
 
