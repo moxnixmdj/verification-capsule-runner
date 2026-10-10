@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK17_ACTIVATION_V6",
+  "date": "2026-10-09",
+  "activate": true,
+  "slot_id": "terminal-bench-science/variable-star-vetting::trial-0",
+  "task_digest": "sha256:51bf2b9d8e87a428772d92c6765d83ad3edc7c24283d2ff75af5f050aaee0c67",
+  "execution_branch": "execute/tb-science-rank17-20261009-v4",
+  "execution_base": "terminal-execution-v1",
+  "execution_base_commit": "ad2283492d033f3e80adf9c29be17c56c5d5319f",
+  "brain_authority_blob": "1f0e1e7739eeaff67cac8ca5781a94c0f6ea8cf9",
+  "brain_ledger_blob": "9c2f95b2d7946e374811321cde58d11f53704fd2",
+  "public_surface_blob": "4bb56a526dbdf0e765264697cd8e035b4e656288",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
