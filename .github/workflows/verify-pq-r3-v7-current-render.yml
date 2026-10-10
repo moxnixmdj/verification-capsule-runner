@@ -1,0 +1,37 @@
+name: Verify professional R3 V7 current render
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - capsules/pq_r3_v7_current_render/**
+      - .github/workflows/verify-pq-r3-v7-current-render.yml
+  push:
+    branches: [verify-pq-r3-v7-20261010]
+    paths:
+      - capsules/pq_r3_v7_current_render/**
+      - .github/workflows/verify-pq-r3-v7-current-render.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install render dependencies
+        run: |
+          if ! command -v libreoffice >/dev/null 2>&1 || ! command -v pdftoppm >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y libreoffice-writer libreoffice-calc libreoffice-impress poppler-utils
+          fi
+          python -m pip install --disable-pip-version-check --no-input python-docx==1.2.0 openpyxl==3.1.5 python-pptx==1.0.2 pypdf==6.19.0 Pillow==12.3.0
+      - name: Replay exact V7 R3 PDF realization
+        run: |
+          cd capsules/pq_r3_v7_current_render
+          PYTHONPATH=. python -m unittest -v canonical.tests.test_pq_r3_v7_current_render
