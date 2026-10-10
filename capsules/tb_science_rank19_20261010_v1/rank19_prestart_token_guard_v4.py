@@ -15,10 +15,11 @@ import subprocess
 
 from canonical.runtime import harbor_science_agent_v13 as agent
 from canonical.runtime import harbor_science_planner_v7 as planner
-from execution_guard.logical_attempt_identity_v1 import logical_attempt_id as canonical_logical_attempt_id
+from execution_guard.logical_attempt_identity_v2 import logical_attempt_id as canonical_logical_attempt_id
 
 DATASET_TASK = "terminal-bench-science/diag-chipseq"
 TASK_DIGEST = "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+EXECUTION_CLAIM_BINDING_DIGEST = "sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
 SERVER_CONTEXT_TOKENS = planner.SERVER_CONTEXT_TOKENS
 RESERVED_COMPLETION_TOKENS = planner.MAX_TOOL_COMPLETION_TOKENS
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK19_PRESTART_TOKEN_BUDGET_GUARD_V4"
@@ -50,7 +51,7 @@ def _first_cycle_prompt(goal: str) -> tuple[str, dict, dict, list, dict, list, l
         brain_deliverables=brain_deliverables,
         observations=observations,
     )
-    logical_attempt_id = canonical_logical_attempt_id(slot_id=DATASET_TASK + "::trial-0", task_digest=TASK_DIGEST)
+    logical_attempt_id = canonical_logical_attempt_id(slot_id=DATASET_TASK + "::trial-0", task_digest=TASK_DIGEST, execution_claim_binding_digest=EXECUTION_CLAIM_BINDING_DIGEST)
     return (
         prompt,
         raw_task_contract,
