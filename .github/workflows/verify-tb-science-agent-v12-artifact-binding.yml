@@ -1,0 +1,51 @@
+name: Verify TB-Science Agent V12 artifact binding
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/science_task_artifact_binding_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v12.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_science_task_artifact_binding_v1.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_agent_v12_artifact_binding.py"
+      - ".github/workflows/verify-tb-science-agent-v12-artifact-binding.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact mirrored Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="capsules/tb_science_rank15_20261009_v1"
+          test "$(git hash-object "$C/canonical/runtime/science_task_artifact_binding_v1.py")" = "07df410198a3d7138fbc2823a5f90cf9f27c5a00"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v12.py")" = "129681ad469bc1f47da51c61195189237949e69f"
+          test "$(git hash-object "$C/canonical/tests/test_science_task_artifact_binding_v1.py")" = "2bcfe7dd9abc505203cb375b427ea04c1b8082f7"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v12_artifact_binding.py")" = "ecd6ea23c77fed1e860e17b74d2d42dc9c353b74"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v11.py")" = "124d13a7449281c9781c39df8f02c2e8f74226b4"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v6.py")" = "ecfaa7523347ba0e902baa9d411e333d3e2853e4"
+          test "$(git hash-object "$C/canonical/runtime/science_typed_action_protocol_v1.py")" = "f29e347ccc5f52bfd474c816b03afa6d4dc520be"
+      - name: Compile exact runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="capsules/tb_science_rank15_20261009_v1"
+          python -m py_compile             "$C/canonical/runtime/science_task_artifact_binding_v1.py"             "$C/canonical/runtime/harbor_science_agent_v12.py"             "$C/canonical/runtime/harbor_science_agent_v11.py"             "$C/canonical/runtime/harbor_science_planner_v6.py"
+      - name: Run V12 and inherited V11 regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python "$C/canonical/tests/test_science_task_artifact_binding_v1.py"
+          python "$C/canonical/tests/test_harbor_science_agent_v12_artifact_binding.py"
+          python "$C/canonical/tests/test_science_typed_action_protocol_v1.py"
+          python "$C/canonical/tests/test_harbor_science_agent_v11_typed_schema_grounding.py"
