@@ -1,25 +1,25 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-10",
-  "status": "RANK20_V13_CLAIM_V3_PROMOTED_EFFECTIVE_AUTHORITY__ACTIVATION_ABSENT__UNREAD_UNSTARTED__ZERO_EXPOSURE",
+  "status": "RANK20_V13_CLAIM_V5_STAGED_ZERO_EXPOSURE__WORKFLOW_V2_IDENTITY_REPAIRED__ACTIVATION_ABSENT",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
   "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
   "workflow_path": ".github/workflows/execute-tb-science-rank20-20261010-v1.yml",
-  "workflow_git_blob_sha": "19a12ff77ebdedb3177f05281e116dee69d915ea",
-  "activation_path": "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V1_PR.json",
+  "workflow_git_blob_sha": "e4cb372e501790fd9ed5aa72193d18109a599102",
+  "activation_path": "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json",
   "behavior": {
-    "path": "execution_guard/TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V2.json",
-    "git_blob_sha": "dc20b4ef740eaeb6741c834d9c74634653c69193"
+    "path": "execution_guard/TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V3.json",
+    "git_blob_sha": "8c3d285161f356c9256375c9168e88cdaadd58e5"
   },
   "authority": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V3.json",
-    "git_blob_sha": "fcd77d4db9570e8ab7c3898ad82ffd69216d81b3"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V5.json",
+    "git_blob_sha": "808d00885bfbc4348006c28f3b51fcfa450f6bf9"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V44.json",
-    "git_blob_sha": "fd61b24b76065aae96986b12e99bd34c72a2ffac"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V47.json",
+    "git_blob_sha": "3dad0171b52a2ce548958a05a2da224bf4912ba7"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
@@ -30,20 +30,20 @@
     "git_blob_sha": "bb7566c518af105dcf36b31db38ccfe2172f2e65"
   },
   "logical_attempt_claim_binding": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V3.json",
-    "git_blob_sha": "59fa5616f1754f90ded1c3b30cb53c98b4348cee"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V5.json",
+    "git_blob_sha": "7d94ac0b86053a31fd711dcb0652370041671e44"
   },
   "epoch": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_PROMOTED_V1.json",
-    "git_blob_sha": "e9d85cc9c737c904e8c7e2b17ed2e2787d2a00e3"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_STAGED_V5.json",
+    "git_blob_sha": "aeef3e2d7a63c5c2a31e2b17ef004604e4980acd"
   },
   "execution_claim": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_PROMOTED_V1.json",
-    "git_blob_sha": "f377c3b4cb6d0941cb963794010cd01b31789efd"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_STAGED_V5.json",
+    "git_blob_sha": "fb94b21faa86db17d5e543684f1852f9fbbd7958"
   },
   "preflight": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v7.py",
-    "git_blob_sha": "27d6834cc4028f922c57da332a7ee3b2b0959338"
+    "git_blob_sha": "74d55719d01f3f434b0b75001548f56a4ed83ff6"
   },
   "finalizer": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_finalize_receipt_v7.py",
@@ -63,31 +63,27 @@
     "benchmark_role": "NEW_CAPABILITY_VALIDATION",
     "decision": "ADMIT_CHECKPOINT_AUDIT_EXECUTION"
   },
-  "logical_attempt_id": "62bbf27ddcc679f431c5569244cf0c54fb1b13181e83076e2c019764f0b747e2",
-  "execution_claim_binding_digest": "sha256:ad74fd461333c1673b76ec0b439aba98c35bf6a0691796b24a5847209873adba",
+  "logical_attempt_id": "c7a02ecc6b11f4338120f05cd922370d361ce79e104549f95b656df3b51cb2bb",
+  "execution_claim_binding_digest": "sha256:aa0d91d18bb597319414b7385a92248992c093e14bf9c8f5677b72c05cb09beb",
   "task_read_history": false,
   "task_started": false,
   "benchmark_trials_consumed": 0,
-  "execution_authority": true,
-  "task_read_authority": true,
+  "execution_authority": false,
+  "task_read_authority": false,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
-  "next": "MINT_EXACT_RANK20_ACTIVATION_AUTHORITY__ACTIVATION_FILE_MUST_REMAIN_ABSENT_UNTIL_THEN",
+  "next": "VERIFY_STAGED_V5_ZERO_EXPOSURE__THEN_CANONICAL_PROMOTION",
   "behavior_refinement_verification": {
-    "path": "capsules/tb_science_rank20_20261010_v1/rank20_behavior_refinement_verify_v1.py",
-    "git_blob_sha": "b15a9d9ba3a717a9758f56aef75e5e14764d9221"
-  },
-  "promotion_verification": {
-    "path": "capsules/tb_science_rank20_20261010_v1/rank20_v3_promoted_pre_activation_tests.py",
-    "git_blob_sha": "ef71df0295129bb5b34df55895dd167ea174015e"
+    "path": "capsules/tb_science_rank20_20261010_v1/rank20_behavior_v3_refinement_verify_v1.py",
+    "git_blob_sha": "71143dd544ea956e7d4a535eb16c9a863793481f"
   },
   "hard_nonclaims": [
-    "NO_RANK20_ACTIVATION_FILE_ON_PROMOTION",
-    "NO_RANK20_TASK_READ_DURING_PROMOTION",
+    "NO_RANK20_ACTIVATION_FILE",
+    "NO_RANK20_TASK_READ",
     "NO_RANK20_DURABLE_START",
     "NO_RANK20_RESULT",
     "NO_RANK20_BENCHMARK_TRIAL_CONSUMPTION",
-    "NO_ACCEPTANCE_CAPABILITY_OR_TERMINAL_CREDIT",
-    "NO_REPLAY_OR_REPLACEMENT_AUTHORITY"
+    "NO_EFFECTIVE_EXECUTION_OR_TASK_READ_AUTHORITY",
+    "NO_ACCEPTANCE_CAPABILITY_OR_TERMINAL_CREDIT"
   ]
 }
