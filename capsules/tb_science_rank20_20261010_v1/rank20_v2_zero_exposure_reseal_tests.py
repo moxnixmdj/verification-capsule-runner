@@ -8,8 +8,8 @@ from execution_guard.rank20_claim_bound_identity_v1 import resolve_claim_bound_i
 ROOT=Path(__file__).resolve().parents[2]
 SLOT="terminal-bench-science/hysteretic-aquifer-control::trial-0"
 DIGEST="sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289"
-BRANCH="execute/tb-science-rank20-20261010-v2"
-ACTIVATION="ACTIVATE_RANK20_V2_PR.json"
+BRANCH="execute/tb-science-rank20-20261010-v3"
+ACTIVATION="ACTIVATE_RANK20_V3_PR.json"
 PLANNER_SHA="e5d6ab78b6cf5bacee568cd3701410a8745b9ce8"
 AGENT_SHA="470bfe079aeffaa07a3b92975b4edea17c9a20e1"
 
@@ -84,13 +84,13 @@ def main():
     identity_expectations = {
         "capsules/tb_science_rank20_20261010_v1/rank20_prestart_token_guard_v5.py":
             ("terminal-bench-science/hysteretic-aquifer-control", DIGEST.split(":",1)[1]),
-        "capsules/tb_science_rank20_20261010_v1/rank20_start_cas_v7.py":
+        "capsules/tb_science_rank20_20261010_v1/rank20_start_cas_v8.py":
             (SLOT, DIGEST.split(":",1)[1]),
         "capsules/tb_science_rank20_20261010_v1/rank20_v7_status_journal_runner.py":
             (SLOT, DIGEST.split(":",1)[1]),
         "capsules/tb_science_rank20_20261010_v1/rank20_finalize_receipt_v7.py":
             (SLOT, DIGEST.split(":",1)[1]),
-        "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v7.py":
+        "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v8.py":
             (SLOT, DIGEST.split(":",1)[1]),
     }
     for rel, expected in identity_expectations.items():
@@ -102,7 +102,7 @@ def main():
     assert b["runtime_bindings"]["identity_primitive"]["path"]=="execution_guard/logical_attempt_identity_v2.py"
     assert b["runtime_bindings"]["claim_bound_identity_resolver"]["path"]=="execution_guard/rank20_claim_bound_identity_v1.py"
 
-    print("PASS__TB_SCIENCE_RANK20_V2_V13_CLAIM_BOUND_PUBLIC_RESEAL__ZERO_EXPOSURE")
+    print("PASS__TB_SCIENCE_RANK20_V3_V13_GENERATION_NEUTRAL_CARRIER_RESEAL__ZERO_EXPOSURE")
     return 0
 
 if __name__=="__main__":
