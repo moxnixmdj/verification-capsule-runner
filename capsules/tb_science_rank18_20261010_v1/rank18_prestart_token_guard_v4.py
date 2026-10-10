@@ -155,7 +155,7 @@ def main() -> int:
             result["status"] = "PREEXPOSURE_ABORT_NONCONSUMING__STATE_RESERVE_MISSING"
         else:
             result["pass"] = True
-            result["status"] = "PASS__RANK18_V4_SLOT_BOUND_IDENTITY__MAXIMAL_RESERVED_CYCLE0_CORE_FITS__TASK_NOT_STARTED"
+            result["status"] = "PASS__RANK18_V1_V12_SLOT_BOUND_IDENTITY__MAXIMAL_RESERVED_CYCLE0_CORE_FITS__TASK_NOT_STARTED"
     except Exception as exc:
         result["error_type"] = type(exc).__name__
         result["error"] = str(exc)
