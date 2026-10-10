@@ -1,0 +1,26 @@
+name: Test Agent V14 claim-bound logical attempt identity
+
+on:
+  push:
+    branches:
+      - "repair/tb-science-agent-v14-claim-bound-identity-20261010-v1"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run claim-bound identity regression
+        env:
+          PYTHONPATH: ".:capsules/tb_science_rank15_20261009_v1"
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank19_20261010_v1/test_agent_v14_claim_bound_identity.py
