@@ -136,7 +136,7 @@
     },
     "preflight": {
       "path": "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
-      "git_blob_sha": "f2c0f4adfdde28aaa226c7e78d14f854959cb047"
+      "git_blob_sha": "8a66cfa696a1b40f0e095e4f90c86a9ad2902442"
     },
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v3.py",
