@@ -79,7 +79,7 @@
   },
   "promotion_verification": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_v3_promoted_pre_activation_tests.py",
-    "git_blob_sha": "25590cc932b2de2eceae00339fed4a9e6554aad9"
+    "git_blob_sha": "dac87a18aa288eaec8a7165369526ca4aff239b5"
   },
   "hard_nonclaims": [
     "NO_RANK20_ACTIVATION_FILE_ON_PROMOTION",
