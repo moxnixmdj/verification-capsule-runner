@@ -1,0 +1,19 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK18_ACTIVATION_V6",
+  "date": "2026-10-10",
+  "activate": true,
+  "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
+  "task_digest": "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9",
+  "execution_branch": "execute/tb-science-rank18-20261010-v1",
+  "execution_base": "terminal-execution-v1",
+  "execution_base_commit": "ff74920b8827243910da297420222c789e5b751c",
+  "brain_authority_blob": "0cbf7ffb571c0f411a5ba44c751b1c833059c83c",
+  "brain_ledger_blob": "c2d405754e51254aa2eee8e6eb9413a298cdf90b",
+  "public_surface_blob": "4f8c9bc50dc5e959c3f9f47253df214ae7c6a5da",
+  "attempts_authorized": 1,
+  "retries_authorized": 0,
+  "replacement_allowed": false,
+  "incremental_spend_usd_max": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
