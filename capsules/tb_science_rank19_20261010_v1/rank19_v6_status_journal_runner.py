@@ -22,11 +22,12 @@ from execution_guard import terminal_agent_start_barrier_v1 as start_barrier
 from execution_guard import terminal_causal_journal_filebridge_v2 as journal_bridge
 from execution_guard.github_status_object_store_v1 import SerializedStatusObjectStore
 from execution_guard import terminal_slot_start_cas_v1 as legacy_cas
-from execution_guard.logical_attempt_identity_v1 import logical_attempt_id as canonical_logical_attempt_id
+from execution_guard.logical_attempt_identity_v2 import logical_attempt_id as canonical_logical_attempt_id
 
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK19_V6_STATUS_JOURNAL_RUNNER"
 SLOT_ID = "terminal-bench-science/diag-chipseq::trial-0"
 TASK_DIGEST = "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+EXECUTION_CLAIM_BINDING_DIGEST = "sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
 BARRIER_REL = Path("RANK19_AGENT_START_BARRIER")
 READY_REL = BARRIER_REL / "AGENT_READY.json"
 COMMIT_REL = BARRIER_REL / "START_COMMITTED.json"
@@ -152,7 +153,7 @@ def _child_env() -> dict[str, str]:
     env["BRAIN_TASK_DIGEST"] = TASK_DIGEST
     env["BRAIN_TASK_ARTIFACTS_JSON"] = _task_artifacts_json()
     carried = str(os.environ.get("BRAIN_LOGICAL_ATTEMPT_ID") or "").strip()
-    expected = canonical_logical_attempt_id(slot_id=SLOT_ID, task_digest=TASK_DIGEST)
+    expected = canonical_logical_attempt_id(slot_id=SLOT_ID, task_digest=TASK_DIGEST, execution_claim_binding_digest=EXECUTION_CLAIM_BINDING_DIGEST)
     if carried != expected:
         raise BarrierRunnerError("LOGICAL_ATTEMPT_ID_NOT_CANONICAL")
     env["BRAIN_LOGICAL_ATTEMPT_ID"] = carried
