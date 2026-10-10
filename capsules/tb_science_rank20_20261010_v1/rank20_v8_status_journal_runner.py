@@ -22,7 +22,8 @@ from execution_guard import terminal_agent_start_barrier_v1 as start_barrier
 from execution_guard import terminal_causal_journal_filebridge_v2 as journal_bridge
 from execution_guard.github_status_object_store_v1 import SerializedStatusObjectStore
 from execution_guard import terminal_slot_start_cas_v1 as legacy_cas
-from execution_guard.rank20_claim_bound_identity_v1 import resolve_claim_bound_identity\nfrom execution_guard.bound_runtime_dispatch_v1 import resolve_bound_runtime
+from execution_guard.rank20_claim_bound_identity_v1 import resolve_claim_bound_identity
+from execution_guard.bound_runtime_dispatch_v1 import resolve_bound_runtime
 
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK20_V8_STATUS_JOURNAL_RUNNER"
 SLOT_ID = "terminal-bench-science/hysteretic-aquifer-control::trial-0"
@@ -46,7 +47,8 @@ class BarrierRunnerError(RuntimeError):
 
 def _write_receipt(value: dict[str, Any]) -> None:
     RUNNER_RECEIPT.write_text(
-        json.dumps(value, indent=2, sort_keys=True) + "\n",
+        json.dumps(value, indent=2, sort_keys=True) + "
+",
         encoding="utf-8",
     )
 
