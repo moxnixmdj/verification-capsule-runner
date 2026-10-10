@@ -41,9 +41,19 @@ jobs:
           export PYTHONPATH="$GITHUB_WORKSPACE:$C"
           python - <<'PY'
           from pathlib import Path
+          import sys
+          import unittest
+
           p=Path("capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_agent_v11_typed_schema_grounding.py")
-          s=p.read_text()
-          s=s.replace("from canonical.runtime import harbor_science_agent_v11 as s","from canonical.runtime import harbor_science_agent_v12 as s")
-          ns={"__name__":"__main__"}
-          exec(compile(s,str(p), "exec"),ns,ns)
+          source=p.read_text()
+          source=source.replace(
+              "from canonical.runtime import harbor_science_agent_v11 as s",
+              "from canonical.runtime import harbor_science_agent_v12 as s",
+          )
+          ns={"__name__":"v12_backcompat_regression","__file__":str(p)}
+          exec(compile(source,str(p),"exec"),ns,ns)
+          suite=unittest.TestLoader().loadTestsFromTestCase(ns["V11Tests"])
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          if result.testsRun != 8 or not result.wasSuccessful():
+              sys.exit(1)
           PY
