@@ -1,17 +1,17 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK19_EXECUTION_CLAIM_V6",
   "date": "2026-10-10",
-  "status": "STAGED_SINGLE_EXECUTION_CLAIM__RANK19_V1__V13",
+  "status": "STAGED_SINGLE_EXECUTION_CLAIM__RANK19_V2__V13__CAPABILITY_FIRST_ADMISSION_BOUND",
   "slot_id": "terminal-bench-science/diag-chipseq::trial-0",
   "task_digest": "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b",
   "logical_attempt_id": "def7e2921acf58d4ef03e3183512996c718a5a13069482cb825464c0c963a8b4",
   "execution_base": "terminal-execution-v1",
   "execution_branch": "execute/tb-science-rank19-20261010-v1",
   "activation_filename": "ACTIVATE_RANK19_V1_PR.json",
-  "public_authority_binding_blob": "bcef1b71b34ed613d97e8d8b8f39daa7232e0695",
-  "brain_authority_blob": "ea76756ea30084c7f8291747ae9d204485a0186a",
+  "public_authority_binding_blob": "783be7b81ab7a17d33d99f45321e843ec8c90ccd",
+  "brain_authority_blob": "54b4b41872cce41ed1bdc6181d857484a2f21b22",
   "brain_ledger_blob": "137a2f61d911321365bd80613e3806a77dbe7eca",
-  "epoch_git_blob_sha": "28a6891fa18efee0ad439da6a490b89b493337f0",
+  "epoch_git_blob_sha": "e1921971d984eb6f7d4a10c471a8f0b94ffc3a1a",
   "workflow_git_blob_sha": "73d30930712396e056187de130551cae2bea00a6",
   "behavior_git_blob_sha": "407108656d1640397e0aa0e982d766ca54e9356d",
   "admission_guard_git_blob_sha": "f3282bc2e9eaf3665a4f75725266c5be9dff43c5",
@@ -20,5 +20,7 @@
   "benchmark_trials_executed": 0,
   "execution_authority": true,
   "promotion_authority": false,
-  "terminal_credit_delta": 0
+  "terminal_credit_delta": 0,
+  "capability_first_checkpoint_admission_blob": "49e4f9c232f876546b2c72fb32ba19a3e487e1c9",
+  "capability_first_admission_verification_blob": "7ba01fca8338d966a40f25a8c74f6e1366b29f2e"
 }
