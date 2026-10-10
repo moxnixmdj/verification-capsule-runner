@@ -47,8 +47,7 @@ class BarrierRunnerError(RuntimeError):
 
 def _write_receipt(value: dict[str, Any]) -> None:
     RUNNER_RECEIPT.write_text(
-        json.dumps(value, indent=2, sort_keys=True) + "
-",
+        json.dumps(value, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
