@@ -14,7 +14,7 @@ SURFACE = ROOT / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
 SLOT = "terminal-bench-science/longitudinal-clinical-agent::trial-0"
 DIGEST = "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9"
 WORKFLOW = ".github/workflows/execute-tb-science-rank18-20261010-v1.yml"
-ACTIVATION = "capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V1_PR.json"
+ACTIVATION = "capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V2_PR.json"
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK18_EXECUTION_PREFLIGHT_V6"
 
 
@@ -116,7 +116,7 @@ def main() -> int:
             "slot": epoch.get("slot_id") == SLOT,
             "digest": epoch.get("task_digest") == DIGEST,
             "execution_base": epoch.get("execution_base") == "terminal-execution-v1",
-            "execution_branch": epoch.get("execution_branch") == "execute/tb-science-rank18-20261010-v1",
+            "execution_branch": epoch.get("execution_branch") == "execute/tb-science-rank18-20261010-v2",
             "public_authority": epoch.get("public_authority_binding_blob") == surface_authority_blob,
             "brain_authority": (
                 isinstance(brain_authority, Mapping)
@@ -138,8 +138,8 @@ def main() -> int:
             "slot": claim.get("slot_id") == SLOT,
             "digest": claim.get("task_digest") == DIGEST,
             "execution_base": claim.get("execution_base") == "terminal-execution-v1",
-            "execution_branch": claim.get("execution_branch") == "execute/tb-science-rank18-20261010-v1",
-            "activation": claim.get("activation_filename") == "ACTIVATE_RANK18_V1_PR.json",
+            "execution_branch": claim.get("execution_branch") == "execute/tb-science-rank18-20261010-v2",
+            "activation": claim.get("activation_filename") == "ACTIVATE_RANK18_V2_PR.json",
             "public_authority": claim.get("public_authority_binding_blob") == surface_authority_blob,
             "brain_authority": (
                 isinstance(brain_authority, Mapping)
@@ -229,7 +229,7 @@ def main() -> int:
                 errors.append("FIRST_RUN_ATTEMPT_REQUIRED")
             if os.environ.get("GITHUB_BASE_REF") != "terminal-execution-v1":
                 errors.append("BASE_REF_MISMATCH")
-            if os.environ.get("GITHUB_HEAD_REF") != "execute/tb-science-rank18-20261010-v1":
+            if os.environ.get("GITHUB_HEAD_REF") != "execute/tb-science-rank18-20261010-v2":
                 errors.append("HEAD_REF_MISMATCH")
             event_path = Path(os.environ.get("GITHUB_EVENT_PATH") or "")
             if not event_path.is_file():
