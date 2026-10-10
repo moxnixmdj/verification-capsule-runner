@@ -102,7 +102,6 @@ class TBSciencePlannerV7GenerationDeadlineTests(unittest.TestCase):
             compile(source, rel, "exec")
 
     def test_verification_is_zero_exposure(self):
-        self.assertFalse(False, "placeholder to keep explicit zero-exposure assertion")
         task_read = False
         task_started = False
         benchmark_trials_consumed = 0
