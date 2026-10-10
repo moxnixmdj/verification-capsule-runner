@@ -1,0 +1,123 @@
+name: Verify TB-Science Rank18 V1 V12 zero-exposure reseal
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Require inert Rank18 staging state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V1_PR.json
+          python capsules/tb_science_rank18_20261010_v1/rank18_v1_zero_exposure_reseal_tests.py
+
+      - name: Verify proof-carrying execution admission without activation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python execution_guard/terminal_execution_admission_v3.py \
+            --workflow ".github/workflows/execute-tb-science-rank18-20261010-v1.yml" \
+            --slot "terminal-bench-science/longitudinal-clinical-agent::trial-0" \
+            --task-digest "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9" \
+            --require-execution-authority
+
+      - name: Verify Rank18 staged preflight composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py --allow-staged
+
+      - name: Compile exact Rank18 V12 control plane
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="capsules/tb_science_rank18_20261010_v1"
+          R="capsules/tb_science_rank15_20261009_v1"
+          python -m py_compile \
+            "$C/rank18_prestart_token_guard_v4.py" \
+            "$C/rank18_execution_preflight_v6.py" \
+            "$C/rank18_start_cas_v6.py" \
+            "$C/rank18_v6_status_journal_runner.py" \
+            "$C/rank18_finalize_receipt_v6.py" \
+            "$C/rank18_v1_zero_exposure_reseal_tests.py" \
+            "$R/canonical/runtime/harbor_science_agent_v12.py" \
+            "$R/canonical/runtime/science_typed_action_protocol_v2.py"
+
+      - name: Verify exact V12 Brain mirror blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          R="capsules/tb_science_rank15_20261009_v1"
+          test "$(git hash-object "$R/canonical/runtime/harbor_science_agent_v12.py")" = "e5ccaab049d22c0b3cc59e36c050ce2f6e83404f"
+          test "$(git hash-object "$R/canonical/runtime/science_typed_action_protocol_v2.py")" = "fa10b92942b92ab6c7f2f1831f660f2a2e3bd6e3"
+          test "$(git hash-object "$R/canonical/tests/test_harbor_science_agent_v12_artifact_finish_gate.py")" = "4cc352b58a71127a4e524b58818c25c34e57a7cf"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$R"
+          python "$R/canonical/tests/test_harbor_science_agent_v12_artifact_finish_gate.py"
+
+      - name: Prove trusted parent task artifact handoff synthetically
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          python - <<'PY'
+          import json
+          import os
+          import tempfile
+          from pathlib import Path
+          from capsules.tb_science_rank18_20261010_v1 import rank18_v6_status_journal_runner as r
+          from execution_guard.logical_attempt_identity_v1 import logical_attempt_id
+
+          with tempfile.TemporaryDirectory() as td:
+              root = Path(td)
+              (root / "task.toml").write_text(
+                  'schema_version = "1.3"\nartifacts = ["/root/results/output.csv"]\n',
+                  encoding="utf-8",
+              )
+              os.environ["TASK_PATH"] = str(root)
+              os.environ["BRAIN_LOGICAL_ATTEMPT_ID"] = logical_attempt_id(
+                  slot_id=r.SLOT_ID, task_digest=r.TASK_DIGEST
+              )
+              os.environ["GH_TOKEN"] = "must-not-reach-child"
+              os.environ["GITHUB_TOKEN"] = "must-not-reach-child"
+              artifacts = json.loads(r._task_artifacts_json())
+              assert artifacts == ["/root/results/output.csv"]
+              child = r._child_env()
+              assert "GH_TOKEN" not in child
+              assert "GITHUB_TOKEN" not in child
+              assert json.loads(child["BRAIN_TASK_ARTIFACTS_JSON"]) == artifacts
+          print("PASS__RANK18_TRUSTED_PARENT_ARTIFACT_HANDOFF__SYNTHETIC_ONLY")
+          PY
+
+      - name: Verify exact staged control blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_prestart_token_guard_v4.py)" = "471425934f8a10ea44ecb50bf4c9cc4adbd176e9"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py)" = "4c1c31718f5aaed33a75810a53e331e7dcff92e3"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py)" = "45b7865d2f089a38c98c86d1101dab339f5610db"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py)" = "d9cf2e70a9d8ebb53dcd32d815185aa2b865f930"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_finalize_receipt_v6.py)" = "2aaff0f55708a79d5f9055a948692c1b27907081"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v1_zero_exposure_reseal_tests.py)" = "5ae5b0cd1f9a18d3bd23c738ddf909a3a3a723d3"
+          test "$(git hash-object execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V1.json)" = "56f45532c898465dd17f928ea06b45af2ebec809"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V1.json)" = "ce9d42dc158ecf31a43b5b3c6a38354393d31138"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_LEDGER_BINDING_V33.json)" = "643206bd4745830fd3ecf032c0c882b83afc25b4"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V1.json)" = "df6e2fa2565fbbb1c492878adcefc08cec9d8015"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V1.json)" = "5469b4309f6c8050146b330a838e4c84a13bdb01"
+          test "$(git hash-object execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json)" = "dc0f31862eecd8b5fa95d605b68276c319ed7b17"
+          echo "PASS__RANK18_V1_V12_ZERO_EXPOSURE_RESEAL"
