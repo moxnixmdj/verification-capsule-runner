@@ -7,8 +7,8 @@ import subprocess
 import sys
 import time
 import tomllib
-from pathlib import Path
-from typing import Any, Callable
+from pathlib import Path, PurePosixPath
+from typing import Any, Callable, Mapping
 
 ROOT = Path(__file__).resolve().parents[2]
 C = ROOT / "capsules/tb_science_rank18_20261010_v1"
@@ -52,6 +52,69 @@ def _write_receipt(value: dict[str, Any]) -> None:
 
 
 
+def _artifact_source_for_agent(raw: Any) -> str | None:
+    """Normalize one Harbor 0.23 ArtifactConfig for the agent-side finish gate.
+
+    Harbor permits either a source-path string or a table with
+    source/destination/exclude/service. Only artifacts from the main service are
+    agent-authored deliverables. Sidecar artifacts remain Harbor/verifier
+    responsibilities and must never be injected as agent obligations.
+    """
+    service = "main"
+    if isinstance(raw, str):
+        source = raw.strip()
+    elif isinstance(raw, Mapping):
+        allowed = {"source", "destination", "exclude", "service"}
+        if any(key not in allowed for key in raw):
+            raise BarrierRunnerError("TASK_ARTIFACT_CONFIG_FIELD_INVALID")
+        source_raw = raw.get("source")
+        if not isinstance(source_raw, str):
+            raise BarrierRunnerError("TASK_ARTIFACT_SOURCE_INVALID")
+        source = source_raw.strip()
+
+        service_raw = raw.get("service")
+        if service_raw is None:
+            service = "main"
+        elif not isinstance(service_raw, str) or not service_raw or service_raw != service_raw.strip():
+            raise BarrierRunnerError("TASK_ARTIFACT_SERVICE_INVALID")
+        else:
+            service = service_raw
+
+        destination = raw.get("destination")
+        if destination is not None:
+            if not isinstance(destination, str):
+                raise BarrierRunnerError("TASK_ARTIFACT_DESTINATION_INVALID")
+            if destination:
+                if "\\" in destination:
+                    raise BarrierRunnerError("TASK_ARTIFACT_DESTINATION_INVALID")
+                dest = PurePosixPath(destination)
+                if dest.is_absolute() or any(part == ".." for part in dest.parts):
+                    raise BarrierRunnerError("TASK_ARTIFACT_DESTINATION_INVALID")
+                if destination.rstrip("/") == "manifest.json":
+                    raise BarrierRunnerError("TASK_ARTIFACT_DESTINATION_INVALID")
+
+        exclude = raw.get("exclude", [])
+        if not isinstance(exclude, list) or any(not isinstance(item, str) for item in exclude):
+            raise BarrierRunnerError("TASK_ARTIFACT_EXCLUDE_INVALID")
+    else:
+        raise BarrierRunnerError("TASK_ARTIFACT_PATH_INVALID")
+
+    if not source or "\x00" in source:
+        raise BarrierRunnerError("TASK_ARTIFACT_SOURCE_INVALID")
+    src = PurePosixPath(source)
+    if any(part == ".." for part in src.parts):
+        raise BarrierRunnerError("TASK_ARTIFACT_SOURCE_INVALID")
+
+    # Terminal-Bench Science task artifacts are absolute container paths.
+    # Requiring absolute paths here keeps the Brain's postconditions unambiguous.
+    if not src.is_absolute():
+        raise BarrierRunnerError("TASK_ARTIFACT_SOURCE_NOT_ABSOLUTE")
+
+    if service != "main":
+        return None
+    return source
+
+
 def _task_artifacts_json() -> str:
     task_path = os.environ.get("TASK_PATH")
     if not isinstance(task_path, str) or not task_path.strip():
@@ -68,14 +131,15 @@ def _task_artifacts_json() -> str:
         artifacts = []
     if not isinstance(artifacts, list) or len(artifacts) > 16:
         raise BarrierRunnerError("TASK_ARTIFACTS_INVALID")
+
     out: list[str] = []
+    seen: set[str] = set()
     for raw in artifacts:
-        if not isinstance(raw, str):
-            raise BarrierRunnerError("TASK_ARTIFACT_PATH_INVALID")
-        path = raw.strip()
-        if not path.startswith("/") or "\x00" in path:
-            raise BarrierRunnerError("TASK_ARTIFACT_PATH_INVALID")
-        out.append(path)
+        source = _artifact_source_for_agent(raw)
+        if source is None or source in seen:
+            continue
+        seen.add(source)
+        out.append(source)
     return json.dumps(out, sort_keys=True, separators=(",", ":"))
 
 def _child_env() -> dict[str, str]:
