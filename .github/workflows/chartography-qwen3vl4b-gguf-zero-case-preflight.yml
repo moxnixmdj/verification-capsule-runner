@@ -1,5 +1,5 @@
 name: Chartography Qwen3-VL 4B GGUF zero-case preflight
-# Gap-B observable verification trigger: 2026-10-10
+# Gap-B observable verification trigger: 2026-10-10 sync-1
 
 on:
   push:
