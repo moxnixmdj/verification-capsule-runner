@@ -1,0 +1,89 @@
+name: Verify TB-Science Rank19 V14 claim-bound reseal
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"
+      - ".github/workflows/verify-tb-science-rank19-v14-claim-bound.yml"
+      - "execution_guard/**"
+      - "capsules/tb_science_rank19_20261010_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile claim-bound execution surface
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank19_20261010_v1
+          R=capsules/tb_science_rank15_20261009_v1
+          test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
+          python -m py_compile             execution_guard/logical_attempt_identity_v2.py             execution_guard/terminal_execution_admission_v4.py             "$C/rank19_logical_attempt_binding_v1.py"             "$C/rank19_prestart_token_guard_v5.py"             "$C/rank19_start_cas_v7.py"             "$C/rank19_v7_status_journal_runner.py"             "$C/rank19_finalize_receipt_v7.py"             "$C/rank19_execution_preflight_v7.py"             "$C/rank19_v2_zero_exposure_reseal_tests.py"             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"
+
+      - name: Verify claim-bound identity derivation and separation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, importlib.util, json
+          from pathlib import Path
+
+          root=Path(".").resolve()
+          c=root/"capsules/tb_science_rank19_20261010_v1"
+          spec=importlib.util.spec_from_file_location("identity_v2", root/"execution_guard/logical_attempt_identity_v2.py")
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          seed=json.loads((c/"RANK19_LOGICAL_ATTEMPT_CLAIM_BINDING_V1.json").read_text(encoding="utf-8"))
+          raw=json.dumps(seed,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False).encode()
+          d="sha256:"+hashlib.sha256(raw).hexdigest()
+          assert d=="sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
+          L=mod.logical_attempt_id(slot_id=seed["slot_id"],task_digest=seed["task_digest"],execution_claim_binding_digest=d)
+          assert L=="a3672b9d77c8fa0b7d3f0610ac2c008d2888e566d8a75ac92aa7078c1523abe6"
+          seed2=dict(seed); seed2["claim_epoch_id"]="SYNTHETIC_DIFFERENT_EPOCH"
+          raw2=json.dumps(seed2,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False).encode()
+          d2="sha256:"+hashlib.sha256(raw2).hexdigest()
+          L2=mod.logical_attempt_id(slot_id=seed["slot_id"],task_digest=seed["task_digest"],execution_claim_binding_digest=d2)
+          assert d2!=d and L2!=L
+          L3=mod.logical_attempt_id(slot_id=seed["slot_id"]+"-other",task_digest=seed["task_digest"],execution_claim_binding_digest=d)
+          assert L3!=L
+          print("PASS__CLAIM_BOUND_LOGICAL_IDENTITY_SEPARATION")
+          PY
+
+      - name: Run zero-exposure reseal verifier
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py
+
+      - name: Run staged admission and preflight
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank19_20261010_v1
+          python execution_guard/terminal_execution_admission_v4.py             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"             --slot "terminal-bench-science/diag-chipseq::trial-0"             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+          python "$C/rank19_execution_preflight_v7.py" --allow-staged
+
+      - name: Verify no activation or benchmark exposure
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank19_20261010_v1
+          test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
+          python - <<'PY'
+          import json
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
+          assert s["execution_authority"] is False
+          assert s["task_read_authority"] is False
+          assert s["task_read_history"] is False
+          assert s["task_started"] is False
+          assert s["benchmark_trials_consumed"]==0
+          assert s["terminal_credit_delta"]==0
+          print("PASS__ZERO_EXPOSURE__NO_ACTIVATION")
+          PY

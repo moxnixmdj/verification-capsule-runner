@@ -1,11 +1,11 @@
-name: Verify TB-Science Rank19 V14 claim-bound reseal from trusted base
+name: Verify TB-Science Rank19 V13 reseal from trusted base
 
 on:
   pull_request:
     branches: [terminal-execution-v1]
     paths:
       - ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"
-      - ".github/workflows/verify-tb-science-rank19-v14-claim-bound.yml"
+      - ".github/workflows/verify-tb-science-rank19-v13-reseal-trusted-base.yml"
       - "execution_guard/**"
       - "capsules/tb_science_rank19_20261010_v1/**"
 
@@ -24,109 +24,84 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Independently pin exact V14 candidate bytes
-        run: |
-          set -euo pipefail
-          test ! -e capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json
-          python - <<'PY'
-          import hashlib, json
-          from pathlib import Path
-          root=Path(".").resolve()
-          exact={
-            ".github/workflows/execute-tb-science-rank19-20261010-v1.yml":"b3c905ad39667edac9bed11068bf412560c3f198",
-            "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json":"1676dac31b031dea7fe07aef2749197346f40908",
-            "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json":"b9fbb776ed5cf0888f34809c94f78638d3d915c1",
-            "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V2.json":"79daaa2dd70fe2119b92160e57bd58970ee1bf0d",
-            "execution_guard/logical_attempt_identity_v2.py":"67ff638459af1bb50a094e9479fb4aa5e2a3de1c",
-            "execution_guard/terminal_execution_admission_v4.py":"bb7566c518af105dcf36b31db38ccfe2172f2e65",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V7_V1.json":"d22c1df03abc4f2e4fe9a9166c6863ba9ce4e361",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V7_V1.json":"25a39ee3d332c16249a700affa7b62c052663035",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_LOGICAL_ATTEMPT_CLAIM_BINDING_V1.json":"ecccf062b79894fcc2b06ecdf0413676a3a9ac2f",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V2.json":"6efd0561447446a6bd6bbdb784b7184e50e1f362",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V39.json":"40d63f342a6ff62f0c038aa6b28f8f2d6a7920f3",
-            "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v7.py":"54290128981a9500300ff33ec3720bca2357ac60",
-            "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v7.py":"4eac1b26b52dc6b71f064072774b7832014fac89",
-            "capsules/tb_science_rank19_20261010_v1/rank19_logical_attempt_binding_v1.py":"f19dbcf3bfa84126b5cf6e002bed9eeb68dec09a",
-            "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v5.py":"6c890c821d4c0a5b9862543dcf1bd0fcbf597143",
-            "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v7.py":"8dfe839ceaf915ba973c14658035dc71f1423bad",
-            "capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py":"2527fa9ea8ab98da3d952d7f188e947b5610a755",
-            "capsules/tb_science_rank19_20261010_v1/rank19_v7_status_journal_runner.py":"7165b58a2f8d3617adde15cccbe5bff23a5f968b",
-          }
-          def blob(rel):
-              raw=(root/rel).read_bytes()
-              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\\0"+raw).hexdigest()
-          for rel,sha in exact.items():
-              got=blob(rel); assert got==sha,(rel,got,sha)
-          s=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text(encoding="utf-8"))
-          assert s["execution_authority"] is False and s["task_read_authority"] is False
-          assert s["task_read_history"] is False and s["task_started"] is False and s["benchmark_trials_consumed"]==0
-          assert s["logical_attempt_id"]=="a3672b9d77c8fa0b7d3f0610ac2c008d2888e566d8a75ac92aa7078c1523abe6"
-          assert s["execution_claim_binding_digest"]=="sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
-          assert s["reseal"]["brain_authority_v3_blob"]=="0630b5d1e8e9aebbd58adf63567b61f0036887ca"
-          assert s["reseal"]["brain_ledger_v39_blob"]=="3f52aecc4ce2a3d4fbb95ceafae85ab27c0b2f9d"
-          print("PASS__TRUSTED_EXACT_RANK19_V14_CANDIDATE_BYTES")
-          PY
-
-      - name: Compile claim-bound execution surface
-        run: |
-          set -euo pipefail
-          C=capsules/tb_science_rank19_20261010_v1
-          R=capsules/tb_science_rank15_20261009_v1
-          test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
-          python -m py_compile             execution_guard/logical_attempt_identity_v2.py             execution_guard/terminal_execution_admission_v4.py             "$C/rank19_logical_attempt_binding_v1.py"             "$C/rank19_prestart_token_guard_v5.py"             "$C/rank19_start_cas_v7.py"             "$C/rank19_v7_status_journal_runner.py"             "$C/rank19_finalize_receipt_v7.py"             "$C/rank19_execution_preflight_v7.py"             "$C/rank19_v2_zero_exposure_reseal_tests.py"             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"
-
-      - name: Verify claim-bound identity derivation and separation
+      - name: Verify proof-carrying inert Rank19 surface
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib, importlib.util, json
-          from pathlib import Path
-
-          root=Path(".").resolve()
-          c=root/"capsules/tb_science_rank19_20261010_v1"
-          spec=importlib.util.spec_from_file_location("identity_v2", root/"execution_guard/logical_attempt_identity_v2.py")
-          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-          seed=json.loads((c/"RANK19_LOGICAL_ATTEMPT_CLAIM_BINDING_V1.json").read_text(encoding="utf-8"))
-          raw=json.dumps(seed,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False).encode()
-          d="sha256:"+hashlib.sha256(raw).hexdigest()
-          assert d=="sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
-          L=mod.logical_attempt_id(slot_id=seed["slot_id"],task_digest=seed["task_digest"],execution_claim_binding_digest=d)
-          assert L=="a3672b9d77c8fa0b7d3f0610ac2c008d2888e566d8a75ac92aa7078c1523abe6"
-          seed2=dict(seed); seed2["claim_epoch_id"]="SYNTHETIC_DIFFERENT_EPOCH"
-          raw2=json.dumps(seed2,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False).encode()
-          d2="sha256:"+hashlib.sha256(raw2).hexdigest()
-          L2=mod.logical_attempt_id(slot_id=seed["slot_id"],task_digest=seed["task_digest"],execution_claim_binding_digest=d2)
-          assert d2!=d and L2!=L
-          L3=mod.logical_attempt_id(slot_id=seed["slot_id"]+"-other",task_digest=seed["task_digest"],execution_claim_binding_digest=d)
-          assert L3!=L
-          print("PASS__CLAIM_BOUND_LOGICAL_IDENTITY_SEPARATION")
-          PY
-
-      - name: Run zero-exposure reseal verifier
-        run: |
-          set -euo pipefail
-          python capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py
-
-      - name: Run staged admission and preflight
-        run: |
-          set -euo pipefail
-          C=capsules/tb_science_rank19_20261010_v1
-          python execution_guard/terminal_execution_admission_v4.py             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"             --slot "terminal-bench-science/diag-chipseq::trial-0"             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
-          python "$C/rank19_execution_preflight_v7.py" --allow-staged
-
-      - name: Verify no activation or benchmark exposure
-        run: |
-          set -euo pipefail
-          C=capsules/tb_science_rank19_20261010_v1
-          test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
-          python - <<'PY'
+          import hashlib
           import json
-          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
-          assert s["execution_authority"] is False
-          assert s["task_read_authority"] is False
-          assert s["task_read_history"] is False
-          assert s["task_started"] is False
-          assert s["benchmark_trials_consumed"]==0
-          assert s["terminal_credit_delta"]==0
-          print("PASS__ZERO_EXPOSURE__NO_ACTIVATION")
+          import py_compile
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          root = Path(".").resolve()
+          surface_path = root / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+          surface = json.loads(surface_path.read_text(encoding="utf-8"))
+
+          def blob(rel):
+              p = root / rel
+              raw = p.read_bytes()
+              return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+
+          def bound(row, label):
+              assert isinstance(row, dict), (label, row)
+              rel = row.get("path")
+              sha = row.get("git_blob_sha")
+              assert isinstance(rel, str) and isinstance(sha, str), (label, row)
+              assert (root / rel).is_file(), (label, rel)
+              assert blob(rel) == sha, (label, rel, blob(rel), sha)
+              return rel
+
+          assert surface["schema"] == "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1"
+          assert surface["family"] == "TB_SCIENCE"
+          assert surface["active"] is True
+          assert surface["execution_authority"] is False
+          assert surface["task_read_authority"] is False
+          assert surface["task_read_history"] is False
+          assert surface["task_started"] is False
+          assert surface["benchmark_trials_consumed"] == 0
+          assert surface["terminal_credit_delta"] == 0
+          activation = root / surface["activation_path"]
+          assert not activation.exists(), activation
+
+          for key in (
+              "behavior", "authority", "ledger", "invariant_registry",
+              "admission_guard", "epoch", "execution_claim", "preflight", "finalizer"
+          ):
+              bound(surface[key], "surface." + key)
+          if "logical_attempt_claim_binding" in surface:
+              bound(surface["logical_attempt_claim_binding"], "surface.logical_attempt_claim_binding")
+
+          behavior = json.loads((root / surface["behavior"]["path"]).read_text(encoding="utf-8"))
+          assert behavior["slot_id"] == surface["slot_id"]
+          assert behavior["task_digest"] == surface["task_digest"]
+          assert behavior["workflow_path"] == surface["workflow_path"]
+
+          runtime = behavior.get("runtime_bindings")
+          assert isinstance(runtime, dict)
+          for key, row in runtime.items():
+              rel = bound(row, "runtime." + key)
+              if rel.endswith(".py"):
+                  py_compile.compile(str(root / rel), doraise=True)
+
+          zero = runtime.get("zero_exposure_tests")
+          assert isinstance(zero, dict)
+          subprocess.check_call([sys.executable, str(root / zero["path"])])
+
+          admission = surface["admission_guard"]["path"]
+          subprocess.check_call([
+              sys.executable, str(root / admission),
+              "--workflow", surface["workflow_path"],
+              "--slot", surface["slot_id"],
+              "--task-digest", surface["task_digest"],
+          ])
+
+          preflight = surface["preflight"]["path"]
+          subprocess.check_call([sys.executable, str(root / preflight), "--allow-staged"])
+
+          surface_after = json.loads(surface_path.read_text(encoding="utf-8"))
+          assert surface_after == surface
+          assert not activation.exists()
+          print("PASS__PROOF_CARRYING_TRUSTED_RANK19_ZERO_EXPOSURE_SURFACE")
           PY

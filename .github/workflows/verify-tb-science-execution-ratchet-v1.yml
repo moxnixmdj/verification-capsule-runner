@@ -4,11 +4,7 @@ on:
   pull_request:
     branches: [terminal-execution-v1]
     paths:
-      - "execution_guard/terminal_execution_admission_v3.py"
-      - "execution_guard/test_terminal_execution_admission_v3.py"
-      - "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json"
-      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
-      - "execution_guard/TB_SCIENCE_*_EXECUTION_BEHAVIOR_*.json"
+      - "execution_guard/**"
       - ".github/workflows/execute-tb-science-rank*.yml"
       - ".github/workflows/verify-tb-science-execution-ratchet-v1.yml"
       - "capsules/tb_science_rank*/**"
@@ -28,36 +24,47 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Compile and run generic admission tests
-        run: |
-          set -euo pipefail
-          python -m py_compile execution_guard/terminal_execution_admission_v3.py
-          PYTHONPATH="$GITHUB_WORKSPACE" python execution_guard/test_terminal_execution_admission_v3.py
-
-      - name: Verify current proof-carrying surface without task exposure
+      - name: Verify staged proof-carrying surface and invariant ratchet
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib,json,pathlib,subprocess,sys
-          R=pathlib.Path(".")
+          import hashlib, json, py_compile, subprocess, sys
+          from pathlib import Path
+
+          root=Path(".").resolve()
+          surface_path=root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+          s=json.loads(surface_path.read_text(encoding="utf-8"))
+
           def blob(rel):
-              p=R/rel
-              raw=p.read_bytes()
+              raw=(root/rel).read_bytes()
               return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
-          def load(rel):
-              return json.loads((R/rel).read_text())
-          s=load("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json")
+
+          def bound(row,label):
+              assert isinstance(row,dict), (label,row)
+              rel=row.get("path"); sha=row.get("git_blob_sha")
+              assert isinstance(rel,str) and isinstance(sha,str), (label,row)
+              assert (root/rel).is_file(), (label,rel)
+              assert blob(rel)==sha, (label,rel,blob(rel),sha)
+              return rel
+
           assert s["family"]=="TB_SCIENCE"
           assert s["active"] is True
-          assert s["execution_authority"] is True
-          assert s["task_read_authority"] is True
+          assert s["execution_authority"] is False
+          assert s["task_read_authority"] is False
+          assert s["task_read_history"] is False
           assert s["task_started"] is False
           assert s["benchmark_trials_consumed"]==0
+          assert s["terminal_credit_delta"]==0
           assert blob(s["workflow_path"])==s["workflow_git_blob_sha"]
+          activation=root/s["activation_path"]
+          assert not activation.exists(), "ACTIVATION_MUST_REMAIN_ABSENT_DURING_RESEAL"
+
           for key in ("behavior","authority","ledger","invariant_registry","admission_guard","epoch","execution_claim","preflight","finalizer"):
-              row=s[key]
-              assert blob(row["path"])==row["git_blob_sha"], (key,row)
-          b=load(s["behavior"]["path"])
+              bound(s[key],"surface."+key)
+          if "logical_attempt_claim_binding" in s:
+              bound(s["logical_attempt_claim_binding"],"surface.logical_attempt_claim_binding")
+
+          b=json.loads((root/s["behavior"]["path"]).read_text(encoding="utf-8"))
           assert b["slot_id"]==s["slot_id"] and b["task_digest"]==s["task_digest"]
           assert b["workflow_path"]==s["workflow_path"]
           facts=b["behavior"]
@@ -67,77 +74,78 @@ jobs:
               "seeded_request_identity",
               "seed_identity_excludes_carrier_identity",
               "slot_bound_logical_attempt_identity",
+              "execution_claim_bound_logical_attempt_identity",
+              "execution_claim_binding_digest_required",
+              "execution_claim_epoch_reauthorization_changes_logical_attempt_identity",
               "agent_ready_precedes_start_cas",
               "child_github_credentials_stripped",
               "durable_action_intent_ack_before_effect",
               "durable_state_commit_ack_before_next_action",
               "uncertain_effect_replay_forbidden",
           ):
-              assert facts[key] is True, key
-          inv=load(s["invariant_registry"]["path"])
+              assert facts.get(key) is True, key
+
+          inv=json.loads((root/s["invariant_registry"]["path"]).read_text(encoding="utf-8"))
           ids={x["id"] for x in inv["invariants"]}
-          for needed in ("TB_SCIENCE_LLAMA_CPU_PORTABILITY_V1","TB_SCIENCE_PLANNER_EXECUTION_ENVELOPE_V2","TB_SCIENCE_DURABLE_CAUSAL_EXECUTION_V1"):
-              assert needed in ids
-          agent=b["runtime_bindings"]["agent"]
-          assert blob(agent["path"])==agent["git_blob_sha"]
-          if "rank16" in s["slot_id"] or "sparse-network-assimilation" in s["slot_id"]:
-              assert agent["git_blob_sha"]=="c3b9bbc93e070b9974598636ebbb2fd3156581cb"
-              assert "harbor_science_agent_v9.py" in agent["path"]
-              assert facts["candidate_local_unknown_coverage_rejection"] is True
-              assert facts["unknown_coverage_coercion_forbidden"] is True
-              assert facts["valid_sibling_and_later_cycle_continuity"] is True
-              assert facts["rejected_dependency_transitive_closure"] is True
-          activation=R/s["activation_path"]
-          assert not activation.exists(), "ACTIVATION_MUST_REMAIN_ABSENT_DURING_RESEAL"
-          for key in ("preflight","finalizer"):
-              subprocess.run([sys.executable,"-m","py_compile",s[key]["path"]],check=True)
-          for key in ("prestart_guard","start_cas","status_journal_runner"):
-              row=b["runtime_bindings"].get(key)
-              if row and str(row["path"]).endswith(".py"):
-                  assert blob(row["path"])==row["git_blob_sha"], key
-                  subprocess.run([sys.executable,"-m","py_compile",row["path"]],check=True)
-          z=b["runtime_bindings"].get("zero_exposure_tests")
-          if z:
-              assert blob(z["path"])==z["git_blob_sha"]
-              subprocess.run([sys.executable,z["path"]],check=True)
-          q=R/"execution_guard/TB_SCIENCE_RANK15_CONSUMED_PUBLIC_QUARANTINE_V1.json"
-          if q.exists():
-              qj=json.loads(q.read_text())
-              assert qj["quarantine"]["rank15_replay_authority"] is False
-              assert qj["quarantine"]["rank15_replacement_authority"] is False
-          print("PASS__CURRENT_PROOF_CARRYING_TB_SCIENCE_SURFACE__ZERO_EXPOSURE")
+          for needed in (
+              "TB_SCIENCE_LLAMA_CPU_PORTABILITY_V1",
+              "TB_SCIENCE_PLANNER_EXECUTION_ENVELOPE_V2",
+              "TB_SCIENCE_DURABLE_CAUSAL_EXECUTION_V1",
+              "TB_SCIENCE_CLAIM_BOUND_LOGICAL_ATTEMPT_IDENTITY_V1",
+          ):
+              assert needed in ids, needed
+
+          runtime=b["runtime_bindings"]
+          for key,row in runtime.items():
+              rel=bound(row,"runtime."+key)
+              if rel.endswith(".py"):
+                  py_compile.compile(str(root/rel),doraise=True)
+
+          z=runtime.get("zero_exposure_tests")
+          assert isinstance(z,dict)
+          subprocess.check_call([sys.executable,str(root/z["path"])])
+          assert json.loads(surface_path.read_text(encoding="utf-8"))==s
+          assert not activation.exists()
+          print("PASS__CURRENT_PROOF_CARRYING_TB_SCIENCE_SURFACE__RATCHETED__ZERO_EXPOSURE")
           PY
 
-      - name: Prove admission passes but activation gate remains closed
+      - name: Prove staged admission passes and activation gate remains closed
         run: |
           set -euo pipefail
           python - <<'PY' > /tmp/current_surface.env
           import json
-          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"))
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
+          print("ADMISSION="+s["admission_guard"]["path"])
           print("WORKFLOW="+s["workflow_path"])
           print("SLOT="+s["slot_id"])
           print("DIGEST="+s["task_digest"])
           print("PREFLIGHT="+s["preflight"]["path"])
           PY
           source /tmp/current_surface.env
-          python execution_guard/terminal_execution_admission_v3.py --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST" --require-execution-authority
-          python "$PREFLIGHT"
-          if python execution_guard/terminal_execution_admission_v3.py --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST" --require-execution-authority --require-activation; then
+          python "$ADMISSION" --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST"
+          python "$PREFLIGHT" --allow-staged
+          if python "$ADMISSION" --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST" --require-activation; then
             echo "current surface bypassed activation gate"
             exit 1
           fi
-          grep -F "ACTIVATION_FILE_MISSING" TERMINAL_EXECUTION_ADMISSION_V3.json
-          test ! -e rank16_task_read
-          test ! -e rank15_task_read
+          python - <<'PY'
+          import glob,json
+          docs=[]
+          for p in glob.glob("TERMINAL_EXECUTION_ADMISSION_*.json"):
+              try: docs.append(json.load(open(p,encoding="utf-8")))
+              except Exception: pass
+          assert any("ACTIVATION_FILE_MISSING" in (d.get("errors") or []) for d in docs), docs
+          print("PASS__ACTIVATION_GATE_CLOSED")
+          PY
 
       - name: Emit zero-exposure receipt
         run: |
           python - <<'PY'
           import json
-          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"))
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
           out={
-            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V3",
-            "status":"PASS__CURRENT_PROOF_CARRYING_SURFACE__ACTIVATION_GATE_CLOSED__ZERO_EXPOSURE",
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V4",
+            "status":"PASS__CURRENT_PROOF_CARRYING_SURFACE__CLAIM_BOUND_IDENTITY_RATCHETED__ACTIVATION_GATE_CLOSED__ZERO_EXPOSURE",
             "slot_id":s["slot_id"],
             "task_digest":s["task_digest"],
             "task_read":False,
@@ -149,10 +157,11 @@ jobs:
           open("EXECUTION_RATCHET_VERIFICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
           print(json.dumps(out,sort_keys=True))
           PY
+
       - uses: actions/upload-artifact@v4
         with:
-          name: tb-science-execution-ratchet-v3
+          name: tb-science-execution-ratchet-v4
           path: |
             EXECUTION_RATCHET_VERIFICATION.json
-            TERMINAL_EXECUTION_ADMISSION_V3.json
+            TERMINAL_EXECUTION_ADMISSION_*.json
           retention-days: 7

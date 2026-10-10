@@ -63,9 +63,34 @@
         "remote_reseal_run_id": 37930835150
       },
       "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
+    },
+    {
+      "id": "TB_SCIENCE_CLAIM_BOUND_LOGICAL_ATTEMPT_IDENTITY_V1",
+      "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+      "requires": {
+        "slot_bound_logical_attempt_identity": true,
+        "execution_claim_bound_logical_attempt_identity": true,
+        "execution_claim_binding_digest_required": true,
+        "execution_claim_epoch_reauthorization_changes_logical_attempt_identity": true,
+        "goal_text_excluded_from_logical_attempt_identity": true,
+        "carrier_identity_excluded_from_logical_attempt_identity": true
+      },
+      "proof": {
+        "canonical_repository": "moxnixmdj/brain",
+        "canonical_verification_path": "canonical/verification/TB_SCIENCE_RANK19_CLAIM_BOUND_LOGICAL_IDENTITY_ZERO_EXPOSURE_VERIFICATION_20261010_V1.json",
+        "canonical_verification_git_blob_sha": "61df8555e703aef8575e5e710986e56ea8ccf781",
+        "public_pull_request": 2577,
+        "public_verified_head_sha": "81fad35c66027a4e91c50872a3f9c5c9a0360752",
+        "public_verification_run_id": 38036337883,
+        "public_verification_job_id": 114167435666,
+        "behavior_v2_git_blob_sha": "79daaa2dd70fe2119b92160e57bd58970ee1bf0d",
+        "logical_attempt_identity_v2_git_blob_sha": "67ff638459af1bb50a094e9479fb4aa5e2a3de1c",
+        "logical_attempt_claim_binding_git_blob_sha": "ecccf062b79894fcc2b06ecdf0413676a3a9ac2f"
+      },
+      "supersession": "EXPLICIT_STRICT_REFINEMENT_PLUS_INDEPENDENT_VERIFICATION_REQUIRED"
     }
   ],
   "schema": "PROJECT_BRAIN_CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1",
-  "status": "ACTIVE_FAIL_CLOSED__CPU_PORTABILITY_PLANNER_ENVELOPE_AND_DURABLE_CAUSAL_EXECUTION_RATCHETED",
+  "status": "ACTIVE_FAIL_CLOSED__CPU_PORTABILITY_PLANNER_ENVELOPE_DURABLE_CAUSAL_EXECUTION_AND_CLAIM_BOUND_LOGICAL_IDENTITY_RATCHETED",
   "terminal_credit_delta": 0
 }
