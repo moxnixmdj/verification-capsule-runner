@@ -1,0 +1,153 @@
+name: Chartography Qwen3-VL 8B public dummy qualification V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-qwen3vl8b-public-dummy-v1.yml"
+      - "subject/chartography_qwen3vl8b_public_dummy_v1/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Capture runner envelope
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out model
+          printf 'nproc=%s\n' "$(nproc)" | tee out/runner.txt
+          awk '/MemTotal:/ {printf "mem_gib=%.2f\n", $2/1024/1024}' /proc/meminfo | tee -a out/runner.txt
+          df -h . | tee -a out/runner.txt
+          test "$(nproc)" -ge 4
+          MEM_KIB="$(awk '/MemTotal:/ {print $2}' /proc/meminfo)"
+          test "$MEM_KIB" -ge $((14*1024*1024))
+
+      - name: Install build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates time
+
+      - name: Fetch exact non-benchmark Chartography dummy pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git chartography
+          cd chartography
+          git checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          test "$(git rev-parse HEAD)" = "3f1bf837232d3918c2cc35c6e2418c9e70d2a57b"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/charts/sample_chart_1.png)" = "8fcc84c1bae3b0028e332712cf74c68e02122475"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/charts/sample_chart_2.jpg)" = "ecf533642b515d7d41e0bf5364ac355bd258012c"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/tasks/sample_task_1.yaml)" = "b74d2fbf789b3a8ea55ce9a9b72204e983489fb0"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/tasks/sample_task_2.yaml)" = "fc86b7a9c087d68baf5f7d347437e72117779820"
+          grep -F "two dummy tasks" task_packs/sample_charts/charts/README.md
+
+      - name: Download exact official Qwen3-VL 8B model and projector
+        shell: bash
+        run: |
+          set -euo pipefail
+          REV="00e7d63528e65d7b64e80e1293a8360b4af6a594"
+          BASE="https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/$REV"
+          curl -fL --retry 5 --retry-all-errors "$BASE/Qwen3VL-8B-Instruct-Q4_K_M.gguf?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf?download=true" -o model/mmproj.gguf
+          echo "67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2  model/model.gguf" | sha256sum -c -
+          echo "c6ba85508d82f42590e6eb77d5340369ab6fecf107a7561d809523d8aa5f3bfd  model/mmproj.gguf" | sha256sum -c -
+          stat -c '%n %s bytes' model/*.gguf | tee out/artifacts.txt
+          df -h . | tee -a out/artifacts.txt
+
+      - name: Build pinned llama.cpp multimodal CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+          test "$(git rev-parse HEAD)" = "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-mtmd-cli -j 2
+
+      - name: Run public dummy chart qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLI="./llama.cpp/build/bin/llama-mtmd-cli"
+          /usr/bin/time -v "$CLI" -m model/model.gguf --mmproj model/mmproj.gguf --no-mmproj-offload \
+            --image chartography/task_packs/sample_charts/charts/sample_chart_1.png \
+            -p "How long would it take an environment of 1100 degC / 0.03 K/m to deform 4 metres vertically. Answer in years with 1 decimal place" \
+            -c 4096 --image-min-tokens 1024 --image-max-tokens 1024 -n 512 -t 4 > out/task1.txt 2> out/task1.stderr.txt
+          /usr/bin/time -v "$CLI" -m model/model.gguf --mmproj model/mmproj.gguf --no-mmproj-offload \
+            --image chartography/task_packs/sample_charts/charts/sample_chart_2.jpg \
+            -p "Using Mg-9 wt % Al alloy, at what temperature does Mg17Al12 precipitate? Round to the nearest 10 degrees." \
+            -c 4096 --image-min-tokens 1024 --image-max-tokens 1024 -n 512 -t 4 > out/task2.txt 2> out/task2.stderr.txt
+          test -s out/task1.txt
+          test -s out/task2.txt
+
+      - name: Fail-closed final-answer checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, re, sys
+          root=pathlib.Path("out")
+          specs=[
+              ("task1.txt", 76.0, 79.0, "sample_task_1"),
+              ("task2.txt", 330.0, 370.0, "sample_task_2"),
+          ]
+          rows=[]
+          passed=True
+          for fn,lo,hi,tid in specs:
+              text=(root/fn).read_text(errors="replace")
+              nums=[float(x) for x in re.findall(r"(?<![A-Za-z])[-+]?(?:\d+(?:\.\d*)?|\.\d+)", text.replace(",", ""))]
+              final=nums[-1] if nums else None
+              ok=final is not None and lo <= final <= hi
+              rows.append({
+                  "task_id":tid,
+                  "acceptable_range":[lo,hi],
+                  "last_numeric_answer":final,
+                  "pass":ok,
+                  "output_sha256":__import__("hashlib").sha256(text.encode()).hexdigest(),
+              })
+              passed = passed and ok
+          result={
+              "schema":"PROJECT_BRAIN_CHARTOGRAPHY_QWEN3VL8B_PUBLIC_DUMMY_QUALIFICATION_V1",
+              "pass":passed,
+              "public_dummy_task_count":2,
+              "released_benchmark_cases_consumed":0,
+              "incremental_spend_usd":0,
+              "model_revision":"00e7d63528e65d7b64e80e1293a8360b4af6a594",
+              "model_sha256":"67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2",
+              "projector_sha256":"c6ba85508d82f42590e6eb77d5340369ab6fecf107a7561d809523d8aa5f3bfd",
+              "rows":rows,
+          }
+          (root/"qualification.json").write_text(json.dumps(result,indent=2))
+          print(json.dumps(result,indent=2))
+          if not passed:
+              raise SystemExit(1)
+          PY
+
+      - name: Write resource summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            grep -H -E 'Maximum resident set size|Elapsed \(wall clock\) time' out/task*.stderr.txt || true
+            df -h .
+          } | tee out/resource-summary.txt
+
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chartography-qwen3vl8b-public-dummy-v1
+          path: out/
+          if-no-files-found: error
