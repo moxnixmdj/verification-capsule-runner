@@ -35,6 +35,7 @@ MODEL_SHA256 = "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
 HARBOR_VERSION = "0.23.0"
 SERVER_CONTEXT_TOKENS = 16384
 RESERVED_COMPLETION_TOKENS = 4096
+STATUS_STORE_ANCHOR_SHA = "8545e23a3113b2e4aef753799eb71d7c192ae815"
 
 
 class StartCASError(RuntimeError):
@@ -185,8 +186,18 @@ def _open_stores():
     if not isinstance(tree, str) or not re.fullmatch(r"[0-9a-f]{40}", tree):
         raise StartCASError("BASE_TREE_UNCONFIRMED__NO_START")
 
+    # The execution record still binds the actual PR merge SHA, but the
+    # durable start object itself must live at one repository-wide coordinate.
+    # Otherwise two PR merge commits can each create the same logical slot key
+    # without seeing one another, which Rank18 proved is unsafe.
+    anchor_status, _anchor_commit, _headers = req(
+        "GET", f"/repos/{repo}/git/commits/{STATUS_STORE_ANCHOR_SHA}"
+    )
+    if anchor_status != 200:
+        raise StartCASError("STATUS_STORE_ANCHOR_UNCONFIRMED__NO_START")
+
     status_store = generic_cas.SerializedStatusObjectStore(
-        req, repo, github_sha, generic_cas.NAMESPACE
+        req, repo, STATUS_STORE_ANCHOR_SHA, generic_cas.NAMESPACE
     )
     # V4 wrote into this legacy ref namespace. Reads remain required during
     # migration so a historical start can never disappear merely because the
@@ -373,7 +384,9 @@ def _result(mode: str) -> dict[str, Any]:
         "generic_cas_schema": generic_cas.SCHEMA,
         "generic_cas_namespace": generic_cas.NAMESPACE,
         "generic_cas_key": _key(),
-        "durable_backend": "GITHUB_COMMIT_STATUS_OBJECT_STORE_V1",
+        "durable_backend": "GITHUB_COMMIT_STATUS_OBJECT_STORE_V1_SLOT_GLOBAL_ANCHOR",
+        "status_store_anchor_sha": STATUS_STORE_ANCHOR_SHA,
+        "status_store_execution_sha_scoped": False,
         "legacy_ref_migration_guard_required": True,
         "legacy_ref_absent": False,
         "pass": False,
