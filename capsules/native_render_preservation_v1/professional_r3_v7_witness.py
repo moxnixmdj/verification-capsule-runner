@@ -137,6 +137,10 @@ core={
     "structural_verdict":structural_verdict,
     "render_verdict":visual_verdict,
     "render_stack":{
+        "predecessor_verified_libreoffice_core":"4:24.2.7-0ubuntu0.24.04.6",
+        "predecessor_verified_poppler_utils":"24.02.0-1ubuntu9.9",
+        "version_transport_claimed":False,
+        "current_stack_requires_fresh_replay":True,
         "libreoffice_core":EXPECTED_DEB["libreoffice-core"],
         "poppler_utils":EXPECTED_DEB["poppler-utils"],
         **EXPECTED_PY,
