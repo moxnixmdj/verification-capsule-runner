@@ -21,6 +21,8 @@ jobs:
           test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_P1_V7_SAME_SUBJECT_ROOT_BINDING_WORKLIST_20261010_V18.json')" = "0d6efbd19f1b7d30853234a0e1f2633b52539f76"
           test "$(git hash-object 'canonical/runtime/professional_quality_root_binding_compat_v1.py')" = "21bcd114cd031823fb929a7be50a6efa00f898d7"
           test "$(git hash-object 'canonical/tests/test_professional_quality_root_binding_compat_v1.py')" = "9bc59e66b87821c11f34f0ad2aabe37c278d1577"
+          test "$(git hash-object 'canonical/runtime/professional_quality_root_receipt_compat_v1.py')" = "7294be045e56081a846700ed5f2ce2dd4fd37a5e"
+          test "$(git hash-object 'canonical/tests/test_professional_quality_root_receipt_compat_v1.py')" = "c5ebbf5457aafd83761f380ca727e7417bbdee52"
           test "$(git hash-object 'canonical/runtime/professional_quality_v7_real_12of12_composition_verify_v1.py')" = "07c64c87dea89cab346ed4c0ae1146f2250a4c73"
           test "$(git hash-object 'canonical/tests/test_professional_quality_v7_real_12of12_composition_verify_v1.py')" = "d75c2a7476ed9bdd66af1d0dbc7c0fc2429006e9"
           test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R3_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "c49c120a61620d400e372884266b63ec34a054d2"
@@ -33,6 +35,8 @@ jobs:
           test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_CLOSURE_NORMAL_FORM_20261009_V1.json')" = "ebcfe5a48efce9df7fbc69a3817ac2f9adb1ff93"
       - name: Run root-binding compatibility tests
         run: python3 -m unittest canonical.tests.test_professional_quality_root_binding_compat_v1 -v
+      - name: Run root-receipt compatibility tests
+        run: python3 -m unittest canonical.tests.test_professional_quality_root_receipt_compat_v1 -v
       - name: Run real 12-of-12 composition verifier
         run: |
           python3 -m canonical.runtime.professional_quality_v7_real_12of12_composition_verify_v1 | tee /tmp/composition.json
