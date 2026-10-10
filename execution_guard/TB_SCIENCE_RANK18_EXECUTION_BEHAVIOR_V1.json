@@ -2,7 +2,7 @@
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V1",
   "date": "2026-10-10",
   "status": "FINAL_RESEAL_CANDIDATE__RANK18_V1__V6_DURABLE_EXECUTION__AGENT_V12_PLANNER_V6_TYPED_SCHEMA_V2__AUTHORITATIVE_TASK_ARTIFACT_FINISH_GATE__ZERO_EXPOSURE",
-  "scope": "RANK18_V1_V12_ZERO_EXPOSURE_EXECUTION_BEHAVIOR",
+  "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
   "task_digest": "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9",
   "workflow_path": ".github/workflows/execute-tb-science-rank18-20261010-v1.yml",
