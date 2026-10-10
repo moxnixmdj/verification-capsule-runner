@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -126,11 +128,9 @@ def main() -> int:
     assert c["behavior_git_blob_sha"] == EFFECTIVE_BEHAVIOR
     assert c["claim_seed_behavior_git_blob_sha"] == CLAIM_SEED_BEHAVIOR
 
-    # Re-run the proof-only refinement theorem from the promoted surface.
+    # Re-run the proof-only refinement theorem in its normal file context.
     verifier_rel = s["behavior_refinement_verification"]["path"]
-    namespace: dict[str, Any] = {"__name__": "__not_main__"}
-    exec(compile((ROOT / verifier_rel).read_text(encoding="utf-8"), verifier_rel, "exec"), namespace, namespace)
-    assert namespace["main"]() == 0
+    subprocess.check_call([sys.executable, str(ROOT / verifier_rel)])
 
     print("PASS__RANK20_PROMOTED_EFFECTIVE_AUTHORITY__PREACTIVATION__ZERO_EXPOSURE")
     return 0
