@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 ROOT = Path(__file__).resolve().parents[2]
-C = ROOT / "capsules/tb_science_rank18_20261009_v4"
+C = ROOT / "capsules/tb_science_rank18_20261010_v1"
 RUNTIME_C = ROOT / "capsules/tb_science_rank15_20261009_v1"
 EXECUTION_GUARD = ROOT / "execution_guard"
 for value in (str(ROOT), str(RUNTIME_C), str(C), str(EXECUTION_GUARD)):
@@ -149,9 +149,9 @@ def _qualify_status_store() -> dict[str, Any]:
     sha = os.environ.get("GITHUB_SHA") or ""
     if not run_id:
         raise BarrierRunnerError("GITHUB_RUN_ID_REQUIRED")
-    key = "rank18-v5-prestart-qualify/" + run_id
+    key = "rank18-v1-v12-prestart-qualify/" + run_id
     value = {
-        "schema": "PROJECT_BRAIN_RANK18_V5_STATUS_STORE_QUALIFICATION_V1",
+        "schema": "PROJECT_BRAIN_RANK18_V1_V12_STATUS_STORE_QUALIFICATION_V1",
         "github_run_id": run_id,
         "github_sha": sha,
         "task_started": False,
