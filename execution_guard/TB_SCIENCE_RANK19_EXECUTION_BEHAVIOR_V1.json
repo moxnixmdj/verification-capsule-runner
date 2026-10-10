@@ -59,7 +59,9 @@
     "authoritative_task_artifacts_parent_extracted_from_task_toml": true,
     "authoritative_task_artifacts_injected_before_agent_start": true,
     "authoritative_artifact_safe_absolute_postcondition_required": true,
-    "material_requirement_closure_cannot_bypass_mandatory_artifact_gate": true
+    "material_requirement_closure_cannot_bypass_mandatory_artifact_gate": true,
+    "all_cycle_context_fit_by_construction": true,
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true
   },
   "runtime_bindings": {
     "planner": {
@@ -140,7 +142,7 @@
     },
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v3.py",
-      "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
+      "git_blob_sha": "f3282bc2e9eaf3665a4f75725266c5be9dff43c5"
     },
     "lossless_raw_task_contract": {
       "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/lossless_raw_task_contract_v1.py",
