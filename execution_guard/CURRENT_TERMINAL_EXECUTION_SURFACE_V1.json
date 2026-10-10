@@ -11,7 +11,7 @@
   "activation_path": "capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V1_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V2.json",
-    "git_blob_sha": "b09d101451642508e94922a21cb5920b702365d9"
+    "git_blob_sha": "f1416884119543a5932d53323476404c070ed400"
   },
   "authority": {
     "path": "capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V3.json",
@@ -31,11 +31,11 @@
   },
   "epoch": {
     "path": "capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V1.json",
-    "git_blob_sha": "02bf13373f6d6e818eafad2d1bd5d0f46ec500ba"
+    "git_blob_sha": "b9d13bcc5ef72b6bb36338bac76c1e2557a5df0e"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V1.json",
-    "git_blob_sha": "8a9108ebfe3595072d547eedc74b20cda55376db"
+    "git_blob_sha": "401a462d1015191ddbac291f0051f3d79a7d1131"
   },
   "preflight": {
     "path": "capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py",
@@ -67,10 +67,10 @@
     "brain_artifact_config_bridge_repair_verify_blob": "aec85d3a6b82aa8ab7a6942b535838333195fb9c",
     "public_authority_v3_blob": "592f823c75554a250f9be5034145bcf08d3b4a01",
     "public_ledger_v35_blob": "efc01926a5dc7d0ae88710c39518e5f5727fd2e6",
-    "epoch_v6_blob": "02bf13373f6d6e818eafad2d1bd5d0f46ec500ba",
-    "execution_claim_v6_blob": "8a9108ebfe3595072d547eedc74b20cda55376db",
+    "epoch_v6_blob": "b9d13bcc5ef72b6bb36338bac76c1e2557a5df0e",
+    "execution_claim_v6_blob": "401a462d1015191ddbac291f0051f3d79a7d1131",
     "workflow_v1_blob": "5afb71e06c2b5041bb9cd5c388d52018e05ef291",
-    "behavior_v2_blob": "b09d101451642508e94922a21cb5920b702365d9",
+    "behavior_v2_blob": "f1416884119543a5932d53323476404c070ed400",
     "status_journal_runner_blob": "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df",
     "zero_exposure_reseal_tests_blob": "51ac624a143ba9d3c145589eaf26ff922b90404c"
   },
