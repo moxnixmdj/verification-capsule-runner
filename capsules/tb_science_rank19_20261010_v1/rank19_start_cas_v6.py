@@ -16,11 +16,12 @@ if str(EXECUTION_GUARD) not in sys.path:
     sys.path.insert(0, str(EXECUTION_GUARD))
 
 import terminal_slot_start_cas_v2 as generic_cas
-import logical_attempt_identity_v1 as logical_identity
+import logical_attempt_identity_v2 as logical_identity
 
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK19_START_CAS_V6"
 SLOT_ID = "terminal-bench-science/diag-chipseq::trial-0"
 TASK_DIGEST = "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+EXECUTION_CLAIM_BINDING_DIGEST = "sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
 EXPECTED_REPOSITORY = "moxnixmdj/verification-capsule-runner"
 EXPECTED_BASE = "terminal-execution-v1"
 EXPECTED_HEAD = "execute/tb-science-rank19-20261010-v1"
@@ -307,7 +308,7 @@ def _build_start_intent(root: Path, context: dict[str, Any]) -> tuple[generic_ca
     logical_attempt_id = guard.get("logical_attempt_id")
     if not isinstance(logical_attempt_id, str) or not re.fullmatch(r"[0-9a-f]{64}", logical_attempt_id):
         raise StartCASError("PRESTART_LOGICAL_ATTEMPT_ID_INVALID")
-    expected_logical_attempt_id = logical_identity.logical_attempt_id(slot_id=SLOT_ID, task_digest=TASK_DIGEST)
+    expected_logical_attempt_id = logical_identity.logical_attempt_id(slot_id=SLOT_ID, task_digest=TASK_DIGEST, execution_claim_binding_digest=EXECUTION_CLAIM_BINDING_DIGEST)
     if logical_attempt_id != expected_logical_attempt_id:
         raise StartCASError("PRESTART_LOGICAL_ATTEMPT_ID_NOT_SLOT_BOUND")
 
