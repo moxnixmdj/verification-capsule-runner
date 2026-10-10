@@ -1,0 +1,76 @@
+name: Verify Rank19 claim-bound successor runtime V2
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "execution_guard/logical_attempt_identity_v2.py"
+      - "execution_guard/rank19_claim_bound_identity_v1.py"
+      - "execution_guard/test_rank19_claim_bound_identity_v1.py"
+      - "execution_guard/test_rank19_claim_bound_runtime_wiring_v1.py"
+      - "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V2.json"
+      - "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v5.py"
+      - "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v7.py"
+      - "capsules/tb_science_rank19_20261010_v1/rank19_v7_status_journal_runner.py"
+      - "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v7.py"
+      - "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v7.py"
+      - "capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py"
+      - ".github/workflows/execute-tb-science-rank19-20261010-v2.yml"
+      - ".github/workflows/verify-tb-science-rank19-claim-bound-runtime-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-exposure-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prove current trusted V1 surface remains untouched
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json
+          test ! -e capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V2_PR.json
+          python - <<'PY'
+          import json
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"))
+          assert s["execution_authority"] is False
+          assert s["task_read_authority"] is False
+          assert s["task_read_history"] is False
+          assert s["task_started"] is False
+          assert s["benchmark_trials_consumed"] == 0
+          PY
+
+      - name: Replay claim-bound identity and wiring tests
+        run: |
+          set -euo pipefail
+          python -m unittest             execution_guard.test_rank19_claim_bound_identity_v1             execution_guard.test_rank19_claim_bound_runtime_wiring_v1 -v
+
+      - name: Compile exact successor runtime
+        run: |
+          set -euo pipefail
+          python -m py_compile             execution_guard/logical_attempt_identity_v2.py             execution_guard/rank19_claim_bound_identity_v1.py             capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v5.py             capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v7.py             capsules/tb_science_rank19_20261010_v1/rank19_v7_status_journal_runner.py             capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v7.py             capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v7.py             capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py
+
+      - name: Assert zero exposure and zero credit
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          b=json.load(open("execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V2.json"))
+          assert b["task_read"] is False
+          assert b["task_started"] is False
+          assert b["benchmark_trials_executed"] == 0
+          assert b["acceptance_credit_delta"] == 0
+          assert b["terminal_credit_delta"] == 0
+          assert b["behavior"]["execution_claim_bound_logical_attempt_identity"] is True
+          assert "logical_attempt_id" not in b
+          PY
