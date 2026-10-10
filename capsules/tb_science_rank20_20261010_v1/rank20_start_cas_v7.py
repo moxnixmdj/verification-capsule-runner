@@ -12,8 +12,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_GUARD = ROOT / "execution_guard"
-if str(EXECUTION_GUARD) not in sys.path:
-    sys.path.insert(0, str(EXECUTION_GUARD))
+for value in (str(ROOT), str(EXECUTION_GUARD)):
+    if value not in sys.path:
+        sys.path.insert(0, value)
 
 import terminal_slot_start_cas_v2 as generic_cas
 import rank20_claim_bound_identity_v1 as claim_identity
