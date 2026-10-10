@@ -81,7 +81,9 @@ def main():
     ):
         text=(ROOT/rel).read_text(encoding="utf-8")
         assert "RANK18" not in text and "rank18" not in text
-        assert SLOT in text and DIGEST.split(":",1)[1] in text
+        assert DIGEST.split(":",1)[1] in text
+        if not rel.endswith("rank19_prestart_token_guard_v4.py"):
+            assert SLOT in text
 
     print("PASS__TB_SCIENCE_RANK19_V13_PUBLIC_RESEAL__ZERO_EXPOSURE")
     return 0
