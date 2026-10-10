@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V2",
   "date": "2026-10-10",
-  "status": "RANK20_V2_V13_FINAL_RESEAL_BEHAVIOR__CLAIM_SEED_AND_HELPER_BOUND__ZERO_EXPOSURE",
+  "status": "RANK20_V2_V13_CLAIM_BOUND_RUNTIME_CANDIDATE__CURRENT_INVARIANT_AND_REPAIRED_AGENT_TEST_COMPLETE__ZERO_EXPOSURE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
   "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
@@ -165,14 +165,6 @@
       "git_blob_sha": "525fac941302254a47710aaae30b0174fab2cb40"
     },
     "claim_bound_identity_resolver": {
-      "path": "execution_guard/rank20_claim_bound_identity_v1.py",
-      "git_blob_sha": "d5e5207a41a5cf0983a0078b1d996bffc9e7a01c"
-    },
-    "logical_attempt_claim_binding": {
-      "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V3.json",
-      "git_blob_sha": "59fa5616f1754f90ded1c3b30cb53c98b4348cee"
-    },
-    "logical_attempt_binding_helper": {
       "path": "execution_guard/rank20_claim_bound_identity_v1.py",
       "git_blob_sha": "d5e5207a41a5cf0983a0078b1d996bffc9e7a01c"
     }
