@@ -57,5 +57,7 @@
   "execution_authority": false,
   "task_read_authority": false,
   "activation_present": false,
-  "next": "INDEPENDENT_ZERO_EXPOSURE_VERIFY_V8"
+  "next": "INDEPENDENT_ZERO_EXPOSURE_VERIFY_V8",
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
 }
