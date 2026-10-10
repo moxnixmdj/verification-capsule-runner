@@ -16,6 +16,8 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
         with:
