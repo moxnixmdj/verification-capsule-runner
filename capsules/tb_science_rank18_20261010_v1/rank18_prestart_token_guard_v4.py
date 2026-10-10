@@ -1,4 +1,4 @@
-"""One-use prestart token-budget guard for TB-Science rank18 V2.
+"""One-use prestart token-budget guard for TB-Science rank18 V1 / Agent V12.
 
 This script is outside the benchmark runtime closure. It may read the exact
 digest-pinned task only after a fresh rank18 public lease is active. It never starts a
@@ -142,7 +142,7 @@ def main() -> int:
         result["server_context_tokens"] = SERVER_CONTEXT_TOKENS
         result["context_headroom_tokens"] = SERVER_CONTEXT_TOKENS - input_tokens - RESERVED_COMPLETION_TOKENS
         result["planner_module"] = "canonical.runtime.harbor_science_planner_v6"
-        result["agent_module"] = "canonical.runtime.harbor_science_agent_v11"
+        result["agent_module"] = "canonical.runtime.harbor_science_agent_v12"
         result["post_freeze_state_reserve_tokens"] = agent.POST_FREEZE_STATE_RESERVE_TOKENS
         result["post_freeze_state_reserve_embedded_in_cycle0_prompt"] = (
             agent.POST_FREEZE_STATE_RESERVE_DIGITS in prompt
