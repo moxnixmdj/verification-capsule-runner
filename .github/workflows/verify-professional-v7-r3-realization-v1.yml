@@ -1,0 +1,68 @@
+name: Verify professional V7 R3 realization evidence v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - capsules/professional_v7_r3_realization_v1/**
+      - .github/workflows/verify-professional-v7-r3-realization-v1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  produce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned realization dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y poppler-utils
+          python -m pip install --disable-pip-version-check --no-input pypdf==6.19.0 Pillow==12.3.0
+          pdftoppm -v
+      - name: Produce exact V7-bound artifact and audience evidence
+        run: |
+          mkdir -p "$RUNNER_TEMP/r3_producer"
+          PYTHONPATH=. python capsules/professional_v7_r3_realization_v1/produce_v1.py             --repo-root "$GITHUB_WORKSPACE"             --out-dir "$RUNNER_TEMP/r3_producer"
+          find "$RUNNER_TEMP/r3_producer" -maxdepth 1 -type f -printf '%f\n' | sort
+      - uses: actions/upload-artifact@v4
+        with:
+          name: professional-v7-r3-producer-${{ github.sha }}
+          path: ${{ runner.temp }}/r3_producer/
+          if-no-files-found: error
+          retention-days: 7
+
+  verify:
+    needs: produce
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pinned independent-verifier dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y poppler-utils
+          python -m pip install --disable-pip-version-check --no-input pypdf==6.19.0 Pillow==12.3.0
+          pdftoppm -v
+      - uses: actions/download-artifact@v4
+        with:
+          name: professional-v7-r3-producer-${{ github.sha }}
+          path: ${{ runner.temp }}/r3_producer
+      - name: Independently verify exact bytes and audience views
+        run: |
+          mkdir -p "$RUNNER_TEMP/r3_verifier"
+          PYTHONPATH=. python capsules/professional_v7_r3_realization_v1/verify_v1.py             --repo-root "$GITHUB_WORKSPACE"             --input-dir "$RUNNER_TEMP/r3_producer"             --out-dir "$RUNNER_TEMP/r3_verifier"
+          cat "$RUNNER_TEMP/r3_verifier/PROFESSIONAL_V7_R3_REALIZATION_INDEPENDENT_VERIFY_V1.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: professional-v7-r3-verifier-${{ github.sha }}
+          path: ${{ runner.temp }}/r3_verifier/
+          if-no-files-found: error
+          retention-days: 7
