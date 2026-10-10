@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-10",
-  "status": "RANK20_V13_PROMOTED_EFFECTIVE_AUTHORITY__CLAIM_EPOCH_V3__PREACTIVATION__ZERO_EXPOSURE",
+  "status": "RANK20_V13_CLAIM_V3_PROMOTED_EFFECTIVE_AUTHORITY__ACTIVATION_ABSENT__UNREAD_UNSTARTED__ZERO_EXPOSURE",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
@@ -72,7 +72,7 @@
   "task_read_authority": true,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
-  "next": "VERIFY_PROMOTED_RANK20_SURFACE_ZERO_EXPOSURE__THEN_MINT_CANONICAL_ACTIVATION_AUTHORITY__THEN_EXACT_ONE_FILE_ACTIVATION_BRANCH",
+  "next": "MINT_EXACT_RANK20_ACTIVATION_AUTHORITY__ACTIVATION_FILE_MUST_REMAIN_ABSENT_UNTIL_THEN",
   "behavior_refinement_verification": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_behavior_refinement_verify_v1.py",
     "git_blob_sha": "b15a9d9ba3a717a9758f56aef75e5e14764d9221"
