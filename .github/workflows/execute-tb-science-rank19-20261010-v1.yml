@@ -52,13 +52,13 @@ jobs:
           assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank19-20261010-v1"
           assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
           PY
-          python execution_guard/terminal_execution_admission_v3.py \
+          python execution_guard/terminal_execution_admission_v4.py \
             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml" \
             --slot "terminal-bench-science/diag-chipseq::trial-0" \
             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b" \
             --require-activation \
             --require-execution-authority
-          python "$C/rank19_execution_preflight_v6.py" --require-activation
+          python "$C/rank19_execution_preflight_v7.py" --require-activation
 
       - name: Install exact Harbor
         run: |
@@ -140,7 +140,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python "$C/rank19_start_cas_v6.py" --check-absent
+          python "$C/rank19_start_cas_v7.py" --check-absent
 
       - name: Read exact rank19 task and prove slot-bound all-cycle context envelope
         id: prestart
@@ -148,7 +148,7 @@ jobs:
         run: |
           set -euo pipefail
           export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$RUNTIME_C:$GITHUB_WORKSPACE/$C"
-          python "$C/rank19_prestart_token_guard_v4.py"
+          python "$C/rank19_prestart_token_guard_v5.py"
           cat RANK19_PRESTART_GUARD.json
 
       - name: Enter Harbor then commit start only after AGENT_READY
@@ -162,32 +162,32 @@ jobs:
         run: |
           set -uo pipefail
           export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$RUNTIME_C:$GITHUB_WORKSPACE/$C"
-          python "$C/rank19_v6_status_journal_runner.py"
+          python "$C/rank19_v7_status_journal_runner.py"
           echo "runner_exit=$?" >> "$GITHUB_OUTPUT"
 
-      - name: Finalize conservative rank19 V6 receipt
+      - name: Finalize conservative rank19 V7 receipt
         if: always()
         env:
           CACHE_READY: ${{ steps.carrier.outputs.ready }}
           HARBOR_OUTCOME: ${{ steps.execute.outcome }}
         run: |
           export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/$RUNTIME_C:$GITHUB_WORKSPACE/$C"
-          python "$C/rank19_finalize_receipt_v6.py"
+          python "$C/rank19_finalize_receipt_v7.py"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: tb-science-diag-chipseq-trial-0-rank19-v2
           path: |
-            diag-chipseq-trial-0__SLOT_RECEIPT_V6.json
-            TERMINAL_EXECUTION_ADMISSION_V3.json
-            RANK19_EXECUTION_PREFLIGHT_V6.json
-            RANK19_START_CAS_CHECK_V6.json
-            RANK19_START_CAS_V6.json
+            diag-chipseq-trial-0__SLOT_RECEIPT_V7.json
+            TERMINAL_EXECUTION_ADMISSION_V4.json
+            RANK19_EXECUTION_PREFLIGHT_V7.json
+            RANK19_START_CAS_CHECK_V7.json
+            RANK19_START_CAS_V7.json
             RANK19_PRESTART_GUARD.json
             RANK19_AGENT_START_BARRIER/
             RANK19_CAUSAL_JOURNAL_BRIDGE/
-            RANK19_V6_STATUS_JOURNAL_RUNNER_RECEIPT.json
+            RANK19_V7_STATUS_JOURNAL_RUNNER_RECEIPT.json
             LOCAL_QWEN_HEALTH.json
             LOCAL_QWEN_SERVER.log
             SYNTHETIC_COMPLETION.json
