@@ -1,0 +1,26 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK18_PUBLIC_LEDGER_BINDING_V33",
+  "date": "2026-10-10",
+  "status": "CURRENT_PUBLIC_BINDING__BRAIN_LEDGER_V33__SEVENTEEN_CONSUMED__RANK18_UNREAD_UNSTARTED_UNCONSUMED",
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261010_V33.json",
+    "git_blob_sha": "c2d405754e51254aa2eee8e6eb9413a298cdf90b"
+  },
+  "consumed_slots": 17,
+  "consumed_successes": 0,
+  "consumed_final_failures": 17,
+  "next_slot": {
+    "ledger_schedule_rank": 18,
+    "frozen_manifest_schedule_order": 17,
+    "task_rank": 17,
+    "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
+    "task_digest": "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9"
+  },
+  "rank18_task_read_history": false,
+  "rank18_task_started": false,
+  "rank18_benchmark_trials_consumed": 0,
+  "rank17_rerun_authority": false,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
