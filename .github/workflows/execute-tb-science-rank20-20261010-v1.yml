@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [terminal-execution-v1]
     paths:
-      - "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V1_PR.json"
+      - "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json"
 
 permissions:
   contents: read
@@ -44,13 +44,13 @@ jobs:
           test "$GITHUB_RUN_ATTEMPT" = "1"
           test "$GITHUB_EVENT_NAME" = "pull_request"
           test "$GITHUB_BASE_REF" = "terminal-execution-v1"
-          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank20-20261010-v1"
-          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK20_V1_PR.json"
+          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank20-20261010-v2"
+          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK20_V2_PR.json"
           python - <<'PY'
           import json, os
           event=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
           assert event["pull_request"]["head"]["repo"]["full_name"] == os.environ["GITHUB_REPOSITORY"]
-          assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank20-20261010-v1"
+          assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank20-20261010-v2"
           assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
           PY
           python execution_guard/terminal_execution_admission_v4.py \
