@@ -25,14 +25,14 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object canonical/governance/PROFESSIONAL_QUALITY_P1_V7_SAME_SUBJECT_ROOT_BINDING_WORKLIST_20261010_V18.json)" = "0d6efbd19f1b7d30853234a0e1f2633b52539f76"
-          test "$(git hash-object canonical/runtime/professional_quality_v7_real_12of12_composition_verify_v1.py)" = "656bd05732faf3439d8f7a5a1d977a8c2a28c070"
+          test "$(git hash-object canonical/runtime/professional_quality_v7_real_12of12_composition_verify_v1.py)" = "07c64c87dea89cab346ed4c0ae1146f2250a4c73"
           test "$(git hash-object canonical/tests/test_professional_quality_v7_real_12of12_composition_verify_v1.py)" = "d75c2a7476ed9bdd66af1d0dbc7c0fc2429006e9"
           test "$(git hash-object canonical/governance/PROFESSIONAL_QUALITY_SCOPED_EVIDENCE_REGISTRY_20261010_V1.json)" = "b9ddf7cbe7fbfad0e81fe068a0c19b48703b5aba"
           test "$(git hash-object canonical/verification/PROFESSIONAL_QUALITY_R4_SEMANTIC_SCOPED_INTEGRATION_VERIFY_20261010_V1.json)" = "664c22bfdfc51ea4058e4e2d3c3efe9d8def907b"
           test "$(git hash-object canonical/verification/PROFESSIONAL_QUALITY_R12_V7_ROOT_SUBJECT_BINDING_PUBLIC_VERIFY_20261010_V1.json)" = "174bc362ff1f1b7935925c8d17e55d36288bdbad"
           test "$(git hash-object canonical/verification/PROFESSIONAL_QUALITY_SAME_SUBJECT_GATE_V3_RECEIPT_ADAPTER_PUBLIC_VERIFY_20261010_V1.json)" = "79910bf40700ddf000630a7169566fef91e6c939"
-          test "$(git hash-object canonical/runtime/professional_quality_same_subject_composition_gate_v3.py)" = "ddbe6ec92fef405b8909a161ef9acd685ec7317b"\n          test "$(git hash-object canonical/runtime/professional_quality_root_binding_compat_v1.py)" = "53c67bfa7109c700458de452056b3272d66f72a3"\n          test "$(git hash-object canonical/tests/test_professional_quality_root_binding_compat_v1.py)" = "075e0b077eae3853ac0dc51cd7467d701145d501"
-      - name: Run binding compatibility tests\n        run: python3 -m unittest canonical.tests.test_professional_quality_root_binding_compat_v1 -v\n      - name: Run real 12-of-12 composition verifier
+          test "$(git hash-object canonical/runtime/professional_quality_same_subject_composition_gate_v3.py)" = "ddbe6ec92fef405b8909a161ef9acd685ec7317b"\n          test "$(git hash-object canonical/runtime/professional_quality_root_binding_compat_v1.py)" = "53c67bfa7109c700458de452056b3272d66f72a3"\n          test "$(git hash-object canonical/tests/test_professional_quality_root_binding_compat_v1.py)" = "075e0b077eae3853ac0dc51cd7467d701145d501"\n          test "$(git hash-object canonical/runtime/professional_quality_root_receipt_compat_v1.py)" = "31e0b36e95c605f54070821ebe5c312286d7ecbd"\n          test "$(git hash-object canonical/tests/test_professional_quality_root_receipt_compat_v1.py)" = "eec83938d87f140ba283f2c98bed52708cead4b0"
+      - name: Run binding compatibility tests\n        run: python3 -m unittest canonical.tests.test_professional_quality_root_binding_compat_v1 -v\n      - name: Run receipt compatibility tests\n        run: python3 -m unittest canonical.tests.test_professional_quality_root_receipt_compat_v1 -v\n      - name: Run real 12-of-12 composition verifier
         run: python3 -m canonical.runtime.professional_quality_v7_real_12of12_composition_verify_v1
       - name: Run composition adversarial tests
         run: python3 -m unittest canonical.tests.test_professional_quality_v7_real_12of12_composition_verify_v1 -v
