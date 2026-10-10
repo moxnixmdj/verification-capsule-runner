@@ -1,0 +1,28 @@
+name: Diagnostic find TB-Science next unexposed slot public mirror
+
+on:
+  push:
+    branches:
+      - "diagnostic/find-tb-science-next-slot-public-20261010"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Locate schedule evidence
+        run: |
+          set -euo pipefail
+          echo "=== DIAG CHIPSEQ REFERENCES ==="
+          grep -R -n -I --include='*.json' --include='*.md' --include='*.py' 'diag-chipseq' . 2>/dev/null | head -n 300 || true
+          echo "=== FROZEN SCHEDULE ORDER REFERENCES ==="
+          grep -R -n -I --include='*.json' --include='*.md' --include='*.py' 'frozen_manifest_schedule_order' . 2>/dev/null | tail -n 300 || true
+          echo "=== LEDGER RANK20 REFERENCES ==="
+          grep -R -n -I --include='*.json' --include='*.md' --include='*.py' '"ledger_schedule_rank"[[:space:]]*:[[:space:]]*20' . 2>/dev/null | head -n 300 || true
+          echo "=== CANDIDATE SCHEDULE FILES ==="
+          find . -type f \( -iname '*science*schedule*' -o -iname '*science*manifest*' -o -iname '*slot*ledger*' -o -iname '*terminal*bench*manifest*' \) | sort | tail -n 300
