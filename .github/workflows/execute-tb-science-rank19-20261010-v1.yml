@@ -53,7 +53,7 @@ jobs:
           assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
           PY
           python execution_guard/terminal_execution_admission_v3.py \
-            --workflow ".github/workflows/execute-tb-science-rank19-20261010-v2.yml" \
+            --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml" \
             --slot "terminal-bench-science/diag-chipseq::trial-0" \
             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b" \
             --require-activation \
