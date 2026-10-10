@@ -23,8 +23,8 @@ SLOT_ID = "terminal-bench-science/longitudinal-clinical-agent::trial-0"
 TASK_DIGEST = "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9"
 EXPECTED_REPOSITORY = "moxnixmdj/verification-capsule-runner"
 EXPECTED_BASE = "terminal-execution-v1"
-EXPECTED_HEAD = "execute/tb-science-rank18-20261010-v1"
-ACTIVATION_REL = "capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V1_PR.json"
+EXPECTED_HEAD = "execute/tb-science-rank18-20261010-v2"
+ACTIVATION_REL = "capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V2_PR.json"
 SURFACE_REL = "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
 PREFLIGHT_RECEIPT = "RANK18_PRESTART_GUARD.json"
 AGENT_READY_REL = "RANK18_AGENT_START_BARRIER/AGENT_READY.json"
@@ -149,7 +149,7 @@ def _event_context(root: Path) -> dict[str, Any]:
         raise StartCASError("EPOCH_OR_CLAIM_HEAD_REF_MISMATCH")
     if claim.get("epoch_git_blob_sha") != epoch_blob:
         raise StartCASError("EXECUTION_CLAIM_EPOCH_BINDING_MISMATCH")
-    if claim.get("activation_filename") != "ACTIVATE_RANK18_V1_PR.json":
+    if claim.get("activation_filename") != "ACTIVATE_RANK18_V2_PR.json":
         raise StartCASError("EXECUTION_CLAIM_ACTIVATION_MISMATCH")
 
     return {
