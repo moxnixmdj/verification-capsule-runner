@@ -1,0 +1,126 @@
+name: Verify TB-Science Rank18 ArtifactConfig bridge repair
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install exact Harbor schema owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor") == "0.23.0"
+          from harbor.models.task.config import ArtifactConfig
+          main = ArtifactConfig(source="/root/results/a.json", service="main")
+          side = ArtifactConfig(source="/var/log/broker/a.jsonl", service="broker")
+          assert main.source == "/root/results/a.json"
+          assert side.service == "broker"
+          print("PASS__PINNED_HARBOR_0_23_ARTIFACTCONFIG_SCHEMA")
+          PY
+
+      - name: Verify exact patched bridge blob and compile
+        shell: bash
+        run: |
+          set -euo pipefail
+          P="capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py"
+          test "$(git hash-object "$P")" = "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
+          python -m py_compile "$P"
+
+      - name: Exercise string table main sidecar and fail-closed cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1:$GITHUB_WORKSPACE/capsules/tb_science_rank18_20261010_v1"
+          python - <<'PY'
+          import json, os, tempfile
+          from pathlib import Path
+          from capsules.tb_science_rank18_20261010_v1 import rank18_v6_status_journal_runner as r
+          from execution_guard.logical_attempt_identity_v1 import logical_attempt_id
+
+          def write(root, body):
+              (root / "task.toml").write_text(body, encoding="utf-8")
+
+          old_task = os.environ.get("TASK_PATH")
+          old_gh = os.environ.get("GH_TOKEN")
+          old_github = os.environ.get("GITHUB_TOKEN")
+          try:
+              with tempfile.TemporaryDirectory() as td:
+                  root = Path(td)
+                  os.environ["TASK_PATH"] = td
+                  write(root, """schema_version = "1.0"
+          artifacts = [
+            "/app/legacy-output.json",
+            { source = "/root/results/trajectory.json", destination = "agent/trajectory.json", exclude = ["*.tmp"], service = "main" },
+            { source = "/root/results/study_report.json", service = "main" },
+            { source = "/var/log/clinenv/actions.jsonl", service = "broker" },
+            { source = "/var/log/clinenv/final_state.json", service = "broker" },
+          ]
+          """)
+                  got = json.loads(r._task_artifacts_json())
+                  assert got == [
+                      "/app/legacy-output.json",
+                      "/root/results/trajectory.json",
+                      "/root/results/study_report.json",
+                  ], got
+
+                  os.environ["BRAIN_LOGICAL_ATTEMPT_ID"] = logical_attempt_id(
+                      slot_id=r.SLOT_ID, task_digest=r.TASK_DIGEST
+                  )
+                  os.environ["GH_TOKEN"] = "must-not-reach-child"
+                  os.environ["GITHUB_TOKEN"] = "must-not-reach-child"
+                  child = r._child_env()
+                  assert "GH_TOKEN" not in child
+                  assert "GITHUB_TOKEN" not in child
+                  assert json.loads(child["BRAIN_TASK_ARTIFACTS_JSON"]) == got
+
+                  write(root, 'artifacts = [{ source = "../escape.json", service = "main" }]\n')
+                  try:
+                      r._task_artifacts_json()
+                  except r.BarrierRunnerError as exc:
+                      assert str(exc) == "TASK_ARTIFACT_SOURCE_INVALID"
+                  else:
+                      raise AssertionError("traversal source must fail closed")
+
+                  write(root, 'artifacts = [{ destination = "x.json", service = "main" }]\n')
+                  try:
+                      r._task_artifacts_json()
+                  except r.BarrierRunnerError as exc:
+                      assert str(exc) == "TASK_ARTIFACT_SOURCE_INVALID"
+                  else:
+                      raise AssertionError("missing source must fail closed")
+
+                  write(root, 'artifacts = [{ source = "/root/a.json", service = 7 }]\n')
+                  try:
+                      r._task_artifacts_json()
+                  except r.BarrierRunnerError as exc:
+                      assert str(exc) == "TASK_ARTIFACT_SERVICE_INVALID"
+                  else:
+                      raise AssertionError("invalid service must fail closed")
+
+              print("PASS__RANK18_ARTIFACTCONFIG_BRIDGE__MAIN_ONLY__SIDECAR_EXCLUDED__FAIL_CLOSED")
+          finally:
+              if old_task is None: os.environ.pop("TASK_PATH", None)
+              else: os.environ["TASK_PATH"] = old_task
+              if old_gh is None: os.environ.pop("GH_TOKEN", None)
+              else: os.environ["GH_TOKEN"] = old_gh
+              if old_github is None: os.environ.pop("GITHUB_TOKEN", None)
+              else: os.environ["GITHUB_TOKEN"] = old_github
+          PY
