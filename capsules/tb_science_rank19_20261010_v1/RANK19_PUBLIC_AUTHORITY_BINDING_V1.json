@@ -30,7 +30,7 @@
   },
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "7f48d7188606c1a290c577f212d9cef8ab1ca119"
+    "git_blob_sha": "910ebccd28ab5f4dd79eee3bedfcf8610b47c2fd"
   },
   "ledger": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json",
