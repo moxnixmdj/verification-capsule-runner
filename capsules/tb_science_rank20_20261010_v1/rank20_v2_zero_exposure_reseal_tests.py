@@ -11,7 +11,7 @@ DIGEST="sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289"
 BRANCH="execute/tb-science-rank20-20261010-v1"
 ACTIVATION="ACTIVATE_RANK20_V1_PR.json"
 PLANNER_SHA="e5d6ab78b6cf5bacee568cd3701410a8745b9ce8"
-AGENT_SHA="8deede8adb960b6ebf7ee747a5e9ff1016238b7e"
+AGENT_SHA="470bfe079aeffaa07a3b92975b4edea17c9a20e1"
 
 def load(rel):
     return json.loads((ROOT/rel).read_text(encoding="utf-8"))
