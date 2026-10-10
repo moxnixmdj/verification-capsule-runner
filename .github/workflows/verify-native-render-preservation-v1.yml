@@ -15,7 +15,7 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,3 +30,5 @@ jobs:
           python -m pip install --disable-pip-version-check --no-input python-docx==1.2.0 openpyxl==3.1.5 python-pptx==1.0.2 pypdf==6.19.0 Pillow==12.3.0
       - name: Run exact mirrored tests
         run: cd capsules/native_render_preservation_v1 && PYTHONPATH=. python -m unittest -v canonical.tests.test_native_artifact_render_preservation_v1
+      - name: Produce exact V7 R3 realization witness
+        run: cd capsules/native_render_preservation_v1 && PYTHONPATH=. python professional_r3_v7_witness.py
