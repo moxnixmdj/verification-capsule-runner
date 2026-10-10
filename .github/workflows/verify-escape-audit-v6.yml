@@ -25,4 +25,4 @@ jobs:
         run: python -m pytest -q canonical/tests/test_escape_progress_shared_gap_audit_v6.py
       - name: Replay exact successor audit
         working-directory: capsules/escape_audit_v6_repo
-        run: python canonical/runtime/escape_progress_shared_gap_audit_v6.py
+        run: python -m canonical.runtime.escape_progress_shared_gap_audit_v6
