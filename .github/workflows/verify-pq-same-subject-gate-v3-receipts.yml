@@ -1,0 +1,27 @@
+name: Verify PQ same-subject gate V3 receipts
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/professional_quality_same_subject_composition_gate_v3.py'
+      - 'canonical/tests/test_professional_quality_same_subject_receipt_normalizer_v1.py'
+      - '.github/workflows/verify-pq-same-subject-gate-v3-receipts.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/professional_quality_same_subject_composition_gate_v3.py)" = "ddbe6ec92fef405b8909a161ef9acd685ec7317b"
+          test "$(git hash-object canonical/tests/test_professional_quality_same_subject_receipt_normalizer_v1.py)" = "3c4a280a987f4d97f04c69edc45452e4cc7b1f12"
+      - name: Compile gate V3
+        run: python3 -m py_compile canonical/runtime/professional_quality_same_subject_composition_gate_v3.py
+      - name: Run receipt normalizer tests
+        run: python3 -m unittest canonical.tests.test_professional_quality_same_subject_receipt_normalizer_v1 -v
