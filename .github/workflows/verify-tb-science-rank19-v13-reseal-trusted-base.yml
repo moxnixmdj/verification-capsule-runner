@@ -44,14 +44,15 @@ jobs:
 
           exact = {
             ".github/workflows/execute-tb-science-rank19-20261010-v1.yml":"73d30930712396e056187de130551cae2bea00a6",
-            "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json":"2904200b7b6d1359b1d847a692361b915e5a1d78",
-            "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json":"4746f6ea3fe7c9f53f7b8a7cc1979cddef9e6f8d",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json":"0eac6cb12f7f5172c1d24c96734735ce556cb30f",
+            "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json":"aa2b7591d4bda63bb197e08e80e048ea35321805",
+            "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json":"407108656d1640397e0aa0e982d766ca54e9356d",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json":"bcef1b71b34ed613d97e8d8b8f39daa7232e0695",
             "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json":"357bbd1a26be73200b6076e6751c58e23d95f325",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json":"0ec6d223d0f70f1e965d0ec178e77663b3fbd9f4",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json":"ff7687e2800c2138d44f87d0d1fabf7e5a57653f",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json":"28a6891fa18efee0ad439da6a490b89b493337f0",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json":"b90ef39eb2dabfa7cea00a49360bac3d4912a6b9",
             "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py":"8a66cfa696a1b40f0e095e4f90c86a9ad2902442",
-            "capsules/tb_science_rank19_20261010_v1/rank19_v1_zero_exposure_reseal_tests.py":"cb2990b19c5d6bf7869d0eeb1feb2c4ac1bebdfa",
+            "capsules/tb_science_rank19_20261010_v1/rank19_v1_zero_exposure_reseal_tests.py":"aa3766a6ee6a1e40a85609250c76fd457346a2a9",
+            "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py":"b8fe83055d3cd10487f2dbebe236890fc8428fb5",
           }
 
           def blob(rel):
@@ -117,6 +118,10 @@ jobs:
           ):
               assert f.get(key) is True,key
           assert f["family_global_workflow_concurrency_group"]=="tb-science-terminal-durable-one-shot-global"
+          assert f["status_start_store_commit_sha_scoped"] is False
+          assert f["status_start_store_slot_global_anchor_required"] is True
+          assert f["status_start_store_anchor_sha"]=="8545e23a3113b2e4aef753799eb71d7c192ae815"
+          assert b["runtime_bindings"]["start_cas"]["git_blob_sha"]=="b8fe83055d3cd10487f2dbebe236890fc8428fb5"
           assert b["runtime_bindings"]["planner"]["git_blob_sha"]==PLANNER
           assert b["runtime_bindings"]["agent"]["git_blob_sha"]==AGENT
           for row in b["runtime_bindings"].values():
@@ -199,6 +204,78 @@ jobs:
           assert d["task_read"] is False and d["task_started"] is False, d
           assert d["benchmark_trials_consumed"]==0 and d["terminal_credit_delta"]==0, d
           print("PASS__CAPABILITY_FIRST_PARK_ENFORCED")
+          PY
+          python - <<'PY'
+          import importlib.util, os
+          from pathlib import Path
+
+          path=Path("capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py")
+          spec=importlib.util.spec_from_file_location("rank19_start_cas_v6_verify", path)
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+
+          class FakeAPI:
+              def __init__(self):
+                  self.statuses={}
+              def request(self, method, path, payload=None):
+                  if method=="GET" and "/git/commits/" in path:
+                      return 200, {"tree":{"sha":"c"*40}}, {}
+                  if method=="POST" and "/statuses/" in path:
+                      sha=path.rsplit("/",1)[1]
+                      self.statuses.setdefault(sha,[]).insert(0,dict(payload))
+                      return 201, {"id":len(self.statuses[sha])}, {}
+                  if method=="GET" and "/commits/" in path and "/statuses?" in path:
+                      sha=path.split("/commits/",1)[1].split("/statuses",1)[0]
+                      return 200, list(self.statuses.get(sha,[])), {}
+                  raise AssertionError((method,path,payload))
+
+          api=FakeAPI()
+          original_factory=mod.generic_cas.request_factory
+          old_env={k:os.environ.get(k) for k in ("GITHUB_REPOSITORY","GH_TOKEN","GITHUB_TOKEN","GITHUB_SHA")}
+          try:
+              mod.generic_cas.request_factory=lambda token: api.request
+              os.environ["GITHUB_REPOSITORY"]="moxnixmdj/verification-capsule-runner"
+              os.environ["GH_TOKEN"]="synthetic"
+              os.environ.pop("GITHUB_TOKEN",None)
+              sha1="1"*40; sha2="2"*40
+              os.environ["GITHUB_SHA"]=sha1
+              store1,_=mod._open_stores()
+              os.environ["GITHUB_SHA"]=sha2
+              store2,_=mod._open_stores()
+              assert store1.commit_sha==mod.STATUS_STORE_ANCHOR_SHA==store2.commit_sha
+              assert store1.commit_sha=="8545e23a3113b2e4aef753799eb71d7c192ae815"
+
+              def intent(run,sha):
+                  return mod.generic_cas.StartIntent(
+                      slot_id=mod.SLOT_ID,
+                      task_digest=mod.TASK_DIGEST,
+                      logical_attempt_id="d"*64,
+                      workflow_git_blob_sha="3"*40,
+                      authority_git_blob_sha="4"*40,
+                      activation_git_blob_sha="5"*40,
+                      runtime_identity_sha256="6"*64,
+                      prestart_receipt_sha256="7"*64,
+                      agent_ready_receipt_sha256="8"*64,
+                      github_run_id=run,
+                      github_sha=sha,
+                  )
+
+              first=mod.generic_cas.reserve_start_once(store1,intent("1001",sha1))
+              assert first["task_started"] is True and first["benchmark_trials_consumed"]==1
+              blocked=False
+              try:
+                  mod.generic_cas.reserve_start_once(store2,intent("1002",sha2))
+              except mod.generic_cas.StartAdmissionDenied as exc:
+                  blocked="START_ALREADY_COMMITTED__NO_SECOND_AGENT_RELEASE" in str(exc)
+              assert blocked, "SECOND_DISTINCT_MERGE_SHA_WAS_NOT_BLOCKED"
+              print("PASS__RANK19_SLOT_GLOBAL_START_CAS_CROSS_COMMIT_CONTENTION")
+          finally:
+              mod.generic_cas.request_factory=original_factory
+              for key,value in old_env.items():
+                  if value is None:
+                      os.environ.pop(key,None)
+                  else:
+                      os.environ[key]=value
           PY
           python "$C/rank19_execution_preflight_v6.py" --allow-staged
           echo PASS__TRUSTED_BASE_RANK19_RESEAL_STATIC_EXECUTION__ZERO_EXPOSURE__PARKED
