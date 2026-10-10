@@ -49,8 +49,9 @@ jobs:
 
           assert s["family"]=="TB_SCIENCE"
           assert s["active"] is True
-          assert s["execution_authority"] is False
-          assert s["task_read_authority"] is False
+          staged = s["execution_authority"] is False and s["task_read_authority"] is False
+          promoted = s["execution_authority"] is True and s["task_read_authority"] is True
+          assert staged or promoted, (s["execution_authority"], s["task_read_authority"])
           assert s["task_read_history"] is False
           assert s["task_started"] is False
           assert s["benchmark_trials_consumed"]==0
@@ -103,7 +104,13 @@ jobs:
 
           z=runtime.get("zero_exposure_tests")
           assert isinstance(z,dict)
-          subprocess.check_call([sys.executable,str(root/z["path"])])
+          if staged:
+              subprocess.check_call([sys.executable,str(root/z["path"])])
+          else:
+              promotion=s.get("promotion_verification")
+              rel=bound(promotion,"surface.promotion_verification")
+              py_compile.compile(str(root/rel),doraise=True)
+              subprocess.check_call([sys.executable,str(root/rel)])
           assert json.loads(surface_path.read_text(encoding="utf-8"))==s
           assert not activation.exists()
           print("PASS__CURRENT_PROOF_CARRYING_TB_SCIENCE_SURFACE__RATCHETED__ZERO_EXPOSURE")
@@ -123,7 +130,16 @@ jobs:
           PY
           source /tmp/current_surface.env
           python "$ADMISSION" --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST"
-          python "$PREFLIGHT" --allow-staged
+          if python - <<'PY'
+          import json
+          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
+          raise SystemExit(0 if s["execution_authority"] is False else 1)
+          PY
+          then
+            python "$PREFLIGHT" --allow-staged
+          else
+            python "$PREFLIGHT"
+          fi
           if python "$ADMISSION" --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST" --require-activation; then
             echo "current surface bypassed activation gate"
             exit 1
