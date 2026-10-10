@@ -26,11 +26,11 @@
   },
   "workflow": {
     "path": ".github/workflows/execute-tb-science-rank19-20261010-v1.yml",
-    "git_blob_sha": "dfed81c60b57b88304ac511b1e4a7024eaf38e01"
+    "git_blob_sha": "73d30930712396e056187de130551cae2bea00a6"
   },
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "a7cd1966bd6241cdcfd5a663d81d6114cd08ad83"
+    "git_blob_sha": "954debd53f669af640152fb02e7a78446b8019af"
   },
   "ledger": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json",
