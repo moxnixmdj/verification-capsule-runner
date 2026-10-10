@@ -11,11 +11,11 @@
   "activation_path": "capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "de7d965c210f804eff2701b94d4ae1c96f81687e"
+    "git_blob_sha": "7f48d7188606c1a290c577f212d9cef8ab1ca119"
   },
   "authority": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json",
-    "git_blob_sha": "0b7a203de173d4155184153eddd24b5c5290fb58"
+    "git_blob_sha": "e8960e7b42a50fd0b72556ffb042a9732c7ee295"
   },
   "ledger": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json",
@@ -27,15 +27,15 @@
   },
   "admission_guard": {
     "path": "execution_guard/terminal_execution_admission_v3.py",
-    "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
+    "git_blob_sha": "f3282bc2e9eaf3665a4f75725266c5be9dff43c5"
   },
   "epoch": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json",
-    "git_blob_sha": "10ec492184affe4e002e8dfebfca682d68429d8f"
+    "git_blob_sha": "5ff4ddc91c4e9608247a83c54f2edcc92f5f987d"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json",
-    "git_blob_sha": "6227324473b23ba6e67bf6632879330a23d9dea7"
+    "git_blob_sha": "4164627b783bc530739537e885e0ac74738c2959"
   },
   "preflight": {
     "path": "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
@@ -65,16 +65,33 @@
     "brain_authority_v1_blob": "ea76756ea30084c7f8291747ae9d204485a0186a",
     "brain_ledger_v38_blob": "137a2f61d911321365bd80613e3806a77dbe7eca",
     "planner_v7_verification_blob": "9797cc625e3e33bb905cf23fa6c79f66dc9794db",
-    "public_authority_v1_blob": "0b7a203de173d4155184153eddd24b5c5290fb58",
+    "public_authority_v1_blob": "e8960e7b42a50fd0b72556ffb042a9732c7ee295",
     "public_ledger_v38_blob": "357bbd1a26be73200b6076e6751c58e23d95f325",
-    "epoch_v6_v1_blob": "10ec492184affe4e002e8dfebfca682d68429d8f",
-    "execution_claim_v6_v1_blob": "6227324473b23ba6e67bf6632879330a23d9dea7",
+    "epoch_v6_v1_blob": "5ff4ddc91c4e9608247a83c54f2edcc92f5f987d",
+    "execution_claim_v6_v1_blob": "4164627b783bc530739537e885e0ac74738c2959",
     "workflow_v1_blob": "dfed81c60b57b88304ac511b1e4a7024eaf38e01",
-    "behavior_v1_blob": "de7d965c210f804eff2701b94d4ae1c96f81687e",
+    "behavior_v1_blob": "7f48d7188606c1a290c577f212d9cef8ab1ca119",
     "planner_v7_blob": "e5d6ab78b6cf5bacee568cd3701410a8745b9ce8",
     "agent_v13_blob": "8deede8adb960b6ebf7ee747a5e9ff1016238b7e",
     "logical_attempt_id": "def7e2921acf58d4ef03e3183512996c718a5a13069482cb825464c0c963a8b4",
     "activation_branch": "execute/tb-science-rank19-20261010-v1"
   },
-  "next": "VERIFY_FULL_RANK19_V13_PUBLIC_RESEAL__THEN_CANONICAL_PROMOTION__THEN_EXACT_ONE_FILE_ACTIVATION_ONLY"
+  "next": "VERIFY_FULL_RANK19_V13_PUBLIC_RESEAL__THEN_CANONICAL_PROMOTION__THEN_EXACT_ONE_FILE_ACTIVATION_ONLY",
+  "capability_first_admission": {
+    "schema": "PROJECT_BRAIN_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_V1",
+    "authorized": true,
+    "workflow_path": ".github/workflows/execute-tb-science-rank19-20261010-v1.yml",
+    "slot_id": "terminal-bench-science/diag-chipseq::trial-0",
+    "task_digest": "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b",
+    "scheduler_source": "moxnixmdj/brain:canonical/governance/CURRENT_DEVELOPMENT_SCHEDULER.json",
+    "scheduler_activation": "canonical/governance/CAPABILITY_FIRST_SCHEDULER_ACTIVATION_20261010_V3.json",
+    "canonical_admission_path": "canonical/governance/CAPABILITY_FIRST_TB_SCIENCE_RANK19_ADMISSION_20261010_V1.json",
+    "canonical_admission_git_blob_sha": "666e472ccc5040e8661c51011104f3349d23d4f0",
+    "canonical_admission_verification_path": "canonical/verification/CAPABILITY_FIRST_TB_SCIENCE_RANK19_ADMISSION_SPRITE_VERIFY_20261010_V1.json",
+    "canonical_admission_verification_git_blob_sha": "6646b7e2a2a83fc2aebf10f570f6136f7002831e",
+    "benchmark_role": "NEW_CAPABILITY_VALIDATION",
+    "maximum_new_benchmark_trials": 1,
+    "decision": "ADMIT_CHECKPOINT_AUDIT_EXECUTION",
+    "reason": "VERIFIED_V7_V13_REPAIR_REQUIRES_ONE_BOUNDED_REAL_TASK_CAPABILITY_VALIDATION"
+  }
 }
