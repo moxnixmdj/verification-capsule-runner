@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - "triggers/chartography_qwen3vl4b_public_dummy_v1.txt"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-qwen3vl4b-public-dummy-v1.yml"
   workflow_dispatch:
 
 permissions:
