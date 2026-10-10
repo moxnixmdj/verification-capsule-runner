@@ -18,9 +18,78 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run claim-bound identity regression
+      - name: Prove V14 is the minimal claim-bound identity repair
         env:
           PYTHONPATH: ".:capsules/tb_science_rank15_20261009_v1"
         run: |
           set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          base=Path("capsules/tb_science_rank15_20261009_v1/canonical/runtime")
+          old=(base/"harbor_science_agent_v13.py").read_text()
+          new=(base/"harbor_science_agent_v14.py").read_text()
+          expected=old
+          replacements=[
+              (
+                  "from execution_guard.logical_attempt_identity_v1 import logical_attempt_id as canonical_logical_attempt_id",
+                  "from execution_guard.logical_attempt_identity_v2 import logical_attempt_id as canonical_logical_attempt_id",
+              ),
+              (
+                  'SCHEMA = "PROJECT_BRAIN_HARBOR_SCIENCE_AGENT_TRACE_V12"',
+                  'SCHEMA = "PROJECT_BRAIN_HARBOR_SCIENCE_AGENT_TRACE_V14"',
+              ),
+              ('        return "1.12.0"', '        return "1.13.0"'),
+              (
+          '''    carried = str(os.environ.get("BRAIN_LOGICAL_ATTEMPT_ID") or "").strip()
+              if not slot_id:
+                  raise RuntimeError("BRAIN_SLOT_ID_REQUIRED")
+              if not task_digest:
+                  raise RuntimeError("BRAIN_TASK_DIGEST_REQUIRED")
+              if not carried:
+                  raise RuntimeError("BRAIN_LOGICAL_ATTEMPT_ID_REQUIRED")
+              expected = canonical_logical_attempt_id(slot_id=slot_id, task_digest=task_digest)
+          ''',
+          '''    carried = str(os.environ.get("BRAIN_LOGICAL_ATTEMPT_ID") or "").strip()
+              claim_binding_digest = str(
+                  os.environ.get("BRAIN_EXECUTION_CLAIM_BINDING_DIGEST") or ""
+              ).strip()
+              if not slot_id:
+                  raise RuntimeError("BRAIN_SLOT_ID_REQUIRED")
+              if not task_digest:
+                  raise RuntimeError("BRAIN_TASK_DIGEST_REQUIRED")
+              if not claim_binding_digest:
+                  raise RuntimeError("BRAIN_EXECUTION_CLAIM_BINDING_DIGEST_REQUIRED")
+              if not carried:
+                  raise RuntimeError("BRAIN_LOGICAL_ATTEMPT_ID_REQUIRED")
+              expected = canonical_logical_attempt_id(
+                  slot_id=slot_id,
+                  task_digest=task_digest,
+                  execution_claim_binding_digest=claim_binding_digest,
+              )
+          ''',
+              ),
+          ]
+          for before,after in replacements:
+              assert expected.count(before)==1, before[:80]
+              expected=expected.replace(before,after)
+          assert new==expected, "AGENT_V14_HAS_UNAUTHORIZED_DELTA_BEYOND_CLAIM_BOUND_IDENTITY_REPAIR"
+          print("PASS__AGENT_V14_MINIMAL_SOURCE_DELTA")
+          PY
+          python -m py_compile capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v14.py
           python capsules/tb_science_rank19_20261010_v1/test_agent_v14_claim_bound_identity.py
+      - name: Prove exact Rank19 claim-bound identity without task read
+        env:
+          PYTHONPATH: ".:capsules/tb_science_rank15_20261009_v1"
+          BRAIN_SLOT_ID: "terminal-bench-science/diag-chipseq::trial-0"
+          BRAIN_TASK_DIGEST: "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+          BRAIN_EXECUTION_CLAIM_BINDING_DIGEST: "sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
+          BRAIN_LOGICAL_ATTEMPT_ID: "a3672b9d77c8fa0b7d3f0610ac2c008d2888e566d8a75ac92aa7078c1523abe6"
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          from canonical.runtime import harbor_science_agent_v14 as agent
+          assert agent.logical_attempt_id_for_goal("synthetic zero-exposure identity check") == os.environ["BRAIN_LOGICAL_ATTEMPT_ID"]
+          assert agent.HarborScienceAgent().version() == "1.13.0"
+          print("PASS__RANK19_EXACT_CLAIM_BOUND_IDENTITY__ZERO_TASK_READ")
+          PY
