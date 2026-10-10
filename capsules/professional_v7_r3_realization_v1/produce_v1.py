@@ -4,6 +4,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -91,6 +92,7 @@ def rasterize(pdf: Path, out_dir: Path, prefix: str) -> list[dict]:
             "file": stable.name,
             "sha256": sha256_file(stable),
             "pixel_dimensions": dims,
+            "bytes_b64": base64.b64encode(stable.read_bytes()).decode("ascii"),
         })
     return result
 
@@ -170,17 +172,27 @@ def main() -> None:
             "file": source_path.name,
             "sha256": sha256_file(source_path),
             "size_bytes": source_path.stat().st_size,
+            "bytes_b64": base64.b64encode(source).decode("ascii"),
         },
         "output_artifact": {
             "file": output_path.name,
             "sha256": sha256_file(output_path),
             "size_bytes": output_path.stat().st_size,
+            "bytes_b64": base64.b64encode(output).decode("ascii"),
         },
         "source_audience_view": source_pages,
         "output_audience_view": output_pages,
         "structural_verdict": structural_verdict,
         "render_verdict": visual,
         "runtime_git_blob_shas": EXPECTED_BLOBS,
+        "carrier": {
+            "repository": os.environ.get("GITHUB_REPOSITORY"),
+            "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+            "workflow_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+            "workflow_sha": os.environ.get("GITHUB_SHA"),
+            "head_ref": os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME"),
+            "base_ref": os.environ.get("GITHUB_BASE_REF") or None,
+        },
         "semantic_scope": "ONE_GENERATED_BOUNDED_EXPLICIT_LOW_LEVEL_PDF_TEXT_EDIT_UNDER_PINNED_NATIVE_RENDER_PRESERVATION_CONTRACT",
         "quality_authority": False,
         "acceptance_authority": False,
