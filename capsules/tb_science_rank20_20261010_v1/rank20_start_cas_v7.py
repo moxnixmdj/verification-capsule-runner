@@ -100,10 +100,32 @@ def _event_context(root: Path) -> dict[str, Any]:
         raise StartCASError("FIRST_RUN_ATTEMPT_REQUIRED")
     if os.environ.get("GITHUB_BASE_REF") != EXPECTED_BASE:
         raise StartCASError("BASE_REF_MISMATCH")
-    if os.environ.get("GITHUB_HEAD_REF") != EXPECTED_HEAD:
-        raise StartCASError("HEAD_REF_MISMATCH")
     if os.environ.get("GITHUB_REPOSITORY") != EXPECTED_REPOSITORY:
         raise StartCASError("REPOSITORY_MISMATCH")
+
+    surface_path = root / SURFACE_REL
+    surface = _read_json(surface_path)
+    if surface.get("execution_authority") is not True:
+        raise StartCASError("EXECUTION_AUTHORITY_NOT_ACTIVE")
+    if surface.get("task_started") is not False:
+        raise StartCASError("SURFACE_TASK_ALREADY_STARTED")
+    if surface.get("slot_id") != SLOT_ID or surface.get("task_digest") != TASK_DIGEST:
+        raise StartCASError("SURFACE_SLOT_OR_DIGEST_MISMATCH")
+
+    authority_path, _authority_blob = _require_binding(
+        root, surface.get("authority"), "surface.authority"
+    )
+    authority = _read_json(authority_path)
+    expected_head = authority.get("execution_branch")
+    expected_activation_filename = authority.get("activation_filename")
+    activation_rel = surface.get("activation_path")
+    if not isinstance(expected_head, str) or not expected_head:
+        raise StartCASError("AUTHORITY_EXECUTION_BRANCH_INVALID")
+    if not isinstance(expected_activation_filename, str) or not expected_activation_filename:
+        raise StartCASError("AUTHORITY_ACTIVATION_FILENAME_INVALID")
+    if not isinstance(activation_rel, str) or Path(activation_rel).name != expected_activation_filename:
+        raise StartCASError("SURFACE_ACTIVATION_AUTHORITY_MISMATCH")
+
     event_path = Path(os.environ.get("GITHUB_EVENT_PATH") or "")
     if not event_path.is_file():
         raise StartCASError("GITHUB_EVENT_PATH_REQUIRED")
@@ -118,10 +140,12 @@ def _event_context(root: Path) -> dict[str, Any]:
     head_repo = head.get("repo")
     if not isinstance(head_repo, dict) or head_repo.get("full_name") != EXPECTED_REPOSITORY:
         raise StartCASError("SAME_REPOSITORY_HEAD_REQUIRED")
-    if head.get("ref") != EXPECTED_HEAD or base.get("ref") != EXPECTED_BASE:
+    if os.environ.get("GITHUB_HEAD_REF") != expected_head:
+        raise StartCASError("HEAD_REF_MISMATCH")
+    if head.get("ref") != expected_head or base.get("ref") != EXPECTED_BASE:
         raise StartCASError("EVENT_REF_MISMATCH")
 
-    activation_path = root / ACTIVATION_REL
+    activation_path = _safe_repo_path(root, activation_rel)
     activation = _read_json(activation_path)
     if activation.get("schema") != "PROJECT_BRAIN_TB_SCIENCE_RANK20_ACTIVATION_V6":
         raise StartCASError("ACTIVATION_SCHEMA_INVALID")
@@ -129,15 +153,6 @@ def _event_context(root: Path) -> dict[str, Any]:
         raise StartCASError("ACTIVATION_NOT_ARMED")
     if activation.get("slot_id") != SLOT_ID or activation.get("task_digest") != TASK_DIGEST:
         raise StartCASError("ACTIVATION_SLOT_OR_DIGEST_MISMATCH")
-
-    surface_path = root / SURFACE_REL
-    surface = _read_json(surface_path)
-    if surface.get("execution_authority") is not True:
-        raise StartCASError("EXECUTION_AUTHORITY_NOT_ACTIVE")
-    if surface.get("task_started") is not False:
-        raise StartCASError("SURFACE_TASK_ALREADY_STARTED")
-    if surface.get("slot_id") != SLOT_ID or surface.get("task_digest") != TASK_DIGEST:
-        raise StartCASError("SURFACE_SLOT_OR_DIGEST_MISMATCH")
 
     epoch_path, epoch_blob = _require_binding(root, surface.get("epoch"), "surface.epoch")
     claim_path, claim_blob = _require_binding(
