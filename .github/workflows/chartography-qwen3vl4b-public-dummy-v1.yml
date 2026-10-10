@@ -41,11 +41,11 @@ jobs:
           cd chartography
           git checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
           test "$(git rev-parse HEAD)" = "3f1bf837232d3918c2cc35c6e2418c9e70d2a57b"
-          test "$(git hash-object task_packs/sample_charts/charts/sample_chart_1.png)" = "8fcc84c1bae3b0028e332712cf74c68e02122475"
-          test "$(git hash-object task_packs/sample_charts/charts/sample_chart_2.jpg)" = "ecf533642b515d7d41e0bf5364ac355bd258012c"
-          test "$(git hash-object task_packs/sample_charts/tasks/sample_task_1.yaml)" = "b74d2fbf789b3a8ea55ce9a9b72204e983489fb0"
-          test "$(git hash-object task_packs/sample_charts/tasks/sample_task_2.yaml)" = "fc86b7a9c087d68baf5f7d347437e72117779820"
-          grep -F "not part of the released set" task_packs/sample_charts/charts/README.md
+          test "$(git rev-parse HEAD:task_packs/sample_charts/charts/sample_chart_1.png)" = "8fcc84c1bae3b0028e332712cf74c68e02122475"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/charts/sample_chart_2.jpg)" = "ecf533642b515d7d41e0bf5364ac355bd258012c"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/tasks/sample_task_1.yaml)" = "b74d2fbf789b3a8ea55ce9a9b72204e983489fb0"
+          test "$(git rev-parse HEAD:task_packs/sample_charts/tasks/sample_task_2.yaml)" = "fc86b7a9c087d68baf5f7d347437e72117779820"
+          grep -F "two dummy tasks" task_packs/sample_charts/charts/README.md
 
       - name: Download corrected official Qwen model and projector
         shell: bash
