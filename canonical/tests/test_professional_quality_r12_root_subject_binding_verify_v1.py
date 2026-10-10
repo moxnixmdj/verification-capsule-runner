@@ -32,7 +32,13 @@ class Tests(unittest.TestCase):
  def test_missing_prior_independent_authority_fails_closed(self):
   wl=load(v.REFS["prior_root_binding_worklist"][0]);row=next(x for x in wl["roots"] if x["root_id"]=="R11_ADAPTIVE_INTEGRITY_SECURITY")
   vd=load(row["verification"]["path"]);vd["root_subject_binding_authority"]=False
-  self.assertEqual(self.run_patch({row["verification"]["path"]:vd})["reason"],"PRIOR_ROOT_AUTHORITY_MISSING:R11_ADAPTIVE_INTEGRITY_SECURITY")
+  self.assertEqual(self.run_patch({row["verification"]["path"]:vd})["reason"],"PRIOR_ROOT_VERIFICATION_INVALID:R11_ADAPTIVE_INTEGRITY_SECURITY:ROOT_SUBJECT_BINDING_AUTHORITY_REQUIRED")
+
+ def test_prior_receipt_binding_hash_mismatch_fails_closed(self):
+  wl=load(v.REFS["prior_root_binding_worklist"][0]);row=next(x for x in wl["roots"] if x["root_id"]=="R10_ANALYSIS_DECISION")
+  vd=load(row["verification"]["path"]);vd["exact_blobs"]["binding"]="0"*40
+  self.assertEqual(self.run_patch({row["verification"]["path"]:vd})["reason"],"PRIOR_ROOT_VERIFICATION_INVALID:R10_ANALYSIS_DECISION:SUBJECT_BINDING_VERIFY_BLOB_MISMATCH")
+
  def test_known_defeater_scope_widening_fails_closed(self):
   p=v.REFS["known_defeater_binding"][0];d=load(p);d["hard_nonclaims"]=[]
   self.assertEqual(self.run_patch({p:d})["reason"],"KNOWN_DEFEATER_SCOPE_OVERCLAIM")
