@@ -13,7 +13,7 @@ C = ROOT / "capsules/tb_science_rank18_20261010_v1"
 SURFACE = ROOT / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
 SLOT = "terminal-bench-science/longitudinal-clinical-agent::trial-0"
 DIGEST = "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9"
-WORKFLOW = ".github/workflows/execute-tb-science-rank18-20261010-v1.yml"
+WORKFLOW = ".github/workflows/execute-tb-science-rank18-20261010-v2.yml"
 ACTIVATION = "capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V2_PR.json"
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK18_EXECUTION_PREFLIGHT_V6"
 
