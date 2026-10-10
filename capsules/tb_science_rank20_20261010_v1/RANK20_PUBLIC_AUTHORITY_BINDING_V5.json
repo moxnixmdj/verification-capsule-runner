@@ -55,5 +55,6 @@
   "incremental_spend_usd": 0,
   "acceptance_credit_delta": 0,
   "capability_credit_delta": 0,
-  "terminal_credit_delta": 0
+  "terminal_credit_delta": 0,
+  "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST"
 }
