@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Verify staged proof-carrying surface and invariant ratchet
+      - name: Verify proof-carrying surface and invariant ratchet
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -49,15 +49,16 @@ jobs:
 
           assert s["family"]=="TB_SCIENCE"
           assert s["active"] is True
-          assert s["execution_authority"] is False
-          assert s["task_read_authority"] is False
+          staged=s["execution_authority"] is False and s["task_read_authority"] is False
+          promoted=s["execution_authority"] is True and s["task_read_authority"] is True
+          assert staged or promoted, (s["execution_authority"],s["task_read_authority"])
           assert s["task_read_history"] is False
           assert s["task_started"] is False
           assert s["benchmark_trials_consumed"]==0
           assert s["terminal_credit_delta"]==0
           assert blob(s["workflow_path"])==s["workflow_git_blob_sha"]
           activation=root/s["activation_path"]
-          assert not activation.exists(), "ACTIVATION_MUST_REMAIN_ABSENT_DURING_RESEAL"
+          assert not activation.exists(), "ACTIVATION_MUST_REMAIN_ABSENT_DURING_RESEAL_OR_PROMOTION"
 
           for key in ("behavior","authority","ledger","invariant_registry","admission_guard","epoch","execution_claim","preflight","finalizer"):
               bound(s[key],"surface."+key)
@@ -101,38 +102,48 @@ jobs:
               if rel.endswith(".py"):
                   py_compile.compile(str(root/rel),doraise=True)
 
-          z=runtime.get("zero_exposure_tests")
-          assert isinstance(z,dict)
-          subprocess.check_call([sys.executable,str(root/z["path"])])
+          if staged:
+              z=runtime.get("zero_exposure_tests")
+              assert isinstance(z,dict)
+              subprocess.check_call([sys.executable,str(root/z["path"])])
+          else:
+              rel=bound(s.get("promotion_verification"),"surface.promotion_verification")
+              py_compile.compile(str(root/rel),doraise=True)
+              subprocess.check_call([sys.executable,str(root/rel)])
+
           assert json.loads(surface_path.read_text(encoding="utf-8"))==s
           assert not activation.exists()
           print("PASS__CURRENT_PROOF_CARRYING_TB_SCIENCE_SURFACE__RATCHETED__ZERO_EXPOSURE")
           PY
 
-      - name: Prove staged admission passes and activation gate remains closed
+      - name: Prove admission passes and activation gate remains closed
         run: |
           set -euo pipefail
-          python - <<'PY' > /tmp/current_surface.env
-          import json
-          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
-          print("ADMISSION="+s["admission_guard"]["path"])
-          print("WORKFLOW="+s["workflow_path"])
-          print("SLOT="+s["slot_id"])
-          print("DIGEST="+s["task_digest"])
-          print("PREFLIGHT="+s["preflight"]["path"])
-          PY
-          source /tmp/current_surface.env
-          python "$ADMISSION" --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST"
-          python "$PREFLIGHT" --allow-staged
-          if python "$ADMISSION" --workflow "$WORKFLOW" --slot "$SLOT" --task-digest "$DIGEST" --require-activation; then
-            echo "current surface bypassed activation gate"
-            exit 1
-          fi
           python - <<'PY'
-          import glob,json
+          import json, subprocess, sys
+          from pathlib import Path
+          root=Path(".").resolve()
+          s=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text(encoding="utf-8"))
+          staged=s["execution_authority"] is False and s["task_read_authority"] is False
+          promoted=s["execution_authority"] is True and s["task_read_authority"] is True
+          assert staged or promoted
+          admission=root/s["admission_guard"]["path"]
+          common=[
+              sys.executable,str(admission),
+              "--workflow",s["workflow_path"],
+              "--slot",s["slot_id"],
+              "--task-digest",s["task_digest"],
+          ]
+          subprocess.check_call(common)
+          pre=[sys.executable,str(root/s["preflight"]["path"])]
+          if staged:
+              pre.append("--allow-staged")
+          subprocess.check_call(pre)
+          blocked=subprocess.run(common+["--require-activation"]).returncode
+          assert blocked != 0, "current surface bypassed activation gate"
           docs=[]
-          for p in glob.glob("TERMINAL_EXECUTION_ADMISSION_*.json"):
-              try: docs.append(json.load(open(p,encoding="utf-8")))
+          for p in root.glob("TERMINAL_EXECUTION_ADMISSION_*.json"):
+              try: docs.append(json.loads(p.read_text(encoding="utf-8")))
               except Exception: pass
           assert any("ACTIVATION_FILE_MISSING" in (d.get("errors") or []) for d in docs), docs
           print("PASS__ACTIVATION_GATE_CLOSED")
@@ -144,10 +155,12 @@ jobs:
           import json
           s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
           out={
-            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V4",
+            "schema":"PROJECT_BRAIN_TB_SCIENCE_EXECUTION_RATCHET_VERIFICATION_V5",
             "status":"PASS__CURRENT_PROOF_CARRYING_SURFACE__CLAIM_BOUND_IDENTITY_RATCHETED__ACTIVATION_GATE_CLOSED__ZERO_EXPOSURE",
             "slot_id":s["slot_id"],
             "task_digest":s["task_digest"],
+            "execution_authority":s["execution_authority"],
+            "task_read_authority":s["task_read_authority"],
             "task_read":False,
             "task_started":False,
             "benchmark_trials_consumed":0,
@@ -160,7 +173,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tb-science-execution-ratchet-v4
+          name: tb-science-execution-ratchet-v5
           path: |
             EXECUTION_RATCHET_VERIFICATION.json
             TERMINAL_EXECUTION_ADMISSION_*.json
