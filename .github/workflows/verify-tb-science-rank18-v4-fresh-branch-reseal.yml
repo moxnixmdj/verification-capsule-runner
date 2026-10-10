@@ -41,14 +41,14 @@ jobs:
           set -euo pipefail
           test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py)" = "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
           test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py)" = "36d220f5caaee9f52fe9dd6f5dac1cbac774d3b1"
-          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py)" = "b0b6cb702f03ae5165afaeb81c59a60c93972c5e"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py)" = "f1b5557508ac821338268884b3415f142e3d6281"
           test "$(git hash-object .github/workflows/execute-tb-science-rank18-20261010-v2.yml)" = "969a9a735d5dfdf371a9a5c82aa972fe6ad85549"
-          test "$(git hash-object execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V4.json)" = "085389b8ff61388fd207eac13d56037134844a77"
-          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V4.json)" = "3289505682d3f55ef2b64354c7c5243c27426976"
-          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V4.json)" = "c5642b3b79562d3bed931913a3fd504487d9e053"
-          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V4.json)" = "e87997e5602c486a0e3ed4430c683764d11fff5c"
-          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v4_zero_exposure_reseal_tests.py)" = "5a1b282bcacef02368e5e0576af441c051b4b735"
-          test "$(git hash-object execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json)" = "8bd6199e47b7ac0755ef7260e0555f2ff9450e1c"
+          test "$(git hash-object execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V4.json)" = "960a06b3450b9686575dc1e7aae3ea4f0695fa90"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V4.json)" = "f9a5bae9882ae10f8aeee3107626096828584116"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V4.json)" = "9173a66721ad6c75c4405aef55e4432e04130a1c"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V4.json)" = "19332b9eea4bd02fa1cca3b3c7101696a2105b6b"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v4_zero_exposure_reseal_tests.py)" = "eb9dabf3527788c7e2006525193b639fbcb3fa08"
+          test "$(git hash-object execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json)" = "001c3d3a40e52aa57a8f775faf31e43d63bfbc93"
           python -m py_compile             capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py             capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py             capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py             capsules/tb_science_rank18_20261010_v1/rank18_finalize_receipt_v6.py
 
       - name: Verify proof-carrying admission without task exposure
