@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK19_EPOCH_V6",
   "date": "2026-10-10",
-  "status": "STAGED_RANK19_V1_V13_EPOCH__UNREAD_UNSTARTED__ONE_USE_ONLY",
+  "status": "STAGED_RANK19_V2_V13_EPOCH__CAPABILITY_FIRST_ADMISSION_V2_BOUND__UNREAD_UNSTARTED__ONE_USE_ONLY",
   "predicate": "TB_SCIENCE_GE_58_7",
   "slot_id": "terminal-bench-science/diag-chipseq::trial-0",
   "task_name": "terminal-bench-science/diag-chipseq",
@@ -12,9 +12,9 @@
   "task_rank": 18,
   "execution_base": "terminal-execution-v1",
   "execution_branch": "execute/tb-science-rank19-20261010-v1",
-  "public_authority_binding_blob": "bcef1b71b34ed613d97e8d8b8f39daa7232e0695",
+  "public_authority_binding_blob": "783be7b81ab7a17d33d99f45321e843ec8c90ccd",
   "public_ledger_binding_blob": "357bbd1a26be73200b6076e6751c58e23d95f325",
-  "brain_authority_blob": "ea76756ea30084c7f8291747ae9d204485a0186a",
+  "brain_authority_blob": "54b4b41872cce41ed1bdc6181d857484a2f21b22",
   "brain_ledger_blob": "137a2f61d911321365bd80613e3806a77dbe7eca",
   "planner_timeout_diagnosis_blob": "97697c3c7868644d36b317dc7e4e80dfd8f97647",
   "planner_v7_zero_exposure_verification_blob": "9797cc625e3e33bb905cf23fa6c79f66dc9794db",
@@ -53,5 +53,7 @@
   "benchmark_trials_executed": 0,
   "execution_authority": true,
   "terminal_credit": false,
-  "incremental_spend_usd": 0
+  "incremental_spend_usd": 0,
+  "capability_first_checkpoint_admission_blob": "49e4f9c232f876546b2c72fb32ba19a3e487e1c9",
+  "capability_first_admission_verification_blob": "7ba01fca8338d966a40f25a8c74f6e1366b29f2e"
 }
