@@ -38,12 +38,15 @@ def _safe_bound_file(root: Path, ref: Any, label: str) -> tuple[Path, str]:
     if not isinstance(expected, str) or len(expected) != 40:
         raise BoundRuntimeDispatchError("BOUND_BLOB_INVALID:" + label)
     root = root.resolve()
-    path = (root / rel).resolve()
+    raw_path = root / rel
+    if raw_path.is_symlink():
+        raise BoundRuntimeDispatchError("BOUND_SYMLINK_FORBIDDEN:" + label)
+    path = raw_path.resolve()
     try:
         path.relative_to(root)
     except ValueError as exc:
         raise BoundRuntimeDispatchError("BOUND_PATH_ESCAPE:" + label) from exc
-    if not path.is_file() or path.is_symlink():
+    if not path.is_file():
         raise BoundRuntimeDispatchError("BOUND_FILE_INVALID:" + label)
     actual = _git_blob(path)
     if actual != expected:
