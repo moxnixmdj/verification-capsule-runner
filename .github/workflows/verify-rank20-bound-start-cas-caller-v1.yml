@@ -1,6 +1,9 @@
 name: Verify Rank20 bound START-CAS caller v1
 
 on:
+  push:
+    branches:
+      - repair/rank20-start-cas-caller-v8-20261010-v1
   pull_request:
     branches:
       - terminal-execution-v1
