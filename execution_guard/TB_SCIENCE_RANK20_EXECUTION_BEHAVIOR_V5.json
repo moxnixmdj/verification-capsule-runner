@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V5",
   "date": "2026-10-10",
-  "status": "RANK20_V5_GENERATION_NEUTRAL_GATE_CANDIDATE__ZERO_EXPOSURE",
+  "status": "RANK20_V5_GENERATION_NEUTRAL_INNER_GATES__FRESH_V3_OUTER_WORKFLOW_GATE__ZERO_EXPOSURE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
   "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
@@ -73,7 +73,12 @@
     "logical_attempt_identity_resolved_from_content_addressed_public_authority": true,
     "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
     "execution_claim_binding_digest_required": true,
-    "execution_claim_epoch_reauthorization_changes_logical_attempt_identity": true
+    "execution_claim_epoch_reauthorization_changes_logical_attempt_identity": true,
+    "generation_neutral_inner_activation_gate": true,
+    "outer_workflow_fresh_v3_activation_trigger": true,
+    "outer_workflow_fresh_v3_head_and_diff_gate": true,
+    "workflow_invokes_generation_neutral_preflight_v8": true,
+    "workflow_invokes_generation_neutral_start_cas_v8": true
   },
   "runtime_bindings": {
     "planner": {
@@ -167,10 +172,6 @@
     "claim_bound_identity_resolver": {
       "path": "execution_guard/rank20_claim_bound_identity_v1.py",
       "git_blob_sha": "d5e5207a41a5cf0983a0078b1d996bffc9e7a01c"
-    },
-    "logical_attempt_claim_binding": {
-      "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V3.json",
-      "git_blob_sha": "59fa5616f1754f90ded1c3b30cb53c98b4348cee"
     },
     "logical_attempt_binding_helper": {
       "path": "execution_guard/rank20_claim_bound_identity_v1.py",
