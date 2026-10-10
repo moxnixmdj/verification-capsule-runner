@@ -53,7 +53,7 @@ def main() -> int:
     safe_id = os.environ.get("SAFE_ID") or "diag-chipseq-trial-0"
     base = root / "jobs" / safe_id
     guard_path = root / "RANK19_PRESTART_GUARD.json"
-    cas_path = root / "RANK19_START_CAS_V6.json"
+    cas_path = root / "RANK19_START_CAS_V7.json"
     guard = _read_json(guard_path)
     cas = _read_json(cas_path)
     surface_path = root / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
@@ -317,7 +317,7 @@ def main() -> int:
             "ANY_NON_SUCCESS_AFTER_CAS_COUNTS_FINAL_ZERO"
         ),
     }
-    out = root / (safe_id + "__SLOT_RECEIPT_V6.json")
+    out = root / (safe_id + "__SLOT_RECEIPT_V7.json")
     out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(receipt, sort_keys=True))
     return 0
