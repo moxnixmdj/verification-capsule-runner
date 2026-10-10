@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK19_PUBLIC_LEDGER_BINDING_V38",
+  "date": "2026-10-10",
+  "status": "CURRENT_PUBLIC_BINDING__BRAIN_LEDGER_V38__EIGHTEEN_CONSUMED__RANK19_UNREAD_UNSTARTED_UNCONSUMED",
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261010_V38.json",
+    "git_blob_sha": "137a2f61d911321365bd80613e3806a77dbe7eca"
+  },
+  "consumed_slots": 18,
+  "consumed_successes": 0,
+  "consumed_final_failures": 18,
+  "next_slot": {
+    "ledger_schedule_rank": 19,
+    "frozen_manifest_schedule_order": 18,
+    "task_rank": 18,
+    "slot_id": "terminal-bench-science/diag-chipseq::trial-0",
+    "task_digest": "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+  },
+  "logical_attempt_id": "def7e2921acf58d4ef03e3183512996c718a5a13069482cb825464c0c963a8b4",
+  "rank19_task_read_history": false,
+  "rank19_task_started": false,
+  "rank19_start_cas_acquired": false,
+  "rank19_benchmark_trials_consumed": 0,
+  "acceptance_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
