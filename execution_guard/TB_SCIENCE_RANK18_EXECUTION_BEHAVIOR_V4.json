@@ -102,7 +102,7 @@
     },
     "zero_exposure_tests": {
       "path": "capsules/tb_science_rank18_20261010_v1/rank18_v4_zero_exposure_reseal_tests.py",
-      "git_blob_sha": "5a1b282bcacef02368e5e0576af441c051b4b735"
+      "git_blob_sha": "eb9dabf3527788c7e2006525193b639fbcb3fa08"
     },
     "all_cycle_proof": {
       "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
@@ -150,7 +150,7 @@
     },
     "preflight": {
       "path": "capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py",
-      "git_blob_sha": "b0b6cb702f03ae5165afaeb81c59a60c93972c5e"
+      "git_blob_sha": "f1b5557508ac821338268884b3415f142e3d6281"
     },
     "admission_guard": {
       "path": "execution_guard/terminal_execution_admission_v3.py",
