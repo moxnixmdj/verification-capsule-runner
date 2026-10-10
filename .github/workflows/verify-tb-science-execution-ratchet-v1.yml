@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib, json, py_compile, subprocess, sys
+          import hashlib, json, os, py_compile, subprocess, sys
           from pathlib import Path
 
           root=Path(".").resolve()
@@ -110,7 +110,7 @@ jobs:
               promotion=s.get("promotion_verification")
               rel=bound(promotion,"surface.promotion_verification")
               py_compile.compile(str(root/rel),doraise=True)
-              subprocess.check_call([sys.executable,str(root/rel)])
+              env=dict(os.environ)\n              env["PYTHONPATH"]=str(root)+(os.pathsep+env["PYTHONPATH"] if env.get("PYTHONPATH") else "")\n              subprocess.check_call([sys.executable,str(root/rel)],env=env)
           assert json.loads(surface_path.read_text(encoding="utf-8"))==s
           assert not activation.exists()
           print("PASS__CURRENT_PROOF_CARRYING_TB_SCIENCE_SURFACE__RATCHETED__ZERO_EXPOSURE")
