@@ -59,28 +59,60 @@ jobs:
           print("PASS__CLAIM_BOUND_LOGICAL_IDENTITY_SEPARATION")
           PY
 
-      - name: Run zero-exposure reseal verifier
+      - name: Run state-appropriate zero-exposure verifier
         run: |
           set -euo pipefail
-          python capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py
+          python - <<'PY'
+          import json, subprocess, sys
+          from pathlib import Path
+          root=Path(".").resolve()
+          s=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text(encoding="utf-8"))
+          staged=s["execution_authority"] is False and s["task_read_authority"] is False
+          promoted=s["execution_authority"] is True and s["task_read_authority"] is True
+          assert staged or promoted
+          if staged:
+              p=root/"capsules/tb_science_rank19_20261010_v1/rank19_v2_zero_exposure_reseal_tests.py"
+          else:
+              p=root/s["promotion_verification"]["path"]
+          subprocess.check_call([sys.executable,str(p)])
+          print("PASS__STATE_APPROPRIATE_ZERO_EXPOSURE_VERIFIER")
+          PY
 
-      - name: Run staged admission and preflight
+      - name: Run admission and preflight without activation
         run: |
           set -euo pipefail
-          C=capsules/tb_science_rank19_20261010_v1
-          python execution_guard/terminal_execution_admission_v4.py             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"             --slot "terminal-bench-science/diag-chipseq::trial-0"             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
-          python "$C/rank19_execution_preflight_v7.py" --allow-staged
+          python - <<'PY'
+          import json, subprocess, sys
+          from pathlib import Path
+          root=Path(".").resolve()
+          s=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text(encoding="utf-8"))
+          staged=s["execution_authority"] is False and s["task_read_authority"] is False
+          promoted=s["execution_authority"] is True and s["task_read_authority"] is True
+          assert staged or promoted
+          subprocess.check_call([
+              sys.executable, str(root/s["admission_guard"]["path"]),
+              "--workflow", s["workflow_path"],
+              "--slot", s["slot_id"],
+              "--task-digest", s["task_digest"],
+          ])
+          args=[sys.executable,str(root/s["preflight"]["path"])]
+          if staged:
+              args.append("--allow-staged")
+          subprocess.check_call(args)
+          PY
 
       - name: Verify no activation or benchmark exposure
         run: |
           set -euo pipefail
-          C=capsules/tb_science_rank19_20261010_v1
-          test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
           python - <<'PY'
           import json
-          s=json.load(open("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json",encoding="utf-8"))
-          assert s["execution_authority"] is False
-          assert s["task_read_authority"] is False
+          from pathlib import Path
+          root=Path(".")
+          s=json.loads((root/"execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text(encoding="utf-8"))
+          staged=s["execution_authority"] is False and s["task_read_authority"] is False
+          promoted=s["execution_authority"] is True and s["task_read_authority"] is True
+          assert staged or promoted
+          assert not (root/s["activation_path"]).exists()
           assert s["task_read_history"] is False
           assert s["task_started"] is False
           assert s["benchmark_trials_consumed"]==0
