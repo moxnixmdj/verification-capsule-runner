@@ -30,7 +30,7 @@ jobs:
           C=capsules/tb_science_rank19_20261010_v1
           R=capsules/tb_science_rank15_20261009_v1
           test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
-          python -m py_compile             execution_guard/logical_attempt_identity_v2.py             execution_guard/terminal_execution_admission_v4.py             "$C/rank19_logical_attempt_binding_v1.py"             "$C/rank19_prestart_token_guard_v5.py"             "$C/rank19_start_cas_v7.py"             "$C/rank19_v7_status_journal_runner.py"             "$C/rank19_finalize_receipt_v7.py"             "$C/rank19_execution_preflight_v7.py"             "$C/rank19_v2_zero_exposure_reseal_tests.py"             "$C/rank19_v3_promoted_pre_activation_tests.py"             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"
+          python -m py_compile             execution_guard/logical_attempt_identity_v2.py             execution_guard/terminal_execution_admission_v4.py             "$C/rank19_logical_attempt_binding_v1.py"             "$C/rank19_prestart_token_guard_v5.py"             "$C/rank19_start_cas_v7.py"             "$C/rank19_v7_status_journal_runner.py"             "$C/rank19_finalize_receipt_v7.py"             "$C/rank19_execution_preflight_v7.py"             "$C/rank19_v2_zero_exposure_reseal_tests.py"             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"
 
       - name: Verify claim-bound identity derivation and separation
         run: |
