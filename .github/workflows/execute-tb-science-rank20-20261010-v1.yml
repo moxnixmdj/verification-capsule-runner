@@ -1,10 +1,10 @@
-name: Execute TB-Science rank20 V2 V13 claim-bound journaled one-shot
+name: Execute TB-Science rank20 V3 V13 claim-bound journaled one-shot
 
 on:
   pull_request:
     branches: [terminal-execution-v1]
     paths:
-      - "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json"
+      - "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V3_PR.json"
 
 permissions:
   contents: read
@@ -44,13 +44,13 @@ jobs:
           test "$GITHUB_RUN_ATTEMPT" = "1"
           test "$GITHUB_EVENT_NAME" = "pull_request"
           test "$GITHUB_BASE_REF" = "terminal-execution-v1"
-          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank20-20261010-v2"
-          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK20_V2_PR.json"
+          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank20-20261010-v3"
+          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK20_V3_PR.json"
           python - <<'PY'
           import json, os
           event=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
           assert event["pull_request"]["head"]["repo"]["full_name"] == os.environ["GITHUB_REPOSITORY"]
-          assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank20-20261010-v2"
+          assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank20-20261010-v3"
           assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
           PY
           python execution_guard/terminal_execution_admission_v4.py \
@@ -59,7 +59,7 @@ jobs:
             --task-digest "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289" \
             --require-activation \
             --require-execution-authority
-          python "$C/rank20_execution_preflight_v7.py" --require-activation
+          python "$C/rank20_execution_preflight_v8.py" --require-activation
 
       - name: Install exact Harbor
         run: |
@@ -141,7 +141,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          python "$C/rank20_start_cas_v7.py" --check-absent
+          python "$C/rank20_start_cas_v8.py" --check-absent
 
       - name: Read exact rank20 task and prove slot-bound all-cycle context envelope
         id: prestart
