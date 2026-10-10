@@ -1,0 +1,70 @@
+name: Verify Rank19 V14 promoted effective authority zero exposure
+
+on:
+  pull_request:
+    branches:
+      - "promote/rank19-v14-effective-authority-20261010-v1"
+    paths:
+      - ".github/workflows/verify-rank19-v14-promoted-effective-authority.yml"
+      - "execution_guard/**"
+      - "capsules/tb_science_rank19_20261010_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile promoted claim-bound surface
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank19_20261010_v1
+          R=capsules/tb_science_rank15_20261009_v1
+          test ! -e "$C/ACTIVATE_RANK19_V1_PR.json"
+          python -m py_compile             execution_guard/logical_attempt_identity_v2.py             execution_guard/terminal_execution_admission_v4.py             "$C/rank19_logical_attempt_binding_v1.py"             "$C/rank19_prestart_token_guard_v5.py"             "$C/rank19_start_cas_v7.py"             "$C/rank19_v7_status_journal_runner.py"             "$C/rank19_finalize_receipt_v7.py"             "$C/rank19_execution_preflight_v7.py"             "$C/rank19_v3_promoted_pre_activation_tests.py"             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"
+
+      - name: Verify promoted effective authority is claim-bound and zero-exposure
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank19_20261010_v1/rank19_v3_promoted_pre_activation_tests.py
+
+      - name: Verify proof-carrying admission and staged preflight
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank19_20261010_v1
+          python execution_guard/terminal_execution_admission_v4.py             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"             --slot "terminal-bench-science/diag-chipseq::trial-0"             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+          python "$C/rank19_execution_preflight_v7.py" --allow-staged
+
+      - name: Prove activation absence and zero benchmark exposure
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path(".")
+          c = root / "capsules/tb_science_rank19_20261010_v1"
+          activation = c / "ACTIVATE_RANK19_V1_PR.json"
+          assert not activation.exists(), "activation must remain absent"
+
+          s = json.loads((root / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json").read_text())
+          assert s["execution_authority"] is True
+          assert s["task_read_authority"] is True
+          assert s["task_read_history"] is False
+          assert s["task_started"] is False
+          assert s["benchmark_trials_consumed"] == 0
+          assert s["terminal_credit_delta"] == 0
+          assert s["logical_attempt_id"] == "a3672b9d77c8fa0b7d3f0610ac2c008d2888e566d8a75ac92aa7078c1523abe6"
+          assert s["execution_claim_binding_digest"] == "sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
+          print("PASS__RANK19_V14_PROMOTED_EFFECTIVE_AUTHORITY__ZERO_EXPOSURE")
+          PY
