@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-10",
-  "status": "ACTIVE_RANK18_V4_SAME_LOGICAL_ATTEMPT__FRESH_V2_ACTIVATION_BRANCH__ARTIFACTCONFIG_BRIDGE_REPAIRED__ZERO_EXPOSURE__AWAIT_VERIFICATION_AND_CANONICAL_PROMOTION",
+  "status": "ACTIVE_FAIL_CLOSED__CAPABILITY_FIRST_ADMISSION_REQUIRED__CURRENT_RANK18_NOT_AUTHORIZED_FOR_NEW_EXECUTION",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
@@ -27,7 +27,7 @@
   },
   "admission_guard": {
     "path": "execution_guard/terminal_execution_admission_v3.py",
-    "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
+    "git_blob_sha": "f3282bc2e9eaf3665a4f75725266c5be9dff43c5"
   },
   "epoch": {
     "path": "capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V4.json",
@@ -80,5 +80,17 @@
     "fresh_activation_branch": "execute/tb-science-rank18-20261010-v2",
     "retired_activation_branch": "execute/tb-science-rank18-20261010-v1"
   },
-  "next": "VERIFY_FULL_RANK18_V4_FRESH_BRANCH_PUBLIC_RESEAL__THEN_CANONICAL_PROMOTION__THEN_EXACT_ONE_FILE_V2_ACTIVATION_ONLY"
+  "next": "NO_NEW_TERMINAL_EXECUTION_UNTIL_EXACT_CAPABILITY_FIRST_ADMISSION_IS_BOUND_AND_SURFACE_RESEALED",
+  "capability_first_admission": {
+    "schema": "PROJECT_BRAIN_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_V1",
+    "authorized": false,
+    "workflow_path": ".github/workflows/execute-tb-science-rank18-20261010-v2.yml",
+    "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
+    "task_digest": "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9",
+    "scheduler_source": "moxnixmdj/brain:canonical/governance/CURRENT_DEVELOPMENT_SCHEDULER.json",
+    "scheduler_activation": "canonical/governance/CAPABILITY_FIRST_SCHEDULER_ACTIVATION_20261010_V3.json",
+    "brain_merge_commit": "5857a50148fdb8963ee94ba87cf8c8babee7aab8",
+    "decision": "PARK_CHECKPOINT_AUDIT_EXECUTION",
+    "reason": "CURRENT_SURFACE_IS_HISTORICAL_RANK18__NO_NEW_EXECUTION_ADMITTED__FUTURE_EXECUTION_REQUIRES_EXACT_CAPABILITY_FIRST_DECISION"
+  }
 }
