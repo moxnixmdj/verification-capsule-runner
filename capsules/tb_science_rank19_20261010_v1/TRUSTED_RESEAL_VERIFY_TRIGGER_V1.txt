@@ -2,3 +2,4 @@ Trigger trusted base-branch Rank19 V13 zero-exposure reseal verification only.
 No activation. No task read. No benchmark execution.
 Reverify after current-base guard reconciliation and trusted-verifier refresh.
 Reverify after derived-slot verifier correction.
+Reverify parked reseal against capability-first verifier v4.
