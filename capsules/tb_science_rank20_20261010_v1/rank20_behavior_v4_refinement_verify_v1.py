@@ -44,6 +44,9 @@ def main() -> int:
     assert old["runtime_bindings"]["start_cas"]["git_blob_sha"] == EXPECTED_OLD_CAS
     assert new["runtime_bindings"]["start_cas"]["git_blob_sha"] == EXPECTED_NEW_CAS
     assert blob(CAS) == EXPECTED_NEW_CAS
+    assert old["runtime_bindings"]["preflight"]["git_blob_sha"] == EXPECTED_OLD_PREFLIGHT
+    assert new["runtime_bindings"]["preflight"]["git_blob_sha"] == EXPECTED_NEW_PREFLIGHT
+    assert blob(PREFLIGHT) == EXPECTED_NEW_PREFLIGHT
 
     for row in (old, new):
         assert row["task_read"] is False
@@ -69,7 +72,7 @@ def main() -> int:
     assert proc.returncode == 0, proc.stderr
     assert "ModuleNotFoundError" not in proc.stderr
 
-    print("PASS__RANK20_V4_START_CAS_IMPORT_CLOSURE_REFINEMENT__ZERO_EXPOSURE")
+    print("PASS__RANK20_V4_IMPORT_CLOSURE_AND_AUTHORITY_DERIVED_ACTIVATION_REFINEMENT__ZERO_EXPOSURE")
     return 0
 
 
