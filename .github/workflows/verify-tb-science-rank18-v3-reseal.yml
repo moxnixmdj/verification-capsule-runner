@@ -1,0 +1,54 @@
+name: Verify TB-Science Rank18 V3 same-attempt reseal
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/verify-tb-science-rank18-v3-reseal.yml"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - "execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V3.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V3.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_LEDGER_BINDING_V35.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V3.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V3.json"
+      - "capsules/tb_science_rank18_20261010_v1/rank18_v3_zero_exposure_reseal_tests.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Require inert same-attempt V3 reseal
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V1_PR.json
+          python capsules/tb_science_rank18_20261010_v1/rank18_v3_zero_exposure_reseal_tests.py
+      - name: Verify exact repaired runner and V3 control blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py)" = "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
+          test "$(git hash-object execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V3.json)" = "ce0426b14fc664d1edd75a2f4a6d93b9bf5468da"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V3.json)" = "768466fbbf937f8f86d6ce7e13cb51f8c481b14d"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_LEDGER_BINDING_V35.json)" = "2423b7b49a43cc786475029d0f2fe410ba169d6c"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V3.json)" = "9e56866a82f04a94187da56e5cf2955d3066c9f2"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V3.json)" = "2116b0bdf4259e3e2b616d337c0a9215fee8ac29"
+          test "$(git hash-object execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json)" = "0554ac6386acc08922437d06084b168e3e7b0343"
+          python -m py_compile             capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py             capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py             capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py             capsules/tb_science_rank18_20261010_v1/rank18_finalize_receipt_v6.py
+      - name: Verify proof-carrying admission without activation
+        run: |
+          set -euo pipefail
+          python execution_guard/terminal_execution_admission_v3.py             --workflow ".github/workflows/execute-tb-science-rank18-20261010-v1.yml"             --slot "terminal-bench-science/longitudinal-clinical-agent::trial-0"             --task-digest "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9"             --require-execution-authority
+          python capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py
+      - name: Re-run repaired ArtifactConfig bridge verifier
+        run: |
+          set -euo pipefail
+          python capsules/tb_science_rank18_20261010_v1/rank18_v3_zero_exposure_reseal_tests.py
+          grep -F "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df" execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V3.json
