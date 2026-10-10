@@ -6,10 +6,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-PRESTART = ROOT / "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v4.py"
-START = ROOT / "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py"
-RUNNER = ROOT / "capsules/tb_science_rank19_20261010_v1/rank19_v6_status_journal_runner.py"
-BEHAVIOR = ROOT / "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json"
+PRESTART = ROOT / "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v5.py"
+START = ROOT / "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v7.py"
+RUNNER = ROOT / "capsules/tb_science_rank19_20261010_v1/rank19_v7_status_journal_runner.py"
+BEHAVIOR = ROOT / "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V2.json"
 
 
 class Rank19ClaimBoundRuntimeWiringTests(unittest.TestCase):
