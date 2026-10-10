@@ -1,0 +1,161 @@
+name: Verify TB-Science planner v7 live zero exposure PR
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "brain/tb_science_v7_verify/**"
+      - "brain/TB_SCIENCE_PLANNER_V7_LIVE_VERIFY_TRIGGER.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  live-zero-exposure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    env:
+      LLAMA_CPP_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      RELEASE_TAG: brain-capability-qwen35-9b-m-exact-v1
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Clean-build exact llama.cpp
+        run: |
+          set -euo pipefail
+          rm -rf llama.cpp
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_CPP_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_CPP_REV"
+          cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+          test -x llama.cpp/build/bin/llama-server
+
+      - name: Restore exact Qwen model cache
+        uses: actions/cache/restore@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+
+      - name: Reassemble exact Qwen model if cache misses
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p models model-parts
+          if [ ! -f "models/$MODEL_FILE" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir model-parts --pattern "$MODEL_FILE.part*of03"
+            cat "model-parts/$MODEL_FILE.part01of03" "model-parts/$MODEL_FILE.part02of03" "model-parts/$MODEL_FILE.part03of03" > "models/$MODEL_FILE"
+          fi
+          echo "$MODEL_SHA256  models/$MODEL_FILE" | sha256sum -c -
+
+      - name: Start exact local cognition carrier
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m "models/$MODEL_FILE" --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080 -c 16384 -t 4 --parallel 1 --jinja --no-webui             "${EXTRA[@]}" > PLANNER_V7_LIVE_SERVER.log 2>&1 &
+          echo $! > PLANNER_V7_LIVE_SERVER.pid
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > PLANNER_V7_HEALTH.json 2>/dev/null; then ok=1; break; fi
+            if ! kill -0 "$(cat PLANNER_V7_LIVE_SERVER.pid)" 2>/dev/null; then cat PLANNER_V7_LIVE_SERVER.log; exit 1; fi
+            sleep 1
+          done
+          test "$ok" = 1
+          grep -Eq "n_ctx_slot = 16384|n_ctx_slot = 16[0-9]{3}" PLANNER_V7_LIVE_SERVER.log
+
+      - name: Exercise exact repaired planner path on synthetic input only
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE/brain/tb_science_v7_verify"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from canonical.runtime import harbor_science_planner_v7 as planner
+
+          logical_attempt_id = "0" * 64
+          instruction = (
+              "ZERO-EXPOSURE SYNTHETIC TRANSPORT QUALIFICATION ONLY. "
+              "Use submit_science_proposal exactly once. "
+              "Set material_requirements to [R1]. "
+              "Return one terse candidate with action_id A1, covers [R1], "
+              "executor shell, command true, verify_executor shell, verify_command true. "
+              "Do not request evidence and do not claim finish authority. "
+          )
+          padding = ""
+          input_tokens = 0
+          for _ in range(40):
+              prompt = instruction + "\nSYNTHETIC_PADDING_ONLY:\n" + padding
+              payload, _ = planner.build_request_payload(
+                  prompt, logical_attempt_id=logical_attempt_id, cycle=0
+              )
+              input_tokens = planner.count_input_tokens(payload)
+              if input_tokens >= 3000:
+                  break
+              padding += (" synthetic_padding_token" * 100)
+          assert 3000 <= input_tokens < 8192, input_tokens
+
+          out = planner.plan(
+              prompt,
+              logical_attempt_id=logical_attempt_id,
+              cycle=0,
+              timeout_s=300,
+          )
+          proposal = planner.normalize_proposal_object(
+              planner.extract_json_object(out["text"])
+          )
+          assert out["input_tokens"] == input_tokens, (out["input_tokens"], input_tokens)
+          assert out["effective_timeout_s"] >= 1700, out
+          assert out["effective_timeout_s"] > 3 * 387, out
+          assert out["transport_attempts"] >= 1, out
+          assert proposal.get("material_requirements"), proposal
+          assert isinstance(proposal.get("candidates"), list) and proposal["candidates"], proposal
+
+          receipt = {
+              "schema": "PROJECT_BRAIN_TB_SCIENCE_PLANNER_V7_LIVE_ZERO_EXPOSURE_VERIFY_V1",
+              "status": "PASS__PINNED_LIVE_LLAMA_CPP_QWEN__SYNTHETIC_3K_REQUEST__GENERATION_COMPLETE_DEADLINE__ZERO_BENCHMARK_EXPOSURE",
+              "planner_git_blob_sha_expected": "e5d6ab78b6cf5bacee568cd3701410a8745b9ce8",
+              "llama_cpp_commit": "bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "model_sha256": "f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "input_tokens": out["input_tokens"],
+              "effective_timeout_s": out["effective_timeout_s"],
+              "duration_s": out["duration_s"],
+              "transport_attempts": out["transport_attempts"],
+              "request_identity_sha256": out["request_identity_sha256"],
+              "payload_sha256": out["payload_sha256"],
+              "task_read": False,
+              "task_started": False,
+              "benchmark_trials_consumed": 0,
+              "execution_authority": False,
+              "rank19_authority": False,
+              "terminal_credit_delta": 0
+          }
+          Path("PLANNER_V7_LIVE_ZERO_EXPOSURE_RECEIPT.json").write_text(
+              json.dumps(receipt, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8"
+          )
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-planner-v7-live-zero-exposure-pr
+          path: |
+            PLANNER_V7_LIVE_ZERO_EXPOSURE_RECEIPT.json
+            PLANNER_V7_LIVE_SERVER.log
+            PLANNER_V7_HEALTH.json
+          if-no-files-found: warn
+          retention-days: 7
