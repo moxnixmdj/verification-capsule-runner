@@ -180,7 +180,7 @@ jobs:
           name: tb-science-hysteretic-aquifer-control-trial-0-rank20-v3-claim-bound
           path: |
             hysteretic-aquifer-control-trial-0__SLOT_RECEIPT_V7.json
-            TERMINAL_EXECUTION_ADMISSION_V3.json
+            TERMINAL_EXECUTION_ADMISSION_V4.json
             RANK20_EXECUTION_PREFLIGHT_V6.json
             RANK20_START_CAS_CHECK_V7.json
             RANK20_START_CAS_V7.json
