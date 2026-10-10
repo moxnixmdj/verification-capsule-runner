@@ -44,7 +44,7 @@ def main():
     assert b["workflow_path"]==s["workflow_path"]
     assert b["runtime_bindings"]["status_journal_runner"]["git_blob_sha"]=="d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
     assert b["runtime_bindings"]["start_cas"]["git_blob_sha"]=="36d220f5caaee9f52fe9dd6f5dac1cbac774d3b1"
-    assert b["runtime_bindings"]["preflight"]["git_blob_sha"]=="b0b6cb702f03ae5165afaeb81c59a60c93972c5e"
+    assert b["runtime_bindings"]["preflight"]["git_blob_sha"]=="f1b5557508ac821338268884b3415f142e3d6281"
     for row in b["runtime_bindings"].values():
         if isinstance(row,dict) and "path" in row and "git_blob_sha" in row:
             require_binding(row)
