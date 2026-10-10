@@ -43,7 +43,7 @@
     "start_cas_postwrite_readback_required": true,
     "family_global_workflow_concurrency_required": true,
     "family_global_workflow_concurrency_group": "tb-science-terminal-durable-one-shot-global",
-    "status_start_store_commit_sha_scoped": true,
+    "status_start_store_commit_sha_scoped": false,
     "exact_single_activation_branch_required": true,
     "candidate_local_unknown_coverage_rejection": true,
     "unknown_coverage_coercion_forbidden": true,
@@ -66,7 +66,9 @@
     "seeded_request_identity": true,
     "seed_identity_excludes_carrier_identity": true,
     "goal_text_excluded_from_logical_attempt_identity": true,
-    "carrier_identity_excluded_from_logical_attempt_identity": true
+    "carrier_identity_excluded_from_logical_attempt_identity": true,
+    "status_start_store_slot_global_anchor_required": true,
+    "status_start_store_anchor_sha": "8545e23a3113b2e4aef753799eb71d7c192ae815"
   },
   "runtime_bindings": {
     "planner": {
@@ -103,7 +105,7 @@
     },
     "start_cas": {
       "path": "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py",
-      "git_blob_sha": "530bdfc465fc0d962478242d62f27746de6411d7"
+      "git_blob_sha": "b8fe83055d3cd10487f2dbebe236890fc8428fb5"
     },
     "generic_start_cas": {
       "path": "execution_guard/terminal_slot_start_cas_v2.py",
