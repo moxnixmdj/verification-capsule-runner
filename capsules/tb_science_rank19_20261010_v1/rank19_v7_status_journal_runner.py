@@ -33,9 +33,9 @@ COMMIT_REL = BARRIER_REL / "START_COMMITTED.json"
 JOURNAL_REL = Path("RANK19_CAUSAL_JOURNAL_BRIDGE")
 JOURNAL_NAMESPACE = "terminal-journal-v1"
 QUALIFY_NAMESPACE = "terminal-status-qualify-v1"
-CAS_RECEIPT = ROOT / "RANK19_START_CAS_V6.json"
-RUNNER_RECEIPT = ROOT / "RANK19_V6_STATUS_JOURNAL_RUNNER_RECEIPT.json"
-HARBOR_LOG = ROOT / "RANK19_V6_HARBOR_RUN.log"
+CAS_RECEIPT = ROOT / "RANK19_START_CAS_V7.json"
+RUNNER_RECEIPT = ROOT / "RANK19_V7_STATUS_JOURNAL_RUNNER_RECEIPT.json"
+HARBOR_LOG = ROOT / "RANK19_V7_HARBOR_RUN.log"
 READY_TIMEOUT_S = 3600.0
 POLL_S = 0.2
 
@@ -242,7 +242,7 @@ def _process_journal_pending(store: Any) -> int:
 
 def _acquire_start_commit() -> None:
     proc = subprocess.run(
-        [sys.executable, str(C / "rank19_start_cas_v6.py"), "--acquire"],
+        [sys.executable, str(C / "rank19_start_cas_v7.py"), "--acquire"],
         cwd=ROOT,
         env=dict(os.environ),
         check=False,
