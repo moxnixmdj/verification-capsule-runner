@@ -1,0 +1,40 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_PUBLIC_AUTHORITY_BINDING_V15",
+  "date": "2026-10-10",
+  "status": "PROMOTED_EFFECTIVE_PREACTIVATION_ZERO_EXPOSURE",
+  "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
+  "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
+  "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
+  "logical_attempt_id": "aeadf4a998d2392b4aa277f1fdd6d31f057a81305dd98f9038f3a8b8bb14be68",
+  "execution_claim_binding_digest": "sha256:bc4522cfc367a3fd250ce53d0812b8a856f575dcf7eb00e8104781cfe0d29a15",
+  "logical_attempt_claim_binding": {
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V12.json",
+    "git_blob_sha": "c081d1a7ece49e2d5313503548be19a00ef8a274"
+  },
+  "brain_authority": {
+    "git_blob_sha": "c9346c09a963c080a90ed54eb26847b65d208f15"
+  },
+  "brain_ledger": {
+    "git_blob_sha": "8e24f2352ab34da06b486922c55985894f6a5f29"
+  },
+  "public_reseal_verification": {
+    "git_blob_sha": "68ad6e384e10833a2e97e47e6d4af37d820277ca",
+    "public_commit_sha": "b42c5948b1d11ce82dc5fc76ec03697153d8afd5"
+  },
+  "ledger": {
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V61.json",
+    "git_blob_sha": "919d93263713eeabe70e7220df9df3e88363ec32"
+  },
+  "execution_branch": "execute/tb-science-rank20-20261010-v3",
+  "activation_filename": "ACTIVATE_RANK20_V3_PR.json",
+  "task_read_history": false,
+  "task_started": false,
+  "start_cas_acquired": false,
+  "benchmark_trials_consumed": 0,
+  "execution_authority": true,
+  "task_read_authority": true,
+  "activation_authority": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
