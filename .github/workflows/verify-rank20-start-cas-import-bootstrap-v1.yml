@@ -1,0 +1,44 @@
+name: Verify Rank20 start-CAS import bootstrap
+
+on:
+  push:
+    branches:
+      - repair/rank20-start-cas-import-bootstrap-20261010-v1
+    paths:
+      - "capsules/tb_science_rank20_20261010_v1/rank20_start_cas_v7.py"
+      - "capsules/tb_science_rank20_20261010_v1/test_rank20_start_cas_import_bootstrap_v1.py"
+      - ".github/workflows/verify-rank20-start-cas-import-bootstrap-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile zero-exposure import path
+        run: |
+          set -euo pipefail
+          python -m py_compile             capsules/tb_science_rank20_20261010_v1/rank20_start_cas_v7.py             capsules/tb_science_rank20_20261010_v1/test_rank20_start_cas_import_bootstrap_v1.py             execution_guard/rank20_claim_bound_identity_v1.py             execution_guard/logical_attempt_identity_v2.py             execution_guard/terminal_slot_start_cas_v2.py
+      - name: Run isolated import regression
+        run: |
+          python - <<'PY'
+          import runpy
+          path="capsules/tb_science_rank20_20261010_v1/test_rank20_start_cas_import_bootstrap_v1.py"
+          ns=runpy.run_path(path, run_name="rank20_import_regression")
+          ns["test_start_cas_wrapper_bootstraps_repository_imports_without_cwd_help"]()
+          print("PASS__RANK20_START_CAS_IMPORT_BOOTSTRAP__ZERO_EXPOSURE")
+          PY
+      - name: Prove no activation or task exposure
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json
+          test ! -e RANK20_START_CAS_CHECK_V7.json
+          test ! -e RANK20_START_CAS_V7.json
