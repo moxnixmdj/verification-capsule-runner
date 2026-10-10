@@ -1,0 +1,54 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_PUBLIC_LEDGER_BINDING_V51",
+  "date": "2026-10-10",
+  "status": "STAGED_PUBLIC_LEDGER__BRAIN_V51__CLAIM_V6_START_CAS_IMPORT_REPAIR__ZERO_EXPOSURE",
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261010_V51.json",
+    "git_blob_sha": "e9edbd032cc851c50c92dafdb7b114a5d2f7eaaf"
+  },
+  "brain_authority": {
+    "path": "canonical/governance/TB_SCIENCE_RANK20_ONE_SLOT_EXECUTION_AUTHORITY_20261010_V6.json",
+    "git_blob_sha": "0475ca6aa61b135a87fc818d147d475d0e3c31d2"
+  },
+  "repair_verification": {
+    "path": "canonical/verification/TB_SCIENCE_RANK20_V4_START_CAS_IMPORT_REPAIR_VERIFY_20261010_V1.json",
+    "git_blob_sha": "c318d153a08f4132186fee0ac483b5a3414ce4ec"
+  },
+  "consumed_slots": 18,
+  "consumed_successes": 0,
+  "consumed_final_failures": 18,
+  "next_slot": {
+    "ledger_schedule_rank": 20,
+    "frozen_manifest_schedule_order": 19,
+    "task_rank": 19,
+    "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
+    "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289"
+  },
+  "logical_attempt_id": "c9d1a7cb834286ae63ec78d3fe471193760e5d404c5154c796c48c254b6fae5b",
+  "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
+  "execution_claim_binding_digest": "sha256:bfb1d1f78efdda8a051d58178e21e8031e4e09c4e5e0dcd0fe20eaaeba68c3ea",
+  "claim_epoch_id": "RANK20_V13_START_CAS_IMPORT_REPAIR_20261010_V6",
+  "logical_attempt_claim_binding": {
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V6.json",
+    "git_blob_sha": "ea13cc707c685f43a61a990d851fee2bbcb23f3f"
+  },
+  "effective_behavior_git_blob_sha": "e0c43d4771a73679f2ac45fa5164aeab9760d1b6",
+  "behavior_refinement_verification_git_blob_sha": "58b016e6785538830c0aa90a03d657aaecbe9c4b",
+  "workflow_git_blob_sha": "e4cb372e501790fd9ed5aa72193d18109a599102",
+  "zero_exposure_test_git_blob_sha": "ba2d467c54a9f9720bc1b647befe655b80555fab",
+  "import_closure_regression_git_blob_sha": "db16ce3f5440bb3ad8fc1c271d152a08fde1d0e7",
+  "preflight_git_blob_sha": "74d55719d01f3f434b0b75001548f56a4ed83ff6",
+  "start_cas_git_blob_sha": "0476919d1619c34168b25df98bcd93f6c64585ce",
+  "rank20_task_read_history": false,
+  "rank20_task_started": false,
+  "rank20_start_cas_acquired": false,
+  "rank20_benchmark_trials_consumed": 0,
+  "public_execution_authority_candidate": true,
+  "public_execution_authority_effective": false,
+  "public_task_read_authority_effective": false,
+  "activation_present": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
