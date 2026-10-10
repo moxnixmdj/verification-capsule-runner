@@ -11,6 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CAS = ROOT / "capsules/tb_science_rank20_20261010_v1/rank20_start_cas_v8.py"
 PREFLIGHT = ROOT / "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v8.py"
+WORKFLOW = ROOT / ".github/workflows/execute-tb-science-rank20-20261010-v1.yml"
+FRESH_BRANCH = "execute/tb-science-rank20-20261010-v3"
+FRESH_ACTIVATION = "ACTIVATE_RANK20_V3_PR.json"
 RETIRED_BRANCH = "execute/tb-science-rank20-20261010-v2"
 RETIRED_ACTIVATION = "ACTIVATE_RANK20_V2_PR.json"
 
@@ -23,6 +26,15 @@ class Rank20V8GenerationNeutralGateTests(unittest.TestCase):
             self.assertNotIn(RETIRED_BRANCH, text)
             self.assertNotIn(RETIRED_ACTIVATION, text)
             ast.parse(text)
+
+    def test_outer_workflow_uses_fresh_v3_activation_and_v8_gates(self):
+        text = WORKFLOW.read_text(encoding="utf-8")
+        self.assertNotIn(RETIRED_BRANCH, text)
+        self.assertNotIn(RETIRED_ACTIVATION, text)
+        self.assertIn(FRESH_BRANCH, text)
+        self.assertIn(FRESH_ACTIVATION, text)
+        self.assertIn('rank20_execution_preflight_v8.py', text)
+        self.assertIn('rank20_start_cas_v8.py', text)
 
     def test_start_cas_uses_authority_derived_epoch_and_activation_checks(self):
         text = CAS.read_text(encoding="utf-8")
