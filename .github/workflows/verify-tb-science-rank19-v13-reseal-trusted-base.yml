@@ -1,0 +1,175 @@
+name: Verify TB-Science Rank19 V13 reseal from trusted base
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json"
+      - "capsules/tb_science_rank19_20261010_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Independently verify exact inert Rank19 surface
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          root=Path(".").resolve()
+          SLOT="terminal-bench-science/diag-chipseq::trial-0"
+          DIGEST="sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
+          ATTEMPT="def7e2921acf58d4ef03e3183512996c718a5a13069482cb825464c0c963a8b4"
+          BRAIN_AUTH="ea76756ea30084c7f8291747ae9d204485a0186a"
+          BRAIN_LEDGER="137a2f61d911321365bd80613e3806a77dbe7eca"
+          PLANNER_VERIFY="9797cc625e3e33bb905cf23fa6c79f66dc9794db"
+          PLANNER="e5d6ab78b6cf5bacee568cd3701410a8745b9ce8"
+          AGENT="8deede8adb960b6ebf7ee747a5e9ff1016238b7e"
+
+          exact = {
+            ".github/workflows/execute-tb-science-rank19-20261010-v1.yml":"dfed81c60b57b88304ac511b1e4a7024eaf38e01",
+            "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json":"e5b1e69a5276bb0f6e682c6ace16ead4aa8eb8f2",
+            "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json":"0007dfe62a266aa2d76d9319a2c6e00da740b0dd",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json":"f0cb8fb9930140dc0b22add001cf268cc65a5a91",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json":"357bbd1a26be73200b6076e6751c58e23d95f325",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json":"82d15273a0a8bc89bb3a351cf260b9933d693758",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json":"d8d8c5def1f25a3077a89e8111805b24b96a6f0e",
+            "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py":"8a66cfa696a1b40f0e095e4f90c86a9ad2902442",
+            "capsules/tb_science_rank19_20261010_v1/rank19_v1_zero_exposure_reseal_tests.py":"cb2990b19c5d6bf7869d0eeb1feb2c4ac1bebdfa",
+          }
+
+          def blob(rel):
+              raw=(root/rel).read_bytes()
+              return hashlib.sha1(b"blob "+str(len(raw)).encode()+b"\0"+raw).hexdigest()
+          def load(rel):
+              return json.loads((root/rel).read_text(encoding="utf-8"))
+          def bound(row):
+              assert isinstance(row,dict) and row.get("path") and row.get("git_blob_sha"), row
+              assert blob(row["path"])==row["git_blob_sha"], row
+
+          for rel,sha in exact.items():
+              assert blob(rel)==sha,(rel,blob(rel),sha)
+
+          s=load("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json")
+          assert s["schema"]=="PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1"
+          assert s["family"]=="TB_SCIENCE"
+          assert s["slot_id"]==SLOT and s["task_digest"]==DIGEST
+          assert s["task_read_history"] is False and s["task_started"] is False
+          assert s["benchmark_trials_consumed"]==0
+          assert s["terminal_credit_delta"]==0
+          assert s["workflow_path"]==".github/workflows/execute-tb-science-rank19-20261010-v1.yml"
+          assert not (root/s["activation_path"]).exists()
+          for k in ("behavior","authority","ledger","invariant_registry","admission_guard","epoch","execution_claim","preflight","finalizer"):
+              bound(s[k])
+
+          a=load(s["authority"]["path"])
+          assert a["slot_id"]==SLOT and a["task_digest"]==DIGEST and a["logical_attempt_id"]==ATTEMPT
+          assert a["brain_authority"]["git_blob_sha"]==BRAIN_AUTH
+          assert a["brain_ledger"]["git_blob_sha"]==BRAIN_LEDGER
+          assert a["planner_v7_zero_exposure_verification"]["git_blob_sha"]==PLANNER_VERIFY
+          assert a["planner_v7_zero_exposure_verification"]["planner_git_blob_sha"]==PLANNER
+          assert a["planner_v7_zero_exposure_verification"]["agent_git_blob_sha"]==AGENT
+          assert a["task_read_history"] is False and a["task_started"] is False
+          assert a["benchmark_trials_consumed"]==0 and a["promotion_authority"] is False
+
+          l=load(s["ledger"]["path"])
+          assert l["logical_attempt_id"]==ATTEMPT
+          assert l["next_slot"]["slot_id"]==SLOT and l["next_slot"]["task_digest"]==DIGEST
+          assert l["rank19_task_read_history"] is False and l["rank19_task_started"] is False
+          assert l["rank19_start_cas_acquired"] is False and l["rank19_benchmark_trials_consumed"]==0
+
+          b=load(s["behavior"]["path"])
+          assert b["slot_id"]==SLOT and b["task_digest"]==DIGEST
+          f=b["behavior"]
+          for key in (
+              "generation_complete_planner_deadline",
+              "planner_timeout_accounts_for_full_bounded_completion",
+              "durable_start_cas_required",
+              "agent_ready_precedes_start_cas",
+              "durable_action_intent_ack_before_effect",
+              "durable_state_commit_ack_before_next_action",
+              "uncertain_effect_replay_forbidden",
+              "family_global_workflow_concurrency_required",
+          ):
+              assert f.get(key) is True,key
+          assert f["family_global_workflow_concurrency_group"]=="tb-science-terminal-durable-one-shot-global"
+          assert b["runtime_bindings"]["planner"]["git_blob_sha"]==PLANNER
+          assert b["runtime_bindings"]["agent"]["git_blob_sha"]==AGENT
+          for row in b["runtime_bindings"].values():
+              if isinstance(row,dict) and row.get("path") and row.get("git_blob_sha"):
+                  bound(row)
+
+          e=load(s["epoch"]["path"]); c=load(s["execution_claim"]["path"])
+          for d in (e,c):
+              assert d["slot_id"]==SLOT and d["task_digest"]==DIGEST and d["logical_attempt_id"]==ATTEMPT
+              assert d["execution_branch"]=="execute/tb-science-rank19-20261010-v1"
+          assert c["activation_filename"]=="ACTIVATE_RANK19_V1_PR.json"
+
+          wf=(root/s["workflow_path"]).read_text(encoding="utf-8")
+          assert "group: tb-science-terminal-durable-one-shot-global" in wf
+          assert "execute/tb-science-rank19-20261010-v1" in wf
+          assert "ACTIVATE_RANK19_V1_PR.json" in wf
+          assert "rank18" not in wf.lower()
+
+          for rel in (
+              "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v4.py",
+              "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py",
+              "capsules/tb_science_rank19_20261010_v1/rank19_v6_status_journal_runner.py",
+              "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v6.py",
+              "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
+          ):
+              txt=(root/rel).read_text(encoding="utf-8")
+              assert "rank18" not in txt.lower(),rel
+              assert SLOT in txt and DIGEST.split(":",1)[1] in txt,rel
+
+          runtime = {
+            "canonical/runtime/bounded_imperative_directive_semantics_v1.py":"3f08b2703723537e5a146346eead6a387424687f",
+            "canonical/runtime/bounded_predicate_argument_semantics.py":"c7f190927e31fa2ab32f129b43402e98ea836498",
+            "canonical/runtime/bounded_task_directive_semantics_v1.py":"e3a4c01cc08e7a569692a5d6f03a6feec69934bf",
+            "canonical/runtime/explicit_requirement_index_v2.py":"525fac941302254a47710aaae30b0174fab2cb40",
+            "canonical/runtime/harbor_command_policy.py":"a525773417291c7a4841bf35e1baff5370350d0d",
+            "canonical/runtime/harbor_environment_transport_v2.py":"9aebd804c6d71b07da5134ed4e2d14a6427de84c",
+            "canonical/runtime/harbor_science_agent_v13.py":"8deede8adb960b6ebf7ee747a5e9ff1016238b7e",
+            "canonical/runtime/harbor_science_evidence_store_v1.py":"57373f94e4f8ad64f071a2e55ff04d49074d39d5",
+            "canonical/runtime/harbor_science_planner_v7.py":"e5d6ab78b6cf5bacee568cd3701410a8745b9ce8",
+            "canonical/runtime/instruction_constraint_compiler_v1.py":"a4a3f87f827bd6f0f85fe70c77a1de5aa3237c6f",
+            "canonical/runtime/lossless_raw_task_contract_v1.py":"53a440fccf91aa08f18abfff4f283e5fd18d9fcd",
+            "canonical/runtime/raw_task_acceptance_residual_localizer_v1.py":"f29616cf7726959aa28db4ed6541a9fc0bc2ac76",
+            "canonical/runtime/science_typed_action_protocol_v2.py":"fa10b92942b92ab6c7f2f1831f660f2a2e3bd6e3",
+            "canonical/runtime/source_aligned_acceptance_program_v1.py":"742c183cccc2ec4bb5f94e88048590e2991dacd4",
+            "canonical/runtime/source_contract_compiler.py":"ba53b1f1a3c1d8e63c906eb4952c7e9b6aef1231",
+            "canonical/runtime/structured_method_expression_ast_candidate_v2.py":"7623f68bab3c1b207e237389841a4b688e509ff3",
+            "canonical/runtime/typed_acceptance_program_v1.py":"7fd2e575bd2d5c36f48c713f15177d5b0d7e68c5",
+          }
+          prefix="capsules/tb_science_rank15_20261009_v1/"
+          for rel,sha in runtime.items():
+              assert blob(prefix+rel)==sha,(rel,blob(prefix+rel),sha)
+
+          print("PASS__TRUSTED_BASE_RANK19_V13_ZERO_EXPOSURE_RESEAL")
+          PY
+
+      - name: Compile and run trusted admission/preflight
+        run: |
+          set -euo pipefail
+          C=capsules/tb_science_rank19_20261010_v1
+          R=capsules/tb_science_rank15_20261009_v1
+          python -m py_compile             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"             "$R/canonical/runtime/harbor_science_evidence_store_v1.py"             "$R/canonical/runtime/science_typed_action_protocol_v2.py"             "$C/rank19_execution_preflight_v6.py"             "$C/rank19_prestart_token_guard_v4.py"             "$C/rank19_start_cas_v6.py"             "$C/rank19_v6_status_journal_runner.py"             "$C/rank19_finalize_receipt_v6.py"
+          python execution_guard/terminal_execution_admission_v3.py             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"             --slot "terminal-bench-science/diag-chipseq::trial-0"             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"             --require-execution-authority
+          python "$C/rank19_execution_preflight_v6.py" --allow-staged
+          echo PASS__TRUSTED_BASE_RANK19_RESEAL_STATIC_EXECUTION__ZERO_EXPOSURE
