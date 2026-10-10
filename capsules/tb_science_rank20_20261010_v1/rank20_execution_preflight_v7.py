@@ -16,7 +16,6 @@ SURFACE = ROOT / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
 SLOT = "terminal-bench-science/hysteretic-aquifer-control::trial-0"
 DIGEST = "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289"
 WORKFLOW = ".github/workflows/execute-tb-science-rank20-20261010-v1.yml"
-ACTIVATION = "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json"
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK20_EXECUTION_PREFLIGHT_V7"
 
 
