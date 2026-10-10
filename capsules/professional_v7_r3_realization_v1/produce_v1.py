@@ -10,7 +10,7 @@ import subprocess
 
 from canonical.runtime import native_artifact_cross_format_candidate_v1 as candidate
 from canonical.runtime import native_artifact_cross_format_proof_v1 as structural
-from canonical.runtime import native_artifact_render_preservation_proof_v1 as render
+from capsules.native_render_preservation_v1.canonical.runtime import native_artifact_render_preservation_proof_v1 as render
 from capsules.professional_v7_r3_realization_v1 import professional_step_binding_authority_v1 as step_auth
 
 SCHEMA = "PROJECT_BRAIN_PROFESSIONAL_V7_R3_REALIZATION_EVIDENCE_V1"
@@ -26,7 +26,7 @@ SEED = 7301
 EXPECTED_BLOBS = {
     "canonical/runtime/native_artifact_cross_format_candidate_v1.py": "f3e5090647dd9029ab9f46efd06dc0c0d0addbc3",
     "canonical/runtime/native_artifact_cross_format_proof_v1.py": "904eb61171f5ee775ff7824c1be7778d7acc4a23",
-    "canonical/runtime/native_artifact_render_preservation_proof_v1.py": "39374e775d54cdc58315d7a1f877d834282a64f7",
+    "capsules/native_render_preservation_v1/canonical/runtime/native_artifact_render_preservation_proof_v1.py": "39374e775d54cdc58315d7a1f877d834282a64f7",
     "canonical/runtime/ooxml_package_transaction.py": "970be62854c918b306ae3f62989009bfbd0e8fc7",
     "canonical/runtime/pdf_native_edit_transaction.py": "b9f673ffe0474d00a598089077ad93db40c00dd8",
     "capsules/professional_v7_r3_realization_v1/professional_step_binding_authority_v1.py": "27f3c137dae7f00925083a0824d008c2b4d10f0a",
