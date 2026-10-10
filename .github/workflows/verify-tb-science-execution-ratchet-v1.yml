@@ -12,6 +12,7 @@ on:
       - ".github/workflows/execute-tb-science-rank*.yml"
       - ".github/workflows/verify-tb-science-execution-ratchet-v1.yml"
       - "capsules/tb_science_rank*/**"
+      - "!capsules/tb_science_rank*/ACTIVATE_RANK*_PR.json"
 
 permissions:
   contents: read
