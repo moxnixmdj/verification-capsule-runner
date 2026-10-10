@@ -56,8 +56,9 @@ jobs:
           assert surface["schema"] == "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1"
           assert surface["family"] == "TB_SCIENCE"
           assert surface["active"] is True
-          assert surface["execution_authority"] is False
-          assert surface["task_read_authority"] is False
+          staged = surface["execution_authority"] is False and surface["task_read_authority"] is False
+          promoted = surface["execution_authority"] is True and surface["task_read_authority"] is True
+          assert staged or promoted, (surface["execution_authority"], surface["task_read_authority"])
           assert surface["task_read_history"] is False
           assert surface["task_started"] is False
           assert surface["benchmark_trials_consumed"] == 0
@@ -87,7 +88,13 @@ jobs:
 
           zero = runtime.get("zero_exposure_tests")
           assert isinstance(zero, dict)
-          subprocess.check_call([sys.executable, str(root / zero["path"])])
+          if staged:
+              subprocess.check_call([sys.executable, str(root / zero["path"])])
+          else:
+              promotion = surface.get("promotion_verification")
+              rel = bound(promotion, "surface.promotion_verification")
+              py_compile.compile(str(root / rel), doraise=True)
+              subprocess.check_call([sys.executable, str(root / rel)])
 
           admission = surface["admission_guard"]["path"]
           subprocess.check_call([
@@ -98,7 +105,10 @@ jobs:
           ])
 
           preflight = surface["preflight"]["path"]
-          subprocess.check_call([sys.executable, str(root / preflight), "--allow-staged"])
+          preflight_args = [sys.executable, str(root / preflight)]
+          if staged:
+              preflight_args.append("--allow-staged")
+          subprocess.check_call(preflight_args)
 
           surface_after = json.loads(surface_path.read_text(encoding="utf-8"))
           assert surface_after == surface
