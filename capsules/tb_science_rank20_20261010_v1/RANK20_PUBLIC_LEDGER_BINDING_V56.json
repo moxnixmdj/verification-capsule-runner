@@ -1,0 +1,48 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_PUBLIC_LEDGER_BINDING_V56",
+  "date": "2026-10-10",
+  "status": "PROMOTED_PUBLIC_LEDGER__BRAIN_V56__FRESH_V3_IDENTITY__EFFECTIVE_PREACTIVATION__ZERO_EXPOSURE",
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261010_V56.json",
+    "git_blob_sha": "7228aa4cc33337506543e459408e7afdbf8e68c0"
+  },
+  "brain_authority": {
+    "path": "canonical/governance/TB_SCIENCE_RANK20_ONE_SLOT_EXECUTION_AUTHORITY_20261010_V9.json",
+    "git_blob_sha": "75ea2068d87591351ba790e17af02a7857f670a9"
+  },
+  "public_reseal_verification": {
+    "path": "canonical/verification/TB_SCIENCE_RANK20_V8_PUBLIC_RESEAL_VERIFY_20261010_V1.json",
+    "git_blob_sha": "0da9bef7f0418b6f192e4ebcb43ef3a4bfa8bf86"
+  },
+  "public_authority_git_blob_sha": "5f4537b6cb35bf2a95441eaab4d8a3a1a79a2853",
+  "consumed_slots": 18,
+  "consumed_successes": 0,
+  "consumed_final_failures": 18,
+  "next_slot": {
+    "ledger_schedule_rank": 20,
+    "frozen_manifest_schedule_order": 19,
+    "task_rank": 19,
+    "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
+    "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289"
+  },
+  "logical_attempt_id": "6ec02f79eb1c35206800ec6196a82d24acc17f9562d8e51d99a011bf9c89a618",
+  "execution_claim_binding_digest": "sha256:08acc8711eff0c388582af03a071ec412c99a57393d9cc40dbfc0002ae802ca6",
+  "claim_epoch_id": "RANK20_V13_STRONG_REPAIR_FRESH_V3_ACTIVATION_IDENTITY_20261010_V8",
+  "logical_attempt_claim_binding": {
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V8.json",
+    "git_blob_sha": "79ade372c86afbc088fea729c31e09f4ba823cf0"
+  },
+  "execution_branch": "execute/tb-science-rank20-20261010-v3",
+  "activation_filename": "ACTIVATE_RANK20_V3_PR.json",
+  "rank20_task_read_history": false,
+  "rank20_task_started": false,
+  "rank20_start_cas_acquired": false,
+  "rank20_benchmark_trials_consumed": 0,
+  "public_execution_authority_effective": true,
+  "public_task_read_authority_effective": true,
+  "activation_present": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
