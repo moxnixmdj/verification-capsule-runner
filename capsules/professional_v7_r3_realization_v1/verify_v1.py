@@ -258,6 +258,7 @@ def main() -> None:
         "terminal_authority": False,
         "terminal_credit_delta": 0,
         "incremental_spend_usd": 0,
+        "portable_evidence": evidence,
     }
     (out_dir / "PROFESSIONAL_V7_R3_REALIZATION_INDEPENDENT_VERIFY_V1.json").write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
