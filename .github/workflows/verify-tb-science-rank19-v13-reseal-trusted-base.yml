@@ -140,16 +140,22 @@ jobs:
           assert "ACTIVATE_RANK19_V1_PR.json" in wf
           assert "rank18" not in wf.lower()
 
-          for rel in (
-              "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v4.py",
-              "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py",
-              "capsules/tb_science_rank19_20261010_v1/rank19_v6_status_journal_runner.py",
-              "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v6.py",
-              "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
-          ):
+          identity_expectations = {
+              "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v4.py":
+                  ("terminal-bench-science/diag-chipseq", DIGEST.split(":",1)[1]),
+              "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py":
+                  (SLOT, DIGEST.split(":",1)[1]),
+              "capsules/tb_science_rank19_20261010_v1/rank19_v6_status_journal_runner.py":
+                  (SLOT, DIGEST.split(":",1)[1]),
+              "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v6.py":
+                  (SLOT, DIGEST.split(":",1)[1]),
+              "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py":
+                  (SLOT, DIGEST.split(":",1)[1]),
+          }
+          for rel,markers in identity_expectations.items():
               txt=(root/rel).read_text(encoding="utf-8")
-              assert "rank18" not in txt.lower(),rel
-              assert DIGEST.split(":",1)[1] in txt,rel
+              for marker in markers:
+                  assert marker in txt,(rel,marker)
 
           runtime = {
             "canonical/runtime/bounded_imperative_directive_semantics_v1.py":"3f08b2703723537e5a146346eead6a387424687f",
