@@ -1,0 +1,42 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_PUBLIC_LEDGER_BINDING_V47",
+  "date": "2026-10-10",
+  "status": "STAGED_PUBLIC_LEDGER__BRAIN_V47__CLAIM_V5__WORKFLOW_V2__ZERO_EXPOSURE",
+  "predicate": "TB_SCIENCE_GE_58_7",
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261010_V47.json",
+    "git_blob_sha": "3f561524395e85ffb20f86cd5e6ec60c20a45d8b"
+  },
+  "brain_authority": {
+    "path": "canonical/governance/TB_SCIENCE_RANK20_ONE_SLOT_EXECUTION_AUTHORITY_20261010_V5.json",
+    "git_blob_sha": "d50b123ed0df77fbd772e00331f278835d4bf35b"
+  },
+  "consumed_slots": 18,
+  "consumed_successes": 0,
+  "consumed_final_failures": 18,
+  "next_slot": {
+    "ledger_schedule_rank": 20,
+    "frozen_manifest_schedule_order": 19,
+    "task_rank": 19,
+    "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
+    "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289"
+  },
+  "logical_attempt_id": "c7a02ecc6b11f4338120f05cd922370d361ce79e104549f95b656df3b51cb2bb",
+  "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
+  "execution_claim_binding_digest": "sha256:aa0d91d18bb597319414b7385a92248992c093e14bf9c8f5677b72c05cb09beb",
+  "logical_attempt_claim_binding": {
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V5.json",
+    "git_blob_sha": "7d94ac0b86053a31fd711dcb0652370041671e44"
+  },
+  "rank20_task_read_history": false,
+  "rank20_task_started": false,
+  "rank20_start_cas_acquired": false,
+  "rank20_benchmark_trials_consumed": 0,
+  "public_execution_authority_candidate": true,
+  "public_execution_authority_effective": false,
+  "public_task_read_authority_effective": false,
+  "activation_present": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
