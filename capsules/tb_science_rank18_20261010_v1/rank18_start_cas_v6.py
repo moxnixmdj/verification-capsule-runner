@@ -289,7 +289,7 @@ def _build_start_intent(root: Path, context: dict[str, Any]) -> tuple[generic_ca
         or guard.get("task_read") is not True
         or guard.get("task_started") is not False
         or guard.get("task_digest") != TASK_DIGEST
-        or not str(guard.get("status") or "").startswith("PASS__RANK18_V1_")
+        or not str(guard.get("status") or "").startswith("PASS__RANK18_V1_V12_")
     ):
         raise StartCASError("PRESTART_GUARD_NOT_AUTHORIZED")
 
