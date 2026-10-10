@@ -1,0 +1,32 @@
+name: Verify reached-state escape kernel v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/reached_escape_state_kernel_v1/canonical/runtime/reached_escape_state_kernel_v1.py)" = "b1435d90f039bd1d809ff364c325c3d0858d3afd"
+          test "$(git hash-object capsules/reached_escape_state_kernel_v1/canonical/tests/test_reached_escape_state_kernel_v1.py)" = "2ecce2e2d981bc20f1be0f96b156d621ba5eac6e"
+      - name: Compile and execute kernel tests
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/reached_escape_state_kernel_v1"
+          export PYTHONPATH="$C"
+          python -m py_compile "$C/canonical/runtime/reached_escape_state_kernel_v1.py"
+          python "$C/canonical/tests/test_reached_escape_state_kernel_v1.py"
