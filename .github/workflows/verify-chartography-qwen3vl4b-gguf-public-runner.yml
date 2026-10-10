@@ -27,7 +27,7 @@ jobs:
           assert j["execution_subject"]["model_revision"]=="1cd86afb9a95c410a6038ab3b40d8b578c892266"
           assert j["execution_subject"]["model_sha256"]=="66358cb18bb6b3b1b6675aa412c7a88ef01d228f481184d13668e5201c730a0a"
           assert j["execution_subject"]["projector_sha256"]=="30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d"
-          assert j["execution_subject"]["llama_cpp_commit"]=="b4aa7dd477acf065a3b9c6a8cf324c904da1a834"
+          assert j["execution_subject"]["llama_cpp_commit"]=="a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
           assert j["synthetic_input"]["terminal_or_benchmark_case"] is False
           assert j["accounting"]["incremental_spend_usd"]==0
           assert j["accounting"]["terminal_cases_consumed"]==0
@@ -56,9 +56,9 @@ jobs:
           git init llama.cpp
           cd llama.cpp
           git remote add origin https://github.com/ggml-org/llama.cpp.git
-          git fetch --depth=1 origin b4aa7dd477acf065a3b9c6a8cf324c904da1a834
+          git fetch --depth=1 origin a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
           git checkout --detach FETCH_HEAD
-          test "$(git rev-parse HEAD)" = "b4aa7dd477acf065a3b9c6a8cf324c904da1a834"
+          test "$(git rev-parse HEAD)" = "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
           cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DLLAMA_CURL=OFF
           cmake --build build -j 4 --target llama-mtmd-cli
           test -x build/bin/llama-mtmd-cli
