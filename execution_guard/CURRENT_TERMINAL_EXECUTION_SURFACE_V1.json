@@ -85,5 +85,9 @@
     "NO_RANK20_BENCHMARK_TRIAL_CONSUMPTION",
     "NO_ACCEPTANCE_CAPABILITY_OR_TERMINAL_CREDIT",
     "NO_REPLAY_OR_REPLACEMENT_AUTHORITY"
-  ]
+  ],
+  "promotion_verification": {
+    "path": "capsules/tb_science_rank20_20261010_v1/rank20_v5_promoted_pre_activation_tests.py",
+    "git_blob_sha": "f07db19277f883787d078db89247e6e24256b566"
+  }
 }
