@@ -17,7 +17,7 @@
     "projector_file": "mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf",
     "projector_sha256": "30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d",
     "llama_cpp_repository": "ggml-org/llama.cpp",
-    "llama_cpp_commit": "b4aa7dd477acf065a3b9c6a8cf324c904da1a834",
+    "llama_cpp_commit": "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b",
     "runtime_binary": "llama-mtmd-cli",
     "backend": "CPU"
   },
@@ -83,9 +83,9 @@
     "v2_status": "SUPERSEDED_BEFORE_EXECUTION_BY_STRONGER_CAUSAL_DIAGNOSIS"
   },
   "runtime_pin_repair": {
-    "selected_commit": "b4aa7dd477acf065a3b9c6a8cf324c904da1a834",
-    "qwen3vl_support_commit": "d261223d24e97f2df50220e4a5b7f0adb69bba81",
-    "role": "KNOWN_QWEN3VL_CAPABLE_AND_VISION_POSITION_CORRECTNESS_FIXED_RUNTIME",
+    "selected_commit": "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b",
+    "qwen3vl_runtime_support_verified_from_source": true,
+    "role": "UNCHANGED_FROM_V1_TO_ISOLATE_MODEL_METADATA_REVISION_AS_THE_SINGLE_CAUSAL_DELTA",
     "primary_causal_repair": false
   },
   "falsified_subject_revision": {
@@ -104,6 +104,7 @@
     "learned_weight_subject_preserved": true,
     "reason": "PARENT_Q4_GGUF_PRECEDES_METADATA_ONLY_GENERAL_ARCHITECTURE_MUTATION_AND_RETAINS_LLAMA_CPP_NATIVE_ARCHITECTURE_ENCODING",
     "projector_revision_unchanged_with_repository_parent": true,
-    "projector_sha256_unchanged": "30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d"
+    "projector_sha256_unchanged": "30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d",
+    "single_causal_variable_changed": "MODEL_REVISION_AND_ITS_GENERAL_ARCHITECTURE_METADATA_ONLY"
   }
 }
