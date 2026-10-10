@@ -1,0 +1,39 @@
+name: Verify professional R11 V7 binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/governance/PROFESSIONAL_QUALITY_R11_ROOT_SUBJECT_BINDING_20261010_V1.json'
+      - 'canonical/runtime/professional_quality_r11_root_subject_binding_verify_v1.py'
+      - 'canonical/tests/test_professional_quality_r11_root_subject_binding_verify_v1.py'
+      - 'canonical/governance/PROFESSIONAL_QUALITY_P1_V7_DECLARED_SYSTEM_SUBJECT_20261010_V6.json'
+      - 'canonical/governance/PROFESSIONAL_QUALITY_P1_EXECUTION_PROFILE_20261010_V3.json'
+      - 'canonical/governance/PROFESSIONAL_QUALITY_R11_FIREWALL_SEMANTIC_SCOPE_20261010_V1.json'
+      - 'canonical/verification/PROFESSIONAL_QUALITY_R11_EVALUATION_FIREWALL_SCOPED_VERIFY_20261010_V1.json'
+      - 'canonical/verification/PROFESSIONAL_QUALITY_R11_FIREWALL_SEMANTIC_VERIFY_20261010_V1.json'
+      - '.github/workflows/verify-professional-r11-v7.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/governance/PROFESSIONAL_QUALITY_R11_ROOT_SUBJECT_BINDING_20261010_V1.json)" = "43007547e14da89b0aef9fad7d0f89cad2bbf77f"
+          test "$(git hash-object canonical/runtime/professional_quality_r11_root_subject_binding_verify_v1.py)" = "d7a855e4f52217eebd9155fe766e3197795ec99f"
+          test "$(git hash-object canonical/tests/test_professional_quality_r11_root_subject_binding_verify_v1.py)" = "6d7ded2422e89e8e8da804789bbbe21ca071be49"
+          test "$(git hash-object canonical/governance/PROFESSIONAL_QUALITY_P1_V7_DECLARED_SYSTEM_SUBJECT_20261010_V6.json)" = "1d598bc8757017ceb34928d0df9f5fce859ef868"
+          test "$(git hash-object canonical/governance/PROFESSIONAL_QUALITY_P1_EXECUTION_PROFILE_20261010_V3.json)" = "f7e89eafbb691c16d1bdf5b8d295a468d5e3bec5"
+          test "$(git hash-object canonical/governance/PROFESSIONAL_QUALITY_R11_FIREWALL_SEMANTIC_SCOPE_20261010_V1.json)" = "76494c75e3f2c5af87b77c99ce9984eafec60e32"
+          test "$(git hash-object canonical/verification/PROFESSIONAL_QUALITY_R11_EVALUATION_FIREWALL_SCOPED_VERIFY_20261010_V1.json)" = "346d369a811aa77af02be901a5b04458fb528667"
+          test "$(git hash-object canonical/verification/PROFESSIONAL_QUALITY_R11_FIREWALL_SEMANTIC_VERIFY_20261010_V1.json)" = "7f0468c4abae22504d71ef627efeaf57e85f02a6"
+      - name: Run R11 binding verifier
+        run: python3 -m canonical.runtime.professional_quality_r11_root_subject_binding_verify_v1
+      - name: Run R11 adversarial tests
+        run: python3 -m unittest canonical.tests.test_professional_quality_r11_root_subject_binding_verify_v1 -v
