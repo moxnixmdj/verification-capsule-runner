@@ -1,0 +1,67 @@
+name: Verify TB-Science Rank18 V4 fresh-branch reseal
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/verify-tb-science-rank18-v4-fresh-branch-reseal.yml"
+      - ".github/workflows/execute-tb-science-rank18-20261010-v2.yml"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - "execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V4.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V4.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V4.json"
+      - "capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V4.json"
+      - "capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py"
+      - "capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py"
+      - "capsules/tb_science_rank18_20261010_v1/rank18_v4_zero_exposure_reseal_tests.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Require inert V4 reseal and fresh coordinates
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V1_PR.json
+          test ! -e capsules/tb_science_rank18_20261010_v1/ACTIVATE_RANK18_V2_PR.json
+          python capsules/tb_science_rank18_20261010_v1/rank18_v4_zero_exposure_reseal_tests.py
+
+      - name: Verify exact V4 graph
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py)" = "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py)" = "36d220f5caaee9f52fe9dd6f5dac1cbac774d3b1"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py)" = "f1b5557508ac821338268884b3415f142e3d6281"
+          test "$(git hash-object .github/workflows/execute-tb-science-rank18-20261010-v2.yml)" = "969a9a735d5dfdf371a9a5c82aa972fe6ad85549"
+          test "$(git hash-object execution_guard/TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V4.json)" = "960a06b3450b9686575dc1e7aae3ea4f0695fa90"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_PUBLIC_AUTHORITY_BINDING_V4.json)" = "f9a5bae9882ae10f8aeee3107626096828584116"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EPOCH_V6_V4.json)" = "9173a66721ad6c75c4405aef55e4432e04130a1c"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/RANK18_EXECUTION_CLAIM_V6_V4.json)" = "19332b9eea4bd02fa1cca3b3c7101696a2105b6b"
+          test "$(git hash-object capsules/tb_science_rank18_20261010_v1/rank18_v4_zero_exposure_reseal_tests.py)" = "eb9dabf3527788c7e2006525193b639fbcb3fa08"
+          test "$(git hash-object execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json)" = "001c3d3a40e52aa57a8f775faf31e43d63bfbc93"
+          python -m py_compile             capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py             capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py             capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py             capsules/tb_science_rank18_20261010_v1/rank18_finalize_receipt_v6.py
+
+      - name: Verify proof-carrying admission without task exposure
+        run: |
+          set -euo pipefail
+          python execution_guard/terminal_execution_admission_v3.py             --workflow ".github/workflows/execute-tb-science-rank18-20261010-v2.yml"             --slot "terminal-bench-science/longitudinal-clinical-agent::trial-0"             --task-digest "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9"             --require-execution-authority
+          python capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py
+
+      - name: Prove retired activation branch is rejected statically
+        run: |
+          set -euo pipefail
+          grep -F 'execute/tb-science-rank18-20261010-v2' capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py
+          grep -F 'ACTIVATE_RANK18_V2_PR.json' capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py
+          ! grep -F 'execute/tb-science-rank18-20261010-v1' capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py
+          ! grep -F 'ACTIVATE_RANK18_V1_PR.json' capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py
+          echo PASS__RANK18_V4_FRESH_ACTIVATION_BRANCH_RESEAL__ZERO_EXPOSURE
