@@ -44,12 +44,12 @@ jobs:
 
           exact = {
             ".github/workflows/execute-tb-science-rank19-20261010-v1.yml":"73d30930712396e056187de130551cae2bea00a6",
-            "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json":"b704c021af2f3ec19cd645d8174cb4adb994ae4e",
-            "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json":"954debd53f669af640152fb02e7a78446b8019af",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json":"0d2b1b6502b27b52299559df5b8e865f341d9d31",
+            "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json":"2904200b7b6d1359b1d847a692361b915e5a1d78",
+            "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json":"4746f6ea3fe7c9f53f7b8a7cc1979cddef9e6f8d",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json":"0eac6cb12f7f5172c1d24c96734735ce556cb30f",
             "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_LEDGER_BINDING_V38.json":"357bbd1a26be73200b6076e6751c58e23d95f325",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json":"1210cd1a8ea6f898d27b7c695a120dc386d700fa",
-            "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json":"63f83b54a2c34ae7b48e17186a531a3085f5e6c0",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json":"0ec6d223d0f70f1e965d0ec178e77663b3fbd9f4",
+            "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json":"ff7687e2800c2138d44f87d0d1fabf7e5a57653f",
             "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py":"8a66cfa696a1b40f0e095e4f90c86a9ad2902442",
             "capsules/tb_science_rank19_20261010_v1/rank19_v1_zero_exposure_reseal_tests.py":"cb2990b19c5d6bf7869d0eeb1feb2c4ac1bebdfa",
           }
@@ -73,6 +73,14 @@ jobs:
           assert s["task_read_history"] is False and s["task_started"] is False
           assert s["benchmark_trials_consumed"]==0
           assert s["terminal_credit_delta"]==0
+          assert s["execution_authority"] is False
+          assert s["task_read_authority"] is False
+          cap=s["capability_first_admission"]
+          assert cap["schema"]=="PROJECT_BRAIN_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_V1"
+          assert cap["authorized"] is False
+          assert cap["decision"]=="PARK_CHECKPOINT_AUDIT_EXECUTION"
+          assert cap["scheduler_activation"]=="canonical/governance/CAPABILITY_FIRST_SCHEDULER_ACTIVATION_20261010_V4.json"
+          assert cap["brain_merge_commit"]=="55794c3ea15b8b806eb6b1d25d8a6e2201e89a7e"
           assert s["workflow_path"]==".github/workflows/execute-tb-science-rank19-20261010-v1.yml"
           assert not (root/s["activation_path"]).exists()
           for k in ("behavior","authority","ledger","invariant_registry","admission_guard","epoch","execution_claim","preflight","finalizer"):
@@ -170,6 +178,27 @@ jobs:
           C=capsules/tb_science_rank19_20261010_v1
           R=capsules/tb_science_rank15_20261009_v1
           python -m py_compile             "$R/canonical/runtime/harbor_science_agent_v13.py"             "$R/canonical/runtime/harbor_science_planner_v7.py"             "$R/canonical/runtime/harbor_environment_transport_v2.py"             "$R/canonical/runtime/harbor_science_evidence_store_v1.py"             "$R/canonical/runtime/science_typed_action_protocol_v2.py"             "$C/rank19_execution_preflight_v6.py"             "$C/rank19_prestart_token_guard_v4.py"             "$C/rank19_start_cas_v6.py"             "$C/rank19_v6_status_journal_runner.py"             "$C/rank19_finalize_receipt_v6.py"
-          python execution_guard/terminal_execution_admission_v3.py             --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"             --slot "terminal-bench-science/diag-chipseq::trial-0"             --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"             --require-execution-authority
+          set +e
+          python execution_guard/terminal_execution_admission_v3.py \
+            --workflow ".github/workflows/execute-tb-science-rank19-20261010-v1.yml" \
+            --slot "terminal-bench-science/diag-chipseq::trial-0" \
+            --task-digest "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b" \
+            > STAGED_CAPABILITY_FIRST_ADMISSION.json
+          rc=$?
+          set -e
+          test "$rc" -eq 1
+          python - <<'PY'
+          import json
+          d=json.load(open("STAGED_CAPABILITY_FIRST_ADMISSION.json",encoding="utf-8"))
+          expected={
+              "CAPABILITY_FIRST_ADMISSION_NOT_AUTHORIZED",
+              "CAPABILITY_FIRST_ADMISSION_DECISION_INVALID",
+          }
+          assert d["pass"] is False, d
+          assert set(d["errors"])==expected, d
+          assert d["task_read"] is False and d["task_started"] is False, d
+          assert d["benchmark_trials_consumed"]==0 and d["terminal_credit_delta"]==0, d
+          print("PASS__CAPABILITY_FIRST_PARK_ENFORCED")
+          PY
           python "$C/rank19_execution_preflight_v6.py" --allow-staged
-          echo PASS__TRUSTED_BASE_RANK19_RESEAL_STATIC_EXECUTION__ZERO_EXPOSURE
+          echo PASS__TRUSTED_BASE_RANK19_RESEAL_STATIC_EXECUTION__ZERO_EXPOSURE__PARKED
