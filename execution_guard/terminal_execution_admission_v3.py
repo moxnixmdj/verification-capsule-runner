@@ -236,6 +236,36 @@ def check_workflow(text: str, behavior: Mapping[str, Any]) -> list[str]:
     return sorted(set(errors))
 
 
+
+def check_capability_first_admission(
+    surface: Mapping[str, Any],
+    *,
+    workflow_rel: str,
+    slot_id: str,
+    task_digest: str,
+) -> list[str]:
+    errors: list[str] = []
+    row = surface.get("capability_first_admission")
+    if not isinstance(row, Mapping):
+        return ["CAPABILITY_FIRST_ADMISSION_MISSING"]
+    if row.get("schema") != "PROJECT_BRAIN_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_V1":
+        errors.append("CAPABILITY_FIRST_ADMISSION_SCHEMA_INVALID")
+    if row.get("authorized") is not True:
+        errors.append("CAPABILITY_FIRST_ADMISSION_NOT_AUTHORIZED")
+    if row.get("workflow_path") != workflow_rel:
+        errors.append("CAPABILITY_FIRST_ADMISSION_WORKFLOW_MISMATCH")
+    if row.get("slot_id") != slot_id:
+        errors.append("CAPABILITY_FIRST_ADMISSION_SLOT_MISMATCH")
+    if row.get("task_digest") != task_digest:
+        errors.append("CAPABILITY_FIRST_ADMISSION_TASK_DIGEST_MISMATCH")
+    source = row.get("scheduler_source")
+    if not isinstance(source, str) or not source:
+        errors.append("CAPABILITY_FIRST_ADMISSION_SCHEDULER_SOURCE_MISSING")
+    decision = row.get("decision")
+    if decision != "ADMIT_CHECKPOINT_AUDIT_EXECUTION":
+        errors.append("CAPABILITY_FIRST_ADMISSION_DECISION_INVALID")
+    return sorted(set(errors))
+
 def admission_errors(
     *, workflow_rel: str, slot_id: str, task_digest: str,
     require_activation: bool, require_execution_authority: bool,
@@ -251,6 +281,15 @@ def admission_errors(
         errors.append("SURFACE_WORKFLOW_PATH_MISMATCH")
     if surface.get("slot_id") != slot_id or surface.get("task_digest") != task_digest:
         errors.append("SURFACE_SLOT_OR_DIGEST_MISMATCH")
+
+    errors.extend(
+        check_capability_first_admission(
+            surface,
+            workflow_rel=workflow_rel,
+            slot_id=slot_id,
+            task_digest=task_digest,
+        )
+    )
 
     workflow = safe_path(workflow_rel)
     if not workflow.is_file():
