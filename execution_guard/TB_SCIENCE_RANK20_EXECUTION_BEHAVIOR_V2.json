@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V2",
   "date": "2026-10-10",
-  "status": "RANK20_V2_V13_CLAIM_BOUND_RUNTIME_CANDIDATE__CURRENT_INVARIANT_COMPLETE__ZERO_EXPOSURE",
+  "status": "RANK20_V2_V13_CLAIM_BOUND_RUNTIME_CANDIDATE__CURRENT_INVARIANT_AND_REPAIRED_AGENT_TEST_COMPLETE__ZERO_EXPOSURE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
   "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
@@ -102,7 +102,7 @@
     },
     "zero_exposure_tests": {
       "path": "capsules/tb_science_rank20_20261010_v1/rank20_v2_zero_exposure_reseal_tests.py",
-      "git_blob_sha": "d7d5b61d46d1899f341630629cdac8815982a986"
+      "git_blob_sha": "b93af6baee042ac09f352b1a12c84fc03123c55d"
     },
     "all_cycle_proof": {
       "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
