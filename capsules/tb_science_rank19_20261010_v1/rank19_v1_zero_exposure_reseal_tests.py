@@ -72,16 +72,22 @@ def main():
     assert BRANCH in wf
     assert ACTIVATION in wf
 
-    for rel in (
-        "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v4.py",
-        "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py",
-        "capsules/tb_science_rank19_20261010_v1/rank19_v6_status_journal_runner.py",
-        "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v6.py",
-        "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
-    ):
+    identity_expectations = {
+        "capsules/tb_science_rank19_20261010_v1/rank19_prestart_token_guard_v4.py":
+            ("terminal-bench-science/diag-chipseq", DIGEST.split(":",1)[1]),
+        "capsules/tb_science_rank19_20261010_v1/rank19_start_cas_v6.py":
+            (SLOT, DIGEST.split(":",1)[1]),
+        "capsules/tb_science_rank19_20261010_v1/rank19_v6_status_journal_runner.py":
+            (SLOT, DIGEST.split(":",1)[1]),
+        "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v6.py":
+            (SLOT, DIGEST.split(":",1)[1]),
+        "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py":
+            (SLOT, DIGEST.split(":",1)[1]),
+    }
+    for rel, expected in identity_expectations.items():
         text=(ROOT/rel).read_text(encoding="utf-8")
         assert "RANK18" not in text and "rank18" not in text
-        assert SLOT in text and DIGEST.split(":",1)[1] in text
+        assert all(fragment in text for fragment in expected), (rel, expected)
 
     print("PASS__TB_SCIENCE_RANK19_V13_PUBLIC_RESEAL__ZERO_EXPOSURE")
     return 0
