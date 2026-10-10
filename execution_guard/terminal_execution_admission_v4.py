@@ -83,7 +83,13 @@ def check_behavior(behavior: Mapping[str, Any], invariants: Mapping[str, Any], e
         "finalizer", "preflight", "admission_guard", "all_cycle_proof",
     }
     if facts.get("execution_claim_bound_logical_attempt_identity") is True:
-        mandatory |= {"logical_attempt_claim_binding", "logical_attempt_binding_helper"}
+        # Legacy surfaces embedded the claim document and helper inside the
+        # behavior manifest. Newer surfaces avoid that content-address cycle:
+        # behavior binds resolver code; the surface separately binds the claim.
+        if isinstance(bindings.get("claim_bound_identity_resolver"), Mapping):
+            mandatory |= {"claim_bound_identity_resolver"}
+        else:
+            mandatory |= {"logical_attempt_claim_binding", "logical_attempt_binding_helper"}
 
     if facts.get("agent_ready_precedes_start_cas") is True:
         mandatory |= {
@@ -122,6 +128,52 @@ def check_behavior(behavior: Mapping[str, Any], invariants: Mapping[str, Any], e
     ):
         if facts.get(key) is not True:
             errors.append("BEHAVIOR_REQUIRED_FALSE:" + key)
+
+
+def check_decoupled_claim_binding(
+    surface: Mapping[str, Any],
+    behavior: Mapping[str, Any],
+    claim: Mapping[str, Any],
+    errors: list[str],
+) -> None:
+    """Verify acyclic claim binding when behavior binds resolver code only."""
+    bindings = behavior.get("runtime_bindings")
+    if not isinstance(bindings, Mapping):
+        return
+    resolver = bindings.get("claim_bound_identity_resolver")
+    if not isinstance(resolver, Mapping):
+        # Legacy claim/helper representation remains governed by check_behavior.
+        return
+
+    def bound_sha(key: str) -> str | None:
+        row = bindings.get(key)
+        return row.get("git_blob_sha") if isinstance(row, Mapping) else None
+
+    expected = {
+        "slot_id": surface.get("slot_id"),
+        "task_digest": surface.get("task_digest"),
+        "workflow_blob": surface.get("workflow_git_blob_sha"),
+        "behavior_blob": (
+            surface.get("behavior", {}).get("git_blob_sha")
+            if isinstance(surface.get("behavior"), Mapping)
+            else None
+        ),
+        "invariant_registry_blob": (
+            surface.get("invariant_registry", {}).get("git_blob_sha")
+            if isinstance(surface.get("invariant_registry"), Mapping)
+            else None
+        ),
+        "identity_v2_blob": bound_sha("identity_primitive"),
+        "claim_bound_identity_resolver_blob": bound_sha("claim_bound_identity_resolver"),
+        "zero_exposure_test_blob": bound_sha("zero_exposure_tests"),
+        "planner_v7_blob": bound_sha("planner"),
+        "agent_v13_blob": bound_sha("agent"),
+    }
+    for key, expected_value in expected.items():
+        if expected_value is None or key not in claim:
+            continue
+        if claim.get(key) != expected_value:
+            errors.append("DECOUPLED_CLAIM_BINDING_MISMATCH:" + key)
 
 
 def _runtime_marker(behavior: Mapping[str, Any], key: str) -> str:
@@ -323,6 +375,10 @@ def admission_errors(
         if behavior.get("workflow_path") != workflow_rel:
             errors.append("BEHAVIOR_WORKFLOW_MISMATCH")
         check_behavior(behavior, invariants, errors)
+        claim_row = surface.get("logical_attempt_claim_binding")
+        if isinstance(claim_row, Mapping) and isinstance(claim_row.get("path"), str):
+            claim = read_json(safe_path(claim_row["path"]))
+            check_decoupled_claim_binding(surface, behavior, claim, errors)
         if workflow.is_file():
             errors.extend(check_workflow(workflow.read_text(encoding="utf-8"), behavior))
 
