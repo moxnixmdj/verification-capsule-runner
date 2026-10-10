@@ -1,0 +1,19 @@
+name: verify-gapb-reclass-v1
+on:
+  push:
+    branches: [verify-gapb-reclass-v1]
+    paths:
+      - "capsules/escape_gapb_reclass_v1/**"
+      - ".github/workflows/verify-gapb-reclass-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python capsules/escape_gapb_reclass_v1/verify.py
