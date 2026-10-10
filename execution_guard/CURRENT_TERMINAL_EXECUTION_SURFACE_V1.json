@@ -11,7 +11,7 @@
   "activation_path": "capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK19_EXECUTION_BEHAVIOR_V1.json",
-    "git_blob_sha": "a7cd1966bd6241cdcfd5a663d81d6114cd08ad83"
+    "git_blob_sha": "0007dfe62a266aa2d76d9319a2c6e00da740b0dd"
   },
   "authority": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_PUBLIC_AUTHORITY_BINDING_V1.json",
@@ -31,15 +31,15 @@
   },
   "epoch": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_EPOCH_V6_V1.json",
-    "git_blob_sha": "31852546849ba0a2559b55e76f83282a9903ddbf"
+    "git_blob_sha": "82d15273a0a8bc89bb3a351cf260b9933d693758"
   },
   "execution_claim": {
     "path": "capsules/tb_science_rank19_20261010_v1/RANK19_EXECUTION_CLAIM_V6_V1.json",
-    "git_blob_sha": "67f10081e726d4566849be9866f517fc415a9e42"
+    "git_blob_sha": "d8d8c5def1f25a3077a89e8111805b24b96a6f0e"
   },
   "preflight": {
     "path": "capsules/tb_science_rank19_20261010_v1/rank19_execution_preflight_v6.py",
-    "git_blob_sha": "f2c0f4adfdde28aaa226c7e78d14f854959cb047"
+    "git_blob_sha": "8a66cfa696a1b40f0e095e4f90c86a9ad2902442"
   },
   "finalizer": {
     "path": "capsules/tb_science_rank19_20261010_v1/rank19_finalize_receipt_v6.py",
