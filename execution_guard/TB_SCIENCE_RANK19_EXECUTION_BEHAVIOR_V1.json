@@ -61,7 +61,12 @@
     "authoritative_artifact_safe_absolute_postcondition_required": true,
     "material_requirement_closure_cannot_bypass_mandatory_artifact_gate": true,
     "all_cycle_context_fit_by_construction": true,
-    "aggregate_acceptance_credit_from_single_slot_forbidden": true
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true,
+    "zero_terminal_completion_required": true,
+    "seeded_request_identity": true,
+    "seed_identity_excludes_carrier_identity": true,
+    "goal_text_excluded_from_logical_attempt_identity": true,
+    "carrier_identity_excluded_from_logical_attempt_identity": true
   },
   "runtime_bindings": {
     "planner": {
