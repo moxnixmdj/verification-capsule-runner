@@ -1,0 +1,59 @@
+name: Verify TB-Science Rank18 V12 artifact finish gate
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - ".github/workflows/verify-r18-v12-artifact-finish.yml"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v12.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/runtime/science_typed_action_protocol_v2.py"
+      - "capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_agent_v12_artifact_finish_gate.py"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          C="capsules/tb_science_rank15_20261009_v1"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_agent_v12.py")" = "e5ccaab049d22c0b3cc59e36c050ce2f6e83404f"
+          test "$(git hash-object "$C/canonical/runtime/science_typed_action_protocol_v2.py")" = "fa10b92942b92ab6c7f2f1831f660f2a2e3bd6e3"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_science_agent_v12_artifact_finish_gate.py")" = "4cc352b58a71127a4e524b58818c25c34e57a7cf"
+      - name: Compile and run V12 focused regression
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python -m py_compile             "$C/canonical/runtime/harbor_science_agent_v12.py"             "$C/canonical/runtime/science_typed_action_protocol_v2.py"
+          python "$C/canonical/tests/test_harbor_science_agent_v12_artifact_finish_gate.py"
+      - name: Preserve V11 typed-schema regression under V12
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/tb_science_rank15_20261009_v1"
+          export PYTHONPATH="$GITHUB_WORKSPACE:$C"
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          import unittest
+
+          p=Path("capsules/tb_science_rank15_20261009_v1/canonical/tests/test_harbor_science_agent_v11_typed_schema_grounding.py")
+          source=p.read_text()
+          source=source.replace(
+              "from canonical.runtime import harbor_science_agent_v11 as s",
+              "from canonical.runtime import harbor_science_agent_v12 as s",
+          )
+          ns={"__name__":"v12_backcompat_regression","__file__":str(p)}
+          exec(compile(source,str(p),"exec"),ns,ns)
+          suite=unittest.TestLoader().loadTestsFromTestCase(ns["V11Tests"])
+          result=unittest.TextTestRunner(verbosity=2).run(suite)
+          if result.testsRun != 8 or not result.wasSuccessful():
+              sys.exit(1)
+          PY
