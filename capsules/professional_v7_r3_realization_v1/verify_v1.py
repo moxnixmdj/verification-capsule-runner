@@ -12,7 +12,7 @@ import tempfile
 from PIL import Image, ImageChops
 
 from canonical.runtime import native_artifact_cross_format_proof_v1 as structural
-from canonical.runtime import native_artifact_render_preservation_proof_v1 as render
+from capsules.native_render_preservation_v1.canonical.runtime import native_artifact_render_preservation_proof_v1 as render
 from capsules.professional_v7_r3_realization_v1 import professional_step_binding_authority_v1 as step_auth
 from capsules.professional_v7_r3_realization_v1.produce_v1 import (
     BEHAVIOR_ID,
