@@ -1,0 +1,58 @@
+name: Verify professional R12 V7 binding
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/**'
+      - '.github/workflows/verify-professional-r12-v7.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Bind exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R12_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "6eb32264e98bf0b36d48ad3519f9c7c88757d0d7"
+          test "$(git hash-object 'canonical/runtime/professional_quality_r12_root_subject_binding_verify_v1.py')" = "4b775d22ca65e38391b115101bf4aa08ccad2142"
+          test "$(git hash-object 'canonical/tests/test_professional_quality_r12_root_subject_binding_verify_v1.py')" = "d69e8988412effea782545c4da860e71c4e51218"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_P1_V7_DECLARED_SYSTEM_SUBJECT_20261010_V6.json')" = "1d598bc8757017ceb34928d0df9f5fce859ef868"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_DECLARED_SYSTEM_SUBJECT_V7_VERIFY_20261010_V1.json')" = "9bca985bfcef8f5cc6d62b42a51ccc72a6abfd2c"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R12_META_COMPOSITION_SCOPE_20261010_V1.json')" = "4c69313ae31905f6aa379361d515dffdfb41efae"
+          test "$(git hash-object 'canonical/verification/UVCK_V2_CURRENT_GENERATION_INDEPENDENT_REPLAY_VERIFY_20261009_V1.json')" = "81f7f070233b6aa1c4b491949a4c3e7aedfafd10"
+          test "$(git hash-object 'canonical/verification/UVCK_V2_DEFEATER_ORDER_VERIFY_20261009_V1.json')" = "1c3428b10a1205e928a87f41a7c16a8a3d17b7ca"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_80_DEFEATER_UVCK_REPLAY_VERIFY_20261009_V1.json')" = "c054e9362ce382889e9cca62bdb69e11cea19644"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_P1_V7_SAME_SUBJECT_ROOT_BINDING_WORKLIST_20261010_V17.json')" = "ac7750ee9d7cc8e839bf454a2835ad14c9472c0e"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_SAME_SUBJECT_COMPOSITION_GATE_20261010_V1.json')" = "f7a4496a6579041c6e2606243732c23b22bcf89c"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_CLOSURE_NORMAL_FORM_20261009_V1.json')" = "ebcfe5a48efce9df7fbc69a3817ac2f9adb1ff93"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R1_ROOT_SUBJECT_BINDING_20261010_V4.json')" = "4e29f1a01832158d9897f3c71c81e015b5e51b05"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R1_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "723e408841020b5430a9934eb92f232a1036d98b"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R2_ROOT_SUBJECT_BINDING_20261010_V2.json')" = "d16ec4ce481880e7b3ca85dab64ba2ead744f088"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R2_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "07cb2ac6b48a6d03dc55b923b217a095c0ee86fc"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R3_ROOT_SUBJECT_BINDING_20261010_V2.json')" = "2fe91ecba3830641ed800d04b70279a3f84283bf"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R3_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V2.json')" = "870bb85fbd00d670ec36e86b4b0b510f5bb9225c"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R4_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "5a99d72d8a6c8fe01241e8a611cceb528fb8c512"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R4_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "96f1ffea9973f06b66d815b3d2e9fb90deeae6db"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R5_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "adad696b4ce4ed62063e871e42ad91300f4590e1"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R5_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "d4dc698d89738470cf3b41fe860b8c3f666a56a9"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R6_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "0a6626c3378b471bff70de0ae3ea53e1e784276e"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R6_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "abb4a251345e2701dc42578a1695f5e59f4bb665"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R7_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "d1b4af80e94048ec4093192d2b8203d47eff56ed"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R7_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "26e0e3f6570ae08057d868b0300386b34de7881f"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R8_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "e5b0b434fb040b77443e541e80c6f5e0890ff7aa"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R8_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "e3e6a3e1cc09779ec59903a721d03a94b6ab441d"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R9_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "7c9f22e80110389768d4c16876571d54304b4536"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R9_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "5724af9be96af15810c74c20c0f6f17098222545"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R10_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "6d8cc56e9273f15f199a624c4a11f1482c76e039"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R10_V7_ROOT_SUBJECT_BINDING_VERIFY_20261010_V1.json')" = "c8a9ecdea133c4eec1c6b9b7f2b374240efc8b66"
+          test "$(git hash-object 'canonical/governance/PROFESSIONAL_QUALITY_R11_ROOT_SUBJECT_BINDING_20261010_V1.json')" = "43007547e14da89b0aef9fad7d0f89cad2bbf77f"
+          test "$(git hash-object 'canonical/verification/PROFESSIONAL_QUALITY_R11_V7_ROOT_SUBJECT_BINDING_PUBLIC_VERIFY_20261010_V1.json')" = "7fa5857f6f15633172a6c46c7edcd33c2058bfc6"
+      - name: Run R12 binding verifier
+        run: python3 -m canonical.runtime.professional_quality_r12_root_subject_binding_verify_v1
+      - name: Run R12 adversarial tests
+        run: python3 -m unittest canonical.tests.test_professional_quality_r12_root_subject_binding_verify_v1 -v
