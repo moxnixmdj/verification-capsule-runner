@@ -94,7 +94,7 @@
     },
     "zero_exposure_tests": {
       "path": "capsules/tb_science_rank18_20261010_v1/rank18_v1_zero_exposure_reseal_tests.py",
-      "git_blob_sha": "bddfbbf5d777a34406e1881baaa9510bf1528e5e"
+      "git_blob_sha": "5ae5b0cd1f9a18d3bd23c738ddf909a3a3a723d3"
     },
     "all_cycle_proof": {
       "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
