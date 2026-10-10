@@ -1,0 +1,107 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK18_EXECUTION_BEHAVIOR_V2",
+  "date": "2026-10-10",
+  "status": "RESEALED_CANDIDATE__SAME_LOGICAL_ATTEMPT__ARTIFACTCONFIG_BRIDGE_VERIFIED__TASK_READ_HISTORY_TRUE__DURABLE_START_FALSE",
+  "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+  "slot_id": "terminal-bench-science/longitudinal-clinical-agent::trial-0",
+  "task_digest": "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9",
+  "workflow_path": ".github/workflows/execute-tb-science-rank18-20261010-v1.yml",
+  "behavior": {
+    "all_cycle_context_fit_by_construction": true,
+    "durable_start_cas_required": true,
+    "task_start_defined_by_cas_acquisition": true,
+    "agent_ready_precedes_start_cas": true,
+    "child_github_credentials_stripped": true,
+    "durable_action_intent_ack_before_effect": true,
+    "durable_state_commit_ack_before_next_action": true,
+    "uncertain_effect_replay_forbidden": true,
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true,
+    "slot_bound_logical_attempt_identity": true,
+    "harbor_artifact_config_string_and_table_forms_supported": true,
+    "main_service_artifact_source_paths_injected_as_agent_deliverables": true,
+    "sidecar_service_artifacts_not_misclassified_as_agent_deliverables": true,
+    "artifact_source_traversal_fail_closed": true,
+    "task_read_history_preserved_across_nonconsuming_prestart_repair": true
+  },
+  "runtime_bindings": {
+    "planner": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_planner_v6.py",
+      "git_blob_sha": "ecfaa7523347ba0e902baa9d411e333d3e2853e4"
+    },
+    "agent": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_science_agent_v12.py",
+      "git_blob_sha": "e5ccaab049d22c0b3cc59e36c050ce2f6e83404f"
+    },
+    "prestart_guard": {
+      "path": "capsules/tb_science_rank18_20261010_v1/rank18_prestart_token_guard_v4.py",
+      "git_blob_sha": "471425934f8a10ea44ecb50bf4c9cc4adbd176e9"
+    },
+    "transport": {
+      "path": "capsules/tb_science_rank15_20261009_v1/canonical/runtime/harbor_environment_transport_v2.py",
+      "git_blob_sha": "9aebd804c6d71b07da5134ed4e2d14a6427de84c"
+    },
+    "zero_exposure_tests": {
+      "path": "capsules/tb_science_rank18_20261010_v1/rank18_v1_zero_exposure_reseal_tests.py",
+      "git_blob_sha": "51ac624a143ba9d3c145589eaf26ff922b90404c"
+    },
+    "all_cycle_proof": {
+      "path": "execution_guard/TB_SCIENCE_RANK15_V3_ALL_CYCLE_ENVELOPE_VERIFICATION_20261009_V1.json",
+      "git_blob_sha": "a1abdbf3a08b192359da2d0a6ff01939ba20678b"
+    },
+    "start_cas": {
+      "path": "capsules/tb_science_rank18_20261010_v1/rank18_start_cas_v6.py",
+      "git_blob_sha": "45b7865d2f089a38c98c86d1101dab339f5610db"
+    },
+    "generic_start_cas": {
+      "path": "execution_guard/terminal_slot_start_cas_v2.py",
+      "git_blob_sha": "05a39c10f8d5575890532381732fd63240c6fb4b"
+    },
+    "identity_primitive": {
+      "path": "execution_guard/logical_attempt_identity_v1.py",
+      "git_blob_sha": "6d29ac6a30e7094feb673147802aaecdf391fff0"
+    },
+    "start_barrier": {
+      "path": "execution_guard/terminal_agent_start_barrier_v1.py",
+      "git_blob_sha": "be71f063b232429dc9e416bb58b4138f35341079"
+    },
+    "generic_status_store": {
+      "path": "execution_guard/github_status_object_store_v1.py",
+      "git_blob_sha": "5e5b7686a1ff82ee7b9c5e49841d63b69c9e6927"
+    },
+    "generic_ref_store": {
+      "path": "execution_guard/github_ref_store_live.py",
+      "git_blob_sha": "a8b0cf3facd91f4d4248bd4d2ed53f72f7d480c3"
+    },
+    "causal_journal": {
+      "path": "execution_guard/terminal_causal_journal_v2.py",
+      "git_blob_sha": "866e1801c3c61f01a6f8b9229015262ffaa13b46"
+    },
+    "causal_journal_bridge": {
+      "path": "execution_guard/terminal_causal_journal_filebridge_v2.py",
+      "git_blob_sha": "0f4bf3335501d04dbeda9606e017dbd075de9c9a"
+    },
+    "status_journal_runner": {
+      "path": "capsules/tb_science_rank18_20261010_v1/rank18_v6_status_journal_runner.py",
+      "git_blob_sha": "d1bb9fc6766f16b34a955c6f1b41d2da0b2709df"
+    },
+    "finalizer": {
+      "path": "capsules/tb_science_rank18_20261010_v1/rank18_finalize_receipt_v6.py",
+      "git_blob_sha": "2aaff0f55708a79d5f9055a948692c1b27907081"
+    },
+    "preflight": {
+      "path": "capsules/tb_science_rank18_20261010_v1/rank18_execution_preflight_v6.py",
+      "git_blob_sha": "4c1c31718f5aaed33a75810a53e331e7dcff92e3"
+    },
+    "admission_guard": {
+      "path": "execution_guard/terminal_execution_admission_v3.py",
+      "git_blob_sha": "f8f3346a8863abdd4a15a5553fc6a49726642c81"
+    }
+  },
+  "task_read_history": true,
+  "task_started": false,
+  "benchmark_trials_executed": 0,
+  "execution_authority": true,
+  "promotion_authority": false,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
