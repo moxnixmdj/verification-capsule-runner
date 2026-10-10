@@ -13,7 +13,7 @@ C = ROOT / "capsules/tb_science_rank19_20261010_v1"
 SURFACE = ROOT / "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
 SLOT = "terminal-bench-science/diag-chipseq::trial-0"
 DIGEST = "sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
-WORKFLOW = ".github/workflows/execute-tb-science-rank19-20261010-v2.yml"
+WORKFLOW = ".github/workflows/execute-tb-science-rank19-20261010-v1.yml"
 ACTIVATION = "capsules/tb_science_rank19_20261010_v1/ACTIVATE_RANK19_V1_PR.json"
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_RANK19_EXECUTION_PREFLIGHT_V6"
 
