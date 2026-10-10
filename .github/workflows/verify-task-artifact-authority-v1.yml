@@ -1,0 +1,32 @@
+name: Verify task artifact authority v1
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          test "$(git hash-object capsules/task_artifact_authority_v1/canonical/runtime/task_artifact_authority_v1.py)" = "621efe77fe02c12ef4b6580daaeeaa313988698f"
+          test "$(git hash-object capsules/task_artifact_authority_v1/canonical/tests/test_task_artifact_authority_v1.py)" = "7fe08c45cea25069fece97e22d9034a14bc2af2d"
+      - name: Compile and test
+        run: |
+          set -euo pipefail
+          C="$GITHUB_WORKSPACE/capsules/task_artifact_authority_v1"
+          export PYTHONPATH="$C"
+          python -m py_compile "$C/canonical/runtime/task_artifact_authority_v1.py"
+          python "$C/canonical/tests/test_task_artifact_authority_v1.py"
