@@ -23,8 +23,8 @@ STEP_ID="RENDER_EXACT_AUDIENCE_VIEW_AND_BIND_OBSERVATION_CHANNELS"
 SEED=73103
 FMT="pdf"
 EXPECTED_DEB={
-    "libreoffice-core":"4:24.2.7-0ubuntu0.24.04.6",
-    "poppler-utils":"24.02.0-1ubuntu9.9",
+    "libreoffice-core":"4:24.2.7-0ubuntu0.24.04.7",
+    "poppler-utils":"24.02.0-1ubuntu9.10",
 }
 EXPECTED_PY={
     "python-docx":"1.2.0",
