@@ -45,7 +45,8 @@ def main():
     assert rb["explicit_requirement_index"]["git_blob_sha"] == INDEX_BLOB
     assert blob(rb["lossless_raw_task_contract"]["path"]) == RAW_BLOB
     assert blob(rb["explicit_requirement_index"]["path"]) == INDEX_BLOB
-    assert rb["agent"]["git_blob_sha"] == "e5ccaab049d22c0b3cc59e36c050ce2f6e83404f"\n    assert rb["typed_action_protocol"]["git_blob_sha"] == "fa10b92942b92ab6c7f2f1831f660f2a2e3bd6e3"
+    assert rb["agent"]["git_blob_sha"] == "e5ccaab049d22c0b3cc59e36c050ce2f6e83404f"
+    assert rb["typed_action_protocol"]["git_blob_sha"] == "fa10b92942b92ab6c7f2f1831f660f2a2e3bd6e3"
     assert rb["planner"]["git_blob_sha"] == "ecfaa7523347ba0e902baa9d411e333d3e2853e4"
     assert "harbor_science_agent_v12.py" in rb["agent"]["path"]
 
@@ -56,13 +57,13 @@ def main():
     assert a["brain_repair_verification"]["git_blob_sha"] == BRAIN_REPAIR_VERIFY
     assert a["execution_branch"] == "execute/tb-science-rank18-20261010-v1"
     assert a["activation_filename"] == "ACTIVATE_RANK18_V1_PR.json"
-    assert a["task_read_history"] is True
+    assert a["task_read"] is False
     assert a["task_started"] is False and a["benchmark_trials_consumed"] == 0
-    assert a["public_reseal_satisfies_brain_v4_task_read_prerequisite"] is True
+    assert a["task_read_authority"].startswith("ONLY_AFTER_EXACT_RANK18_V1_ACTIVATION_PR")
 
     l=load(s["ledger"]["path"])
     assert l["brain_ledger"]["git_blob_sha"] == BRAIN_LEDGER
-    assert l["consumed_slots"] == 16
+    assert l["consumed_slots"] == 17
     assert l["rank18_task_read_history"] is False
     assert l["rank18_task_started"] is False
     assert l["rank18_benchmark_trials_consumed"] == 0
