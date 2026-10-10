@@ -1,0 +1,37 @@
+name: Cancel duplicate Rank19 activation run 38038191918
+
+on:
+  push:
+    branches:
+      - "maintenance/cancel-rank19-duplicate-run-38038191918"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  cancel-duplicate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Cancel only the exact duplicate Rank19 run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_RUN_ID: "38038191918"
+          EXPECTED_HEAD_SHA: "620fb2c18d0fa90d55012dfd262fda1bb72b2860"
+          EXPECTED_WORKFLOW_ID: "380375577"
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_REPOSITORY"
+          run_json="$(gh api "repos/$repo/actions/runs/$TARGET_RUN_ID")"
+          python - <<'PY' "$run_json"
+          import json, os, sys
+          r=json.loads(sys.argv[1])
+          assert str(r["id"]) == os.environ["TARGET_RUN_ID"]
+          assert r["event"] == "pull_request"
+          assert r["head_sha"] == os.environ["EXPECTED_HEAD_SHA"]
+          assert str(r["workflow_id"]) == os.environ["EXPECTED_WORKFLOW_ID"]
+          assert r["run_number"] == 2
+          assert r["status"] in {"queued","in_progress","pending"}, r["status"]
+          assert r["conclusion"] is None
+          PY
+          gh api --method POST "repos/$repo/actions/runs/$TARGET_RUN_ID/cancel"
