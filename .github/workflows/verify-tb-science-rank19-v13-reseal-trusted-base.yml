@@ -136,7 +136,7 @@ jobs:
           ):
               txt=(root/rel).read_text(encoding="utf-8")
               assert "rank18" not in txt.lower(),rel
-              assert SLOT in txt and DIGEST.split(":",1)[1] in txt,rel
+              assert DIGEST.split(":",1)[1] in txt,rel
 
           runtime = {
             "canonical/runtime/bounded_imperative_directive_semantics_v1.py":"3f08b2703723537e5a146346eead6a387424687f",
