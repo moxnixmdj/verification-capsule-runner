@@ -6,6 +6,11 @@ on:
     paths:
       - capsules/professional_v7_r3_realization_v1/**
       - .github/workflows/verify-professional-v7-r3-realization-v1.yml
+  push:
+    branches: [verify/professional-v7-r3-realization-20261010]
+    paths:
+      - capsules/professional_v7_r3_realization_v1/**
+      - .github/workflows/verify-professional-v7-r3-realization-v1.yml
   workflow_dispatch:
 
 permissions:
