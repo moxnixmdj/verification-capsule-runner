@@ -1,25 +1,25 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-10",
-  "status": "RANK20_V7_STAGED_STRONG_REPAIR__PREACTIVATION__ZERO_EXPOSURE",
+  "status": "RANK20_V8_STAGED_FRESH_V3_IDENTITY__PREACTIVATION__ZERO_EXPOSURE",
   "family": "TB_SCIENCE",
   "active": true,
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
   "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
   "workflow_path": ".github/workflows/execute-tb-science-rank20-20261010-v1.yml",
   "workflow_git_blob_sha": "e4cb372e501790fd9ed5aa72193d18109a599102",
-  "activation_path": "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V2_PR.json",
+  "activation_path": "capsules/tb_science_rank20_20261010_v1/ACTIVATE_RANK20_V3_PR.json",
   "behavior": {
     "path": "execution_guard/TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V4.json",
     "git_blob_sha": "7c3975e0ac9206e7e33e16115741290efd5d16c2"
   },
   "authority": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V8.json",
-    "git_blob_sha": "d411c19d57ca8af56647ab24f5bf27179f6fb7c4"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_AUTHORITY_BINDING_V9.json",
+    "git_blob_sha": "2ff4fd92ee95c9917a37ced90703a1964a58bccb"
   },
   "ledger": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V53.json",
-    "git_blob_sha": "68ac2b8ca01b939a3ea8e922b4446fa66ff4cb84"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_PUBLIC_LEDGER_BINDING_V55.json",
+    "git_blob_sha": "a2b38a6fd490a2855d517f75bb296a6b9aef8931"
   },
   "invariant_registry": {
     "path": "execution_guard/CURRENT_VERIFIED_EXECUTION_INVARIANTS_V1.json",
@@ -30,16 +30,16 @@
     "git_blob_sha": "bb7566c518af105dcf36b31db38ccfe2172f2e65"
   },
   "logical_attempt_claim_binding": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V7.json",
-    "git_blob_sha": "e58921cf2e2e3b2b6afbc5b776ed708f4710543c"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_LOGICAL_ATTEMPT_CLAIM_BINDING_V8.json",
+    "git_blob_sha": "79ade372c86afbc088fea729c31e09f4ba823cf0"
   },
   "epoch": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_STAGED_V7.json",
-    "git_blob_sha": "f4a9b502879393f6aae41faa88399a967bfbb05f"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EPOCH_V6_STAGED_V8.json",
+    "git_blob_sha": "4e96d68a2836605d98d65cd4dd282ab3da91902f"
   },
   "execution_claim": {
-    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_STAGED_V7.json",
-    "git_blob_sha": "e358ab15b7ebed825d4471267af1f50884e9f8ca"
+    "path": "capsules/tb_science_rank20_20261010_v1/RANK20_EXECUTION_CLAIM_V6_STAGED_V8.json",
+    "git_blob_sha": "15d06a958c6f585d2b8af785a6ac46f7553f9d3c"
   },
   "preflight": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_execution_preflight_v7.py",
@@ -63,8 +63,8 @@
     "benchmark_role": "NEW_CAPABILITY_VALIDATION",
     "decision": "ADMIT_CHECKPOINT_AUDIT_EXECUTION"
   },
-  "logical_attempt_id": "35882bb248aa1486fb845e9028bc40297c040cb002262ad629ca71c332df1ff0",
-  "execution_claim_binding_digest": "sha256:d237cb57191aeb030d0f5f4d8732f9ac8c8bf6e163e6db984850877f3ba47d51",
+  "logical_attempt_id": "6ec02f79eb1c35206800ec6196a82d24acc17f9562d8e51d99a011bf9c89a618",
+  "execution_claim_binding_digest": "sha256:08acc8711eff0c388582af03a071ec412c99a57393d9cc40dbfc0002ae802ca6",
   "task_read_history": false,
   "task_started": false,
   "benchmark_trials_consumed": 0,
@@ -72,7 +72,7 @@
   "task_read_authority": false,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
-  "next": "VERIFY_V7_STRONG_REPAIR_ZERO_EXPOSURE_RESEAL__ONLY_THEN_PROMOTE_EFFECTIVE_AUTHORITY",
+  "next": "INDEPENDENT_ZERO_EXPOSURE_VERIFY_V8_RESEAL__ONLY_THEN_PROMOTE_EFFECTIVE_AUTHORITY",
   "behavior_refinement_verification": {
     "path": "capsules/tb_science_rank20_20261010_v1/rank20_behavior_v4_refinement_verify_v1.py",
     "git_blob_sha": "4f2fc8642407d9726abaea7a4d66bab1989660e6"
@@ -83,7 +83,7 @@
     "NO_RANK20_DURABLE_START",
     "NO_RANK20_RESULT",
     "NO_RANK20_BENCHMARK_TRIAL_CONSUMPTION",
-    "NO_EFFECTIVE_EXECUTION_OR_TASK_READ_AUTHORITY_BEFORE_RESEAL_PROMOTION",
+    "NO_EFFECTIVE_EXECUTION_OR_TASK_READ_AUTHORITY_BEFORE_V8_RESEAL_PROMOTION",
     "NO_ACCEPTANCE_CAPABILITY_OR_TERMINAL_CREDIT",
     "NO_REPLAY_OR_REPLACEMENT_AUTHORITY"
   ]
