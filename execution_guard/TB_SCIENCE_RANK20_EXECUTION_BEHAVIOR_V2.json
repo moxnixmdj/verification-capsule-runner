@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK20_EXECUTION_BEHAVIOR_V2",
   "date": "2026-10-10",
-  "status": "RANK20_V2_V13_CLAIM_BOUND_RUNTIME_CANDIDATE__GENERIC_BEFORE_FINAL_CLAIM_MINT__ZERO_EXPOSURE",
+  "status": "RANK20_V2_V13_CLAIM_BOUND_RUNTIME_CANDIDATE__CURRENT_INVARIANT_COMPLETE__ZERO_EXPOSURE",
   "scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
   "slot_id": "terminal-bench-science/hysteretic-aquifer-control::trial-0",
   "task_digest": "sha256:681df0c3b2ada03a933ac4d2e11f07983676f87a9f26b61e416987904b880289",
@@ -71,7 +71,9 @@
     "status_start_store_anchor_sha": "8545e23a3113b2e4aef753799eb71d7c192ae815",
     "execution_claim_bound_logical_attempt_identity": true,
     "logical_attempt_identity_resolved_from_content_addressed_public_authority": true,
-    "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST"
+    "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
+    "execution_claim_binding_digest_required": true,
+    "execution_claim_epoch_reauthorization_changes_logical_attempt_identity": true
   },
   "runtime_bindings": {
     "planner": {
