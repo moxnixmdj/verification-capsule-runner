@@ -1,4 +1,4 @@
-name: Execute TB-Science rank18 V4 slot-bound journaled one-shot
+name: Execute TB-Science rank18 V1 V12 slot-bound journaled one-shot
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: tb-science-rank18-v4-durable-one-shot
+  group: tb-science-rank18-v1-v12-durable-one-shot
   cancel-in-progress: false
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
           assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
           PY
           python execution_guard/terminal_execution_admission_v3.py \
-            --workflow ".github/workflows/execute-tb-science-rank18-20261009-v4.yml" \
+            --workflow ".github/workflows/execute-tb-science-rank18-20261010-v1.yml" \
             --slot "terminal-bench-science/longitudinal-clinical-agent::trial-0" \
             --task-digest "sha256:e9a166b2173f7014d4f1559505397b221f94bc446eab031f94791b35e0e5f1c9" \
             --require-activation \
@@ -177,7 +177,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tb-science-longitudinal-clinical-agent-trial-0-rank18-v4
+          name: tb-science-longitudinal-clinical-agent-trial-0-rank18-v1
           path: |
             longitudinal-clinical-agent-trial-0__SLOT_RECEIPT_V6.json
             TERMINAL_EXECUTION_ADMISSION_V3.json
