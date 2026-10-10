@@ -55,6 +55,59 @@ python "$C/rank15_finalize_receipt_v6.py"
 """
 
 class AdmissionV3Tests(unittest.TestCase):
+    def test_capability_first_admission_requires_explicit_exact_authorization(self):
+        surface = {
+            "capability_first_admission": {
+                "schema": "PROJECT_BRAIN_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_V1",
+                "authorized": True,
+                "workflow_path": ".github/workflows/example.yml",
+                "slot_id": "slot-a",
+                "task_digest": "sha256:abc",
+                "scheduler_source": "brain:CURRENT_DEVELOPMENT_SCHEDULER",
+                "decision": "ADMIT_CHECKPOINT_AUDIT_EXECUTION",
+            }
+        }
+        self.assertEqual(
+            guard.check_capability_first_admission(
+                surface,
+                workflow_rel=".github/workflows/example.yml",
+                slot_id="slot-a",
+                task_digest="sha256:abc",
+            ),
+            [],
+        )
+
+    def test_capability_first_admission_defaults_fail_closed(self):
+        errors = guard.check_capability_first_admission(
+            {},
+            workflow_rel=".github/workflows/example.yml",
+            slot_id="slot-a",
+            task_digest="sha256:abc",
+        )
+        self.assertEqual(errors, ["CAPABILITY_FIRST_ADMISSION_MISSING"])
+
+    def test_capability_first_admission_rejects_stale_or_wrong_target(self):
+        surface = {
+            "capability_first_admission": {
+                "schema": "PROJECT_BRAIN_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_V1",
+                "authorized": True,
+                "workflow_path": ".github/workflows/other.yml",
+                "slot_id": "slot-b",
+                "task_digest": "sha256:def",
+                "scheduler_source": "brain:CURRENT_DEVELOPMENT_SCHEDULER",
+                "decision": "ADMIT_CHECKPOINT_AUDIT_EXECUTION",
+            }
+        }
+        errors = guard.check_capability_first_admission(
+            surface,
+            workflow_rel=".github/workflows/example.yml",
+            slot_id="slot-a",
+            task_digest="sha256:abc",
+        )
+        self.assertIn("CAPABILITY_FIRST_ADMISSION_WORKFLOW_MISMATCH", errors)
+        self.assertIn("CAPABILITY_FIRST_ADMISSION_SLOT_MISMATCH", errors)
+        self.assertIn("CAPABILITY_FIRST_ADMISSION_TASK_DIGEST_MISMATCH", errors)
+
     def test_legacy_direct_route_still_passes(self):
         self.assertEqual(guard.check_workflow(direct_workflow(), direct_behavior()), [])
 
