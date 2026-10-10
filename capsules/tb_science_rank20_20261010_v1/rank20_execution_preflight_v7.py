@@ -93,6 +93,15 @@ def main() -> int:
         ledger = read_json(safe(ledger_row["path"])) if isinstance(ledger_row, Mapping) else {}
         epoch = read_json(safe(epoch_row["path"])) if isinstance(epoch_row, Mapping) else {}
         claim = read_json(safe(claim_row["path"])) if isinstance(claim_row, Mapping) else {}
+        expected_head = authority.get("execution_branch")
+        expected_activation_filename = authority.get("activation_filename")
+        activation_rel = surface.get("activation_path")
+        if not isinstance(expected_head, str) or not expected_head:
+            errors.append("AUTHORITY_EXECUTION_BRANCH_INVALID")
+        if not isinstance(expected_activation_filename, str) or not expected_activation_filename:
+            errors.append("AUTHORITY_ACTIVATION_FILENAME_INVALID")
+        if not isinstance(activation_rel, str) or Path(activation_rel).name != expected_activation_filename:
+            errors.append("SURFACE_ACTIVATION_AUTHORITY_MISMATCH")
         try:
             identity = resolve_claim_bound_identity(
                 root=ROOT,
@@ -132,7 +141,7 @@ def main() -> int:
             "slot": epoch.get("slot_id") == SLOT,
             "digest": epoch.get("task_digest") == DIGEST,
             "execution_base": epoch.get("execution_base") == "terminal-execution-v1",
-            "execution_branch": epoch.get("execution_branch") == "execute/tb-science-rank20-20261010-v2",
+            "execution_branch": isinstance(expected_head, str) and epoch.get("execution_branch") == expected_head,
             "public_authority": epoch.get("public_authority_binding_blob") == surface_authority_blob,
             "brain_authority": (
                 isinstance(brain_authority, Mapping)
@@ -154,8 +163,8 @@ def main() -> int:
             "slot": claim.get("slot_id") == SLOT,
             "digest": claim.get("task_digest") == DIGEST,
             "execution_base": claim.get("execution_base") == "terminal-execution-v1",
-            "execution_branch": claim.get("execution_branch") == "execute/tb-science-rank20-20261010-v2",
-            "activation": claim.get("activation_filename") == "ACTIVATE_RANK20_V2_PR.json",
+            "execution_branch": isinstance(expected_head, str) and claim.get("execution_branch") == expected_head,
+            "activation": isinstance(expected_activation_filename, str) and claim.get("activation_filename") == expected_activation_filename,
             "public_authority": claim.get("public_authority_binding_blob") == surface_authority_blob,
             "brain_authority": (
                 isinstance(brain_authority, Mapping)
@@ -227,7 +236,7 @@ def main() -> int:
                 errors.append("ALL_CYCLE_THEOREM_INVALID")
 
         if args.require_activation:
-            activation_path = safe(ACTIVATION)
+            activation_path = safe(activation_rel) if isinstance(activation_rel, str) else ROOT / "__invalid_activation__"
             if not activation_path.is_file():
                 errors.append("ACTIVATION_FILE_MISSING")
             else:
@@ -245,7 +254,7 @@ def main() -> int:
                 errors.append("FIRST_RUN_ATTEMPT_REQUIRED")
             if os.environ.get("GITHUB_BASE_REF") != "terminal-execution-v1":
                 errors.append("BASE_REF_MISMATCH")
-            if os.environ.get("GITHUB_HEAD_REF") != "execute/tb-science-rank20-20261010-v2":
+            if not isinstance(expected_head, str) or os.environ.get("GITHUB_HEAD_REF") != expected_head:
                 errors.append("HEAD_REF_MISMATCH")
             event_path = Path(os.environ.get("GITHUB_EVENT_PATH") or "")
             if not event_path.is_file():
