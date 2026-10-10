@@ -1,0 +1,148 @@
+name: Verify Chartography Qwen3-VL4B GGUF public runner
+on:
+  pull_request:
+    paths:
+      - 'subject/chartography_qwen3vl4b_gguf_public_runner_preflight/**'
+      - '.github/workflows/verify-chartography-qwen3vl4b-gguf-public-runner.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify frozen subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("subject/chartography_qwen3vl4b_gguf_public_runner_preflight/CHARTOGRAPHY_QWEN3_VL4B_GGUF_PUBLIC_RUNNER_PREFLIGHT_V3.json")
+          j=json.loads(p.read_text())
+          assert j["status"].startswith("FROZEN_PREEXECUTION_V3")
+          assert j["execution_subject"]["model_revision"]=="1cd86afb9a95c410a6038ab3b40d8b578c892266"
+          assert j["execution_subject"]["model_sha256"]=="66358cb18bb6b3b1b6675aa412c7a88ef01d228f481184d13668e5201c730a0a"
+          assert j["execution_subject"]["projector_sha256"]=="30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d"
+          assert j["execution_subject"]["llama_cpp_commit"]=="a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
+          assert j["synthetic_input"]["terminal_or_benchmark_case"] is False
+          assert j["accounting"]["incremental_spend_usd"]==0
+          assert j["accounting"]["terminal_cases_consumed"]==0
+          print("SUBJECT_PASS")
+          PY
+
+      - name: Capture free public runner envelope
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "nproc=$(nproc)"
+          free -h
+          df -h /
+          test "$(nproc)" -ge 4
+          python - <<'PY'
+          import os
+          kb=int(open("/proc/meminfo").read().split("MemTotal:")[1].split("kB")[0].strip())
+          print("mem_total_kib",kb)
+          assert kb >= 14*1024*1024, kb
+          PY
+
+      - name: Checkout exact llama.cpp commit and build multimodal CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          cd llama.cpp
+          git remote add origin https://github.com/ggml-org/llama.cpp.git
+          git fetch --depth=1 origin a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DLLAMA_CURL=OFF
+          cmake --build build -j 4 --target llama-mtmd-cli
+          test -x build/bin/llama-mtmd-cli
+          build/bin/llama-mtmd-cli --version || true
+
+      - name: Download exact pinned GGUF model and projector
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p weights
+          base='https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct-GGUF/resolve/1cd86afb9a95c410a6038ab3b40d8b578c892266'
+          curl -L --fail --retry 4 --retry-delay 3 -o weights/model.gguf "$base/Qwen3VL-4B-Instruct-Q4_K_M.gguf?download=true"
+          curl -L --fail --retry 4 --retry-delay 3 -o weights/mmproj.gguf "$base/mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf?download=true"
+          echo '66358cb18bb6b3b1b6675aa412c7a88ef01d228f481184d13668e5201c730a0a  weights/model.gguf' | sha256sum -c -
+          echo '30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d  weights/mmproj.gguf' | sha256sum -c -
+          stat -c '%n %s bytes' weights/model.gguf weights/mmproj.gguf
+          df -h /
+
+      - name: Generate local synthetic image
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import struct
+          w=h=64
+          row=w*3
+          data=bytearray()
+          for y in range(h):
+              for x in range(w):
+                  # BMP stores B,G,R. Red background; blue center square.
+                  if 16 <= x < 48 and 16 <= y < 48:
+                      data += bytes((255,0,0))
+                  else:
+                      data += bytes((0,0,255))
+          file_size=54+len(data)
+          hdr=b'BM'+struct.pack('<IHHI',file_size,0,0,54)
+          dib=struct.pack('<IIIHHIIIIII',40,w,h,1,24,0,len(data),2835,2835,0,0)
+          open('synthetic.bmp','wb').write(hdr+dib+data)
+          print("synthetic.bmp",file_size)
+          PY
+          file synthetic.bmp
+          sha256sum synthetic.bmp
+
+      - name: Run zero-terminal multimodal CPU smoke and capture diagnostics
+        shell: bash
+        run: |
+          set -uo pipefail
+          ./llama.cpp/build/bin/llama-mtmd-cli --help > mtmd-help.txt 2>&1 || true
+          echo '=== relevant CLI options ==='
+          grep -E -- '--mmproj|--image|--temp|-n,|--predict|-c,|--ctx-size|-t,|--threads' mtmd-help.txt || true
+          set +e
+          /usr/bin/time -v timeout 1200 \
+            ./llama.cpp/build/bin/llama-mtmd-cli \
+            -m weights/model.gguf \
+            --mmproj weights/mmproj.gguf \
+            --no-mmproj-offload -ngl 0 \
+            -c 1024 -t 4 \
+            --image synthetic.bmp \
+            -p 'Describe the image briefly. Mention the two visible colors.' \
+            -n 32 --temp 0 \
+            > inference.txt 2> inference.stderr
+          rc=$?
+          set -e
+          echo "MTMD_EXIT_CODE=$rc"
+          echo '=== inference stdout ==='
+          cat inference.txt || true
+          echo '=== inference stderr ==='
+          cat inference.stderr || true
+          echo '=== resource summary ==='
+          grep -E 'Maximum resident set size|Elapsed|Exit status' inference.stderr || true
+          df -h /
+          test "$rc" -eq 0
+          test -s inference.txt
+          echo "CHARTOGRAPHY_QWEN3VL4B_GGUF_SYNTHETIC_PREFLIGHT_PASS"
+
+      - name: Upload zero-terminal diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chartography-qwen3vl4b-zero-terminal-diagnostics
+          path: |
+            mtmd-help.txt
+            inference.txt
+            inference.stderr
+            synthetic.bmp
+          if-no-files-found: warn
+          retention-days: 7
