@@ -12,6 +12,12 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 EXECUTION_GUARD = ROOT / "execution_guard"
+# This script is executed directly by the workflow with no PYTHONPATH export.
+# Keep both the repository root (for package imports such as
+# execution_guard.logical_attempt_identity_v2) and the execution_guard
+# directory (for the historical top-level imports) available.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 if str(EXECUTION_GUARD) not in sys.path:
     sys.path.insert(0, str(EXECUTION_GUARD))
 
