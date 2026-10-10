@@ -28,7 +28,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib, json, py_compile, subprocess, sys
+          import hashlib, json, os, py_compile, subprocess, sys
           from pathlib import Path
 
           root=Path(".").resolve()
@@ -105,7 +105,7 @@ jobs:
           z=runtime.get("zero_exposure_tests")
           assert isinstance(z,dict)
           if staged:
-              subprocess.check_call([sys.executable,str(root/z["path"])])
+              subprocess.check_call([sys.executable,str(root/z["path"])], env={**os.environ, "PYTHONPATH": str(root) + (os.pathsep + os.environ["PYTHONPATH"] if os.environ.get("PYTHONPATH") else "")})
           else:
               promotion=s.get("promotion_verification")
               rel=bound(promotion,"surface.promotion_verification")
