@@ -6,7 +6,8 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 SLOT="terminal-bench-science/diag-chipseq::trial-0"
 DIGEST="sha256:437bfacaebda9ce9905d54bdfe7247aec9649038206512c64547021f42e3950b"
-ATTEMPT="def7e2921acf58d4ef03e3183512996c718a5a13069482cb825464c0c963a8b4"
+ATTEMPT="a3672b9d77c8fa0b7d3f0610ac2c008d2888e566d8a75ac92aa7078c1523abe6"
+CLAIM_BINDING_DIGEST="sha256:4e9cae8c879a8122f11fe6ae7eea775fcc4fb0ae62b3a87e208a95d28ea4d05f"
 BRANCH="execute/tb-science-rank19-20261010-v1"
 ACTIVATION="ACTIVATE_RANK19_V1_PR.json"
 PLANNER_SHA="e5d6ab78b6cf5bacee568cd3701410a8745b9ce8"
