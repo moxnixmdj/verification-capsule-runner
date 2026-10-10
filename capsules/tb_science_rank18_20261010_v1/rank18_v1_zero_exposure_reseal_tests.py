@@ -22,7 +22,64 @@ def blob(rel):
 def load(rel):
     return json.loads((ROOT/rel).read_text(encoding="utf-8"))
 
+def verify_artifact_config_bridge():
+    import os, sys, tempfile
+    if str(CAP) not in sys.path:
+        sys.path.insert(0, str(CAP))
+    import rank18_v6_status_journal_runner as runner
+
+    old = os.environ.get("TASK_PATH")
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/"task.toml"
+            p.write_text(
+                """schema_version = "1.4"
+artifacts = [
+  "/app/legacy-output.json",
+  { source = "/root/results/trajectory.json", destination = "agent/trajectory.json", exclude = ["*.tmp"], service = "main" },
+  { source = "/root/results/study_report.json", service = "main" },
+  { source = "/var/log/broker/actions.jsonl", service = "broker" },
+]
+""",
+                encoding="utf-8",
+            )
+            os.environ["TASK_PATH"] = td
+            got=json.loads(runner._task_artifacts_json())
+            assert got == [
+                "/app/legacy-output.json",
+                "/root/results/trajectory.json",
+                "/root/results/study_report.json",
+            ], got
+
+            p.write_text(
+                'artifacts = [{ source = "../escape.json", service = "main" }]\n',
+                encoding="utf-8",
+            )
+            try:
+                runner._task_artifacts_json()
+            except runner.BarrierRunnerError as exc:
+                assert str(exc) == "TASK_ARTIFACT_SOURCE_INVALID"
+            else:
+                raise AssertionError("traversal artifact must fail closed")
+
+            p.write_text(
+                'artifacts = [{ destination = "x.json", service = "main" }]\n',
+                encoding="utf-8",
+            )
+            try:
+                runner._task_artifacts_json()
+            except runner.BarrierRunnerError as exc:
+                assert str(exc) == "TASK_ARTIFACT_SOURCE_INVALID"
+            else:
+                raise AssertionError("artifact table without source must fail closed")
+    finally:
+        if old is None:
+            os.environ.pop("TASK_PATH", None)
+        else:
+            os.environ["TASK_PATH"] = old
+
 def main():
+    verify_artifact_config_bridge()
     assert not (CAP/"ACTIVATE_RANK18_V1_PR.json").exists()
 
     s=load("execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json")
@@ -80,7 +137,7 @@ def main():
     assert q["quarantine"]["rank15_replay_authority"] is False
     assert q["quarantine"]["rank15_replacement_authority"] is False
 
-    print("PASS__TB_SCIENCE_RANK18_V1_ZERO_EXPOSURE_RESEAL__V12_ARTIFACT_FINISH_GATE_BOUND")
+    print("PASS__TB_SCIENCE_RANK18_V1_ZERO_EXPOSURE_RESEAL__V12_ARTIFACT_CONFIG_BRIDGE_AND_FINISH_GATE_BOUND")
 
 if __name__=="__main__":
     main()
