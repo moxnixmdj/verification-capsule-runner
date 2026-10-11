@@ -1,0 +1,53 @@
+name: Chartography HuggingFace git transport probe V1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-hf-git-transport-probe-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe git metadata only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          set +e
+          git ls-remote https://huggingface.co/datasets/surgeai/chartography >out/ls-remote.txt 2>out/ls-remote.err
+          RC=$?
+          set -e
+          echo "git_ls_remote_rc=$RC" | tee out/summary.txt
+          cat out/ls-remote.txt | head -20 || true
+          cat out/ls-remote.err | tail -40 || true
+          if [ "$RC" -eq 0 ]; then
+            set +e
+            GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://huggingface.co/datasets/surgeai/chartography hf-chartography >out/clone.txt 2>out/clone.err
+            CRC=$?
+            set -e
+            echo "git_clone_pointer_only_rc=$CRC" | tee -a out/summary.txt
+            if [ "$CRC" -eq 0 ]; then
+              git -C hf-chartography rev-parse HEAD | tee out/hf-head.txt
+              git -C hf-chartography ls-tree -r HEAD | grep -E 'data\.parquet|charts/' | head -30 | tee out/tree-sample.txt || true
+              if [ -f hf-chartography/data.parquet ]; then
+                echo "data_parquet_pointer_bytes=$(wc -c < hf-chartography/data.parquet)" | tee -a out/summary.txt
+                sed -n '1,10p' hf-chartography/data.parquet | tee out/data-parquet-pointer.txt || true
+              fi
+            else
+              tail -80 out/clone.err
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-hf-git-transport-probe-v1
+          path: out/
+          if-no-files-found: error
