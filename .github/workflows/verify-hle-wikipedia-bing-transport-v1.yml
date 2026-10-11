@@ -1,0 +1,25 @@
+name: Verify HLE Wikipedia Bing transport V1
+on:
+  push:
+    branches: [verify-hle-wikipedia-bing-transport-v1-20261011]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/hle_wikipedia_bing_transport_v1.py'
+      - 'canonical/tests/test_hle_wikipedia_bing_transport_v1.py'
+      - '.github/workflows/verify-hle-wikipedia-bing-transport-v1.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_wikipedia_bing_transport_v1.py)" = "eace56be88b0047aaebfe713c61ddf6acea59296"
+          test "$(git hash-object canonical/tests/test_hle_wikipedia_bing_transport_v1.py)" = "7ec2a287396b59a77d92d4c1ab4a3a683f36d0fd"
+      - name: Run exact tests
+        env: {PYTHONPATH: .}
+        run: python -m unittest -v canonical.tests.test_hle_wikipedia_bing_transport_v1
