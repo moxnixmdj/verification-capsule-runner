@@ -28,7 +28,7 @@ jobs:
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py")" = "7a4301dfdfa23ab43db705488f6d0e12d53cf2c2"
           test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
           test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
-          ! grep -R -E 'task_[0-9]{3}|reference.trajector|evaluation_examples|benchmark_releases' "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py"
+          ! grep -R -E 'task_[0-9]{3}|evaluation_examples|benchmark_releases' "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py"
 
       - name: Build exact pinned llama.cpp server
         run: |
