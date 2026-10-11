@@ -16,7 +16,7 @@ env:
   MMPROJ_FILE: ChartVerse-8B.mmproj-Q8_0.gguf
   MMPROJ_SHA256: 0df4b5c847587984c93e6712f0851abb2227ecabfe94b8d60ccac90a12b654f0
   LLAMA_CPP_COMMIT: a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
-  SUBJECT_CACHE_KEY: chartography-subject-97eebc1d-0df4b5c8-a7fb71fa-v1
+  SUBJECT_CACHE_KEY: chartography-subject-97eebc1d-0df4b5c8-a7fb71fa-v2
 
 jobs:
   bind:
@@ -68,7 +68,6 @@ jobs:
           path: |
             model
             llama.cpp/build/bin
-            tool-image.tar
             tool-image.tar
           key: ${{ env.SUBJECT_CACHE_KEY }}
       - name: Install build prerequisites
@@ -138,6 +137,7 @@ jobs:
           path: |
             model
             llama.cpp/build/bin
+            tool-image.tar
           key: ${{ env.SUBJECT_CACHE_KEY }}
       - name: Enforce frozen subject cache
         shell: bash
