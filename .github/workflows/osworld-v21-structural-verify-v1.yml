@@ -1,0 +1,43 @@
+name: OSWorld v2.1 structural verifier V1
+
+on:
+  push:
+    branches:
+      - osworld-v21-structural-verify-v1
+    paths:
+      - "capsules/osworld_v21_structural_verify_v1/**"
+      - ".github/workflows/osworld-v21-structural-verify-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain blobs
+        run: |
+          set -euo pipefail
+          C=capsules/osworld_v21_structural_verify_v1
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_state_ops_v1.py")" = "0cba0ee052746e41988a666a2948c4e842e0a259"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_host_browser_ops_v1.py")" = "bfaf6f36b5bbd739ceff34ddb71ed9c603dc4240"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_host_guest_ops_v1.py")" = "f002bbb5aadc302c9bff644c59c85485fb3bb668"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_brain_agent_adapter_v1.py")" = "bf7513f1d7837d42f782e714f77975e59d73994f"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_runner_bridge_v1.py")" = "e876439e8969de01e06c575ac1b60cce9d635838"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_state_ops_v1.py")" = "35e57e433e442e20a8acf3491fdfe7f4eb2954cb"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_host_guest_ops_v1.py")" = "b520a110d90689368b117c7d9ea3ddb0b934cfbd"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py")" = "a0c8c62a369d5cb713044514a34000afd4e36913"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_runner_bridge_v1.py")" = "5eb41c62c14f43235f5ad891279fe1437deeb1ca"
+      - name: Run exact structural tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/osworld_v21_structural_verify_v1
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input -q pytest
+          python -m pytest -q             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_state_ops_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_host_guest_ops_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_runner_bridge_v1.py
