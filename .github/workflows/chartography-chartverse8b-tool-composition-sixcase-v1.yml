@@ -205,8 +205,8 @@ jobs:
               "ORIGINAL_QUESTION="+row["prompt"]
             )
             cmd=["./llama.cpp/build/bin/llama-mtmd-cli","-m","model/model.gguf","--mmproj","model/mmproj.gguf",
-                 "--no-mmproj-offload","--image",str(image),"-p",prompt,"-n","48","-t","4","--image-min-tokens","1024"]
-            p=subprocess.run(cmd,text=True,capture_output=True,timeout=180)
+                 "--no-mmproj-offload","--image",str(image),"-p",prompt,"-n","48","-t","4","--image-min-tokens","256"]
+            p=subprocess.run(cmd,text=True,capture_output=True,timeout=300)
             raw=p.stdout.strip()
             lines=[re.sub(r"\s+"," ",x).strip().upper() for x in raw.splitlines() if x.strip()]
             final=lines[-1] if lines else ""
