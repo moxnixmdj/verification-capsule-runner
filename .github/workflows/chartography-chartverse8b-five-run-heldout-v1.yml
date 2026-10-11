@@ -56,7 +56,6 @@ jobs:
           test "$(git hash-object src/chartography/scorer.py)" = "11cffaa92dff3bed126247990d41f1509574040e"
 
   prepare_subject:
-    needs: bind
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -109,6 +108,10 @@ jobs:
           EOF
           docker build -f /tmp/Dockerfile.chartography -t brain-chartography-tool-v1 /tmp
           docker save brain-chartography-tool-v1 -o tool-image.tar
+          docker image rm -f brain-chartography-tool-v1 || true
+          docker system prune -af || true
+          find llama.cpp/build -mindepth 1 -maxdepth 1 ! -name bin -exec rm -rf {} +
+          find llama.cpp -mindepth 1 -maxdepth 1 ! -name build -exec rm -rf {} +
       - name: Verify cached subject identity
         shell: bash
         run: |
@@ -154,6 +157,7 @@ jobs:
           python -m pip install --disable-pip-version-check --no-input             "pillow>=10,<13" "pyarrow>=17,<23" "huggingface_hub>=0.27,<2"
           docker load -i tool-image.tar
           docker image inspect brain-chartography-tool-v1 >/dev/null
+          rm -f tool-image.tar
           mkdir -p "out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}"
       - name: Run one sealed heldout shard
         env:
@@ -197,7 +201,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: chartography-epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}
-          path: out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}/
+          path: |
+            out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}/responses.json
+            out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}/score.json
+            out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}/manifest.json
           if-no-files-found: error
           retention-days: 90
 
