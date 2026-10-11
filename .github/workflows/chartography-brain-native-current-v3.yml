@@ -1,0 +1,138 @@
+name: Chartography Brain-native current V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-brain-native-current-v3.yml"
+      - "canonical/runtime/chartography_deterministic_professional_solver_v1.py"
+      - "canonical/tests/test_chartography_deterministic_professional_solver_v1.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact bounded perception surface
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check --no-input "pillow==10.2.0" "pyyaml>=6,<7"
+      - name: Compile, unit-test, and reject external cognition
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/chartography_deterministic_professional_solver_v1.py
+          python -m unittest -v canonical.tests.test_chartography_deterministic_professional_solver_v1
+          python - <<'PY'
+          from pathlib import Path
+          src=Path("canonical/runtime/chartography_deterministic_professional_solver_v1.py").read_text().lower()
+          forbidden=["qwen","minicpm","anthropic","openai","gemini","transformers","torch","llama","ollama"]
+          hits=[x for x in forbidden if x in src]
+          if hits: raise SystemExit("FORBIDDEN_GENERAL_MODEL_REFERENCE:"+",".join(hits))
+          print("PASS_ZERO_GENERAL_PURPOSE_MODEL_REFERENCES")
+          PY
+      - name: Bind official nonheldout samples
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git /tmp/chartography
+          git -C /tmp/chartography checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          mkdir -p out
+      - name: Generate and seal responses without gold
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib,json,yaml
+          from pathlib import Path
+          from canonical.runtime.chartography_deterministic_professional_solver_v1 import solve
+          root=Path("/tmp/chartography/task_packs/sample_charts")
+          specs=[
+            ("sample_task_1.yaml",root/"charts"/"sample_chart_1.png"),
+            ("sample_task_2.yaml",root/"charts"/"sample_chart_2.jpg"),
+          ]
+          rows=[]
+          for i,(yf,img) in enumerate(specs,1):
+              doc=yaml.safe_load((root/"tasks"/yf).read_text())
+              prompt=str(doc["prompt"]).strip()
+              out=solve(img,prompt)
+              required={
+                "cognition_dependency_class":"MODEL_INDEPENDENT",
+                "general_purpose_model_dependency_count":0,
+                "external_general_purpose_model_runtime_dependency_count":0,
+                "donor_general_purpose_model_runtime_dependency_count":0,
+                "online_teacher_call_count":0,
+                "teacher_fallback_path_count":0,
+                "bounded_learned_components":["image.extract.ocr.tesseract"],
+              }
+              for k,v in required.items():
+                  if out.get(k)!=v:
+                      raise SystemExit(f"OWNERSHIP_RUNTIME_MISMATCH:{k}:{out.get(k)!r}:{v!r}")
+              rows.append({
+                  "case":i,
+                  "task_id":str(doc["task_id"]),
+                  "prompt_sha256":hashlib.sha256(prompt.encode()).hexdigest(),
+                  "image_sha256":hashlib.sha256(img.read_bytes()).hexdigest(),
+                  "answer":out["answer"],
+                  "answer_numeric":out["answer_numeric"],
+                  "route":out["route"],
+                  "runtime_ownership":required,
+              })
+          p=Path("out/responses.json")
+          p.write_text(json.dumps(rows,indent=2,sort_keys=True)+"\n")
+          print("SEALED_RESPONSES_SHA256="+hashlib.sha256(p.read_bytes()).hexdigest())
+          PY
+      - name: Grade after response seal
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib,json,re,yaml
+          from pathlib import Path
+          p=Path("out/responses.json")
+          sealed=hashlib.sha256(p.read_bytes()).hexdigest()
+          rows=json.loads(p.read_text())
+          root=Path("/tmp/chartography/task_packs/sample_charts")
+          grade=[]; passed=0
+          for row in rows:
+              doc=yaml.safe_load((root/"tasks"/f"sample_task_{row['case']}.yaml").read_text())
+              nums=[float(x) for x in re.findall(r"[0-9]+(?:[.][0-9]+)?",str(doc["golden_answer"]))]
+              if len(nums)<3: raise SystemExit("GOLD_RANGE_PARSE_FAILED")
+              lo,hi=nums[-2],nums[-1]
+              val=float(row["answer_numeric"])
+              ok=lo<=val<=hi
+              passed+=int(ok)
+              grade.append({"case":row["case"],"value":val,"lo":lo,"hi":hi,"pass":ok})
+          result={
+              "schema":"PROJECT_BRAIN_CHARTOGRAPHY_BRAIN_NATIVE_CURRENT_V3_VERIFY",
+              "responses_sha256":sealed,
+              "passed":passed,
+              "total":len(rows),
+              "pass":passed==len(rows),
+              "heldout_cases_consumed":0,
+              "heldout_gold_consumed":0,
+              "general_purpose_model_dependency_count":0,
+              "external_general_purpose_model_runtime_dependency_count":0,
+              "bounded_learned_components":["image.extract.ocr.tesseract"],
+              "official_score_claimed":False,
+              "terminal_credit_delta":0,
+              "incremental_spend_usd":0,
+              "rows":grade,
+          }
+          Path("out/result.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(result,sort_keys=True))
+          raise SystemExit(0 if result["pass"] else 1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-brain-native-current-v3
+          path: |
+            out/responses.json
+            out/result.json
+          if-no-files-found: error
