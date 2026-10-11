@@ -26,8 +26,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/professional_artifact_visual_observer_v1.py)" = "9389dbb4e2c3463bc52f2525010edbdd77d08d2f"
-          test "$(git hash-object canonical/tests/test_professional_artifact_visual_observer_v1.py)" = "a4cdf2bb359c87dae880bf36577d51c8294c5910"
+          test "$(git hash-object canonical/runtime/professional_artifact_visual_observer_v1.py)" = "27be857789160e6971fb4d20265eae30468ea063"
+          test "$(git hash-object canonical/tests/test_professional_artifact_visual_observer_v1.py)" = "24db6f10c71df9ec20ca34ac6bd6a64b90c89ce1"
           test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "19f3087489ce7f6f935fc7baaebdc8cd672f4b62"
           test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "45714d7a0160802d986042910da1c4c6462676e5"
           echo EXACT_BRAIN_CANDIDATE_BLOBS_BOUND
@@ -134,10 +134,10 @@ jobs:
               "schema":"PROJECT_BRAIN_PROFESSIONAL_ARTIFACT_VISUAL_OBSERVER_PUBLIC_VERIFY_V1",
               "status":"PASS__EXACT_BRAIN_CANDIDATE_BLOBS__FOCUSED_TESTS__REAL_NATIVE_FORMAT_COMPOSITION",
               "brain_pr":4638,
-              "brain_runtime_blob":"9389dbb4e2c3463bc52f2525010edbdd77d08d2f",
-              "brain_tests_blob":"a4cdf2bb359c87dae880bf36577d51c8294c5910",
+              "brain_runtime_blob":"27be857789160e6971fb4d20265eae30468ea063",
+              "brain_tests_blob":"24db6f10c71df9ec20ca34ac6bd6a64b90c89ce1",
               "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
-              "focused_test_count":9,
+              "focused_test_count":11,
               "real_formats":["pdf","docx","pptx","xlsx"],
               "real_composition":composition,
               "render_verification_relation":"INDEPENDENT_EQUIVALENT_LIBREOFFICE_TO_PDF_TO_POPPLER_SHIM__NOT_BYTE_IDENTITY_TO_BRAIN_RENDER_MODULE",
