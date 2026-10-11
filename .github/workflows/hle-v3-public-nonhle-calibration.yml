@@ -1,0 +1,96 @@
+name: Calibrate HLE V3 on public non-HLE QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_V3_PUBLIC_NONHLE_CALIBRATION_FREEZE_20261011_V1.json"
+      - "canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/runtime/hle_native_research_solver_v3.py"
+      - "canonical/runtime/hle_native_question_contract_v1.py"
+      - "canonical/runtime/hle_native_semantic_compiler_v1.py"
+      - "canonical/runtime/hle_evidence_candidate_synthesis_v1.py"
+      - "canonical/tests/run_hle_v3_public_nonhle_calibration_v1.py"
+      - ".github/workflows/hle-v3-public-nonhle-calibration.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact frozen Brain and calibration blobs
+        run: |
+          test "$(git hash-object canonical/governance/HLE_V3_PUBLIC_NONHLE_CALIBRATION_FREEZE_20261011_V1.json)" = "1e2c2ce86163edc48abcab2b7e1f194e45515fc6"
+          test "$(git hash-object canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json)" = "d2a2427b483fe1c06c6b1e6bc98d72bf07e7a730"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+          test "$(git hash-object canonical/runtime/hle_native_research_solver_v3.py)" = "d719d1eb4d288e2c1062c43d74dd83ad1ba50684"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v1.py)" = "7acc064d880f266a28855eefe518ae40ff8ae49b"
+          test "$(git hash-object canonical/runtime/hle_native_semantic_compiler_v1.py)" = "238ebf2ffe23e527fceae919cbc30453a290fdd2"
+          test "$(git hash-object canonical/runtime/hle_evidence_candidate_synthesis_v1.py)" = "4cd588212d12fdff726b6e153631dbef1282e14e"
+          test "$(git hash-object canonical/tests/run_hle_v3_public_nonhle_calibration_v1.py)" = "0de2c1b1cef3044ff668e1c8f99033f114659623"
+
+      - name: Compile frozen calibration subject
+        run: |
+          python -m py_compile canonical/runtime/root2_hle_opus55_tool_adapter_v1.py
+          python -m py_compile canonical/runtime/hle_native_research_solver_v3.py
+          python -m py_compile canonical/runtime/hle_native_question_contract_v1.py
+          python -m py_compile canonical/runtime/hle_native_semantic_compiler_v1.py
+          python -m py_compile canonical/runtime/hle_evidence_candidate_synthesis_v1.py
+          python -m py_compile canonical/tests/run_hle_v3_public_nonhle_calibration_v1.py
+
+      - name: Prepare first 25 questions only
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v3_public_nonhle_calibration_v1.py prepare \
+            --questions /tmp/hle-v3-questions.json
+
+      - name: Run Brain-native V3 with gold absent
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v3_public_nonhle_calibration_v1.py solve \
+            --questions /tmp/hle-v3-questions.json \
+            --commitments /tmp/hle-v3-commitments.json \
+            --workers 5
+
+      - name: Refetch gold only after commitments are sealed and score
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v3_public_nonhle_calibration_v1.py score \
+            --questions /tmp/hle-v3-questions.json \
+            --commitments /tmp/hle-v3-commitments.json \
+            --summary /tmp/hle-v3-calibration-summary.json
+
+      - name: Upload non-sensitive calibration receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-v3-public-nonhle-calibration-receipt
+          path: /tmp/hle-v3-calibration-summary.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce frozen promotion gate
+        run: |
+          python - <<'PY'
+          import json
+          p="/tmp/hle-v3-calibration-summary.json"
+          x=json.load(open(p,encoding="utf-8"))
+          print(json.dumps({
+            "attempted":x["attempted"],
+            "attempt_rate":x["attempt_rate"],
+            "normalized_exact":x["normalized_exact"],
+            "normalized_exact_rate":x["normalized_exact_rate"],
+            "passed":x["promotion_gate"]["passed"],
+          },sort_keys=True))
+          raise SystemExit(0 if x["promotion_gate"]["passed"] else 1)
+          PY
