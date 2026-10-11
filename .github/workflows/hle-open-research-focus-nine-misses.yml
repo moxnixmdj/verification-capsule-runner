@@ -1,0 +1,52 @@
+name: Test open-research focus on nine HLE misses
+on:
+  push:
+    branches: [diag-hle-open-research-focus-nine-misses-20261011]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain subjects
+        run: |
+          test "$(git hash-object canonical/runtime/bound_capabilities/open_web_source_candidate_discovery.py)" = "81f73bca882d35603e5be43e8c40dd57e73ffce0"
+          test "$(git hash-object canonical/runtime/bound_capabilities/research_query_focus.py)" = "c55513f4bf78fc31c3bbb1229fefbd14c17ff56e"
+          test "$(git hash-object canonical/tests/run_hle_wikipedia_via_bing_nine_misses_v1.py)" = "ef889583d62cdb60ed00475a8a4fea4b0e503942"
+          test "$(git hash-object canonical/tests/run_hle_open_research_focus_nine_misses_v1.py)" = "01b9b7772b3f949ee2e0dd7564997cb03c3859ac"
+      - name: Compile
+        run: python -m py_compile canonical/tests/run_hle_open_research_focus_nine_misses_v1.py
+      - name: Prepare only consumed misses
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_open_research_focus_nine_misses_v1.py prepare --questions /tmp/q.json
+      - name: Seal open-research traces before gold
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_open_research_focus_nine_misses_v1.py trace --questions /tmp/q.json --trace /tmp/t.json --workers 2
+      - name: Score after trace sealing
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_open_research_focus_nine_misses_v1.py score --trace /tmp/t.json --summary /tmp/s.json
+      - name: Enforce zero cognition
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/s.json"))
+          assert x["sample_size"]==9
+          assert x["external_model_calls_total"]==0
+          assert x["external_reasoning_model_calls_total"]==0
+          assert x["model_dependency_count_total"]==0
+          assert x["hle_questions_consumed"]==0
+          assert x["hle_gold_consumed"]==0
+          print("OPEN_RESEARCH_FOCUS_RESULT",json.dumps({
+            "hit_ids":x["hit_ids"],"remaining":x["remaining_miss_ids"],
+            "backend_hits":x["backend_hit_counts"]
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hle-open-research-focus-nine-misses
+          path: /tmp/s.json
+          if-no-files-found: error
+          retention-days: 7
