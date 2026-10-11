@@ -1,6 +1,11 @@
 name: OSWorld v2.1 official task access probe V1
 
 on:
+  push:
+    branches:
+      - osworld-v21-official-task-access-20261011-v1
+    paths:
+      - ".github/workflows/osworld-v21-official-task-access-probe-v1.yml"
   pull_request:
     paths:
       - ".github/workflows/osworld-v21-official-task-access-probe-v1.yml"
