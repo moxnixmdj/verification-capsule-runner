@@ -30,7 +30,7 @@ def main():
         image=root/"charts"/img
         rp=out/f"case_{i}.json"
         cp=subprocess.run([
-          "python","subject/chartography_brain_native/solver_v1.py",
+          "python","subject/chartography_brain_native/solver_v2.py",
           "--image",str(image),"--question",q,"--out",str(rp)
         ],text=True,capture_output=True,timeout=120)
         result=json.loads(rp.read_text()) if rp.exists() else {
