@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Bind exact V5 diagnostic bytes
         run: |
-          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "92d6dae7356fa6c27c0e9ccec5b91a9bec8bf71a"
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "14cf87e474c55df72bc5a13f35e94010561940d5"
           test "$(git hash-object canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py)" = "a9ee9d4716046d77f3e13a12c014547d28d643e5"
       - name: Compile and self-test V5
         env:
@@ -38,7 +38,7 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          python canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py solve --questions /tmp/v5q.json --commitments /tmp/v5c.json --workers 5
+          python canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py solve --questions /tmp/v5q.json --commitments /tmp/v5c.json --workers 2
       - name: Score only after commitments sealed
         env:
           PYTHONPATH: .
