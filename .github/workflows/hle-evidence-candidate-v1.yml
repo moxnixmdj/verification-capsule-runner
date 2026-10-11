@@ -1,0 +1,34 @@
+name: Verify HLE evidence candidate synthesis V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_EVIDENCE_CANDIDATE_PREEXPOSURE_20261011_V1.json"
+      - "canonical/runtime/hle_evidence_candidate_synthesis_v1.py"
+      - "canonical/tests/test_hle_evidence_candidate_synthesis_v1.py"
+      - ".github/workflows/hle-evidence-candidate-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/HLE_EVIDENCE_CANDIDATE_PREEXPOSURE_20261011_V1.json)" = "2a6114a01507e959e7c1f11721a879c0242a739e"
+          test "$(git hash-object canonical/runtime/hle_evidence_candidate_synthesis_v1.py)" = "4cd588212d12fdff726b6e153631dbef1282e14e"
+          test "$(git hash-object canonical/tests/test_hle_evidence_candidate_synthesis_v1.py)" = "147065ada36cbe7ca4118eb1a009192baf36e394"
+      - name: Compile frozen subject
+        run: |
+          python -m py_compile canonical/runtime/hle_evidence_candidate_synthesis_v1.py
+          python -m py_compile canonical/tests/test_hle_evidence_candidate_synthesis_v1.py
+      - name: Run frozen synthetic no-model tests
+        env:
+          PYTHONPATH: .
+        run: python -m unittest -v canonical.tests.test_hle_evidence_candidate_synthesis_v1
