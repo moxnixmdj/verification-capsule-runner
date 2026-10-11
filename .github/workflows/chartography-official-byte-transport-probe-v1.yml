@@ -1,0 +1,96 @@
+name: Chartography official-byte transport probe V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-official-byte-transport-probe-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe official Surge/Hugging Face transports without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import hashlib, json, os, subprocess, urllib.request, urllib.error
+          from pathlib import Path
+
+          out={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_OFFICIAL_BYTE_TRANSPORT_PROBE_V1",
+            "dataset":"surgeai/chartography",
+            "credentials_used":False,
+            "golden_answers_read":False,
+            "model_calls":0,
+            "incremental_spend_usd":0,
+            "probes":[]
+          }
+
+          urls=[
+            ("api","https://huggingface.co/api/datasets/surgeai/chartography"),
+            ("readme_resolve","https://huggingface.co/datasets/surgeai/chartography/resolve/main/README.md?download=true"),
+            ("readme_raw","https://huggingface.co/datasets/surgeai/chartography/raw/main/README.md"),
+            ("parquet_resolve","https://huggingface.co/datasets/surgeai/chartography/resolve/main/data.parquet?download=true"),
+            ("hfco_parquet","https://hf.co/datasets/surgeai/chartography/resolve/main/data.parquet?download=true"),
+          ]
+          for name,url in urls:
+            req=urllib.request.Request(url,headers={
+              "User-Agent":"Mozilla/5.0 Project-Brain-Chartography-Transport-Probe/1.0",
+              "Accept":"*/*"
+            })
+            rec={"name":name,"url_sha256":hashlib.sha256(url.encode()).hexdigest()}
+            try:
+              with urllib.request.urlopen(req,timeout=30) as r:
+                body=r.read(2_000_000)
+                rec.update(status=r.status,bytes_read=len(body),sha256=hashlib.sha256(body).hexdigest())
+            except urllib.error.HTTPError as e:
+              rec.update(status=e.code,bytes_read=0)
+            except Exception as e:
+              rec.update(status=None,error_class=type(e).__name__)
+            out["probes"].append(rec)
+
+          cmds=[
+            ("git_ls_remote",["git","ls-remote","https://huggingface.co/datasets/surgeai/chartography","HEAD"]),
+            ("git_clone_metadata",["bash","-lc","rm -rf /tmp/chartography && GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://huggingface.co/datasets/surgeai/chartography /tmp/chartography >/tmp/clone.out 2>/tmp/clone.err"]),
+          ]
+          for name,cmd in cmds:
+            cp=subprocess.run(cmd,text=True,capture_output=True,timeout=120)
+            rec={"name":name,"returncode":cp.returncode,
+                 "stdout_sha256":hashlib.sha256(cp.stdout.encode()).hexdigest(),
+                 "stderr_sha256":hashlib.sha256(cp.stderr.encode()).hexdigest()}
+            if name=="git_ls_remote" and cp.returncode==0 and cp.stdout.strip():
+              rec["head_sha"]=cp.stdout.split()[0]
+            if name=="git_clone_metadata" and cp.returncode==0:
+              p=Path("/tmp/chartography")
+              rec["file_count"]=sum(1 for x in p.rglob("*") if x.is_file())
+              rec["has_data_parquet"]=(p/"data.parquet").exists()
+              if (p/"data.parquet").exists():
+                b=(p/"data.parquet").read_bytes()
+                rec["data_parquet_bytes"]=len(b)
+                rec["data_parquet_sha256"]=hashlib.sha256(b).hexdigest()
+            out["probes"].append(rec)
+
+          out["official_byte_transport_available"]=any(
+            (x.get("name")=="parquet_resolve" and x.get("status")==200) or
+            (x.get("name")=="hfco_parquet" and x.get("status")==200) or
+            (x.get("name")=="git_clone_metadata" and x.get("has_data_parquet") and x.get("data_parquet_bytes",0)>100000)
+            for x in out["probes"]
+          )
+          Path("out/transport.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-official-byte-transport-probe-v1
+          path: out/transport.json
+          if-no-files-found: error
