@@ -73,6 +73,46 @@ def _single_numeric_response(response: str) -> tuple[Optional[Decimal], Optional
     return value, unit
 
 
+_SCALE_SUFFIX = {"k": Decimal("1000"), "m": Decimal("1000000"), "b": Decimal("1000000000")}
+_SCALE_WORD = {"thousand": Decimal("1000"), "million": Decimal("1000000"), "billion": Decimal("1000000000")}
+
+def _published_exact_numeric(text: str) -> tuple[Optional[Decimal], str]:
+    """Parse only unambiguous one-scalar notation covered by Surge's rules."""
+    raw = _norm_text(text)
+    nums = list(_NUM.finditer(raw))
+    if len(nums) != 1:
+        return None, ""
+    m = nums[0]
+    value = _dec(m.group(0))
+    if value is None:
+        return None, ""
+    before, after = raw[:m.start()].strip(), raw[m.end():].strip()
+    currency = "$" in before
+    before = before.replace("$", "").strip()
+
+    scale = Decimal("1")
+    wm = re.match(r"^(thousand|million|billion)\\b", after)
+    if wm:
+        scale = _SCALE_WORD[wm.group(1)]
+        after = after[wm.end():].strip()
+    elif currency:
+        sm = re.match(r"^([kmb])\\b", after)
+        if sm:
+            scale = _SCALE_SUFFIX[sm.group(1)]
+            after = after[sm.end():].strip()
+
+    # Public scorer explicitly equates 'percentage points' and 'pp'.
+    after = re.sub(r"^percentage\\s+points?\\b", "pp", after).strip()
+    if before:
+        return None, ""
+    unit = ""
+    if after in {"", "pp", "%", "°c", "c", "°f", "f"}:
+        unit = {"c":"°c","f":"°f"}.get(after, after)
+    else:
+        return None, ""
+    return value * scale, unit
+
+
 def _range_from_golden(golden: str) -> tuple[Optional[Decimal], Optional[Decimal], Optional[str]]:
     """Parse only explicitly marked acceptable/range intervals.
 
@@ -124,6 +164,14 @@ def score_lower_bound(golden_answer: str, response_text: str) -> ScoreResult:
         if lo <= val <= hi:
             return ScoreResult(1, "EXPLICIT_ACCEPTABLE_RANGE_CONTAINMENT")
         return ScoreResult(0, "OUTSIDE_EXPLICIT_RANGE")
+
+    # Exact printed numeric values: accept only the explicit equivalent
+    # notation classes published by Surge. No approximate matching or unit
+    # conversion is performed.
+    gv, gu = _published_exact_numeric(golden_answer)
+    rv, ru = _published_exact_numeric(response_text)
+    if gv is not None and rv is not None and gv == rv and gu == ru:
+        return ScoreResult(1, "PUBLISHED_EXACT_NUMERIC_EQUIVALENCE")
 
     # Deliberately no fuzzy categorical matching, ranking inference, unit
     # conversion, or multipart decomposition: those remain 0 unless exact.
