@@ -1,0 +1,8 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK21_ACTIVATION_V6",
+  "activate": true,
+  "slot_id": "terminal-bench-science/ode-law-discovery::trial-0",
+  "task_digest": "sha256:767d16a0a6226f391208b1b4bb126a6f957e5d0c8156342b5c9410a755142d65",
+  "logical_attempt_id": "7eb619d40a65597b2b2dccbcf409c143aa47e1663ca4c0d8f098167cb252811a",
+  "execution_claim_binding_digest": "sha256:fb99e7f9d8d23a789c57506dc61e31c2abd25c442245f0309d94d65b29421697"
+}
