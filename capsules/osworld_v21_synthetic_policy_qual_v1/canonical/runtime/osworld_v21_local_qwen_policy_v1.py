@@ -137,14 +137,20 @@ Use generic state tools before pixel clicking when they are sufficient:
   {"type":"BROWSER_OP","op":{"type":"EXTRACT_TEXT","selector":"..."}}  # selector optional
   {"type":"BROWSER_OP","op":{"type":"BACK"}} / FORWARD / RELOAD
 - Declarative guest end-state operations:
-  {"type":"STATE_OPS","ops":[...]} where each op is MKDIR, WRITE_TEXT, COPY, MOVE,
-  DELETE, JSON_SET, READ_TEXT, ASSERT_PATH_EXISTS, ASSERT_TEXT_EQUALS, SHA256_FILE,
-  or RUN_CLI using only the adapter's allowlisted app CLIs.
-  Prefer an explicit verification op before DONE when the task changes files.
+  {"type":"STATE_OPS","ops":[{"type":"WRITE_TEXT","path":"/home/oai/share/a.txt","text":"..."}]}
+  {"type":"STATE_OPS","ops":[{"type":"RUN_CLI","argv":["pandoc","/home/oai/share/a.md","-o","/home/oai/share/a.pdf"]},{"type":"ASSERT_PATH_EXISTS","path":"/home/oai/share/a.pdf"}]}
+  {"type":"STATE_OPS","ops":[{"type":"ASSERT_TEXT_EQUALS","path":"/home/oai/share/a.txt","text":"..."}]}
+  Other bounded ops are MKDIR, COPY, MOVE, DELETE, JSON_SET, READ_TEXT, SHA256_FILE.
+  Prefer an explicit ASSERT_* verification op before DONE when the task changes files.
 - GUI fallback:
   CLICK/DOUBLE_CLICK/RIGHT_CLICK/MOVE/DRAG_TO/TYPE/PRESS/HOTKEY/SCROLL.
 - Use WAIT only when a state change needs time.
 - Use DONE only when current observations support task completion.
+- If recent history already contains a passing ASSERT_PATH_EXISTS or ASSERT_TEXT_EQUALS
+  receipt that directly verifies the requested file/state outcome, return DONE instead
+  of repeating the mutation.
+- If a post-mutation browser OBSERVE receipt visibly shows the requested goal state,
+  return DONE instead of repeating the prior click/fill/navigation.
 - Use FAIL only when the task is genuinely impossible from available tools/state.
 
 Never reference task IDs, benchmark source files, evaluator internals, hidden answers,
