@@ -117,53 +117,93 @@ def parse_number(s: str):
 
 
 def fit_axis_ticks(words: list[dict], width: int, height: int, axis: str):
-    pts=[]
+    raw=[]
     for w in words:
         v=parse_number(w["text"])
         if v is None:
             continue
         if axis=="x":
-            if w["cy"] < height*0.72:
+            if w["cy"] < height*0.55:
                 continue
-            pts.append((w["cx"],v,w))
+            raw.append((float(w["cx"]),float(w["cy"]),v,w))
         else:
-            if w["cx"] > width*0.20:
+            if w["cx"] > width*0.35 or w["cy"] > height*0.95:
                 continue
-            if w["cy"] > height*0.92:
-                continue
-            pts.append((w["cy"],v,w))
-    if len(pts)<2:
+            raw.append((float(w["cy"]),float(w["cx"]),v,w))
+    if len(raw)<2:
         raise RuntimeError(f"INSUFFICIENT_{axis.upper()}_TICKS")
 
-    # Try plausible subsets. Choose the subset that is most linear and has
-    # monotone numeric order in the expected direction.
+    # Collapse duplicate OCR views of the same visible tick.
+    dedup=[]
+    for p,band,v,w in sorted(raw,key=lambda x:(x[0],x[1],x[2])):
+        found=False
+        for i,(pp,bb,vv,ww) in enumerate(dedup):
+            if abs(p-pp)<6 and abs(band-bb)<6 and abs(v-vv)<1e-9:
+                if w.get("conf",0)>ww.get("conf",0):
+                    dedup[i]=(p,band,v,w)
+                found=True; break
+        if not found:
+            dedup.append((p,band,v,w))
+    raw=dedup
+
+    # True ticks align in one narrow horizontal band (x axis) or vertical band
+    # (y axis). Legend numbers do not. Score candidate bands by count, spatial
+    # span, monotonic linearity, and axis-like position.
+    band_tol=max(8.0,(0.018*height if axis=="x" else 0.018*width))
     best=None
-    n=len(pts)
-    for i in range(n):
-        for j in range(i+1,n):
-            p1,v1,_=pts[i]; p2,v2,_=pts[j]
-            if abs(p2-p1)<20 or abs(v2-v1)<1e-9:
-                continue
-            a=(v2-v1)/(p2-p1); b=v1-a*p1
-            # x values increase to the right; y values decrease upward.
-            if axis=="x" and a<=0: continue
-            if axis=="y" and a>=0: continue
-            inliers=[]
-            for p,v,w in pts:
-                pred=a*p+b
-                tol=max(0.75,0.035*max(abs(v),1.0))
-                if abs(pred-v)<=tol:
-                    inliers.append((p,v,w))
-            if len(inliers)<2: continue
-            xs=np.array([x[0] for x in inliers],float)
-            ys=np.array([x[1] for x in inliers],float)
-            aa,bb=np.polyfit(xs,ys,1)
-            residual=float(np.mean(np.abs((aa*xs+bb)-ys)))
-            score=(len(inliers),-residual)
-            if best is None or score>best[0]:
-                best=(score,float(aa),float(bb),inliers)
+    for _,center,_,_ in raw:
+        group=[x for x in raw if abs(x[1]-center)<=band_tol]
+        # Deduplicate same numeric value by keeping the position that best
+        # preserves spatial spread.
+        if len(group)<2:
+            continue
+        coords=np.array([x[0] for x in group],float)
+        vals=np.array([x[2] for x in group],float)
+        if len(set(round(float(v),9) for v in vals))<2:
+            continue
+        try:
+            a,b=np.polyfit(coords,vals,1)
+        except Exception:
+            continue
+        if axis=="x" and a<=0: continue
+        if axis=="y" and a>=0: continue
+        pred=a*coords+b
+        vr=max(float(np.max(vals)-np.min(vals)),1.0)
+        residual=float(np.mean(np.abs(pred-vals)))/vr
+        span=float(np.max(coords)-np.min(coords))/(width if axis=="x" else height)
+        if span<0.18:
+            continue
+        # Keep only inliers to the candidate axis mapping and refit.
+        tol=max(0.75,0.04*max(float(np.max(np.abs(vals))),1.0))
+        inlier_mask=np.abs(pred-vals)<=tol
+        ing=[g for g,k in zip(group,inlier_mask) if k]
+        if len(ing)<2:
+            continue
+        xs=np.array([x[0] for x in ing],float)
+        ys=np.array([x[2] for x in ing],float)
+        aa,bb=np.polyfit(xs,ys,1)
+        pred2=aa*xs+bb
+        vr2=max(float(np.max(ys)-np.min(ys)),1.0)
+        residual2=float(np.mean(np.abs(pred2-ys)))/vr2
+        span2=float(np.max(xs)-np.min(xs))/(width if axis=="x" else height)
+        align_spread=float(np.std([x[1] for x in ing]))/max(band_tol,1.0)
+        position=(
+            float(np.mean([x[1] for x in ing]))/height
+            if axis=="x"
+            else 1.0-float(np.mean([x[1] for x in ing]))/width
+        )
+        score=(
+            len(ing)*4.0
+            + span2*6.0
+            + position*1.5
+            - residual2*20.0
+            - align_spread*2.0
+        )
+        if best is None or score>best[0]:
+            best=(score,float(aa),float(bb),[(x[0],x[2],x[3]) for x in ing])
+
     if best is None:
-        raise RuntimeError(f"NO_{axis.upper()}_AXIS_FIT")
+        raise RuntimeError(f"NO_{axis.upper()}_AXIS_ALIGNED_TICK_BAND")
     return {"a":best[1],"b":best[2],"inliers":best[3]}
 
 
