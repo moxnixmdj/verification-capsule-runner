@@ -151,3 +151,15 @@ report={
 print(json.dumps(report,indent=2,sort_keys=True))
 if fail:
     raise SystemExit(1)
+
+
+# Verification-only extension for the isolated TB-Science zero-model capsule.
+# The existing parent-runtime gate above remains authoritative and must pass first.
+import subprocess as _subprocess
+import sys as _sys
+_tb=_subprocess.run(
+    [_sys.executable,"capsules/tb_science_zero_model_science_v1/verify.py"],
+    cwd=ROOT,
+)
+if _tb.returncode!=0:
+    raise SystemExit(_tb.returncode)
