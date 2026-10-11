@@ -9,14 +9,14 @@ permissions:
 env:
   DATASET_REPO: surgeai/chartography
   OFFICIAL_HARNESS_COMMIT: 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
-  MODEL_REPO: mradermacher/ChartVerse-8B-GGUF
-  MODEL_REVISION: 02926a8255ad68f66cad965e3faf4fd6f6515259
-  MODEL_FILE: ChartVerse-8B.Q4_K_M.gguf
-  MODEL_SHA256: 97eebc1d3d8a2f8482205a986305bdbcd5553b8c2131073dc47c553badaa9d15
-  MMPROJ_FILE: ChartVerse-8B.mmproj-Q8_0.gguf
-  MMPROJ_SHA256: 0df4b5c847587984c93e6712f0851abb2227ecabfe94b8d60ccac90a12b654f0
+  MODEL_REPO: Qwen/Qwen3-VL-8B-Instruct-GGUF
+  MODEL_REVISION: f982a07559d4a2f6c8744d840bf6fccab30eea96
+  MODEL_FILE: Qwen3VL-8B-Instruct-Q4_K_M.gguf
+  MODEL_SHA256: 67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2
+  MMPROJ_FILE: mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf
+  MMPROJ_SHA256: c6ba85508d82f42590e6eb77d5340369ab6fecf107a7561d809523d8aa5f3bfd
   LLAMA_CPP_COMMIT: a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
-  SUBJECT_CACHE_KEY: chartography-subject-97eebc1d-0df4b5c8-a7fb71fa-server-v3
+  SUBJECT_CACHE_KEY: chartography-qwen8-67d1659b-c6ba8550-a7fb71fa-server-jinja-v1
 
 jobs:
   bind:
@@ -168,7 +168,7 @@ jobs:
           set -euo pipefail
           OUT="out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}"
           PORT="$((18080 + ${{ matrix.epoch }} * 10 + ${{ matrix.shard }}))"
-          llama.cpp/build/bin/llama-server             -m model/model.gguf             --mmproj model/mmproj.gguf             --no-mmproj-offload             --host 127.0.0.1             --port "$PORT"             --threads 4             --parallel 1             --ctx-size 8192             --image-min-tokens 1024             --no-webui             --log-disable             >"$OUT/server.stdout.log" 2>"$OUT/server.stderr.log" &
+          llama.cpp/build/bin/llama-server             -m model/model.gguf             --mmproj model/mmproj.gguf             --no-mmproj-offload             --jinja             --host 127.0.0.1             --port "$PORT"             --threads 4             --parallel 1             --ctx-size 8192             --image-min-tokens 1024             --no-webui             --log-disable             >"$OUT/server.stdout.log" 2>"$OUT/server.stderr.log" &
           SERVER_PID="$!"
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           export PORT
