@@ -1,0 +1,56 @@
+name: Diagnose HLE query planner V2 consumed recall
+on:
+  push:
+    branches: [diag-hle-query-planner-v2-consumed-20261011]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain subjects
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v2.py)" = "0a0b1e70ba90bb6e29cbd8316343c10c2dcb1908"
+          test "$(git hash-object canonical/runtime/hle_native_open_web_fallback_v1.py)" = "f03db468c1b9a1d5425d1eaf49966e6c8484819a"
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v1.py)" = "2386db287d08153ffb905f8cd89a76f4ebf19d9f"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+          test "$(git hash-object canonical/tests/run_hle_query_planner_v2_consumed_diagnostic_v1.py)" = "13e8c241eecf8fed575da8bbad0eb0e9e570bb11"
+      - name: Re-run exact synthetic suite
+        env: {PYTHONPATH: .}
+        run: python -m unittest canonical.tests.test_hle_native_retrieval_query_planner_v2 -v
+      - name: Prepare already-consumed public questions
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_query_planner_v2_consumed_diagnostic_v1.py prepare --questions /tmp/q.json
+      - name: Seal V2 retrieval trace with gold absent
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_query_planner_v2_consumed_diagnostic_v1.py trace --questions /tmp/q.json --trace /tmp/t.json --workers 4
+      - name: Score only after trace sealing
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_query_planner_v2_consumed_diagnostic_v1.py score --trace /tmp/t.json --summary /tmp/s.json
+      - name: Enforce zero cognition and report
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/s.json"))
+          assert x["external_model_calls_total"]==0
+          assert x["model_dependency_count_total"]==0
+          assert x["hle_questions_consumed"]==0
+          assert x["hle_gold_consumed"]==0
+          print("PLANNER_V2_RECALL",json.dumps({
+            "baseline_discovery":x["baseline_discovery_surface_hit_rate"],
+            "baseline_full":x["baseline_full_retrieval_any_hit_rate"],
+            "v2_recall":x["retrieval_any_hit_rate"],
+            "delta_vs_full":x["absolute_delta_vs_full_retrieval_reference"],
+            "backend_hits":x["backend_hit_counts"],
+            "backend_health":x["backend_health_sample_counts"],
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hle-query-planner-v2-consumed-diagnostic
+          path: /tmp/s.json
+          if-no-files-found: ignore
+          retention-days: 7
