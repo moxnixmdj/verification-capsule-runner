@@ -12,7 +12,7 @@ import rank21_start_cas_v7 as start_cas
 
 SCHEMA = "PROJECT_BRAIN_TB_SCIENCE_TERMINAL_SLOT_RECEIPT_RANK21_V7"
 SLOT = "terminal-bench-science/ode-law-discovery::trial-0"
-TASK = "terminal-bench-science/hysteretic-aquifer-control"
+TASK = "terminal-bench-science/ode-law-discovery"
 DIGEST = "sha256:767d16a0a6226f391208b1b4bb126a6f957e5d0c8156342b5c9410a755142d65"
 
 
