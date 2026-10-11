@@ -1,0 +1,64 @@
+name: Chartography real Qwen crop-loop preflight V1
+
+on:
+  push:
+    branches:
+      - successor/chartography-real-crop-loop-v1
+    paths:
+      - ".github/workflows/chartography-real-qwen-crop-loop-v1.yml"
+      - "subject/chartography_with_tools/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates time
+          python -m pip install --disable-pip-version-check --no-input pillow
+      - name: Download exact model
+        run: |
+          set -euo pipefail
+          mkdir -p model out
+          REV="1cd86afb9a95c410a6038ab3b40d8b578c892266"
+          BASE="https://huggingface.co/Qwen/Qwen3-VL-4B-Instruct-GGUF/resolve/$REV"
+          curl -fL --retry 5 --retry-all-errors "$BASE/Qwen3VL-4B-Instruct-Q4_K_M.gguf?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf?download=true" -o model/mmproj.gguf
+          echo "66358cb18bb6b3b1b6675aa412c7a88ef01d228f481184d13668e5201c730a0a  model/model.gguf" | sha256sum -c -
+          echo "30ba2c7dd3127a4561b6cba9d13d0f711c91bdb38742e2f56d73c8cb596bd06d  model/mmproj.gguf" | sha256sum -c -
+      - name: Build pinned llama.cpp
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-mtmd-cli -j 2
+      - name: Generate synthetic chart-like image
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          im=Image.new("RGB",(64,64),(255,0,0))
+          for x in range(16,48):
+              for y in range(16,48):
+                  im.putpixel((x,y),(0,0,255))
+          im.save("synthetic.bmp")
+          PY
+      - name: Real Qwen bounded crop loop
+        run: |
+          set -euo pipefail
+          python subject/chartography_with_tools/run_real_qwen_crop_loop.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-real-qwen-crop-loop-v1
+          path: out/
+          if-no-files-found: error
