@@ -1,0 +1,25 @@
+name: Verify Chartography deterministic geometry V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/chartography_geometry_v1/**"
+      - ".github/workflows/verify-chartography-geometry-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify deterministic geometry repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd capsules/chartography_geometry_v1
+          python verify.py
