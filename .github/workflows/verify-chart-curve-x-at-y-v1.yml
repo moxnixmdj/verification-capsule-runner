@@ -24,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_curve_x_at_y_query_v1.py)" = "04866f3aee99d9fd964f13571d8af278dfa6fe5e"
-          test "$(git hash-object canonical/tests/test_chart_curve_x_at_y_query_v1.py)" = "cae9afcc53232408b375d92c60b01599eeaf7238"
+          test "$(git hash-object canonical/tests/test_chart_curve_x_at_y_query_v1.py)" = "325d125c3e55acab091be139a35ba3b9d1e57c25"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py)" = "107e20dd66840ecaba32e9e9f6cbfc764da1ae0b"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_legend_style_binding_v1.py)" = "aeed8dc4dc231d1d1a794188974930e9457c7ecb"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py)" = "1ccab094a14ae261a01912ad6e573ffc09fa8b35"
