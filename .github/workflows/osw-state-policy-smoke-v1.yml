@@ -1,0 +1,153 @@
+name: OSWorld exact state-policy synthetic smoke V1
+
+on:
+  push:
+    branches: [osw-state-policy-smoke-v1]
+    paths:
+      - '.github/workflows/osw-state-policy-smoke-v1.yml'
+      - 'capsules/osw_operative_policy_smoke_v1/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TAG: brain-capability-qwen35-9b-m-exact-v1
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_BYTES: '5060174144'
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      CAPSULE: capsules/osw_operative_policy_smoke_v1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reassemble exact Brain-controlled Qwen bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p model out /home/oai/share
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY"             --pattern "$MODEL_FILE.part*of03" --dir model
+          cat model/"$MODEL_FILE".part01of03               model/"$MODEL_FILE".part02of03               model/"$MODEL_FILE".part03of03 > model/"$MODEL_FILE"
+          test "$(stat -c '%s' model/$MODEL_FILE)" = "$MODEL_BYTES"
+          echo "$MODEL_SHA256  model/$MODEL_FILE" | sha256sum -c -
+
+      - name: Build pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_REV"
+          cmake -S llama.cpp -B llama.cpp/build             -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Start loopback-only exact owned planner endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then
+            EXTRA+=(--reasoning off)
+          fi
+          nohup llama.cpp/build/bin/llama-server             -m "model/$MODEL_FILE"             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080             -c 8192 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}"             > out/server.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > out/health.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Execute exact state-first policy against synthetic guest
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$CAPSULE" python - <<'PY' | tee out/receipt.json
+          import json, subprocess, sys
+          from pathlib import Path
+
+          from canonical.runtime.osworld_v21_brain_agent_adapter_v1 import BrainOSWorldAgent
+          from canonical.runtime.osworld_v21_host_guest_ops_v1 import OSWorldHostGuestOps
+          from canonical.runtime.osworld_v21_local_qwen_policy_v1 import plan_state
+
+          target = Path("/home/oai/share/brain.txt")
+          if target.exists():
+              target.unlink()
+
+          class Controller:
+              def execute_python_command(self, program):
+                  p=subprocess.run([sys.executable,"-c",program],text=True,capture_output=True)
+                  return {
+                      "status":"ok" if p.returncode==0 else "error",
+                      "output":p.stdout,
+                      "error":p.stderr if p.returncode else None,
+                  }
+
+          class Env:
+              controller=Controller()
+
+          class Browser:
+              def bind_environment(self, env): self.env=env
+              def run(self, op):
+                  return {"type":str(op.get("type") or "").upper(),"active_url":"about:blank","visible_text":""}
+
+          guest=OSWorldHostGuestOps()
+          agent=BrainOSWorldAgent(
+              plan_state,
+              policy_id="brain-osworld-v21-local-qwen35-9b-state-first-v1",
+              browser_controller=Browser(),
+              guest_controller=guest,
+              ocr_provider=None,
+          )
+          agent.bind_environment(Env())
+
+          instruction="Create /home/oai/share/brain.txt containing exactly alpha, verify the file content, then finish."
+          trace=[]
+          terminal=None
+          for i in range(1,7):
+              response,actions=agent.predict(instruction,{"screenshot":("screen-"+str(i)).encode()})
+              trace.append({"cycle":i,"response":response,"actions":actions,"history":agent.history[-1] if agent.history else None})
+              if actions==["DONE"]:
+                  terminal="DONE"
+                  break
+              if actions==["FAIL"]:
+                  terminal="FAIL"
+                  break
+
+          assert terminal=="DONE",trace
+          assert target.read_text(encoding="utf-8")=="alpha",trace
+          assert any(
+              isinstance(row.get("guest_result"),dict)
+              and "ASSERT_TEXT_EQUALS:PASS:/home/oai/share/brain.txt" in str(row["guest_result"].get("output") or "")
+              for row in agent.history
+          ),agent.history
+          assert all(not row.get("operation_error") for row in agent.history),agent.history
+
+          receipt={
+              "schema":"PROJECT_BRAIN_OSWORLD_V21_EXACT_STATE_POLICY_SYNTHETIC_SMOKE_V1",
+              "status":"PASS",
+              "cycles":len(trace),
+              "terminal":terminal,
+              "target_content":target.read_text(encoding="utf-8"),
+              "action_receipts":agent.history,
+              "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "llama_cpp_revision":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "adapter_blob_sha":"1a203aa33ec89a172dab58804549258495308d52",
+              "external_generation_provider":False,
+              "benchmark_task_data_used":False,
+              "reference_trajectories_used":False,
+              "terminal_cases_consumed":0,
+              "incremental_spend_usd":0,
+          }
+          print(json.dumps(receipt,sort_keys=True,default=str))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osw-state-policy-smoke-v1
+          path: out/
+          if-no-files-found: error
