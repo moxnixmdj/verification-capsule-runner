@@ -654,7 +654,11 @@ def solve(image_path: str | Path, prompt: str) -> dict[str, Any]:
             "ocr_psm": ocr["psm"],
             "cognition_dependency_class": "MODEL_INDEPENDENT",
             "general_purpose_model_dependency_count": 0,
-            "bounded_learned_components": ["image.extract.ocr.tesseract.positioned.tsv"],
+            "bounded_learned_components": ["image.extract.ocr.tesseract"],
+            "external_general_purpose_model_runtime_dependency_count": 0,
+            "donor_general_purpose_model_runtime_dependency_count": 0,
+            "online_teacher_call_count": 0,
+            "teacher_fallback_path_count": 0,
         }
 
     phase_q = _parse_precipitation_question(prompt)
@@ -685,7 +689,11 @@ def solve(image_path: str | Path, prompt: str) -> dict[str, Any]:
             "ocr_psm": ocr["psm"],
             "cognition_dependency_class": "MODEL_INDEPENDENT",
             "general_purpose_model_dependency_count": 0,
-            "bounded_learned_components": ["image.extract.ocr.tesseract.positioned.tsv"],
+            "bounded_learned_components": ["image.extract.ocr.tesseract"],
+            "external_general_purpose_model_runtime_dependency_count": 0,
+            "donor_general_purpose_model_runtime_dependency_count": 0,
+            "online_teacher_call_count": 0,
+            "teacher_fallback_path_count": 0,
         }
 
     raise ChartographyProfessionalSolverError("UNSUPPORTED_PROFESSIONAL_CHART_QUESTION")
