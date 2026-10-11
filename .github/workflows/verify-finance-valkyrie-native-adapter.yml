@@ -1,0 +1,25 @@
+name: Verify Finance Brain-native Valkyrie adapter
+
+on:
+  push:
+    branches:
+      - verify-finance-valkyrie-native-adapter-20261011-v1
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile adapter and runtime
+        run: |
+          python -m py_compile \
+            canonical/integrations/brain_fabv2_native_v1/run_agent.py \
+            canonical/runtime/finance_agent_v2_brain_native_llm_v1.py \
+            canonical/runtime/finance_quantitative_dependency_v1.py \
+            canonical/runtime/finance_quantitative_question_contract_v1.py \
+            canonical/runtime/finance_metric_xbrl_registry_v1.py \
+            canonical/runtime/finance_agent_v2_zero_spend_adapter_v1.py \
+            canonical/runtime/zero_spend_provider_guard_v1.py
+      - name: Run adapter tests
+        run: python -m unittest canonical.tests.test_finance_agent_v2_valkyrie_native_bundle_v1 -v
