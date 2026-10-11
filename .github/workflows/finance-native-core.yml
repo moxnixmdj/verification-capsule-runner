@@ -1,0 +1,72 @@
+name: Verify Finance Brain-native core
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/finance_quantitative_algebra_v1.py"
+      - "canonical/runtime/finance_quantitative_dependency_v1.py"
+      - "canonical/runtime/finance_quantitative_question_contract_v1.py"
+      - "canonical/runtime/finance_metric_xbrl_registry_v1.py"
+      - "canonical/runtime/finance_sec_ticker_cik_from_registry_v1.py"
+      - "canonical/runtime/finance_sec_fact_selector_v1.py"
+      - "canonical/runtime/finance_market_price_series_v1.py"
+      - "canonical/runtime/finance_modeling_workflows_v1.py"
+      - "canonical/tests/test_finance_quantitative_algebra_v1.py"
+      - "canonical/tests/test_finance_quantitative_dependency_v1.py"
+      - "canonical/tests/test_finance_quantitative_question_contract_v1.py"
+      - "canonical/tests/test_finance_metric_xbrl_registry_v1.py"
+      - "canonical/tests/test_finance_sec_ticker_cik_from_registry_v1.py"
+      - "canonical/tests/test_finance_sec_fact_selector_v1.py"
+      - "canonical/tests/test_finance_market_price_series_v1.py"
+      - "canonical/tests/test_finance_modeling_workflows_v1.py"
+      - ".github/workflows/finance-native-core.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/finance_quantitative_algebra_v1.py)" = "efeecdb5faa595db75595bed2b87f9104e16882d"
+          test "$(git hash-object canonical/runtime/finance_quantitative_dependency_v1.py)" = "57d250414b1f064dd243d1d98e8cde7c85cf6858"
+          test "$(git hash-object canonical/runtime/finance_quantitative_question_contract_v1.py)" = "24a17cf65b0db07fedef9d1a99b1662b58c0448c"
+          test "$(git hash-object canonical/runtime/finance_metric_xbrl_registry_v1.py)" = "a64271e46811c8c1a440a344045ca1f38c30a519"
+          test "$(git hash-object canonical/runtime/finance_sec_ticker_cik_from_registry_v1.py)" = "55a72e8b4fdbadd14948857ca3d70b31d3c13629"
+          test "$(git hash-object canonical/runtime/finance_sec_fact_selector_v1.py)" = "03957a8bd33329db5102236c2acc6974b8a8a71c"
+          test "$(git hash-object canonical/runtime/finance_market_price_series_v1.py)" = "02fbcee19c186db6c832af7690b6118040bab567"
+          test "$(git hash-object canonical/runtime/finance_modeling_workflows_v1.py)" = "a4cbd055df1771f278873e3d922a68d468442242"
+          test "$(git hash-object canonical/tests/test_finance_quantitative_algebra_v1.py)" = "3a3ab3a5203fe10e25cb407e6454fa95ff9a27a0"
+          test "$(git hash-object canonical/tests/test_finance_quantitative_dependency_v1.py)" = "86f29998362b686d1fa314002517010c2b8d3ef6"
+          test "$(git hash-object canonical/tests/test_finance_quantitative_question_contract_v1.py)" = "ce7cfc058756ed3d498cba1d55b78b366c5b2a02"
+          test "$(git hash-object canonical/tests/test_finance_metric_xbrl_registry_v1.py)" = "967041308f07a4b57aee7c0bb90ab5ad4fed9bab"
+          test "$(git hash-object canonical/tests/test_finance_sec_ticker_cik_from_registry_v1.py)" = "a2e38c0cc92dd1e74c39b66c127ebd5d4f830d73"
+          test "$(git hash-object canonical/tests/test_finance_sec_fact_selector_v1.py)" = "92193ff9e25748edecd47d0fe9c05856087a4dc9"
+          test "$(git hash-object canonical/tests/test_finance_market_price_series_v1.py)" = "42f32b1e0f9d78d3c924527e1b579f135844d253"
+          test "$(git hash-object canonical/tests/test_finance_modeling_workflows_v1.py)" = "0d61a56bd644b020d8a41a2a5c368ca351df279c"
+      - name: Compile exact subject
+        run: |
+          python -m py_compile canonical/runtime/finance_quantitative_algebra_v1.py
+          python -m py_compile canonical/runtime/finance_quantitative_dependency_v1.py
+          python -m py_compile canonical/runtime/finance_quantitative_question_contract_v1.py
+          python -m py_compile canonical/runtime/finance_metric_xbrl_registry_v1.py
+          python -m py_compile canonical/runtime/finance_sec_ticker_cik_from_registry_v1.py
+          python -m py_compile canonical/runtime/finance_sec_fact_selector_v1.py
+          python -m py_compile canonical/runtime/finance_market_price_series_v1.py
+          python -m py_compile canonical/runtime/finance_modeling_workflows_v1.py
+      - name: Install focused test dependency
+        run: python -m pip install --disable-pip-version-check --no-input pytest==8.3.5
+      - name: Run exact donor-free Finance tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q             canonical/tests/test_finance_quantitative_algebra_v1.py             canonical/tests/test_finance_quantitative_dependency_v1.py             canonical/tests/test_finance_quantitative_question_contract_v1.py             canonical/tests/test_finance_metric_xbrl_registry_v1.py             canonical/tests/test_finance_sec_ticker_cik_from_registry_v1.py             canonical/tests/test_finance_sec_fact_selector_v1.py             canonical/tests/test_finance_market_price_series_v1.py             canonical/tests/test_finance_modeling_workflows_v1.py
