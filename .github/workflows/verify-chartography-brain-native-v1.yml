@@ -17,10 +17,11 @@ permissions:
 
 env:
   SURGE_COMMIT: 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
-  SEMANTICS_BLOB: 67e27b1dbaaec7a0aaab3aec6053188a6b465992
-  OCR_POSITIONED_BLOB: 19f3087489ce7f6f935fc7baaebdc8cd672f4b62
+  SEMANTICS_BLOB: 05a21547a24db4f762ef314079fa6603cadb5e1c
+  OCR_POSITIONED_BLOB: 985fb63b00fb0c190364b3be9d6265541f17bd85
   OCR_BASE_BLOB: 45714d7a0160802d986042910da1c4c6462676e5
   TEST_BLOB: 9d17b6dc0fcb1f48755203aab258cb1b5e5a3c71
+  OCR_WORD_TEST_BLOB: 2213150a23b2eabe00d3eab23f0e7d5a4edbc2e9
 
 jobs:
   verify:
@@ -43,6 +44,7 @@ jobs:
           test "$(git hash-object mirror/canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "$OCR_POSITIONED_BLOB"
           test "$(git hash-object mirror/canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "$OCR_BASE_BLOB"
           test "$(git hash-object mirror/canonical/tests/test_chartography_professional_semantics_v1.py)" = "$TEST_BLOB"
+          test "$(git hash-object mirror/canonical/tests/test_image_ocr_tesseract_positioned.py)" = "$OCR_WORD_TEST_BLOB"
       - name: Verify no runtime model cognition in producer source
         shell: bash
         run: |
@@ -58,7 +60,7 @@ jobs:
       - name: Run mirrored Brain unit tests
         env:
           PYTHONPATH: mirror
-        run: python -m unittest -v canonical.tests.test_chartography_professional_semantics_v1
+        run: python -m unittest -v canonical.tests.test_chartography_professional_semantics_v1 canonical.tests.test_image_ocr_tesseract_positioned
       - name: Bind exact Surge public sample pack
         shell: bash
         run: |
