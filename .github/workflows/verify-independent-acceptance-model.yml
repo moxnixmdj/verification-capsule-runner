@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py)" = "f71e3a649d785b8f6b282d594c57ca1430e6e46f"
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py)" = "b542ea934fbdc1d8777cebb1b0fd527ca8235d61"
           test "$(git hash-object canonical/runtime/independent_acceptance_model.py)" = "710298c5d7154b5a3c2a4a1700420c40cb2fa55a"
           python - <<'PY'
           import hashlib,inspect
