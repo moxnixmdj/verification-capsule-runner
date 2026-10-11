@@ -1,0 +1,129 @@
+name: Verify exact Brain chart scene graph V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-exact-brain-chart-scene-graph-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  EXACT_MODULE_BLOB: 258999b07287287db2037af777973d5bbb39116d
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize exact frozen Brain module by Git blob SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import base64,json,os,pathlib,urllib.request
+          sha=os.environ["EXACT_MODULE_BLOB"]
+          url=f"https://api.github.com/repos/moxnixmdj/verification-capsule-runner/git/blobs/{sha}"
+          req=urllib.request.Request(url,headers={
+              "Authorization":"Bearer "+os.environ["GH_TOKEN"],
+              "Accept":"application/vnd.github+json",
+          })
+          with urllib.request.urlopen(req,timeout=30) as r:
+              doc=json.load(r)
+          if doc.get("sha")!=sha or doc.get("encoding")!="base64":
+              raise SystemExit("BLOB_IDENTITY_MISMATCH")
+          raw=base64.b64decode(doc["content"])
+          p=pathlib.Path("candidate/chart_raster_scene_graph_v1.py")
+          p.parent.mkdir(parents=True,exist_ok=True)
+          p.write_bytes(raw)
+          print("MATERIALIZED",sha,len(raw))
+          PY
+          test "$(git hash-object candidate/chart_raster_scene_graph_v1.py)" = "$EXACT_MODULE_BLOB"
+      - name: Install deterministic dependency
+        run: python -m pip install --disable-pip-version-check --no-input "pillow==10.2.0"
+      - name: Reject external cognition references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("candidate/chart_raster_scene_graph_v1.py").read_text().lower()
+          forbidden=["qwen","minicpm","anthropic","openai","gemini","transformers","torch","llama","ollama"]
+          hits=[x for x in forbidden if x in s]
+          if hits: raise SystemExit("FORBIDDEN_GENERAL_MODEL_REFERENCE:"+",".join(hits))
+          print("PASS_ZERO_GENERAL_PURPOSE_MODEL_REFERENCES")
+          PY
+      - name: Independent synthetic qualification
+        run: |
+          python - <<'PY'
+          import importlib.util,sys,tempfile
+          from pathlib import Path
+          from PIL import Image,ImageDraw
+          spec=importlib.util.spec_from_file_location("scene","candidate/chart_raster_scene_graph_v1.py")
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+
+          assert m.calibrate_axis([(50,0),(100,10),(150,20),(200,30)],"INCREASING")["scale"]=="LINEAR"
+          assert m.calibrate_axis([(50,1),(100,10),(150,100),(200,1000)],"INCREASING")["scale"]=="LOG10"
+          assert m.calibrate_axis([(190,0),(150,10),(110,20),(70,30)],"DECREASING")["scale"]=="LINEAR"
+          try:
+              m.calibrate_axis([(50,0),(100,10),(150,20)],"DECREASING")
+              raise AssertionError("WRONG_DIRECTION_DID_NOT_FAIL")
+          except m.ChartSceneGraphError:
+              pass
+
+          geometry=0
+          with tempfile.TemporaryDirectory() as td:
+              root=Path(td)
+              for i in range(40):
+                  w=280+(i%5)*40; h=220+(i%4)*30
+                  left=35+(i%7)*4; top=20+(i%5)*3
+                  right=w-25-(i%3)*4; bottom=h-30-(i%4)*3
+                  im=Image.new("RGB",(w,h),"white"); d=ImageDraw.Draw(im)
+                  d.line((left,top,left,bottom),fill="black",width=2)
+                  d.line((left,bottom,right,bottom),fill="black",width=2)
+                  pts=[]
+                  for j in range(101):
+                      x=left+10+int((right-left-20)*j/100)
+                      y=bottom-10-int((bottom-top-20)*(0.2+0.6*j/100))
+                      pts.append((x,y))
+                  d.line(pts,fill=(220,35,35),width=3)
+                  d.rectangle((right-60,top+20,right-45,top+65),fill=(25,80,220))
+                  p=root/f"{i}.png"; im.save(p)
+                  box=m.detect_plot_box(im)
+                  assert abs(box[0]-left)<=2
+                  assert abs(box[3]-bottom)<=2
+                  assert len(m.saturated_components(im,box))>=2
+                  traces=m.color_polylines(im,box)
+                  assert any(t["column_count"]>max(30,(right-left)//2) for t in traces)
+                  out=m.build_scene_graph(
+                      p,
+                      [(left,0),(left+50,10),(left+100,20),(left+150,30)],
+                      [(bottom,0),(bottom-40,10),(bottom-80,20),(bottom-120,30)],
+                  )
+                  assert out["semantic_authority"] is False
+                  assert out["domain_semantic_authority"] is False
+                  assert out["benchmark_score_authority"] is False
+                  assert out["general_purpose_model_dependency_count"]==0
+                  assert out["external_general_purpose_model_runtime_dependency_count"]==0
+                  geometry+=1
+
+          for off in [0,7,23,91]:
+              assert m.calibrate_axis([(off+10*k,5+2*k) for k in range(1,7)],"INCREASING")["scale"]=="LINEAR"
+          for base in [2,10]:
+              assert m.calibrate_axis([(20+40*k,float(base**k)) for k in range(5)],"INCREASING")["scale"]=="LOG10"
+          for scale in [1,3,11]:
+              assert m.calibrate_axis([(220-25*k,float(scale*k)) for k in range(6)],"DECREASING")["scale"]=="LINEAR"
+
+          print({
+            "exact_module_blob": "258999b07287287db2037af777973d5bbb39116d",
+            "geometry_cases": geometry,
+            "focused_axis_cases": 4,
+            "extra_linear_cases": 4,
+            "extra_log_cases": 2,
+            "extra_decreasing_cases": 3,
+            "external_runtime_cognition": 0,
+            "benchmark_score_authority": False,
+            "pass": True,
+          })
+          PY
