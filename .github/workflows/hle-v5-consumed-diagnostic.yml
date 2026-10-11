@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "canonical/runtime/hle_native_open_domain_research_v5.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
       - "canonical/tests/run_hle_v5_consumed_diagnostic_v1.py"
       - ".github/workflows/hle-v5-consumed-diagnostic.yml"
   workflow_dispatch:
@@ -18,6 +19,7 @@ jobs:
       - name: Bind exact Brain V5 blob
         run: |
           test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "ae6006af1e578b0690357756e0b899a10323a5f4"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
       - name: Compile and self-test
         env:
           PYTHONPATH: .
