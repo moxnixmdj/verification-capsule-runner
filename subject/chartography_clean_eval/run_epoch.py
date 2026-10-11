@@ -47,6 +47,47 @@ def crop_image(src: Path, dst: Path, box: tuple[int, int, int, int]) -> dict:
         }
 
 
+def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
+    """Run model-authored analysis code in an isolated no-network container.
+
+    The mount contains only the current chart plus tool scratch files. The
+    benchmark parquet, gold answers, runner repository, credentials, and model
+    weights are deliberately not mounted.
+    """
+    tool_dir = workdir.resolve()
+    tool_dir.mkdir(parents=True, exist_ok=True)
+    image_copy = tool_dir / "current_image.png"
+    with Image.open(current_image) as im:
+        im.save(image_copy)
+    code_path = tool_dir / "tool.py"
+    code_path.write_text(code)
+    cp = subprocess.run(
+        [
+            "docker", "run", "--rm",
+            "--network", "none",
+            "--read-only",
+            "--memory", "768m",
+            "--cpus", "1",
+            "--tmpfs", "/tmp:rw,nosuid,nodev,size=128m",
+            "-v", f"{tool_dir}:/work:rw",
+            "-w", "/work",
+            "brain-chartography-tool-v1",
+            "python", "/work/tool.py",
+        ],
+        text=True,
+        capture_output=True,
+        timeout=90,
+        env={"PATH": "/usr/local/bin:/usr/bin:/bin"},
+    )
+    return {
+        "returncode": cp.returncode,
+        "stdout": cp.stdout[-6000:],
+        "stderr": cp.stderr[-2000:],
+        "stdout_sha256": hashlib.sha256(cp.stdout.encode()).hexdigest(),
+        "stderr_sha256": hashlib.sha256(cp.stderr.encode()).hexdigest(),
+    }
+
+
 def extract_action(stdout: str) -> dict | None:
     for raw in reversed(_JSON.findall(stdout)):
         try:
@@ -61,6 +102,8 @@ def extract_action(stdout: str) -> dict | None:
             vals = [obj[k] for k in ("left", "top", "right", "bottom")]
             if all(type(v) is int for v in vals):
                 return {"kind": "crop", "box": tuple(vals)}
+        if set(obj) == {"tool", "code"} and obj.get("tool") == "python" and isinstance(obj.get("code"), str):
+            return {"kind": "python", "code": obj["code"]}
     return None
 
 
@@ -83,24 +126,35 @@ def invoke_model(
 ) -> tuple[dict, dict]:
     with Image.open(image) as im:
         w, h = im.size
-    prior = [
-        {"tool": "crop", "box": x["box"], "output_size": x["output_size"]}
-        for x in transcript
-        if x.get("tool") == "crop"
-    ]
+    prior = []
+    for x in transcript[-6:]:
+        if x.get("tool") == "crop":
+            prior.append({"tool": "crop", "box": x["box"], "output_size": x["output_size"]})
+        elif x.get("tool") == "python":
+            prior.append({
+                "tool": "python",
+                "returncode": x["returncode"],
+                "stdout": x["stdout"],
+                "stderr": x["stderr"],
+            })
     prompt = (
         "You are solving one professional chart-reading question. "
-        "You may inspect the CURRENT image directly and may zoom by requesting a crop. "
+        "You may inspect the CURRENT image directly. You have two tools: crop and isolated Python analysis. "
         "Return exactly one JSON object and nothing else. "
-        "If a crop is genuinely useful, return "
+        "Crop: "
         '{"tool":"crop","left":INTEGER,"top":INTEGER,"right":INTEGER,"bottom":INTEGER}. '
+        "Python: "
+        '{"tool":"python","code":"PYTHON CODE"}. '
+        "Python runs offline in an isolated container that can read /work/current_image.png and has "
+        "Python 3, Pillow, NumPy, SciPy, Matplotlib, and OpenCV. Print only measurements you need. "
+        "It cannot access the benchmark, network, credentials, model files, or any golden answers. "
         "Coordinates are pixel coordinates in the CURRENT image with origin at top-left, "
         f"whose size is {w}x{h}. "
-        "Otherwise answer now using "
+        "When ready answer using "
         '{"final":"SUBSTANTIVE ANSWER"}. '
         "The final field must contain only the answer you commit to, preserving any units needed by the question. "
         "Do not mention this tool protocol in the final answer. "
-        f"Previous crop receipts: {json.dumps(prior, separators=(',', ':'))}\n"
+        f"Previous tool receipts: {json.dumps(prior, separators=(',', ':'))}\n"
         f"QUESTION: {question}"
     )
     cp = subprocess.run(
@@ -174,11 +228,37 @@ def solve_one(
                 "transcript": transcript,
                 "calls": calls,
             }
-        if action["kind"] != "crop" or call_index >= max_crops:
+        if call_index >= max_crops:
             return {
                 "status": "NO_VALID_FINAL",
                 "answer": "",
-                "crop_calls": len(transcript),
+                "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                "transcript": transcript,
+                "calls": calls,
+            }
+        if action["kind"] == "python":
+            try:
+                rec = run_python_tool(action["code"], current, workdir / f"python_{call_index:02d}")
+            except Exception as exc:
+                return {
+                    "status": "PYTHON_TOOL_ERROR",
+                    "answer": "",
+                    "error_class": type(exc).__name__,
+                    "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                    "transcript": transcript,
+                    "calls": calls,
+                }
+            transcript.append({
+                "tool": "python",
+                "code_sha256": hashlib.sha256(action["code"].encode()).hexdigest(),
+                **rec,
+            })
+            continue
+        if action["kind"] != "crop":
+            return {
+                "status": "NO_VALID_FINAL",
+                "answer": "",
+                "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
                 "transcript": transcript,
                 "calls": calls,
             }
@@ -190,7 +270,7 @@ def solve_one(
                 "status": "INVALID_CROP",
                 "answer": "",
                 "error_class": type(exc).__name__,
-                "crop_calls": len(transcript),
+                "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
                 "transcript": transcript,
                 "calls": calls,
             }
