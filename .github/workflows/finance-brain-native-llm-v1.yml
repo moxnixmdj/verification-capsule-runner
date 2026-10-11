@@ -23,7 +23,7 @@ jobs:
           python-version: "3.12"
       - name: Bind exact Brain blobs
         run: |
-          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v1.py)" = "792b2a5bb028140b61724aef3b69dc932d6d5b60"
+          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v1.py)" = "9ec61256da933b91edad92620fd3d019ac141eff"
           test "$(git hash-object canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py)" = "6ff9462721b99e82c3a09f680034051dac7a2c34"
           test "$(git hash-object canonical/runtime/finance_quantitative_dependency_v1.py)" = "57d250414b1f064dd243d1d98e8cde7c85cf6858"
           test "$(git hash-object canonical/runtime/finance_quantitative_question_contract_v1.py)" = "24a17cf65b0db07fedef9d1a99b1662b58c0448c"
