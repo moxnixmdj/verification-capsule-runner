@@ -117,93 +117,50 @@ def parse_number(s: str):
 
 
 def fit_axis_ticks(words: list[dict], width: int, height: int, axis: str):
-    raw=[]
+    pts=[]
     for w in words:
         v=parse_number(w["text"])
         if v is None:
             continue
         if axis=="x":
-            if w["cy"] < height*0.55:
+            if w["cy"] < height*0.72:
                 continue
-            raw.append((float(w["cx"]),float(w["cy"]),v,w))
+            pts.append((w["cx"],v,w))
         else:
-            if w["cx"] > width*0.35 or w["cy"] > height*0.95:
+            if w["cx"] > width*0.20:
                 continue
-            raw.append((float(w["cy"]),float(w["cx"]),v,w))
-    if len(raw)<2:
+            if w["cy"] > height*0.92:
+                continue
+            pts.append((w["cy"],v,w))
+    if len(pts)<2:
         raise RuntimeError(f"INSUFFICIENT_{axis.upper()}_TICKS")
 
-    # Collapse duplicate OCR views of the same visible tick.
-    dedup=[]
-    for p,band,v,w in sorted(raw,key=lambda x:(x[0],x[1],x[2])):
-        found=False
-        for i,(pp,bb,vv,ww) in enumerate(dedup):
-            if abs(p-pp)<6 and abs(band-bb)<6 and abs(v-vv)<1e-9:
-                if w.get("conf",0)>ww.get("conf",0):
-                    dedup[i]=(p,band,v,w)
-                found=True; break
-        if not found:
-            dedup.append((p,band,v,w))
-    raw=dedup
-
-    # True ticks align in one narrow horizontal band (x axis) or vertical band
-    # (y axis). Legend numbers do not. Score candidate bands by count, spatial
-    # span, monotonic linearity, and axis-like position.
-    band_tol=max(8.0,(0.018*height if axis=="x" else 0.018*width))
     best=None
-    for _,center,_,_ in raw:
-        group=[x for x in raw if abs(x[1]-center)<=band_tol]
-        # Deduplicate same numeric value by keeping the position that best
-        # preserves spatial spread.
-        if len(group)<2:
-            continue
-        coords=np.array([x[0] for x in group],float)
-        vals=np.array([x[2] for x in group],float)
-        if len(set(round(float(v),9) for v in vals))<2:
-            continue
-        try:
-            a,b=np.polyfit(coords,vals,1)
-        except Exception:
-            continue
-        if axis=="x" and a<=0: continue
-        if axis=="y" and a>=0: continue
-        pred=a*coords+b
-        vr=max(float(np.max(vals)-np.min(vals)),1.0)
-        residual=float(np.mean(np.abs(pred-vals)))/vr
-        span=float(np.max(coords)-np.min(coords))/(width if axis=="x" else height)
-        if span<0.18:
-            continue
-        # Keep only inliers to the candidate axis mapping and refit.
-        tol=max(0.75,0.04*max(float(np.max(np.abs(vals))),1.0))
-        inlier_mask=np.abs(pred-vals)<=tol
-        ing=[g for g,k in zip(group,inlier_mask) if k]
-        if len(ing)<2:
-            continue
-        xs=np.array([x[0] for x in ing],float)
-        ys=np.array([x[2] for x in ing],float)
-        aa,bb=np.polyfit(xs,ys,1)
-        pred2=aa*xs+bb
-        vr2=max(float(np.max(ys)-np.min(ys)),1.0)
-        residual2=float(np.mean(np.abs(pred2-ys)))/vr2
-        span2=float(np.max(xs)-np.min(xs))/(width if axis=="x" else height)
-        align_spread=float(np.std([x[1] for x in ing]))/max(band_tol,1.0)
-        position=(
-            float(np.mean([x[1] for x in ing]))/height
-            if axis=="x"
-            else 1.0-float(np.mean([x[1] for x in ing]))/width
-        )
-        score=(
-            len(ing)*4.0
-            + span2*6.0
-            + position*1.5
-            - residual2*20.0
-            - align_spread*2.0
-        )
-        if best is None or score>best[0]:
-            best=(score,float(aa),float(bb),[(x[0],x[2],x[3]) for x in ing])
-
+    n=len(pts)
+    for i in range(n):
+        for j in range(i+1,n):
+            p1,v1,_=pts[i]; p2,v2,_=pts[j]
+            if abs(p2-p1)<20 or abs(v2-v1)<1e-9:
+                continue
+            a=(v2-v1)/(p2-p1); b=v1-a*p1
+            if axis=="x" and a<=0: continue
+            if axis=="y" and a>=0: continue
+            inliers=[]
+            for p,v,w in pts:
+                pred=a*p+b
+                tol=max(0.75,0.035*max(abs(v),1.0))
+                if abs(pred-v)<=tol:
+                    inliers.append((p,v,w))
+            if len(inliers)<2: continue
+            xs=np.array([x[0] for x in inliers],float)
+            ys=np.array([x[1] for x in inliers],float)
+            aa,bb=np.polyfit(xs,ys,1)
+            residual=float(np.mean(np.abs((aa*xs+bb)-ys)))
+            score=(len(inliers),-residual)
+            if best is None or score>best[0]:
+                best=(score,float(aa),float(bb),inliers)
     if best is None:
-        raise RuntimeError(f"NO_{axis.upper()}_AXIS_ALIGNED_TICK_BAND")
+        raise RuntimeError(f"NO_{axis.upper()}_AXIS_FIT")
     return {"a":best[1],"b":best[2],"inliers":best[3]}
 
 
@@ -213,6 +170,97 @@ def data_to_px(value: float, fit: dict) -> float:
 
 def px_to_data(px: float, fit: dict) -> float:
     return fit["a"]*px+fit["b"]
+
+
+def detect_plot_spines(image: Path) -> tuple[float,float]:
+    gray=cv2.imread(str(image),cv2.IMREAD_GRAYSCALE)
+    if gray is None:
+        raise RuntimeError("IMAGE_READ_FAILED")
+    h,w=gray.shape
+    edges=cv2.Canny(gray,50,150,apertureSize=3)
+    lines=cv2.HoughLinesP(
+        edges,1,np.pi/180,threshold=max(45,int(0.06*min(w,h))),
+        minLineLength=int(0.28*min(w,h)),maxLineGap=12
+    )
+    if lines is None:
+        raise RuntimeError("PLOT_SPINES_NOT_FOUND")
+    hs=[]; vs=[]
+    for z in lines[:,0,:]:
+        x1,y1,x2,y2=[int(v) for v in z]
+        dx=abs(x2-x1); dy=abs(y2-y1)
+        if dy<=3 and dx>=0.28*w and max(y1,y2)>0.48*h and min(x1,x2)<0.42*w:
+            hs.append((dx,(y1+y2)/2.0,min(x1,x2),max(x1,x2)))
+        if dx<=3 and dy>=0.28*h and max(x1,x2)<0.38*w and min(y1,y2)<0.58*h:
+            vs.append((dy,(x1+x2)/2.0,min(y1,y2),max(y1,y2)))
+    if not hs or not vs:
+        raise RuntimeError("PLOT_SPINES_NOT_FOUND")
+    # Prefer long lines and, among near-ties, the lower horizontal / left vertical.
+    hmax=max(x[0] for x in hs)
+    hc=[x for x in hs if x[0]>=0.75*hmax]
+    x_axis_y=max(x[1] for x in hc)
+    vmax=max(x[0] for x in vs)
+    vc=[x for x in vs if x[0]>=0.75*vmax]
+    y_axis_x=min(x[1] for x in vc)
+    return float(x_axis_y),float(y_axis_x)
+
+
+def _fit_tick_candidates(pts: list[tuple[float,float,dict]], axis: str):
+    if len(pts)<2:
+        raise RuntimeError(f"INSUFFICIENT_{axis.upper()}_TICK_CANDIDATES")
+    best=None
+    for i in range(len(pts)):
+        for j in range(i+1,len(pts)):
+            p1,v1,_=pts[i]; p2,v2,_=pts[j]
+            if abs(p2-p1)<18 or abs(v2-v1)<1e-9:
+                continue
+            a=(v2-v1)/(p2-p1); b=v1-a*p1
+            if axis=="x" and a<=0: continue
+            if axis=="y" and a>=0: continue
+            inliers=[]
+            for p,v,w in pts:
+                pred=a*p+b
+                tol=max(0.6,0.025*max(abs(v),1.0))
+                if abs(pred-v)<=tol:
+                    inliers.append((p,v,w))
+            if len(inliers)<2:
+                continue
+            xs=np.array([x[0] for x in inliers],float)
+            ys=np.array([x[1] for x in inliers],float)
+            aa,bb=np.polyfit(xs,ys,1)
+            residual=float(np.mean(np.abs(aa*xs+bb-ys)))
+            span=float(np.max(xs)-np.min(xs))
+            score=(len(inliers),span,-residual)
+            if best is None or score>best[0]:
+                best=(score,float(aa),float(bb),inliers)
+    if best is None:
+        raise RuntimeError(f"NO_{axis.upper()}_TICK_FIT")
+    return {"a":best[1],"b":best[2],"inliers":best[3]}
+
+
+def fit_line_chart_axes(image: Path, words: list[dict], width: int, height: int):
+    x_axis_y,y_axis_x=detect_plot_spines(image)
+    xpts=[]; ypts=[]
+    for w in words:
+        v=parse_number(w["text"])
+        if v is None:
+            continue
+        # x tick labels live immediately below the bottom spine and within
+        # the plotting span, unlike legend numerics.
+        if (
+            x_axis_y+2 <= w["cy"] <= min(height-1,x_axis_y+0.13*height)
+            and y_axis_x-0.03*width <= w["cx"] <= 0.86*width
+        ):
+            xpts.append((float(w["cx"]),float(v),w))
+        # y tick labels live immediately left of the left spine.
+        if (
+            max(0,y_axis_x-0.15*width) <= w["cx"] <= y_axis_x-1
+            and 0.04*height <= w["cy"] <= x_axis_y+0.02*height
+        ):
+            ypts.append((float(w["cy"]),float(v),w))
+    xfit=_fit_tick_candidates(xpts,"x")
+    yfit=_fit_tick_candidates(ypts,"y")
+    xfit["spine_y"]=x_axis_y; yfit["spine_x"]=y_axis_x
+    return xfit,yfit
 
 
 def parse_line_chart_question(q: str):
@@ -402,8 +450,11 @@ def solve_colored_line_chart(image: Path, q: str, words: list[dict], lines: list
         raise RuntimeError("NOT_LINE_CHART_QUERY")
     with Image.open(image) as im:
         w,h=im.size
-    xfit=fit_axis_ticks(words,w,h,"x")
-    yfit=fit_axis_ticks(words,w,h,"y")
+    try:
+        xfit,yfit=fit_line_chart_axes(image,words,w,h)
+    except Exception:
+        xfit=fit_axis_ticks(words,w,h,"x")
+        yfit=fit_axis_ticks(words,w,h,"y")
     legend=find_legend_line(lines,spec["temp"],spec["gradient"])
 
     img=cv2.imread(str(image),cv2.IMREAD_COLOR)
