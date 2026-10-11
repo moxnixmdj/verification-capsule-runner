@@ -1,0 +1,163 @@
+name: OSWorld exact operative policy synthetic smoke V1
+
+on:
+  push:
+    branches: [osw-operative-policy-smoke-v1]
+    paths:
+      - '.github/workflows/osw-operative-policy-smoke-v1.yml'
+      - 'capsules/osw_operative_policy_smoke_v1/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TAG: brain-capability-qwen35-9b-m-exact-v1
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_BYTES: '5060174144'
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+      CAPSULE: capsules/osw_operative_policy_smoke_v1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reassemble exact Brain-controlled Qwen bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p model out
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY"             --pattern "$MODEL_FILE.part*of03" --dir model
+          cat model/"$MODEL_FILE".part01of03               model/"$MODEL_FILE".part02of03               model/"$MODEL_FILE".part03of03 > model/"$MODEL_FILE"
+          test "$(stat -c '%s' model/$MODEL_FILE)" = "$MODEL_BYTES"
+          echo "$MODEL_SHA256  model/$MODEL_FILE" | sha256sum -c -
+
+      - name: Build pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin "$LLAMA_REV"
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "$LLAMA_REV"
+          cmake -S llama.cpp -B llama.cpp/build             -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Start loopback-only exact owned planner endpoint
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then
+            EXTRA+=(--reasoning off)
+          fi
+          nohup llama.cpp/build/bin/llama-server             -m "model/$MODEL_FILE"             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080             -c 8192 -t 4 --parallel 1             --jinja --no-webui "${EXTRA[@]}"             > out/server.log 2>&1 &
+          ok=0
+          for i in $(seq 1 240); do
+            if curl -fsS http://127.0.0.1:8080/health > out/health.json 2>/dev/null; then
+              ok=1; break
+            fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Run exact two-cycle operative Brain policy
+        run: |
+          set -euo pipefail
+          PYTHONPATH="$CAPSULE" python - <<'PY' | tee out/receipt.json
+          import json
+          from canonical.runtime.osworld_v21_brain_agent_adapter_v1 import BrainOSWorldAgent
+          from canonical.runtime.osworld_v21_local_qwen_policy_v1 import plan_state
+
+          class Browser:
+              def __init__(self):
+                  self.ops=[]
+              def bind_environment(self, env):
+                  self.env=env
+              def run(self, op):
+                  op=dict(op)
+                  self.ops.append(op)
+                  kind=str(op.get("type") or "").upper()
+                  if kind=="OBSERVE":
+                      return {
+                          "type":"OBSERVE",
+                          "active_url":"https://synthetic.invalid/form",
+                          "active_title":"Synthetic Form",
+                          "tabs":[{"title":"Synthetic Form","url":"https://synthetic.invalid/form"}],
+                          "visible_text":"Synthetic page\nSubmit",
+                          "controls":[{"tag":"button","text":"Submit","role":"button"}],
+                      }
+                  return {
+                      "type":kind,
+                      "status":"synthetic_ok",
+                      "active_url":"https://synthetic.invalid/form",
+                  }
+
+          class Guest:
+              def bind_environment(self, env):
+                  self.env=env
+              def run(self, payload):
+                  raise AssertionError("guest path must not be used in browser smoke")
+
+          browser=Browser()
+          agent=BrainOSWorldAgent(
+              plan_state,
+              policy_id="brain-osworld-v21-local-qwen35-9b-state-first-v1",
+              browser_controller=browser,
+              guest_controller=Guest(),
+              ocr_provider=None,
+          )
+          env=object()
+          agent.bind_environment(env)
+
+          instruction="Inspect the current browser page first. Then click the visible control named Submit."
+          r1,a1=agent.predict(instruction,{"screenshot":b"synthetic-screen-1"})
+          assert a1==["WAIT"],(r1,a1,browser.ops,agent.history)
+          assert browser.ops and str(browser.ops[0].get("type")).upper()=="OBSERVE",browser.ops
+
+          r2,a2=agent.predict(instruction,{"screenshot":b"synthetic-screen-2"})
+          assert a2==["WAIT"],(r2,a2,browser.ops,agent.history)
+          assert len(browser.ops)>=2,browser.ops
+          kind=str(browser.ops[1].get("type")).upper()
+          assert kind in {"CLICK_TEXT","CLICK_ROLE"},browser.ops
+          if kind=="CLICK_TEXT":
+              assert browser.ops[1].get("text")=="Submit",browser.ops
+          else:
+              assert browser.ops[1].get("name")=="Submit",browser.ops
+
+          receipt={
+              "schema":"PROJECT_BRAIN_OSWORLD_V21_EXACT_OPERATIVE_POLICY_SYNTHETIC_SMOKE_V1",
+              "status":"PASS",
+              "cycles":2,
+              "browser_ops":browser.ops,
+              "policy_receipts":[x.get("policy_receipt") for x in agent.history],
+              "exact_blobs":{
+                  "harbor_command_policy":"a525773417291c7a4841bf35e1baff5370350d0d",
+                  "harbor_science_planner_v1":"58964dc8d6b5eed5c202081cd800035c791eeb1d",
+                  "osworld_v21_local_qwen_policy_v1":"8c852df15c463f347c63ba34e04281e034065c50",
+                  "osworld_v21_host_browser_ops_v1":"bfaf6f36b5bbd739ceff34ddb71ed9c603dc4240",
+                  "osworld_v21_host_guest_ops_v1":"f002bbb5aadc302c9bff644c59c85485fb3bb668",
+                  "osworld_v21_state_ops_v1":"0cba0ee052746e41988a666a2948c4e842e0a259",
+                  "osworld_v21_brain_agent_adapter_v1":"bf7513f1d7837d42f782e714f77975e59d73994f",
+              },
+              "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "llama_cpp_revision":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "endpoint":"http://127.0.0.1:8080",
+              "external_generation_provider":False,
+              "terminal_cases_consumed":0,
+              "benchmark_task_data_used":False,
+              "reference_trajectories_used":False,
+              "incremental_spend_usd":0,
+          }
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osw-operative-policy-smoke-v1
+          path: out/
+          if-no-files-found: error
