@@ -43,7 +43,7 @@ jobs:
                   if len(qids)>=3:break
               except Exception as e:
                 searches.append({"query":q,"status":"FAILED:"+type(e).__name__,"labels":[]})
-              time.sleep(0.15)
+              time.sleep(1.0)
             edges=[]
             if qids:
               try:
@@ -61,7 +61,7 @@ jobs:
                  "neighborhood_status":status,"edge_count":len(edges),"edges":edges}
             out.append(row)
             print("GRAPH_ROW",json.dumps(row,ensure_ascii=False,sort_keys=True))
-            time.sleep(0.15)
+            time.sleep(1.0)
           open("/tmp/graph.json","w").write(json.dumps({
             "schema":"PROJECT_BRAIN_HLE_WIKIDATA_GRAPH_ANCHOR_TRACE_V1",
             "baseline_query_trace_run":38145869751,
