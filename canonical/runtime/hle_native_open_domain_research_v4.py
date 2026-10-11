@@ -343,7 +343,7 @@ def propose(
     search_fn: Callable[..., list[dict[str, Any]]] = wikipedia_search,
     extracts_fn: Callable[..., dict[int, str]] = wikipedia_extracts,
     search_limit: int = 5,
-    max_pages: int = 10,
+    max_pages: int = 15,
 ) -> dict[str, Any]:
     if not isinstance(task_id, str) or not task_id.strip():
         raise ValueError("TASK_ID_REQUIRED")
@@ -460,7 +460,7 @@ def propose(
         # is strongly anchored to the question and the title itself is not supplied.
         anchor_count = sum(1 for t in list(q_tokens)[:20] if t in text.casefold())
         if title and 1 <= len(title.split()) <= 8 and anchor_count >= 2:
-            title_score = 4.0 + min(2.0, anchor_count * 0.25)
+            title_score = 4.5 + min(2.5, anchor_count * 0.35)
             if kind == "PERSON" and _PERSON.fullmatch(title):
                 title_score += 2.0
             if "film" in q.casefold() and re.search(r"\(\d{4}\s+film\)", row["title"], re.I):
@@ -486,7 +486,7 @@ def propose(
     margin = best["score"] - (second["score"] if second else 0.0)
     # Relation evidence may stand alone; generic titles need either margin or multi-query support.
     strong_relation = any(r not in {"ANCHORED_PAGE_TITLE"} for r in best["reasons"]) and best["score"] >= 7.0
-    accepted = strong_relation or best["score"] >= 6.0 or (best["score"] >= 5.0 and margin >= 1.5)
+    accepted = strong_relation or best["score"] >= 5.5 or (best["score"] >= 5.0 and margin >= 1.0)
     if not accepted:
         return {
             **base,
