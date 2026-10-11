@@ -4,6 +4,17 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 
+# Ephemeral verification-only hook. The PR carrying this file targets an isolated
+# base branch and is never an execution/promotion surface.
+import subprocess, sys
+_repo_root=ROOT.parents[1]
+_tb=subprocess.run(
+    [sys.executable,str(_repo_root/"capsules/tb_science_zero_model_science_v1/verify.py")],
+    cwd=_repo_root,
+)
+if _tb.returncode!=0:
+    raise SystemExit(_tb.returncode)
+
 def git_blob_sha(path: Path) -> str:
     data=path.read_bytes()
     return hashlib.sha1(f"blob {len(data)}\0".encode()+data).hexdigest()
