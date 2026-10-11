@@ -1,0 +1,80 @@
+name: Verify Brain-native Chartography public samples V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-chartography-brain-native-v1.yml"
+      - "mirror/canonical/runtime/chartography_professional_semantics_v1.py"
+      - "mirror/canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py"
+      - "mirror/canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+      - "mirror/canonical/tests/test_chartography_professional_semantics_v1.py"
+      - "subject/chartography_brain_native_v1/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SURGE_COMMIT: 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+  SEMANTICS_BLOB: 67e27b1dbaaec7a0aaab3aec6053188a6b465992
+  OCR_POSITIONED_BLOB: 19f3087489ce7f6f935fc7baaebdc8cd672f4b62
+  OCR_BASE_BLOB: 45714d7a0160802d986042910da1c4c6462676e5
+  TEST_BLOB: 9d17b6dc0fcb1f48755203aab258cb1b5e5a3c71
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact OCR surface and Pillow
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng libtesseract5
+          python -m pip install --disable-pip-version-check --no-input "pillow>=10,<13"
+      - name: Verify mirrored Brain blob identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object mirror/canonical/runtime/chartography_professional_semantics_v1.py)" = "$SEMANTICS_BLOB"
+          test "$(git hash-object mirror/canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "$OCR_POSITIONED_BLOB"
+          test "$(git hash-object mirror/canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "$OCR_BASE_BLOB"
+          test "$(git hash-object mirror/canonical/tests/test_chartography_professional_semantics_v1.py)" = "$TEST_BLOB"
+      - name: Verify no runtime model cognition in producer source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("mirror/canonical/runtime/chartography_professional_semantics_v1.py").read_text()
+          forbidden=["transformers","torch","llama","qwen","minicpm","anthropic","openai","gemini","ollama"]
+          hits=[x for x in forbidden if x.lower() in p.lower()]
+          if hits: raise SystemExit("FORBIDDEN_RUNTIME_MODEL_REFERENCE:"+",".join(hits))
+          print("PASS_ZERO_GENERAL_PURPOSE_MODEL_REFERENCES")
+          PY
+      - name: Run mirrored Brain unit tests
+        env:
+          PYTHONPATH: mirror
+        run: python -m unittest -v canonical.tests.test_chartography_professional_semantics_v1
+      - name: Bind exact Surge public sample pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach "$SURGE_COMMIT"
+          test "$(git rev-parse HEAD)" = "$SURGE_COMMIT"
+      - name: Run donor-free Brain solver on official public samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=mirror python subject/chartography_brain_native_v1/run_public_samples.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-brain-native-public-samples-v1
+          path: out/result.json
+          if-no-files-found: error
