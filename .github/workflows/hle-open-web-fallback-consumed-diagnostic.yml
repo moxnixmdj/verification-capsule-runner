@@ -42,9 +42,11 @@ jobs:
           assert x["hle_questions_consumed"]==0
           assert x["hle_gold_consumed"]==0
           print("FALLBACK_RECALL",json.dumps({
-            "baseline":x["baseline_retrieval_any_hit_rate"],
-            "new":x["retrieval_any_hit_rate"],
-            "delta":x["absolute_delta_vs_baseline"],
+            "baseline_discovery":x["baseline_discovery_surface_hit_rate"],
+            "baseline_full":x["baseline_full_retrieval_any_hit_rate"],
+            "new_discovery":x["retrieval_any_hit_rate"],
+            "delta_vs_discovery":x["absolute_delta_vs_discovery_baseline"],
+            "delta_vs_full_reference":x["absolute_delta_vs_full_retrieval_reference"],
             "backend_hits":x["backend_hit_counts"],
             "backend_health":x["backend_health_sample_counts"],
           },sort_keys=True))
