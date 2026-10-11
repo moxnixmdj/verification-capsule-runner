@@ -1,0 +1,137 @@
+name: Verify Brain-native chart axis title unit binding V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-chart-axis-title-unit-binding-v1.yml"
+      - "canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py"
+      - "canonical/tests/test_chart_axis_title_unit_binding_v1.py"
+      - "canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py"
+      - "verification/independent_chart_axis_title_unit_binding_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install exact OCR and focused Python dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install --disable-pip-version-check --no-input pytest==9.1.1 Pillow
+
+      - name: Bind exact Brain candidate and dependency blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py)" = "10fa8b5c89e4eb1b1add99f0b6d8b912ea77e2e6"
+          test "$(git hash-object canonical/tests/test_chart_axis_title_unit_binding_v1.py)" = "f79fdd37ec8773d7cd137cac05540b234017b5af"
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py)" = "258999b07287287db2037af777973d5bbb39116d"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "45714d7a0160802d986042910da1c4c6462676e5"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "19f3087489ce7f6f935fc7baaebdc8cd672f4b62"
+          test "$(git hash-object verification/independent_chart_axis_title_unit_binding_v1.py)" = "f800ed927b75ef42f71e2e00c4a01bf245a5d5f6"
+          echo EXACT_BLOBS_BOUND
+
+      - name: Verify pinned Tesseract dependency surface
+        run: |
+          python - <<'PY'
+          from canonical.runtime.bound_capabilities.image_ocr_tesseract import verify_dependency_surface
+          print(verify_dependency_surface())
+          PY
+
+      - name: Compile exact bytes
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py
+          python -m py_compile verification/independent_chart_axis_title_unit_binding_v1.py
+
+      - name: Replay authored candidate tests
+        run: python -m pytest -q canonical/tests/test_chart_axis_title_unit_binding_v1.py
+
+      - name: Independent verifier-authored falsification and real rotated OCR smoke
+        run: python -m pytest -q verification/independent_chart_axis_title_unit_binding_v1.py
+
+      - name: Enforce ownership and nonclaim invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py").read_text()
+          required=[
+            'CAPABILITY_ID = "chart.raster.axis_title_unit_binding.v1"',
+            'EXTERNAL_GENERAL_PURPOSE_MODEL_RUNTIME_DEPENDENCY_COUNT = 0',
+            'DONOR_GENERAL_PURPOSE_MODEL_RUNTIME_DEPENDENCY_COUNT = 0',
+            'NETWORK_DEPENDENCY_COUNT = 0',
+            '"domain_semantic_authority": False',
+            '"benchmark_score_authority": False',
+          ]
+          missing=[x for x in required if x not in p]
+          if missing:
+              raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
+          forbidden=["Qwen","MiniCPM","Claude","Gemini","OpenAI","Anthropic","Chartography"]
+          found=[x for x in forbidden if x.casefold() in p.casefold()]
+          if found:
+              raise SystemExit("FORBIDDEN_RUNTIME_REFERENCE:"+repr(found))
+          print("PASS_BRAIN_NATIVE_ZERO_EXTERNAL_MODEL_RUNTIME_COGNITION")
+          PY
+
+      - name: Emit verification receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json,pathlib,subprocess
+          files={
+            "runtime":"canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py",
+            "authored_tests":"canonical/tests/test_chart_axis_title_unit_binding_v1.py",
+            "scene_graph":"canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py",
+            "image_ocr":"canonical/runtime/bound_capabilities/image_ocr_tesseract.py",
+            "positioned_ocr":"canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py",
+            "independent_tests":"verification/independent_chart_axis_title_unit_binding_v1.py",
+          }
+          receipt={
+            "schema":"PROJECT_BRAIN_CHART_AXIS_TITLE_UNIT_BINDING_INDEPENDENT_VERIFY_V1",
+            "status":"PASS__EXACT_BRAIN_BLOBS__AUTHORED_PLUS_INDEPENDENT_FALSIFICATION_AND_REAL_ROTATED_OCR",
+            "brain_candidate_pr":4682,
+            "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
+            "authored_test_count":21,
+            "independent_test_count":14,
+            "real_rotated_ocr_smoke_count":1,
+            "heldout_chartography_cases_consumed":0,
+            "external_general_purpose_model_runtime_dependency_count":0,
+            "donor_general_purpose_model_runtime_dependency_count":0,
+            "incremental_spend_usd":0,
+            "benchmark_score_credit_delta":0,
+            "terminal_credit_delta":0,
+            "hard_nonclaims":[
+              "NO_OPEN_WORLD_AXIS_SEMANTICS",
+              "NO_UNIT_CONVERSION_AUTHORITY",
+              "NO_DOMAIN_SEMANTIC_AUTHORITY",
+              "NO_CHARTOGRAPHY_GE89"
+            ]
+          }
+          pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chart-axis-title-unit-binding-v1-independent
+          path: out/receipt.json
+          if-no-files-found: error
