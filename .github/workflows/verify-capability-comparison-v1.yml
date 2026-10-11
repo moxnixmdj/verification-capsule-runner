@@ -1,0 +1,56 @@
+name: Verify Capability Comparison V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/CAPABILITY_COMPARISON_PROGRAM_V1.json"
+      - "canonical/runtime/capability_comparison_scheduler_v1.py"
+      - "canonical/tests/test_capability_comparison_scheduler_v1.py"
+      - "canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json"
+      - "canonical/governance/FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json"
+      - ".github/workflows/verify-capability-comparison-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/CAPABILITY_COMPARISON_PROGRAM_V1.json)" = "d4c4c9191b8266dfffdee4ae4c56e14535e971b9"
+          test "$(git hash-object canonical/runtime/capability_comparison_scheduler_v1.py)" = "f2514d17581f9cf4799585b14af62717aca340c3"
+          test "$(git hash-object canonical/tests/test_capability_comparison_scheduler_v1.py)" = "09a1bffad513047a50f3ad37bdd243d22467f420"
+          test "$(git hash-object canonical/governance/OPUS55_ACCEPTANCE_PREDICATE_REGISTRY_V2.json)" = "562536d9ba3f245a6bd24490a1eb3b30f27e0c3a"
+          test "$(git hash-object canonical/governance/FROZEN_19_ACCEPTANCE_PROOF_SHAPE_QUOTIENT_20261007_V1.json)" = "b20c5cd6965f7ea7e5ca019d1e828ac6eced042c"
+      - name: Compile scheduler
+        run: python -m py_compile canonical/runtime/capability_comparison_scheduler_v1.py
+      - name: Install focused test dependency
+        run: python -m pip install --disable-pip-version-check --no-input pytest==8.3.5
+      - name: Run focused scheduler tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q canonical/tests/test_capability_comparison_scheduler_v1.py
+      - name: Compile current 13-obligation program
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/runtime/capability_comparison_scheduler_v1.py > /tmp/result.json
+          python - <<'PY'
+          import json
+          d=json.load(open("/tmp/result.json"))
+          assert d["audit_obligation_count"] == 13, d
+          assert d["capability_family_count"] == 10, d
+          assert d["highest_raw_dominance_count"] == 3, d
+          assert d["automatic_score_to_capability_transfer"] is False, d
+          assert d["automatic_capability_to_score_transfer"] is False, d
+          print(json.dumps(d, indent=2, sort_keys=True))
+          PY
