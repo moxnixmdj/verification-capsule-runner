@@ -1,0 +1,68 @@
+name: Diagnose HLE open-domain V4 on consumed public QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_native_open_domain_research_v4.py"
+      - "canonical/tests/run_hle_v4_public_nonhle_diagnostic_v1.py"
+      - ".github/workflows/hle-v4-public-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact V4 diagnostic bytes
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v4.py)" = "f7cd848f4369fd5e8da53723a2b52d799596fc66"
+          test "$(git hash-object canonical/tests/run_hle_v4_public_nonhle_diagnostic_v1.py)" = "764ffc75b80ee64085eb26f3789af5a3b9331e89"
+      - name: Compile and self-test V4
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_native_open_domain_research_v4.py
+          python canonical/runtime/hle_native_open_domain_research_v4.py
+          python -m py_compile canonical/tests/run_hle_v4_public_nonhle_diagnostic_v1.py
+      - name: Prepare consumed diagnostic questions
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v4_public_nonhle_diagnostic_v1.py prepare --questions /tmp/v4q.json
+      - name: Solve with gold absent
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v4_public_nonhle_diagnostic_v1.py solve --questions /tmp/v4q.json --commitments /tmp/v4c.json --workers 5
+      - name: Score only after commitments sealed
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v4_public_nonhle_diagnostic_v1.py score --questions /tmp/v4q.json --commitments /tmp/v4c.json --summary /tmp/v4s.json
+      - name: Print aggregate diagnostic only
+        run: |
+          python - <<'PY'
+          import json,collections
+          x=json.load(open("/tmp/v4s.json"))
+          print(json.dumps({
+            "attempted":x["attempted"],
+            "attempt_rate":x["attempt_rate"],
+            "normalized_exact":x["normalized_exact"],
+            "normalized_exact_rate":x["normalized_exact_rate"],
+            "gate":x["promotion_gate"],
+            "statuses":dict(collections.Counter(r["status"] for r in x["per_slot_receipts"]))
+          },sort_keys=True))
+          PY
+      - name: Upload diagnostic receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-v4-consumed-public-diagnostic
+          path: /tmp/v4s.json
+          if-no-files-found: error
+          retention-days: 7
