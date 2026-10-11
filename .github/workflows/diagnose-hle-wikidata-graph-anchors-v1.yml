@@ -1,0 +1,78 @@
+name: Diagnose HLE Wikidata graph anchors V1
+on:
+  push:
+    branches: [diag-hle-wikidata-neighborhood-prior-misses-20261011-v1]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact graph capabilities
+        run: |
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py)" = "7dd5004e03d5df95273e666b63dc3cf670fc5bc8"
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_neighborhood_v1.py)" = "051d224bd8f5b04f410e579c9b070cad0a3d89a6"
+          echo EXACT_GRAPH_BLOBS_BOUND
+      - name: Traverse sealed baseline anchors
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          import json,time
+          from canonical.runtime.bound_capabilities.wikidata_entity_search_v1 import search
+          from canonical.runtime.bound_capabilities.wikidata_entity_neighborhood_v1 import neighborhood
+          # These anchors are copied from the already-sealed V1 query trace.
+          anchors={
+            27:["Scotsman","Governor of New South Wales"],
+            32:["Napoleon III of France","Napoleon I of France"],
+            37:["Moulin Rouge"],
+            38:["Arsenal of the Reich","Essen"],
+            41:["Bill"],
+            45:["Troy"],
+          }
+          out=[]
+          for row_idx,queries in anchors.items():
+            qids=[]; searches=[]
+            for q in queries:
+              try:
+                x=search(q,limit=2,timeout=15)
+                searches.append({"query":q,"status":x["status"],"labels":[c["label"] for c in x["candidates"]]})
+                for c in x["candidates"]:
+                  if c["entity_id"] not in qids:qids.append(c["entity_id"])
+                  if len(qids)>=3:break
+              except Exception as e:
+                searches.append({"query":q,"status":"FAILED:"+type(e).__name__,"labels":[]})
+              time.sleep(0.15)
+            edges=[]
+            if qids:
+              try:
+                n=neighborhood(qids,max_edges_per_entity=35,max_total_edges=90,timeout=15)
+                for e in n["edges"]:
+                  edges.append({
+                    "source":e["source_label"],"property":e["property_label"],
+                    "target":e["target_label"],"target_description":e["target_description"],
+                    "literal":e["literal_value"],
+                  })
+                status=n["status"]
+              except Exception as e: status="FAILED:"+type(e).__name__
+            else: status="NO_QIDS"
+            row={"row_idx":row_idx,"anchors":queries,"searches":searches,"source_qids":qids,
+                 "neighborhood_status":status,"edge_count":len(edges),"edges":edges}
+            out.append(row)
+            print("GRAPH_ROW",json.dumps(row,ensure_ascii=False,sort_keys=True))
+            time.sleep(0.15)
+          open("/tmp/graph.json","w").write(json.dumps({
+            "schema":"PROJECT_BRAIN_HLE_WIKIDATA_GRAPH_ANCHOR_TRACE_V1",
+            "baseline_query_trace_run":38145869751,
+            "gold_accessed":False,"external_model_calls":0,"model_dependency_count":0,
+            "hle_questions_consumed":0,"hle_gold_consumed":0,"rows":out
+          },ensure_ascii=False,sort_keys=True,indent=2))
+          print("GRAPH_TRACE_SEALED",sum(r["edge_count"] for r in out),sum(bool(r["source_qids"]) for r in out))
+          PY
+      - name: Upload graph trace
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-wikidata-graph-anchor-trace-v1
+          path: /tmp/graph.json
+          retention-days: 7
