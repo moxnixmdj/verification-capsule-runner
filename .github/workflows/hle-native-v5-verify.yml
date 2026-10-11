@@ -1,0 +1,111 @@
+name: Verify HLE native research V5
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_native_question_contract_v3.py"
+      - "canonical/tests/test_hle_native_question_contract_v3.py"
+      - "canonical/runtime/hle_evidence_candidate_synthesis_v3.py"
+      - "canonical/tests/test_hle_evidence_candidate_synthesis_v3.py"
+      - "canonical/runtime/hle_native_research_solver_v5.py"
+      - "canonical/tests/test_hle_native_research_solver_v5.py"
+      - "canonical/runtime/hle_exact_retrieval_extract_v2.py"
+      - "canonical/runtime/hle_exact_retrieval_extract_v1.py"
+      - "canonical/runtime/hle_native_question_contract_v2.py"
+      - "canonical/runtime/hle_native_question_contract_v1.py"
+      - "canonical/runtime/hle_native_semantic_compiler_v1.py"
+      - "canonical/runtime/hle_native_open_domain_research_v5.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json"
+      - "canonical/tests/run_hle_native_v5_consumed_diagnostic_v1.py"
+      - ".github/workflows/hle-native-v5-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact frozen Brain V5 blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+          test "$(git hash-object canonical/tests/test_hle_native_question_contract_v3.py)" = "905bd448d54c602dd0c31a36a852ac43c0737f9d"
+          test "$(git hash-object canonical/runtime/hle_evidence_candidate_synthesis_v3.py)" = "1a37aac998436b023bb04e5494db91a54fbac8c8"
+          test "$(git hash-object canonical/tests/test_hle_evidence_candidate_synthesis_v3.py)" = "8353389de0d820458263545769adadeac24fb0dd"
+          test "$(git hash-object canonical/runtime/hle_native_research_solver_v5.py)" = "6fd57f4f3591e4ab09b3e16ffbae399f7aaf93ae"
+          test "$(git hash-object canonical/tests/test_hle_native_research_solver_v5.py)" = "40fd1ba846f5815a6be9b0949a85a366fa0051ac"
+          test "$(git hash-object canonical/runtime/hle_exact_retrieval_extract_v2.py)" = "1c9d1c9096af91e05f67c3ead3068b0daf0ab033"
+          test "$(git hash-object canonical/runtime/hle_exact_retrieval_extract_v1.py)" = "11c6b01974b8c095a4243e000bb8e7bb579d7d54"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v2.py)" = "403091eeb32e20baceed38cbcbb5cfc823871ad9"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v1.py)" = "7acc064d880f266a28855eefe518ae40ff8ae49b"
+          test "$(git hash-object canonical/runtime/hle_native_semantic_compiler_v1.py)" = "238ebf2ffe23e527fceae919cbc30453a290fdd2"
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "ae6006af1e578b0690357756e0b899a10323a5f4"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+          test "$(git hash-object canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json)" = "d2a2427b483fe1c06c6b1e6bc98d72bf07e7a730"
+          test "$(git hash-object canonical/tests/run_hle_native_v5_consumed_diagnostic_v1.py)" = "935b790adcf89af6b7a897499f34c7660b6d0450"
+
+      - name: Compile frozen V5 subjects
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_native_question_contract_v3.py
+          python -m py_compile canonical/runtime/hle_evidence_candidate_synthesis_v3.py
+          python -m py_compile canonical/runtime/hle_native_research_solver_v5.py
+          python -m py_compile canonical/runtime/hle_exact_retrieval_extract_v2.py
+          python -m py_compile canonical/tests/run_hle_native_v5_consumed_diagnostic_v1.py
+
+      - name: Independent V5 synthetic unit tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest -v canonical.tests.test_hle_native_question_contract_v3
+          python -m unittest -v canonical.tests.test_hle_evidence_candidate_synthesis_v3
+          python -m unittest -v canonical.tests.test_hle_native_research_solver_v5
+
+      - name: Prepare already-consumed public non-HLE questions
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_native_v5_consumed_diagnostic_v1.py prepare --questions /tmp/v5q.json
+
+      - name: Solve with gold absent
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_native_v5_consumed_diagnostic_v1.py solve --questions /tmp/v5q.json --commitments /tmp/v5c.json --workers 3
+
+      - name: Score only after commitments are sealed
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_native_v5_consumed_diagnostic_v1.py score --questions /tmp/v5q.json --commitments /tmp/v5c.json --summary /tmp/v5s.json
+
+      - name: Enforce predeclared consumed diagnostic gate
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/v5s.json"))
+          assert x["attempt_rate"] >= 0.25, x
+          assert x["normalized_exact_rate"] >= 0.20, x
+          assert x["external_model_calls_total"] == 0
+          assert x["external_reasoning_model_calls_total"] == 0
+          assert x["model_dependency_count_total"] == 0
+          assert x["hle_questions_consumed"] == 0
+          assert x["hle_gold_consumed"] == 0
+          print("V5_CONSUMED_DIAGNOSTIC_GATE_PASS")
+          PY
+
+      - name: Upload V5 diagnostic receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-native-v5-consumed-public-diagnostic
+          path: /tmp/v5s.json
+          if-no-files-found: ignore
+          retention-days: 7
