@@ -134,6 +134,60 @@ def fallback_final(stdout: str) -> str:
     return lines[-1] if lines else ""
 
 
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "crop",
+            "description": "Crop the current chart to a smaller rectangle so labels, thin lines, and intersections can be inspected at higher effective resolution.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "left": {"type": "integer"},
+                    "top": {"type": "integer"},
+                    "right": {"type": "integer"},
+                    "bottom": {"type": "integer"},
+                },
+                "required": ["left", "top", "right", "bottom"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "python",
+            "description": "Measure the current chart offline using Python. /work/current_image.png is available with Pillow, NumPy, SciPy, Matplotlib, and OpenCV. Use it for axis calibration, pixel/color tracing, line/intersection detection, geometric measurement, or calculations. Print concise measurements only.",
+            "parameters": {
+                "type": "object",
+                "properties": {"code": {"type": "string"}},
+                "required": ["code"],
+                "additionalProperties": False,
+            },
+        },
+    },
+]
+
+
+def _native_tool_action(tool_call: dict) -> dict:
+    fn = tool_call.get("function") or {}
+    name = fn.get("name")
+    args = fn.get("arguments", {})
+    if isinstance(args, str):
+        args = json.loads(args)
+    if not isinstance(args, dict):
+        return {"kind": "error", "answer": ""}
+    if name == "crop":
+        try:
+            vals = tuple(int(args[k]) for k in ("left", "top", "right", "bottom"))
+        except Exception:
+            return {"kind": "error", "answer": ""}
+        return {"kind": "crop", "box": vals}
+    if name == "python" and isinstance(args.get("code"), str) and args["code"].strip():
+        return {"kind": "python", "code": args["code"]}
+    return {"kind": "error", "answer": ""}
+
+
 def invoke_model(
     *,
     server_url: str,
@@ -158,33 +212,27 @@ def invoke_model(
                 "stdout": x["stdout"],
                 "stderr": x["stderr"],
             })
+
     prompt = (
-        "Solve one professional chart-reading question. "
-        "Inspect the chart carefully and use tools rather than eyeballing when a numerical or geometric measurement can reduce ambiguity. "
-        "You have two tools: crop and isolated Python analysis. "
-        "Return exactly one compact JSON object and nothing else. "
-        "Crop: "
-        '{"tool":"crop","left":INTEGER,"top":INTEGER,"right":INTEGER,"bottom":INTEGER}. '
-        "Python: "
-        '{"tool":"python","code":"PYTHON CODE"}. '
-        "Python runs offline in an isolated container that can read /work/current_image.png and has "
-        "Python 3, Pillow, NumPy, SciPy, Matplotlib, and OpenCV. Print only measurements you need. "
-        "It cannot access the benchmark, network, credentials, model files, or any golden answers. "
-        "When a tool returns decisive measurements, follow those measurements instead of contradicting them by visual guess. "
-        "Coordinates are pixel coordinates in the CURRENT image with origin at top-left, "
-        f"whose size is {w}x{h}. "
-        "When ready answer using "
-        '{"final":"SUBSTANTIVE ANSWER"}. '
-        "The final field must contain only the answer you commit to, preserving any units needed by the question. "
-        f"Previous tool receipts: {json.dumps(prior, separators=(',', ':'))}\n"
+        "Solve one professional chart-reading question from the chart image. "
+        "Use measurements rather than visual guessing. The available tools act on the CURRENT image. "
+        "Python runs offline and can inspect /work/current_image.png with Pillow, NumPy, SciPy, Matplotlib, and OpenCV. "
+        "When tool measurements are decisive, follow them rather than contradicting them by visual guess. "
+        f"Current image size: {w}x{h}. Prior tool results: {json.dumps(prior, separators=(',', ':'))}. "
+        "When measurements are sufficient, return only the substantive final answer with any required units. "
         f"QUESTION: {question}"
     )
     mime = {"PNG": "image/png", "JPEG": "image/jpeg", "JPG": "image/jpeg", "WEBP": "image/webp"}.get(fmt, "image/png")
     data_uri = "data:" + mime + ";base64," + base64.b64encode(image.read_bytes()).decode("ascii")
     payload = {
-        "temperature": 0.1,
+        "temperature": 0.0,
+        "top_k": 1,
+        "top_p": 1.0,
         "seed": seed + call_index,
-        "max_tokens": 256,
+        "max_tokens": 384,
+        "parallel_tool_calls": False,
+        "tools": TOOLS,
+        "tool_choice": "required" if call_index == 0 else "auto",
         "messages": [{
             "role": "user",
             "content": [
@@ -204,29 +252,44 @@ def invoke_model(
         with urllib.request.urlopen(req, timeout=timeout_s) as resp:
             raw_bytes = resp.read()
         body = json.loads(raw_bytes)
-        raw = str(body["choices"][0]["message"]["content"]).strip()
+        choice = body["choices"][0]
+        msg = choice["message"]
+        tool_calls = msg.get("tool_calls") or []
+        content = (msg.get("content") or "").strip()
         http_status = 200
         error_class = None
     except Exception as exc:
         raw_bytes = str(exc).encode()
-        raw = ""
+        tool_calls = []
+        content = ""
         http_status = getattr(exc, "code", None)
         error_class = type(exc).__name__
-    action = extract_action(raw)
+
     receipt = {
-        "returncode": 0 if action is not None and error_class is None else 1,
+        "returncode": 0 if error_class is None else 1,
         "http_status": http_status,
         "error_class": error_class,
         "response_sha256": hashlib.sha256(raw_bytes).hexdigest(),
         "seed": seed + call_index,
         "image_sha256": sha256_file(image),
         "wall_seconds": round(time.time() - started, 3),
+        "tool_call_count": len(tool_calls),
     }
     if error_class is not None:
         return {"kind": "error", "answer": ""}, receipt
-    if action is not None:
-        return action, receipt
-    return {"kind": "final", "answer": fallback_final(raw)}, receipt
+    if tool_calls:
+        if len(tool_calls) != 1:
+            return {"kind": "error", "answer": ""}, receipt
+        try:
+            return _native_tool_action(tool_calls[0]), receipt
+        except Exception:
+            return {"kind": "error", "answer": ""}, receipt
+    if call_index == 0:
+        return {"kind": "required_tool_not_called", "answer": ""}, receipt
+    if content:
+        return {"kind": "final", "answer": content}, receipt
+    return {"kind": "error", "answer": ""}, receipt
+
 
 def solve_one(
     *,
@@ -252,6 +315,14 @@ def solve_one(
             timeout_s=timeout_s,
         )
         calls.append(call_receipt)
+        if action["kind"] == "required_tool_not_called":
+            return {
+                "status": "REQUIRED_TOOL_NOT_CALLED",
+                "answer": "",
+                "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                "transcript": transcript,
+                "calls": calls,
+            }
         if action["kind"] == "final":
             return {
                 "status": "FINAL",
