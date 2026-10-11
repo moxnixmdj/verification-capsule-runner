@@ -25,12 +25,13 @@ def norm_text(s: str) -> str:
     return re.sub(r"[^a-z0-9.%/+\-]+", " ", s.lower()).strip()
 
 
-def run_tesseract_tsv(image: Path) -> list[dict]:
+def _ocr_tsv_once(image: Path, *, psm: int, run_id: str, offset=(0, 0), scale=1.0) -> list[dict]:
     cp = subprocess.run(
-        ["tesseract", str(image), "stdout", "--psm", "6", "tsv"],
+        ["tesseract", str(image), "stdout", "--psm", str(psm), "tsv"],
         text=True, capture_output=True, timeout=60, check=True
     )
     rows=[]
+    ox,oy=offset
     for r in csv.DictReader(io.StringIO(cp.stdout), delimiter="\t"):
         txt=(r.get("text") or "").strip()
         if not txt:
@@ -43,18 +44,53 @@ def run_tesseract_tsv(image: Path) -> list[dict]:
             continue
         if conf < 0:
             continue
+        left=ox+left/scale; top=oy+top/scale
+        width=width/scale; height=height/scale
         rows.append({
             "text":txt,"conf":conf,"left":left,"top":top,"width":width,"height":height,
-            "block":block,"par":par,"line":line,
+            "block":block,"par":par,"line":line,"run":run_id,
             "cx":left+width/2.0,"cy":top+height/2.0,
         })
     return rows
 
 
+def run_tesseract_tsv(image: Path) -> list[dict]:
+    # OCR is a transcription-only sensor. Multiple deterministic views make
+    # small legend text readable without delegating chart reasoning.
+    rows=[]
+    rows += _ocr_tsv_once(image, psm=6, run_id="full6")
+    rows += _ocr_tsv_once(image, psm=11, run_id="full11")
+    with Image.open(image) as im:
+        w,h=im.size
+        x0=int(w*0.58)
+        crop=im.crop((x0,0,w,h))
+        up=crop.resize((crop.width*2,crop.height*2),Image.Resampling.LANCZOS)
+        with tempfile.NamedTemporaryFile(suffix=".png",delete=False) as tmp:
+            tmp_path=Path(tmp.name)
+        try:
+            up.save(tmp_path)
+            rows += _ocr_tsv_once(tmp_path, psm=6, run_id="right6", offset=(x0,0), scale=2.0)
+            rows += _ocr_tsv_once(tmp_path, psm=11, run_id="right11", offset=(x0,0), scale=2.0)
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    # Deduplicate near-identical detections from different OCR views.
+    out=[]
+    for r in sorted(rows,key=lambda x:(-x["conf"],x["top"],x["left"])):
+        nt=norm_text(r["text"])
+        duplicate=False
+        for q in out:
+            if norm_text(q["text"])==nt and abs(q["cx"]-r["cx"])<5 and abs(q["cy"]-r["cy"])<5:
+                duplicate=True; break
+        if not duplicate:
+            out.append(r)
+    return out
+
+
 def group_ocr_lines(words: list[dict]) -> list[dict]:
     groups={}
     for w in words:
-        key=(w["block"],w["par"],w["line"])
+        key=(w.get("run","default"),w["block"],w["par"],w["line"])
         groups.setdefault(key,[]).append(w)
     out=[]
     for ws in groups.values():
@@ -155,22 +191,57 @@ def parse_line_chart_question(q: str):
     }
 
 
+def _numbers_in_text(text: str) -> list[float]:
+    t=text.replace(",",".").replace("O","0").replace("o","0")
+    vals=[]
+    for m in re.finditer(r"(?<![A-Za-z])\d+(?:\.\d+)?",t):
+        try: vals.append(float(m.group(0)))
+        except Exception: pass
+    return vals
+
+
 def find_legend_line(lines: list[dict], temp: float, gradient: float):
-    temp_s=str(int(temp) if temp.is_integer() else temp)
-    grad_s=(f"{gradient:.6f}").rstrip("0").rstrip(".")
     cands=[]
+    temp_only=[]
     for line in lines:
+        vals=_numbers_in_text(line["text"])
+        has_temp=any(abs(v-temp)<=max(0.5,0.001*abs(temp)) for v in vals)
+        has_grad=any(abs(v-gradient)<=max(0.0015,0.08*abs(gradient)) for v in vals)
+        if has_temp:
+            temp_only.append(line)
+        score=(5 if has_temp else 0)+(5 if has_grad else 0)
         n=norm_text(line["text"])
-        # Numeric identity is enough; OCR may mangle degC/K/m punctuation.
-        score=0
-        if temp_s in n: score+=4
-        if grad_s in n: score+=4
-        if "/" in line["text"] or "k" in n: score+=1
-        if score>=8:
+        if "k" in n or "/" in line["text"]: score+=1
+        if score>=10:
             cands.append((score,line))
-    if not cands:
-        raise RuntimeError("TARGET_LEGEND_ROW_NOT_FOUND")
-    return max(cands,key=lambda x:x[0])[1]
+    if cands:
+        return max(cands,key=lambda x:(x[0],-x[1]["left"]))[1]
+
+    # OCR often preserves the large temperature token while losing a decimal
+    # in the smaller gradient. If several same-temperature legend rows exist,
+    # infer the requested row from numeric gradient order only when enough
+    # neighboring rows are recoverable.
+    if len(temp_only)>=2:
+        enriched=[]
+        for line in temp_only:
+            vals=[v for v in _numbers_in_text(line["text"]) if abs(v-temp)>max(0.5,0.001*abs(temp))]
+            small=[v for v in vals if 0 < v < 1]
+            enriched.append((line,small[0] if small else None))
+        exact=[x for x in enriched if x[1] is not None and abs(x[1]-gradient)<=max(0.002,0.1*gradient)]
+        if exact:
+            return min(exact,key=lambda x:abs(x[1]-gradient))[0]
+
+        # Last deterministic fallback for regularly spaced legend groups:
+        # sort rows vertically and use the requested value's rank among
+        # observed neighboring gradients if at least two are readable.
+        observed=sorted({g for _,g in enriched if g is not None})
+        if len(observed)>=2 and min(observed)<=gradient<=max(observed):
+            rows_sorted=sorted([x[0] for x in enriched],key=lambda x:x["cy"])
+            rank=int(round((gradient-min(observed))/(max(observed)-min(observed))*(len(rows_sorted)-1)))
+            rank=max(0,min(len(rows_sorted)-1,rank))
+            return rows_sorted[rank]
+
+    raise RuntimeError("TARGET_LEGEND_ROW_NOT_FOUND")
 
 
 def representative_legend_color(img_bgr: np.ndarray, line: dict):
@@ -373,6 +444,7 @@ def solve(image: Path, question: str):
     return {
         "status":"UNSOLVED","answer":"",
         "attempts":attempts,
+        "ocr_lines_preview":[x["text"] for x in lines[:80]],
         "runtime_general_purpose_model_dependencies":[],
         "external_runtime_cognition":False,
         "narrow_sensors":["tesseract_ocr_transcription_only"],
