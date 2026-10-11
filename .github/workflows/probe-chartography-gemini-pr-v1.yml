@@ -1,0 +1,49 @@
+name: Chartography Gemini credential presence PR V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/probe-chartography-gemini-pr-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Emit sanitized presence receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json, os
+          names=["GEMINI_API_KEY","GOOGLE_API_KEY","GOOGLE_GENERATIVE_AI_API_KEY"]
+          presence={name: bool(os.environ.get(name)) for name in names}
+          out={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_GEMINI_CREDENTIAL_PRESENCE_PR_V1",
+            "credential_presence":presence,
+            "any_candidate_credential_present":any(presence.values()),
+            "network_requests":0,
+            "secret_values_emitted":False,
+            "incremental_spend_usd":0,
+            "terminal_cases_consumed":0,
+            "acceptance_credit_delta":0
+          }
+          open("out/gemini-credential-presence.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chartography-gemini-credential-presence-pr-v1
+          path: out/gemini-credential-presence.json
+          if-no-files-found: error
