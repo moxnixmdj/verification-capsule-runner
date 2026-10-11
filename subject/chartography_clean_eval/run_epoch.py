@@ -48,11 +48,11 @@ def crop_image(src: Path, dst: Path, box: tuple[int, int, int, int]) -> dict:
 
 
 def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
-    """Run model-authored analysis code in an isolated no-network container.
+    """Run model-authored analysis code in an isolated no-network Linux namespace.
 
-    The mount contains only the current chart plus tool scratch files. The
-    benchmark parquet, gold answers, runner repository, credentials, and model
-    weights are deliberately not mounted.
+    Only system runtime libraries and this tool-call directory are visible.
+    Benchmark caches, gold answers, repository files, credentials, and model
+    weights are not mounted into the namespace.
     """
     tool_dir = workdir.resolve()
     tool_dir.mkdir(parents=True, exist_ok=True)
@@ -63,21 +63,25 @@ def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
     code_path.write_text(code)
     cp = subprocess.run(
         [
-            "docker", "run", "--rm",
-            "--network", "none",
-            "--read-only",
-            "--memory", "768m",
-            "--cpus", "1",
-            "--tmpfs", "/tmp:rw,nosuid,nodev,size=128m",
-            "-v", f"{tool_dir}:/work:rw",
-            "-w", "/work",
-            "brain-chartography-tool-v1",
-            "python", "/work/tool.py",
+            "bwrap", "--unshare-all", "--new-session", "--die-with-parent",
+            "--clearenv",
+            "--setenv", "PATH", "/usr/bin:/bin",
+            "--setenv", "HOME", "/tmp",
+            "--ro-bind", "/usr", "/usr",
+            "--ro-bind", "/bin", "/bin",
+            "--ro-bind", "/lib", "/lib",
+            "--ro-bind", "/lib64", "/lib64",
+            "--proc", "/proc",
+            "--dev", "/dev",
+            "--tmpfs", "/tmp",
+            "--bind", str(tool_dir), "/work",
+            "--chdir", "/work",
+            "/usr/bin/python3", "/work/tool.py",
         ],
         text=True,
         capture_output=True,
         timeout=90,
-        env={"PATH": "/usr/local/bin:/usr/bin:/bin"},
+        env={"PATH": "/usr/bin:/bin"},
     )
     return {
         "returncode": cp.returncode,
@@ -290,6 +294,8 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--max-crops", type=int, default=3)
     ap.add_argument("--timeout-seconds", type=int, default=300)
+    ap.add_argument("--shard-index", type=int, default=0)
+    ap.add_argument("--shard-count", type=int, default=1)
     args = ap.parse_args()
 
     outdir = Path(args.out)
@@ -307,12 +313,15 @@ def main() -> None:
 
     # GENERATION PHASE: deliberately project only non-golden columns.
     gen_table = pq.read_table(parquet_path, columns=["task_id", "prompt", "chart_path"])
-    gen_rows = gen_table.to_pylist()
-    if len(gen_rows) != 100:
-        raise SystemExit(f"EXPECTED_100_TASKS_GOT_{len(gen_rows)}")
+    all_rows = gen_table.to_pylist()
+    if len(all_rows) != 100:
+        raise SystemExit(f"EXPECTED_100_TASKS_GOT_{len(all_rows)}")
+    if args.shard_count < 1 or not (0 <= args.shard_index < args.shard_count):
+        raise SystemExit("INVALID_SHARD")
+    indexed_rows = [(i, row) for i, row in enumerate(all_rows) if i % args.shard_count == args.shard_index]
 
     responses = []
-    for index, row in enumerate(gen_rows):
+    for index, row in indexed_rows:
         task_id = str(row["task_id"])
         prompt = str(row["prompt"]).strip()
         chart_rel = str(row["chart_path"])
@@ -375,6 +384,9 @@ def main() -> None:
         "dataset_repo": args.dataset_repo,
         "dataset_revision": args.dataset_rev,
         "dataset_task_count": len(responses),
+        "full_dataset_task_count": 100,
+        "shard_index": args.shard_index,
+        "shard_count": args.shard_count,
         "responses_sha256": responses_sha,
         "correct_lower_bound": correct,
         "total": len(responses),
