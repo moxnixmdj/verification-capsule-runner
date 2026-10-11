@@ -1,0 +1,38 @@
+name: Verify TB-Science DNA Harbor agent v1
+
+on:
+  pull_request:
+    branches: [verify/tb-science-dna-harbor-agent-isolated-base-20261011]
+    paths:
+      - "capsules/tb_science_dna_harbor_agent_capability_v1/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact Brain DNA Harbor agent stack
+        env:
+          C: capsules/tb_science_dna_harbor_agent_capability_v1
+        run: |
+          set -euo pipefail
+          test "$(git hash-object "$C/canonical/runtime/harbor_dna_storage_agent_v1.py")" = "0d05cda2dde81c724d9df136ce97e747ad7fde4f"
+          test "$(git hash-object "$C/canonical/tests/test_harbor_dna_storage_agent_v1.py")" = "e4c1f6003591a8e51d9a2cda24e5692caf24f6fe"
+          test "$(git hash-object "$C/canonical/runtime/dna_storage_codec_v1.py")" = "3734ad7c4674d9ebe77dbaf0592ea10d0a6cb451"
+          test "$(git hash-object "$C/canonical/runtime/dna_storage_task_kernel_v1.py")" = "ade8e7ce619112f8d89d9c83f00d5b7b143e5bb1"
+          test "$(git hash-object "$C/canonical/runtime/harbor_environment_transport_v2.py")" = "9aebd804c6d71b07da5134ed4e2d14a6427de84c"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          test "$(git hash-object "$C/execution_guard/terminal_agent_start_barrier_v1.py")" = "be71f063b232429dc9e416bb58b4138f35341079"
+          test "$(git hash-object "$C/execution_guard/logical_attempt_identity_v2.py")" = "67ff638459af1bb50a094e9479fb4aa5e2a3de1c"
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C"
+          python -m py_compile             "$C/canonical/runtime/harbor_dna_storage_agent_v1.py"             "$C/canonical/tests/test_harbor_dna_storage_agent_v1.py"
+          python -m unittest -v canonical.tests.test_harbor_dna_storage_agent_v1
