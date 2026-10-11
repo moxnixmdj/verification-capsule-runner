@@ -1,0 +1,71 @@
+name: Diagnose HLE V5 on consumed public QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_native_open_domain_research_v5.py"
+      - "canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py"
+      - ".github/workflows/hle-v5-public-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact V5 diagnostic bytes
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "92d6dae7356fa6c27c0e9ccec5b91a9bec8bf71a"
+          test "$(git hash-object canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py)" = "a9ee9d4716046d77f3e13a12c014547d28d643e5"
+      - name: Compile and self-test V5
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_native_open_domain_research_v5.py
+          python canonical/runtime/hle_native_open_domain_research_v5.py
+          python -m py_compile canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py
+      - name: Prepare consumed public questions
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py prepare --questions /tmp/v5q.json
+      - name: Solve with gold absent
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py solve --questions /tmp/v5q.json --commitments /tmp/v5c.json --workers 5
+      - name: Score only after commitments sealed
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v5_public_nonhle_diagnostic_v1.py score --questions /tmp/v5q.json --commitments /tmp/v5c.json --summary /tmp/v5s.json
+      - name: Print aggregate diagnostic
+        run: |
+          python - <<'PY'
+          import json,collections
+          x=json.load(open("/tmp/v5s.json",encoding="utf-8"))
+          print(json.dumps({
+            "attempted":x["attempted"],
+            "attempt_rate":x["attempt_rate"],
+            "normalized_exact":x["normalized_exact"],
+            "normalized_exact_rate":x["normalized_exact_rate"],
+            "passed":x["promotion_gate"]["passed"],
+            "external_model_calls_total":x["external_model_calls_total"],
+            "external_reasoning_model_calls_total":x["external_reasoning_model_calls_total"],
+            "model_dependency_count_total":x["model_dependency_count_total"],
+            "statuses":dict(collections.Counter(r["status"] for r in x["per_slot_receipts"])),
+          },sort_keys=True))
+          PY
+      - name: Upload diagnostic receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-v5-consumed-public-diagnostic
+          path: /tmp/v5s.json
+          if-no-files-found: error
+          retention-days: 7
