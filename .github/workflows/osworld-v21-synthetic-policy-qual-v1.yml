@@ -41,9 +41,17 @@ jobs:
           git -C llama.cpp checkout --detach FETCH_HEAD
           test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
           cmake -S llama.cpp -B llama.cpp/build -G Ninja -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
-          cmake --build llama.cpp/build -j 2 --target llama-server
+          cmake --build llama.cpp/build -j 4 --target llama-server
+
+      - name: Restore exact Qwen model cache
+        id: model-cache
+        uses: actions/cache@v4
+        with:
+          path: models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          key: brain-qwen35-9b-f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
 
       - name: Reassemble exact Brain-controlled Qwen bytes
+        if: steps.model-cache.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           mkdir -p models/parts
@@ -55,6 +63,9 @@ jobs:
             rm "$p"
           done
           rmdir models/parts
+      - name: Verify exact Qwen model identity
+        run: |
+          set -euo pipefail
           echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
           test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
 
