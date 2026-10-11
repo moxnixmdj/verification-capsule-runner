@@ -93,7 +93,7 @@ jobs:
               gold=str(doc['golden_answer'])
               if 'acceptable range' not in gold.lower():
                   raise SystemExit('SAMPLE_GOLD_RANGE_MISSING')
-              nums=[float(x) for x in re.findall(r'[-+]?\\d+(?:\\.\\d+)?',gold)]
+              nums=[float(x) for x in re.findall(r'[0-9]+(?:[.][0-9]+)?',gold)]
               if len(nums)<3:
                   raise SystemExit('SAMPLE_GOLD_NUMBERS_MISSING:'+gold)
               lo,hi=nums[-2],nums[-1]
