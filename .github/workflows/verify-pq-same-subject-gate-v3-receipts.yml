@@ -19,9 +19,12 @@ jobs:
       - name: Bind exact Brain blobs
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/professional_quality_same_subject_composition_gate_v3.py)" = "ddbe6ec92fef405b8909a161ef9acd685ec7317b"
+          test "$(git hash-object canonical/runtime/professional_quality_same_subject_composition_gate_v3.py)" = "fac14c52912ea7b122948c4054fd92ff64876586"
           test "$(git hash-object canonical/tests/test_professional_quality_same_subject_receipt_normalizer_v1.py)" = "3c4a280a987f4d97f04c69edc45452e4cc7b1f12"
+          test "$(git hash-object canonical/tests/test_professional_quality_same_subject_binding_authority_compat_v1.py)" = "b7c0ed92f8967d48829512d6300093482b711e92"
       - name: Compile gate V3
         run: python3 -m py_compile canonical/runtime/professional_quality_same_subject_composition_gate_v3.py
       - name: Run receipt normalizer tests
         run: python3 -m unittest canonical.tests.test_professional_quality_same_subject_receipt_normalizer_v1 -v
+      - name: Run legacy binding authority compatibility tests
+        run: python3 -m unittest canonical.tests.test_professional_quality_same_subject_binding_authority_compat_v1 -v
