@@ -1,0 +1,36 @@
+name: Verify Wikidata neighborhood V1
+on:
+  push:
+    branches: [verify-wikidata-neighborhood-v1-20261011]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact blobs
+        run: |
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_neighborhood_v1.py)" = "051d224bd8f5b04f410e579c9b070cad0a3d89a6"
+          test "$(git hash-object canonical/tests/test_wikidata_entity_neighborhood_v1.py)" = "4276837a54218d0c2b177a72d6d7062853cd781c"
+          echo EXACT_WIKIDATA_NEIGHBORHOOD_BLOBS_BOUND
+      - name: Compile and unit tests
+        env: {PYTHONPATH: .}
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/wikidata_entity_neighborhood_v1.py
+          python -m unittest -v canonical.tests.test_wikidata_entity_neighborhood_v1
+      - name: Live Q42 bounded graph health
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          from canonical.runtime.bound_capabilities.wikidata_entity_neighborhood_v1 import neighborhood
+          x=neighborhood(["Q42"],max_edges_per_entity=8,max_total_edges=8,timeout=15)
+          assert x["status"]=="NEIGHBORHOOD_RETRIEVED",x
+          assert 1 <= x["edge_count"] <= 8,x
+          assert x["external_model_calls"]==0 and x["model_dependency_count"]==0
+          assert x["answer_authority"] is False and x["correctness_authority"] is False
+          assert all(e["answer_authority"] is False for e in x["edges"])
+          print("LIVE_WIKIDATA_NEIGHBORHOOD_PASS",x["edge_count"],
+                [(e["property_label"],e["target_label"] or e["literal_value"]) for e in x["edges"][:5]])
+          PY
