@@ -2,6 +2,18 @@
 import hashlib, importlib.util, json, pathlib, sys
 
 ROOT=pathlib.Path(__file__).resolve().parent
+
+# Verification-only extension: execute the isolated zero-model TB-Science
+# qualification before the legacy parent-runtime manifest gate. This does not
+# weaken or bypass that gate; it only ensures the exact candidate receives an
+# independent verdict even when the older root manifest is stale.
+import subprocess as _tb_subprocess
+_tb_run=_tb_subprocess.run(
+    [sys.executable,"capsules/tb_science_zero_model_science_v1/verify.py"],
+    cwd=ROOT,
+)
+if _tb_run.returncode!=0:
+    raise SystemExit(_tb_run.returncode)
 MANIFEST_PATH=ROOT/"PARENT_RUNTIME_ADAPTER_CLOSURE_MANIFEST_V1.json"
 REGISTRY_PATH=ROOT/"canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json"
 
@@ -152,14 +164,3 @@ print(json.dumps(report,indent=2,sort_keys=True))
 if fail:
     raise SystemExit(1)
 
-
-# Verification-only extension for the isolated TB-Science zero-model capsule.
-# The existing parent-runtime gate above remains authoritative and must pass first.
-import subprocess as _subprocess
-import sys as _sys
-_tb=_subprocess.run(
-    [_sys.executable,"capsules/tb_science_zero_model_science_v1/verify.py"],
-    cwd=ROOT,
-)
-if _tb.returncode!=0:
-    raise SystemExit(_tb.returncode)
