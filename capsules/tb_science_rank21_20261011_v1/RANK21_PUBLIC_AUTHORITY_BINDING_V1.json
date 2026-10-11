@@ -1,0 +1,43 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK21_PUBLIC_AUTHORITY_BINDING_V1",
+  "date": "2026-10-11",
+  "status": "EFFECTIVE_PREACTIVATION_ZERO_EXPOSURE__FRESH_RANK21__ONE_SHOT_NON_RETRY",
+  "slot_id": "terminal-bench-science/ode-law-discovery::trial-0",
+  "task_digest": "sha256:767d16a0a6226f391208b1b4bb126a6f957e5d0c8156342b5c9410a755142d65",
+  "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
+  "logical_attempt_id": "7eb619d40a65597b2b2dccbcf409c143aa47e1663ca4c0d8f098167cb252811a",
+  "execution_claim_binding_digest": "sha256:fb99e7f9d8d23a789c57506dc61e31c2abd25c442245f0309d94d65b29421697",
+  "claim_epoch_id": "RANK21_V1_BOUND_RUNTIME_CALLER_REPAIR_VALIDATION_20261011_V1",
+  "brain_authority": {
+    "path": "canonical/governance/TB_SCIENCE_RANK21_ONE_SLOT_EXECUTION_AUTHORITY_20261011_V1.json",
+    "git_blob_sha": "cc056211011df95034c6da8ff383eb3305f18782"
+  },
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261011_V63.json",
+    "git_blob_sha": "32a1b6fd01dfb9b1bd0e6db080e0c79f76ae306a"
+  },
+  "logical_attempt_claim_binding": {
+    "path": "capsules/tb_science_rank21_20261011_v1/RANK21_LOGICAL_ATTEMPT_CLAIM_BINDING_V1.json",
+    "git_blob_sha": "8d8465e8e2635c8051eed5ee3c10579e061e428f"
+  },
+  "execution_branch": "execute/tb-science-rank21-20261011-v1",
+  "activation_filename": "ACTIVATE_RANK21_V1_PR.json",
+  "controls": {
+    "logical_attempts_authorized_total": 1,
+    "retries_authorized": 0,
+    "replacement_allowed": false,
+    "different_task_or_digest_forbidden": true,
+    "rank20_replay_forbidden": true
+  },
+  "task_read_history": false,
+  "task_started": false,
+  "start_cas_acquired": false,
+  "benchmark_trials_consumed": 0,
+  "execution_authority": true,
+  "task_read_authority": true,
+  "activation_authority": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
