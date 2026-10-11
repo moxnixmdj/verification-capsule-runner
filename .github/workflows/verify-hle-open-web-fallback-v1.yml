@@ -1,0 +1,33 @@
+name: Verify HLE open-web fallback V1
+on:
+  pull_request:
+    paths:
+      - 'canonical/runtime/hle_native_open_web_fallback_v1.py'
+      - 'canonical/tests/test_hle_native_open_web_fallback_v1.py'
+      - '.github/workflows/verify-hle-open-web-fallback-v1.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact git blobs
+        run: |
+          python - <<'PY'
+          import hashlib, pathlib
+          def git_blob_sha(path):
+              b=pathlib.Path(path).read_bytes()
+              return hashlib.sha1(f"blob {len(b)}\0".encode()+b).hexdigest()
+          got_runtime=git_blob_sha("canonical/runtime/hle_native_open_web_fallback_v1.py")
+          got_tests=git_blob_sha("canonical/tests/test_hle_native_open_web_fallback_v1.py")
+          assert got_runtime=="f03db468c1b9a1d5425d1eaf49966e6c8484819a", got_runtime
+          assert got_tests=="5e64895795f39e4a50e53664167dd0e3ec3bc3c4", got_tests
+          print("BLOB_BINDING_PASS", got_runtime, got_tests)
+          PY
+      - name: Run exact tests
+        run: python -m unittest -v canonical.tests.test_hle_native_open_web_fallback_v1
