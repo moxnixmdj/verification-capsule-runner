@@ -1,5 +1,7 @@
 name: Diagnose HLE open-web fallback consumed recall
 on:
+  push:
+    branches: [diag-hle-open-web-fallback-consumed-20261011]
   pull_request:
     branches: [main]
     paths:
