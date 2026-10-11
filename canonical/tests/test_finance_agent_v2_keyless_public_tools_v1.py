@@ -159,7 +159,7 @@ class Tests(unittest.TestCase):
         self.assertIs(ga.PriceHistory, OriginalPrice)
 
     def test_source_contains_no_keyed_provider_secret_names(self):
-        text = open(m.__file__, encoding="utf-8").read()
+        text = Path(m.__file__).read_text(encoding="utf-8")
         for token in (
             "TAVILY_API_KEY",
             "SEC_EDGAR_API_KEY",
