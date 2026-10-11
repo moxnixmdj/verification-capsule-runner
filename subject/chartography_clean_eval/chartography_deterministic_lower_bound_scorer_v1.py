@@ -68,6 +68,8 @@ def _single_numeric_response(response: str) -> tuple[Optional[Decimal], Optional
     if stripped:
         return None, None
     unit = units[0].casefold() if len(units) == 1 else ("" if not units else None)
+    if unit in {"c", "f"}:
+        unit = {"c": "°c", "f": "°f"}[unit]
     if unit is None:
         return None, None
     return value, unit
@@ -116,26 +118,29 @@ def _published_exact_numeric(text: str) -> tuple[Optional[Decimal], str]:
 def _range_from_golden(golden: str) -> tuple[Optional[Decimal], Optional[Decimal], Optional[str]]:
     """Parse only explicitly marked acceptable/range intervals.
 
-    Refuses generic hyphenated text so a date, axis label, or explanation
-    cannot accidentally become a scoring interval.
+    Numbers are read only after the explicit range marker. This supports
+    official forms such as "350C (acceptable range 330C to 370C)" while
+    refusing unrelated numbers in the principal answer or surrounding text.
     """
     text = _norm_text(golden)
-    if not _RANGE_MARKER.search(text):
+    marker = _RANGE_MARKER.search(text)
+    if not marker:
         return None, None, None
-    m = _RANGE_PAIR.search(text)
-    if not m:
+    tail = text[marker.end():]
+    nums = list(_NUM.finditer(tail))
+    if len(nums) < 2:
         return None, None, None
-    lo, hi = _dec(m.group(1)), _dec(m.group(2))
+    lo, hi = _dec(nums[0].group(0)), _dec(nums[1].group(0))
     if lo is None or hi is None:
         return None, None, None
     if lo > hi:
         lo, hi = hi, lo
-    # Bind unit conservatively from the local tail after the interval.
-    tail = text[m.end():m.end()+24]
-    units = _UNIT.findall(tail)
-    unit = units[0].casefold() if units else ""
+    units = [u.casefold() for u in _UNIT.findall(tail)]
+    normalized = {"c": "°c", "f": "°f"}
+    units = [normalized.get(u, u) for u in units]
+    distinct = sorted(set(units))
+    unit = distinct[0] if len(distinct) == 1 else ""
     return lo, hi, unit
-
 
 def score_lower_bound(golden_answer: str, response_text: str) -> ScoreResult:
     """Award 1 only when correctness follows directly from published rules."""
