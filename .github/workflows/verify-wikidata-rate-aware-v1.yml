@@ -13,7 +13,7 @@ jobs:
       - name: Bind exact blobs
         run: |
           test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_rate_aware_transport_v1.py)" = "49593c6df23389588eb605de3a89ebf39eb3ff56"
-          test "$(git hash-object canonical/tests/test_wikidata_rate_aware_transport_v1.py)" = "8e1dcac7af95bb0fef0376ac0f4b95a86f3c070e"
+          test "$(git hash-object canonical/tests/test_wikidata_rate_aware_transport_v1.py)" = "5814bee4a4f28a6341062a60cb727364b8945d66"
           test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py)" = "7dd5004e03d5df95273e666b63dc3cf670fc5bc8"
           test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_neighborhood_v1.py)" = "051d224bd8f5b04f410e579c9b070cad0a3d89a6"
           echo EXACT_RATE_AWARE_BLOBS_BOUND
