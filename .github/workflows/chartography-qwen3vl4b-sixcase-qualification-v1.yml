@@ -131,7 +131,7 @@ jobs:
             cmd=[
               "./llama.cpp/build/bin/llama-mtmd-cli",
               "-m","model/model.gguf","--mmproj","model/mmproj.gguf","--no-mmproj-offload",
-              "--image",f"charts/case_{i}.bmp","-p",row["prompt"],"-n","24","-t","4"
+              "--image",f"charts/case_{i}.bmp","--image-min-tokens","1024","-p",row["prompt"],"-n","24","-t","4"
             ]
             p=subprocess.run(cmd,text=True,capture_output=True,timeout=180)
             raw=p.stdout.strip()
