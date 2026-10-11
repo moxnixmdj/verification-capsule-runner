@@ -39,7 +39,7 @@ jobs:
         run: |
           test "$(git hash-object canonical/runtime/finance_quantitative_algebra_v1.py)" = "efeecdb5faa595db75595bed2b87f9104e16882d"
           test "$(git hash-object canonical/runtime/finance_quantitative_dependency_v1.py)" = "57d250414b1f064dd243d1d98e8cde7c85cf6858"
-          test "$(git hash-object canonical/runtime/finance_quantitative_question_contract_v1.py)" = "1435741758343189cebd8fc41b242c82a1644c20"
+          test "$(git hash-object canonical/runtime/finance_quantitative_question_contract_v1.py)" = "24a17cf65b0db07fedef9d1a99b1662b58c0448c"
           test "$(git hash-object canonical/runtime/finance_metric_xbrl_registry_v1.py)" = "a64271e46811c8c1a440a344045ca1f38c30a519"
           test "$(git hash-object canonical/runtime/finance_sec_ticker_cik_from_registry_v1.py)" = "55a72e8b4fdbadd14948857ca3d70b31d3c13629"
           test "$(git hash-object canonical/runtime/finance_sec_fact_selector_v1.py)" = "03957a8bd33329db5102236c2acc6974b8a8a71c"
