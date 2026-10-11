@@ -1,0 +1,65 @@
+name: Verify HLE V5 fresh public generalization
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_V5_PUBLIC_NONHLE_FRESH_HOLDOUT_FREEZE_20261011_V1.json"
+      - "canonical/runtime/hle_native_open_domain_research_v5.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/tests/run_hle_v5_fresh_public_holdout_v1.py"
+      - ".github/workflows/hle-v5-fresh-public-holdout.yml"
+permissions:
+  contents: read
+jobs:
+  holdout:
+    if: ${{ false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact pre-exposure bytes
+        run: |
+          test "$(git hash-object canonical/governance/HLE_V5_PUBLIC_NONHLE_FRESH_HOLDOUT_FREEZE_20261011_V1.json)" = "1e59cd5f47caf68a69fb51483959b0e188416f92"
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "ae6006af1e578b0690357756e0b899a10323a5f4"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+          test "$(git hash-object canonical/tests/run_hle_v5_fresh_public_holdout_v1.py)" = "4420fac2b535a14774027901b6a93ee16116dba3"
+      - name: Compile and self-test
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_native_open_domain_research_v5.py
+          python canonical/runtime/hle_native_open_domain_research_v5.py
+          python -m py_compile canonical/tests/run_hle_v5_fresh_public_holdout_v1.py
+      - name: Prepare untouched questions only
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_v5_fresh_public_holdout_v1.py prepare --questions /tmp/v5hq.json
+      - name: Solve with gold absent
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_v5_fresh_public_holdout_v1.py solve --questions /tmp/v5hq.json --commitments /tmp/v5hc.json --workers 5
+      - name: Refetch gold only after commitments are sealed
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_v5_fresh_public_holdout_v1.py score --questions /tmp/v5hq.json --commitments /tmp/v5hc.json --summary /tmp/v5hs.json
+      - name: Upload non-sensitive holdout receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-v5-fresh-public-holdout-receipt
+          path: /tmp/v5hs.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce frozen gate
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/v5hs.json",encoding="utf-8"))
+          assert x["sample_size"] == 25
+          assert x["external_model_calls_total"] == 0
+          assert x["external_reasoning_model_calls_total"] == 0
+          assert x["model_dependency_count_total"] == 0
+          assert x["hle_questions_consumed"] == 0
+          assert x["hle_gold_consumed"] == 0
+          raise SystemExit(0 if x["promotion_gate"]["passed"] else 1)
+          PY
