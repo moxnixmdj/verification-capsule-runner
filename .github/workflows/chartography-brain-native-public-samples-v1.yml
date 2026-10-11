@@ -1,0 +1,47 @@
+name: Chartography Brain-native public samples V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-brain-native-public-samples-v1.yml"
+      - "subject/chartography_brain_native/**"
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deterministic vision and narrow OCR
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr
+          python -m pip install --disable-pip-version-check --no-input pillow numpy opencv-python-headless pyyaml
+      - name: Bind official non-heldout development samples
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          test "$(git rev-parse HEAD)" = "3f1bf837232d3918c2cc35c6e2418c9e70d2a57b"
+      - name: Prohibit runtime general-purpose models
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -RniE 'llama-server|Qwen|MiniCPM|ChartVerse|anthropic|openai|gemini|transformers|vllm' subject/chartography_brain_native
+      - name: Run donor-free Brain qualification
+        run: |
+          python subject/chartography_brain_native/run_public_samples_v1.py --official-root official --out out/native
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-brain-native-public-samples-v1
+          path: |
+            out/native/responses.json
+            out/native/result.json
+            out/native/case_1.json
+            out/native/case_2.json
+          if-no-files-found: error
