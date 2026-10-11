@@ -55,3 +55,5 @@ jobs:
           echo "HLE_GOLD_CONSUMED=0"
           echo "EXTERNAL_MODEL_CALLS=0"
           echo "BENCHMARK_SCORE_CREDIT=0"
+
+# synchronize trigger after base registration
