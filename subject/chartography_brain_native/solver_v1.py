@@ -267,6 +267,95 @@ def representative_legend_color(img_bgr: np.ndarray, line: dict):
     return np.median(bucket,axis=0).astype(float)
 
 
+def _runs(bits: np.ndarray) -> list[int]:
+    out=[]; n=0
+    for v in bits.astype(bool):
+        if v:
+            n+=1
+        elif n:
+            out.append(n); n=0
+    if n: out.append(n)
+    return out
+
+
+def legend_style_signature(img_bgr: np.ndarray, line: dict, target_rgb: np.ndarray) -> dict:
+    h,w=img_bgr.shape[:2]
+    x0=max(0,int(line["left"])-60)
+    x1=max(x0+1,int(line["left"])-2)
+    y0=max(0,int(line["cy"])-8)
+    y1=min(h,int(line["cy"])+9)
+    rgb=img_bgr[y0:y1,x0:x1,::-1].astype(float)
+    dist=np.linalg.norm(rgb-target_rgb.reshape(1,1,3),axis=2)
+    present=np.any(dist<70,axis=0)
+    runs=_runs(present)
+    return {
+        "coverage":float(np.mean(present)) if len(present) else 0.0,
+        "median_run":float(np.median(runs)) if runs else 0.0,
+        "max_run":int(max(runs)) if runs else 0,
+        "run_count":len(runs),
+    }
+
+
+def cluster_same_color_lines(
+    xx: np.ndarray, yy: np.ndarray, xfit: dict, yfit: dict, target_style: dict
+) -> dict:
+    xd=px_to_data(xx,xfit)
+    yd=px_to_data(yy,yfit)
+    # Ratio is stable here because these chart series originate very near
+    # the plot origin. Ignore the crowded origin where all styles overlap.
+    xmax=float(np.max(xd))
+    keep=(xd>max(5.0,0.18*xmax))&(yd>=-0.2)
+    xx2=xx[keep]; xd2=xd[keep]; yd2=yd[keep]
+    if len(xd2)<60:
+        raise RuntimeError("COLORED_CURVE_CLUSTER_PIXELS_INSUFFICIENT")
+    ratio=(yd2/xd2).astype(np.float32)
+    lo,hi=np.percentile(ratio,[2,98])
+    k=(ratio>=lo)&(ratio<=hi)
+    ratio=ratio[k]; xx2=xx2[k]; xd2=xd2[k]; yd2=yd2[k]
+    if len(ratio)<60:
+        raise RuntimeError("COLORED_CURVE_RATIO_PIXELS_INSUFFICIENT")
+
+    # Three style-coded curves commonly share a color in professional legends.
+    # Attempt K=3 first; fall back to fewer only if data is sparse.
+    K=3 if len(ratio)>=120 else 2
+    criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,100,1e-7)
+    compact,labels,centers=cv2.kmeans(
+        ratio.reshape(-1,1),K,None,criteria,20,cv2.KMEANS_PP_CENTERS
+    )
+    labels=labels.ravel(); centers=centers.ravel()
+    candidates=[]
+    for ci in range(K):
+        sel=labels==ci
+        if np.count_nonzero(sel)<15:
+            continue
+        xdc=xd2[sel]; ydc=yd2[sel]; xpc=xx2[sel].astype(int)
+        a,b=np.polyfit(xdc,ydc,1)
+        xmin=int(np.min(xpc)); xmaxp=int(np.max(xpc))
+        present=np.zeros(max(1,xmaxp-xmin+1),dtype=bool)
+        present[np.unique(xpc)-xmin]=True
+        runs=_runs(present)
+        sig={
+            "coverage":float(np.mean(present)),
+            "median_run":float(np.median(runs)) if runs else 0.0,
+            "max_run":int(max(runs)) if runs else 0,
+            "run_count":len(runs),
+        }
+        # Log-scaled run lengths avoid letting one solid run dominate.
+        style_distance=(
+            abs(sig["coverage"]-target_style["coverage"])*3.0
+            + abs(math.log1p(sig["median_run"])-math.log1p(target_style["median_run"]))
+            + 0.3*abs(math.log1p(sig["max_run"])-math.log1p(target_style["max_run"]))
+        )
+        candidates.append({
+            "slope":float(a),"intercept":float(b),"style":sig,
+            "style_distance":float(style_distance),"center_ratio":float(centers[ci]),
+            "support":int(np.count_nonzero(sel)),
+        })
+    if not candidates:
+        raise RuntimeError("NO_COLORED_LINE_CLUSTERS")
+    return min(candidates,key=lambda c:c["style_distance"])
+
+
 def solve_colored_line_chart(image: Path, q: str, words: list[dict], lines: list[dict]):
     spec=parse_line_chart_question(q)
     if spec is None:
@@ -298,25 +387,22 @@ def solve_colored_line_chart(image: Path, q: str, words: list[dict], lines: list
     if len(xx)<20:
         raise RuntimeError("TARGET_CURVE_PIXELS_INSUFFICIENT")
 
-    xd=px_to_data(xx,xfit)
-    yd=px_to_data(yy,yfit)
-    # Reject isolated color aliases using robust line residual.
-    a,b=np.polyfit(xd,yd,1)
-    resid=np.abs(yd-(a*xd+b))
-    med=np.median(resid)
-    keep=resid<=max(0.08,4*med+0.03)
-    a,b=np.polyfit(xd[keep],yd[keep],1)
+    target_style=legend_style_signature(img,legend,target_rgb)
+    chosen=cluster_same_color_lines(xx,yy,xfit,yfit,target_style)
+    a=chosen["slope"]; b=chosen["intercept"]
     if abs(a)<1e-9:
         raise RuntimeError("TARGET_CURVE_ZERO_SLOPE")
     x=(spec["target_y"]-b)/a
     ans=round(float(x),spec["decimals"])
     return {
         "answer":f"{ans:.{spec['decimals']}f}",
-        "method":"legend_guided_color_trace_linear_fit",
+        "method":"legend_guided_color_and_style_cluster_fit",
         "curve_slope":float(a),
         "curve_intercept":float(b),
         "target_rgb":[float(x) for x in target_rgb],
-        "curve_pixels":int(np.count_nonzero(keep)),
+        "target_style":target_style,
+        "chosen_cluster":chosen,
+        "curve_pixels":int(len(xx)),
         "x_axis_inliers":len(xfit["inliers"]),
         "y_axis_inliers":len(yfit["inliers"]),
     }
@@ -336,8 +422,8 @@ def text_mask(words: list[dict], shape):
     m=np.zeros((h,w),np.uint8)
     for x in words:
         pad=2
-        x0=max(0,x["left"]-pad); y0=max(0,x["top"]-pad)
-        x1=min(w,x["left"]+x["width"]+pad); y1=min(h,x["top"]+x["height"]+pad)
+        x0=max(0,int(math.floor(x["left"]-pad))); y0=max(0,int(math.floor(x["top"]-pad)))
+        x1=min(w,int(math.ceil(x["left"]+x["width"]+pad))); y1=min(h,int(math.ceil(x["top"]+x["height"]+pad)))
         m[y0:y1,x0:x1]=255
     return m
 
