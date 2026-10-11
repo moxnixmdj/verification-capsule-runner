@@ -1,0 +1,91 @@
+name: Chartography deterministic grader schema audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-deterministic-grader-schema-audit-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch public held-out metadata only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          curl -fL --retry 5 --retry-all-errors             'https://huggingface.co/datasets/surgeai/chartography/resolve/main/data.parquet?download=true'             -o /tmp/chartography.parquet
+          sha256sum /tmp/chartography.parquet | tee out/parquet.sha256
+
+      - name: Audit golden-answer grammar without exposing answers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pyarrow
+          python - <<'PY'
+          import json,re,hashlib
+          import pyarrow.parquet as pq
+          t=pq.read_table('/tmp/chartography.parquet')
+          rows=t.to_pylist()
+          assert len(rows)==100, len(rows)
+
+          RANGE_WORDS=re.compile(r'(?i)acceptable|range|between|from\s+[-+]?\d.*\bto\b|[-+]?\d[^\n]{0,20}[–—-]\s*[-+]?\d')
+          CANNOT=re.compile(r'(?i)cannot be determined|can.?t be determined|not determinable|insufficient information')
+          NUM=re.compile(r'(?<![A-Za-z])[-+]?\$?\d[\d,]*(?:\.\d+)?(?:\s*(?:%|pp|mph|km/?h|m/s|kPa|MPa|Pa|Hz|kHz|MHz|GHz|°C|°F|K|mm|cm|m|km|kg|g|lb|MW|kW|W|M|B|million|billion))?')
+          MULTI_HINT=re.compile(r'(?i)(?:\n|;|\b(?:and|respectively|both|each|first|second|third)\b)')
+          classes={}
+          shapes=[]
+          for i,row in enumerate(rows):
+            g=str(row['golden_answer']).strip()
+            p=str(row['prompt']).strip()
+            if CANNOT.search(g):
+              cls='cannot_determine'
+            elif RANGE_WORDS.search(g):
+              cls='range_or_tolerance'
+            else:
+              nums=NUM.findall(g)
+              if len(nums)>=2 or MULTI_HINT.search(g):
+                cls='multi_part_or_multi_value'
+              elif len(nums)==1:
+                cls='exact_numeric_or_numeric_with_label'
+              else:
+                cls='categorical_or_text'
+            classes[cls]=classes.get(cls,0)+1
+            shapes.append({
+              'task_id_hash':hashlib.sha256(str(row['task_id']).encode()).hexdigest(),
+              'class':cls,
+              'golden_sha256':hashlib.sha256(g.encode()).hexdigest(),
+              'prompt_sha256':hashlib.sha256(p.encode()).hexdigest(),
+              'golden_char_len':len(g),
+              'numeric_token_count':len(NUM.findall(g)),
+              'has_range_marker':bool(RANGE_WORDS.search(g)),
+              'has_multi_marker':bool(MULTI_HINT.search(g)),
+            })
+
+          report={
+            'schema':'PROJECT_BRAIN_CHARTOGRAPHY_GOLDEN_ANSWER_GRAMMAR_AUDIT_V1',
+            'dataset_rows':len(rows),
+            'columns':t.column_names,
+            'class_counts':classes,
+            'row_shapes':shapes,
+            'raw_golden_answers_emitted':False,
+            'training_or_tuning_used':False,
+            'purpose':'EVALUATOR_CONSTRUCTION_ONLY',
+          }
+          with open('out/report.json','w') as f: json.dump(report,f,indent=2,sort_keys=True)
+          print(json.dumps({'rows':100,'class_counts':classes,'raw_golden_answers_emitted':False},sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chartography-grader-schema-audit-v1
+          path: out/
+          if-no-files-found: error
