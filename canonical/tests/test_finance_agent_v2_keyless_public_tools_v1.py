@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import types
 import unittest
+from pathlib import Path
 
 from canonical.runtime import finance_agent_v2_keyless_public_tools_v1 as m
 
