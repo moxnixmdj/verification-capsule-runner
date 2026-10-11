@@ -1,0 +1,41 @@
+name: Verify Wikidata rate-aware transport V1
+on:
+  push:
+    branches: [verify-wikidata-rate-aware-20261011-v1]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact blobs
+        run: |
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_rate_aware_transport_v1.py)" = "49593c6df23389588eb605de3a89ebf39eb3ff56"
+          test "$(git hash-object canonical/tests/test_wikidata_rate_aware_transport_v1.py)" = "8e1dcac7af95bb0fef0376ac0f4b95a86f3c070e"
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py)" = "7dd5004e03d5df95273e666b63dc3cf670fc5bc8"
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_neighborhood_v1.py)" = "051d224bd8f5b04f410e579c9b070cad0a3d89a6"
+          echo EXACT_RATE_AWARE_BLOBS_BOUND
+      - name: Unit tests
+        env: {PYTHONPATH: .}
+        run: python -m unittest -v canonical.tests.test_wikidata_rate_aware_transport_v1
+      - name: Live shared-scheduler composition
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          import json
+          from canonical.runtime.bound_capabilities.wikidata_rate_aware_transport_v1 import make_fetcher
+          from canonical.runtime.bound_capabilities.wikidata_entity_search_v1 import search
+          from canonical.runtime.bound_capabilities.wikidata_entity_neighborhood_v1 import neighborhood
+          fetch=make_fetcher(min_interval=1.0,max_retries=3,max_retry_after=4)
+          rows=[]
+          for q in ["Moulin Rouge","Essen","Troy"]:
+            s=search(q,limit=2,timeout=15,fetch_fn=fetch)
+            assert s["candidate_count"]>=1,(q,s)
+            qid=s["candidates"][0]["entity_id"]
+            n=neighborhood([qid],max_edges_per_entity=8,max_total_edges=8,timeout=15,fetch_fn=fetch)
+            assert n["status"] in {"NEIGHBORHOOD_RETRIEVED","NO_EDGES"}
+            rows.append({"query":q,"qid":qid,"label":s["candidates"][0]["label"],"edges":n["edge_count"]})
+          print("LIVE_SHARED_SCHEDULER_PASS",json.dumps(rows,ensure_ascii=False), "requests",fetch.request_count,"retries",fetch.retry_count)
+          PY
