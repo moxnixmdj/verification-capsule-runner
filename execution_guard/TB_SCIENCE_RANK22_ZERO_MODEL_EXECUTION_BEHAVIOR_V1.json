@@ -1,7 +1,7 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK22_ZERO_MODEL_EXECUTION_BEHAVIOR_V1",
   "date": "2026-10-11",
-  "status": "STAGED_ZERO_EXPOSURE__ZERO_MODEL_DETERMINISTIC_SCIENTIFIC_ROUTE",
+  "status": "STAGED_ZERO_EXPOSURE__ZERO_MODEL_DETERMINISTIC_SCIENTIFIC_ROUTE__PREFLIGHT_PHASE_ORDER_REPAIRED",
   "scope": "TB_SCIENCE_ZERO_MODEL_DETERMINISTIC_SCIENTIFIC_V1",
   "slot_id": "terminal-bench-science/rv-astrometry-fitting::trial-0",
   "task_digest": "sha256:8e086e1f7245067eaa9a67c259c1519204fa058d8664983066cd582ef258a1ea",
@@ -84,7 +84,7 @@
     },
     "preflight": {
       "path": "capsules/tb_science_rank22_20261011_v1/rank22_execution_preflight_v1.py",
-      "git_blob_sha": "2360f54b617918fd2e1fc59790142c995f2e547a"
+      "git_blob_sha": "ee4f57cd5479388c113a7785f49dfe125f177a84"
     }
   },
   "model_cognition_prohibition": {
