@@ -1,0 +1,26 @@
+name: Verify HLE query planner V2
+on:
+  push:
+    branches: [verify-hle-query-planner-v2-20261011]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v2.py)" = "0a0b1e70ba90bb6e29cbd8316343c10c2dcb1908"
+          test "$(git hash-object canonical/tests/test_hle_native_retrieval_query_planner_v2.py)" = "0c4803c46d639945c65ade3075faf910fffdd2b1"
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v1.py)" = "2386db287d08153ffb905f8cd89a76f4ebf19d9f"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+      - name: Compile
+        run: python -m py_compile canonical/runtime/hle_native_retrieval_query_planner_v2.py
+      - name: Run exact synthetic suite
+        env: {PYTHONPATH: .}
+        run: python -m unittest canonical.tests.test_hle_native_retrieval_query_planner_v2 -v
+      - name: Self test
+        env: {PYTHONPATH: .}
+        run: python canonical/runtime/hle_native_retrieval_query_planner_v2.py
