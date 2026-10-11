@@ -96,19 +96,3 @@ jobs:
           assert score_lower_bound("12", "13").score == 0
           print("PASS_SOUND_SCORER_BOUNDARIES")
           PY
-
-      - name: Probe existing authorized dataset access
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${HF_TOKEN:-}" || { echo "::error::HF_TOKEN_SECRET_ABSENT"; exit 42; }
-          python -m pip install --disable-pip-version-check --no-input "huggingface_hub>=0.27,<2"
-          python - <<'PY'
-          import os
-          from huggingface_hub import HfApi
-          info=HfApi(token=os.environ["HF_TOKEN"]).repo_info("surgeai/chartography",repo_type="dataset")
-          print("AUTHORIZED_DATASET_REPO_ACCESS=1")
-          print("DATASET_REVISION="+info.sha)
-          PY
