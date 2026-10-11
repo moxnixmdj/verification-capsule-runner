@@ -1,0 +1,85 @@
+name: Verify exact Brain positioned OCR V1
+on:
+  pull_request:
+    branches: [main]
+    paths: [".github/workflows/verify-exact-brain-positioned-ocr-v1.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  EXACT_POSITIONED_BLOB: 985fb63b00fb0c190364b3be9d6265541f17bd85
+  EXACT_BASE_BLOB: 45714d7a0160802d986042910da1c4c6462676e5
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize exact positioned adapter blob
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import base64,json,os,pathlib,urllib.request
+          sha=os.environ["EXACT_POSITIONED_BLOB"]
+          req=urllib.request.Request(f"https://api.github.com/repos/moxnixmdj/verification-capsule-runner/git/blobs/{sha}",headers={"Authorization":"Bearer "+os.environ["GH_TOKEN"],"Accept":"application/vnd.github+json"})
+          with urllib.request.urlopen(req,timeout=30) as r: doc=json.load(r)
+          if doc.get("sha")!=sha or doc.get("encoding")!="base64": raise SystemExit("POSITIONED_BLOB_IDENTITY_MISMATCH")
+          p=pathlib.Path("canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py")
+          p.parent.mkdir(parents=True,exist_ok=True); p.write_bytes(base64.b64decode(doc["content"]))
+          PY
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "$EXACT_POSITIONED_BLOB"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "$EXACT_BASE_BLOB"
+      - name: Install exact bounded OCR surface
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install --disable-pip-version-check --no-input "pillow==10.2.0"
+      - name: Parser adversarial qualification
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from canonical.runtime.bound_capabilities.image_ocr_tesseract_positioned import parse_tsv_positioned
+          H="level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n"
+          def t(*rows): return H+"\n".join(rows)+"\n"
+          good=t("1\t1\t0\t0\t0\t0\t0\t0\t200\t100\t-1\t","5\t1\t1\t1\t1\t2\t30\t10\t20\t10\t91.0\tmm","5\t1\t1\t1\t1\t1\t10\t10\t15\t10\t92.0\t25","5\t1\t1\t1\t2\t1\t15\t40\t30\t12\t88.0\tDEPTH")
+          o=parse_tsv_positioned(good)
+          assert o["word_count"]==3 and o["line_count"]==2 and o["text_items"][0]["text"]=="25 mm"
+          assert o["text_items"][0]["box"]=={"x0":10,"y0":10,"x1_exclusive":50,"y1_exclusive":20}
+          bad=[
+            t("1\t1\t0\t0\t0\t0\t0\t0\t100\t50\t-1\t","5\t1\t1\t1\t1\t1\t90\t10\t20\t10\t90\tBAD"),
+            t("5\t1\t1\t1\t1\t1\t10\t10\t20\t10\t90\tTEXT"),
+            t("1\t1\t0\t0\t0\t0\t0\t0\t100\t50\t-1\t","5\t1\t1\t1\t1\t1\t1.5\t10\t20\t10\t90\tTEXT"),
+            t("1\t1\t0\t0\t0\t0\t0\t0\t100\t50\t-1\t","5\t1\t1\t1\t1\t1\t10\t10\t20\t10\tnan\tTEXT")]
+          for raw in bad:
+              try: parse_tsv_positioned(raw)
+              except RuntimeError: pass
+              else: raise AssertionError("MALFORMED_TSV_DID_NOT_FAIL_CLOSED")
+          print("PARSER_CASES_PASS=5")
+          PY
+      - name: Live pinned positioned OCR qualification
+        env:
+          PYTHONPATH: .
+        run: |
+          mkdir -p out/tmp
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          from PIL import Image,ImageDraw,ImageFont
+          from canonical.runtime.bound_capabilities.image_ocr_tesseract_positioned import run
+          p=Path("out/tmp/ticks.png"); im=Image.new("RGB",(1000,400),"white"); d=ImageDraw.Draw(im)
+          font=ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",52)
+          for x,text in [(80,"10"),(280,"20"),(500,"30"),(760,"40")]: d.text((x,250),text,font=font,fill="black")
+          im.save(p); o=run({"path":"out/tmp/ticks.png","psm_values":["6","11","3"]},".")
+          nums=[(w["text"],w["box"]) for w in o["word_items"] if re.fullmatch(r"\d+",w["text"].strip().replace(",",""))]
+          if len(nums)<3: raise SystemExit("LIVE_NUMERIC_POSITIONED_OCR_TOO_WEAK:"+repr(nums))
+          if o["dependency"]["eng_model_sha256"]!="7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2": raise SystemExit("PINNED_MODEL_HASH_MISMATCH")
+          result={"schema":"PROJECT_BRAIN_POSITIONED_OCR_V1_PUBLIC_VERIFY","exact_positioned_blob":"985fb63b00fb0c190364b3be9d6265541f17bd85","exact_base_blob":"45714d7a0160802d986042910da1c4c6462676e5","parser_cases_passed":5,"live_numeric_tokens":len(nums),"live_word_count":o["word_count"],"selected_psm":o["selected_psm"],"eng_model_sha256":o["dependency"]["eng_model_sha256"],"general_purpose_model_dependency_count":0,"terminal_semantic_authority":False,"pass":True}
+          Path("out/result.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n"); print(json.dumps(result,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: positioned-ocr-v1-public-verify
+          path: out/result.json
+          if-no-files-found: error
