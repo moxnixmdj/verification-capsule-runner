@@ -25,9 +25,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py)" = "b542ea934fbdc1d8777cebb1b0fd527ca8235d61"
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py)" = "17cd8a637138d56517975ac09141d490c5c0cd53"
           test "$(git hash-object canonical/runtime/independent_acceptance_model.py)" = "710298c5d7154b5a3c2a4a1700420c40cb2fa55a"
-          test "$(git hash-object canonical/tests/test_python_software_acceptance_spec_v1.py)" = "9090d776f57b46429198e9d55900fa881701a47e"
+          test "$(git hash-object canonical/tests/test_python_software_acceptance_spec_v1.py)" = "981210d0918d3e128e9da55f4798f3c20648abff"
           python - <<'PY'
           import hashlib,inspect
           from canonical.runtime import goal_compiler
@@ -91,7 +91,7 @@ jobs:
               inspect.getsource(goal_compiler.decompose_goal).encode()
             ).hexdigest(),
             "author_test_blob":"9090d776f57b46429198e9d55900fa881701a47e",
-            "author_test_count":10,
+            "author_test_count":12,
             "independent_falsification_count":8,
             "frontiercode_cases_consumed":0,
             "external_general_purpose_model_runtime_dependency_count":0,
