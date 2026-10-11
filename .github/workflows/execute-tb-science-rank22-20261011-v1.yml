@@ -79,7 +79,8 @@ jobs:
             "benchmark_trials_consumed":0,
             "incremental_spend_usd":0,
           }
-          open("$GITHUB_WORKSPACE/RANK22_ZERO_MODEL_QUALIFICATION.json","w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          import os
+          open(os.path.join(os.environ["GITHUB_WORKSPACE"],"RANK22_ZERO_MODEL_QUALIFICATION.json"),"w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
           print(json.dumps(out,sort_keys=True))
           PY
           echo "ready=true" >> "$GITHUB_OUTPUT"
