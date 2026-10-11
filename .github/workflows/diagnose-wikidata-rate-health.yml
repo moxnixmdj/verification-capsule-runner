@@ -1,0 +1,30 @@
+name: Diagnose Wikidata entity-search rate health
+on:
+  push:
+    branches: [diag-wikidata-rate-health-20261011-v1]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sequential spaced entity searches
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          import json,time
+          from canonical.runtime.bound_capabilities.wikidata_entity_search_v1 import search
+          queries=["Moulin Rouge","Essen","Bill Gates","Troy","Napoleon III of France"]
+          rows=[]
+          for i,q in enumerate(queries):
+            try:
+              x=search(q,limit=2,timeout=15)
+              r={"query":q,"status":x["status"],"candidate_count":x["candidate_count"],"labels":[c["label"] for c in x["candidates"]]}
+            except Exception as e:
+              r={"query":q,"status":"FAILED","error_type":type(e).__name__,"error":str(e)}
+            rows.append(r);print("RATE_ROW",json.dumps(r,ensure_ascii=False,sort_keys=True))
+            if i+1<len(queries):time.sleep(1.0)
+          print("RATE_SUMMARY",json.dumps({"pass":sum(r["status"]!="FAILED" for r in rows),"fail":sum(r["status"]=="FAILED" for r in rows)},sort_keys=True))
+          PY
