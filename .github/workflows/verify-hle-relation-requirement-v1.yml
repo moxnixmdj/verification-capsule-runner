@@ -1,0 +1,25 @@
+name: Verify HLE relation requirement compiler V1
+on:
+  push:
+    branches: [verify-hle-relation-requirement-v1-20261011]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_relation_requirement_compiler_v1.py)" = "ab784ca199b454d0d80e11e9f4faf7812e1eec4d"
+          test "$(git hash-object canonical/tests/test_hle_relation_requirement_compiler_v1.py)" = "52b8570a2c1849f20aeb4e59fb2356bf856cf279"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+      - name: Compile
+        run: python -m py_compile canonical/runtime/hle_relation_requirement_compiler_v1.py
+      - name: Run exact synthetic suite
+        env: {PYTHONPATH: .}
+        run: python -m unittest canonical.tests.test_hle_relation_requirement_compiler_v1 -v
+      - name: Self test
+        env: {PYTHONPATH: .}
+        run: python canonical/runtime/hle_relation_requirement_compiler_v1.py
