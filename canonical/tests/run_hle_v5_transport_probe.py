@@ -42,3 +42,5 @@ for item in rows:
 print("TRANSPORT_SUMMARY",json.dumps(summary,sort_keys=True))
 
 # trigger corrected exact-policy transport replay
+
+# trigger after base workflow registration
