@@ -1,0 +1,68 @@
+name: Chartography Qwen3-VL-8B crop-loop fit V1
+
+on:
+  push:
+    branches:
+      - successor/chartography-real-crop-loop-v1
+    paths:
+      - ".github/workflows/chartography-qwen3vl8b-crop-loop-fit-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates time
+          python -m pip install --disable-pip-version-check --no-input pillow
+      - name: Download pinned Qwen3-VL-8B quant and projector
+        run: |
+          set -euo pipefail
+          mkdir -p model out
+          REV="00e7d63528e65d7b64e80e1293a8360b4af6a594"
+          BASE="https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/$REV"
+          curl -fL --retry 5 --retry-all-errors "$BASE/Qwen3VL-8B-Instruct-Q4_K_M.gguf?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf?download=true" -o model/mmproj.gguf
+          sha256sum model/model.gguf model/mmproj.gguf | tee out/model-sha256.txt
+          du -h model/model.gguf model/mmproj.gguf | tee out/model-sizes.txt
+      - name: Build pinned llama.cpp
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-mtmd-cli -j 2
+      - name: Record runner resources
+        run: |
+          set -euo pipefail
+          free -h | tee out/free-before.txt
+          df -h . | tee out/disk-before.txt
+      - name: Generate synthetic chart-like image
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          im=Image.new("RGB",(64,64),(255,0,0))
+          for x in range(16,48):
+              for y in range(16,48):
+                  im.putpixel((x,y),(0,0,255))
+          im.save("synthetic.bmp")
+          PY
+      - name: Real Qwen3-VL-8B bounded crop loop
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python subject/chartography_with_tools/run_real_qwen_crop_loop.py 2>&1 | tee out/qwen8b-run.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-qwen3vl8b-crop-loop-fit-v1
+          path: out/
+          if-no-files-found: error
