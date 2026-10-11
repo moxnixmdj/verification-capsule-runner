@@ -1,0 +1,226 @@
+name: Chartography clean five-run heldout V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-clean-five-run-heldout-v1.yml"
+      - "subject/chartography_clean_eval/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DATASET_REPO: surgeai/chartography
+  OFFICIAL_HARNESS_COMMIT: 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+  MODEL_REPO: Qwen/Qwen3-VL-8B-Instruct-GGUF
+  MODEL_REVISION: __MODEL_REVISION__
+  MODEL_FILE: Qwen3VL-8B-Instruct-Q4_K_M.gguf
+  MODEL_SHA256: __MODEL_SHA256__
+  MMPROJ_FILE: mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf
+  MMPROJ_SHA256: __MMPROJ_SHA256__
+  LLAMA_CPP_COMMIT: a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+
+jobs:
+  bind:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      dataset_rev: ${{ steps.rev.outputs.dataset_rev }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: rev
+        name: Bind exact public dataset revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          REV="$(git ls-remote "https://huggingface.co/datasets/${DATASET_REPO}" HEAD | awk '{print $1}')"
+          test -n "$REV"
+          echo "dataset_rev=$REV" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$REV" | tee dataset-revision.txt
+      - name: Bind official public harness authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach "$OFFICIAL_HARNESS_COMMIT"
+          test "$(git rev-parse HEAD)" = "$OFFICIAL_HARNESS_COMMIT"
+          test "$(git hash-object src/chartography/dataset.py)" = "4d1bc311794527a86019f6ed4cf1efbd9bceb9bb"
+          test "$(git hash-object src/chartography/scorer.py)" = "11cffaa92dff3bed126247990d41f1509574040e"
+
+  epoch:
+    needs: bind
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        epoch: [1, 2, 3, 4, 5]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce zero-cost execution envelope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(nproc)" -ge 4
+          awk '/MemTotal:/ {exit !($2 >= 14*1024*1024)}' /proc/meminfo
+          mkdir -p model "out/epoch-${{ matrix.epoch }}"
+
+      - name: Install exact runtime prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates
+          python -m pip install --disable-pip-version-check --no-input             "pillow>=10,<13" "pyarrow>=17,<23" "huggingface_hub>=0.27,<2"
+
+      - name: Download and verify frozen visual subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$MODEL_REVISION" != "__MODEL_REVISION__"
+          test "$MODEL_SHA256" != "__MODEL_SHA256__"
+          test "$MMPROJ_SHA256" != "__MMPROJ_SHA256__"
+          BASE="https://huggingface.co/${MODEL_REPO}/resolve/${MODEL_REVISION}"
+          curl -fL --retry 5 --retry-all-errors "$BASE/${MODEL_FILE}?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/${MMPROJ_FILE}?download=true" -o model/mmproj.gguf
+          echo "${MODEL_SHA256}  model/model.gguf" | sha256sum -c -
+          echo "${MMPROJ_SHA256}  model/mmproj.gguf" | sha256sum -c -
+
+      - name: Build frozen llama.cpp visual CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach "$LLAMA_CPP_COMMIT"
+          test "$(git rev-parse HEAD)" = "$LLAMA_CPP_COMMIT"
+          cmake -S . -B build -G Ninja             -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF             -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-mtmd-cli -j 2
+
+      - name: Run one sealed heldout epoch
+        shell: bash
+        env:
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: |
+          set -euo pipefail
+          python subject/chartography_clean_eval/run_epoch.py             --epoch "${{ matrix.epoch }}"             --dataset-repo "$DATASET_REPO"             --dataset-rev "${{ needs.bind.outputs.dataset_rev }}"             --model model/model.gguf             --mmproj model/mmproj.gguf             --cli llama.cpp/build/bin/llama-mtmd-cli             --out "out/epoch-${{ matrix.epoch }}"             --max-crops 3             --timeout-seconds 300
+
+      - name: Emit frozen epoch manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,pathlib
+          epoch=os.environ["EPOCH"]
+          p=pathlib.Path("out")/f"epoch-{epoch}"
+          def h(q):
+              return hashlib.sha256(q.read_bytes()).hexdigest()
+          m={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_CLEAN_EPOCH_MANIFEST_V1",
+            "epoch":int(epoch),
+            "dataset_revision":os.environ["DATASET_REV"],
+            "model_repository":os.environ["MODEL_REPO"],
+            "model_revision":os.environ["MODEL_REVISION"],
+            "model_sha256":os.environ["MODEL_SHA256"],
+            "mmproj_sha256":os.environ["MMPROJ_SHA256"],
+            "llama_cpp_commit":os.environ["LLAMA_CPP_COMMIT"],
+            "responses_sha256":h(p/"responses.json"),
+            "score_sha256":h(p/"score.json"),
+            "gold_generation_separation":True,
+            "heldout_tuning_performed":False,
+            "incremental_spend_usd":0
+          }
+          (p/"manifest.json").write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
+          PY
+        env:
+          EPOCH: ${{ matrix.epoch }}
+          DATASET_REV: ${{ needs.bind.outputs.dataset_rev }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chartography-clean-epoch-${{ matrix.epoch }}
+          path: |
+            out/epoch-${{ matrix.epoch }}/responses.json
+            out/epoch-${{ matrix.epoch }}/score.json
+            out/epoch-${{ matrix.epoch }}/manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate:
+    needs: [bind, epoch]
+    if: always() && needs.bind.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: chartography-clean-epoch-*
+          path: results
+
+      - name: Compile five-run lower-bound certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p aggregate
+          python - <<'PY'
+          import glob,hashlib,json,pathlib
+          score_paths=sorted(glob.glob("results/**/score.json",recursive=True))
+          manifest_paths=sorted(glob.glob("results/**/manifest.json",recursive=True))
+          if len(score_paths)!=5 or len(manifest_paths)!=5:
+              raise SystemExit(f"EXPECTED_5_EPOCHS scores={len(score_paths)} manifests={len(manifest_paths)}")
+          scores=[json.load(open(p)) for p in score_paths]
+          manifests=[json.load(open(p)) for p in manifest_paths]
+          epochs=sorted(x["epoch"] for x in scores)
+          if epochs != [1,2,3,4,5]:
+              raise SystemExit(f"BAD_EPOCH_SET {epochs}")
+          revs={x["dataset_revision"] for x in manifests}
+          models={(x["model_revision"],x["model_sha256"],x["mmproj_sha256"]) for x in manifests}
+          if len(revs)!=1 or len(models)!=1:
+              raise SystemExit("CROSS_EPOCH_IDENTITY_MISMATCH")
+          if any(x["total"]!=100 for x in scores):
+              raise SystemExit("NON_100_TASK_EPOCH")
+          correct=sum(x["correct_lower_bound"] for x in scores)
+          total=sum(x["total"] for x in scores)
+          pct=100.0*correct/total
+          receipt_material="\n".join(sorted(x["responses_sha256"] for x in scores)).encode()
+          out={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_CLEAN_FIVE_RUN_LOWER_BOUND_RESULT_V1",
+            "dataset_revision":next(iter(revs)),
+            "model_identity":list(next(iter(models))),
+            "epochs":epochs,
+            "epoch_lower_bound_percent":[x["lower_bound_percent"] for x in sorted(scores,key=lambda z:z["epoch"])],
+            "correct_lower_bound":correct,
+            "total":total,
+            "five_run_mean_lower_bound_percent":pct,
+            "ge_89":pct>=89.0,
+            "response_set_commitment_sha256":hashlib.sha256(receipt_material).hexdigest(),
+            "gold_generation_separation":True,
+            "heldout_tuning_performed":False,
+            "incremental_spend_usd":0,
+            "scorer_role":"SOUND_FAIL_CLOSED_LOWER_BOUND_UNDER_PUBLISHED_SURGE_RULES"
+          }
+          pathlib.Path("aggregate/result.json").write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps({k:out[k] for k in ("epoch_lower_bound_percent","correct_lower_bound","total","five_run_mean_lower_bound_percent","ge_89","response_set_commitment_sha256")},sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-clean-five-run-aggregate-v1
+          path: aggregate/result.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce frozen threshold
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("aggregate/result.json"))
+          raise SystemExit(0 if x["ge_89"] else 1)
+          PY
