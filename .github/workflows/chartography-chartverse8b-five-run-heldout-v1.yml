@@ -68,6 +68,8 @@ jobs:
           path: |
             model
             llama.cpp/build/bin
+            tool-image.tar
+            tool-image.tar
           key: ${{ env.SUBJECT_CACHE_KEY }}
       - name: Install build prerequisites
         if: steps.subject-cache.outputs.cache-hit != 'true'
@@ -96,6 +98,18 @@ jobs:
           test "$(git rev-parse HEAD)" = "$LLAMA_CPP_COMMIT"
           cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build build --target llama-mtmd-cli -j 2
+      - name: Build isolated chart code tool image
+        if: steps.subject-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/Dockerfile.chartography <<'EOF'
+          FROM python:3.12-slim
+          RUN pip install --no-cache-dir pillow numpy scipy matplotlib opencv-python-headless
+          WORKDIR /work
+          EOF
+          docker build -f /tmp/Dockerfile.chartography -t brain-chartography-tool-v1 /tmp
+          docker save brain-chartography-tool-v1 -o tool-image.tar
       - name: Verify cached subject identity
         shell: bash
         run: |
@@ -103,6 +117,7 @@ jobs:
           echo "${MODEL_SHA256}  model/model.gguf" | sha256sum -c -
           echo "${MMPROJ_SHA256}  model/mmproj.gguf" | sha256sum -c -
           test -x llama.cpp/build/bin/llama-mtmd-cli
+          test -s tool-image.tar
 
   shard:
     needs: [bind, prepare_subject]
@@ -132,13 +147,13 @@ jobs:
           echo "${MODEL_SHA256}  model/model.gguf" | sha256sum -c -
           echo "${MMPROJ_SHA256}  model/mmproj.gguf" | sha256sum -c -
           test -x llama.cpp/build/bin/llama-mtmd-cli
-      - name: Install exact evaluation and sandbox runtime
+      - name: Install exact evaluation runtime and load isolated tool image
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends             bubblewrap python3-pil python3-numpy python3-scipy python3-matplotlib python3-opencv
           python -m pip install --disable-pip-version-check --no-input             "pillow>=10,<13" "pyarrow>=17,<23" "huggingface_hub>=0.27,<2"
+          docker load -i tool-image.tar
+          docker image inspect brain-chartography-tool-v1 >/dev/null
           mkdir -p "out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}"
       - name: Run one sealed heldout shard
         env:
@@ -173,7 +188,7 @@ jobs:
             "responses_sha256":h(p/"responses.json"),
             "score_sha256":h(p/"score.json"),
             "gold_generation_separation":True,
-            "python_tool_sandbox":"BUBBLEWRAP_UNSHARE_ALL_CLEAR_ENV_NO_NETWORK",
+            "python_tool_sandbox":"DOCKER_NETWORK_NONE_READ_ONLY_CAP_DROP_ALL_NO_NEW_PRIVILEGES",
             "heldout_tuning_performed":False,
             "incremental_spend_usd":0
           }
