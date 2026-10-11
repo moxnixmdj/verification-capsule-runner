@@ -192,7 +192,7 @@ def wikipedia_search(query: str, *, limit: int = 5, timeout: float = 20.0,
     })
     obj = fetch(url, timeout=timeout)
     out = []
-    for row in ((obj.get("query") or {}).get("search") or []):
+    for rank, row in enumerate(((obj.get("query") or {}).get("search") or []), 1):
         title = _canon(row.get("title"))
         if not title:
             continue
@@ -200,6 +200,7 @@ def wikipedia_search(query: str, *, limit: int = 5, timeout: float = 20.0,
             "pageid": int(row.get("pageid") or 0),
             "title": title,
             "snippet": _strip_html(row.get("snippet") or ""),
+            "rank": rank,
         })
     return out
 
@@ -294,7 +295,7 @@ def _relation_candidates(q: str, text: str, kind: str) -> list[tuple[str, float,
             for m in re.finditer(r"\baffect(?:s|ing)?\s+(?:wine\s+|ripe\s+|white\s+)?([a-z][a-z-]+(?:\s+[a-z][a-z-]+){0,2})(?=[,.;]|$)", low, re.I):
                 emit(m.group(1), 8.0, "AFFECTS_OBJECT", head_last=True)
         if "mutton" in lowq or "what animal" in lowq:
-            for m in re.finditer(r"\b(?:meat\s+(?:of|from)|comes?\s+from|from)\s+(?:domestic\s+)?([a-z][a-z-]+)(?=[,.; ]|$)", low, re.I):
+            for m in re.finditer(r"\b(?:meat\s+(?:of|from)|comes?\s+from|from)\s+(?:the\s+)?(?:domestic\s+)?([a-z][a-z-]+)(?=[,.; ]|$)", low, re.I):
                 emit(m.group(1), 8.5, "SOURCE_ANIMAL")
         if "written by whom" in lowq or re.search(r"\bwho\s+wrote\b", lowq):
             for m in re.finditer(r"\b(?:written|composed|created|music|lyrics)\s+(?:was\s+)?(?:by|:)?\s*("+person_pat+r")", row):
@@ -316,10 +317,16 @@ def _relation_candidates(q: str, text: str, kind: str) -> list[tuple[str, float,
             years = re.findall(r"\b(?:1[0-9]{3}|20[0-9]{2})\b", row)
             for y in years:
                 emit(y, 5.5, "YEAR_LITERAL")
+        if ("nile" in lowq and ("meet" in lowq or "meets" in lowq)) or "confluence" in lowq:
+            for m in re.finditer(r"\b(?:meet|meets|confluence)[^.;]{0,90}?\b(?:at|in)\s+([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’ .-]{1,45}?)(?=[,.;]|$)", row, re.I):
+                emit(m.group(1), 9.0, "CONFLUENCE_LOCATION")
         if "film" in lowq:
             # "inspired the 1987 film Good Morning, Vietnam starring..."
             for m in re.finditer(r"\b(?:19|20)\d{2}\s+film\s+([A-Z][A-Za-z0-9'’,: -]{1,70}?)(?=\s+(?:starring|directed|based|was|is)\b|[.;]|$)", row):
                 emit(m.group(1), 9.0, "DATED_FILM")
+            # Award/role wording such as "won ... for his role in Milk".
+            for m in re.finditer(r"\b(?:award|oscar|actor)[^.;]{0,120}?\bfor\s+(?:his\s+|her\s+)?(?:role\s+in\s+)?(?:the\s+)?(?:film\s+)?([A-Z][A-Za-z0-9'’,: -]{1,60}?)(?=[,.;]|\s+(?:in|at|which|directed|starring)\b|$)", row, re.I):
+                emit(m.group(1), 8.5, "AWARD_FILM")
         if "opera" in lowq:
             for m in re.finditer(r"\b(?:opera|in)\s+([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’ ]{2,60}?)(?=[,.;]|\s+(?:by|at|with)\b|$)", row):
                 emit(m.group(1), 6.5, "OPERA_RELATION")
@@ -405,20 +412,25 @@ def propose(
             pid = int(row.get("pageid") or 0)
             if pid <= 0:
                 continue
+            rank = int(row.get("rank") or 99)
             rec = pages.setdefault(pid, {
                 "pageid": pid,
                 "title": _canon(row.get("title")),
                 "snippet": _canon(row.get("snippet")),
                 "query_hits": set(),
+                "best_rank": rank,
             })
             rec["query_hits"].add(qi)
-            if len(pages) >= max_pages:
-                break
-        if len(pages) >= max_pages:
-            # Continue other queries only if they can add evidence to existing titles through snippets.
-            pass
+            rec["best_rank"] = min(int(rec.get("best_rank") or 99), rank)
 
-    page_list = list(pages.values())[:max_pages]
+    page_list = sorted(
+        pages.values(),
+        key=lambda x: (
+            int(x.get("best_rank") or 99),
+            -len(x.get("query_hits") or ()),
+            str(x.get("title") or ""),
+        ),
+    )[:max_pages]
     try:
         extracts = extracts_fn([x["pageid"] for x in page_list]) if page_list else {}
     except Exception:
