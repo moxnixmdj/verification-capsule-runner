@@ -34,7 +34,7 @@ jobs:
       - name: Solve with gold absent
         env:
           PYTHONPATH: .
-        run: python canonical/tests/run_hle_v5_consumed_diagnostic_v1.py solve --questions /tmp/v5q.json --commitments /tmp/v5c.json --workers 5
+        run: python canonical/tests/run_hle_v5_consumed_diagnostic_v1.py solve --questions /tmp/v5q.json --commitments /tmp/v5c.json --workers 1
       - name: Score after commitments are sealed
         env:
           PYTHONPATH: .
