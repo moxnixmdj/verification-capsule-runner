@@ -1,6 +1,13 @@
 name: Verify Chartography Brain-native direct curve family rank V1 independent
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-chart-direct-curve-family-rank-independent-v1.yml"
+      - "canonical/runtime/bound_capabilities/chart_direct_curve_label_family_rank_v1.py"
+      - "canonical/tests/test_chart_direct_curve_label_family_rank_v1.py"
+      - "verification/independent_chart_direct_curve_label_family_rank_v1.py"
   pull_request:
     branches: [main]
     paths:
