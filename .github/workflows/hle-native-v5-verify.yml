@@ -36,7 +36,7 @@ jobs:
         run: |
           test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
           test "$(git hash-object canonical/tests/test_hle_native_question_contract_v3.py)" = "905bd448d54c602dd0c31a36a852ac43c0737f9d"
-          test "$(git hash-object canonical/runtime/hle_evidence_candidate_synthesis_v3.py)" = "1a37aac998436b023bb04e5494db91a54fbac8c8"
+          test "$(git hash-object canonical/runtime/hle_evidence_candidate_synthesis_v3.py)" = "ed2e0b572b33a5ed3c84d748689ee71645460dbf"
           test "$(git hash-object canonical/tests/test_hle_evidence_candidate_synthesis_v3.py)" = "8353389de0d820458263545769adadeac24fb0dd"
           test "$(git hash-object canonical/runtime/hle_native_research_solver_v5.py)" = "6fd57f4f3591e4ab09b3e16ffbae399f7aaf93ae"
           test "$(git hash-object canonical/tests/test_hle_native_research_solver_v5.py)" = "40fd1ba846f5815a6be9b0949a85a366fa0051ac"
