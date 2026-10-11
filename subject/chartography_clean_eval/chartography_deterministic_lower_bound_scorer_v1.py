@@ -91,18 +91,18 @@ def _published_exact_numeric(text: str) -> tuple[Optional[Decimal], str]:
     before = before.replace("$", "").strip()
 
     scale = Decimal("1")
-    wm = re.match(r"^(thousand|million|billion)\\b", after)
+    wm = re.match(r"^(thousand|million|billion)\b", after)
     if wm:
         scale = _SCALE_WORD[wm.group(1)]
         after = after[wm.end():].strip()
     elif currency:
-        sm = re.match(r"^([kmb])\\b", after)
+        sm = re.match(r"^([kmb])\b", after)
         if sm:
             scale = _SCALE_SUFFIX[sm.group(1)]
             after = after[sm.end():].strip()
 
     # Public scorer explicitly equates 'percentage points' and 'pp'.
-    after = re.sub(r"^percentage\\s+points?\\b", "pp", after).strip()
+    after = re.sub(r"^percentage\s+points?\b", "pp", after).strip()
     if before:
         return None, ""
     unit = ""
