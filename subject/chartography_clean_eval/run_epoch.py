@@ -94,31 +94,40 @@ def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
     }
 
 
-def extract_action(stdout: str) -> dict | None:
-    """Parse the last complete JSON action line.
+def _action_from_obj(obj: object) -> dict | None:
+    if not isinstance(obj, dict):
+        return None
+    if set(obj) == {"final"} and isinstance(obj.get("final"), str) and obj["final"].strip():
+        return {"kind": "final", "answer": obj["final"].strip()}
+    if set(obj) == {"tool", "left", "top", "right", "bottom"} and obj.get("tool") == "crop":
+        vals = [obj[k] for k in ("left", "top", "right", "bottom")]
+        if all(type(v) is int for v in vals):
+            return {"kind": "crop", "box": tuple(vals)}
+    if set(obj) == {"tool", "code"} and obj.get("tool") == "python" and isinstance(obj.get("code"), str):
+        return {"kind": "python", "code": obj["code"]}
+    return None
 
-    Line-wise JSON parsing is deliberate: Python tool code may itself contain
-    braces, which makes regex-based object extraction unsound.
+
+def extract_action(stdout: str) -> dict | None:
+    """Return the last valid complete JSON action embedded in model output.
+
+    JSONDecoder is used instead of regex or line-only parsing so Python code
+    may contain nested braces, strings, or newlines without corrupting the
+    action boundary.
     """
-    candidates = [x.strip() for x in stdout.splitlines() if x.strip()]
-    if stdout.strip() not in candidates:
-        candidates.append(stdout.strip())
-    for raw in reversed(candidates):
+    decoder = json.JSONDecoder()
+    found: list[tuple[int, dict]] = []
+    for i, ch in enumerate(stdout):
+        if ch != "{":
+            continue
         try:
-            obj = json.loads(raw)
+            obj, _ = decoder.raw_decode(stdout[i:])
         except Exception:
             continue
-        if not isinstance(obj, dict):
-            continue
-        if set(obj) == {"final"} and isinstance(obj.get("final"), str) and obj["final"].strip():
-            return {"kind": "final", "answer": obj["final"].strip()}
-        if set(obj) == {"tool", "left", "top", "right", "bottom"} and obj.get("tool") == "crop":
-            vals = [obj[k] for k in ("left", "top", "right", "bottom")]
-            if all(type(v) is int for v in vals):
-                return {"kind": "crop", "box": tuple(vals)}
-        if set(obj) == {"tool", "code"} and obj.get("tool") == "python" and isinstance(obj.get("code"), str):
-            return {"kind": "python", "code": obj["code"]}
-    return None
+        action = _action_from_obj(obj)
+        if action is not None:
+            found.append((i, action))
+    return found[-1][1] if found else None
 
 def fallback_final(stdout: str) -> str:
     lines = [re.sub(r"\s+", " ", x).strip() for x in stdout.splitlines() if x.strip()]
