@@ -1,0 +1,98 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK23_DNA_STORAGE_EXECUTION_BEHAVIOR_V1",
+  "date": "2026-10-11",
+  "scope": "TB_SCIENCE_DONOR_FREE_DNA_STORAGE_V1",
+  "slot_id": "terminal-bench-science/dna-storage-codec::trial-0",
+  "task_digest": "sha256:bde6852289db3f5474aedc96c54aca201d11be6c61f4fef019998b2b689e65ac",
+  "workflow_path": ".github/workflows/execute-tb-science-rank23-20261011-v1.yml",
+  "behavior": {
+    "execution_claim_bound_logical_attempt_identity": true,
+    "execution_claim_binding_digest_required": true,
+    "durable_start_cas_required": true,
+    "task_start_defined_by_cas_acquisition": true,
+    "agent_ready_precedes_start_cas": true,
+    "child_github_credentials_stripped": true,
+    "producer_dependency_inventory_complete": true,
+    "producer_external_model_cognition_free": true,
+    "visible_contract_adapter_required": true,
+    "ambiguous_contract_fail_closed": true,
+    "aggregate_acceptance_credit_from_single_slot_forbidden": true,
+    "producer_model_cognition_dependency_count": 0,
+    "producer_model_cognition_dependencies": []
+  },
+  "runtime_bindings": {
+    "codec": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/runtime/dna_storage_codec_v1.py",
+      "git_blob_sha": "3734ad7c4674d9ebe77dbaf0592ea10d0a6cb451"
+    },
+    "adapter": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/runtime/dna_storage_task_adapter_v1.py",
+      "git_blob_sha": "2009dabd5870218550fcc5af74dc6c4822269818"
+    },
+    "agent": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/runtime/harbor_science_dna_storage_agent_v1.py",
+      "git_blob_sha": "ef4832b8fff0197cb9f0fe87196fbe2521e312f5"
+    },
+    "prestart_guard": {
+      "path": "capsules/tb_science_rank23_20261011_v1/rank23_prestart_guard_v1.py",
+      "git_blob_sha": "40d0e4ae53f4ad22ca3f5e76f5cb193c5ba86f80"
+    },
+    "transport": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/runtime/harbor_environment_transport_v2.py",
+      "git_blob_sha": "9aebd804c6d71b07da5134ed4e2d14a6427de84c"
+    },
+    "command_policy": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/runtime/harbor_command_policy.py",
+      "git_blob_sha": "a525773417291c7a4841bf35e1baff5370350d0d"
+    },
+    "codec_test": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/tests/test_dna_storage_codec_v1.py",
+      "git_blob_sha": "cc4e9aadabb8ba4b146f2a5ace14fcb62488fca8"
+    },
+    "adapter_test": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/tests/test_dna_storage_task_adapter_v1.py",
+      "git_blob_sha": "0df88f2c40150d1861e3468515135b7087058a10"
+    },
+    "agent_test": {
+      "path": "capsules/tb_science_rank23_20261011_v1/canonical/tests/test_harbor_science_dna_storage_agent_v1.py",
+      "git_blob_sha": "43432e4b118842046b76b9f5d2074125db4c704c"
+    },
+    "start_cas": {
+      "path": "capsules/tb_science_rank23_20261011_v1/rank23_start_cas_v1.py",
+      "git_blob_sha": "c764092a46f8e2a8479a82ad97b1e17c42ae72bb"
+    },
+    "generic_start_cas": {
+      "path": "execution_guard/terminal_slot_start_cas_v2.py",
+      "git_blob_sha": "05a39c10f8d5575890532381732fd63240c6fb4b"
+    },
+    "identity_primitive": {
+      "path": "execution_guard/logical_attempt_identity_v2.py",
+      "git_blob_sha": "67ff638459af1bb50a094e9479fb4aa5e2a3de1c"
+    },
+    "claim_bound_identity_resolver": {
+      "path": "execution_guard/rank23_claim_bound_identity_v1.py",
+      "git_blob_sha": "0a2b9c8988b476b3442000c067cca555a8c71d31"
+    },
+    "start_barrier": {
+      "path": "execution_guard/terminal_agent_start_barrier_v1.py",
+      "git_blob_sha": "be71f063b232429dc9e416bb58b4138f35341079"
+    },
+    "status_runner": {
+      "path": "capsules/tb_science_rank23_20261011_v1/rank23_dna_storage_runner_v1.py",
+      "git_blob_sha": "4057872d0910806ed3aff9e76c086f7ed0000b47"
+    },
+    "finalizer": {
+      "path": "capsules/tb_science_rank23_20261011_v1/rank23_finalize_receipt_v1.py",
+      "git_blob_sha": "388f4cccea911268d565a4c97c09a137a0ad70f1"
+    },
+    "preflight": {
+      "path": "capsules/tb_science_rank23_20261011_v1/rank23_execution_preflight_v1.py",
+      "git_blob_sha": "29ca82f99e286bd173cc7609e4d5ff881440a997"
+    }
+  },
+  "task_read": false,
+  "task_started": false,
+  "benchmark_trials_consumed": 0,
+  "model_dependency_count": 0,
+  "external_model_runtime_calls": 0
+}
