@@ -106,12 +106,15 @@ def main()->int:
         for marker in ("llama-server",".gguf","/v1/chat/completions","ollama","vllm","litellm","anthropic.","transformers","openai.chat"):
             if marker in low: errors.append("WORKFLOW_MODEL_RUNTIME_MARKER:"+marker)
         if "persist-credentials: false" not in text: errors.append("WORKFLOW_CREDENTIAL_STRIP_MISSING")
+        # Bind execution ordering to unique workflow step names, not filenames.
+        # Runtime filenames also appear in the earlier py_compile qualification
+        # command, so filename-first-occurrence ordering is a false positive.
         phases=[
             "Qualify exact zero-model scientific runtime before any task read",
-            'rank22_start_cas_v1.py" --check-absent',
-            "rank22_prestart_guard_v1.py",
-            "rank22_zero_model_runner_v1.py",
-            "rank22_finalize_receipt_v1.py",
+            "Prove durable start CAS is absent before any task read",
+            "Read exact Rank22 task and qualify zero-model route without starting",
+            "Enter Harbor then commit start only after zero-model agent ready",
+            "Finalize conservative Rank22 receipt",
         ]
         pos=[text.find(x) for x in phases]
         if any(x<0 for x in pos) or pos!=sorted(pos): errors.append("WORKFLOW_PHASE_ORDER_INVALID")
