@@ -30,7 +30,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p model out /home/oai/share
+          mkdir -p model out /tmp/brain-osworld-state-smoke
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY"             --pattern "$MODEL_FILE.part*of03" --dir model
           cat model/"$MODEL_FILE".part01of03               model/"$MODEL_FILE".part02of03               model/"$MODEL_FILE".part03of03 > model/"$MODEL_FILE"
           test "$(stat -c '%s' model/$MODEL_FILE)" = "$MODEL_BYTES"
@@ -73,7 +73,7 @@ jobs:
           from canonical.runtime.osworld_v21_host_guest_ops_v1 import OSWorldHostGuestOps
           from canonical.runtime.osworld_v21_local_qwen_policy_v1 import plan_state
 
-          target = Path("/home/oai/share/brain.txt")
+          target = Path("/tmp/brain-osworld-state-smoke/brain.txt")
           if target.exists():
               target.unlink()
 
@@ -104,7 +104,7 @@ jobs:
           )
           agent.bind_environment(Env())
 
-          instruction="Create /home/oai/share/brain.txt containing exactly alpha, verify the file content, then finish."
+          instruction="Create /tmp/brain-osworld-state-smoke/brain.txt containing exactly alpha, verify the file content, then finish."
           trace=[]
           terminal=None
           for i in range(1,7):
@@ -121,7 +121,7 @@ jobs:
           assert target.read_text(encoding="utf-8")=="alpha",trace
           assert any(
               isinstance(row.get("guest_result"),dict)
-              and "ASSERT_TEXT_EQUALS:PASS:/home/oai/share/brain.txt" in str(row["guest_result"].get("output") or "")
+              and "ASSERT_TEXT_EQUALS:PASS:/tmp/brain-osworld-state-smoke/brain.txt" in str(row["guest_result"].get("output") or "")
               for row in agent.history
           ),agent.history
           assert all(not row.get("operation_error") for row in agent.history),agent.history
