@@ -1,0 +1,44 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK22_PUBLIC_AUTHORITY_BINDING_V1",
+  "date": "2026-10-11",
+  "status": "STAGED_PREACTIVATION_ZERO_EXPOSURE__FRESH_RANK22__ONE_SHOT_ZERO_MODEL",
+  "slot_id": "terminal-bench-science/rv-astrometry-fitting::trial-0",
+  "task_digest": "sha256:8e086e1f7245067eaa9a67c259c1519204fa058d8664983066cd582ef258a1ea",
+  "logical_attempt_identity_basis": "SLOT_ID_PLUS_TASK_DIGEST_PLUS_EXECUTION_CLAIM_BINDING_DIGEST",
+  "logical_attempt_id": "e958f9c8f996ba3ee3599ae573340c6970262634a5085cc2102c7b8321baf796",
+  "execution_claim_binding_digest": "sha256:a1b8c550de90ff8c924c99633aa5195615e2ab4361e8e637061b39be587af812",
+  "claim_epoch_id": "RANK22_V1_ZERO_MODEL_SCIENTIFIC_VALIDATION_20261011_V1",
+  "brain_authority": {
+    "path": "canonical/governance/TB_SCIENCE_RANK22_ONE_SLOT_EXECUTION_AUTHORITY_20261011_V1.json",
+    "git_blob_sha": "a4a821bbc01f620b528ab8f7baae9204624f1598"
+  },
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261011_V69.json",
+    "git_blob_sha": "32cb8b726532aac05e50b10d62d3469bb2de5fae"
+  },
+  "logical_attempt_claim_binding": {
+    "path": "capsules/tb_science_rank22_20261011_v1/RANK22_LOGICAL_ATTEMPT_CLAIM_BINDING_V1.json",
+    "git_blob_sha": "59a0397b4a970aae37a728a5094f3c3c030885e0"
+  },
+  "execution_branch": "execute/tb-science-rank22-20261011-v1",
+  "activation_filename": "ACTIVATE_RANK22_V1_PR.json",
+  "controls": {
+    "logical_attempts_authorized_total": 1,
+    "retries_authorized": 0,
+    "replacement_allowed": false,
+    "different_task_or_digest_forbidden": true,
+    "rank21_replay_forbidden": true,
+    "model_cognition_dependencies_allowed": 0
+  },
+  "task_read_history": false,
+  "task_started": false,
+  "start_cas_acquired": false,
+  "benchmark_trials_consumed": 0,
+  "execution_authority": true,
+  "task_read_authority": true,
+  "activation_authority": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0,
+  "incremental_spend_usd": 0
+}
