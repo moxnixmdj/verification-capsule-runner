@@ -17,20 +17,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Install sandbox runtime
+      - name: Exercise exact no-network Docker isolation
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends bubblewrap python3-pil python3-numpy
-      - name: Exercise no-network bubblewrap namespace
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/chartography-bwrap-smoke
-          printf 'print("BWRAP_OK")\n' > /tmp/chartography-bwrap-smoke/tool.py
-          out="$(bwrap --unshare-all --new-session --die-with-parent --clearenv             --setenv PATH /usr/bin:/bin --setenv HOME /tmp             --ro-bind /usr /usr --ro-bind /bin /bin --ro-bind /lib /lib --ro-bind /lib64 /lib64             --proc /proc --dev /dev --tmpfs /tmp             --bind /tmp/chartography-bwrap-smoke /work --chdir /work             /usr/bin/python3 /work/tool.py)"
-          test "$out" = "BWRAP_OK"
+          mkdir -p /tmp/chartography-docker-smoke
+          printf 'print("DOCKER_SANDBOX_OK")\n' > /tmp/chartography-docker-smoke/tool.py
+          out="$(docker run --rm --network none --read-only --cap-drop ALL             --security-opt no-new-privileges --pids-limit 64 --memory 256m --cpus 1             --tmpfs /tmp:rw,nosuid,nodev,size=32m             -v /tmp/chartography-docker-smoke:/work:rw -w /work             python:3.12-slim python /work/tool.py)"
+          test "$out" = "DOCKER_SANDBOX_OK"
       - name: Static compile and invariant checks
         shell: bash
         run: |
@@ -48,8 +42,8 @@ jobs:
             "shard: [0, 1, 2, 3]",
             "AUTHORIZED_HF_TOKEN_REQUIRED",
             "actions/cache@v4",
-            "bubblewrap",
-            "BUBBLEWRAP_UNSHARE_ALL_CLEAR_ENV_NO_NETWORK",
+            "docker",
+            "DOCKER_NETWORK_NONE_READ_ONLY_CAP_DROP_ALL_NO_NEW_PRIVILEGES",
             "EXPECTED_20_SHARDS",
             "NON_100_TASK_EPOCH_AFTER_SHARD_REDUCTION",
             "five_run_mean_lower_bound_percent",
