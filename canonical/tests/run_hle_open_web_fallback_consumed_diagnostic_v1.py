@@ -122,9 +122,9 @@ def score(tpath:Path,spath:Path)->None:
     summary={
         "schema":SCHEMA,"dataset":DATASET,"split":SPLIT,"sample_size":N,
         "slice":"ROWS_25_TO_49_ALREADY_CONSUMED_OPEN_WEB_FALLBACK_DIAGNOSTIC",
-        "baseline_retrieval_any_hit_rate":0.52,
+        "baseline_full_retrieval_any_hit_rate":0.52,\n        "baseline_discovery_surface_hit_rate":0.44,
         "retrieval_any_hit":any_n,"retrieval_any_hit_rate":any_n/N,
-        "absolute_delta_vs_baseline":any_n/N-0.52,
+        "absolute_delta_vs_discovery_baseline":any_n/N-0.44,\n        "absolute_delta_vs_full_retrieval_reference":any_n/N-0.52,
         "backend_hit_counts":dict(sorted(backend_hits.items())),
         "backend_health_sample_counts":{k:dict(sorted(v.items())) for k,v in sorted(backend_health.items())},
         "external_model_calls_total":0,"external_reasoning_model_calls_total":0,"model_dependency_count_total":0,
