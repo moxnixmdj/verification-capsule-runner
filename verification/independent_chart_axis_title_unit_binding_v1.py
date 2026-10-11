@@ -21,6 +21,13 @@ def cand(text, conf=95, source="independent"):
 class IndependentChartAxisTitleUnitBindingV1(unittest.TestCase):
     def test_word_substrings_do_not_create_meter_or_gram_units(self):
         for text in ("Program Count", "Amplitude", "Sample Group"):
+            self.assertEqual(c.extract_explicit_units(text),[],text)
+        # Amplitude is intentionally a bounded semantic role, but it must not
+        # acquire a unit merely because the word contains letters such as m/g.
+        amp=c.parse_axis_label("Amplitude")
+        self.assertEqual(amp["semantic_role"],"AMPLITUDE")
+        self.assertIsNone(amp["canonical_unit"])
+        for text in ("Program Count","Sample Group"):
             with self.assertRaises(c.AxisTitleUnitBindingError):
                 c.parse_axis_label(text)
 
