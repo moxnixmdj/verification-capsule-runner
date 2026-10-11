@@ -1,0 +1,62 @@
+name: Chartography five-run V2 preflight
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-chartverse8b-five-run-heldout-v1.yml"
+      - ".github/workflows/chartography-five-run-v2-preflight.yml"
+      - "subject/chartography_clean_eval/**"
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static compile and invariant checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile subject/chartography_clean_eval/run_epoch.py
+          python -m py_compile subject/chartography_clean_eval/chartography_deterministic_lower_bound_scorer_v1.py
+          python - <<'PY'
+          import pathlib,re
+          wf=pathlib.Path(".github/workflows/chartography-chartverse8b-five-run-heldout-v1.yml").read_text()
+          py=pathlib.Path("subject/chartography_clean_eval/run_epoch.py").read_text()
+          required=[
+            "workflow_dispatch:",
+            "max-parallel: 20",
+            "epoch: [1, 2, 3, 4, 5]",
+            "shard: [0, 1, 2, 3]",
+            "AUTHORIZED_HF_TOKEN_REQUIRED",
+            "actions/cache@v4",
+            "bubblewrap",
+            "BUBBLEWRAP_UNSHARE_ALL_CLEAR_ENV_NO_NETWORK",
+            "EXPECTED_20_SHARDS",
+            "NON_100_TASK_EPOCH_AFTER_SHARD_REDUCTION",
+            "five_run_mean_lower_bound_percent",
+            "ge_89",
+          ]
+          missing=[x for x in required if x not in wf]
+          if missing: raise SystemExit(f"MISSING_WORKFLOW_INVARIANTS {missing}")
+          py_required=[
+            '"--shard-index"',
+            '"--shard-count"',
+            '"python"',
+            '"crop"',
+            '"bwrap"',
+            '"--unshare-all"',
+            '"--clearenv"',
+            "gold_loaded_after_response_seal",
+            "gold_present_in_generation_projection",
+          ]
+          missing=[x for x in py_required if x not in py]
+          if missing: raise SystemExit(f"MISSING_RUNTIME_INVARIANTS {missing}")
+          if "golden_answer" in py.split("# SCORING PHASE:")[0]:
+              raise SystemExit("GOLD_REFERENCE_BEFORE_SCORING_PHASE")
+          print("PASS_CHARTOGRAPHY_FIVE_RUN_V2_PREFLIGHT")
+          PY
