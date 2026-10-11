@@ -1,0 +1,35 @@
+name: Chartography donor-free public observation V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-donor-free-public-observation-v1.yml"
+      - "subject/chartography_donor_free_public_observation_v1.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deterministic sensors
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check --no-input "pillow>=10,<13"
+      - name: Bind exact official public sample pack
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          test "$(git rev-parse HEAD)" = 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+      - name: Observe public samples with zero model cognition
+        run: python subject/chartography_donor_free_public_observation_v1.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-donor-free-public-observation-v1
+          path: out/observation.json
+          if-no-files-found: error

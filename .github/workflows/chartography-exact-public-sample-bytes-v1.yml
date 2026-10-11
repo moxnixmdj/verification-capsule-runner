@@ -1,0 +1,28 @@
+name: Chartography exact public sample bytes V1
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-exact-public-sample-bytes-v1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bind:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Surge public sample commit
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          test "$(git rev-parse HEAD)" = 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chartography-exact-public-sample-bytes-v1
+          path: |
+            official/task_packs/sample_charts/charts/sample_chart_1.png
+            official/task_packs/sample_charts/charts/sample_chart_2.jpg
+          if-no-files-found: error
