@@ -27,8 +27,8 @@ jobs:
           set -euo pipefail
           test "$(git hash-object "$C/canonical/runtime/dna_storage_codec_v1.py")" = "3734ad7c4674d9ebe77dbaf0592ea10d0a6cb451"
           test "$(git hash-object "$C/canonical/tests/test_dna_storage_codec_v1.py")" = "cc4e9aadabb8ba4b146f2a5ace14fcb62488fca8"
-          test "$(git hash-object "$C/canonical/runtime/dna_storage_task_kernel_v1.py")" = "575e265b5ccc005093c2616c449b7b26dee74005"
-          test "$(git hash-object "$C/canonical/tests/test_dna_storage_task_kernel_v1.py")" = "6aecf9876552d068d4b7b0ae3d4989c9a573f9b3"
+          test "$(git hash-object "$C/canonical/runtime/dna_storage_task_kernel_v1.py")" = "999f54fd2d245404dcc5c1e8db57f5e151629786"
+          test "$(git hash-object "$C/canonical/tests/test_dna_storage_task_kernel_v1.py")" = "3fafe4c67587352e6b8e8798a1aa0c9b47903ef6"
           export PYTHONPATH="$GITHUB_WORKSPACE/$C"
           python -m py_compile             "$C/canonical/runtime/dna_storage_codec_v1.py"             "$C/canonical/runtime/dna_storage_task_kernel_v1.py"             "$C/canonical/tests/test_dna_storage_codec_v1.py"             "$C/canonical/tests/test_dna_storage_task_kernel_v1.py"
           python -m unittest -v             canonical.tests.test_dna_storage_codec_v1             canonical.tests.test_dna_storage_task_kernel_v1
