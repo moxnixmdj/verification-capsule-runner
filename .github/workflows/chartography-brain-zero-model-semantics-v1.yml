@@ -1,0 +1,90 @@
+name: Chartography Brain zero-model semantics V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-brain-zero-model-semantics-v1.yml"
+      - "subject/chartography_brain_semantics_v1/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize exact Brain runtime bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          R=subject/chartography_brain_semantics_v1
+          mkdir -p "$R/canonical/runtime"
+          base64 -d "$R/encoded/chartography_series_intersection_v1.py.b64" > "$R/canonical/runtime/chartography_series_intersection_v1.py"
+          base64 -d "$R/encoded/chartography_fixed_x_boundary_v1.py.b64" > "$R/canonical/runtime/chartography_fixed_x_boundary_v1.py"
+          base64 -d "$R/encoded/chartography_professional_semantic_router_v1.py.b64" > "$R/canonical/runtime/chartography_professional_semantic_router_v1.py"
+          test "$(git hash-object "$R/canonical/runtime/bound_capabilities/image_ocr_tesseract.py")" = "45714d7a0160802d986042910da1c4c6462676e5"
+          test "$(git hash-object "$R/canonical/runtime/chartography_positioned_ocr_v1.py")" = "c3884cea30f2fa71a76a26a39b664e07ca4eff64"
+          test "$(git hash-object "$R/canonical/runtime/chartography_axis_calibration_v1.py")" = "2893402d93205b79b594b363f3b10df43ecb7c7b"
+          test "$(git hash-object "$R/canonical/runtime/chartography_semantic_utils_v1.py")" = "af179d2187d6edeaca977c9ad0bf079ba89a5d6a"
+          test "$(git hash-object "$R/canonical/runtime/chartography_series_intersection_v1.py")" = "48cca7bce94e9a78ab688d50821b61fcd2a354d4"
+          test "$(git hash-object "$R/canonical/runtime/chartography_fixed_x_boundary_v1.py")" = "df8d78b05424c469e7b50bba069854da3ab5d6c4"
+          test "$(git hash-object "$R/canonical/runtime/chartography_professional_semantic_router_v1.py")" = "c4fbc31fbc11916778d8827ea7d9b0cccb70879d"
+          python -m py_compile "$R"/canonical/runtime/chartography_*.py
+      - name: Install pinned local sensor dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check --no-input pillow pyyaml
+      - name: Bind official non-heldout Surge samples
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git /tmp/chartography
+          git -C /tmp/chartography checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+      - name: Execute Brain-only semantic kernel
+        env:
+          PYTHONPATH: subject/chartography_brain_semantics_v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import yaml
+          from canonical.runtime.bound_capabilities.image_ocr_tesseract import verify_dependency_surface
+          from canonical.runtime.chartography_professional_semantic_router_v1 import solve
+
+          dep=verify_dependency_surface()
+          root=Path("/tmp/chartography/task_packs/sample_charts")
+          rows=[]
+          for i,(task,image) in enumerate([
+              ("sample_task_1.yaml","sample_chart_1.png"),
+              ("sample_task_2.yaml","sample_chart_2.jpg"),
+          ],1):
+              spec=yaml.safe_load((root/"tasks"/task).read_text())
+              result=solve(root/"charts"/image,str(spec["prompt"]))
+              rows.append({"case":i,"answer":result["answer"],"raw_value":result["raw_value"],"route":result["route"]})
+          ok=[76<=float(rows[0]["raw_value"])<=79,330<=float(rows[1]["raw_value"])<=370]
+          receipt={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_ZERO_MODEL_PUBLIC_SAMPLE_V1",
+            "pass":all(ok),"passed":sum(ok),"total":2,"rows":rows,
+            "tesseract":dep["tesseract_version"],
+            "model_dependency_count":0,
+            "external_model_runtime_dependency_count":0,
+            "donor_runtime_dependency_count":0,
+            "heldout_cases_consumed":0,"heldout_gold_consumed":0,
+            "incremental_spend_usd":0,
+          }
+          Path("out/result.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          raise SystemExit(0 if receipt["pass"] else 1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-brain-zero-model-semantics-v1
+          path: out/result.json
+          if-no-files-found: warn
