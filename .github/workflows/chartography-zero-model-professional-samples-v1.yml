@@ -1,0 +1,161 @@
+name: Chartography zero-model professional samples V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-zero-model-professional-samples-v1.yml"
+      - "canonical/runtime/chartography_deterministic_professional_solver_v1.py"
+      - "canonical/tests/test_chartography_deterministic_professional_solver_v1.py"
+      - "canonical/runtime/chartography_brain_credit_subject_gate_v2.py"
+      - "canonical/tests/test_chartography_brain_credit_subject_gate_v2.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact bounded perception surface
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check --no-input "pillow==10.2.0" "pyyaml>=6,<7"
+      - name: Compile and adversarial unit tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/chartography_deterministic_professional_solver_v1.py
+          python -m py_compile canonical/runtime/chartography_brain_credit_subject_gate_v2.py
+          python -m unittest -v             canonical.tests.test_chartography_deterministic_professional_solver_v1             canonical.tests.test_chartography_brain_credit_subject_gate_v2
+      - name: Bind official non-heldout samples
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git /tmp/chartography
+          git -C /tmp/chartography checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          mkdir -p canonical/astra_runtime/tmp/chartography_public_samples out
+          cp /tmp/chartography/task_packs/sample_charts/charts/sample_chart_1.png canonical/astra_runtime/tmp/chartography_public_samples/
+          cp /tmp/chartography/task_packs/sample_charts/charts/sample_chart_2.jpg canonical/astra_runtime/tmp/chartography_public_samples/
+      - name: Generate and seal responses without gold
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib,json,yaml
+          from pathlib import Path
+          from canonical.runtime.chartography_deterministic_professional_solver_v1 import solve
+          root=Path('/tmp/chartography/task_packs/sample_charts')
+          local=Path('canonical/astra_runtime/tmp/chartography_public_samples')
+          specs=[
+            ('sample_task_1.yaml',local/'sample_chart_1.png'),
+            ('sample_task_2.yaml',local/'sample_chart_2.jpg'),
+          ]
+          rows=[]
+          for i,(yf,img) in enumerate(specs,1):
+              # Generation projection intentionally excludes golden_answer.
+              doc=yaml.safe_load((root/'tasks'/yf).read_text())
+              prompt=str(doc['prompt']).strip()
+              out=solve(img,prompt)
+              rows.append({
+                  'case':i,
+                  'task_id':str(doc['task_id']),
+                  'prompt_sha256':hashlib.sha256(prompt.encode()).hexdigest(),
+                  'image_sha256':hashlib.sha256(img.read_bytes()).hexdigest(),
+                  'answer':out['answer'],
+                  'route':out['route'],
+                  'answer_numeric':out['answer_numeric'],
+                  'solver_receipt':out,
+              })
+              print(json.dumps({'case':i,'answer':out['answer'],'route':out['route']},sort_keys=True))
+          p=Path('out/responses.json')
+          p.write_text(json.dumps(rows,indent=2,sort_keys=True)+'\n')
+          print('SEALED_RESPONSES_SHA256='+hashlib.sha256(p.read_bytes()).hexdigest())
+          PY
+      - name: Grade only after response seal
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib,json,re,yaml
+          from pathlib import Path
+          p=Path('out/responses.json')
+          sealed=hashlib.sha256(p.read_bytes()).hexdigest()
+          rows=json.loads(p.read_text())
+          root=Path('/tmp/chartography/task_packs/sample_charts')
+          passed=0
+          grade=[]
+          for row in rows:
+              doc=yaml.safe_load((root/'tasks'/f"sample_task_{row['case']}.yaml").read_text())
+              gold=str(doc['golden_answer'])
+              if 'acceptable range' not in gold.lower():
+                  raise SystemExit('SAMPLE_GOLD_RANGE_MISSING')
+              nums=[float(x) for x in re.findall(r'[0-9]+(?:[.][0-9]+)?',gold)]
+              if len(nums)<3:
+                  raise SystemExit('SAMPLE_GOLD_NUMBERS_MISSING:'+gold)
+              lo,hi=nums[-2],nums[-1]
+              val=float(row['answer_numeric'])
+              ok=lo<=val<=hi
+              passed+=int(ok)
+              grade.append({'case':row['case'],'answer':row['answer'],'value':val,'lo':lo,'hi':hi,'pass':ok})
+          result={
+              'schema':'PROJECT_BRAIN_CHARTOGRAPHY_ZERO_MODEL_PROFESSIONAL_SAMPLES_V1',
+              'responses_sha256':sealed,
+              'passed':passed,'total':len(rows),'pass':passed==len(rows),
+              'rows':grade,
+              'heldout_cases_consumed':0,
+              'heldout_gold_consumed':0,
+              'general_purpose_model_dependency_count':0,
+              'bounded_learned_components':['image.extract.ocr.tesseract.positioned.tsv'],
+              'incremental_spend_usd':0,
+          }
+          Path('out/result.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          raise SystemExit(0 if result['pass'] else 1)
+          PY
+      - name: Ownership subject gate
+        if: always()
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from canonical.runtime.chartography_brain_credit_subject_gate_v2 import SUBJECT_SCHEMA,admit_brain_credit_subject
+          subject={
+            'schema':SUBJECT_SCHEMA,
+            'repository':'moxnixmdj/brain',
+            'operative_solver_role':'BRAIN_OWNED_NATIVE_MECHANISM',
+            'brain_owned_operative_artifact':True,
+            'cognition_dependency_class':'MODEL_INDEPENDENT',
+            'producer_cognition_provenance_complete':True,
+            'runtime_dependency_inventory_complete':True,
+            'general_purpose_model_dependency_count':0,
+            'external_general_purpose_model_runtime_dependency_count':0,
+            'donor_general_purpose_model_runtime_dependency_count':0,
+            'online_teacher_call_count':0,
+            'teacher_fallback_path_count':0,
+            'bounded_learned_components':[{
+              'capability_id':'image.extract.ocr.tesseract.positioned.tsv',
+              'classification':'VERIFIED_BRAIN_OWNED_BOUNDED_COMPONENT',
+              'verification_path':'canonical/verification/M1A_POSITIONED_OCR_TSV_BRIDGE_PUBLIC_RUNNER_VERIFICATION_20261002_V1.json',
+              'dependency_accounting_path':'canonical/governance/TESSERACT_OCR_DEPENDENCY_ACCOUNTING_V1.json',
+              'donor_runtime_required':False,
+              'external_frontier_model_required':False,
+            }],
+            'bounded_learned_component_provenance_complete':True,
+            'acquisition_donor_used':False,
+            'qualification_after_donor_removal':True,
+            'student_or_derived_artifact_distinct_from_donor':True,
+          }
+          print(admit_brain_credit_subject(subject))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-zero-model-professional-samples-v1
+          path: |
+            out/responses.json
+            out/result.json
+          if-no-files-found: warn
