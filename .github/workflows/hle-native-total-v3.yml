@@ -1,0 +1,34 @@
+name: Verify HLE Brain-native total solver V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_NATIVE_TOTAL_SOLVER_V3_PREEXPOSURE_20261011_V1.json"
+      - "canonical/runtime/hle_native_total_solver_v3.py"
+      - "canonical/tests/test_hle_native_total_solver_v3.py"
+      - ".github/workflows/hle-native-total-v3.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/HLE_NATIVE_TOTAL_SOLVER_V3_PREEXPOSURE_20261011_V1.json)" = "33a4b586579ef8e4fae1af271a7a44f7b90b823f"
+          test "$(git hash-object canonical/runtime/hle_native_total_solver_v3.py)" = "d8184f34bdba058f6c23f6153a9f288727a7a705"
+          test "$(git hash-object canonical/tests/test_hle_native_total_solver_v3.py)" = "c106d10119ff57ed378b7ba732edc188eb649580"
+      - name: Compile frozen subject
+        run: |
+          python -m py_compile canonical/runtime/hle_native_total_solver_v3.py
+          python -m py_compile canonical/tests/test_hle_native_total_solver_v3.py
+      - name: Run frozen anti-substitution suite
+        env:
+          PYTHONPATH: .
+        run: python -m unittest -v canonical.tests.test_hle_native_total_solver_v3
