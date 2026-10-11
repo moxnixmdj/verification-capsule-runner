@@ -67,6 +67,17 @@ jobs:
           cd official
           git checkout --detach "$SURGE_COMMIT"
           test "$(git rev-parse HEAD)" = "$SURGE_COMMIT"
+      - name: Capture exact positioned OCR diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=mirror python subject/chartography_brain_native_v1/dump_public_sample_ocr.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-brain-native-public-ocr-v1
+          path: out/ocr/*.ocr.json
+          if-no-files-found: error
       - name: Run donor-free Brain solver on official public samples
         shell: bash
         run: |
