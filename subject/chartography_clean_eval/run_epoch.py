@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
 import re
 import subprocess
 import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pyarrow.parquet as pq
@@ -124,9 +127,7 @@ def fallback_final(stdout: str) -> str:
 
 def invoke_model(
     *,
-    cli: Path,
-    model: Path,
-    mmproj: Path,
+    server_url: str,
     image: Path,
     question: str,
     transcript: list[dict],
@@ -136,6 +137,7 @@ def invoke_model(
 ) -> tuple[dict, dict]:
     with Image.open(image) as im:
         w, h = im.size
+        fmt = (im.format or "PNG").upper()
     prior = []
     for x in transcript[-6:]:
         if x.get("tool") == "crop":
@@ -148,9 +150,10 @@ def invoke_model(
                 "stderr": x["stderr"],
             })
     prompt = (
-        "You are solving one professional chart-reading question. "
-        "You may inspect the CURRENT image directly. You have two tools: crop and isolated Python analysis. "
-        "Return exactly one JSON object and nothing else. "
+        "Solve one professional chart-reading question. "
+        "Inspect the chart carefully and use tools rather than eyeballing when a numerical or geometric measurement can reduce ambiguity. "
+        "You have two tools: crop and isolated Python analysis. "
+        "Return exactly one compact JSON object and nothing else. "
         "Crop: "
         '{"tool":"crop","left":INTEGER,"top":INTEGER,"right":INTEGER,"bottom":INTEGER}. '
         "Python: "
@@ -158,55 +161,67 @@ def invoke_model(
         "Python runs offline in an isolated container that can read /work/current_image.png and has "
         "Python 3, Pillow, NumPy, SciPy, Matplotlib, and OpenCV. Print only measurements you need. "
         "It cannot access the benchmark, network, credentials, model files, or any golden answers. "
+        "When a tool returns decisive measurements, follow those measurements instead of contradicting them by visual guess. "
         "Coordinates are pixel coordinates in the CURRENT image with origin at top-left, "
         f"whose size is {w}x{h}. "
         "When ready answer using "
         '{"final":"SUBSTANTIVE ANSWER"}. '
         "The final field must contain only the answer you commit to, preserving any units needed by the question. "
-        "Do not mention this tool protocol in the final answer. "
         f"Previous tool receipts: {json.dumps(prior, separators=(',', ':'))}\n"
         f"QUESTION: {question}"
     )
-    cp = subprocess.run(
-        [
-            str(cli),
-            "-m", str(model),
-            "--mmproj", str(mmproj),
-            "--no-mmproj-offload",
-            "--image", str(image),
-            "-p", prompt,
-            "-n", "384",
-            "-t", "4",
-            "--seed", str(seed + call_index),
-            "--temp", "0.2",
-        ],
-        text=True,
-        capture_output=True,
-        timeout=timeout_s,
+    mime = {"PNG": "image/png", "JPEG": "image/jpeg", "JPG": "image/jpeg", "WEBP": "image/webp"}.get(fmt, "image/png")
+    data_uri = "data:" + mime + ";base64," + base64.b64encode(image.read_bytes()).decode("ascii")
+    payload = {
+        "temperature": 0.1,
+        "seed": seed + call_index,
+        "max_tokens": 256,
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": data_uri}},
+            ],
+        }],
+    }
+    req = urllib.request.Request(
+        server_url,
+        data=json.dumps(payload, separators=(",", ":")).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
     )
-    raw = cp.stdout.strip()
+    started = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            raw_bytes = resp.read()
+        body = json.loads(raw_bytes)
+        raw = str(body["choices"][0]["message"]["content"]).strip()
+        http_status = 200
+        error_class = None
+    except Exception as exc:
+        raw_bytes = str(exc).encode()
+        raw = ""
+        http_status = getattr(exc, "code", None)
+        error_class = type(exc).__name__
     action = extract_action(raw)
     receipt = {
-        "returncode": cp.returncode,
-        "stdout_sha256": hashlib.sha256(cp.stdout.encode()).hexdigest(),
-        "stderr_sha256": hashlib.sha256(cp.stderr.encode()).hexdigest(),
+        "returncode": 0 if action is not None and error_class is None else 1,
+        "http_status": http_status,
+        "error_class": error_class,
+        "response_sha256": hashlib.sha256(raw_bytes).hexdigest(),
         "seed": seed + call_index,
         "image_sha256": sha256_file(image),
+        "wall_seconds": round(time.time() - started, 3),
     }
-    if cp.returncode != 0:
+    if error_class is not None:
         return {"kind": "error", "answer": ""}, receipt
     if action is not None:
         return action, receipt
-    # Fail open only on formatting, never on semantics: the raw last line becomes
-    # the candidate final answer and must still pass the strict lower-bound scorer.
     return {"kind": "final", "answer": fallback_final(raw)}, receipt
-
 
 def solve_one(
     *,
-    cli: Path,
-    model: Path,
-    mmproj: Path,
+    server_url: str,
     image: Path,
     question: str,
     workdir: Path,
@@ -219,9 +234,7 @@ def solve_one(
     calls: list[dict] = []
     for call_index in range(max_crops + 1):
         action, call_receipt = invoke_model(
-            cli=cli,
-            model=model,
-            mmproj=mmproj,
+            server_url=server_url,
             image=current,
             question=question,
             transcript=transcript,
@@ -294,9 +307,7 @@ def main() -> None:
     ap.add_argument("--epoch", type=int, required=True)
     ap.add_argument("--dataset-repo", required=True)
     ap.add_argument("--dataset-rev", required=True)
-    ap.add_argument("--model", required=True)
-    ap.add_argument("--mmproj", required=True)
-    ap.add_argument("--cli", required=True)
+    ap.add_argument("--server-url", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--max-crops", type=int, default=3)
     ap.add_argument("--timeout-seconds", type=int, default=300)
@@ -344,9 +355,7 @@ def main() -> None:
         base_seed = args.epoch * 1_000_003 + index * 101
         started = time.time()
         solved = solve_one(
-            cli=Path(args.cli),
-            model=Path(args.model),
-            mmproj=Path(args.mmproj),
+            server_url=args.server_url,
             image=chart,
             question=prompt,
             workdir=task_work,
