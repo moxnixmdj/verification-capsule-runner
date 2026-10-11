@@ -1,0 +1,57 @@
+name: Chartography positioned OCR public samples V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-positioned-ocr-public-samples-v1.yml"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact OCR surface
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+          tesseract --version | head -1
+          dpkg-query -W -f='${Version}\n' tesseract-ocr libtesseract5 tesseract-ocr-eng
+      - name: Bind official non-heldout Surge samples
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git /tmp/chartography
+          git -C /tmp/chartography checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          mkdir -p canonical/astra_runtime/tmp/chartography_public_samples
+          cp /tmp/chartography/task_packs/sample_charts/charts/sample_chart_1.png canonical/astra_runtime/tmp/chartography_public_samples/
+          cp /tmp/chartography/task_packs/sample_charts/charts/sample_chart_2.jpg canonical/astra_runtime/tmp/chartography_public_samples/
+      - name: Emit positioned OCR observations
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import json
+          from canonical.runtime.bound_capabilities.image_ocr_tesseract_positioned import run
+          root='.'
+          for n in (1,2):
+              ext='png' if n==1 else 'jpg'
+              p=f'canonical/astra_runtime/tmp/chartography_public_samples/sample_chart_{n}.{ext}'
+              out=run({"path":p,"language":"eng","psm_values":["6","11","3","7"]},root)
+              print("SAMPLE",n)
+              print(json.dumps({
+                  "selected_psm":out["selected_psm"],
+                  "page_width":out["page_width"],
+                  "page_height":out["page_height"],
+                  "word_count":out["word_count"],
+                  "line_count":out["line_count"],
+                  "text_items":out["text_items"],
+                  "source_sha256":out["source_sha256"],
+                  "dependency":out["dependency"],
+              },sort_keys=True))
+          PY
