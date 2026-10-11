@@ -54,3 +54,5 @@ jobs:
           assert d["automatic_capability_to_score_transfer"] is False, d
           print(json.dumps(d, indent=2, sort_keys=True))
           PY
+
+# trigger independent verification on installed workflow
