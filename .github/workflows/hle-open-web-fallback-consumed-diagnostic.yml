@@ -1,7 +1,21 @@
 name: Diagnose HLE open-web fallback consumed recall
 on:
   push:
-    branches: [diag-hle-open-web-fallback-consumed-20261011]
+    branches:
+      - diag-hle-open-web-fallback-consumed-20261011
+      - diag-hle-open-web-fallback-clean-20261011
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/hle_native_open_web_fallback_v1.py'
+      - 'canonical/runtime/hle_native_retrieval_query_planner_v1.py'
+      - 'canonical/runtime/hle_native_question_contract_v3.py'
+      - 'canonical/runtime/hle_native_question_contract_v2.py'
+      - 'canonical/runtime/hle_native_question_contract_v1.py'
+      - 'canonical/runtime/hle_native_semantic_compiler_v1.py'
+      - 'canonical/runtime/bound_capabilities/research_query_focus.py'
+      - 'canonical/tests/run_hle_open_web_fallback_consumed_diagnostic_v1.py'
+      - '.github/workflows/hle-open-web-fallback-consumed-diagnostic.yml'
   workflow_dispatch:
 permissions:
   contents: read
