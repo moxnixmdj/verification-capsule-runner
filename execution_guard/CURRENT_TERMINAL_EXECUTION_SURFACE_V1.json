@@ -1,9 +1,9 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-11",
-  "status": "RANK21_FRESH_ONE_SHOT_EFFECTIVE_AUTHORITY__PREACTIVATION__UNREAD_UNSTARTED__ZERO_EXPOSURE",
+  "status": "REVOKED__EXTERNAL_MODEL_COGNITION_PRODUCER_PATH__NO_BRAIN_CREDIT",
   "family": "TB_SCIENCE",
-  "active": true,
+  "active": false,
   "slot_id": "terminal-bench-science/ode-law-discovery::trial-0",
   "task_digest": "sha256:767d16a0a6226f391208b1b4bb126a6f957e5d0c8156342b5c9410a755142d65",
   "workflow_path": ".github/workflows/execute-tb-science-rank21-20261011-v1.yml",
@@ -59,8 +59,8 @@
   "task_read_history": false,
   "task_started": false,
   "benchmark_trials_consumed": 0,
-  "execution_authority": true,
-  "task_read_authority": true,
+  "execution_authority": false,
+  "task_read_authority": false,
   "activation_present": false,
   "incremental_spend_usd": 0,
   "terminal_credit_delta": 0,
@@ -73,5 +73,14 @@
     "scheduler_source": "brain:canonical/governance/TB_SCIENCE_RANK21_CAPABILITY_FIRST_CHECKPOINT_ADMISSION_20261011_V1.json#2753d59268d6aac32f1f880b1c959ca8fa079445",
     "decision": "ADMIT_CHECKPOINT_AUDIT_EXECUTION"
   },
-  "next": "VERIFY_EXACT_ZERO_EXPOSURE_RESEAL__MERGE_TO_TERMINAL_EXECUTION_V1__THEN_MINT_FRESH_ONE_FILE_RANK21_ACTIVATION_AUTHORITY"
+  "next": "RESEAL_ONLY_A_ZERO_MODEL_COGNITION_PRODUCER_ROUTE__OLD_QWEN_SURFACE_MUST_NEVER_REGAIN_BRAIN_CREDIT",
+  "model_cognition_prohibition": {
+    "policy": "NO_EXTERNAL_MODEL_COGNITION_IN_ANY_BRAIN_CREDITED_PRODUCER_PATH",
+    "contaminated_scope": "TB_SCIENCE_LOCAL_QWEN_CPU_CARRIERS",
+    "contaminated_model_role": "QWEN3_5_9B_REASONING_PLANNING_GENERATION",
+    "local_or_open_weight_does_not_change_classification": true,
+    "benchmark_or_capability_credit_authority": false,
+    "terminal_credit_authority": false,
+    "future_reseal_requires_zero_model_cognition_dependencies": true
+  }
 }
