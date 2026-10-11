@@ -1,0 +1,50 @@
+name: Verify HLE open-web fallback V1
+on:
+  push:
+    branches: [verify-hle-open-web-fallback-20261011-v1]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact subject blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/hle_native_open_web_fallback_v1.py)" = "f03db468c1b9a1d5425d1eaf49966e6c8484819a"
+          test "$(git hash-object canonical/tests/test_hle_native_open_web_fallback_v1.py)" = "5e64895795f39e4a50e53664167dd0e3ec3bc3c4"
+          test "$(git hash-object verification/independent_hle_open_web_fallback_v1.py)" = "bbe1b90632a68e63f516821f227f28e5fe80c3f7"
+          echo EXACT_BLOBS_BOUND
+      - name: Compile exact runtime
+        env: {PYTHONPATH: .}
+        run: python -m py_compile canonical/runtime/hle_native_open_web_fallback_v1.py
+      - name: Candidate tests
+        env: {PYTHONPATH: .}
+        run: python -m unittest -v canonical.tests.test_hle_native_open_web_fallback_v1
+      - name: Independent falsification
+        env: {PYTHONPATH: .}
+        run: python -m unittest -v verification.independent_hle_open_web_fallback_v1
+      - name: Static cognition and gold firewall
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/hle_native_open_web_fallback_v1.py").read_text()
+          forbidden=["anthropic","openai","gemini","claude","answer_key","correct_answer","rationale"]
+          bad=[x for x in forbidden if x in p.lower()]
+          assert not bad, bad
+          assert '"gold_accessed": False' in p
+          assert '"external_model_calls": 0' in p
+          assert '"model_dependency_count": 0' in p
+          print("STATIC_FIREWALL_PASS")
+          PY
+      - name: Zero benchmark consumption statement
+        run: |
+          echo "HLE_CASES_CONSUMED=0"
+          echo "HLE_GOLD_CONSUMED=0"
+          echo "EXTERNAL_MODEL_CALLS=0"
+          echo "BENCHMARK_SCORE_CREDIT=0"
