@@ -1,0 +1,58 @@
+name: Verify Finance Brain-native LLM V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/finance_agent_v2_brain_native_llm_v1.py"
+      - "canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py"
+      - ".github/workflows/finance-brain-native-llm-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v1.py)" = "792b2a5bb028140b61724aef3b69dc932d6d5b60"
+          test "$(git hash-object canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py)" = "6ff9462721b99e82c3a09f680034051dac7a2c34"
+          test "$(git hash-object canonical/runtime/finance_quantitative_dependency_v1.py)" = "57d250414b1f064dd243d1d98e8cde7c85cf6858"
+          test "$(git hash-object canonical/runtime/finance_quantitative_question_contract_v1.py)" = "24a17cf65b0db07fedef9d1a99b1662b58c0448c"
+          test "$(git hash-object canonical/runtime/finance_metric_xbrl_registry_v1.py)" = "a64271e46811c8c1a440a344045ca1f38c30a519"
+      - name: Compile exact subject
+        run: |
+          python -m py_compile canonical/runtime/finance_agent_v2_brain_native_llm_v1.py
+          python -m py_compile canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py
+      - name: Install focused test dependency
+        run: python -m pip install --disable-pip-version-check --no-input pytest==8.3.5
+      - name: Run exact Brain-native policy tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py
+      - name: Prove no runtime network or model provider imports
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          p=Path("canonical/runtime/finance_agent_v2_brain_native_llm_v1.py")
+          tree=ast.parse(p.read_text())
+          forbidden={"openai","anthropic","google","google.genai","mistral","xai","transformers","torch","requests","httpx","aiohttp"}
+          imports=set()
+          for n in ast.walk(tree):
+              if isinstance(n,ast.Import):
+                  imports.update(a.name for a in n.names)
+              elif isinstance(n,ast.ImportFrom) and n.module:
+                  imports.add(n.module)
+          bad=sorted(x for x in imports if x in forbidden or x.split(".")[0] in forbidden)
+          assert not bad,bad
+          print("ZERO_RUNTIME_PROVIDER_IMPORTS_PASS")
+          PY
