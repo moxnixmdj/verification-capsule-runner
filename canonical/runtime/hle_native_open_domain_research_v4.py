@@ -456,15 +456,24 @@ def propose(
         for cand, score, reason in _relation_candidates(q, text, kind):
             add(cand, score, reason, pid, hits)
 
-        # Search-result title is a generic candidate only when the evidence around it
-        # is strongly anchored to the question and the title itself is not supplied.
+        # Search-result titles are typed candidates. Search rank is evidence, not
+        # authority; PERSON questions may never accept non-person titles.
         anchor_count = sum(1 for t in list(q_tokens)[:20] if t in text.casefold())
-        if title and 1 <= len(title.split()) <= 8 and anchor_count >= 2:
+        if kind == "PERSON":
+            by_match = re.search(r"\\bby\\s+(" + _PERSON.pattern + r")\\s*$", title)
+            if by_match and anchor_count >= 1:
+                add(by_match.group(1), 10.0, "PERSON_FROM_BY_TITLE", pid, hits)
+        if title and 1 <= len(title.split()) <= 8 and anchor_count >= 1 and (kind != "PERSON" or _PERSON.fullmatch(title)):
             title_score = 4.5 + min(2.5, anchor_count * 0.35)
-            if kind == "PERSON" and _PERSON.fullmatch(title):
+            if kind == "PERSON":
                 title_score += 2.0
-            if "film" in q.casefold() and re.search(r"\(\d{4}\s+film\)", row["title"], re.I):
+            if "film" in q.casefold() and re.search(r"\\(\\d{4}\\s+film\\)", row["title"], re.I):
                 title_score += 3.0
+            if "cave" in q.casefold() and title.casefold().endswith(" national park"):
+                title = title[:-len(" National Park")].strip()
+                title_score += 2.0
+            if re.search(r"\\bwhich\\s+(?:sport|opera|film|movie|cave)\\b", q, re.I):
+                title_score += 1.0
             add(title, title_score, "ANCHORED_PAGE_TITLE", pid, hits)
 
     ranked = sorted(
