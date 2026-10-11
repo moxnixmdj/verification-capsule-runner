@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 HERE=Path(__file__).resolve().parent
-spec=importlib.util.spec_from_file_location("solver",HERE/"solver_v1.py")
+spec=importlib.util.spec_from_file_location("solver",HERE/"solver_v2.py")
 solver=importlib.util.module_from_spec(spec); spec.loader.exec_module(solver)
 
 COLORS=["#7b1fa2","#009688","#e53935"]
