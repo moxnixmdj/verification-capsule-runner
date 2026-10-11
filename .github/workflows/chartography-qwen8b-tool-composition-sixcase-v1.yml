@@ -1,0 +1,257 @@
+name: Chartography Qwen8B tool-composition six-case V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-qwen8b-tool-composition-sixcase-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enforce zero-cost runner envelope
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out model charts
+          test "$(nproc)" -ge 4
+          awk '/MemTotal:/ {exit !($2 >= 14*1024*1024)}' /proc/meminfo
+
+      - name: Install build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates
+
+      - name: Bind current 8B model revision and download exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          REV="$(python - <<'PY'
+          import json, urllib.request
+          with urllib.request.urlopen("https://huggingface.co/api/models/Qwen/Qwen3-VL-8B-Instruct-GGUF", timeout=30) as r:
+              print(json.load(r)["sha"])
+          PY
+          )"
+          test -n "$REV"
+          printf '%s\n' "$REV" | tee out/model_revision.txt
+          BASE="https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/$REV"
+          curl -fL --retry 5 --retry-all-errors "$BASE/Qwen3VL-8B-Instruct-Q4_K_M.gguf?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf?download=true" -o model/mmproj.gguf
+          sha256sum model/model.gguf | tee out/model_sha256.txt
+          sha256sum model/mmproj.gguf | tee out/projector_sha256.txt
+
+      - name: Build exact pinned llama.cpp mtmd CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+          test "$(git rev-parse HEAD)" = "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-mtmd-cli -j 2
+
+      - name: Generate exact six-case suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,struct,pathlib
+          W,H=256,192
+          WHITE=(255,255,255); BLACK=(0,0,0); RED=(255,0,0); GREEN=(0,180,0); BLUE=(0,80,255)
+          CYAN=(0,190,190); YELLOW=(240,190,0); PURPLE=(145,70,200); ORANGE=(240,120,20)
+          def canvas(): return [[WHITE for _ in range(W)] for __ in range(H)]
+          def rect(im,x0,y0,x1,y1,c):
+            for y in range(max(0,y0),min(H,y1)):
+              for x in range(max(0,x0),min(W,x1)): im[y][x]=c
+          def line(im,x0,y0,x1,y1,c,t=3):
+            dx=abs(x1-x0); sx=1 if x0<x1 else -1; dy=-abs(y1-y0); sy=1 if y0<y1 else -1; err=dx+dy
+            while True:
+              rect(im,x0-t//2,y0-t//2,x0+t//2+1,y0+t//2+1,c)
+              if x0==x1 and y0==y1: return
+              e2=2*err
+              if e2>=dy: err+=dy; x0+=sx
+              if e2<=dx: err+=dx; y0+=sy
+          def dot(im,x,y,c,r=5):
+            for yy in range(y-r,y+r+1):
+              for xx in range(x-r,x+r+1):
+                if (xx-x)**2+(yy-y)**2<=r*r and 0<=xx<W and 0<=yy<H: im[yy][xx]=c
+          def axes(im): line(im,28,160,232,160,BLACK,2); line(im,28,20,28,160,BLACK,2)
+          def bmp(im):
+            row=((W*3+3)//4)*4; pix=bytearray()
+            for y in range(H-1,-1,-1):
+              raw=bytearray()
+              for x in range(W):
+                r,g,b=im[y][x]; raw += bytes((b,g,r))
+              raw += bytes(row-len(raw)); pix += raw
+            size=54+len(pix)
+            return b"BM"+struct.pack("<IHHI",size,0,0,54)+struct.pack("<IIIHHIIIIII",40,W,H,1,24,0,len(pix),2835,2835,0,0)+pix
+          cases=[]
+          im=canvas(); axes(im); rect(im,55,120,90,160,RED); rect(im,110,80,145,160,GREEN); rect(im,165,40,200,160,BLUE)
+          cases.append(("BAR_ORDERING",im,"Which colored bar is tallest? Answer exactly one word: RED, GREEN, or BLUE.","BLUE","c68d78abd05fc9101fe8112d35f2af95fb29be783ac6751d3bb44d0aa1ff7144"))
+          im=canvas(); axes(im); rect(im,75,64,115,160,CYAN); rect(im,150,112,190,160,YELLOW)
+          cases.append(("BAR_RATIO",im,"The cyan and yellow bars start at the same baseline. Cyan is how many times as tall as yellow? Answer exactly 2.","2","554d3a72a1b14e267fe36233a6c0a45486823436a39911cc2287648ee2f3479c"))
+          im=canvas(); axes(im); pts=[(48,140),(85,120),(122,96),(159,70),(205,46)]
+          for a,b in zip(pts,pts[1:]): line(im,*a,*b,RED,4)
+          for p in pts: dot(im,*p,RED,4)
+          cases.append(("LINE_TREND",im,"From left to right, does the red line increase or decrease in plotted value? Answer exactly INCREASE or DECREASE.","INCREASE","0c76e5f3157425f155acdc5a02f271f9706ae8e4d154aa74782a0da939dc4c9a"))
+          im=canvas(); axes(im); line(im,48,50,210,135,RED,4); line(im,48,135,210,50,BLUE,4)
+          cases.append(("LINE_CROSSING",im,"At the right side of the chart, which line is higher in plotted value? Answer exactly RED or BLUE.","BLUE","ff92368272340426cce84c6db1d30868fe7b24c8daac7fc413800e8b27693ea1"))
+          im=canvas(); axes(im); line(im,130,25,130,160,BLACK,1)
+          for p in [(50,55),(70,80),(88,108),(105,65),(116,130)]: dot(im,*p,GREEN,6)
+          for p in [(155,75),(183,112),(214,52)]: dot(im,*p,RED,6)
+          cases.append(("SCATTER_COUNT",im,"How many green data points are left of the vertical divider? Answer exactly one digit.","5","dad9460416cd783a1205e061e471fe09fbae0007629adc03c04a1e43d634dbb2"))
+          im=canvas(); axes(im); rect(im,60,100,85,160,PURPLE); rect(im,88,75,113,160,ORANGE); rect(im,155,55,180,160,PURPLE); rect(im,183,95,208,160,ORANGE)
+          cases.append(("GROUPED_BAR_COMPARISON",im,"There are two groups of purple/orange bars. In which group is the PURPLE bar taller than the ORANGE bar? Answer exactly LEFT or RIGHT.","RIGHT","33099ac52b5b17f0b5071cf1db02fb1c27a5001c3f0546fbcb54a26aa209f57c"))
+          out=[]
+          for i,(skill,im,prompt,expected,wantsha) in enumerate(cases,1):
+            data=bmp(im); got=hashlib.sha256(data).hexdigest(); assert got==wantsha,(i,got,wantsha)
+            pathlib.Path(f"charts/case_{i}.bmp").write_bytes(data)
+            out.append({"case_id":i,"skill":skill,"prompt":prompt,"expected":expected,"sha256":got})
+          pathlib.Path("charts/manifest.json").write_text(json.dumps(out,indent=2)+"\n")
+          PY
+
+      - name: Run deterministic geometry tool plus exact Qwen subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib,subprocess,re,struct,statistics,hashlib
+
+          COLORS={
+            (255,0,0):"RED",(0,180,0):"GREEN",(0,80,255):"BLUE",
+            (0,190,190):"CYAN",(240,190,0):"YELLOW",
+            (145,70,200):"PURPLE",(240,120,20):"ORANGE"
+          }
+
+          def read_bmp(path):
+            b=path.read_bytes()
+            off=struct.unpack_from("<I",b,10)[0]
+            w,h=struct.unpack_from("<ii",b,18)
+            assert w>0 and h>0
+            row=((w*3+3)//4)*4
+            pixels={}
+            for yy in range(h):
+              src_y=h-1-yy
+              base=off+src_y*row
+              for x in range(w):
+                bb,gg,rr=b[base+3*x:base+3*x+3]
+                rgb=(rr,gg,bb)
+                if rgb in COLORS: pixels[(x,yy)]=COLORS[rgb]
+            return w,h,pixels
+
+          def components(points):
+            pts=set(points); out=[]
+            while pts:
+              seed=pts.pop(); stack=[seed]; comp=[seed]
+              while stack:
+                x,y=stack.pop()
+                for dx in (-1,0,1):
+                  for dy in (-1,0,1):
+                    if dx==0 and dy==0: continue
+                    q=(x+dx,y+dy)
+                    if q in pts:
+                      pts.remove(q); stack.append(q); comp.append(q)
+              out.append(comp)
+            return out
+
+          def med(vals): return round(float(statistics.median(vals)),2)
+
+          def tool_observation(path):
+            w,h,pixels=read_bmp(path)
+            grouped={}
+            for p,name in pixels.items(): grouped.setdefault(name,[]).append(p)
+            result={"coordinate_system":"origin_top_left_x_right_y_down","image_size":[w,h],"colors":{}}
+            for name,pts in sorted(grouped.items()):
+              cs=components(pts); rows=[]
+              for comp in sorted(cs,key=lambda c:min(x for x,y in c)):
+                xs=[x for x,y in comp]; ys=[y for x,y in comp]
+                x0,x1=min(xs),max(xs); y0,y1=min(ys),max(ys); width=x1-x0+1
+                edge=max(2,int(width*0.12))
+                ly=[y for x,y in comp if x<=x0+edge-1]
+                ry=[y for x,y in comp if x>=x1-edge+1]
+                rows.append({
+                  "bbox":[x0,y0,x1,y1],
+                  "width":width,"height":y1-y0+1,"area":len(comp),
+                  "centroid":[round(sum(xs)/len(xs),2),round(sum(ys)/len(ys),2)],
+                  "left_edge_y_median":med(ly),
+                  "right_edge_y_median":med(ry)
+                })
+              result["colors"][name]=rows
+            return result
+
+          manifest=json.loads(pathlib.Path("charts/manifest.json").read_text())
+          rows=[]
+          for row in manifest:
+            i=row["case_id"]; image=pathlib.Path(f"charts/case_{i}.bmp")
+            obs=tool_observation(image)
+            obs_json=json.dumps(obs,sort_keys=True,separators=(",",":"))
+            prompt=(
+              "A deterministic image-geometry tool analyzed the chart. "
+              "Its coordinate system has y increasing downward, so smaller y means visually higher. "
+              "Use the image and tool observation together. "
+              "Do not explain. Return only the answer token allowed by the original question.\n"
+              "TOOL_OBSERVATION_JSON="+obs_json+"\n"
+              "ORIGINAL_QUESTION="+row["prompt"]
+            )
+            cmd=["./llama.cpp/build/bin/llama-mtmd-cli","-m","model/model.gguf","--mmproj","model/mmproj.gguf",
+                 "--no-mmproj-offload","--image",str(image),"-p",prompt,"-n","48","-t","4"]
+            p=subprocess.run(cmd,text=True,capture_output=True,timeout=180)
+            raw=p.stdout.strip()
+            lines=[re.sub(r"\s+"," ",x).strip().upper() for x in raw.splitlines() if x.strip()]
+            final=lines[-1] if lines else ""
+            passed=p.returncode==0 and final==row["expected"]
+            rows.append({
+              **row,
+              "tool_observation_sha256":hashlib.sha256(obs_json.encode()).hexdigest(),
+              "tool_observation":obs,
+              "returncode":p.returncode,
+              "normalized_final":final,
+              "pass":passed
+            })
+            pathlib.Path(f"out/case_{i}.stdout.txt").write_text(p.stdout)
+            pathlib.Path(f"out/case_{i}.stderr.txt").write_text(p.stderr)
+            pathlib.Path(f"out/case_{i}.tool.json").write_text(json.dumps(obs,indent=2)+"\n")
+          result={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_QWEN8B_TOOL_COMPOSITION_SIX_CASE_RESULT_V1",
+            "subject":{
+              "model_repository":"Qwen/Qwen3-VL-8B-Instruct-GGUF",
+              "model_revision":pathlib.Path("out/model_revision.txt").read_text().strip(),
+              "model_sha256":pathlib.Path("out/model_sha256.txt").read_text().split()[0],
+              "projector_sha256":pathlib.Path("out/projector_sha256.txt").read_text().split()[0],
+              "llama_cpp_commit":"a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
+            },
+            "tool":"GENERIC_CONNECTED_COMPONENT_GEOMETRY_V1",
+            "tool_is_answer_agnostic":True,
+            "case_count":6,
+            "passed_count":sum(x["pass"] for x in rows),
+            "pass":all(x["pass"] for x in rows),
+            "rows":rows,
+            "terminal_cases_consumed":0,
+            "external_dataset_cases_consumed":0,
+            "judge_calls":0,
+            "incremental_spend_usd":0
+          }
+          pathlib.Path("out/result.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps({"pass":result["pass"],"passed_count":result["passed_count"],
+                            "finals":[[x["case_id"],x["normalized_final"],x["pass"]] for x in rows]}))
+          raise SystemExit(0 if result["pass"] else 1)
+          PY
+
+      - name: Upload tool-composition evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chartography-qwen8b-tool-composition-sixcase-v1
+          path: out/
+          if-no-files-found: error
