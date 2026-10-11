@@ -1,0 +1,71 @@
+name: Diagnose HLE Wikipedia Bing consumed misses
+on:
+  push:
+    branches: [verify-hle-wikipedia-bing-transport-v1-20261011]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'canonical/runtime/hle_wikipedia_bing_transport_v1.py'
+      - 'canonical/runtime/hle_native_retrieval_query_planner_v1.py'
+      - 'canonical/runtime/hle_native_question_contract_v3.py'
+      - 'canonical/runtime/hle_native_question_contract_v2.py'
+      - 'canonical/runtime/hle_native_question_contract_v1.py'
+      - 'canonical/runtime/hle_native_semantic_compiler_v1.py'
+      - 'canonical/runtime/root2_hle_opus55_tool_adapter_v1.py'
+      - 'canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json'
+      - 'canonical/tests/run_hle_wikipedia_bing_consumed_diagnostic_v1.py'
+      - '.github/workflows/diagnose-hle-wikipedia-bing-consumed.yml'
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain and diagnostic blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_wikipedia_bing_transport_v1.py)" = "f544eceed4cec7635f54efc4dda3aed3dd6d6f55"
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v1.py)" = "2386db287d08153ffb905f8cd89a76f4ebf19d9f"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v2.py)" = "403091eeb32e20baceed38cbcbb5cfc823871ad9"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v1.py)" = "7acc064d880f266a28855eefe518ae40ff8ae49b"
+          test "$(git hash-object canonical/runtime/hle_native_semantic_compiler_v1.py)" = "238ebf2ffe23e527fceae919cbc30453a290fdd2"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+          test "$(git hash-object canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json)" = "d2a2427b483fe1c06c6b1e6bc98d72bf07e7a730"
+          test "$(git hash-object canonical/tests/run_hle_wikipedia_bing_consumed_diagnostic_v1.py)" = "4a6a7ae70f7087c9aa340f6e7964189e7bad0355"
+      - name: Prepare already-consumed shared misses
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_wikipedia_bing_consumed_diagnostic_v1.py prepare --questions /tmp/q.json
+      - name: Seal retrieval trace before gold
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_wikipedia_bing_consumed_diagnostic_v1.py trace --questions /tmp/q.json --trace /tmp/t.json --workers 3
+      - name: Score after sealing
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_wikipedia_bing_consumed_diagnostic_v1.py score --trace /tmp/t.json --summary /tmp/s.json
+      - name: Enforce zero cognition and report
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/s.json"))
+          assert x["external_model_calls_total"]==0
+          assert x["model_dependency_count_total"]==0
+          assert x["hle_questions_consumed"]==0
+          assert x["hle_gold_consumed"]==0
+          print("WIKI_BING_CAUSAL",json.dumps({
+            "hits":x["hit_count"],
+            "rate":x["retrieval_any_hit_rate"],
+            "hit_ids":x["hit_ids"],
+            "remaining":x["remaining_miss_ids"],
+            "causal_pass":x["causal_pass"],
+            "status_counts":x["transport_status_counts"],
+            "engine_attempts":x["search_engine_attempt_counts"],
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hle-wikipedia-bing-consumed-diagnostic
+          path: /tmp/s.json
+          if-no-files-found: ignore
+          retention-days: 7
