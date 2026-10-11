@@ -99,7 +99,7 @@ jobs:
           receipts=[]
           for row in rows:
               cmd=[cli,"-m","model/model.gguf","--mmproj","model/mmproj.gguf","--no-mmproj-offload",
-                   "--image",row["chart_path"],"-p",row["prompt"],"-n","192","-t","4"]
+                   "--image",row["chart_path"],"-p",row["prompt"],"-n","768","-t","4"]
               # Golden answer is intentionally absent from cmd and prompt.
               assert row["golden_answer_for_grading_only"] not in " ".join(cmd)
               t=time.time()
@@ -138,9 +138,8 @@ jobs:
                   passed=False; chosen=None; lo=hi=None
               else:
                   lo,hi=map(float,m.groups())
-                  in_range=[x for x in nums if lo<=x<=hi]
-                  chosen=in_range[-1] if in_range else (nums[-1] if nums else None)
-                  passed=bool(in_range)
+                  chosen=nums[-1] if nums else None
+                  passed=chosen is not None and lo<=chosen<=hi
               scored.append({"task_id":row["task_id"],"golden_answer":gold,"parsed_number":chosen,
                              "range":[lo,hi] if lo is not None else None,"pass":passed})
           result={
