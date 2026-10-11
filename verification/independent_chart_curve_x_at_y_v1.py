@@ -1,4 +1,5 @@
 from __future__ import annotations
+# verifier-sync: corrected exact Brain test hash bound
 import unittest
 from canonical.runtime.bound_capabilities.chart_curve_x_at_y_query_v1 import CurveXAtYQueryError, query_curve_x_at_y
 
