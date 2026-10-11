@@ -1,0 +1,88 @@
+name: Chartography live promoted execution V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-live-promoted-execution-v1.yml"
+      - "canonical/runtime/BOUND_CAPABILITY_REGISTRY_V1.json"
+      - "canonical/runtime/astra_runtime.py"
+      - "canonical/runtime/apt_metadata_snapshot_v1.py"
+      - "canonical/runtime/verified_bound_capability_execution_adapter_v1.py"
+      - "canonical/runtime/bound_capability_execution_verifier_v1.py"
+      - "canonical/runtime/capability_execution_trace_capsule_v1.py"
+      - "canonical/runtime/capability_planner.py"
+      - "canonical/runtime/chartography_deterministic_professional_solver_v1.py"
+      - "canonical/runtime/bound_capabilities/chartography_deterministic_professional_v1.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  execute:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh apt metadata
+        run: sudo apt-get update
+      - name: Bind official nonheldout samples
+        run: |
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git /tmp/chartography
+          git -C /tmp/chartography checkout --detach 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+          mkdir -p canonical/astra_runtime/tmp/chartography_live
+          cp /tmp/chartography/task_packs/sample_charts/charts/sample_chart_1.png canonical/astra_runtime/tmp/chartography_live/
+          cp /tmp/chartography/task_packs/sample_charts/charts/sample_chart_2.jpg canonical/astra_runtime/tmp/chartography_live/
+      - name: Execute promoted capability
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          import hashlib,json,yaml
+          from pathlib import Path
+          from canonical.runtime.verified_bound_capability_execution_adapter_v1 import execute
+
+          task_root=Path('/tmp/chartography/task_packs/sample_charts')
+          rows=[]
+          for case,image_name in [(1,'sample_chart_1.png'),(2,'sample_chart_2.jpg')]:
+              doc=yaml.safe_load((task_root/'tasks'/f'sample_task_{case}.yaml').read_text())
+              prompt=str(doc['prompt']).strip()
+              result=execute(
+                  'chart.solve.professional.deterministic.v1',
+                  inputs={
+                      'image_path':f'canonical/astra_runtime/tmp/chartography_live/{image_name}',
+                      'prompt':prompt,
+                  },
+                  instance_id=f'chartography-live-sample-{case}',
+              )
+              inner=result.get('result') or {}
+              row={
+                  'case':case,
+                  'pass':result.get('pass'),
+                  'status':result.get('status'),
+                  'errors':result.get('errors'),
+                  'answer':inner.get('answer'),
+                  'answer_numeric':inner.get('answer_numeric'),
+                  'route':inner.get('route'),
+                  'registry_file_sha256':result.get('registry_file_sha256'),
+                  'registry_entry_sha256':result.get('registry_entry_sha256'),
+                  'rendered_action_sha256':result.get('rendered_action_sha256'),
+                  'result_sha256':result.get('result_sha256'),
+                  'composition_capsule_head_hash':result.get('composition_capsule_head_hash'),
+              }
+              print(json.dumps(row,sort_keys=True))
+              if result.get('pass') is not True:
+                  raise SystemExit('LIVE_PROMOTED_EXECUTION_FAILED_CASE_'+str(case))
+              rows.append(row)
+          out=Path('canonical/astra_runtime/tmp/chartography_live/promoted_results.json')
+          out.write_text(json.dumps(rows,indent=2,sort_keys=True)+'\n')
+          print('PROMOTED_RESULTS_SHA256='+hashlib.sha256(out.read_bytes()).hexdigest())
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-live-promoted-execution-v1
+          path: canonical/astra_runtime/tmp/chartography_live/promoted_results.json
+          if-no-files-found: warn
