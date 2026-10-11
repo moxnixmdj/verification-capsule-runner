@@ -64,7 +64,7 @@ jobs:
             '"image_url"',
             '"max_tokens": 1024',
             '"tools": TOOLS',
-            '"tool_choice": "required" if call_index == 0 else "auto"',
+            '"tool_choice": "required" if require_tool else "auto"',
             '"parallel_tool_calls": False',
             'def _native_tool_action',
             'def _call_native_model',
