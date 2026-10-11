@@ -34,9 +34,7 @@ def _authorize_external_information(kind,payload):
     verdict["mission_id"]=_ACTIVE_CONTINUOUS_OBS_MISSION_ID
     evidence_id=_ACTIVE_CONTINUOUS_OBS_MISSION_ID or "UNBOUND"
     p=EVID_DIR/f"{evidence_id}__INFORMATION_ADMISSION.jsonl"
-    p.parent.mkdir(parents=True,exist_ok=True)
-    with p.open("a",encoding="utf-8",newline="\n") as fh:
-        fh.write(json.dumps(verdict,sort_keys=True,separators=(",",":"))+"\n")
+    _append_admin_jsonl(p,verdict)
     if not verdict.get("pass"):
         raise Blocker(
             "CONTINUOUS_OBS_INFORMATION_BLOCKED:"
@@ -59,21 +57,194 @@ STATE_DIR=ROOT/"canonical"/"astra_runtime"/"state"
 EVID_DIR=ROOT/"canonical"/"astra_runtime"/"evidence"
 
 def utc(): return datetime.now(timezone.utc).isoformat()
-def writej(p,x):
-    p=pathlib.Path(p); p.parent.mkdir(parents=True,exist_ok=True)
+def _admin_destination_class(p):
+    p=pathlib.Path(p)
+    raw=p if p.is_absolute() else ROOT/p
+    lex=pathlib.Path(os.path.abspath(raw))
+    state_root=pathlib.Path(os.path.abspath(STATE_DIR))
+    evid_root=pathlib.Path(os.path.abspath(EVID_DIR))
+    if lex.parent==state_root and lex.suffix==".json":
+        return "ASTRA_STATE_JSON"
+    if lex.parent==evid_root and lex.suffix==".json":
+        return "ASTRA_EVIDENCE_JSON"
+    if lex.parent==evid_root and lex.suffix==".jsonl":
+        return "ASTRA_EVIDENCE_JSONL"
+    return None
+
+def _admin_expected_prestate(p):
+    p=pathlib.Path(p)
+    if p.is_symlink() or p.parent.is_symlink() or not p.exists():
+        return "ABSENT"
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+def _typed_admin_commit(p,payload,destination_class,operation):
+    p=pathlib.Path(p)
+    raw=p if p.is_absolute() else ROOT/p
+    lex=pathlib.Path(os.path.abspath(raw))
+    root_lex=pathlib.Path(os.path.abspath(ROOT))
+    try:
+        rel=lex.relative_to(root_lex).as_posix()
+    except ValueError as exc:
+        raise Blocker("TYPED_ADMIN_WRITE_PATH_OUTSIDE_ROOT") from exc
+    mod=_load_runtime_helper("root3_typed_durable_admin_write_v1")
+    plan=mod.build_plan(
+        operation=operation,
+        destination_class=destination_class,
+        path=rel,
+        payload=payload,
+        expected_pre_sha256=_admin_expected_prestate(lex),
+    )
+    return mod.commit(ROOT,plan,payload)
+
+def writej(p,x,admin_class=None):
+    p=pathlib.Path(p)
+    destination_class=_admin_destination_class(p)
+    if destination_class is not None:
+        if admin_class!=destination_class:
+            raise Blocker("TYPED_ADMIN_WRITE_EXPLICIT_CLASS_REQUIRED")
+        if destination_class not in {"ASTRA_STATE_JSON","ASTRA_EVIDENCE_JSON"}:
+            raise Blocker("TYPED_ADMIN_WRITE_REPLACE_CLASS_REQUIRED")
+        payload=(json.dumps(x,indent=2,sort_keys=True)+"\n").encode("utf-8")
+        _typed_admin_commit(p,payload,destination_class,"REPLACE")
+        return
+    if admin_class is not None:
+        raise Blocker("TYPED_ADMIN_CLASS_ON_NONADMIN_PATH")
+    p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text(json.dumps(x,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+
+def write_statej(p,x):
+    return writej(p,x,admin_class="ASTRA_STATE_JSON")
+
+def write_evidencej(p,x):
+    return writej(p,x,admin_class="ASTRA_EVIDENCE_JSON")
+
+def _append_admin_jsonl(p,x):
+    p=pathlib.Path(p)
+    if _admin_destination_class(p)!="ASTRA_EVIDENCE_JSONL":
+        raise Blocker("TYPED_ADMIN_JSONL_DESTINATION_REQUIRED")
+    payload=(json.dumps(x,sort_keys=True,separators=(",",":"))+"\n").encode("utf-8")
+    return _typed_admin_commit(p,payload,"ASTRA_EVIDENCE_JSONL","APPEND_JSONL")
 def readj(p): return json.loads(pathlib.Path(p).read_text(encoding="utf-8"))
 
-def context_results(state):
+DECLARED_CROSS_STEP_CONTEXT_MODE="DECLARED_CONTENT_BOUND_V1"
+
+def _honesty_result_gate():
+    return _load_runtime_helper("honesty_load_bearing_result_gate_v1")
+
+def _certify_step_result_if_present(result,mission_id,mission_sha256,step_index,step_id):
+    if not isinstance(result,dict):
+        raise Blocker("LOAD_BEARING_RESULT_OBJECT_REQUIRED")
+    record=result.get("honesty_record")
+    if record is None:
+        return None
+    if not isinstance(record,dict):
+        raise Blocker("LOAD_BEARING_HONESTY_RECORD_INVALID")
+    try:
+        return _honesty_result_gate().certify_result(
+            mission_id=mission_id,
+            mission_sha256=mission_sha256,
+            step_index=step_index,
+            step_id=step_id,
+            result=result,
+            honesty_record=record,
+        )
+    except Exception as exc:
+        raise Blocker("LOAD_BEARING_HONESTY_CERTIFICATION_FAILED:"+type(exc).__name__+":"+str(exc)) from exc
+
+def _validate_load_bearing_record(state,rec):
+    cert=rec.get("load_bearing_honesty_certificate")
+    if not isinstance(cert,dict):
+        raise Blocker("LOAD_BEARING_RESULT_HONESTY_CERTIFICATE_REQUIRED:"+str(rec.get("step_index")))
+    try:
+        _honesty_result_gate().validate_result_certificate(
+            certificate=cert,
+            mission_id=str(state.get("mission_id") or ""),
+            mission_sha256=str(state.get("mission_sha256") or ""),
+            step_index=rec.get("step_index"),
+            step_id=str(rec.get("step_id") or ""),
+            result=rec.get("result"),
+        )
+    except Exception as exc:
+        raise Blocker("LOAD_BEARING_RESULT_HONESTY_CERTIFICATE_INVALID:"+type(exc).__name__+":"+str(exc)) from exc
+    return rec["result"]
+
+def _context_result_map(state):
     latest={}
     for rec in state.get("history",[]):
         if rec.get("ok"):
-            latest[rec["step_index"]]=rec["result"]
+            latest[rec["step_index"]]=_validate_load_bearing_record(state,rec)
     for batch in state.get("rehydrations",[]):
         for rec in batch.get("steps",[]):
             if rec.get("ok"):
-                latest[rec["step_index"]]=rec["result"]
+                latest[rec["step_index"]]=_validate_load_bearing_record(state,rec)
+    return latest
+
+def context_results(state):
+    latest=_context_result_map(state)
     return [latest[i] for i in sorted(latest)]
+
+def _cross_step_declarations(step):
+    raw=step.get("cross_step_inputs",[])
+    if not isinstance(raw,list):
+        raise Blocker("CROSS_STEP_INPUTS_INVALID")
+    allowed={"RESULT_JSON","BODY","STDOUT"}
+    out=[]
+    seen=set()
+    for item in raw:
+        if not isinstance(item,dict) or set(item)!={"step_index","channels"}:
+            raise Blocker("CROSS_STEP_INPUT_DECLARATION_INVALID")
+        source=item.get("step_index")
+        channels=item.get("channels")
+        if not isinstance(source,int) or isinstance(source,bool) or source<0:
+            raise Blocker("CROSS_STEP_SOURCE_INDEX_INVALID")
+        if source in seen:
+            raise Blocker("CROSS_STEP_SOURCE_DUPLICATE:"+str(source))
+        if (
+            not isinstance(channels,list)
+            or not channels
+            or any(not isinstance(x,str) or x not in allowed for x in channels)
+            or len(channels)!=len(set(channels))
+        ):
+            raise Blocker("CROSS_STEP_CHANNELS_INVALID:"+str(source))
+        seen.add(source)
+        out.append({"step_index":source,"channels":list(channels)})
+    return out
+
+def _declared_context_results(state,step,current_step_index):
+    declarations=_cross_step_declarations(step)
+    latest=_context_result_map(state)
+    bindings=[]
+    for decl in declarations:
+        source=decl["step_index"]
+        if source>=current_step_index:
+            raise Blocker("CROSS_STEP_SOURCE_NOT_PRIOR:"+str(source))
+        if source not in latest:
+            raise Blocker("CROSS_STEP_SOURCE_RESULT_MISSING:"+str(source))
+        result=latest[source]
+        raw=json.dumps(
+            result,sort_keys=True,separators=(",",":"),ensure_ascii=False
+        ).encode("utf-8")
+        bindings.append({
+          "step_index":source,
+          "channels":list(decl["channels"]),
+          "result":result,
+          "result_sha256":hashlib.sha256(raw).hexdigest(),
+        })
+    return {
+      "mode":DECLARED_CROSS_STEP_CONTEXT_MODE,
+      "bindings":bindings,
+    }
+
+def _step_context_results(state,mission,current_step_index):
+    mode=mission.get("cross_step_context_mode") or DECLARED_CROSS_STEP_CONTEXT_MODE
+    if mode!=DECLARED_CROSS_STEP_CONTEXT_MODE:
+        raise Blocker("CROSS_STEP_CONTEXT_MODE_UNKNOWN:"+str(mode))
+    steps=mission.get("steps")
+    if not isinstance(steps,list) or current_step_index<0 or current_step_index>=len(steps):
+        raise Blocker("CROSS_STEP_CURRENT_STEP_INVALID")
+    return _declared_context_results(
+        state,steps[current_step_index],current_step_index
+    )
 
 def sha_file(p):
     h=hashlib.sha256()
@@ -132,29 +303,95 @@ def _resolve_bash_executable():
 def run_shell(step, prior_results=None):
     cmd=step["command"]
     env=os.environ.copy()
-    for i, result in enumerate(prior_results or []):
-        prefix=f"ASTRA_STEP_{i}_"
-        env[prefix+"RESULT_JSON"]=json.dumps(result, sort_keys=True)
-        if "body_excerpt" in result:
-            env[prefix+"BODY"]=result["body_excerpt"]
-        if "stdout" in result:
-            env[prefix+"STDOUT"]=result["stdout"]
+    cross_step_bindings=[]
+    if isinstance(prior_results,dict) and prior_results.get("mode")==DECLARED_CROSS_STEP_CONTEXT_MODE:
+        declarations=_cross_step_declarations(step)
+        raw_bindings=prior_results.get("bindings")
+        if not isinstance(raw_bindings,list):
+            raise Blocker("CROSS_STEP_BINDINGS_INVALID")
+        expected=[
+          {"step_index":x["step_index"],"channels":list(x["channels"])}
+          for x in declarations
+        ]
+        got=[
+          {
+            "step_index":x.get("step_index"),
+            "channels":list(x.get("channels") or []),
+          }
+          for x in raw_bindings if isinstance(x,dict)
+        ]
+        if len(got)!=len(raw_bindings) or got!=expected:
+            raise Blocker("CROSS_STEP_BINDING_DECLARATION_MISMATCH")
+        for binding in raw_bindings:
+            source=binding["step_index"]
+            result=binding.get("result")
+            raw=json.dumps(
+                result,sort_keys=True,separators=(",",":"),ensure_ascii=False
+            ).encode("utf-8")
+            digest=hashlib.sha256(raw).hexdigest()
+            if binding.get("result_sha256")!=digest:
+                raise Blocker("CROSS_STEP_RESULT_HASH_MISMATCH:"+str(source))
+            prefix=f"ASTRA_STEP_{source}_"
+            for channel in binding["channels"]:
+                if channel=="RESULT_JSON":
+                    env[prefix+"RESULT_JSON"]=json.dumps(result,sort_keys=True)
+                elif channel=="BODY":
+                    if not isinstance(result,dict) or "body_excerpt" not in result:
+                        raise Blocker("CROSS_STEP_BODY_UNAVAILABLE:"+str(source))
+                    env[prefix+"BODY"]=str(result["body_excerpt"])
+                elif channel=="STDOUT":
+                    if not isinstance(result,dict) or "stdout" not in result:
+                        raise Blocker("CROSS_STEP_STDOUT_UNAVAILABLE:"+str(source))
+                    env[prefix+"STDOUT"]=str(result["stdout"])
+                else:
+                    raise Blocker("CROSS_STEP_CHANNEL_UNKNOWN:"+str(channel))
+            env[prefix+"RESULT_SHA256"]=digest
+            cross_step_bindings.append({
+              "step_index":source,
+              "channels":list(binding["channels"]),
+              "result_sha256":digest,
+            })
+    elif prior_results not in (None, []):
+        raise Blocker("LEGACY_CROSS_STEP_CONTEXT_FORBIDDEN")
     t=time.monotonic()
     p=subprocess.run([_resolve_bash_executable(),"-lc",cmd],cwd=ROOT,text=True,capture_output=True,env=env)
-    return {
+    out={
       "adapter":"shell","command":cmd,"returncode":p.returncode,
       "stdout":p.stdout[-12000:],"stderr":p.stderr[-12000:],
-      "duration_s":round(time.monotonic()-t,3)
+      "duration_s":round(time.monotonic()-t,3),
     }
+    if isinstance(prior_results,dict) and prior_results.get("mode")==DECLARED_CROSS_STEP_CONTEXT_MODE:
+        out["cross_step_context_mode"]=DECLARED_CROSS_STEP_CONTEXT_MODE
+        out["cross_step_bindings"]=cross_step_bindings
+    return out
+
+def _validated_external_tool_bridge_dir(raw_dir):
+    task_id=str(os.environ.get("PROJECT_BRAIN_TASK_ID") or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{1,160}",task_id):
+        raise Blocker("EXTERNAL_TOOL_BRIDGE_TASK_ID_INVALID")
+    root=ROOT.resolve()
+    base=(root/"canonical"/"same_identity_worker"/"external_tool_bridge")
+    base_resolved=base.resolve()
+    if base_resolved!=root and root not in base_resolved.parents:
+        raise Blocker("EXTERNAL_TOOL_BRIDGE_BASE_ESCAPES_REPOSITORY")
+    bridge=pathlib.Path(str(raw_dir or "").strip())
+    if not bridge.is_absolute():
+        bridge=(root/bridge)
+    if bridge.exists() and bridge.is_symlink():
+        raise Blocker("EXTERNAL_TOOL_BRIDGE_TASK_DIR_SYMLINK_FORBIDDEN")
+    bridge_resolved=bridge.resolve()
+    expected=(base_resolved/task_id).resolve()
+    if bridge_resolved!=expected or bridge_resolved.parent!=base_resolved:
+        raise Blocker("EXTERNAL_TOOL_BRIDGE_DIR_IDENTITY_MISMATCH")
+    return bridge_resolved
+
 
 def _external_tool_bridge(kind,payload):
     _authorize_external_information(kind,payload)
     raw_dir=os.environ.get("PROJECT_BRAIN_EXTERNAL_TOOL_BRIDGE_DIR","").strip()
     if not raw_dir:
         return None
-    bridge=pathlib.Path(raw_dir)
-    if not bridge.is_absolute():
-        bridge=(ROOT/bridge).resolve()
+    bridge=_validated_external_tool_bridge_dir(raw_dir)
     bridge.mkdir(parents=True,exist_ok=True)
     request={
       "schema":"PROJECT_BRAIN_EXTERNAL_TOOL_REQUEST_V1",
@@ -217,6 +454,64 @@ class _ExternalBridgeHTTPResponse:
 
 _ORIGINAL_URLOPEN=urllib.request.urlopen
 
+def _direct_authorized_urlopen(request, timeout=20, *args, **kwargs):
+    if _ACTIVE_CONTINUOUS_OBS_CONTEXT is None or _ACTIVE_CONTINUOUS_OBS_MODULE is None or not _ACTIVE_CONTINUOUS_OBS_MISSION_ID:
+        raise Blocker("DIRECT_NETWORK_EFFECT_CONTEXT_NOT_BOUND")
+    if isinstance(request, urllib.request.Request):
+        url=request.full_url
+        method=request.get_method()
+    else:
+        url=str(request)
+        method="GET"
+    parsed=urllib.parse.urlsplit(url)
+    scheme=(parsed.scheme or "").lower()
+    host=(parsed.hostname or "").lower()
+    if scheme not in {"http","https"} or not host:
+        raise Blocker("DIRECT_NETWORK_EFFECT_URL_NOT_HTTP_S")
+    effect_id=hashlib.sha256(json.dumps({
+        "mission_id":_ACTIVE_CONTINUOUS_OBS_MISSION_ID,
+        "method":str(method),
+        "scheme":scheme,
+        "host":host,
+        "path_sha256":hashlib.sha256((parsed.path or "/").encode("utf-8")).hexdigest(),
+    },sort_keys=True,separators=(",",":")).encode("utf-8")).hexdigest()
+    evidence_path=EVID_DIR/f"{_ACTIVE_CONTINUOUS_OBS_MISSION_ID}__DIRECT_NETWORK_EFFECT.jsonl"
+    _append_admin_jsonl(evidence_path,{
+        "schema":"PROJECT_BRAIN_DIRECT_NETWORK_EFFECT_RECEIPT_V1",
+        "phase":"ATTEMPT",
+        "effect_id":effect_id,
+        "mission_id":_ACTIVE_CONTINUOUS_OBS_MISSION_ID,
+        "method":str(method),
+        "scheme":scheme,
+        "host":host,
+    })
+    try:
+        response=_ORIGINAL_URLOPEN(request, timeout=timeout, *args, **kwargs)
+    except Exception as exc:
+        _append_admin_jsonl(evidence_path,{
+            "schema":"PROJECT_BRAIN_DIRECT_NETWORK_EFFECT_RECEIPT_V1",
+            "phase":"ERROR",
+            "effect_id":effect_id,
+            "mission_id":_ACTIVE_CONTINUOUS_OBS_MISSION_ID,
+            "error_type":type(exc).__name__,
+        })
+        raise
+    try:
+        final_url=str(response.geturl())
+    except Exception:
+        final_url=url
+    final=urllib.parse.urlsplit(final_url)
+    _append_admin_jsonl(evidence_path,{
+        "schema":"PROJECT_BRAIN_DIRECT_NETWORK_EFFECT_RECEIPT_V1",
+        "phase":"OPENED",
+        "effect_id":effect_id,
+        "mission_id":_ACTIVE_CONTINUOUS_OBS_MISSION_ID,
+        "status":int(getattr(response,"status",0) or 0),
+        "final_scheme":(final.scheme or "").lower(),
+        "final_host":(final.hostname or "").lower(),
+    })
+    return response
+
 def _bridge_aware_urlopen(request, timeout=20, *args, **kwargs):
     if isinstance(request, urllib.request.Request):
         url=request.full_url
@@ -234,7 +529,7 @@ def _bridge_aware_urlopen(request, timeout=20, *args, **kwargs):
       'data_b64':base64.b64encode(data).decode('ascii') if data is not None else None,
     })
     if bridged is None:
-        return _ORIGINAL_URLOPEN(request, timeout=timeout, *args, **kwargs)
+        return _direct_authorized_urlopen(request, timeout=timeout, *args, **kwargs)
     for key in ('status','final_url','body_b64'):
         if key not in bridged:
             raise Blocker('EXTERNAL_URLOPEN_RESPONSE_INCOMPLETE:'+key)
@@ -305,6 +600,16 @@ def _safe_repo_path(raw):
     p=(ROOT/value).resolve()
     if p != ROOT.resolve() and ROOT.resolve() not in p.parents:
         raise Blocker("PATH_OUTSIDE_REPOSITORY")
+    return p
+
+def _safe_repo_mutation_path(raw):
+    p=_safe_repo_path(raw)
+    tmp_root=(ROOT/"canonical"/"astra_runtime"/"tmp").resolve()
+    if p==tmp_root or tmp_root not in p.parents:
+        raise Blocker("RUNTIME_MUTATION_OUTSIDE_EPHEMERAL_TMP")
+    for reserved in (STATE_DIR.resolve(),EVID_DIR.resolve()):
+        if p==reserved or reserved in p.parents:
+            raise Blocker("ADMIN_RUNTIME_PATH_RESERVED_FOR_TYPED_DRIVER")
     return p
 
 def _load_bound_capability_registry():
@@ -714,6 +1019,11 @@ def _ensure_apt_dependencies(source):
     requested=[]
     expected={}
     evidence=[]
+    try:
+        from canonical.runtime.apt_metadata_snapshot_v1 import package_records, installed_version
+        apt_records=package_records()
+    except Exception as exc:
+        raise Blocker("BOUND_APT_METADATA_SNAPSHOT_FAILED:"+type(exc).__name__+":"+str(exc)) from exc
     for pkg in packages:
         if not isinstance(pkg,dict):
             raise Blocker("BOUND_APT_PACKAGE_INVALID")
@@ -722,15 +1032,16 @@ def _ensure_apt_dependencies(source):
         sha=str(pkg.get("sha256") or "").strip().lower()
         if not name or not version or len(sha)!=64:
             raise Blocker("BOUND_APT_PACKAGE_METADATA_INCOMPLETE")
-        show=subprocess.run(["apt-cache","show",f"{name}={version}"],text=True,capture_output=True,timeout=30)
-        if show.returncode!=0:
+        hashes={
+            str(rec.get("SHA256") or "").strip().lower()
+            for rec in apt_records
+            if str(rec.get("Package") or "").strip()==name
+            and str(rec.get("Version") or "").strip()==version
+            and str(rec.get("SHA256") or "").strip()
+        }
+        if not hashes:
             raise Blocker("BOUND_APT_METADATA_NOT_FOUND:"+name)
-        found=None
-        for line in show.stdout.splitlines():
-            if line.startswith("SHA256:"):
-                found=line.split(":",1)[1].strip().lower()
-                break
-        if found!=sha:
+        if hashes!={sha}:
             raise Blocker("BOUND_APT_PACKAGE_HASH_MISMATCH:"+name)
         requested.append(f"{name}={version}")
         expected[name]=version
@@ -744,9 +1055,9 @@ def _ensure_apt_dependencies(source):
     if proc.returncode!=0:
         raise Blocker("BOUND_APT_INSTALL_FAILED:"+proc.stderr[-1600:])
     for name,version in expected.items():
-        q=subprocess.run(["dpkg-query","-W","-f=$"+"{Version}",name],text=True,capture_output=True,timeout=30)
-        if q.returncode!=0 or q.stdout.strip()!=version:
-            raise Blocker("BOUND_APT_INSTALLED_VERSION_MISMATCH:"+name+":"+q.stdout.strip())
+        observed=installed_version(name)
+        if observed!=version:
+            raise Blocker("BOUND_APT_INSTALLED_VERSION_MISMATCH:"+name+":"+str(observed or ""))
     return {"status":"INSTALLED_VERIFIED","origin":source.get("origin"),"packages":evidence}
 
 def _invoke_bound_capability(args):
@@ -929,7 +1240,14 @@ def _goal_action(action):
                 if len(hits)>=80: break
         return {"type":typ,"query":q,"hits":hits,"truncated":len(hits)>=80}
     if typ=="write_json_records":
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
+        tmp_root=(ROOT/"canonical"/"astra_runtime"/"tmp").resolve()
+        if (
+            output==tmp_root
+            or tmp_root not in output.parents
+            or output.suffix.lower()!=".json"
+        ):
+            raise Blocker("JSON_RECORD_OUTPUT_PATH_NOT_EPHEMERAL_JSON")
         fields=args.get("fields")
         records=args.get("records")
         if (
@@ -1226,8 +1544,8 @@ def _goal_action(action):
         }
     if typ=="invoke_capability_until":
         template=args.get("action")
-        attempts_dir=_safe_repo_path(args.get("attempts_dir",""))
-        result_path=_safe_repo_path(args.get("result_path",""))
+        attempts_dir=_safe_repo_mutation_path(args.get("attempts_dir",""))
+        result_path=_safe_repo_mutation_path(args.get("result_path",""))
         max_attempts=int(args.get("max_attempts") or 0)
         value_key=str(args.get("value_key") or "")
         match_chars=set(str(args.get("match_chars") or "").lower())
@@ -1366,7 +1684,7 @@ def _goal_action(action):
         fallback=args.get("fallback_action")
         primary_condition=args.get("primary_postcondition")
         fallback_condition=args.get("fallback_postcondition")
-        decision_path=_safe_repo_path(args.get("decision_path",""))
+        decision_path=_safe_repo_mutation_path(args.get("decision_path",""))
         if (
             not isinstance(primary,dict) or primary.get("type")!="invoke_capability"
             or not isinstance(fallback,dict) or fallback.get("type")!="invoke_capability"
@@ -1497,7 +1815,7 @@ def _goal_action(action):
 
     if typ=="invoke_capability_fanout":
         source=_safe_repo_path(args.get("source_path",""))
-        manifest_path=_safe_repo_path(args.get("manifest_path",""))
+        manifest_path=_safe_repo_mutation_path(args.get("manifest_path",""))
         if not source.is_file():
             return {"type":typ,"output_verified":False,"error":"FANOUT_SOURCE_MISSING"}
         wrapper=json.loads(source.read_text(encoding="utf-8"))
@@ -1542,7 +1860,7 @@ def _goal_action(action):
             if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*",expected_field):
                 return {"type":typ,"output_verified":False,"error":"FANOUT_ITEM_FALLBACK_EXPECTED_FIELD_INVALID"}
 
-            output_dir=_safe_repo_path(output_dir_raw)
+            output_dir=_safe_repo_mutation_path(output_dir_raw)
             attempt_dir=output_dir/".primary_attempts"
             output_dir.mkdir(parents=True,exist_ok=True)
             attempt_dir.mkdir(parents=True,exist_ok=True)
@@ -1596,7 +1914,7 @@ def _goal_action(action):
                 if primary_valid:
                     primary_valid_count+=1
                     src=_safe_repo_path(primary_out)
-                    dst=_safe_repo_path(final_out)
+                    dst=_safe_repo_mutation_path(final_out)
                     if dst.exists():
                         dst.unlink()
                     src.replace(dst)
@@ -1605,7 +1923,7 @@ def _goal_action(action):
                 else:
                     fallback_count+=1
                     try:
-                        dst=_safe_repo_path(final_out)
+                        dst=_safe_repo_mutation_path(final_out)
                         if dst.exists():
                             dst.unlink()
                         invoke_nested(fallback,item,item_id,final_out)
@@ -1684,7 +2002,7 @@ def _goal_action(action):
                         or not isinstance(template.get("args"),dict)
                     ):
                         return {"type":typ,"output_verified":False,"error":"FANOUT_ITEM_ACTION_SPEC_INVALID","id":item_id}
-                    output_dir=_safe_repo_path(output_dir_raw)
+                    output_dir=_safe_repo_mutation_path(output_dir_raw)
                     output_dir.mkdir(parents=True,exist_ok=True)
                     out=str((output_dir/(item_id+extension)).relative_to(ROOT))
                     def subst(v):
@@ -1725,7 +2043,7 @@ def _goal_action(action):
             }
 
         # Legacy conditional mode remains supported for already-verified plans.
-        output_dir=_safe_repo_path(args.get("output_dir",""))
+        output_dir=_safe_repo_mutation_path(args.get("output_dir",""))
         value_field=str(args.get("value_field") or "")
         threshold=int(args.get("max_length") or 0)
         output_dir.mkdir(parents=True,exist_ok=True)
@@ -2034,7 +2352,7 @@ def _goal_action(action):
     if typ=="derive_grouped_records":
         dimension_path=_safe_repo_path(args.get("dimension_path",""))
         fact_path=_safe_repo_path(args.get("fact_path",""))
-        output_path=_safe_repo_path(args.get("output_path",""))
+        output_path=_safe_repo_mutation_path(args.get("output_path",""))
         dimension_key=str(args.get("dimension_key") or "")
         fact_key=str(args.get("fact_key") or "")
         output_id_field=str(args.get("output_id_field") or "")
@@ -2319,7 +2637,7 @@ def _goal_action(action):
 
     if typ=="select_ranked_record":
         source_path=_safe_repo_path(args.get("source_path",""))
-        output_path=_safe_repo_path(args.get("output_path",""))
+        output_path=_safe_repo_mutation_path(args.get("output_path",""))
         order_by=list(args.get("order_by") or [])
         output_fields=list(args.get("output_fields") or [])
         try:
@@ -2433,7 +2751,7 @@ def _goal_action(action):
     if typ=="aggregate_runtime_json_arrays":
         dimension_path=_safe_repo_path(args.get("dimension_path",""))
         fact_path=_safe_repo_path(args.get("fact_path",""))
-        output_path=_safe_repo_path(args.get("output_path",""))
+        output_path=_safe_repo_mutation_path(args.get("output_path",""))
         dimension_key=str(args.get("dimension_key") or "")
         fact_key=str(args.get("fact_key") or "")
         output_id_field=str(args.get("output_id_field") or "")
@@ -2576,7 +2894,7 @@ def _goal_action(action):
     if typ=="join_runtime_json_arrays":
         left_path=_safe_repo_path(args.get("left_path",""))
         right_path=_safe_repo_path(args.get("right_path",""))
-        output_path=_safe_repo_path(args.get("output_path",""))
+        output_path=_safe_repo_mutation_path(args.get("output_path",""))
         left_key=str(args.get("left_key") or "")
         right_key=str(args.get("right_key") or "")
         left_entity=str(args.get("left_entity") or "left")
@@ -2752,7 +3070,7 @@ def _goal_action(action):
 
     if typ=="project_browser_result_json":
         source=_safe_repo_path(args.get("source_path",""))
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
         if not source.is_file():
             return {"type":typ,"error":"SOURCE_JSON_NOT_FOUND","path":str(args.get("source_path",""))}
         try:
@@ -2876,7 +3194,7 @@ def _goal_action(action):
 
     if typ=="extract_labeled_fields_from_rendered_source":
         source_path=_safe_repo_path(args.get("browser_result_path",""))
-        output_path=_safe_repo_path(args.get("output_path",""))
+        output_path=_safe_repo_mutation_path(args.get("output_path",""))
         specs=args.get("fields") or []
         if not source_path.is_file():
             return {"type":typ,"verified":False,"error":"SEMANTIC_EXTRACTION_SOURCE_MISSING"}
@@ -3000,7 +3318,7 @@ def _goal_action(action):
 
     if typ=="resolve_authority_identity":
         entity_name=str(args.get("entity_name") or "").strip()
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
         if not entity_name:
             return {"type":typ,"verified":False,"error":"AUTHORITY_ENTITY_NAME_REQUIRED"}
         search_url="https://www.wikidata.org/w/api.php?"+urllib.parse.urlencode({
@@ -3152,7 +3470,7 @@ def _goal_action(action):
 
     if typ=="discover_authoritative_web_source":
         query=str(args.get("query") or "").strip()
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
         authority_domains=args.get("authority_domains") or []
         if not query:
             return {"type":typ,"verified":False,"error":"SOURCE_DISCOVERY_QUERY_REQUIRED"}
@@ -3600,7 +3918,7 @@ def _goal_action(action):
 
     if typ=="fetch_json_knowledge":
         url=str(args.get("url") or "").strip()
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
         path_spec=args.get("json_path") or []
         if not url.startswith(("https://","http://")):
             return {"type":typ,"verified":False,"error":"KNOWLEDGE_URL_INVALID"}
@@ -3653,7 +3971,7 @@ def _goal_action(action):
 
     if typ=="assess_knowledge_consistency":
         evidence_paths=args.get("evidence_paths") or []
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
         max_age_s=args.get("max_age_s")
         if (
             not isinstance(evidence_paths,list) or not evidence_paths
@@ -3763,7 +4081,7 @@ def _goal_action(action):
 
     if typ=="materialize_supported_knowledge":
         assessment_path=_safe_repo_path(args.get("assessment_path",""))
-        output=_safe_repo_path(args.get("output_path",""))
+        output=_safe_repo_mutation_path(args.get("output_path",""))
         field_name=str(args.get("field_name") or "value").strip()
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*",field_name):
             return {"type":typ,"output_verified":False,"error":"KNOWLEDGE_MATERIALIZE_FIELD_INVALID"}
@@ -3952,7 +4270,7 @@ def _goal_action(action):
         producer_capability_id=str(args.get("producer_capability_id") or "").strip()
         if not all((fmt,json_path,binary_path,producer_project,producer_capability_id)):
             return {"type":typ,"verified":False,"error":"INDEPENDENT_CODEC_VERIFIER_ARGS_INCOMPLETE"}
-        import independent_pypi_codec_verifier
+        from canonical.runtime import independent_pypi_codec_verifier
         evidence=independent_pypi_codec_verifier.verify(
             fmt,json_path,binary_path,producer_project,ROOT
         )
@@ -3981,7 +4299,7 @@ def _goal_action(action):
         producer_capability_id=str(args.get("producer_capability_id") or "").strip()
         if not all((fmt,json_path,binary_path,producer_project,producer_capability_id)):
             return {"type":typ,"verified":False,"error":"INDEPENDENT_NPM_CODEC_VERIFIER_ARGS_INCOMPLETE"}
-        import independent_npm_codec_verifier
+        from canonical.runtime import independent_npm_codec_verifier
         evidence=independent_npm_codec_verifier.verify(
             fmt,json_path,binary_path,producer_project,ROOT
         )
@@ -4000,6 +4318,26 @@ def _goal_action(action):
           "verifier_integrity":evidence.get("verifier_integrity"),
           "attempt_count":evidence.get("attempt_count"),
         }
+    if typ=="invoke_verified_bound_capability_adapter":
+        from canonical.runtime import verified_bound_capability_execution_adapter_v1 as promoted_bound
+        capability_id=str(args.get("capability_id") or "")
+        inputs=args.get("inputs")
+        if not capability_id or not isinstance(inputs,dict):
+            return {
+              "type":typ,"pass":False,
+              "errors":["PROMOTED_BOUND_CONTROLLER_ARGS_INVALID"],
+            }
+        return promoted_bound.execute(
+            capability_id,
+            inputs=inputs,
+            instance_id=args.get("instance_id"),
+            requires=args.get("requires"),
+            provides=args.get("provides"),
+            result_fields=args.get("result_fields"),
+            expected_registry_file_sha256=args.get("expected_registry_file_sha256"),
+            expected_registry_entry_sha256=args.get("expected_registry_entry_sha256"),
+            expected_rendered_action_sha256=args.get("expected_rendered_action_sha256"),
+        )
     if typ=="invoke_capability":
         return _invoke_bound_capability(args)
     if typ=="assert_text_contains_json_keys":
@@ -4178,6 +4516,25 @@ def _controller_checkpoint_record_valid(record):
         if isinstance(raw,str) and raw:
             checks.append((raw,result.get("sha256")))
 
+    if typ=="invoke_verified_bound_capability_adapter":
+        if (
+            result.get("pass") is not True
+            or not isinstance(result.get("composition_capsule_head_hash"),str)
+            or not result.get("composition_capsule_head_hash")
+        ):
+            return False
+        inner=result.get("result")
+        if not isinstance(inner,dict):
+            return False
+        for path_key,hash_key in (
+            ("output_path","output_sha256"),
+            ("screenshot_path","screenshot_sha256"),
+            ("xlsx_path","xlsx_sha256"),
+        ):
+            raw=inner.get(path_key)
+            if isinstance(raw,str) and raw:
+                checks.append((raw,inner.get(hash_key)))
+
     for raw,expected_hash in checks:
         try:
             p=_safe_repo_path(raw)
@@ -4242,7 +4599,7 @@ def _load_controller_checkpoint(step,mission,actions):
     data["resume_count"]=int(data.get("resume_count") or 0)+1
     data["next_action_index"]=len(data.get("completed_actions") or [])
     data["updated_at_utc"]=utc()
-    writej(path,data)
+    write_statej(path,data)
     return path,data,True
 
 
@@ -4252,7 +4609,7 @@ def _write_controller_checkpoint(path,data,trace,status="IN_PROGRESS"):
     data["next_action_index"]=len(trace)
     data["status"]=status
     data["updated_at_utc"]=utc()
-    writej(path,data)
+    write_statej(path,data)
     return data
 
 
@@ -4261,21 +4618,94 @@ def _run_model_independent_goal(step, mission, goal):
     if actions is None:
         return None
     allowed_types={
-      "read_file","list_tree","search_text","http_get","extract_labeled_fields_from_rendered_source","assert_labeled_fields_against_fresh_source","resolve_authority_identity","assert_authority_identity","discover_authoritative_web_source","assert_authoritative_source_discovery","fetch_json_knowledge","assess_knowledge_consistency","materialize_supported_knowledge","assert_knowledge_status","assert_json_knowledge","write_json_records","invoke_capability","invoke_capability_by_runtime_value","invoke_capability_fanout","invoke_capability_fallback","invoke_capability_until","verify_with_independent_pypi_codec","verify_with_independent_npm_codec",
+      "read_file","list_tree","search_text","http_get","extract_labeled_fields_from_rendered_source","assert_labeled_fields_against_fresh_source","resolve_authority_identity","assert_authority_identity","discover_authoritative_web_source","assert_authoritative_source_discovery","fetch_json_knowledge","assess_knowledge_consistency","materialize_supported_knowledge","assert_knowledge_status","assert_json_knowledge","write_json_records","invoke_verified_bound_capability_adapter","invoke_capability","invoke_capability_by_runtime_value","invoke_capability_fanout","invoke_capability_fallback","invoke_capability_until","verify_with_independent_pypi_codec","verify_with_independent_npm_codec",
       "project_browser_result_json","join_runtime_json_arrays","assert_runtime_json_join","aggregate_runtime_json_arrays","assert_runtime_json_aggregate","derive_grouped_records","assert_grouped_derived_records","select_ranked_record","assert_ranked_record","assert_hex_prefix_bucket","assert_collection_length_bucket","assert_runtime_selected_code_decodes",
       "assert_text_contains_json_keys","assert_file_exists","assert_json_fields_equal","assert_runtime_fanout_decodes","assert_runtime_fanout_artifacts_decode","assert_runtime_per_item_fallback_decodes","assert_runtime_fallback_decision","assert_runtime_bounded_loop_trace",
       "assert_workflow_audit_supported_by_source","assert_python_source_audit_supported_by_source",
       "assert_python_test_audit_zero","assert_python_test_audit_supported_by_fresh_execution",
       "finish"
     }
+
+    composition_guard=None
+    composition_contract=None
+    composition_initial_facts=None
+    composition_capsule=None
+    if step.get("_composition_capsule_enforced") is True:
+        composition_guard=_load_composition_state_capsule_guard()
+        composition_contract=step.get("_composition_contract")
+        composition_initial_facts=step.get("_composition_initial_facts")
+        try:
+            composition_guard.validate_plan(
+                actions,composition_contract,composition_initial_facts
+            )
+        except Exception as exc:
+            raise Blocker(
+                "COMPOSITION_STATE_CONTRACT_INVALID:"
+                +type(exc).__name__+":"+str(exc)
+            ) from exc
+
     checkpoint_path,checkpoint,resumed=_load_controller_checkpoint(step,mission,actions)
     trace=list(checkpoint.get("completed_actions") or [])
     start_cycle=len(trace)
+
+    if composition_guard is not None:
+        try:
+            rebuilt=composition_guard.rebuild_valid_prefix(
+                actions,composition_contract,composition_initial_facts,trace
+            )
+            composition_capsule=rebuilt["capsule"]
+            valid_count=int(rebuilt.get("valid_count") or 0)
+            if valid_count < min(len(trace),len(composition_contract)):
+                rewound_from=len(trace)
+                trace=trace[:valid_count]
+                start_cycle=len(trace)
+                checkpoint["rewind_count"]=int(checkpoint.get("rewind_count") or 0)+1
+                checkpoint["last_rewound_from_action_index"]=rewound_from
+                checkpoint["composition_rewind_reason"]=str(
+                    rebuilt.get("reason") or "COMPOSITION_PREFIX_INVALID"
+                )
+                checkpoint=_write_controller_checkpoint(
+                    checkpoint_path,checkpoint,trace
+                )
+        except Exception as exc:
+            raise Blocker(
+                "COMPOSITION_STATE_REBUILD_FAILED:"
+                +type(exc).__name__+":"+str(exc)
+            ) from exc
+
     for cycle in range(start_cycle,len(actions)):
         raw_action=actions[cycle]
         if not isinstance(raw_action,dict):
             raise Blocker("MODEL_INDEPENDENT_CONTROLLER_ACTION_NOT_OBJECT")
-        action=_resolve_result_refs(dict(raw_action),trace)
+
+        composition_row=None
+        if composition_guard is not None:
+            if cycle < len(composition_contract):
+                composition_row=composition_contract[cycle]
+                try:
+                    composition_guard.assert_action_ready(
+                        composition_capsule,composition_row
+                    )
+                except Exception as exc:
+                    raise Blocker(
+                        "COMPOSITION_STATE_REQUIRED_EFFECT_UNAVAILABLE:"
+                        +type(exc).__name__+":"+str(exc)
+                    ) from exc
+            elif cycle!=len(composition_contract) or raw_action.get("type")!="finish":
+                raise Blocker("COMPOSITION_STATE_UNDECLARED_ACTION_BYPASS:"+str(cycle))
+
+        if composition_guard is not None and composition_row is not None:
+            try:
+                action=composition_guard.resolve_action_from_capsule(
+                    composition_capsule,composition_row,dict(raw_action)
+                )
+            except Exception as exc:
+                raise Blocker(
+                    "COMPOSITION_STATE_READ_FAILED:"
+                    +type(exc).__name__+":"+str(exc)
+                ) from exc
+        else:
+            action=_resolve_result_refs(dict(raw_action),trace)
         typ=action.get("type")
         if typ not in allowed_types:
             raise Blocker("MODEL_INDEPENDENT_CONTROLLER_ACTION_REJECTED:"+str(typ))
@@ -4286,7 +4716,34 @@ def _run_model_independent_goal(step, mission, goal):
         if isinstance(result,dict) and result.get("error"):
             raise Blocker("MODEL_INDEPENDENT_ACTION_ERROR:"+str(result.get("error")))
         _verify_action_expectation(action,result)
-        trace.append({"cycle":cycle,"plan":action,"result":result})
+
+        composition_head=None
+        if composition_guard is not None and composition_row is not None:
+            try:
+                composition_capsule=composition_guard.append_action_result(
+                    composition_capsule,composition_row,action,result
+                )
+                composition_verdict=composition_guard.verify_capsule(
+                    composition_capsule
+                )
+                if composition_verdict.get("status")!="PASS":
+                    raise Blocker(
+                        "COMPOSITION_STATE_CAPSULE_POST_ACTION_INVALID:"
+                        +str(composition_verdict.get("reason"))
+                    )
+                composition_head=composition_capsule.get("head_hash")
+            except Blocker:
+                raise
+            except Exception as exc:
+                raise Blocker(
+                    "COMPOSITION_STATE_COMMIT_FAILED:"
+                    +type(exc).__name__+":"+str(exc)
+                ) from exc
+
+        record={"cycle":cycle,"plan":action,"result":result}
+        if composition_head is not None:
+            record["composition_capsule_head_hash"]=composition_head
+        trace.append(record)
         checkpoint=_write_controller_checkpoint(checkpoint_path,checkpoint,trace)
         interrupt_after=step.get("interrupt_after_controller_actions_once")
         if interrupt_after is not None:
@@ -4302,7 +4759,36 @@ def _run_model_independent_goal(step, mission, goal):
             if not summary.strip():
                 raise Blocker("MODEL_INDEPENDENT_CONTROLLER_EMPTY_FINISH")
             checkpoint=_write_controller_checkpoint(checkpoint_path,checkpoint,trace,status="COMPLETE")
-            return {
+
+            composition_summary=None
+            if composition_guard is not None:
+                verdict=composition_guard.verify_capsule(composition_capsule)
+                if verdict.get("status")!="PASS":
+                    raise Blocker(
+                        "COMPOSITION_STATE_CAPSULE_TERMINAL_INVALID:"
+                        +str(verdict.get("reason"))
+                    )
+                capsule_path=EVID_DIR/(
+                    checkpoint_path.stem+"__COMPOSITION_STATE_CAPSULE.json"
+                )
+                write_evidencej(capsule_path,composition_capsule)
+                composition_summary={
+                  "schema":"PROJECT_BRAIN_COMPOSITION_STATE_CAPSULE_RUNTIME_BINDING_V2",
+                  "status":"PASS",
+                  "scope":"DETERMINISTIC_CAPABILITY_GRAPH_DECLARED_CROSS_CAPABILITY_STATE",
+                  "declared_cross_capability_state_no_bypass":True,
+                  "state_reads_are_capsule_sourced":True,
+                  "producer_action_and_execution_evidence_are_content_bound":True,
+                  "resume_prefix_is_capsule_head_checked":True,
+                  "semantic_declaration_completeness":"UNVERIFIED",
+                  "external_evidence_channel_completeness":"UNVERIFIED",
+                  "head_hash":composition_capsule.get("head_hash"),
+                  "record_count":verdict.get("record_count"),
+                  "latest_key_count":verdict.get("latest_key_count"),
+                  "evidence_path":str(capsule_path.relative_to(ROOT)).replace("\\","/"),
+                  "acceptance_credit_delta":0,
+                }
+            output={
               "adapter":"goal","returncode":0,
               "stdout":summary,
               "controller_mode":"MODEL_INDEPENDENT_ACTION_PLAN",
@@ -4321,6 +4807,9 @@ def _run_model_independent_goal(step, mission, goal):
                 "last_rewound_from_action_index":checkpoint.get("last_rewound_from_action_index"),
               }
             }
+            if composition_summary is not None:
+                output["composition_state_capsule"]=composition_summary
+            return output
     raise Blocker("MODEL_INDEPENDENT_CONTROLLER_PLAN_WITHOUT_FINISH")
 
 def _capability_problem(step, mission):
@@ -4852,6 +5341,18 @@ def _load_capability_planner():
     spec.loader.exec_module(module)
     return module
 
+def _load_composition_state_capsule_guard():
+    path=pathlib.Path(__file__).resolve().with_name("composition_state_capsule_guard_v2.py")
+    spec=importlib.util.spec_from_file_location(
+        "project_brain_composition_state_capsule_guard_v2",path
+    )
+    if spec is None or spec.loader is None:
+        raise Blocker("COMPOSITION_STATE_CAPSULE_GUARD_LOAD_FAILED")
+    module=importlib.util.module_from_spec(spec)
+    sys.modules[spec.name]=module
+    spec.loader.exec_module(module)
+    return module
+
 def _external_package_name_searcher(effect,ecosystem,tokens,limit,timeout_s):
     bridged=_external_tool_bridge("package_name_search",{
       "effect":str(effect),"ecosystem":str(ecosystem),
@@ -4953,7 +5454,7 @@ def _run_open_research_source_frontend(mission, goal, decomposition):
         ) from exc
     mid=str(mission.get("mission_id") or "UNKNOWN")
     path=EVID_DIR/f"{mid}__OPEN_RESEARCH_SOURCE_FRONTEND.json"
-    writej(path,result)
+    write_evidencej(path,result)
     return path,result
 
 
@@ -4977,7 +5478,7 @@ def _ground_plain_goal_to_bound_capabilities(mission, goal):
         ) from exc
     mid=str(mission.get("mission_id") or "UNKNOWN")
     path=EVID_DIR/f"{mid}__BOUND_CAPABILITY_GROUNDING.json"
-    writej(path,result)
+    write_evidencej(path,result)
     return path,result
 
 
@@ -5026,7 +5527,7 @@ def _compose_grounding_to_capability_problem(
         raise Blocker("GROUNDED_EXECUTABLE_COMPOSITION_VERIFY_FAILED:"+str(reason))
     mid=str(mission.get("mission_id") or "UNKNOWN")
     path=EVID_DIR/f"{mid}__GROUNDED_EXECUTABLE_COMPOSITION.json"
-    writej(path,composition)
+    write_evidencej(path,composition)
     return path,composition
 
 def _load_auto_capability_acquisition():
@@ -5094,7 +5595,7 @@ def _discover_unreachable_effects(mission, error):
     }
     mid=str(mission.get("mission_id") or "UNKNOWN")
     path=EVID_DIR/f"{mid}__CAPABILITY_ACQUISITION_GAP.json"
-    writej(path,evidence)
+    write_evidencej(path,evidence)
     return path,evidence
 
 def _render_bound_template(value, inputs):
@@ -5304,6 +5805,9 @@ def _run_capability_planned_goal(step, mission, goal):
     derived.pop("capability_problem",None)
     derived.pop("capability_problem_ref",None)
     derived["controller_actions"]=planned["actions"]
+    derived["_composition_capsule_enforced"]=True
+    derived["_composition_contract"]=planned["composition_contract"]
+    derived["_composition_initial_facts"]=planned["planning"].get("initial_facts",[])
     derived["max_controller_actions"]=max(
         int(step.get("max_controller_actions",16)),
         len(planned["actions"])
@@ -5313,7 +5817,70 @@ def _run_capability_planned_goal(step, mission, goal):
         raise Blocker("CAPABILITY_PLAN_EXECUTION_MISSING")
     result["planning_mode"]="DETERMINISTIC_CAPABILITY_GRAPH"
     result["capability_plan"]=planned["planning"]
+    result["composition_contract"]=planned["composition_contract"]
     result["inherited_bound_capabilities"]=problem.get("_inherited_bound_capabilities",[])
+
+    # Bind successful capability-plan execution to the honesty envelope using
+    # the actual content-addressed composition-state capsule produced by this run.
+    # This certifies only execution of this bounded plan, never project-terminal
+    # success or semantic adequacy beyond the declared capability contract.
+    composition_summary=result.get("composition_state_capsule")
+    head_hash=(
+        composition_summary.get("head_hash")
+        if isinstance(composition_summary,dict)
+        else None
+    )
+    if (
+        not isinstance(head_hash,str)
+        or re.fullmatch(r"[0-9a-f]{64}",head_hash.lower()) is None
+    ):
+        raise Blocker("CAPABILITY_PLAN_COMPOSITION_RECEIPT_MISSING")
+    obligation_id="VERIFIED_BOUND_CAPABILITY_PLAN_EXECUTION"
+    step_id=str(step.get("id") or step.get("step_id") or "goal")
+    mission_id=str(mission.get("mission_id") or "").strip()
+    if not mission_id:
+        raise Blocker("CAPABILITY_PLAN_MISSION_ID_REQUIRED_FOR_HONESTY")
+    honesty_common={
+      "schema":"PROJECT_BRAIN_HONESTY_ENVELOPE_INPUT_V1",
+      "obligations":[{
+        "id":obligation_id,
+        "state":"VERIFIED",
+        "receipts":[head_hash.lower()],
+      }],
+      "completion_claim":"COMPLETE",
+      "provenance_events":[{
+        "event_id":"verified-bound-capability-plan-execution",
+        "material":True,
+        "receipts":[head_hash.lower()],
+        "disclosed":True,
+      }],
+      "material_claims":[{
+        "claim_id":"bounded-capability-plan-executed",
+        "supported":True,
+        "explicit_uncertainty":False,
+        "declined":False,
+        "evidence_receipts":[head_hash.lower()],
+      }],
+      "belief_assertions":[],
+    }
+    result["honesty_record"]={
+      **honesty_common,
+      "task_contract":{
+        "task_id":mission_id+"::step::"+step_id,
+        "required_obligations":[obligation_id],
+      },
+    }
+    result["terminal_honesty_record"]={
+      **honesty_common,
+      "task_contract":{
+        "task_id":mission_id,
+        "required_obligations":[obligation_id],
+      },
+    }
+    result["honesty_scope_boundary"]=(
+      "CERTIFIES_ONLY_VERIFIED_EXECUTION_OF_THE_DECLARED_BOUND_CAPABILITY_PLAN;"
+      "DOES_NOT_CERTIFY_GLOBAL_TASK_SEMANTIC_ADEQUACY_OR_PROJECT_TERMINAL_SUCCESS"
+    )
     return result
 
 def _classify_plain_goal_gap(text):
@@ -5367,7 +5934,7 @@ def _write_goal_gap_classification(mission, subgoal, gap_class, compile_error):
       "policy":"ONLY_CAPABILITY_CANDIDATE_MAY_TRIGGER_EXTERNAL_CAPABILITY_ACQUISITION",
       "observed_at_utc":utc(),
     }
-    writej(path,evidence)
+    write_evidencej(path,evidence)
     return path,evidence
 
 
@@ -5605,6 +6172,7 @@ def _run_goal_unstamped(step, mission):
         unresolved_marker="GOAL_COMPILATION_FAILED:GOAL_COMPILATION_SUBGOAL_UNRESOLVED:"
         is_no_match="GOAL_COMPILATION_FAILED:GOAL_COMPILATION_NO_VERIFIED_CAPABILITY_MATCH" in error_text
         is_unresolved_subgoal=unresolved_marker in error_text
+        is_control_flow_unsupported="GOAL_COMPILATION_FAILED:GOAL_CONTROL_FLOW_UNSUPPORTED:" in error_text
         optional_planner=bool(step.get("allow_optional_model_planner",False))
         if is_unresolved_subgoal and not optional_planner:
             raw=error_text.split(unresolved_marker,1)[1]
@@ -5614,12 +6182,19 @@ def _run_goal_unstamped(step, mission):
                 acquisition_goal=""
             if not acquisition_goal:
                 raise
-        if (is_no_match or is_unresolved_subgoal) and not optional_planner:
+        if (is_no_match or is_unresolved_subgoal or is_control_flow_unsupported) and not optional_planner:
             gap_class=_classify_plain_goal_gap(acquisition_goal)
             gap_path,gap_evidence=_write_goal_gap_classification(
                 mission,acquisition_goal,gap_class,error_text
             )
-            if gap_class!="CAPABILITY_CANDIDATE":
+            # Unsupported control-flow may still be executable when the exact
+            # semantics are already represented by a verified bound capability.
+            # Probe bound grounding first, but never use external acquisition to
+            # invent control-flow semantics.
+            control_flow_bound_probe=bool(
+                is_control_flow_unsupported and gap_class=="CONTROL_FLOW"
+            )
+            if gap_class!="CAPABILITY_CANDIDATE" and not control_flow_bound_probe:
                 raise Blocker(
                     "GOAL_ARCHITECTURAL_GAP:"+json.dumps({
                       "gap_class":gap_class,
@@ -5633,6 +6208,23 @@ def _run_goal_unstamped(step, mission):
                 mission,grounding_goal
             )
             grounded_count=int(grounding.get("grounded_clause_count") or 0)
+            unresolved_indexes=[
+                int(x) for x in (grounding.get("unresolved_clause_indexes") or [])
+            ]
+            if grounded_count>0 and unresolved_indexes:
+                # Partial grounding must not suppress acquisition for unresolved
+                # clauses. Preserve the bound grounding as evidence, but route
+                # only the unresolved semantic remainder to acquisition.
+                clauses=grounding.get("clauses") or []
+                unresolved_text=[
+                    str(clauses[i].get("text") or "").strip()
+                    for i in unresolved_indexes
+                    if 0 <= i < len(clauses) and isinstance(clauses[i],dict)
+                    and str(clauses[i].get("text") or "").strip()
+                ]
+                if unresolved_text:
+                    acquisition_goal=". ".join(unresolved_text)
+                grounded_count=0
             if grounded_count>0:
                 try:
                     composition_path,composition=_compose_grounding_to_capability_problem(
@@ -5667,6 +6259,17 @@ def _run_goal_unstamped(step, mission):
                 composed_result["composition_mode"]="MODEL_INDEPENDENT_GROUNDED_CAPABILITY_GRAPH"
                 composed_result["model_dependency_count"]=0
                 return composed_result
+
+            if control_flow_bound_probe and grounded_count<=0:
+                raise Blocker(
+                    "GOAL_ARCHITECTURAL_GAP:"+json.dumps({
+                      "gap_class":"CONTROL_FLOW",
+                      "subgoal":acquisition_goal,
+                      "evidence_path":str(gap_path.relative_to(ROOT)),
+                      "capability_acquisition_attempted":False,
+                      "bound_grounding_attempted":True,
+                    },sort_keys=True)
+                ) from e
 
             broad=grounding.get("broad_objective_decomposition")
             if isinstance(broad,dict) and broad.get("status")=="DECOMPOSED":
@@ -5763,7 +6366,7 @@ def _run_goal_unstamped(step, mission):
                   "status":"AUTO_ACQUISITION_DISPATCHED",
                   "observed_at_utc":utc()
                 }
-                writej(ep,evidence)
+                write_evidencej(ep,evidence)
                 verified_acquisition=_verify_and_promote_acquisition(dispatch)
                 compiled_after_acquisition=_compile_plain_goal(goal)
                 acquired_result=_run_compiled_plain_goal(
@@ -5802,7 +6405,7 @@ def _run_goal_unstamped(step, mission):
             else:
                 evidence["auto_acquisition"]=dispatch
                 evidence["status"]="AUTO_ACQUISITION_DISPATCHED"
-            writej(ep,evidence)
+            write_evidencej(ep,evidence)
             if dispatch is not None:
                 verified_acquisition=_verify_and_promote_acquisition(dispatch)
                 compiled_after_acquisition=_compile_plain_goal(goal)
@@ -6062,14 +6665,172 @@ def run_goal(step, mission):
     return _stamp_cognition_provenance(_run_goal_unstamped(step, mission))
 
 
+
+_CERTIFICATE_GATED_ROUTE_RECEIPT_FIELDS=frozenset({
+    "context_digest",
+    "cell_id",
+    "route_id",
+    "route_blob_sha",
+    "adequacy_certificate_blob_sha",
+    "admission_certificate_blob_sha",
+    "admitted",
+})
+
+_CERTIFICATE_GATED_CONTENT_SHA_FIELDS=(
+    "route_blob_sha",
+    "adequacy_certificate_blob_sha",
+    "admission_certificate_blob_sha",
+)
+
+def _git_blob_sha1_bytes(payload):
+    header=b"blob "+str(len(payload)).encode("ascii")+b"\x00"
+    return hashlib.sha1(header+payload).hexdigest()
+
+def _content_addressed_repo_file(raw_path):
+    value=str(raw_path or "").strip().replace("\\","/")
+    if not value:
+        raise Blocker("CONTENT_ADDRESS_PATH_MISSING")
+    if value.startswith("/"):
+        value=value.lstrip("/")
+    pure=pathlib.PurePosixPath(value)
+    if any(part in {"..",""} for part in pure.parts):
+        raise Blocker("CONTENT_ADDRESS_PATH_INVALID")
+    cursor=ROOT
+    for part in pure.parts:
+        if part==".":
+            continue
+        cursor=cursor/part
+        if cursor.is_symlink():
+            raise Blocker("CONTENT_ADDRESS_PATH_SYMLINK_FORBIDDEN:"+value)
+    root=ROOT.resolve()
+    path=(ROOT/pure).resolve()
+    if path==root or root not in path.parents:
+        raise Blocker("CONTENT_ADDRESS_PATH_OUTSIDE_REPOSITORY")
+    if not path.is_file():
+        raise Blocker("CONTENT_ADDRESS_FILE_MISSING:"+value)
+    return path,path.relative_to(root).as_posix()
+
+def _validate_certificate_gated_content_bindings(step,receipts):
+    raw=step.get("content_address_bindings")
+    if not isinstance(raw,dict) or not raw:
+        raise Blocker("CERTIFICATE_GATED_CONTENT_ADDRESS_BINDINGS_REQUIRED")
+    expected=set()
+    for receipt in receipts:
+        for field in _CERTIFICATE_GATED_CONTENT_SHA_FIELDS:
+            expected.add(getattr(receipt,field))
+    if set(raw)!=expected:
+        raise Blocker("CERTIFICATE_GATED_CONTENT_ADDRESS_BINDING_SET_MISMATCH")
+    verified={}
+    for expected_sha,raw_path in raw.items():
+        if (
+            not isinstance(expected_sha,str)
+            or len(expected_sha)!=40
+            or any(ch not in "0123456789abcdef" for ch in expected_sha)
+        ):
+            raise Blocker("CERTIFICATE_GATED_CONTENT_ADDRESS_SHA_INVALID")
+        if not isinstance(raw_path,str) or not raw_path.strip():
+            raise Blocker("CERTIFICATE_GATED_CONTENT_ADDRESS_PATH_INVALID")
+        path,rel=_content_addressed_repo_file(raw_path)
+        actual=_git_blob_sha1_bytes(path.read_bytes())
+        if actual!=expected_sha:
+            raise Blocker("CERTIFICATE_GATED_CONTENT_ADDRESS_GIT_BLOB_SHA_MISMATCH:"+expected_sha)
+        verified[expected_sha]=rel
+    return verified
+
+def run_certificate_gated_route_select(step):
+    """Production selection seam: select only a content-bound certified route; do not execute it."""
+    if not isinstance(step,dict):
+        raise Blocker("CERTIFICATE_GATED_ROUTE_STEP_INVALID")
+    actual_context_digest=step.get("actual_context_digest")
+    if not isinstance(actual_context_digest,str) or not actual_context_digest:
+        raise Blocker("CERTIFICATE_GATED_ROUTE_CONTEXT_DIGEST_INVALID")
+    raw_receipts=step.get("admission_receipts")
+    if not isinstance(raw_receipts,list) or not raw_receipts:
+        raise Blocker("CERTIFICATE_GATED_ROUTE_RECEIPTS_REQUIRED")
+
+    router=_load_runtime_helper("certificate_gated_selected_route_router_v1")
+    receipts=[]
+    string_fields=(
+        "context_digest",
+        "cell_id",
+        "route_id",
+        "route_blob_sha",
+        "adequacy_certificate_blob_sha",
+        "admission_certificate_blob_sha",
+    )
+    for index,item in enumerate(raw_receipts):
+        if not isinstance(item,dict):
+            raise Blocker("CERTIFICATE_GATED_ROUTE_RECEIPT_NOT_OBJECT:"+str(index))
+        if set(item)!=_CERTIFICATE_GATED_ROUTE_RECEIPT_FIELDS:
+            raise Blocker("CERTIFICATE_GATED_ROUTE_RECEIPT_FIELDS_INVALID:"+str(index))
+        if any(not isinstance(item.get(key),str) or not item.get(key) for key in string_fields):
+            raise Blocker("CERTIFICATE_GATED_ROUTE_RECEIPT_STRING_FIELD_INVALID:"+str(index))
+        if type(item.get("admitted")) is not bool:
+            raise Blocker("CERTIFICATE_GATED_ROUTE_RECEIPT_ADMISSION_NOT_LITERAL_BOOL:"+str(index))
+        receipts.append(router.AdmissionReceipt(
+            context_digest=item["context_digest"],
+            cell_id=item["cell_id"],
+            route_id=item["route_id"],
+            route_blob_sha=item["route_blob_sha"],
+            adequacy_certificate_blob_sha=item["adequacy_certificate_blob_sha"],
+            admission_certificate_blob_sha=item["admission_certificate_blob_sha"],
+            admitted=item["admitted"],
+        ))
+
+    verified_paths=_validate_certificate_gated_content_bindings(step,receipts)
+
+    try:
+        selected=router.select_certified_route(
+            actual_context_digest=actual_context_digest,
+            receipts=receipts,
+        )
+    except router.RouterFailClosed as exc:
+        raise Blocker("CERTIFICATE_GATED_ROUTE_SELECT_BLOCKED:"+str(exc)) from exc
+
+    return {
+        "schema":"PROJECT_BRAIN_CERTIFICATE_GATED_DEPLOYED_ROUTE_SELECTION_V1",
+        "status":"SELECTED_CERTIFIED_ROUTE",
+        "context_digest":selected.context_digest,
+        "cell_id":selected.cell_id,
+        "route_id":selected.route_id,
+        "route_blob_sha":selected.route_blob_sha,
+        "adequacy_certificate_blob_sha":selected.adequacy_certificate_blob_sha,
+        "admission_certificate_blob_sha":selected.admission_certificate_blob_sha,
+        "route_path":verified_paths[selected.route_blob_sha],
+        "adequacy_certificate_path":verified_paths[selected.adequacy_certificate_blob_sha],
+        "admission_certificate_path":verified_paths[selected.admission_certificate_blob_sha],
+        "content_address_binding_verified":True,
+        "admitted":True,
+        "selection_only":True,
+        "downstream_route_execution_performed":False,
+        "execution_authority":False,
+        "promotion_authority":False,
+        "terminal_results_observed":0,
+        "fresh_terminal_evidence_consumed":0,
+        "terminal_credit_delta":0,
+    }
+
 def execute_step(step, prior_results=None, mission=None):
     adapter=step["adapter"]
+    mission=mission or {}
+    mode=mission.get("cross_step_context_mode") or DECLARED_CROSS_STEP_CONTEXT_MODE
+    if mode!=DECLARED_CROSS_STEP_CONTEXT_MODE:
+        raise Blocker("CROSS_STEP_CONTEXT_MODE_UNKNOWN:"+str(mode))
     if adapter=="shell":
+        if prior_results is None:
+            prior_results={"mode":DECLARED_CROSS_STEP_CONTEXT_MODE,"bindings":[]}
+        if (
+            not isinstance(prior_results,dict)
+            or prior_results.get("mode")!=DECLARED_CROSS_STEP_CONTEXT_MODE
+        ):
+            raise Blocker("DECLARED_CROSS_STEP_CONTEXT_REQUIRED")
         return run_shell(step, prior_results)
     if adapter=="http":
         return run_http(step)
     if adapter=="goal":
         return run_goal(step, mission or {})
+    if adapter=="certificate_gated_route_select":
+        return run_certificate_gated_route_select(step)
     raise Blocker("MISSING_ADAPTER:"+adapter)
 
 def verify(step,result):
@@ -6125,9 +6886,7 @@ def main():
         verdict["mission_id"]=mid
         verdict["mission_sha256"]=mission_sha256
         obs_path=EVID_DIR/f"{mid}__CONTINUOUS_OBS.jsonl"
-        obs_path.parent.mkdir(parents=True,exist_ok=True)
-        with obs_path.open("a",encoding="utf-8",newline="\n") as fh:
-            fh.write(json.dumps(verdict,sort_keys=True,separators=(",",":"))+"\n")
+        _append_admin_jsonl(obs_path,verdict)
         if not verdict.get("pass"):
             raise Blocker(
                 "CONTINUOUS_OBS_BLOCKED:"+"|".join(verdict.get("errors") or ["UNKNOWN"])
@@ -6168,7 +6927,7 @@ def main():
           "current_mission_sha256":mission_sha256,
           "observed_at_utc":utc()
         }
-        writej(EVID_DIR/f"{mid}__MISSION_DRIFT_BLOCKER.json",blocker)
+        write_evidencej(EVID_DIR/f"{mid}__MISSION_DRIFT_BLOCKER.json",blocker)
         print(json.dumps(blocker))
         return 5
     state["mission_path"]=mission_rel
@@ -6183,7 +6942,7 @@ def main():
                 continue
             try:
                 _continuous_obs_revalidate(f"BEFORE_REHYDRATION_STEP:{j}")
-                result=execute_step(prior, context_results(state), mission)
+                result=execute_step(prior, _step_context_results(state,mission,j), mission)
                 ok=verify(prior,result)
                 _continuous_obs_revalidate(f"AFTER_REHYDRATION_STEP:{j}")
             except Exception as e:
@@ -6195,12 +6954,19 @@ def main():
                   "error":type(e).__name__+":"+str(e),
                   "observed_at_utc":utc()
                 }
-                writej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
+                write_evidencej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
                 state["status"]="BLOCKED"; state["blocker"]=blocker; state["updated_at_utc"]=utc()
-                writej(state_path,state)
+                write_statej(state_path,state)
                 print(json.dumps(blocker)); return 3
             rec={"step_index":j,"step_id":prior["id"],"ok":bool(ok),"result":result,
                  "rehydration":True,"completed_at_utc":utc()}
+            cert=_certify_step_result_if_present(
+                result,mid,mission_sha256,j,prior["id"]
+            )
+            if cert is None:
+                rec["quarantined_untrusted_audit_data"]=True
+            else:
+                rec["load_bearing_honesty_certificate"]=cert
             rehydrated.append(rec)
             if not ok:
                 blocker={
@@ -6209,23 +6975,23 @@ def main():
                   "adapter":prior["adapter"],"phase":"REHYDRATION",
                   "error":"VERIFICATION_FAILED","result":result,"observed_at_utc":utc()
                 }
-                writej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
+                write_evidencej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
                 state["status"]="BLOCKED"; state["blocker"]=blocker; state["updated_at_utc"]=utc()
-                writej(state_path,state)
+                write_statej(state_path,state)
                 print(json.dumps(blocker)); return 4
         if rehydrated:
             state.setdefault("rehydrations",[]).append({
               "at_utc":utc(),"before_step":state["next_step"],"steps":rehydrated
             })
             state["updated_at_utc"]=utc()
-            writej(state_path,state)
+            write_statej(state_path,state)
 
     for i in range(state["next_step"],len(mission["steps"])):
         step=mission["steps"][i]
         adapter=step["adapter"]
         try:
             _continuous_obs_revalidate(f"BEFORE_STEP:{i}")
-            result=execute_step(step, context_results(state), mission)
+            result=execute_step(step, _step_context_results(state,mission,i), mission)
             ok=verify(step,result)
             _continuous_obs_revalidate(f"AFTER_STEP_RECEIPT:{i}")
         except Exception as e:
@@ -6235,11 +7001,18 @@ def main():
               "adapter":adapter,"error":type(e).__name__+":"+str(e),
               "observed_at_utc":utc()
             }
-            writej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
+            write_evidencej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
             state["status"]="BLOCKED"; state["blocker"]=blocker; state["updated_at_utc"]=utc()
-            writej(state_path,state)
+            write_statej(state_path,state)
             print(json.dumps(blocker)); return 3
         rec={"step_index":i,"step_id":step["id"],"ok":bool(ok),"result":result,"completed_at_utc":utc()}
+        cert=_certify_step_result_if_present(
+            result,mid,mission_sha256,i,step["id"]
+        )
+        if cert is None:
+            rec["quarantined_untrusted_audit_data"]=True
+        else:
+            rec["load_bearing_honesty_certificate"]=cert
         state["history"].append(rec)
         if not ok:
             blocker={
@@ -6248,9 +7021,9 @@ def main():
               "adapter":adapter,"error":"VERIFICATION_FAILED",
               "result":result,"observed_at_utc":utc()
             }
-            writej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
+            write_evidencej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
             state["status"]="BLOCKED"; state["blocker"]=blocker; state["updated_at_utc"]=utc()
-            writej(state_path,state)
+            write_statej(state_path,state)
             print(json.dumps(blocker)); return 4
         state["next_step"]=i+1
         # A previously blocked mission may later succeed after a verified
@@ -6259,11 +7032,40 @@ def main():
         state.pop("blocker",None)
         state["status"]="RUNNING"
         state["updated_at_utc"]=utc()
-        writej(state_path,state)
+        write_statej(state_path,state)
     _continuous_obs_revalidate("BEFORE_TERMINAL_RECEIPT")
     state.pop("blocker",None)
+    state["status"]="COMPLETE_PENDING_HONESTY"
+    state["updated_at_utc"]=utc()
+    write_statej(state_path,state)
+    preterminal_state_sha256=sha_file(state_path)
+    terminal_honesty_record=mission.get("terminal_honesty_record")
+    if terminal_honesty_record is None and state.get("history"):
+        last_result=state["history"][-1].get("result")
+        if isinstance(last_result,dict):
+            terminal_honesty_record=last_result.get("terminal_honesty_record")
+    try:
+        terminal_honesty_certificate=_honesty_result_gate().certify_terminal_completion(
+            mission_id=mid,
+            mission_sha256=mission_sha256,
+            state_sha256=preterminal_state_sha256,
+            honesty_record=terminal_honesty_record,
+        )
+    except Exception as exc:
+        blocker={
+          "schema":"PROJECT_BRAIN_ASTRA_RUNTIME_BLOCKER_V1",
+          "mission_id":mid,
+          "phase":"TERMINAL_HONESTY",
+          "error":"TERMINAL_HONESTY_CERTIFICATION_FAILED:"+type(exc).__name__+":"+str(exc),
+          "observed_at_utc":utc()
+        }
+        write_evidencej(EVID_DIR/f"{mid}__BLOCKER.json",blocker)
+        state["status"]="BLOCKED"; state["blocker"]=blocker; state["updated_at_utc"]=utc()
+        write_statej(state_path,state)
+        print(json.dumps(blocker)); return 6
+    state["terminal_honesty_certificate"]=terminal_honesty_certificate
     state["status"]="COMPLETE"; state["completed_at_utc"]=utc()
-    writej(state_path,state)
+    write_statej(state_path,state)
     receipt={
       "schema":"PROJECT_BRAIN_ASTRA_RUNTIME_RECEIPT_V1",
       "mission_id":mid,"mission_path":a.mission,"mission_sha256":mission_sha256,
@@ -6273,8 +7075,17 @@ def main():
       "status":"COMPLETE","steps_completed":len(state["history"]),
       "state_sha256":sha_file(state_path),"completed_at_utc":utc()
     }
-    writej(EVID_DIR/f"{mid}__RECEIPT.json",receipt)
+    write_evidencej(EVID_DIR/f"{mid}__RECEIPT.json",receipt)
     print(json.dumps(receipt)); return 0
 
 if __name__=="__main__":
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0,str(ROOT))
+    from canonical.runtime import root3_subprocess_mediator_v2 as _root3_process_mediator
+    _root3_process_status=_root3_process_mediator.status()
+    if (
+        _root3_process_status.get("run_guard_active") is not True
+        or _root3_process_status.get("popen_guard_active") is not True
+    ):
+        raise SystemExit("ROOT3_PRODUCTION_BOOTSTRAP_REQUIRED")
     raise SystemExit(main())
