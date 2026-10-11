@@ -21,7 +21,7 @@ _RANGE_PAIR = re.compile(
     r"(?i)([-+]?\d[\d,]*(?:\.\d+)?)\s*(?:to|[-–—])\s*([-+]?\d[\d,]*(?:\.\d+)?)"
 )
 _UNIT = re.compile(
-    r"(?i)(%|pp|mph|km/?h|m/s|kpa|mpa|pa|hz|khz|mhz|ghz|°c|°f|\bk\b|mm|cm|km|kg|lb|mw|kw|\bw\b)"
+    r"(?i)(%|pp|mph|km/?h|m/s|kpa|mpa|pa|hz|khz|mhz|ghz|°c|°f|\bc\b|\bf\b|\bk\b|mm|cm|km|kg|lb|mw|kw|\bw\b)"
 )
 _CANNOT = re.compile(
     r"(?i)^(?:it\s+)?(?:cannot|can't)\s+be\s+determined(?:\s+from\s+the\s+chart)?[.!]?$"
