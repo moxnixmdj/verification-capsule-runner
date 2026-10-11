@@ -40,3 +40,5 @@ for item in rows:
     print(json.dumps({"row_idx":idx,"query_count":len(queries),"receipts":receipts,
                       "external_model_calls":0,"gold_accessed":False},sort_keys=True))
 print("TRANSPORT_SUMMARY",json.dumps(summary,sort_keys=True))
+
+# trigger corrected exact-policy transport replay
