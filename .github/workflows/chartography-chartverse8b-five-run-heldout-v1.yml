@@ -16,7 +16,7 @@ env:
   MMPROJ_FILE: ChartVerse-8B.mmproj-Q8_0.gguf
   MMPROJ_SHA256: 0df4b5c847587984c93e6712f0851abb2227ecabfe94b8d60ccac90a12b654f0
   LLAMA_CPP_COMMIT: a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
-  SUBJECT_CACHE_KEY: chartography-subject-97eebc1d-0df4b5c8-a7fb71fa-v2
+  SUBJECT_CACHE_KEY: chartography-subject-97eebc1d-0df4b5c8-a7fb71fa-server-v3
 
 jobs:
   bind:
@@ -95,7 +95,7 @@ jobs:
           git checkout --detach "$LLAMA_CPP_COMMIT"
           test "$(git rev-parse HEAD)" = "$LLAMA_CPP_COMMIT"
           cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --target llama-mtmd-cli -j 2
+          cmake --build build --target llama-server -j 2
       - name: Build isolated chart code tool image
         if: steps.subject-cache.outputs.cache-hit != 'true'
         shell: bash
@@ -118,7 +118,7 @@ jobs:
           set -euo pipefail
           echo "${MODEL_SHA256}  model/model.gguf" | sha256sum -c -
           echo "${MMPROJ_SHA256}  model/mmproj.gguf" | sha256sum -c -
-          test -x llama.cpp/build/bin/llama-mtmd-cli
+          test -x llama.cpp/build/bin/llama-server
           test -s tool-image.tar
 
   shard:
@@ -159,14 +159,36 @@ jobs:
           docker image inspect brain-chartography-tool-v1 >/dev/null
           rm -f tool-image.tar
           mkdir -p "out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}"
-      - name: Run one sealed heldout shard
+      - name: Run one sealed heldout shard with persistent VLM server
         env:
           HF_HUB_DISABLE_TELEMETRY: "1"
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          python subject/chartography_clean_eval/run_epoch.py             --epoch "${{ matrix.epoch }}"             --shard-index "${{ matrix.shard }}"             --shard-count 4             --dataset-repo "$DATASET_REPO"             --dataset-rev "${{ needs.bind.outputs.dataset_rev }}"             --model model/model.gguf             --mmproj model/mmproj.gguf             --cli llama.cpp/build/bin/llama-mtmd-cli             --out "out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}"             --max-crops 5             --timeout-seconds 300
+          OUT="out/epoch-${{ matrix.epoch }}-shard-${{ matrix.shard }}"
+          PORT="$((18080 + ${{ matrix.epoch }} * 10 + ${{ matrix.shard }}))"
+          llama.cpp/build/bin/llama-server             -m model/model.gguf             --mmproj model/mmproj.gguf             --no-mmproj-offload             --host 127.0.0.1             --port "$PORT"             --threads 4             --parallel 1             --ctx-size 8192             --image-min-tokens 1024             --no-webui             --log-disable             >"$OUT/server.stdout.log" 2>"$OUT/server.stderr.log" &
+          SERVER_PID="$!"
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          export PORT
+          python - <<'PY'
+          import os,time,urllib.request
+          url=f"http://127.0.0.1:{os.environ['PORT']}/health"
+          last=None
+          for _ in range(180):
+              try:
+                  with urllib.request.urlopen(url,timeout=2) as r:
+                      if r.status == 200:
+                          print("VLM_SERVER_READY")
+                          break
+              except Exception as e:
+                  last=e
+              time.sleep(1)
+          else:
+              raise SystemExit(f"VLM_SERVER_NOT_READY: {last}")
+          PY
+          python subject/chartography_clean_eval/run_epoch.py             --epoch "${{ matrix.epoch }}"             --shard-index "${{ matrix.shard }}"             --shard-count 4             --dataset-repo "$DATASET_REPO"             --dataset-rev "${{ needs.bind.outputs.dataset_rev }}"             --server-url "http://127.0.0.1:$PORT/v1/chat/completions"             --out "$OUT"             --max-crops 5             --timeout-seconds 300
       - name: Emit shard manifest
         env:
           EPOCH: ${{ matrix.epoch }}
