@@ -1,0 +1,97 @@
+name: Chartography Qwen8 native-required-tools sample V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-qwen8-native-required-tools-sample-v1.yml"
+      - "subject/chartography_tool_runtime/qwen8_native_required_tools_sample_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OFFICIAL_HARNESS_COMMIT: 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+  MODEL_REPO: Qwen/Qwen3-VL-8B-Instruct-GGUF
+  MODEL_REVISION: f982a07559d4a2f6c8744d840bf6fccab30eea96
+  MODEL_FILE: Qwen3VL-8B-Instruct-Q4_K_M.gguf
+  MODEL_SHA256: 67d1659bfe71b89d50b45a4ad1a9e5b997e5bb16ce5da66a6a6167abd569e9e2
+  MMPROJ_FILE: mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf
+  MMPROJ_SHA256: c6ba85508d82f42590e6eb77d5340369ab6fecf107a7561d809523d8aa5f3bfd
+  LLAMA_CPP_COMMIT: a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates
+          python -m pip install --disable-pip-version-check --no-input "pillow>=10,<13" "pyyaml>=6,<7"
+          mkdir -p model out/sample
+      - name: Build isolated code-tool image
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat >/tmp/Dockerfile.chartography <<'EOF'
+          FROM python:3.12-slim
+          RUN pip install --no-cache-dir pillow numpy scipy matplotlib opencv-python-headless
+          WORKDIR /work
+          EOF
+          docker build -f /tmp/Dockerfile.chartography -t brain-chartography-tool-v1 /tmp
+      - name: Bind official non-heldout samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach "$OFFICIAL_HARNESS_COMMIT"
+          test "$(git rev-parse HEAD)" = "$OFFICIAL_HARNESS_COMMIT"
+      - name: Download exact frozen subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://huggingface.co/${MODEL_REPO}/resolve/${MODEL_REVISION}"
+          curl -fL --retry 5 --retry-all-errors "$BASE/${MODEL_FILE}?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/${MMPROJ_FILE}?download=true" -o model/mmproj.gguf
+          echo "${MODEL_SHA256}  model/model.gguf" | sha256sum -c -
+          echo "${MMPROJ_SHA256}  model/mmproj.gguf" | sha256sum -c -
+      - name: Build exact tool-aware VLM server
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach "$LLAMA_CPP_COMMIT"
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-server -j 2
+      - name: Run native-required-tool development qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          llama.cpp/build/bin/llama-server             -m model/model.gguf --mmproj model/mmproj.gguf --no-mmproj-offload             --jinja --host 127.0.0.1 --port 18080 --threads 4 --parallel 1 --ctx-size 8192             --image-min-tokens 1024 --no-webui --log-disable &
+          PID="$!"; trap 'kill "$PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import time,urllib.request
+          last=None
+          for _ in range(180):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:18080/health",timeout=2) as r:
+                      if r.status==200: print("SERVER_READY"); break
+              except Exception as e: last=e
+              time.sleep(1)
+          else: raise SystemExit(f"SERVER_NOT_READY: {last}")
+          PY
+          python subject/chartography_tool_runtime/qwen8_native_required_tools_sample_v1.py             --official-root official             --server-url http://127.0.0.1:18080/v1/chat/completions             --out out/sample
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-qwen8-native-required-tools-sample-v1
+          path: |
+            out/sample/responses.json
+            out/sample/result.json
+          if-no-files-found: error
