@@ -67,3 +67,5 @@ jobs:
           path: /tmp/s.json
           if-no-files-found: ignore
           retention-days: 7
+
+# synchronize after verifier registration on main
