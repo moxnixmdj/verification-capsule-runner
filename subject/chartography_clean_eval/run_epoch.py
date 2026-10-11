@@ -48,11 +48,11 @@ def crop_image(src: Path, dst: Path, box: tuple[int, int, int, int]) -> dict:
 
 
 def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
-    """Run model-authored analysis code in an isolated no-network Linux namespace.
+    """Run model-authored analysis code in a no-network read-only container.
 
-    Only system runtime libraries and this tool-call directory are visible.
+    The container receives only the current chart and per-call scratch files.
     Benchmark caches, gold answers, repository files, credentials, and model
-    weights are not mounted into the namespace.
+    weights are not mounted or passed as environment variables.
     """
     tool_dir = workdir.resolve()
     tool_dir.mkdir(parents=True, exist_ok=True)
@@ -63,25 +63,24 @@ def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
     code_path.write_text(code)
     cp = subprocess.run(
         [
-            "bwrap", "--unshare-all", "--new-session", "--die-with-parent",
-            "--clearenv",
-            "--setenv", "PATH", "/usr/bin:/bin",
-            "--setenv", "HOME", "/tmp",
-            "--ro-bind", "/usr", "/usr",
-            "--ro-bind", "/bin", "/bin",
-            "--ro-bind", "/lib", "/lib",
-            "--ro-bind", "/lib64", "/lib64",
-            "--proc", "/proc",
-            "--dev", "/dev",
-            "--tmpfs", "/tmp",
-            "--bind", str(tool_dir), "/work",
-            "--chdir", "/work",
-            "/usr/bin/python3", "/work/tool.py",
+            "docker", "run", "--rm",
+            "--network", "none",
+            "--read-only",
+            "--cap-drop", "ALL",
+            "--security-opt", "no-new-privileges",
+            "--pids-limit", "64",
+            "--memory", "768m",
+            "--cpus", "1",
+            "--tmpfs", "/tmp:rw,nosuid,nodev,size=128m",
+            "-v", f"{tool_dir}:/work:rw",
+            "-w", "/work",
+            "brain-chartography-tool-v1",
+            "python", "/work/tool.py",
         ],
         text=True,
         capture_output=True,
         timeout=90,
-        env={"PATH": "/usr/bin:/bin"},
+        env={"PATH": "/usr/local/bin:/usr/bin:/bin"},
     )
     return {
         "returncode": cp.returncode,
