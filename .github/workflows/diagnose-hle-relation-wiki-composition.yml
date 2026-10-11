@@ -56,3 +56,5 @@ jobs:
           path: /tmp/s.json
           if-no-files-found: ignore
           retention-days: 7
+
+# synchronize registered composition verifier
