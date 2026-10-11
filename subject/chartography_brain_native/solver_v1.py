@@ -107,6 +107,47 @@ def group_ocr_lines(words: list[dict]) -> list[dict]:
     return out
 
 
+def reconstruct_spatial_legend_rows(words: list[dict], width: int, height: int) -> list[dict]:
+    region=[x for x in words if x["cx"]>=0.45*width and 0.05*height<=x["cy"]<=0.92*height]
+    unique=[]
+    for x in sorted(region,key=lambda z:(-z.get("conf",0),z["cy"],z["left"])):
+        nt=norm_text(x["text"])
+        if any(norm_text(y["text"])==nt and abs(y["cx"]-x["cx"])<=6 and abs(y["cy"]-x["cy"])<=6 for y in unique):
+            continue
+        unique.append(x)
+    tol=max(5.0,0.012*height)
+    clusters=[]
+    for x in sorted(unique,key=lambda z:z["cy"]):
+        matches=[c for c in clusters if abs(c["cy"]-x["cy"])<=tol]
+        if not matches:
+            clusters.append({"cy":float(x["cy"]),"words":[x]})
+        else:
+            c=min(matches,key=lambda z:abs(z["cy"]-x["cy"]))
+            c["words"].append(x)
+            c["cy"]=sum(z["cy"] for z in c["words"])/len(c["words"])
+    rows=[]
+    for c in clusters:
+        kept=[]
+        for x in sorted(c["words"],key=lambda z:z["left"]):
+            nt=norm_text(x["text"])
+            if any(norm_text(y["text"])==nt and abs(y["cx"]-x["cx"])<8 for y in kept):
+                continue
+            kept.append(x)
+        if not kept:
+            continue
+        rows.append({
+            "text":" ".join(x["text"] for x in kept),
+            "left":min(x["left"] for x in kept),
+            "top":min(x["top"] for x in kept),
+            "right":max(x["left"]+x["width"] for x in kept),
+            "bottom":max(x["top"]+x["height"] for x in kept),
+            "cy":sum(x["cy"] for x in kept)/len(kept),
+            "words":kept,
+            "source":"spatial_reconstruction",
+        })
+    return rows
+
+
 def parse_number(s: str):
     s=s.strip().replace(",","")
     s=s.replace("O","0").replace("o","0")
