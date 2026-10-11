@@ -1,0 +1,97 @@
+name: OSWorld exact host browser synthetic smoke V1
+
+on:
+  push:
+    branches: [osw-host-browser-smoke-v1]
+    paths:
+      - '.github/workflows/osw-host-browser-smoke-v1.yml'
+      - 'capsules/osw_host_browser_smoke_v1/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright Python package
+        run: python -m pip install --disable-pip-version-check --no-input playwright
+
+      - name: Launch synthetic Chrome CDP
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          mkdir -p /tmp/osw-host-browser-profile out
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage             --remote-debugging-port=9222             --user-data-dir=/tmp/osw-host-browser-profile             about:blank >out/chrome.log 2>&1 &
+          for i in $(seq 1 40); do
+            curl -fsS http://127.0.0.1:9222/json/version >/dev/null && exit 0
+            sleep 0.25
+          done
+          exit 1
+
+      - name: Exercise exact operative browser module
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from http.server import BaseHTTPRequestHandler, HTTPServer
+          import threading
+          from pathlib import Path
+          import sys
+
+          sys.path.insert(0, "capsules/osw_host_browser_smoke_v1")
+          from osworld_v21_host_browser_ops_v1 import OSWorldHostBrowser
+
+          class H(BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body=b"""<html><head><title>Synthetic</title></head><body>
+                  <label>Name <input id='name' placeholder='Name'></label>
+                  <button onclick="this.textContent='Saved'">Save</button>
+                  </body></html>"""
+                  self.send_response(200)
+                  self.send_header("Content-Type","text/html")
+                  self.send_header("Content-Length",str(len(body)))
+                  self.end_headers()
+                  self.wfile.write(body)
+              def log_message(self,*args): pass
+
+          server=HTTPServer(("127.0.0.1",8766),H)
+          threading.Thread(target=server.serve_forever,daemon=True).start()
+
+          class Env:
+              vm_ip="127.0.0.1"
+              chromium_port=9222
+
+          b=OSWorldHostBrowser()
+          b.bind_environment(Env())
+          b.run({"type":"NAVIGATE","url":"http://127.0.0.1:8766/"})
+          first=b.run({"type":"OBSERVE"})
+          assert "Save" in first["visible_text"]
+          b.run({"type":"FILL_PLACEHOLDER","placeholder":"Name","value":"Brain","exact":True})
+          b.run({"type":"CLICK_TEXT","text":"Save","exact":True})
+          second=b.run({"type":"OBSERVE"})
+          assert "Saved" in second["visible_text"]
+          assert any(c.get("placeholder")=="Name" for c in second["controls"])
+          receipt={
+              "schema":"PROJECT_BRAIN_OSWORLD_V21_HOST_BROWSER_SYNTHETIC_SMOKE_V1",
+              "status":"PASS",
+              "source_blob_sha":"bfaf6f36b5bbd739ceff34ddb71ed9c603dc4240",
+              "operations":["NAVIGATE","OBSERVE","FILL_PLACEHOLDER","CLICK_TEXT","OBSERVE"],
+              "terminal_cases_consumed":0,
+              "incremental_spend_usd":0
+          }
+          Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          server.shutdown()
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osw-host-browser-smoke-v1
+          path: out/
+          if-no-files-found: error
