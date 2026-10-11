@@ -1,0 +1,34 @@
+{
+  "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK21_PUBLIC_LEDGER_BINDING_V1",
+  "date": "2026-10-11",
+  "status": "FRESH_RANK21_PREACTIVATION__ZERO_EXPOSURE__EIGHTEEN_CONSUMED",
+  "brain_ledger": {
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261011_V63.json",
+    "git_blob_sha": "32a1b6fd01dfb9b1bd0e6db080e0c79f76ae306a"
+  },
+  "brain_authority": {
+    "path": "canonical/governance/TB_SCIENCE_RANK21_ONE_SLOT_EXECUTION_AUTHORITY_20261011_V1.json",
+    "git_blob_sha": "cc056211011df95034c6da8ff383eb3305f18782"
+  },
+  "consumed_slots": 18,
+  "consumed_successes": 0,
+  "consumed_final_failures": 18,
+  "next_slot": {
+    "ledger_schedule_rank": 21,
+    "slot_id": "terminal-bench-science/ode-law-discovery::trial-0",
+    "task_digest": "sha256:767d16a0a6226f391208b1b4bb126a6f957e5d0c8156342b5c9410a755142d65"
+  },
+  "logical_attempt_id": "7eb619d40a65597b2b2dccbcf409c143aa47e1663ca4c0d8f098167cb252811a",
+  "execution_claim_binding_digest": "sha256:fb99e7f9d8d23a789c57506dc61e31c2abd25c442245f0309d94d65b29421697",
+  "task_read_history": false,
+  "task_started": false,
+  "start_cas_acquired": false,
+  "benchmark_trials_consumed": 0,
+  "activation_present": false,
+  "execution_authority": true,
+  "task_read_authority": true,
+  "activation_authority": false,
+  "acceptance_credit_delta": 0,
+  "capability_credit_delta": 0,
+  "terminal_credit_delta": 0
+}
