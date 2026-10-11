@@ -40,7 +40,7 @@ jobs:
           git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
           git -C llama.cpp checkout --detach FETCH_HEAD
           test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
-          cmake -S llama.cpp -B llama.cpp/build -G Ninja -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake -S llama.cpp -B llama.cpp/build -G Ninja -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DLLAMA_BUILD_UI=OFF -DLLAMA_USE_PREBUILT_UI=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build llama.cpp/build -j 4 --target llama-server
 
       - name: Restore exact Qwen model cache
