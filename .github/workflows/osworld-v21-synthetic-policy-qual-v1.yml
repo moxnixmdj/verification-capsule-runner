@@ -1,0 +1,92 @@
+name: OSWorld v2.1 synthetic local policy qualification V1
+
+on:
+  push:
+    branches:
+      - osworld-v21-synthetic-policy-qual-v1
+    paths:
+      - "capsules/osworld_v21_synthetic_policy_qual_v1/**"
+      - ".github/workflows/osworld-v21-synthetic-policy-qual-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify exact Brain policy source blobs
+        run: |
+          set -euo pipefail
+          C=capsules/osworld_v21_synthetic_policy_qual_v1
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py")" = "7a4301dfdfa23ab43db705488f6d0e12d53cf2c2"
+          test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
+          test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
+          ! grep -R -E 'task_[0-9]{3}|reference.trajector|evaluation_examples|benchmark_releases' "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py"
+
+      - name: Build exact pinned llama.cpp server
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cmake ninja-build ca-certificates curl
+          git init llama.cpp
+          git -C llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git
+          git -C llama.cpp fetch --depth 1 origin bec4772f6a2527d371557b5d2032641e5ff7619c
+          git -C llama.cpp checkout --detach FETCH_HEAD
+          test "$(git -C llama.cpp rev-parse HEAD)" = "bec4772f6a2527d371557b5d2032641e5ff7619c"
+          cmake -S llama.cpp -B llama.cpp/build -G Ninja -DGGML_CUDA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build llama.cpp/build -j 2 --target llama-server
+
+      - name: Reassemble exact Brain-controlled Qwen bytes
+        run: |
+          set -euo pipefail
+          mkdir -p models/parts
+          gh release download brain-capability-qwen35-9b-m-exact-v1             --repo moxnixmdj/verification-capsule-runner             --pattern 'Qwen3.5-9B-M-TS-Q4_K_M.gguf.part*'             --dir models/parts
+          ls -lh models/parts
+          : > models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+          for p in             models/parts/Qwen3.5-9B-M-TS-Q4_K_M.gguf.part01of03             models/parts/Qwen3.5-9B-M-TS-Q4_K_M.gguf.part02of03             models/parts/Qwen3.5-9B-M-TS-Q4_K_M.gguf.part03of03; do
+            cat "$p" >> models/Qwen3.5-9B-M-TS-Q4_K_M.gguf
+            rm "$p"
+          done
+          rmdir models/parts
+          echo 'f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c  models/Qwen3.5-9B-M-TS-Q4_K_M.gguf' | sha256sum -c -
+          test "$(stat -c '%s' models/Qwen3.5-9B-M-TS-Q4_K_M.gguf)" = "5060174144"
+
+      - name: Start exact local policy endpoint at 16k context
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if llama.cpp/build/bin/llama-server --help 2>&1 | grep -q -- '--reasoning'; then EXTRA+=(--reasoning off); fi
+          nohup llama.cpp/build/bin/llama-server             -m models/Qwen3.5-9B-M-TS-Q4_K_M.gguf             --alias brain-qwen3.5-9b             --host 127.0.0.1 --port 8080             -c 16384 -t 4 --parallel 1 --jinja --no-webui "${EXTRA[@]}"             > out-server.log 2>&1 &
+          echo $! > out-server.pid
+          ok=0
+          for i in $(seq 1 180); do
+            if curl -fsS http://127.0.0.1:8080/health > out-health.json 2>/dev/null; then ok=1; break; fi
+            sleep 1
+          done
+          test "$ok" = 1
+
+      - name: Run zero-benchmark synthetic policy qualification
+        env:
+          PYTHONPATH: ${{ github.workspace }}/capsules/osworld_v21_synthetic_policy_qual_v1
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python capsules/osworld_v21_synthetic_policy_qual_v1/qualify.py | tee out/qualification-console.jsonl
+
+      - name: Preserve qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: osworld-v21-synthetic-policy-qual-v1
+          path: |
+            out/
+            out-health.json
+            out-server.log
+          if-no-files-found: warn
