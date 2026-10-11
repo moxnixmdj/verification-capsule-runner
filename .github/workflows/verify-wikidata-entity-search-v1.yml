@@ -1,0 +1,46 @@
+name: Verify Wikidata entity search V1
+on:
+  push:
+    branches: [verify-wikidata-entity-search-v1-20261011]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py)" = "7dd5004e03d5df95273e666b63dc3cf670fc5bc8"
+          test "$(git hash-object canonical/tests/test_wikidata_entity_search_v1.py)" = "f7c31c7a084603b4fc8f1f0a57a03a2806f76e85"
+          echo EXACT_WIKIDATA_BLOBS_BOUND
+      - name: Compile
+        env: {PYTHONPATH: .}
+        run: python -m py_compile canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py
+      - name: Unit tests
+        env: {PYTHONPATH: .}
+        run: python -m unittest -v canonical.tests.test_wikidata_entity_search_v1
+      - name: Live public API health and semantics
+        env: {PYTHONPATH: .}
+        run: |
+          python - <<'PY'
+          from canonical.runtime.bound_capabilities.wikidata_entity_search_v1 import search
+          x=search("New York",limit=3,timeout=15)
+          assert x["status"]=="CANDIDATES_DISCOVERED",x
+          assert x["candidate_count"]>=1,x
+          assert all(str(r["entity_id"]).startswith("Q") for r in x["candidates"])
+          assert x["external_model_calls"]==0
+          assert x["model_dependency_count"]==0
+          assert x["answer_authority"] is False
+          assert x["correctness_authority"] is False
+          assert x["nonexistence_claim_authorized"] is False
+          print("LIVE_WIKIDATA_PASS",x["candidate_count"],[(r["entity_id"],r["label"]) for r in x["candidates"]])
+          PY
+      - name: Zero cognition statement
+        run: |
+          echo "EXTERNAL_MODEL_CALLS=0"
+          echo "MODEL_DEPENDENCY_COUNT=0"
+          echo "CAPABILITY_AUTHORITY=CANDIDATE_ONLY"
