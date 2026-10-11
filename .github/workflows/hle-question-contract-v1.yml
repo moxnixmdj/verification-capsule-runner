@@ -1,0 +1,38 @@
+name: Verify HLE Brain-native question contract V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_NATIVE_QUESTION_CONTRACT_PREEXPOSURE_20261011_V1.json"
+      - "canonical/runtime/hle_native_question_contract_v1.py"
+      - "canonical/runtime/hle_native_semantic_compiler_v1.py"
+      - "canonical/tests/test_hle_native_question_contract_v1.py"
+      - ".github/workflows/hle-question-contract-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/HLE_NATIVE_QUESTION_CONTRACT_PREEXPOSURE_20261011_V1.json)" = "a01caf6bd031828b962a6a30582e968ef184af11"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v1.py)" = "7acc064d880f266a28855eefe518ae40ff8ae49b"
+          test "$(git hash-object canonical/runtime/hle_native_semantic_compiler_v1.py)" = "238ebf2ffe23e527fceae919cbc30453a290fdd2"
+          test "$(git hash-object canonical/tests/test_hle_native_question_contract_v1.py)" = "506feb40e8b0a0ba84c33d683a1ccc03a16c5e2f"
+      - name: Compile frozen subject
+        run: |
+          python -m py_compile canonical/runtime/hle_native_question_contract_v1.py
+          python -m py_compile canonical/runtime/hle_native_semantic_compiler_v1.py
+          python -m py_compile canonical/tests/test_hle_native_question_contract_v1.py
+      - name: Run frozen synthetic no-model tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest -v canonical.tests.test_hle_native_question_contract_v1
