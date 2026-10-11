@@ -27,7 +27,7 @@ jobs:
           base64 -d "$R/encoded/chartography_fixed_x_boundary_v1.py.b64" > "$R/canonical/runtime/chartography_fixed_x_boundary_v1.py"
           base64 -d "$R/encoded/chartography_professional_semantic_router_v1.py.b64" > "$R/canonical/runtime/chartography_professional_semantic_router_v1.py"
           test "$(git hash-object "$R/canonical/runtime/bound_capabilities/image_ocr_tesseract.py")" = "45714d7a0160802d986042910da1c4c6462676e5"
-          test "$(git hash-object "$R/canonical/runtime/chartography_positioned_ocr_v1.py")" = "c3884cea30f2fa71a76a26a39b664e07ca4eff64"
+          test "$(git hash-object "$R/canonical/runtime/chartography_positioned_ocr_v1.py")" = "50689fcf929a1af47af3abee085903610af0f025"
           test "$(git hash-object "$R/canonical/runtime/chartography_axis_calibration_v1.py")" = "2893402d93205b79b594b363f3b10df43ecb7c7b"
           test "$(git hash-object "$R/canonical/runtime/chartography_semantic_utils_v1.py")" = "af179d2187d6edeaca977c9ad0bf079ba89a5d6a"
           test "$(git hash-object "$R/canonical/runtime/chartography_series_intersection_v1.py")" = "48cca7bce94e9a78ab688d50821b61fcd2a354d4"
