@@ -1,0 +1,59 @@
+name: Verify TB-Science Rank22 zero-exposure reseal
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank22_20261011_v1/**"
+      - "execution_guard/CURRENT_TERMINAL_EXECUTION_SURFACE_V1.json"
+      - "execution_guard/TB_SCIENCE_RANK22_ZERO_MODEL_EXECUTION_BEHAVIOR_V1.json"
+      - "execution_guard/rank22_claim_bound_identity_v1.py"
+      - ".github/workflows/verify-tb-science-rank22-zero-exposure-reseal-20261011-v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify exact staged Rank22 zero exposure
+        run: |
+          set -euo pipefail
+          test ! -e capsules/tb_science_rank22_20261011_v1/ACTIVATE_RANK22_V1_PR.json
+          export PYTHONPATH="$GITHUB_WORKSPACE/capsules/tb_science_rank22_20261011_v1:$GITHUB_WORKSPACE"
+          python capsules/tb_science_rank22_20261011_v1/rank22_zero_exposure_reseal_verify_v1.py
+          python - <<'PY'
+          import json
+          r=json.load(open("RANK22_ZERO_EXPOSURE_RESEAL_VERIFY_V1.json"))
+          assert r["pass"] is True, r
+          assert r["task_read"] is False
+          assert r["task_started"] is False
+          assert r["benchmark_trials_consumed"] == 0
+          assert r["model_dependency_count"] == 0
+          assert r["external_model_runtime_calls"] == 0
+          PY
+      - name: Re-run exact focused zero-model qualification
+        working-directory: capsules/tb_science_rank22_20261011_v1
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$PWD:$GITHUB_WORKSPACE"
+          python -m py_compile \
+            canonical/runtime/tb_science_zero_model_scientific_kernel_v1.py \
+            canonical/runtime/harbor_science_zero_model_agent_v1.py \
+            canonical/runtime/harbor_environment_transport_v2.py \
+            canonical/runtime/harbor_command_policy.py \
+            canonical/tests/test_tb_science_zero_model_scientific_kernel_v1.py \
+            rank22_prestart_guard_v1.py \
+            rank22_start_cas_v1.py \
+            rank22_zero_model_runner_v1.py \
+            rank22_finalize_receipt_v1.py \
+            rank22_execution_preflight_v1.py
+          python -m unittest -v canonical.tests.test_tb_science_zero_model_scientific_kernel_v1
