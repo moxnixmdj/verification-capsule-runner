@@ -1,0 +1,92 @@
+name: Verify Brain interprocedural value provenance V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-brain-interprocedural-value-provenance-v1.yml"
+      - "canonical/runtime/bound_capabilities/python_interprocedural_value_provenance_v1.py"
+      - "canonical/runtime/bound_capabilities/python_dynamic_fault_localizer_v1.py"
+      - "canonical/tests/test_python_interprocedural_value_provenance_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_interprocedural_value_provenance_v1.py)" = "c8f1298777cfa1a53731ce46d81fcc2b87b18d87"
+          test "$(git hash-object canonical/tests/test_python_interprocedural_value_provenance_v1.py)" = "7824b915ef966cec3dd740f884164f78861fd65b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_dynamic_fault_localizer_v1.py)" = "9a3cd924bd7cdaf6918c6072aebc7c344a69324e"
+          echo EXACT_BRAIN_BLOBS_BOUND
+      - name: Compile exact bytes
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/python_interprocedural_value_provenance_v1.py
+          python -m py_compile canonical/runtime/bound_capabilities/python_dynamic_fault_localizer_v1.py
+      - name: Focused independent tests
+        run: python -m unittest -v canonical.tests.test_python_interprocedural_value_provenance_v1
+      - name: Ownership and scope invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/python_interprocedural_value_provenance_v1.py").read_text()
+          required=[
+            'CAPABILITY_ID = "python.value.provenance.interprocedural.direct.v1"',
+            '"external_general_purpose_model_runtime_dependency_count": 0',
+            '"external_capability_provider_count": 0',
+            '"source_mutation_count": 0',
+            '"NO_GENERAL_DYNAMIC_TAINT_IDENTITY"',
+            '"NO_FRONTIERCODE_SCORE_OR_ACCEPTANCE_CREDIT"',
+          ]
+          missing=[x for x in required if x not in p]
+          if missing: raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
+          forbidden=["Qwen","MiniCPM","Claude","Gemini","openai","anthropic"]
+          found=[x for x in forbidden if x.lower() in p.lower()]
+          if found: raise SystemExit("GENERAL_PURPOSE_MODEL_REFERENCE_IN_PRODUCER:"+repr(found))
+          print("PASS_ZERO_MODEL_INTERPROCEDURAL_PROVENANCE_INVARIANTS")
+          PY
+      - name: Emit receipt
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p out
+          python - <<'PY'
+          import json,pathlib,subprocess
+          files={
+            "runtime":"canonical/runtime/bound_capabilities/python_interprocedural_value_provenance_v1.py",
+            "tests":"canonical/tests/test_python_interprocedural_value_provenance_v1.py",
+            "dynamic_localizer":"canonical/runtime/bound_capabilities/python_dynamic_fault_localizer_v1.py",
+          }
+          receipt={
+            "schema":"PROJECT_BRAIN_INTERPROCEDURAL_VALUE_PROVENANCE_PUBLIC_VERIFY_V1",
+            "status":"PASS__EXACT_BRAIN_BLOBS__FOCUSED_INDEPENDENT_TESTS",
+            "brain_pr":4616,
+            "brain_head_commit":"a6f221836310f320a3b7b6659b89976abd1ac6de",
+            "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
+            "focused_test_count":7,
+            "proved":["DIRECT_CROSS_MODULE_RETURN_LOCAL_PARAMETER_FLOW","FAILING_EXECUTION_ACTIVATION","RUNTIME_VALUE_SUMMARY_CORROBORATION","DYNAMIC_LOCALIZER_PROVENANCE_REGION_EXPANSION","COMPLEX_NESTED_CALL_FAILS_CLOSED","STAR_IMPORT_FAILS_CLOSED","DETERMINISTIC_READ_ONLY_ZERO_MODEL"],
+            "external_general_purpose_model_runtime_dependency_count":0,
+            "incremental_spend_usd":0,
+            "frontiercode_score_credit_delta":0,
+            "terminal_credit_delta":0,
+            "hard_nonclaims":["NO_GENERAL_DYNAMIC_TAINT_IDENTITY","NO_HEAP_ALIAS_PROVENANCE_COMPLETENESS","NO_DYNAMIC_DISPATCH_COMPLETENESS","NO_FRONTIERCODE_SCORE"]
+          }
+          pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brain-interprocedural-value-provenance-v1-verification
+          path: out/receipt.json
+          if-no-files-found: warn
