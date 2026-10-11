@@ -1,0 +1,33 @@
+name: Chartography authorized-access probe V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-authorized-access-probe-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Install Hugging Face client
+        run: python -m pip install --disable-pip-version-check --no-input "huggingface_hub>=0.27,<2"
+      - name: Probe authorization without reading dataset rows
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}" || { echo "::error::HF_TOKEN_SECRET_ABSENT"; exit 42; }
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          info=HfApi(token=os.environ["HF_TOKEN"]).repo_info("surgeai/chartography",repo_type="dataset")
+          print("AUTHORIZED_DATASET_REPO_ACCESS=1")
+          print("DATASET_REVISION="+info.sha)
+          PY
