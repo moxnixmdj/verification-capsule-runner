@@ -24,8 +24,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py)" = "f3fede29edaa4a6438ab554a7835d0674ad2d1c6"
-          test "$(git hash-object canonical/tests/test_python_coupled_software_repair_loop_v1.py)" = "0712f8fe4fadc9e00d0eb9a82278ee2cab861b43"
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py)" = "93e81068790657543211da20e44f0b4425a26b63"
+          test "$(git hash-object canonical/tests/test_python_coupled_software_repair_loop_v1.py)" = "de903757a501f5d2a418ed81d098983444c03840"
           test "$(git hash-object canonical/runtime/bound_capabilities/python_test_guided_patch_search_v1.py)" = "9bd33aca208fca26270765e18b3563abcf841e0b"
           test "$(git hash-object canonical/runtime/bound_capabilities/python_iterative_software_repair_loop_v1.py)" = "352867cf8ce00dab65b17b96d098b6ea4b32f40d"
           echo EXACT_BRAIN_BLOBS_BOUND
@@ -76,7 +76,7 @@ jobs:
             "status":"PASS__EXACT_BRAIN_BLOBS__FOCUSED_INDEPENDENT_TESTS",
             "brain_repository":"moxnixmdj/brain",
             "brain_pr":4600,
-            "brain_head_commit":"bb06f216d9a2a45d82d6f35875ff34874b298656",
+            "brain_head_commit":"805d54b1a5187ac5322ef76d16647c6bc32771fd",
             "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
             "verified_neutral_intermediate_pair":True,
             "verified_strict_single_regression":True,
