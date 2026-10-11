@@ -1,9 +1,9 @@
 {
   "schema": "PROJECT_BRAIN_CURRENT_TERMINAL_EXECUTION_SURFACE_V1",
   "date": "2026-10-11",
-  "status": "STAGED_RANK22_ZERO_MODEL_RESEAL__CLAIM_V2__PREFLIGHT_PHASE_ORDER_REPAIRED__PREACTIVATION__ZERO_EXPOSURE__INACTIVE_UNTIL_PROMOTION",
+  "status": "RANK22_ZERO_MODEL_EFFECTIVE_PREACTIVATION__CLAIM_V2__ZERO_EXPOSURE__ACTIVATION_ABSENT",
   "family": "TB_SCIENCE",
-  "active": false,
+  "active": true,
   "slot_id": "terminal-bench-science/rv-astrometry-fitting::trial-0",
   "task_digest": "sha256:8e086e1f7245067eaa9a67c259c1519204fa058d8664983066cd582ef258a1ea",
   "workflow_path": ".github/workflows/execute-tb-science-rank22-20261011-v1.yml",
@@ -15,11 +15,11 @@
   },
   "authority": {
     "path": "capsules/tb_science_rank22_20261011_v1/RANK22_PUBLIC_AUTHORITY_BINDING_V1.json",
-    "git_blob_sha": "e6908c53a229c9c3e086fdc9118f410575424adb"
+    "git_blob_sha": "6a3d81130a0f18d2041df42f7c045ac6b2a6c988"
   },
   "ledger": {
     "path": "capsules/tb_science_rank22_20261011_v1/RANK22_PUBLIC_LEDGER_BINDING_V1.json",
-    "git_blob_sha": "44c56f653a62d4cbc54019084c69098f0a49444a"
+    "git_blob_sha": "9a03bed8c55fd7faef28487fe838b7a1c080ddd3"
   },
   "logical_attempt_claim_binding": {
     "path": "capsules/tb_science_rank22_20261011_v1/RANK22_LOGICAL_ATTEMPT_CLAIM_BINDING_V2.json",
@@ -43,11 +43,12 @@
   "task_read_history": false,
   "task_started": false,
   "benchmark_trials_consumed": 0,
-  "execution_authority": false,
-  "task_read_authority": false,
+  "execution_authority": true,
+  "task_read_authority": true,
   "activation_present": false,
   "model_dependency_count": 0,
   "external_model_runtime_calls": 0,
   "incremental_spend_usd": 0,
-  "terminal_credit_delta": 0
+  "terminal_credit_delta": 0,
+  "next": "VERIFY_EFFECTIVE_PREACTIVATION_SURFACE__THEN_SEPARATELY_AUTHORIZE_EXACT_ONE_FILE_ACTIVATION"
 }
