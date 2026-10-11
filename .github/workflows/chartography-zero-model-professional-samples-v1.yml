@@ -91,9 +91,12 @@ jobs:
           for row in rows:
               doc=yaml.safe_load((root/'tasks'/f"sample_task_{row['case']}.yaml").read_text())
               gold=str(doc['golden_answer'])
-              m=re.search(r'acceptable range\s+([-+]?\d+(?:\.\d+)?)\s+to\s+([-+]?\d+(?:\.\d+)?)',gold,re.I)
-              if not m: raise SystemExit('SAMPLE_GOLD_RANGE_MISSING')
-              lo,hi=map(float,m.groups())
+              if 'acceptable range' not in gold.lower():
+                  raise SystemExit('SAMPLE_GOLD_RANGE_MISSING')
+              nums=[float(x) for x in re.findall(r'[-+]?\\d+(?:\\.\\d+)?',gold)]
+              if len(nums)<3:
+                  raise SystemExit('SAMPLE_GOLD_NUMBERS_MISSING:'+gold)
+              lo,hi=nums[-2],nums[-1]
               val=float(row['answer_numeric'])
               ok=lo<=val<=hi
               passed+=int(ok)
