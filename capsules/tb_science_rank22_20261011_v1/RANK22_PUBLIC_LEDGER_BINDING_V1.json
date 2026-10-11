@@ -1,14 +1,14 @@
 {
   "schema": "PROJECT_BRAIN_TB_SCIENCE_RANK22_PUBLIC_LEDGER_BINDING_V1",
   "date": "2026-10-11",
-  "status": "FRESH_RANK22_PREACTIVATION__ZERO_EXPOSURE__NINETEEN_CONSUMED__CLAIM_V2",
+  "status": "RANK22_EFFECTIVE_PREACTIVATION__ZERO_EXPOSURE__NINETEEN_CONSUMED__CLAIM_V2",
   "brain_ledger": {
-    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261011_V70.json",
-    "git_blob_sha": "299e82c215dd514d8da4aa58becce8e703b84959"
+    "path": "canonical/governance/TB_SCIENCE_CURRENT_SLOT_LEDGER_RECONCILIATION_20261011_V71.json",
+    "git_blob_sha": "2781ff135264e55bb114a331d995d57126660da6"
   },
   "brain_authority": {
-    "path": "canonical/governance/TB_SCIENCE_RANK22_ONE_SLOT_EXECUTION_AUTHORITY_20261011_V2.json",
-    "git_blob_sha": "58ecc78bc7baf7d3c3aa19a4bf409d2d9fdb1c8e"
+    "path": "canonical/governance/TB_SCIENCE_RANK22_ONE_SLOT_EXECUTION_AUTHORITY_20261011_V3.json",
+    "git_blob_sha": "6bb9a36c420c53c7d0cf8c2ea5b15d6d23ba40f8"
   },
   "consumed_slots": 19,
   "consumed_successes": 0,
@@ -32,5 +32,7 @@
   "external_model_runtime_calls": 0,
   "acceptance_credit_delta": 0,
   "capability_credit_delta": 0,
-  "terminal_credit_delta": 0
+  "terminal_credit_delta": 0,
+  "execution_authority_effective": true,
+  "task_read_authority_effective": true
 }
