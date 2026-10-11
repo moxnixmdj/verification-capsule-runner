@@ -188,58 +188,35 @@ def _native_tool_action(tool_call: dict) -> dict:
     return {"kind": "error", "answer": ""}
 
 
-def invoke_model(
+def _image_part(image: Path) -> dict:
+    with Image.open(image) as im:
+        fmt = (im.format or "PNG").upper()
+    mime = {"PNG": "image/png", "JPEG": "image/jpeg", "JPG": "image/jpeg", "WEBP": "image/webp"}.get(fmt, "image/png")
+    return {
+        "type": "image_url",
+        "image_url": {"url": "data:" + mime + ";base64," + base64.b64encode(image.read_bytes()).decode("ascii")},
+    }
+
+
+def _call_native_model(
     *,
     server_url: str,
-    image: Path,
-    question: str,
-    transcript: list[dict],
+    messages: list[dict],
     seed: int,
-    call_index: int,
+    require_tool: bool,
     timeout_s: int,
+    image_sha256: str,
 ) -> tuple[dict, dict]:
-    with Image.open(image) as im:
-        w, h = im.size
-        fmt = (im.format or "PNG").upper()
-    prior = []
-    for x in transcript[-6:]:
-        if x.get("tool") == "crop":
-            prior.append({"tool": "crop", "box": x["box"], "output_size": x["output_size"]})
-        elif x.get("tool") == "python":
-            prior.append({
-                "tool": "python",
-                "returncode": x["returncode"],
-                "stdout": x["stdout"],
-                "stderr": x["stderr"],
-            })
-
-    prompt = (
-        "Solve one professional chart-reading question from the chart image. "
-        "Use measurements rather than visual guessing. The available tools act on the CURRENT image. "
-        "Python runs offline and can inspect /work/current_image.png with Pillow, NumPy, SciPy, Matplotlib, and OpenCV. "
-        "When tool measurements are decisive, follow them rather than contradicting them by visual guess. "
-        f"Current image size: {w}x{h}. Prior tool results: {json.dumps(prior, separators=(',', ':'))}. "
-        "When measurements are sufficient, return only the substantive final answer with any required units. "
-        f"QUESTION: {question}"
-    )
-    mime = {"PNG": "image/png", "JPEG": "image/jpeg", "JPG": "image/jpeg", "WEBP": "image/webp"}.get(fmt, "image/png")
-    data_uri = "data:" + mime + ";base64," + base64.b64encode(image.read_bytes()).decode("ascii")
     payload = {
         "temperature": 0.0,
         "top_k": 1,
         "top_p": 1.0,
-        "seed": seed + call_index,
-        "max_tokens": 384,
+        "seed": seed,
+        "max_tokens": 1024,
         "parallel_tool_calls": False,
         "tools": TOOLS,
-        "tool_choice": "required" if call_index == 0 else "auto",
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": data_uri}},
-            ],
-        }],
+        "tool_choice": "required" if require_tool else "auto",
+        "messages": messages,
     }
     req = urllib.request.Request(
         server_url,
@@ -254,41 +231,28 @@ def invoke_model(
         body = json.loads(raw_bytes)
         choice = body["choices"][0]
         msg = choice["message"]
-        tool_calls = msg.get("tool_calls") or []
-        content = (msg.get("content") or "").strip()
-        http_status = 200
         error_class = None
+        http_status = 200
     except Exception as exc:
         raw_bytes = str(exc).encode()
-        tool_calls = []
-        content = ""
-        http_status = getattr(exc, "code", None)
+        choice = {}
+        msg = {"role": "assistant", "content": "", "tool_calls": []}
         error_class = type(exc).__name__
+        http_status = getattr(exc, "code", None)
 
     receipt = {
         "returncode": 0 if error_class is None else 1,
         "http_status": http_status,
         "error_class": error_class,
         "response_sha256": hashlib.sha256(raw_bytes).hexdigest(),
-        "seed": seed + call_index,
-        "image_sha256": sha256_file(image),
+        "seed": seed,
+        "image_sha256": image_sha256,
         "wall_seconds": round(time.time() - started, 3),
-        "tool_call_count": len(tool_calls),
+        "finish_reason": choice.get("finish_reason"),
+        "tool_call_count": len(msg.get("tool_calls") or []),
+        "required_tool": require_tool,
     }
-    if error_class is not None:
-        return {"kind": "error", "answer": ""}, receipt
-    if tool_calls:
-        if len(tool_calls) != 1:
-            return {"kind": "error", "answer": ""}, receipt
-        try:
-            return _native_tool_action(tool_calls[0]), receipt
-        except Exception:
-            return {"kind": "error", "answer": ""}, receipt
-    if call_index == 0:
-        return {"kind": "required_tool_not_called", "answer": ""}, receipt
-    if content:
-        return {"kind": "final", "answer": content}, receipt
-    return {"kind": "error", "answer": ""}, receipt
+    return msg, receipt
 
 
 def solve_one(
@@ -301,85 +265,206 @@ def solve_one(
     max_crops: int,
     timeout_s: int,
 ) -> dict:
+    workdir.mkdir(parents=True, exist_ok=True)
     current = image
+    with Image.open(current) as im:
+        w, h = im.size
+
+    messages: list[dict] = [{
+        "role": "user",
+        "content": [
+            {
+                "type": "text",
+                "text": (
+                    "Solve this professional chart-reading question from the chart image. "
+                    "Use measurement tools rather than eyeballing. The first turn must use a tool. "
+                    "Python runs offline and can inspect /work/current_image.png with Pillow, NumPy, SciPy, Matplotlib, and OpenCV. "
+                    "When tool measurements are decisive, trust them rather than contradicting them by visual guess. "
+                    f"Current image size is {w}x{h}. "
+                    "When enough evidence has been gathered, return only the substantive final answer with required units. "
+                    f"QUESTION: {question}"
+                ),
+            },
+            _image_part(current),
+        ],
+    }]
+
     transcript: list[dict] = []
     calls: list[dict] = []
-    for call_index in range(max_crops + 1):
-        action, call_receipt = invoke_model(
+    max_tool_turns = max_crops
+
+    for turn in range(max_tool_turns + 2):
+        msg, call_receipt = _call_native_model(
             server_url=server_url,
-            image=current,
-            question=question,
-            transcript=transcript,
-            seed=seed,
-            call_index=call_index,
+            messages=messages,
+            seed=seed + turn,
+            require_tool=(turn == 0),
             timeout_s=timeout_s,
+            image_sha256=sha256_file(current),
         )
         calls.append(call_receipt)
-        if action["kind"] == "required_tool_not_called":
+
+        if call_receipt["error_class"] is not None:
             return {
-                "status": "REQUIRED_TOOL_NOT_CALLED",
+                "status": "MODEL_ERROR",
                 "answer": "",
+                "error_class": call_receipt["error_class"],
                 "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
                 "transcript": transcript,
                 "calls": calls,
             }
-        if action["kind"] == "final":
-            return {
-                "status": "FINAL",
-                "answer": action["answer"],
-                "crop_calls": len(transcript),
-                "transcript": transcript,
-                "calls": calls,
-            }
-        if call_index >= max_crops:
-            return {
-                "status": "NO_VALID_FINAL",
-                "answer": "",
-                "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
-                "transcript": transcript,
-                "calls": calls,
-            }
-        if action["kind"] == "python":
+
+        tool_calls = msg.get("tool_calls") or []
+        content = (msg.get("content") or "").strip()
+
+        if tool_calls:
+            if len(tool_calls) != 1:
+                return {
+                    "status": "MULTIPLE_TOOL_CALLS",
+                    "answer": "",
+                    "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                    "transcript": transcript,
+                    "calls": calls,
+                }
+            if turn >= max_tool_turns:
+                return {
+                    "status": "TOOL_LIMIT",
+                    "answer": "",
+                    "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                    "transcript": transcript,
+                    "calls": calls,
+                }
+
+            call = tool_calls[0]
+            call_id = call.get("id") or f"call_{turn:04d}"
             try:
-                rec = run_python_tool(action["code"], current, workdir / f"python_{call_index:02d}")
+                action = _native_tool_action(call)
             except Exception as exc:
                 return {
-                    "status": "PYTHON_TOOL_ERROR",
+                    "status": "BAD_TOOL_CALL",
                     "answer": "",
                     "error_class": type(exc).__name__,
                     "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
                     "transcript": transcript,
                     "calls": calls,
                 }
-            transcript.append({
-                "tool": "python",
-                "code_sha256": hashlib.sha256(action["code"].encode()).hexdigest(),
-                **rec,
+
+            # Preserve actual assistant native-tool message so subsequent turns
+            # receive the tool call in the format expected by the chat template.
+            messages.append({
+                "role": "assistant",
+                "content": msg.get("content"),
+                "tool_calls": tool_calls,
             })
-            continue
-        if action["kind"] != "crop":
+
+            if action["kind"] == "python":
+                code = action["code"]
+                try:
+                    rec = run_python_tool(code, current, workdir / f"python_{turn:02d}")
+                except Exception as exc:
+                    return {
+                        "status": "PYTHON_TOOL_ERROR",
+                        "answer": "",
+                        "error_class": type(exc).__name__,
+                        "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                        "transcript": transcript,
+                        "calls": calls,
+                    }
+                transcript.append({
+                    "tool": "python",
+                    "code_sha256": hashlib.sha256(code.encode()).hexdigest(),
+                    **rec,
+                })
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": json.dumps({
+                        "returncode": rec["returncode"],
+                        "stdout": rec["stdout"],
+                        "stderr": rec["stderr"],
+                    }, separators=(",", ":")),
+                })
+                continue
+
+            if action["kind"] == "crop":
+                dst = workdir / f"crop_{turn:02d}.png"
+                try:
+                    rec = crop_image(current, dst, action["box"])
+                except Exception as exc:
+                    return {
+                        "status": "INVALID_CROP",
+                        "answer": "",
+                        "error_class": type(exc).__name__,
+                        "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+                        "transcript": transcript,
+                        "calls": calls,
+                    }
+                transcript.append({"tool": "crop", **rec})
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": call_id,
+                    "content": json.dumps({
+                        "status": "ok",
+                        "crop_size": rec["output_size"],
+                    }, separators=(",", ":")),
+                })
+                current = dst
+                messages.append({
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                f"Here is the crop you requested, size {rec['output_size'][0]}x{rec['output_size'][1]}. "
+                                "Continue from the accumulated evidence."
+                            ),
+                        },
+                        _image_part(current),
+                    ],
+                })
+                continue
+
             return {
-                "status": "NO_VALID_FINAL",
+                "status": "BAD_TOOL_CALL",
                 "answer": "",
                 "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
                 "transcript": transcript,
                 "calls": calls,
             }
-        dst = workdir / f"crop_{call_index:02d}.png"
-        try:
-            rec = crop_image(current, dst, action["box"])
-        except Exception as exc:
+
+        if turn == 0:
             return {
-                "status": "INVALID_CROP",
+                "status": "REQUIRED_TOOL_NOT_CALLED",
                 "answer": "",
-                "error_class": type(exc).__name__,
+                "crop_calls": 0,
+                "transcript": transcript,
+                "calls": calls,
+            }
+
+        if content:
+            return {
+                "status": "FINAL",
+                "answer": content,
                 "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
                 "transcript": transcript,
                 "calls": calls,
             }
-        transcript.append({"tool": "crop", **rec})
-        current = dst
-    return {"status": "NO_VALID_FINAL", "answer": "", "crop_calls": len(transcript), "transcript": transcript, "calls": calls}
+
+        return {
+            "status": "EMPTY_FINAL",
+            "answer": "",
+            "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+            "transcript": transcript,
+            "calls": calls,
+        }
+
+    return {
+        "status": "NO_VALID_FINAL",
+        "answer": "",
+        "crop_calls": sum(1 for x in transcript if x.get("tool") == "crop"),
+        "transcript": transcript,
+        "calls": calls,
+    }
 
 
 def main() -> None:
