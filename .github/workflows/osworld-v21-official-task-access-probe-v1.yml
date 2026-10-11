@@ -1,0 +1,130 @@
+name: OSWorld v2.1 official task access probe V1
+
+on:
+  push:
+    branches:
+      - osworld-v21-official-task-access-20261011-v1
+    paths:
+      - ".github/workflows/osworld-v21-official-task-access-probe-v1.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/osworld-v21-official-task-access-probe-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    env:
+      HF_TOKEN_A: ${{ secrets.HF_TOKEN }}
+      HF_TOKEN_B: ${{ secrets.HUGGINGFACE_TOKEN }}
+      HF_TOKEN_C: ${{ secrets.HF_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe exact gated task revision without exposing bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json, os, subprocess, sys
+          from pathlib import Path
+
+          out = Path("out")
+          status = {
+              "schema": "OSWORLD_V21_OFFICIAL_TASK_ACCESS_PROBE_V1",
+              "release": "osworld-v2.1",
+              "task_repository": "xlangai/osworld_v2_tasks",
+              "task_revision": "0a1aadad95aa79b00b3783e717d865089ab06e26",
+              "expected_task_count": 108,
+              "credential_present": False,
+              "download_succeeded": False,
+              "all_108_hashes_match": False,
+              "matched_count": 0,
+              "mismatch_count": None,
+              "status": "STARTED",
+          }
+
+          token = next((os.environ.get(k, "") for k in ("HF_TOKEN_A","HF_TOKEN_B","HF_TOKEN_C") if os.environ.get(k, "")), "")
+          status["credential_present"] = bool(token)
+          if not token:
+              status["status"] = "BLOCKED__NO_HUGGINGFACE_CREDENTIAL_IN_PUBLIC_RUNNER"
+              out.joinpath("status.json").write_text(json.dumps(status, indent=2) + "\n")
+              print(status["status"])
+              raise SystemExit(0)
+
+          try:
+              subprocess.run(
+                  [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "-q", "huggingface_hub>=0.29,<2"],
+                  check=True,
+              )
+              subprocess.run(
+                  ["git", "clone", "--quiet", "--depth", "1", "--branch", "osworld-v2.1",
+                   "https://github.com/xlang-ai/OSWorld-V2.git", "/tmp/osworld-v2"],
+                  check=True,
+              )
+              manifest_path = Path("/tmp/osworld-v2/benchmark_releases/osworld-v2.1.task_hashes.json")
+              manifest = json.loads(manifest_path.read_text())
+              expected = manifest["files"]
+              if len(expected) != 108:
+                  raise RuntimeError(f"unexpected_manifest_count:{len(expected)}")
+
+              from huggingface_hub import snapshot_download
+              root = Path(snapshot_download(
+                  repo_id="xlangai/osworld_v2_tasks",
+                  repo_type="dataset",
+                  revision="0a1aadad95aa79b00b3783e717d865089ab06e26",
+                  token=token,
+                  allow_patterns=["task_*.py"],
+                  local_dir="/tmp/osworld-v2-tasks",
+              ))
+              status["download_succeeded"] = True
+
+              import hashlib
+              matched = 0
+              mismatches = []
+              for name, meta in sorted(expected.items()):
+                  p = root / name
+                  if not p.is_file():
+                      mismatches.append({"file": name, "reason": "missing"})
+                      continue
+                  data = p.read_bytes()
+                  got = hashlib.sha256(data).hexdigest()
+                  if got == meta["sha256"] and len(data) == int(meta["size"]):
+                      matched += 1
+                  else:
+                      mismatches.append({"file": name, "reason": "hash_or_size_mismatch"})
+
+              status["matched_count"] = matched
+              status["mismatch_count"] = len(mismatches)
+              status["all_108_hashes_match"] = matched == 108 and not mismatches
+              status["status"] = (
+                  "PASS__AUTHORIZED_EXACT_108_TASK_BYTES_AVAILABLE_AND_HASH_MATCHED"
+                  if status["all_108_hashes_match"]
+                  else "FAIL_CLOSED__DOWNLOADED_TASK_BYTES_DO_NOT_MATCH_OFFICIAL_MANIFEST"
+              )
+              if mismatches:
+                  status["mismatch_files"] = [x["file"] for x in mismatches]
+          except Exception as exc:
+              status["status"] = "BLOCKED_OR_FAILED__HUGGINGFACE_GATE_OR_TRANSPORT"
+              status["error_type"] = type(exc).__name__
+              status["error_summary"] = str(exc)[:500].replace(token, "[REDACTED]") if token else str(exc)[:500]
+
+          out.joinpath("status.json").write_text(json.dumps(status, indent=2) + "\n")
+          print(status["status"])
+          print("credential_present=" + str(status["credential_present"]).lower())
+          print("download_succeeded=" + str(status["download_succeeded"]).lower())
+          print("matched_count=" + str(status["matched_count"]))
+          print("all_108_hashes_match=" + str(status["all_108_hashes_match"]).lower())
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osworld-v21-official-task-access-probe-v1
+          path: out/status.json
+          if-no-files-found: error
