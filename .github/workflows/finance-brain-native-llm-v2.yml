@@ -6,8 +6,10 @@ on:
     paths:
       - "canonical/runtime/finance_agent_v2_brain_native_llm_v1.py"
       - "canonical/runtime/finance_agent_v2_brain_native_llm_v2.py"
+      - "canonical/runtime/finance_native_evidence_synthesis_v1.py"
       - "canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py"
       - "canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py"
+      - "canonical/tests/test_finance_native_evidence_synthesis_v1.py"
       - ".github/workflows/finance-brain-native-llm-v2.yml"
   workflow_dispatch:
 
@@ -26,23 +28,27 @@ jobs:
       - name: Bind exact Brain blobs
         run: |
           test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v1.py)" = "9ec61256da933b91edad92620fd3d019ac141eff"
-          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v2.py)" = "89a9c3b6de37d78ece32054ad242c880f11f8293"
+          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v2.py)" = "5d7b022bb2a38b29a2700dbe951a375eae719960"
           test "$(git hash-object canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py)" = "6ff9462721b99e82c3a09f680034051dac7a2c34"
           test "$(git hash-object canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py)" = "5b3b8b0ef2e6cf93b28f9da360f2191e884ab5ad"
+          test "$(git hash-object canonical/runtime/finance_native_evidence_synthesis_v1.py)" = "dbc93263a6067056b7ae3dbefe41964992779d3b"
+          test "$(git hash-object canonical/tests/test_finance_native_evidence_synthesis_v1.py)" = "9ab65b1e72a745f62c5edd5c67fe9a330bfb9a55"
           test "$(git hash-object canonical/runtime/finance_market_price_series_v1.py)" = "02fbcee19c186db6c832af7690b6118040bab567"
       - name: Compile exact subject
         run: |
           python -m py_compile canonical/runtime/finance_agent_v2_brain_native_llm_v1.py
           python -m py_compile canonical/runtime/finance_agent_v2_brain_native_llm_v2.py
+          python -m py_compile canonical/runtime/finance_native_evidence_synthesis_v1.py
           python -m py_compile canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py
           python -m py_compile canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py
+          python -m py_compile canonical/tests/test_finance_native_evidence_synthesis_v1.py
       - name: Install focused test dependency
         run: python -m pip install --disable-pip-version-check --no-input pytest==8.3.5
       - name: Run exact V1 and V2 tests
         env:
           PYTHONPATH: .
         run: |
-          python -m pytest -q             canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py             canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py
+          python -m pytest -q canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py canonical/tests/test_finance_native_evidence_synthesis_v1.py
       - name: Prove no runtime model or network client imports
         run: |
           python - <<'PY'
@@ -52,6 +58,7 @@ jobs:
           for path in [
               "canonical/runtime/finance_agent_v2_brain_native_llm_v1.py",
               "canonical/runtime/finance_agent_v2_brain_native_llm_v2.py",
+              "canonical/runtime/finance_native_evidence_synthesis_v1.py",
           ]:
               tree=ast.parse(Path(path).read_text())
               imports=set()
