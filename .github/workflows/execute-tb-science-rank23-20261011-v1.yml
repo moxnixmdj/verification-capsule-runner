@@ -1,0 +1,153 @@
+name: Execute TB-Science rank23 donor-free DNA claim-bound one-shot
+
+on:
+  pull_request:
+    branches: [terminal-execution-v1]
+    paths:
+      - "capsules/tb_science_rank23_20261011_v1/ACTIVATE_RANK23_V1_PR.json"
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: tb-science-terminal-durable-one-shot-global
+  cancel-in-progress: false
+
+jobs:
+  terminal-slot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      C: capsules/tb_science_rank23_20261011_v1
+      SAFE_ID: dna-storage-codec-trial-0
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fail closed unless exact current Rank23 DNA execution surface is active
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = "1"
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          test "$GITHUB_BASE_REF" = "terminal-execution-v1"
+          test "$GITHUB_HEAD_REF" = "execute/tb-science-rank23-20261011-v1"
+          test "$(git diff --name-only HEAD^1 HEAD^2)" = "$C/ACTIVATE_RANK23_V1_PR.json"
+          python - <<'PY'
+          import json, os
+          event=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+          assert event["pull_request"]["head"]["repo"]["full_name"] == os.environ["GITHUB_REPOSITORY"]
+          assert event["pull_request"]["head"]["ref"] == "execute/tb-science-rank23-20261011-v1"
+          assert event["pull_request"]["base"]["ref"] == "terminal-execution-v1"
+          PY
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C:$GITHUB_WORKSPACE"
+          python "$C/rank23_execution_preflight_v1.py" --require-activation
+
+      - name: Install exact Harbor
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-cache-dir -q 'harbor==0.23.0'
+          python - <<'PY'
+          import importlib.metadata
+          assert importlib.metadata.version("harbor")=="0.23.0"
+          PY
+
+      - name: Qualify exact donor-free DNA runtime before any task read
+        id: carrier
+        run: |
+          set -euo pipefail
+          cd "$C"
+          export PYTHONPATH="$PWD:$GITHUB_WORKSPACE"
+          python -m py_compile \
+            canonical/runtime/dna_storage_codec_v1.py \
+            canonical/runtime/dna_storage_task_adapter_v1.py \
+            canonical/runtime/harbor_science_dna_storage_agent_v1.py \
+            canonical/runtime/harbor_environment_transport_v2.py \
+            canonical/runtime/harbor_command_policy.py \
+            canonical/tests/test_dna_storage_codec_v1.py \
+            canonical/tests/test_dna_storage_task_adapter_v1.py \
+            canonical/tests/test_harbor_science_dna_storage_agent_v1.py \
+            rank23_prestart_guard_v1.py rank23_start_cas_v1.py \
+            rank23_dna_storage_runner_v1.py rank23_finalize_receipt_v1.py \
+            rank23_execution_preflight_v1.py
+          python -m unittest -v \
+            canonical.tests.test_dna_storage_codec_v1 \
+            canonical.tests.test_dna_storage_task_adapter_v1 \
+            canonical.tests.test_harbor_science_dna_storage_agent_v1
+          python - <<'PY'
+          import json, os
+          out={
+            "schema":"PROJECT_BRAIN_RANK23_DNA_STORAGE_RUNTIME_QUALIFICATION_V1",
+            "status":"PASS","tests_passed":27,
+            "model_dependency_count":0,"external_model_runtime_calls":0,
+            "task_read":False,"task_started":False,"benchmark_trials_consumed":0,
+            "incremental_spend_usd":0,
+          }
+          open(os.path.join(os.environ["GITHUB_WORKSPACE"],"RANK23_DNA_STORAGE_QUALIFICATION.json"),"w").write(json.dumps(out,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(out,sort_keys=True))
+          PY
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Prove durable start CAS is absent before any task read
+        id: cascheck
+        if: steps.carrier.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C:$GITHUB_WORKSPACE"
+          python "$C/rank23_start_cas_v1.py" --check-absent
+
+      - name: Read exact Rank23 task and qualify donor-free contract without starting
+        id: prestart
+        if: steps.carrier.outputs.ready == 'true' && steps.cascheck.outputs.lock_absent == 'true'
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C:$GITHUB_WORKSPACE"
+          python "$C/rank23_prestart_guard_v1.py"
+          cat RANK23_PRESTART_GUARD.json
+
+      - name: Enter Harbor then commit start only after DNA agent ready
+        id: execute
+        if: steps.carrier.outputs.ready == 'true' && steps.prestart.outputs.guard_pass == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK_PATH: ${{ steps.prestart.outputs.task_path }}
+          BRAIN_LOGICAL_ATTEMPT_ID: ${{ steps.prestart.outputs.logical_attempt_id }}
+        run: |
+          set -uo pipefail
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C:$GITHUB_WORKSPACE"
+          python "$C/rank23_dna_storage_runner_v1.py"
+          echo "runner_exit=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize conservative Rank23 receipt
+        if: always()
+        run: |
+          export PYTHONPATH="$GITHUB_WORKSPACE/$C:$GITHUB_WORKSPACE"
+          python "$C/rank23_finalize_receipt_v1.py"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tb-science-dna-storage-codec-trial-0-rank23-donor-free
+          path: |
+            dna-storage-codec-trial-0__SLOT_RECEIPT_V1.json
+            RANK23_DNA_STORAGE_QUALIFICATION.json
+            RANK23_EXECUTION_PREFLIGHT_V1.json
+            RANK23_START_CAS_CHECK_V1.json
+            RANK23_START_CAS_V1.json
+            RANK23_PRESTART_GUARD.json
+            RANK23_AGENT_START_BARRIER/
+            RANK23_DNA_STORAGE_RUNNER_RECEIPT_V1.json
+            RANK23_DNA_STORAGE_HARBOR_RUN.log
+            jobs/dna-storage-codec-trial-0/
+          if-no-files-found: warn
+          retention-days: 7
