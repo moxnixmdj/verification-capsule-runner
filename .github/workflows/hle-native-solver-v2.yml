@@ -1,0 +1,33 @@
+name: Verify HLE Brain-native solver V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_native_total_solver_v2.py"
+      - "canonical/tests/test_hle_native_total_solver_v2.py"
+      - ".github/workflows/hle-native-solver-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_total_solver_v2.py)" = "aba3541c400210686c33fff2a551b0f8a79785b5"
+          test "$(git hash-object canonical/tests/test_hle_native_total_solver_v2.py)" = "45b658fa4fb614c754a874a6c670b8cff4606242"
+      - name: Compile frozen subject
+        run: |
+          python -m py_compile canonical/runtime/hle_native_total_solver_v2.py
+          python -m py_compile canonical/tests/test_hle_native_total_solver_v2.py
+      - name: Run synthetic no-model tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest -v canonical.tests.test_hle_native_total_solver_v2
