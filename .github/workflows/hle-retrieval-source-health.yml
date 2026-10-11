@@ -1,0 +1,76 @@
+name: Diagnose HLE retrieval source health
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_native_retrieval_query_planner_v1.py"
+      - "canonical/runtime/hle_native_question_contract_v3.py"
+      - "canonical/runtime/hle_native_question_contract_v2.py"
+      - "canonical/runtime/hle_native_question_contract_v1.py"
+      - "canonical/runtime/hle_native_semantic_compiler_v1.py"
+      - "canonical/runtime/hle_native_open_domain_research_v5.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json"
+      - "canonical/tests/run_hle_retrieval_trace_short_seed_v1.py"
+      - "canonical/tests/run_hle_source_health_consumed_v1.py"
+      - ".github/workflows/hle-retrieval-source-health.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind source-health bytes
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v1.py)" = "2386db287d08153ffb905f8cd89a76f4ebf19d9f"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "ae6006af1e578b0690357756e0b899a10323a5f4"
+          test "$(git hash-object canonical/tests/run_hle_retrieval_trace_short_seed_v1.py)" = "0afe328fd3c801a5a87256bf0dac06f7ce4b1667"
+          test "$(git hash-object canonical/tests/run_hle_source_health_consumed_v1.py)" = "8aceb2ed4d9e0ace4d61e335677f1e6896f373dd"
+      - name: Compile source-health path
+        env:
+          PYTHONPATH: .
+        run: python -m py_compile canonical/tests/run_hle_source_health_consumed_v1.py
+      - name: Prepare fixed consumed questions
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_retrieval_trace_short_seed_v1.py prepare --questions /tmp/hq.json
+      - name: Concurrent source health
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_source_health_consumed_v1.py --questions /tmp/hq.json --out /tmp/h4.json --workers 4
+      - name: Sequential source health
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_source_health_consumed_v1.py --questions /tmp/hq.json --out /tmp/h1.json --workers 1
+      - name: Compare
+        run: |
+          python - <<'PY'
+          import json
+          a=json.load(open("/tmp/h4.json"));b=json.load(open("/tmp/h1.json"))
+          for x in (a,b):
+              assert x["external_model_calls_total"]==0
+              assert x["model_dependency_count_total"]==0
+              assert x["hle_questions_consumed"]==0
+              assert x["hle_gold_consumed"]==0
+          print("SOURCE_HEALTH_COMPARE",json.dumps({
+            "concurrent":{"bing_nonempty":a["bing_nonempty_rate"],"wiki_nonempty":a["wiki_nonempty_rate"],"wiki_status":a["wiki_status_counts"]},
+            "sequential":{"bing_nonempty":b["bing_nonempty_rate"],"wiki_nonempty":b["wiki_nonempty_rate"],"wiki_status":b["wiki_status_counts"]},
+          },sort_keys=True))
+          PY
+      - name: Upload health receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-retrieval-source-health
+          path: |
+            /tmp/h4.json
+            /tmp/h1.json
+          if-no-files-found: ignore
+          retention-days: 7
