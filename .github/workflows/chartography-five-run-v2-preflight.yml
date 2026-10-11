@@ -56,9 +56,11 @@ jobs:
             '"--shard-count"',
             '"python"',
             '"crop"',
-            '"bwrap"',
-            '"--unshare-all"',
-            '"--clearenv"',
+            '"docker"',
+            '"--network", "none"',
+            '"--read-only"',
+            '"--cap-drop", "ALL"',
+            '"no-new-privileges"',
             "gold_loaded_after_response_seal",
             "gold_present_in_generation_projection",
           ]
@@ -67,4 +69,17 @@ jobs:
           if "golden_answer" in py.split("# SCORING PHASE:")[0]:
               raise SystemExit("GOLD_REFERENCE_BEFORE_SCORING_PHASE")
           print("PASS_CHARTOGRAPHY_FIVE_RUN_V2_PREFLIGHT")
+          PY
+      - name: Verify sound scorer boundary examples
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=subject/chartography_clean_eval python - <<'PY'
+          from chartography_deterministic_lower_bound_scorer_v1 import score_lower_bound
+          assert score_lower_bound("350C (acceptable range 330C to 370C)", "350C").score == 1
+          assert score_lower_bound("350C (acceptable range 330C to 370C)", "400C").score == 0
+          assert score_lower_bound("$4.2M", "4.2 million").score == 1
+          assert score_lower_bound("31 percentage points", "31 pp").score == 1
+          assert score_lower_bound("12", "13").score == 0
+          print("PASS_SOUND_SCORER_BOUNDARIES")
           PY
