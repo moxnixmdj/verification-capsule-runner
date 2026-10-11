@@ -52,7 +52,7 @@ jobs:
           test "$(git hash-object canonical/tests/test_finance_sec_ticker_cik_from_registry_v1.py)" = "a2e38c0cc92dd1e74c39b66c127ebd5d4f830d73"
           test "$(git hash-object canonical/tests/test_finance_sec_fact_selector_v1.py)" = "92193ff9e25748edecd47d0fe9c05856087a4dc9"
           test "$(git hash-object canonical/tests/test_finance_market_price_series_v1.py)" = "42f32b1e0f9d78d3c924527e1b579f135844d253"
-          test "$(git hash-object canonical/tests/test_finance_modeling_workflows_v1.py)" = "0d61a56bd644b020d8a41a2a5c368ca351df279c"
+          test "$(git hash-object canonical/tests/test_finance_modeling_workflows_v1.py)" = "77fc1d9f641548b87aa81a7bd3630838c20a5e2b"
       - name: Compile exact subject
         run: |
           python -m py_compile canonical/runtime/finance_quantitative_algebra_v1.py
