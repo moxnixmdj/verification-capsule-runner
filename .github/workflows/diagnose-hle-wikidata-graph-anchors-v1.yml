@@ -14,6 +14,7 @@ jobs:
         run: |
           test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py)" = "7dd5004e03d5df95273e666b63dc3cf670fc5bc8"
           test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_neighborhood_v1.py)" = "051d224bd8f5b04f410e579c9b070cad0a3d89a6"
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_rate_aware_transport_v1.py)" = "49593c6df23389588eb605de3a89ebf39eb3ff56"
           echo EXACT_GRAPH_BLOBS_BOUND
       - name: Traverse sealed baseline anchors
         env: {PYTHONPATH: .}
@@ -22,6 +23,7 @@ jobs:
           import json,time
           from canonical.runtime.bound_capabilities.wikidata_entity_search_v1 import search
           from canonical.runtime.bound_capabilities.wikidata_entity_neighborhood_v1 import neighborhood
+          from canonical.runtime.bound_capabilities.wikidata_rate_aware_transport_v1 import make_fetcher
           # These anchors are copied from the already-sealed V1 query trace.
           anchors={
             27:["Scotsman","Governor of New South Wales"],
@@ -31,23 +33,23 @@ jobs:
             41:["Bill"],
             45:["Troy"],
           }
+          fetch=make_fetcher(min_interval=1.0,max_retries=3,max_retry_after=4)
           out=[]
           for row_idx,queries in anchors.items():
             qids=[]; searches=[]
             for q in queries:
               try:
-                x=search(q,limit=2,timeout=15)
+                x=search(q,limit=2,timeout=15,fetch_fn=fetch)
                 searches.append({"query":q,"status":x["status"],"labels":[c["label"] for c in x["candidates"]]})
                 for c in x["candidates"]:
                   if c["entity_id"] not in qids:qids.append(c["entity_id"])
                   if len(qids)>=3:break
               except Exception as e:
                 searches.append({"query":q,"status":"FAILED:"+type(e).__name__,"labels":[]})
-              time.sleep(1.0)
-            edges=[]
+              edges=[]
             if qids:
               try:
-                n=neighborhood(qids,max_edges_per_entity=35,max_total_edges=90,timeout=15)
+                n=neighborhood(qids,max_edges_per_entity=35,max_total_edges=90,timeout=15,fetch_fn=fetch)
                 for e in n["edges"]:
                   edges.append({
                     "source":e["source_label"],"property":e["property_label"],
@@ -61,14 +63,13 @@ jobs:
                  "neighborhood_status":status,"edge_count":len(edges),"edges":edges}
             out.append(row)
             print("GRAPH_ROW",json.dumps(row,ensure_ascii=False,sort_keys=True))
-            time.sleep(1.0)
           open("/tmp/graph.json","w").write(json.dumps({
             "schema":"PROJECT_BRAIN_HLE_WIKIDATA_GRAPH_ANCHOR_TRACE_V1",
             "baseline_query_trace_run":38145869751,
             "gold_accessed":False,"external_model_calls":0,"model_dependency_count":0,
             "hle_questions_consumed":0,"hle_gold_consumed":0,"rows":out
           },ensure_ascii=False,sort_keys=True,indent=2))
-          print("GRAPH_TRACE_SEALED",sum(r["edge_count"] for r in out),sum(bool(r["source_qids"]) for r in out))
+          print("GRAPH_TRACE_SEALED",sum(r["edge_count"] for r in out),sum(bool(r["source_qids"]) for r in out),"api_requests",fetch.request_count,"retries",fetch.retry_count)
           PY
       - name: Upload graph trace
         uses: actions/upload-artifact@v4
