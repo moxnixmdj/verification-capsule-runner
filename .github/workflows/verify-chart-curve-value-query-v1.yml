@@ -1,13 +1,13 @@
-name: Verify Chartography Brain-native curve value query V1
+name: Verify Chartography Brain-native curve inverse query V1
 
 on:
   pull_request:
     branches: [main]
     paths:
       - ".github/workflows/verify-chart-curve-value-query-v1.yml"
-      - "canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py"
-      - "canonical/tests/test_chart_curve_value_query_v1.py"
-      - "verification/independent_chart_curve_value_query_v1.py"
+      - "canonical/runtime/bound_capabilities/chart_curve_inverse_query_v1.py"
+      - "canonical/tests/test_chart_curve_inverse_query_v1.py"
+      - "verification/independent_chart_curve_inverse_query_v1.py"
   workflow_dispatch:
 
 permissions:
@@ -23,45 +23,42 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_curve_inverse_query_v1.py)" = "a0cf067f28d07e4d0a7421f7fd0e020d8ae5a026"
+          test "$(git hash-object canonical/tests/test_chart_curve_inverse_query_v1.py)" = "655242d6224daa12209a48b382b01d750209bfc8"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py)" = "107e20dd66840ecaba32e9e9f6cbfc764da1ae0b"
-          test "$(git hash-object canonical/tests/test_chart_curve_value_query_v1.py)" = "21870c05e9a8533305168cad65edd1977aeb047b"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_legend_style_binding_v1.py)" = "aeed8dc4dc231d1d1a794188974930e9457c7ecb"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py)" = "1ccab094a14ae261a01912ad6e573ffc09fa8b35"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py)" = "258999b07287287db2037af777973d5bbb39116d"
-          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "19f3087489ce7f6f935fc7baaebdc8cd672f4b62"
-          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "45714d7a0160802d986042910da1c4c6462676e5"
           echo EXACT_BRAIN_BLOBS_BOUND
       - name: Install focused dependency
         run: python -m pip install --disable-pip-version-check --no-input "pillow>=10,<13"
       - name: Compile exact bytes
-        run: |
-          python -m py_compile canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py
-          python -m py_compile canonical/runtime/bound_capabilities/chart_legend_style_binding_v1.py
-          python -m py_compile canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py
-      - name: Brain candidate tests
-        run: python -m unittest -v canonical.tests.test_chart_curve_value_query_v1
+        run: python -m py_compile canonical/runtime/bound_capabilities/chart_curve_inverse_query_v1.py
+      - name: Brain author tests
+        run: python -m unittest -v canonical.tests.test_chart_curve_inverse_query_v1
       - name: Independent falsification cases
-        run: python -m unittest -v verification.independent_chart_curve_value_query_v1
+        run: python -m unittest -v verification.independent_chart_curve_inverse_query_v1
       - name: Ownership and nonclaim invariants
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           import pathlib
-          p=pathlib.Path("canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py").read_text()
+          p=pathlib.Path("canonical/runtime/bound_capabilities/chart_curve_inverse_query_v1.py").read_text()
           required=[
-            'CAPABILITY_ID = "chart.raster.curve_value_query.v1"',
+            'CAPABILITY_ID = "chart.raster.curve_inverse_query.v1"',
             '"external_general_purpose_model_runtime_dependency_count": 0',
             '"domain_semantic_authority": False',
             '"benchmark_score_authority": False',
             '"NO_CHARTOGRAPHY_SCORE_CREDIT"',
+            '"NO_MULTIPLE_CROSSING_CURVE_AUTHORITY"',
           ]
           missing=[x for x in required if x not in p]
           if missing: raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
           forbidden=["Qwen","MiniCPM","Claude","Gemini","openai","anthropic"]
           found=[x for x in forbidden if x.lower() in p.lower()]
           if found: raise SystemExit("GENERAL_PURPOSE_MODEL_REFERENCE_IN_PRODUCER:"+repr(found))
-          print("PASS_ZERO_MODEL_CURVE_QUERY_INVARIANTS")
+          print("PASS_ZERO_MODEL_CURVE_INVERSE_INVARIANTS")
           PY
       - name: Emit receipt
         if: success()
@@ -71,26 +68,27 @@ jobs:
           python - <<'PY'
           import json,pathlib,subprocess
           files={
-            "runtime":"canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py",
-            "tests":"canonical/tests/test_chart_curve_value_query_v1.py",
+            "runtime":"canonical/runtime/bound_capabilities/chart_curve_inverse_query_v1.py",
+            "tests":"canonical/tests/test_chart_curve_inverse_query_v1.py",
+            "curve_value_dependency":"canonical/runtime/bound_capabilities/chart_curve_value_query_v1.py",
             "legend_binding":"canonical/runtime/bound_capabilities/chart_legend_style_binding_v1.py",
             "axis_binding":"canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py",
             "scene_graph":"canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py",
           }
           receipt={
-            "schema":"PROJECT_BRAIN_CHART_CURVE_VALUE_QUERY_PUBLIC_VERIFY_V1",
+            "schema":"PROJECT_BRAIN_CHART_CURVE_INVERSE_QUERY_PUBLIC_VERIFY_V1",
             "status":"PASS__EXACT_BRAIN_BLOBS__AUTHOR_TESTS_PLUS_INDEPENDENT_FALSIFICATION",
-            "brain_pr":4626,
-            "brain_head_commit":"bffabd4b7ab34d084175d9549900cf4b1e776d66",
+            "brain_pr":4642,
+            "brain_head_commit":"1ef76a025daf521c07b57334118db948d752ea19",
             "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
-            "brain_test_count":10,
+            "brain_test_count":12,
             "independent_falsification_count":6,
             "heldout_chartography_cases_consumed":0,
             "external_general_purpose_model_runtime_dependency_count":0,
             "incremental_spend_usd":0,
             "chartography_score_credit_delta":0,
             "terminal_credit_delta":0,
-            "hard_nonclaims":["NO_DOMAIN_SEMANTIC_AUTHORITY","NO_OVERLAPPING_SAME_COLOR_MULTI_SERIES_AUTHORITY","NO_CHARTOGRAPHY_SCORE"]
+            "hard_nonclaims":["NO_DOMAIN_SEMANTIC_AUTHORITY","NO_MULTIPLE_CROSSING_AUTHORITY","NO_CHARTOGRAPHY_SCORE"]
           }
           pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
           print(json.dumps(receipt,sort_keys=True))
@@ -98,6 +96,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: chart-curve-value-query-v1-verification
+          name: chart-curve-inverse-query-v1-verification
           path: out/receipt.json
           if-no-files-found: warn
