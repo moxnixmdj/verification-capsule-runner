@@ -1,0 +1,27 @@
+{
+  "schema": "PROJECT_BRAIN_CHARTOGRAPHY_SUBJECT_FREEZE_V1",
+  "benchmark": "Surge AI Chartography",
+  "target_metric": "with_tools_mean_percent",
+  "threshold": 89,
+  "subject": {
+    "model_repository": "mradermacher/ChartVerse-8B-GGUF",
+    "model_revision": "044013a4745e310250b1a2a7a3bfd12082c8a1e8",
+    "model_file": "ChartVerse-8B.Q4_K_M.gguf",
+    "mmproj_file": "ChartVerse-8B.mmproj-Q8_0.gguf",
+    "llama_cpp_commit": "a7fb71fab83b474a0892b9a05aaa3a8ddca2729b"
+  },
+  "freeze_policy": {
+    "selected_before_official_task_exposure": true,
+    "official_chartography_tasks_consumed_for_selection": 0,
+    "official_chartography_golden_answers_consumed_for_selection": 0,
+    "synthetic_qualification_only": true,
+    "no_post_exposure_model_or_prompt_selection": true
+  },
+  "selection_basis": [
+    "chart-specialized pre-Chartography model family",
+    "fits zero-incremental-spend public GitHub runner envelope",
+    "same llama.cpp multimodal runtime route already exercised by existing Chartography machinery"
+  ],
+  "file_sha256_binding": "TO_BE_FILLED_ONLY_FROM_PREEXPOSURE_QUALIFICATION_RECEIPT",
+  "incremental_spend_usd": 0
+}
