@@ -17,6 +17,7 @@ assert _spec.loader is not None
 _spec.loader.exec_module(base)
 
 _old_group=base.group_ocr_lines
+_old_find_legend=base.find_legend_line
 
 
 def group_ocr_lines_v2(words: list[dict]) -> list[dict]:
@@ -28,6 +29,43 @@ def group_ocr_lines_v2(words: list[dict]) -> list[dict]:
     spatial=base.reconstruct_spatial_legend_rows(words,max(1,int(width)),max(1,int(height)))
     return spatial+native
 
+
+
+def find_legend_line_v2(lines: list[dict], temp: float, gradient: float):
+    scored=[]
+    for line in lines:
+        vals=base._numbers_in_text(line.get("text",""))
+        has_temp=any(abs(v-temp)<=max(0.5,0.001*abs(temp)) for v in vals)
+        has_grad=any(abs(v-gradient)<=max(0.0015,0.08*abs(gradient)) for v in vals)
+        if not (has_temp and has_grad):
+            continue
+        text=base.norm_text(line.get("text",""))
+        source=line.get("source","native_ocr")
+        numeric_count=len(vals)
+        score=0.0
+        # Native OCR rows that already contain the complete label are less
+        # likely to have accidentally merged adjacent legend entries.
+        if source=="native_ocr":
+            score+=20.0
+        else:
+            score+=5.0
+        if "deg" in text:
+            score+=4.0
+        if "k" in text:
+            score+=4.0
+        if "/" in line.get("text",""):
+            score+=2.0
+        score-=4.0*max(0,numeric_count-2)
+        width=float(line.get("right",0)-line.get("left",0))
+        if width>0:
+            score-=0.0005*width
+        words=line.get("words") or []
+        if words:
+            score+=0.01*sum(max(0.0,float(x.get("conf",0))) for x in words)/len(words)
+        scored.append((score,line))
+    if scored:
+        return max(scored,key=lambda x:x[0])[1]
+    return _old_find_legend(lines,temp,gradient)
 
 def representative_legend_color_v2(img_bgr: np.ndarray, line: dict):
     h,w=img_bgr.shape[:2]
@@ -158,6 +196,7 @@ def cluster_same_color_lines_v2(
 
 
 base.group_ocr_lines=group_ocr_lines_v2
+base.find_legend_line=find_legend_line_v2
 base.representative_legend_color=representative_legend_color_v2
 base.legend_style_signature=legend_style_signature_v2
 base.cluster_same_color_lines=cluster_same_color_lines_v2
