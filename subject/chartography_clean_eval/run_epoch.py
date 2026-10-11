@@ -93,7 +93,15 @@ def run_python_tool(code: str, current_image: Path, workdir: Path) -> dict:
 
 
 def extract_action(stdout: str) -> dict | None:
-    for raw in reversed(_JSON.findall(stdout)):
+    """Parse the last complete JSON action line.
+
+    Line-wise JSON parsing is deliberate: Python tool code may itself contain
+    braces, which makes regex-based object extraction unsound.
+    """
+    candidates = [x.strip() for x in stdout.splitlines() if x.strip()]
+    if stdout.strip() not in candidates:
+        candidates.append(stdout.strip())
+    for raw in reversed(candidates):
         try:
             obj = json.loads(raw)
         except Exception:
@@ -109,7 +117,6 @@ def extract_action(stdout: str) -> dict | None:
         if set(obj) == {"tool", "code"} and obj.get("tool") == "python" and isinstance(obj.get("code"), str):
             return {"kind": "python", "code": obj["code"]}
     return None
-
 
 def fallback_final(stdout: str) -> str:
     lines = [re.sub(r"\s+", " ", x).strip() for x in stdout.splitlines() if x.strip()]
