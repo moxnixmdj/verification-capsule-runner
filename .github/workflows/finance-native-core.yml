@@ -24,7 +24,7 @@ jobs:
       - name: Bind exact Brain keyless tool blobs
         run: |
           test "$(git hash-object canonical/runtime/finance_agent_v2_keyless_public_tools_v1.py)" = "e393d2cb6d0a02b8e6976417e4a5e41264c9c263"
-          test "$(git hash-object canonical/tests/test_finance_agent_v2_keyless_public_tools_v1.py)" = "9952440bcc36c3eb57c7fa037a1ffa62262c1792"
+          test "$(git hash-object canonical/tests/test_finance_agent_v2_keyless_public_tools_v1.py)" = "a513c2f0f56b32cbe5e658575df7dabee779420c"
       - name: Compile exact subject
         run: |
           python -m py_compile canonical/runtime/finance_agent_v2_keyless_public_tools_v1.py
