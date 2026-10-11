@@ -1,19 +1,116 @@
-name: Verify independent acceptance model
+name: Verify Coding V6 software acceptance specification V1
+
 on:
   pull_request:
     branches: [main]
     paths:
-      - 'verification/independent_acceptance_model.py'
-      - 'verification/test_independent_acceptance_model.py'
       - '.github/workflows/verify-independent-acceptance-model.yml'
+      - 'canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py'
+      - 'verification/independent_python_software_acceptance_spec_v1.py'
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-24.04
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
-      - run: cd verification && python -m unittest -v test_independent_acceptance_model.py
+      - name: Bind exact Brain subject and reused semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py)" = "b542ea934fbdc1d8777cebb1b0fd527ca8235d61"
+          test "$(git hash-object canonical/runtime/independent_acceptance_model.py)" = "710298c5d7154b5a3c2a4a1700420c40cb2fa55a"
+          test "$(git hash-object canonical/tests/test_python_software_acceptance_spec_v1.py)" = "9090d776f57b46429198e9d55900fa881701a47e"
+          python - <<'PY'
+          import hashlib,inspect
+          from canonical.runtime import goal_compiler
+          src=inspect.getsource(goal_compiler.decompose_goal)
+          got=hashlib.sha256(src.encode()).hexdigest()
+          want="c6515d86ff765926471c5f31874d7b74ee305f8de7baf75dbc9825bf5af4d23e"
+          if got != want:
+              raise SystemExit(f"DECOMPOSE_GOAL_SEMANTICS_DRIFT:{got}")
+          print("EXACT_IMPORTED_DECOMPOSE_GOAL_FUNCTION_BOUND",got)
+          PY
+      - name: Compile subject
+        run: python -m py_compile canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py
+      - name: Brain author tests
+        run: python -m unittest -v canonical.tests.test_python_software_acceptance_spec_v1
+      - name: Independent unseen falsification
+        run: python -m unittest -v verification.independent_python_software_acceptance_spec_v1
+      - name: Ownership and fail-closed invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py").read_text()
+          required=[
+            'CAPABILITY_ID = "python.software.acceptance.specification.v1"',
+            '"external_general_purpose_model_runtime_dependency_count": 0',
+            '"existing_test_pass_does_not_override_unbound_semantics": True',
+            '"NO_ARBITRARY_NATURAL_LANGUAGE_SEMANTIC_COMPLETENESS"',
+            '"NO_FRONTIERCODE_SCORE_CREDIT"',
+          ]
+          missing=[x for x in required if x not in p]
+          if missing:
+              raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
+          forbidden=["Qwen","MiniCPM","Claude","Gemini","openai","anthropic"]
+          found=[x for x in forbidden if x.lower() in p.lower()]
+          if found:
+              raise SystemExit("GENERAL_PURPOSE_MODEL_REFERENCE_IN_PRODUCER:"+repr(found))
+          print("PASS_BRAIN_NATIVE_ACCEPTANCE_SPEC_INVARIANTS")
+          PY
+      - name: Emit receipt
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p out
+          python - <<'PY'
+          import hashlib,inspect,json,pathlib,subprocess
+          from canonical.runtime import goal_compiler
+          receipt={
+            "schema":"PROJECT_BRAIN_CODING_V6_SOFTWARE_ACCEPTANCE_SPEC_PUBLIC_VERIFY_V1",
+            "status":"PASS__EXACT_RUNTIME__INDEPENDENT_UNSEEN_FALSIFICATION",
+            "brain_pr":4643,
+            "brain_runtime_blob":subprocess.check_output(
+              ["git","hash-object","canonical/runtime/bound_capabilities/python_software_acceptance_spec_v1.py"],
+              text=True
+            ).strip(),
+            "independent_acceptance_model_blob":subprocess.check_output(
+              ["git","hash-object","canonical/runtime/independent_acceptance_model.py"],
+              text=True
+            ).strip(),
+            "decompose_goal_function_sha256":hashlib.sha256(
+              inspect.getsource(goal_compiler.decompose_goal).encode()
+            ).hexdigest(),
+            "author_test_blob":"9090d776f57b46429198e9d55900fa881701a47e",
+            "author_test_count":10,
+            "independent_falsification_count":8,
+            "frontiercode_cases_consumed":0,
+            "external_general_purpose_model_runtime_dependency_count":0,
+            "incremental_spend_usd":0,
+            "frontiercode_score_credit_delta":0,
+            "terminal_credit_delta":0,
+            "hard_nonclaims":[
+              "NO_ARBITRARY_NATURAL_LANGUAGE_SEMANTIC_COMPLETENESS",
+              "NO_HIDDEN_REQUIREMENT_INFERENCE",
+              "NO_GENERAL_MERGEABILITY_AUTHORITY",
+              "NO_FRONTIERCODE_SCORE"
+            ]
+          }
+          pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coding-v6-software-acceptance-spec-v1-verification
+          path: out/receipt.json
+          if-no-files-found: warn
