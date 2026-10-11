@@ -1,0 +1,166 @@
+name: Chartography ChartVerse official-sample crop-loop V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-chartverse-official-sample-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OFFICIAL_HARNESS_COMMIT: 3f1bf837232d3918c2cc35c6e2418c9e70d2a57b
+  MODEL_REPO: mradermacher/ChartVerse-8B-GGUF
+  MODEL_REVISION: 02926a8255ad68f66cad965e3faf4fd6f6515259
+  MODEL_FILE: ChartVerse-8B.Q4_K_M.gguf
+  MODEL_SHA256: 97eebc1d3d8a2f8482205a986305bdbcd5553b8c2131073dc47c553badaa9d15
+  MMPROJ_FILE: ChartVerse-8B.mmproj-Q8_0.gguf
+  MMPROJ_SHA256: 0df4b5c847587984c93e6712f0851abb2227ecabfe94b8d60ccac90a12b654f0
+  LLAMA_CPP_COMMIT: a7fb71fab83b474a0892b9a05aaa3a8ddca2729b
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install exact runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build curl ca-certificates
+          python -m pip install --disable-pip-version-check --no-input "pillow>=10,<13" "pyyaml>=6,<7"
+          mkdir -p model out
+
+      - name: Bind official non-heldout sample pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/surge-ai/chartography.git official
+          cd official
+          git checkout --detach "$OFFICIAL_HARNESS_COMMIT"
+          test "$(git rev-parse HEAD)" = "$OFFICIAL_HARNESS_COMMIT"
+          test -f task_packs/sample_charts/charts/sample_chart_1.png
+          test -f task_packs/sample_charts/charts/sample_chart_2.jpg
+          test -f task_packs/sample_charts/tasks/sample_task_1.yaml
+          test -f task_packs/sample_charts/tasks/sample_task_2.yaml
+
+      - name: Download exact frozen subject
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://huggingface.co/${MODEL_REPO}/resolve/${MODEL_REVISION}"
+          curl -fL --retry 5 --retry-all-errors "$BASE/${MODEL_FILE}?download=true" -o model/model.gguf
+          curl -fL --retry 5 --retry-all-errors "$BASE/${MMPROJ_FILE}?download=true" -o model/mmproj.gguf
+          echo "${MODEL_SHA256}  model/model.gguf" | sha256sum -c -
+          echo "${MMPROJ_SHA256}  model/mmproj.gguf" | sha256sum -c -
+
+      - name: Build exact visual CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          cd llama.cpp
+          git checkout --detach "$LLAMA_CPP_COMMIT"
+          test "$(git rev-parse HEAD)" = "$LLAMA_CPP_COMMIT"
+          cmake -S . -B build -G Ninja -DGGML_NATIVE=OFF -DGGML_CUDA=OFF -DGGML_BLAS=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target llama-mtmd-cli -j 2
+
+      - name: Run two official non-heldout sample tasks with bounded crop loop
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, re, subprocess, pathlib, hashlib
+          import yaml
+          from PIL import Image
+
+          root=pathlib.Path("official/task_packs/sample_charts")
+          cli="./llama.cpp/build/bin/llama-mtmd-cli"
+          model="model/model.gguf"; mmproj="model/mmproj.gguf"
+
+          def sha(p):
+              return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+
+          def parse_action(raw):
+              objs=re.findall(r'\{[^{}]*\}',raw,re.S)
+              for s in reversed(objs):
+                  try: x=json.loads(s)
+                  except Exception: continue
+                  if isinstance(x,dict) and set(x)=={"final"} and str(x["final"]).strip():
+                      return ("final",str(x["final"]).strip())
+                  if isinstance(x,dict) and set(x)=={"tool","left","top","right","bottom"} and x.get("tool")=="crop":
+                      vals=[x[k] for k in ("left","top","right","bottom")]
+                      if all(type(v) is int for v in vals): return ("crop",tuple(vals))
+              lines=[x.strip() for x in raw.splitlines() if x.strip()]
+              return ("final",lines[-1] if lines else "")
+
+          def solve(image,question,outdir):
+              current=pathlib.Path(image); crops=[]; calls=[]
+              for idx in range(3):
+                  with Image.open(current) as im: w,h=im.size
+                  prompt=(
+                    "Solve this professional chart-reading question from the image. "
+                    "You may zoom once or twice by asking for a crop. "
+                    "Return exactly one JSON object and nothing else. "
+                    "For a crop use {\"tool\":\"crop\",\"left\":INTEGER,\"top\":INTEGER,\"right\":INTEGER,\"bottom\":INTEGER}. "
+                    "Coordinates refer to the CURRENT image, origin top-left, size "+str(w)+"x"+str(h)+". "
+                    "When ready answer with {\"final\":\"ANSWER\"}. Preserve necessary units. "
+                    "QUESTION: "+question
+                  )
+                  cp=subprocess.run([cli,"-m",model,"--mmproj",mmproj,"--no-mmproj-offload",
+                    "--image",str(current),"-p",prompt,"-n","128","-t","4","--seed",str(7001+idx),
+                    "--temp","0.1","--image-min-tokens","256"],text=True,capture_output=True,timeout=300)
+                  calls.append({"returncode":cp.returncode,"stdout_sha256":hashlib.sha256(cp.stdout.encode()).hexdigest(),
+                                "stderr_sha256":hashlib.sha256(cp.stderr.encode()).hexdigest(),"image_sha256":sha(current)})
+                  if cp.returncode!=0: return {"answer":"","status":"MODEL_ERROR","crops":crops,"calls":calls}
+                  kind,val=parse_action(cp.stdout)
+                  if kind=="final": return {"answer":val,"status":"FINAL","crops":crops,"calls":calls}
+                  l,t,r,b=val
+                  with Image.open(current) as im:
+                      if l<0 or t<0 or r<=l or b<=t or r>im.width or b>im.height:
+                          return {"answer":"","status":"INVALID_CROP","crops":crops,"calls":calls}
+                      dst=outdir/f"crop_{idx}.png"; dst.parent.mkdir(parents=True,exist_ok=True)
+                      im.crop((l,t,r,b)).save(dst)
+                  crops.append({"box":[l,t,r,b],"sha256":sha(dst)})
+                  current=dst
+              return {"answer":"","status":"NO_FINAL","crops":crops,"calls":calls}
+
+          cases=[
+            ("sample_task_1.yaml","charts/sample_chart_1.png",76.0,79.0),
+            ("sample_task_2.yaml","charts/sample_chart_2.jpg",330.0,370.0),
+          ]
+          rows=[]
+          for i,(yf,imgrel,lo,hi) in enumerate(cases,1):
+              y=yaml.safe_load((root/"tasks"/yf).read_text())
+              res=solve(root/imgrel,str(y["prompt"]),pathlib.Path("out")/f"case_{i}")
+              nums=re.findall(r'[-+]?\d+(?:\.\d+)?',res["answer"].replace(",",""))
+              value=float(nums[0]) if nums else None
+              passed=value is not None and lo<=value<=hi
+              rows.append({"case":i,"task_file":yf,"prompt_sha256":hashlib.sha256(str(y["prompt"]).encode()).hexdigest(),
+                           "chart_sha256":sha(root/imgrel),"answer":res["answer"],"parsed_value":value,
+                           "acceptable":[lo,hi],"pass":passed,"solver":res})
+          result={
+            "schema":"PROJECT_BRAIN_CHARTOGRAPHY_CHARTVERSE_OFFICIAL_SAMPLE_CROP_LOOP_V1",
+            "official_harness_commit":"3f1bf837232d3918c2cc35c6e2418c9e70d2a57b",
+            "model_revision":"02926a8255ad68f66cad965e3faf4fd6f6515259",
+            "model_sha256":"97eebc1d3d8a2f8482205a986305bdbcd5553b8c2131073dc47c553badaa9d15",
+            "mmproj_sha256":"0df4b5c847587984c93e6712f0851abb2227ecabfe94b8d60ccac90a12b654f0",
+            "sample_cases":2,"passed":sum(x["pass"] for x in rows),"pass":all(x["pass"] for x in rows),
+            "heldout_cases_consumed":0,"heldout_gold_consumed":0,"incremental_spend_usd":0,"rows":rows}
+          pathlib.Path("out/result.json").write_text(json.dumps(result,indent=2)+"\n")
+          print(json.dumps({"passed":result["passed"],"pass":result["pass"],
+                            "answers":[[x["case"],x["answer"],x["pass"]] for x in rows]}))
+          raise SystemExit(0 if result["pass"] else 1)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chartography-chartverse-official-sample-v1
+          path: out/
+          if-no-files-found: error
