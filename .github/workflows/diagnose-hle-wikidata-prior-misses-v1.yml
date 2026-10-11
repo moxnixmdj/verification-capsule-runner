@@ -1,0 +1,62 @@
+name: Diagnose HLE Wikidata prior misses V1
+on:
+  push:
+    branches: [diag-hle-wikidata-prior-misses-20261011-v1]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py)" = "7dd5004e03d5df95273e666b63dc3cf670fc5bc8"
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v1.py)" = "2386db287d08153ffb905f8cd89a76f4ebf19d9f"
+          test "$(git hash-object canonical/tests/run_hle_wikidata_prior_misses_v1.py)" = "13ce1ce566e10ffc21e9bb5a94abaa412353ed3d"
+          echo EXACT_WIKIDATA_DIAGNOSTIC_BLOBS_BOUND
+      - name: Compile
+        env: {PYTHONPATH: .}
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/wikidata_entity_search_v1.py
+          python -m py_compile canonical/tests/run_hle_wikidata_prior_misses_v1.py
+      - name: Prepare ten consumed misses
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_wikidata_prior_misses_v1.py prepare --questions /tmp/q.json
+      - name: Seal Wikidata trace before gold
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_wikidata_prior_misses_v1.py trace --questions /tmp/q.json --trace /tmp/t.json --workers 2
+      - name: Score after trace seal
+        env: {PYTHONPATH: .}
+        run: python canonical/tests/run_hle_wikidata_prior_misses_v1.py score --trace /tmp/t.json --summary /tmp/s.json
+      - name: Enforce protected state and report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/s.json"))
+          assert x["external_model_calls_total"]==0
+          assert x["model_dependency_count_total"]==0
+          assert x["hle_questions_consumed"]==0
+          assert x["hle_gold_consumed"]==0
+          assert x["hle_score_credit"]==0
+          print("WIKIDATA_PRIOR_MISS_RESULT",json.dumps({
+            "recovered":x["wikidata_recovered_prior_misses"],
+            "rows":x["recovered_row_indices"],
+            "combined_hits":x["combined_union_hit_count"],
+            "combined_rate":x["combined_union_retrieval_any_hit_rate"],
+            "absolute_gain":x["absolute_recall_gain"],
+          },sort_keys=True))
+          PY
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-wikidata-prior-misses-v1
+          path: /tmp/s.json
+          if-no-files-found: ignore
+          retention-days: 7
