@@ -133,3 +133,5 @@ jobs:
           name: chart-direct-curve-label-family-rank-independent-v1
           path: out/receipt.json
           if-no-files-found: error
+
+# trigger exact independent replay 2026-10-11
