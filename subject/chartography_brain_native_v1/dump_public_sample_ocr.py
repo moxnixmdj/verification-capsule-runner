@@ -25,6 +25,7 @@ for p in samples:
         "line_count":obs["line_count"],
         "text":obs["text"],
         "text_items":obs["text_items"],
+        "word_items":obs.get("word_items",[]),
         "terminal_semantic_authority":obs["terminal_semantic_authority"],
     }
     dest=outdir/(p.stem+".ocr.json")
