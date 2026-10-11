@@ -1,0 +1,108 @@
+name: OSWorld local planner synthetic smoke V1
+
+on:
+  push:
+    branches: [osw-planner-smoke-v1]
+    paths:
+      - '.github/workflows/osw-planner-smoke-v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TAG: brain-capability-qwen35-9b-m-exact-v1
+      MODEL_FILE: Qwen3.5-9B-M-TS-Q4_K_M.gguf
+      MODEL_SHA256: f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c
+      LLAMA_REV: bec4772f6a2527d371557b5d2032641e5ff7619c
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reassemble exact Brain-controlled planner model
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p model out
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY"             --pattern "$MODEL_FILE.part*of03" --dir model
+          cat model/"$MODEL_FILE".part01of03               model/"$MODEL_FILE".part02of03               model/"$MODEL_FILE".part03of03 > model/"$MODEL_FILE"
+          echo "$MODEL_SHA256  model/$MODEL_FILE" | sha256sum -c -
+
+      - name: Build pinned llama.cpp
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git llama.cpp
+          git -C llama.cpp checkout --detach "$LLAMA_REV" || {
+            git -C llama.cpp fetch --depth 1 origin "$LLAMA_REV"
+            git -C llama.cpp checkout --detach "$LLAMA_REV"
+          }
+          cmake -S llama.cpp -B llama.cpp/build             -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF             -DLLAMA_CURL=OFF -DGGML_NATIVE=ON
+          cmake --build llama.cpp/build --target llama-cli -j 4
+
+      - name: Synthetic browser-state planning smoke
+        run: |
+          set -euo pipefail
+          cat > prompt.txt <<'EOF'
+          You are the deterministic planning component of Project Brain's OSWorld agent.
+          Return EXACTLY one JSON object and no markdown or commentary.
+          Allowed output:
+          {"response":"short rationale","actions":[{"type":"BROWSER_OP","op":{"type":"CLICK_TEXT","text":"Settings","exact":true}}]}
+          or {"response":"...","actions":[{"type":"WAIT"}]}
+          Prefer direct browser operations over coordinate guessing.
+          Never emit raw shell, Python, JavaScript, benchmark source paths, evaluator details, or hidden answers.
+
+          LIVE_STATE:
+          {"goal":"Open Settings","browser_state":{"page_count":1,"pages":[{"page_index":0,"url":"https://example.test/","title":"Synthetic Example","elements":[{"i":0,"tag":"button","text":"Settings"},{"i":1,"tag":"button","text":"Cancel"}]}]},"a11y_tree":null,"history":[]}
+          EOF
+          llama.cpp/build/bin/llama-cli             -m "model/$MODEL_FILE" -f prompt.txt -n 320 -c 4096 -t 4             --temp 0 --no-display-prompt > out/raw.txt 2> out/stderr.txt
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          text = Path("out/raw.txt").read_text(encoding="utf-8", errors="replace")
+          dec = json.JSONDecoder()
+          obj = None
+          for i,ch in enumerate(text):
+              if ch != "{":
+                  continue
+              try:
+                  cand,_ = dec.raw_decode(text[i:])
+              except json.JSONDecodeError:
+                  continue
+              if isinstance(cand,dict) and isinstance(cand.get("actions"),list):
+                  obj = cand
+                  break
+          if obj is None:
+              raise SystemExit("NO_ACTION_JSON")
+          actions = obj["actions"]
+          if len(actions) != 1 or not isinstance(actions[0],dict):
+              raise SystemExit("INVALID_ACTION_COUNT")
+          allowed = {"BROWSER_OP","CLICK","DOUBLE_CLICK","RIGHT_CLICK","MOVE","DRAG_TO","TYPE","PRESS","HOTKEY","SCROLL","STATE_OPS","WAIT","DONE","FAIL"}
+          kind = str(actions[0].get("type","")).upper()
+          if kind not in allowed:
+              raise SystemExit("UNSUPPORTED_ACTION:"+kind)
+          receipt = {
+              "schema":"PROJECT_BRAIN_OSWORLD_V21_QWEN35_SYNTHETIC_PLANNER_SMOKE_V1",
+              "status":"PASS",
+              "terminal_cases_consumed":0,
+              "incremental_spend_usd":0,
+              "model_sha256":"f41c0a0c0e43bf721fb2da29374cd1a97271bac0bab08a9dc42964525e82350c",
+              "llama_cpp_revision":"bec4772f6a2527d371557b5d2032641e5ff7619c",
+              "action":actions[0],
+              "response":obj.get("response",""),
+          }
+          Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osw-planner-smoke-v1
+          path: out/
+          if-no-files-found: error
