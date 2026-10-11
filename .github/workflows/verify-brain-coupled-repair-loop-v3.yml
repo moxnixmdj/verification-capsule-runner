@@ -1,0 +1,100 @@
+name: Verify Brain coupled software repair loop V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-brain-coupled-repair-loop-v3.yml"
+      - "canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py"
+      - "canonical/runtime/bound_capabilities/python_test_guided_patch_search_v1.py"
+      - "canonical/runtime/bound_capabilities/python_iterative_software_repair_loop_v1.py"
+      - "canonical/tests/test_python_coupled_software_repair_loop_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py)" = "93e81068790657543211da20e44f0b4425a26b63"
+          test "$(git hash-object canonical/tests/test_python_coupled_software_repair_loop_v1.py)" = "de903757a501f5d2a418ed81d098983444c03840"
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_test_guided_patch_search_v1.py)" = "9bd33aca208fca26270765e18b3563abcf841e0b"
+          test "$(git hash-object canonical/runtime/bound_capabilities/python_iterative_software_repair_loop_v1.py)" = "352867cf8ce00dab65b17b96d098b6ea4b32f40d"
+          echo EXACT_BRAIN_BLOBS_BOUND
+      - name: Compile exact capability bytes
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py
+          python -m py_compile canonical/runtime/bound_capabilities/python_test_guided_patch_search_v1.py
+          python -m py_compile canonical/runtime/bound_capabilities/python_iterative_software_repair_loop_v1.py
+      - name: Focused independent tests
+        run: python -m unittest -v canonical.tests.test_python_coupled_software_repair_loop_v1
+      - name: Ownership and scope invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py").read_text()
+          required=[
+            '"model_dependency_count": 0',
+            '"external_general_purpose_model_runtime_dependency_count": 0',
+            '"external_capability_provider_count": 0',
+            '"incremental_spend_usd": 0',
+            '"NO_FRONTIERCODE_SCORE_OR_ACCEPTANCE_CREDIT"',
+            '"NEUTRAL_INTERMEDIATE_COUPLED_PAIR"',
+          ]
+          missing=[x for x in required if x not in p]
+          if missing: raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
+          forbidden=["Qwen","MiniCPM","Claude","Gemini","openai","anthropic"]
+          found=[x for x in forbidden if x.lower() in p.lower()]
+          if found: raise SystemExit("GENERAL_PURPOSE_MODEL_REFERENCE_IN_PRODUCER:"+repr(found))
+          print("PASS_ZERO_MODEL_COUPLED_REPAIR_INVARIANTS")
+          PY
+      - name: Emit verification receipt
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p out
+          python - <<'PY'
+          import json,pathlib,subprocess
+          files={
+            "runtime":"canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py",
+            "tests":"canonical/tests/test_python_coupled_software_repair_loop_v1.py",
+            "patch_search":"canonical/runtime/bound_capabilities/python_test_guided_patch_search_v1.py",
+            "strict_loop":"canonical/runtime/bound_capabilities/python_iterative_software_repair_loop_v1.py",
+          }
+          receipt={
+            "schema":"PROJECT_BRAIN_COUPLED_SOFTWARE_REPAIR_LOOP_V3_PUBLIC_VERIFY_V1",
+            "status":"PASS__EXACT_BRAIN_BLOBS__FOCUSED_INDEPENDENT_TESTS",
+            "brain_repository":"moxnixmdj/brain",
+            "brain_pr":4600,
+            "brain_head_commit":"805d54b1a5187ac5322ef76d16647c6bc32771fd",
+            "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
+            "verified_neutral_intermediate_pair":True,
+            "verified_strict_single_regression":True,
+            "verified_evidence_ranked_localization":True,
+            "verified_source_restoration":True,
+            "external_general_purpose_model_runtime_dependency_count":0,
+            "incremental_spend_usd":0,
+            "frontiercode_score_credit_delta":0,
+            "terminal_credit_delta":0,
+            "hard_nonclaims":["NO_GENERAL_SOFTWARE_ENGINEERING_COMPLETENESS","NO_GENERAL_SEMANTIC_LOCALIZATION_COMPLETENESS","NO_FRONTIERCODE_SCORE","NO_NON_PYTHON_SUPPORT"]
+          }
+          pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brain-coupled-repair-loop-v3-verification
+          path: out/receipt.json
+          if-no-files-found: warn
+# retrigger: repaired distinct-site coupled witness
