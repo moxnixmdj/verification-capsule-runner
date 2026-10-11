@@ -25,7 +25,8 @@ jobs:
         run: |
           set -euo pipefail
           C=capsules/osworld_v21_synthetic_policy_qual_v1
-          test "$(git hash-object "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py")" = "526f7ac825afca50382599feb70bf2b0013f43c1"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py")" = "8c852df15c463f347c63ba34e04281e034065c50"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_state_ops_v1.py")" = "0cba0ee052746e41988a666a2948c4e842e0a259"
           test "$(git hash-object "$C/canonical/runtime/harbor_science_planner_v1.py")" = "58964dc8d6b5eed5c202081cd800035c791eeb1d"
           test "$(git hash-object "$C/canonical/runtime/harbor_command_policy.py")" = "a525773417291c7a4841bf35e1baff5370350d0d"
           ! grep -R -E 'task_[0-9]{3}|evaluation_examples|benchmark_releases' "$C/canonical/runtime/osworld_v21_local_qwen_policy_v1.py"
