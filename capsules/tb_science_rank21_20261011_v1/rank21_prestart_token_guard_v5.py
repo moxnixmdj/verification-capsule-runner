@@ -17,7 +17,7 @@ from canonical.runtime import harbor_science_agent_v13 as agent
 from canonical.runtime import harbor_science_planner_v7 as planner
 from execution_guard.rank21_claim_bound_identity_v1 import resolve_claim_bound_identity
 
-DATASET_TASK = "terminal-bench-science/hysteretic-aquifer-control"
+DATASET_TASK = "terminal-bench-science/ode-law-discovery"
 TASK_DIGEST = "sha256:767d16a0a6226f391208b1b4bb126a6f957e5d0c8156342b5c9410a755142d65"
 SERVER_CONTEXT_TOKENS = planner.SERVER_CONTEXT_TOKENS
 RESERVED_COMPLETION_TOKENS = planner.MAX_TOOL_COMPLETION_TOKENS
@@ -112,7 +112,7 @@ def main() -> int:
             ],
             check=True,
         )
-        task_path = root / "hysteretic-aquifer-control"
+        task_path = root / "ode-law-discovery"
         instruction_path = task_path / "instruction.md"
         task_toml = task_path / "task.toml"
         if not instruction_path.is_file() or not task_toml.is_file():
