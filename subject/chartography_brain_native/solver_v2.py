@@ -31,6 +31,20 @@ def group_ocr_lines_v2(words: list[dict]) -> list[dict]:
 
 
 
+def _annotate_label_left(line: dict, temp: float) -> dict:
+    out=dict(line)
+    matches=[]
+    for w in line.get("words") or []:
+        vals=base._numbers_in_text(w.get("text",""))
+        if any(abs(v-temp)<=max(0.5,0.001*abs(temp)) for v in vals):
+            matches.append(w)
+    if matches:
+        out["label_left"]=min(float(w["left"]) for w in matches)
+    else:
+        out["label_left"]=float(line.get("left",0))
+    return out
+
+
 def find_legend_line_v2(lines: list[dict], temp: float, gradient: float):
     scored=[]
     for line in lines:
@@ -42,35 +56,25 @@ def find_legend_line_v2(lines: list[dict], temp: float, gradient: float):
         text=base.norm_text(line.get("text",""))
         source=line.get("source","native_ocr")
         numeric_count=len(vals)
-        score=0.0
-        # Native OCR rows that already contain the complete label are less
-        # likely to have accidentally merged adjacent legend entries.
-        if source=="native_ocr":
-            score+=20.0
-        else:
-            score+=5.0
-        if "deg" in text:
-            score+=4.0
-        if "k" in text:
-            score+=4.0
-        if "/" in line.get("text",""):
-            score+=2.0
+        score=20.0 if source=="native_ocr" else 5.0
+        if "deg" in text: score+=4.0
+        if "k" in text: score+=4.0
+        if "/" in line.get("text",""): score+=2.0
         score-=4.0*max(0,numeric_count-2)
-        width=float(line.get("right",0)-line.get("left",0))
-        if width>0:
-            score-=0.0005*width
         words=line.get("words") or []
         if words:
             score+=0.01*sum(max(0.0,float(x.get("conf",0))) for x in words)/len(words)
         scored.append((score,line))
     if scored:
-        return max(scored,key=lambda x:x[0])[1]
-    return _old_find_legend(lines,temp,gradient)
+        return _annotate_label_left(max(scored,key=lambda x:x[0])[1],temp)
+    return _annotate_label_left(_old_find_legend(lines,temp,gradient),temp)
+
 
 def representative_legend_color_v2(img_bgr: np.ndarray, line: dict):
     h,w=img_bgr.shape[:2]
-    x0=max(0,int(line["left"])-110)
-    x1=max(x0+1,int(line["left"])-2)
+    label_left=float(line.get("label_left",line["left"]))
+    x0=max(0,int(label_left)-95)
+    x1=max(x0+1,int(label_left)-4)
     y0=max(0,int(line["cy"])-9)
     y1=min(h,int(line["cy"])+10)
     rgb=img_bgr[y0:y1,x0:x1,::-1].reshape(-1,3)
@@ -100,8 +104,9 @@ def classify_line_style(sig: dict) -> str:
 
 def legend_style_signature_v2(img_bgr: np.ndarray, line: dict, target_rgb: np.ndarray) -> dict:
     h,w=img_bgr.shape[:2]
-    x0=max(0,int(line["left"])-110)
-    x1=max(x0+1,int(line["left"])-2)
+    label_left=float(line.get("label_left",line["left"]))
+    x0=max(0,int(label_left)-95)
+    x1=max(x0+1,int(label_left)-4)
     y0=max(0,int(line["cy"])-9)
     y1=min(h,int(line["cy"])+10)
     rgb=img_bgr[y0:y1,x0:x1,::-1].astype(float)
