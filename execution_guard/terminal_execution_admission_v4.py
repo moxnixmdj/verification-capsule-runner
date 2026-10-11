@@ -123,6 +123,20 @@ def check_behavior(behavior: Mapping[str, Any], invariants: Mapping[str, Any], e
         if facts.get(key) is not True:
             errors.append("BEHAVIOR_REQUIRED_FALSE:" + key)
 
+    # Permanent anti-laundering invariant: a terminal result attributed to Brain
+    # must have a complete producer dependency inventory and zero model cognition.
+    # Local/open/self-hosted/copied weights are still a model dependency.
+    if facts.get("producer_dependency_inventory_complete") is not True:
+        errors.append("PRODUCER_DEPENDENCY_INVENTORY_INCOMPLETE")
+    if facts.get("producer_external_model_cognition_free") is not True:
+        errors.append("EXTERNAL_MODEL_COGNITION_NOT_PROVEN_ABSENT")
+    count = facts.get("producer_model_cognition_dependency_count")
+    if count != 0:
+        errors.append("PRODUCER_MODEL_COGNITION_DEPENDENCY_NONZERO_OR_UNKNOWN")
+    deps = facts.get("producer_model_cognition_dependencies")
+    if deps != []:
+        errors.append("PRODUCER_MODEL_COGNITION_DEPENDENCIES_PRESENT_OR_UNKNOWN")
+
 
 def _runtime_marker(behavior: Mapping[str, Any], key: str) -> str:
     bindings = behavior.get("runtime_bindings")
@@ -145,6 +159,23 @@ def check_workflow(text: str, behavior: Mapping[str, Any]) -> list[str]:
         return ["BEHAVIOR_FACTS_INVALID"]
 
     lines = text.splitlines()
+
+    # Defense in depth against known model-runtime execution surfaces. This is
+    # not the sole gate; the explicit complete dependency inventory above is.
+    lowered = text.casefold()
+    for marker in (
+        "llama-server",
+        "/v1/chat/completions",
+        ".gguf",
+        "ollama",
+        "vllm",
+        "litellm",
+        "openai.chat",
+        "anthropic.",
+        "transformers",
+    ):
+        if marker in lowered:
+            errors.append("WORKFLOW_EXTERNAL_MODEL_COGNITION_MARKER:" + marker)
 
     def line_pos(*tokens: str) -> int:
         for i, line in enumerate(lines):
