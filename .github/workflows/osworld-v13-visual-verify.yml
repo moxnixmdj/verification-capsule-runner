@@ -1,0 +1,25 @@
+name: OSWorld V13 deterministic visual verifier
+
+on:
+  push:
+    branches:
+      - osworld-v13-visual-verify-20261011-v1
+    paths:
+      - "capsules/osworld_v13_visual_v1/**"
+      - ".github/workflows/osworld-v13-visual-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bounded test dependencies
+        run: python -m pip install --disable-pip-version-check --no-input pillow pytest
+      - name: Execute exact visual candidate tests
+        working-directory: capsules/osworld_v13_visual_v1
+        run: PYTHONPATH=. python -m pytest -q test_visual_v13_standalone.py
