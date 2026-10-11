@@ -1,0 +1,45 @@
+name: Verify HLE Brain-native research solver V3
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_NATIVE_RESEARCH_SOLVER_V3_PREEXPOSURE_20261011_V1.json"
+      - "canonical/runtime/hle_native_research_solver_v3.py"
+      - "canonical/tests/test_hle_native_research_solver_v3.py"
+      - "canonical/runtime/hle_native_question_contract_v1.py"
+      - "canonical/runtime/hle_native_semantic_compiler_v1.py"
+      - "canonical/runtime/hle_evidence_candidate_synthesis_v1.py"
+      - ".github/workflows/hle-native-research-v3.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/governance/HLE_NATIVE_RESEARCH_SOLVER_V3_PREEXPOSURE_20261011_V1.json)" = "a6f83a98095e66c64df8e751043709d956e5c7dd"
+          test "$(git hash-object canonical/runtime/hle_native_research_solver_v3.py)" = "d719d1eb4d288e2c1062c43d74dd83ad1ba50684"
+          test "$(git hash-object canonical/tests/test_hle_native_research_solver_v3.py)" = "551830b7c239f0176fe09c320162a1cc818dec44"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v1.py)" = "7acc064d880f266a28855eefe518ae40ff8ae49b"
+          test "$(git hash-object canonical/runtime/hle_native_semantic_compiler_v1.py)" = "238ebf2ffe23e527fceae919cbc30453a290fdd2"
+          test "$(git hash-object canonical/runtime/hle_evidence_candidate_synthesis_v1.py)" = "4cd588212d12fdff726b6e153631dbef1282e14e"
+      - name: Compile frozen subject
+        run: |
+          python -m py_compile canonical/runtime/hle_native_research_solver_v3.py
+          python -m py_compile canonical/runtime/hle_native_question_contract_v1.py
+          python -m py_compile canonical/runtime/hle_native_semantic_compiler_v1.py
+          python -m py_compile canonical/runtime/hle_evidence_candidate_synthesis_v1.py
+          python -m py_compile canonical/tests/test_hle_native_research_solver_v3.py
+      - name: Run frozen synthetic no-model tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest -v \
+            canonical.tests.test_hle_native_research_solver_v3
