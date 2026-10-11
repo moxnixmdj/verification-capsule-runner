@@ -1,0 +1,284 @@
+{
+  "schema": "PROJECT_BRAIN_CURRENT_BENCHMARK_CAPABILITY_DOMINANCE_FRONTIER_V1",
+  "date": "2026-10-11",
+  "status": "ACTIVE_CANDIDATE__CAPABILITY_FIRST__PROOF_LATTICE_V2__POST_LATTICE_WALL_CLOCK_OPTIMIZER_BOUND__12_CHECKPOINT_ROWS_WAKE_GATED__1_TB_SCIENCE_PARKED__ZERO_SCORE_OR_CAPABILITY_CREDIT_FROM_PROJECTION",
+  "mission": {
+    "terminal_goal": "BUILD_THE_MOST_CAPABLE_GENERAL_RELIABLE_AND_RESOURCE_EFFICIENT_PROBLEM_SOLVING_SYSTEM_POSSIBLE",
+    "benchmark_role": "MILESTONE_MEASUREMENT_AND_AUDIT",
+    "capability_role": "PRIMARY_DEVELOPMENT_OBJECT",
+    "literal_benchmark_scores_remain_independent_obligations": true
+  },
+  "sources": {
+    "goal_override": {
+      "path": "canonical/governance/CURRENT_TERMINAL_GOAL_OVERRIDE.json",
+      "git_blob_sha": "be42319861a3ca1f286a493d09368c85f5ef43eb"
+    },
+    "wake_gate": {
+      "path": "canonical/governance/CURRENT_ALL_OPEN_CHECKPOINT_WAKE_GATE_RECONCILIATION_20261011_V1.json",
+      "git_blob_sha": "e10c7ebe00dac3f60eee2845df16c58a1fdd5791"
+    },
+    "live_frontier": {
+      "path": "canonical/governance/CURRENT_LIVE_WORK_FRONTIER.json",
+      "git_blob_sha": "bb2f427bb5aa790e98ffa8d26b02df008827b802"
+    },
+    "global_family_universe": {
+      "path": "canonical/governance/GLOBAL_TERMINAL_UNIVERSE_V1.json",
+      "git_blob_sha": "ff97ffee7c9b25a491ff5ee231919ea4964f09e3"
+    },
+    "m0_global_necessity_falsifier": {
+      "path": "canonical/governance/M0_GLOBAL_SEMANTIC_DECOMPOSITION_NECESSITY_FALSIFIER_20261007_V1.json",
+      "git_blob_sha": "0c02f1c3a2b4eacf9d84b1cb81c09643305c6f8a"
+    }
+  },
+  "relation_policy": {
+    "projection_default": "SCHEDULING_HEURISTIC_ONLY",
+    "credit_relations": [
+      "EXACT_EQUIVALENCE",
+      "CONSERVATIVE_DOMINANCE",
+      "OWNER_ACCEPTED_RELATION"
+    ],
+    "rule": "HEURISTIC_PROJECTION_RANKS_ONLY__NEVER_CREATES_SCORE_OR_CAPABILITY_CREDIT",
+    "proved_proposition_edges_required_for_closure": true,
+    "minimum_proof_cover_required_when_complete_cover_exists": true,
+    "heuristic_family_projection_has_zero_proposition_closure_authority": true
+  },
+  "benchmark_rows": [
+    {
+      "id": "CODING_TB4_GE_66_4",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "ADVANCED_AGENTIC_CODING",
+          "COMPLEX_MULTI_TOOL_AGENCY",
+          "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+          "MULTI_CAPABILITY_COMPOSITION"
+        ]
+      }
+    },
+    {
+      "id": "CODING_FRONTIERCODE_GE_54_4",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "ADVANCED_AGENTIC_CODING",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT"
+        ]
+      }
+    },
+    {
+      "id": "CODING_CURSORBENCH_GE_57_8",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "ADVANCED_AGENTIC_CODING",
+          "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+          "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY"
+        ]
+      }
+    },
+    {
+      "id": "MYSTERYMECHANISM_INTRINSIC_OPUS55_NONINFERIORITY_OR_STRONGER",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "UNKNOWN_DOMAIN_ADAPTATION",
+          "MULTIDISCIPLINARY_TOOL_AUGMENTED_REASONING",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT"
+        ]
+      }
+    },
+    {
+      "id": "PROWORK_GDPVAL_GE_1846",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "PROFESSIONAL_KNOWLEDGE_WORK",
+          "COMMUNICATION_AND_SYNTHESIS",
+          "ARTIFACT_CREATION",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT"
+        ]
+      }
+    },
+    {
+      "id": "PROWORK_AA_BRIEFCASE_GE_1822__SHARED_MEASUREMENT_WITH_ARTIFACT",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "PROFESSIONAL_KNOWLEDGE_WORK",
+          "ARTIFACT_CREATION",
+          "COMMUNICATION_AND_SYNTHESIS",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT"
+        ]
+      }
+    },
+    {
+      "id": "AUTOMATIONBENCH_GE_40",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "BUSINESS_WORKFLOW_AUTOMATION",
+          "COMPUTER_AND_BROWSER_USE",
+          "COMPLEX_MULTI_TOOL_AGENCY",
+          "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+          "MULTI_CAPABILITY_COMPOSITION"
+        ]
+      }
+    },
+    {
+      "id": "HLE_TOOLS_GE_67_7",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "MULTIDISCIPLINARY_TOOL_AUGMENTED_REASONING",
+          "UNKNOWN_DOMAIN_ADAPTATION",
+          "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT",
+          "MULTI_CAPABILITY_COMPOSITION"
+        ]
+      }
+    },
+    {
+      "id": "CHARTOGRAPHY_TOOLS_GE_89",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "VISION_AND_DENSE_DOCUMENT_UNDERSTANDING",
+          "ARTIFACT_CREATION",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT"
+        ]
+      }
+    },
+    {
+      "id": "OSWORLD_2_1_PARTIAL_GE_81_8",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "COMPUTER_AND_BROWSER_USE",
+          "COMPLEX_MULTI_TOOL_AGENCY",
+          "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT",
+          "MULTI_CAPABILITY_COMPOSITION"
+        ]
+      }
+    },
+    {
+      "id": "FINANCE_ACCOUNTING_INDEX_GE_61",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "FINANCIAL_ANALYSIS",
+          "PROFESSIONAL_KNOWLEDGE_WORK",
+          "INSTRUCTION_FOLLOWING_SCOPE_AND_JUDGMENT"
+        ]
+      }
+    },
+    {
+      "id": "FINANCE_AGENT_V2_GE_58_59",
+      "scheduler_state": "WAKE_GATED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "FINANCIAL_ANALYSIS",
+          "PROFESSIONAL_KNOWLEDGE_WORK",
+          "MULTIDISCIPLINARY_TOOL_AUGMENTED_REASONING",
+          "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+          "COMMUNICATION_AND_SYNTHESIS",
+          "MULTI_CAPABILITY_COMPOSITION"
+        ]
+      }
+    },
+    {
+      "id": "TB_SCIENCE_GE_58_7",
+      "scheduler_state": "PARKED",
+      "capability_projection": {
+        "relation": "SCHEDULING_HEURISTIC_ONLY",
+        "families": [
+          "AGENTIC_SCIENTIFIC_RESEARCH",
+          "MULTIDISCIPLINARY_TOOL_AUGMENTED_REASONING",
+          "UNKNOWN_DOMAIN_ADAPTATION",
+          "TOOL_DISCOVERY_SELECTION_AND_LEARNING",
+          "COMPLEX_MULTI_TOOL_AGENCY",
+          "SELF_VERIFICATION_DEBUGGING_AND_RECOVERY",
+          "MULTI_CAPABILITY_COMPOSITION"
+        ]
+      }
+    }
+  ],
+  "candidate_source_policy": {
+    "source_path": "canonical/governance/CURRENT_LIVE_WORK_FRONTIER.json",
+    "rule": "DERIVE_READY_EXECUTION_CANDIDATES_FROM_THE_LIVE_POINTER_AT_PLAN_TIME__DO_NOT_PIN_VERSIONED_WORK_IDS_HERE",
+    "priority": "CAUSALLY_ADMITTED_CAPABILITY_WORK_BEFORE_RESOURCE_PARETO__BENCHMARK_WORK_ONLY_WHEN_RUNNABLE_AND_NONDOMINATED"
+  },
+  "current_expected_plan": {
+    "benchmark_specific_same_information_selected": false,
+    "capability_work_selected_from_benchmark_projection_only": false,
+    "actual_execution_selection": "DERIVE_FROM_CURRENT_LIVE_WORK_FRONTIER_THROUGH_V2_PROOF_LATTICE__THEN_MINIMIZE_TOTAL_WALL_CLOCK_ACROSS_ALREADY_ADMISSIBLE_PROOF_ROUTES__HEURISTIC_PROJECTIONS_ZERO_CLOSURE_AUTHORITY"
+  },
+  "ledgers": {
+    "CAPABILITY_COMPARISON_LEDGER": {
+      "path": "canonical/governance/CURRENT_CAPABILITY_COMPARISON_LEDGER.json",
+      "closed_by_this_projection": [],
+      "open_relations_require_typed_entailment": true
+    },
+    "BRANDED_BENCHMARK_RECEIPT_LEDGER": {
+      "path": "canonical/governance/CURRENT_BRANDED_BENCHMARK_RECEIPT_LEDGER.json",
+      "closed_by_this_projection": [],
+      "open_checkpoint_rows": 12,
+      "parked_checkpoint_rows": 1
+    }
+  },
+  "hard_nonclaims": [
+    "NO_BENCHMARK_SCORE_CREATED",
+    "NO_CAPABILITY_PARITY_CREATED_FROM_HEURISTIC_PROJECTION",
+    "NO_CLAIM_THE_PROJECTED_FAMILY_LISTS_ARE_SCOPE_COMPLETE",
+    "NO_GLOBAL_M0_WORK_AUTHORIZED_BY_GRAPH_CENTRALITY",
+    "NO_VERSIONED_WORK_ID_IS_PINNED_AS_CURRENT_EXECUTION_AUTHORITY_IN_THIS_PROJECTION"
+  ],
+  "accounting": {
+    "incremental_spend_usd": 0,
+    "benchmark_score_credit_delta": 0,
+    "capability_credit_delta": 0,
+    "ownership_credit_delta": 0,
+    "terminal_credit_delta": 0
+  },
+  "controller_version": "V2_PROOF_LATTICE_ACTIVE_CANDIDATE",
+  "proof_lattice_control": {
+    "law_path": "canonical/laws/BENCHMARK_MEASUREMENT_VS_CAPABILITY_PROOF_LAW_V2.md",
+    "law_git_blob_sha": "cf2b8f056112bcefdba2ac3f8c0d2feb925e236f",
+    "runtime_path": "canonical/runtime/benchmark_capability_dominance_scheduler_v2.py",
+    "runtime_git_blob_sha": "ac3520bf11168f5ff2b446402d72019ef3433649",
+    "minimum_proof_cover_compiler_path": "canonical/runtime/proof_coverage_compiler.py",
+    "minimum_proof_cover_compiler_git_blob_sha": "f9b7eb23ec749d542392f36d89ddf69d9f8d3c87",
+    "activation_path": "canonical/governance/CAPABILITY_PROOF_LATTICE_ACTIVATION_20261011_V1.json",
+    "activation_git_blob_sha": "29f4630da045a63cceea8158681bd55c228c04c2",
+    "verification_path": "canonical/verification/BENCHMARK_CAPABILITY_DOMINANCE_V2_LOCAL_VERIFICATION_20261011_V1.json",
+    "verification_git_blob_sha": "16b9e8ae6b336655d6eca0e4f2c766158f048e74",
+    "selection_rule": "EXACT_MINIMUM_PROOF_COVER_IF_AVAILABLE__ELSE_MAX_VERIFIED_MARGINAL_PROPOSITION_CLOSURE__THEN_REUSABLE_CAPABILITY_BREADTH__THEN_WALL_CLOCK_AND_REALITY_COST",
+    "execution_authority": false,
+    "promotion_authority": false
+  },
+  "post_lattice_optimization": {
+    "prerequisite": "ONLY_ROUTES_WITH_PROVED_SCOPE_BOUND_PROPOSITION_EDGES_AND_EXISTING_V2_ADMISSION_MAY_ENTER",
+    "runtime": "canonical/runtime/capability_proof_compression_optimizer_v1.py",
+    "role": "SELECT_MINIMUM_TOTAL_WALL_CLOCK_EVIDENCE_SET_AMONG_ALREADY_ADMISSIBLE_PROOF_ROUTES__DOES_NOT_VALIDATE_ENTAILMENT_OR_CREATE_CREDIT",
+    "objective_order": [
+      "MINIMUM_TOTAL_WALL_CLOCK",
+      "MAXIMUM_REUSABLE_PROPOSITION_OR_CAPABILITY_COVERAGE_AT_EQUAL_WALL_CLOCK",
+      "MINIMUM_EXTERNAL_DEPENDENCY_RISK",
+      "MINIMUM_COMPUTE_RESOURCE_COST",
+      "DETERMINISTIC_ID_TIEBREAK"
+    ],
+    "proof_credit_authority": false
+  }
+}
