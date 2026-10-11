@@ -1,0 +1,102 @@
+name: Holdout HLE V4 on fresh public non-HLE QA
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/governance/HLE_V4_PUBLIC_NONHLE_FRESH_HOLDOUT_FREEZE_20261011_V1.json"
+      - "canonical/runtime/hle_native_open_domain_research_v4.py"
+      - "canonical/tests/run_hle_v4_public_nonhle_fresh_holdout_v1.py"
+      - ".github/workflows/hle-v4-public-fresh-holdout.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  holdout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact pre-exposure frozen bytes
+        run: |
+          test "$(git hash-object canonical/governance/HLE_V4_PUBLIC_NONHLE_FRESH_HOLDOUT_FREEZE_20261011_V1.json)" = "f051741f74d68a1a46e57d9fd7bfeb1e8d5c9513"
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v4.py)" = "f7cd848f4369fd5e8da53723a2b52d799596fc66"
+          test "$(git hash-object canonical/tests/run_hle_v4_public_nonhle_fresh_holdout_v1.py)" = "d558b9f8510080664896403a54b8b679a7f8ce67"
+
+      - name: Compile frozen subject and runner
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_native_open_domain_research_v4.py
+          python canonical/runtime/hle_native_open_domain_research_v4.py
+          python -m py_compile canonical/tests/run_hle_v4_public_nonhle_fresh_holdout_v1.py
+
+      - name: Prepare untouched rows 25-49 as questions only
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v4_public_nonhle_fresh_holdout_v1.py prepare \
+            --questions /tmp/v4-holdout-questions.json
+
+      - name: Solve frozen holdout with gold absent
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v4_public_nonhle_fresh_holdout_v1.py solve \
+            --questions /tmp/v4-holdout-questions.json \
+            --commitments /tmp/v4-holdout-commitments.json \
+            --workers 5
+
+      - name: Refetch gold only after all commitments are sealed
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_v4_public_nonhle_fresh_holdout_v1.py score \
+            --questions /tmp/v4-holdout-questions.json \
+            --commitments /tmp/v4-holdout-commitments.json \
+            --summary /tmp/v4-holdout-summary.json
+
+      - name: Print aggregate holdout result only
+        run: |
+          python - <<'PY'
+          import json, collections
+          x=json.load(open("/tmp/v4-holdout-summary.json",encoding="utf-8"))
+          print(json.dumps({
+            "sample_size":x["sample_size"],
+            "attempted":x["attempted"],
+            "attempt_rate":x["attempt_rate"],
+            "normalized_exact":x["normalized_exact"],
+            "normalized_exact_rate":x["normalized_exact_rate"],
+            "passed":x["promotion_gate"]["passed"],
+            "external_model_calls_total":x["external_model_calls_total"],
+            "external_reasoning_model_calls_total":x["external_reasoning_model_calls_total"],
+            "model_dependency_count_total":x["model_dependency_count_total"],
+            "statuses":dict(collections.Counter(r["status"] for r in x["per_slot_receipts"])),
+          },sort_keys=True))
+          PY
+
+      - name: Upload non-sensitive holdout receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-v4-fresh-public-nonhle-holdout-receipt
+          path: /tmp/v4-holdout-summary.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce precommitted fresh holdout gate
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/v4-holdout-summary.json",encoding="utf-8"))
+          assert x["sample_size"] == 25
+          assert x["external_model_calls_total"] == 0
+          assert x["external_reasoning_model_calls_total"] == 0
+          assert x["model_dependency_count_total"] == 0
+          assert x["hle_questions_consumed"] == 0
+          assert x["hle_gold_consumed"] == 0
+          raise SystemExit(0 if x["promotion_gate"]["passed"] else 1)
+          PY
