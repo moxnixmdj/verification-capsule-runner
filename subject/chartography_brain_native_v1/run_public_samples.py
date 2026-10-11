@@ -43,6 +43,10 @@ for c in CASES:
       "external_model_runtime_dependency_count":out["external_model_runtime_dependency_count"],
       "cognition_dependency_class":out["cognition_dependency_class"],
       "ocr_terminal_semantic_authority":out["ocr_terminal_semantic_authority"],
+      "axis_calibration":out.get("axis_calibration"),
+      "swatch":out.get("swatch"),
+      "trace":out.get("trace"),
+      "candidate_intersections_c":out.get("candidate_intersections_c"),
     })
 result={
   "schema":"PROJECT_BRAIN_CHARTOGRAPHY_DONOR_FREE_PUBLIC_SAMPLE_VERIFY_V1",
