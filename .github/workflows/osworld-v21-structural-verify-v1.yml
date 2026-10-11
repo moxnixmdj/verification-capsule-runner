@@ -30,9 +30,9 @@ jobs:
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_host_guest_ops_v1.py")" = "f002bbb5aadc302c9bff644c59c85485fb3bb668"
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_brain_agent_adapter_v1.py")" = "bf7513f1d7837d42f782e714f77975e59d73994f"
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_runner_bridge_v1.py")" = "e876439e8969de01e06c575ac1b60cce9d635838"
-          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_state_ops_v1.py")" = "35e57e433e442e20a8acf3491fdfe7f4eb2954cb"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_state_ops_v1.py")" = "9f41191588b57bec23a35f31857fddc3d0b9c9dc"
           test "$(git hash-object "$C/canonical/tests/test_osworld_v21_host_guest_ops_v1.py")" = "b520a110d90689368b117c7d9ea3ddb0b934cfbd"
-          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py")" = "a0c8c62a369d5cb713044514a34000afd4e36913"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py")" = "d06844c74304927800884a4161e177e01830b6ce"
           test "$(git hash-object "$C/canonical/tests/test_osworld_v21_runner_bridge_v1.py")" = "5eb41c62c14f43235f5ad891279fe1437deeb1ca"
       - name: Run exact structural tests
         env:
