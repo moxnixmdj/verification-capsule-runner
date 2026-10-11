@@ -92,10 +92,15 @@ def main():
         r=solver.solve(Path(c["image"]),c["question"])
         pred=numeric_answer(r.get("answer",""))
         ok=pred is not None and abs(pred-c["truth"])<=c["tol"]
+        debug_keys=(
+          "attempts","curve_slope","curve_intercept","target_rgb","target_style",
+          "chosen_cluster","x_axis_inliers","y_axis_inliers","ocr_lines_preview"
+        )
         rows.append({
           "index":n,"kind":c["kind"],"question":c["question"],"truth":c["truth"],"tol":c["tol"],
           "answer":r.get("answer",""),"status":r.get("status"),"module":r.get("module"),
           "pass":ok,
+          "debug":{k:r.get(k) for k in debug_keys if k in r},
         })
     by_kind={}
     for k in ("line","phase"):
