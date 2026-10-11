@@ -1,0 +1,88 @@
+name: Diagnose HLE short-seed retrieval recall
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_native_retrieval_query_planner_v1.py"
+      - "canonical/tests/test_hle_native_retrieval_query_planner_v1.py"
+      - "canonical/runtime/hle_native_question_contract_v3.py"
+      - "canonical/runtime/hle_native_question_contract_v2.py"
+      - "canonical/runtime/hle_native_question_contract_v1.py"
+      - "canonical/runtime/hle_native_semantic_compiler_v1.py"
+      - "canonical/runtime/hle_native_open_domain_research_v5.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json"
+      - "canonical/tests/run_hle_retrieval_trace_short_seed_v1.py"
+      - ".github/workflows/hle-retrieval-short-seed-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind short-seed planner bytes
+        run: |
+          test "$(git hash-object canonical/runtime/hle_native_retrieval_query_planner_v1.py)" = "2386db287d08153ffb905f8cd89a76f4ebf19d9f"
+          test "$(git hash-object canonical/tests/test_hle_native_retrieval_query_planner_v1.py)" = "4e8dc179fa9ff534b38ce715a81040726c5daccf"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v3.py)" = "0865d6baf59b465cf121963dbadd5409a1702671"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v2.py)" = "403091eeb32e20baceed38cbcbb5cfc823871ad9"
+          test "$(git hash-object canonical/runtime/hle_native_question_contract_v1.py)" = "7acc064d880f266a28855eefe518ae40ff8ae49b"
+          test "$(git hash-object canonical/runtime/hle_native_semantic_compiler_v1.py)" = "238ebf2ffe23e527fceae919cbc30453a290fdd2"
+          test "$(git hash-object canonical/runtime/hle_native_open_domain_research_v5.py)" = "ae6006af1e578b0690357756e0b899a10323a5f4"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+          test "$(git hash-object canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json)" = "d2a2427b483fe1c06c6b1e6bc98d72bf07e7a730"
+          test "$(git hash-object canonical/tests/run_hle_retrieval_trace_short_seed_v1.py)" = "0afe328fd3c801a5a87256bf0dac06f7ce4b1667"
+      - name: Compile short-seed path
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_native_retrieval_query_planner_v1.py
+          python -m py_compile canonical/tests/run_hle_retrieval_trace_short_seed_v1.py
+      - name: Synthetic planner tests
+        env:
+          PYTHONPATH: .
+        run: python -m unittest -v canonical.tests.test_hle_native_retrieval_query_planner_v1
+      - name: Prepare consumed public questions
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_retrieval_trace_short_seed_v1.py prepare --questions /tmp/sq.json
+      - name: Freeze short-seed retrieval trace with gold absent
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_retrieval_trace_short_seed_v1.py trace --questions /tmp/sq.json --trace /tmp/st.json --workers 4
+      - name: Measure answer recall after trace sealed
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_retrieval_trace_short_seed_v1.py score --questions /tmp/sq.json --trace /tmp/st.json --summary /tmp/ss.json
+      - name: Enforce zero cognition and report recall
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/ss.json"))
+          assert x["external_model_calls_total"]==0
+          assert x["external_reasoning_model_calls_total"]==0
+          assert x["model_dependency_count_total"]==0
+          assert x["hle_questions_consumed"]==0
+          assert x["hle_gold_consumed"]==0
+          print("SHORT_SEED_RETRIEVAL_RECALL",json.dumps({
+            "any":x["retrieval_any_hit_rate"],
+            "rich":x["rich_hit_rate"],
+            "wiki_title":x["wiki_title_hit_rate"],
+            "wiki_snippet":x["wiki_snippet_hit_rate"],
+            "wiki_extract":x["wiki_extract_hit_rate"],
+          },sort_keys=True))
+          PY
+      - name: Upload short-seed recall receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-short-seed-retrieval-recall-consumed
+          path: /tmp/ss.json
+          if-no-files-found: ignore
+          retention-days: 7
