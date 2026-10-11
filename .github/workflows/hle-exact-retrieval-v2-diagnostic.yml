@@ -1,0 +1,104 @@
+name: Diagnose HLE exact retrieval V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_exact_retrieval_extract_v2.py"
+      - "canonical/runtime/hle_exact_retrieval_extract_v1.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json"
+      - "canonical/tests/run_hle_exact_retrieval_v2_consumed_diagnostic_v1.py"
+      - ".github/workflows/hle-exact-retrieval-v2-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact Brain retrieval blobs
+        run: |
+          test "$(git hash-object canonical/runtime/hle_exact_retrieval_extract_v2.py)" = "1c9d1c9096af91e05f67c3ead3068b0daf0ab033"
+          test "$(git hash-object canonical/runtime/hle_exact_retrieval_extract_v1.py)" = "11c6b01974b8c095a4243e000bb8e7bb579d7d54"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+          test "$(git hash-object canonical/governance/HLE_OPUS55_TOOL_POLICY_V1.json)" = "d2a2427b483fe1c06c6b1e6bc98d72bf07e7a730"
+          test "$(git hash-object canonical/tests/run_hle_exact_retrieval_v2_consumed_diagnostic_v1.py)" = "0059e3145785f8fd7915c3fb9529723ded4f3f9b"
+
+      - name: Compile exact retrieval path
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_exact_retrieval_extract_v1.py
+          python -m py_compile canonical/runtime/hle_exact_retrieval_extract_v2.py
+          python -m py_compile canonical/tests/run_hle_exact_retrieval_v2_consumed_diagnostic_v1.py
+
+      - name: Synthetic no-model retrieval check
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from canonical.runtime.hle_exact_retrieval_extract_v2 import propose
+          def search(q,limit=12):
+              return {"status":"PASS","results":[{"url":"https://example.org/fact"}]}
+          def fetch(url,max_bytes=600000):
+              return {"status":"PASS","url":url,"final_url":url,
+                      "body_excerpt":"The example name is Nova City. Nova City is the example name.",
+                      "body_sha256":"0"*64}
+          x=propose(task_id="synthetic",question="What is the example name?",
+                    search_fn=search,fetch_fn=fetch)
+          assert x.get("gold_accessed") is False
+          assert int(x.get("external_model_calls",0) or 0)==0
+          assert int(x.get("model_dependency_count",0) or 0)==0
+          print("EXACT_RETRIEVAL_V2_SYNTHETIC_NO_MODEL_PASS",x.get("status"))
+          PY
+
+      - name: Prepare already-consumed public non-HLE questions
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_exact_retrieval_v2_consumed_diagnostic_v1.py prepare --questions /tmp/erq.json
+
+      - name: Solve with gold absent
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_exact_retrieval_v2_consumed_diagnostic_v1.py solve --questions /tmp/erq.json --commitments /tmp/erc.json --workers 3
+
+      - name: Score after commitments are sealed
+        env:
+          PYTHONPATH: .
+        run: |
+          python canonical/tests/run_hle_exact_retrieval_v2_consumed_diagnostic_v1.py score --questions /tmp/erq.json --commitments /tmp/erc.json --summary /tmp/ers.json
+
+      - name: Report isolation result
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open("/tmp/ers.json"))
+          assert x["external_model_calls_total"] == 0
+          assert x["external_reasoning_model_calls_total"] == 0
+          assert x["model_dependency_count_total"] == 0
+          assert x["hle_questions_consumed"] == 0
+          assert x["hle_gold_consumed"] == 0
+          print("EXACT_RETRIEVAL_V2_ISOLATION",json.dumps({
+            "attempt_rate":x["attempt_rate"],
+            "normalized_exact_rate":x["normalized_exact_rate"],
+            "attempted":x["attempted"],
+            "normalized_exact":x["normalized_exact"],
+          },sort_keys=True))
+          PY
+
+      - name: Upload exact retrieval diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-exact-retrieval-v2-consumed-diagnostic
+          path: /tmp/ers.json
+          if-no-files-found: ignore
+          retention-days: 7
