@@ -1,0 +1,42 @@
+name: Diagnose existing HLE retrieval V2 on consumed public QA
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/hle_exact_retrieval_extract_v2.py"
+      - "canonical/runtime/hle_exact_retrieval_extract_v1.py"
+      - "canonical/runtime/root2_hle_opus55_tool_adapter_v1.py"
+      - "canonical/tests/run_hle_existing_retrieval_v2_consumed_diag.py"
+      - ".github/workflows/hle-existing-retrieval-v2-diag.yml"
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bind exact Brain bytes
+        run: |
+          test "$(git hash-object canonical/runtime/hle_exact_retrieval_extract_v2.py)" = "1c9d1c9096af91e05f67c3ead3068b0daf0ab033"
+          test "$(git hash-object canonical/runtime/hle_exact_retrieval_extract_v1.py)" = "11c6b01974b8c095a4243e000bb8e7bb579d7d54"
+          test "$(git hash-object canonical/runtime/root2_hle_opus55_tool_adapter_v1.py)" = "fa955ccc5e4f3d29aa79e2b380f713d30ee46e8f"
+      - name: Compile
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m py_compile canonical/runtime/hle_exact_retrieval_extract_v2.py
+          python -m py_compile canonical/runtime/hle_exact_retrieval_extract_v1.py
+          python -m py_compile canonical/tests/run_hle_existing_retrieval_v2_consumed_diag.py
+      - name: Run sequential consumed diagnostic
+        env:
+          PYTHONPATH: .
+        run: python canonical/tests/run_hle_existing_retrieval_v2_consumed_diag.py
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hle-existing-retrieval-v2-consumed-diag
+          path: /tmp/retrieval_v2_diag.json
+          if-no-files-found: error
+          retention-days: 7
