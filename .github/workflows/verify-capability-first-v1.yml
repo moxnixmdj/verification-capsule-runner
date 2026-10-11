@@ -1,0 +1,39 @@
+name: Verify capability-first optimizer and coupled repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "capsules/capability_first_v1/**"
+      - ".github/workflows/verify-capability-first-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object capsules/capability_first_v1/canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py)" = "7ccfe7ec881b17dddf8481cb1951b74d67b570c6"
+          test "$(git hash-object capsules/capability_first_v1/canonical/tests/test_python_coupled_software_repair_loop_v1.py)" = "4eedafd4746f69d613479253fb6e0825f25898ba"
+          test "$(git hash-object capsules/capability_first_v1/canonical/runtime/capability_proof_compression_optimizer_v1.py)" = "c40f8c7d98605e26c0c99c4f9c210d2c7f107d4d"
+          test "$(git hash-object capsules/capability_first_v1/canonical/tests/test_capability_proof_compression_optimizer_v1.py)" = "719da0a0a44ca67e0383ce83c638e2cf362aa08c"
+      - name: Compile exact subjects
+        run: |
+          python -m py_compile capsules/capability_first_v1/canonical/runtime/bound_capabilities/python_coupled_software_repair_loop_v1.py
+          python -m py_compile capsules/capability_first_v1/canonical/runtime/capability_proof_compression_optimizer_v1.py
+      - name: Run exact focused tests
+        env:
+          PYTHONPATH: capsules/capability_first_v1
+        run: |
+          python -m unittest -v \
+            canonical.tests.test_python_coupled_software_repair_loop_v1 \
+            canonical.tests.test_capability_proof_compression_optimizer_v1
