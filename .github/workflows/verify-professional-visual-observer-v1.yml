@@ -1,0 +1,166 @@
+name: Verify professional artifact visual observer V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-professional-visual-observer-v1.yml"
+      - "canonical/runtime/professional_artifact_visual_observer_v1.py"
+      - "canonical/runtime/native_artifact_render_preservation_proof_v1.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+      - "canonical/tests/test_professional_artifact_visual_observer_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bind exact Brain candidate blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/professional_artifact_visual_observer_v1.py)" = "9389dbb4e2c3463bc52f2525010edbdd77d08d2f"
+          test "$(git hash-object canonical/tests/test_professional_artifact_visual_observer_v1.py)" = "a4cdf2bb359c87dae880bf36577d51c8294c5910"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "19f3087489ce7f6f935fc7baaebdc8cd672f4b62"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "45714d7a0160802d986042910da1c4c6462676e5"
+          echo EXACT_BRAIN_CANDIDATE_BLOBS_BOUND
+
+      - name: Install render and document dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y libreoffice poppler-utils tesseract-ocr tesseract-ocr-eng fonts-dejavu-core
+          python -m pip install --disable-pip-version-check --no-input \
+            "pillow>=10,<13" "python-docx>=1,<2" "openpyxl>=3,<4" "python-pptx>=1,<2" "pypdf>=5,<7"
+
+      - name: Verify pinned OCR dependency surface
+        run: |
+          python - <<'PY'
+          from canonical.runtime.bound_capabilities.image_ocr_tesseract import verify_dependency_surface
+          out=verify_dependency_surface()
+          print(out)
+          PY
+
+      - name: Compile candidate
+        run: |
+          python -m py_compile canonical/runtime/professional_artifact_visual_observer_v1.py
+          python -m py_compile canonical/runtime/native_artifact_render_preservation_proof_v1.py
+
+      - name: Focused adversarial tests
+        run: python -m unittest -v canonical.tests.test_professional_artifact_visual_observer_v1
+
+      - name: Real native-format render and OCR composition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import base64
+          import json
+          import tempfile
+          from pathlib import Path
+
+          from canonical.runtime.native_artifact_cross_format_proof_v1 import generate_case
+          from canonical.runtime.professional_artifact_visual_observer_v1 import run
+
+          rows=[]
+          for i,fmt in enumerate(("pdf","docx","pptx","xlsx"), start=1):
+              case=generate_case(fmt, 9100+i)
+              payload=base64.b64decode(case["task"]["document_b64"], validate=True)
+              with tempfile.TemporaryDirectory() as td:
+                  root=Path(td)
+                  p=root/("artifact."+fmt)
+                  p.write_bytes(payload)
+                  out=run({"path":p.name,"require_text":True}, root)
+                  rows.append({
+                      "format":fmt,
+                      "pass":out["pass"],
+                      "page_count":out["page_count"],
+                      "page_gates":[x["gates"] for x in out["pages"]],
+                  })
+                  print(fmt, json.dumps(rows[-1], sort_keys=True))
+                  if not out["pass"]:
+                      raise SystemExit("REAL_COMPOSITION_FAILED:"+fmt+":"+json.dumps(out,sort_keys=True))
+          Path("real_composition.json").write_text(json.dumps(rows,indent=2,sort_keys=True)+"\n")
+          PY
+
+      - name: Ownership and nonclaim invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/professional_artifact_visual_observer_v1.py").read_text()
+          required=[
+              'CAPABILITY_ID = "professional.artifact.visual_observer.v1"',
+              '"professional_quality_top": False',
+              '"owner_preference_equivalence": False',
+              '"benchmark_score_authority": False',
+              '"external_general_purpose_model_runtime_dependency_count": 0',
+          ]
+          missing=[x for x in required if x not in p]
+          if missing:
+              raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
+          print("PASS_BRAIN_NATIVE_BOUNDED_VISUAL_OBSERVER_INVARIANTS")
+          PY
+
+      - name: Emit receipt
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json
+          import pathlib
+          import subprocess
+
+          composition=json.loads(pathlib.Path("real_composition.json").read_text())
+          files={
+              "runtime":"canonical/runtime/professional_artifact_visual_observer_v1.py",
+              "tests":"canonical/tests/test_professional_artifact_visual_observer_v1.py",
+              "positioned_ocr":"canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py",
+              "base_ocr":"canonical/runtime/bound_capabilities/image_ocr_tesseract.py",
+              "verification_render_shim":"canonical/runtime/native_artifact_render_preservation_proof_v1.py",
+          }
+          receipt={
+              "schema":"PROJECT_BRAIN_PROFESSIONAL_ARTIFACT_VISUAL_OBSERVER_PUBLIC_VERIFY_V1",
+              "status":"PASS__EXACT_BRAIN_CANDIDATE_BLOBS__FOCUSED_TESTS__REAL_NATIVE_FORMAT_COMPOSITION",
+              "brain_pr":4638,
+              "brain_runtime_blob":"9389dbb4e2c3463bc52f2525010edbdd77d08d2f",
+              "brain_tests_blob":"a4cdf2bb359c87dae880bf36577d51c8294c5910",
+              "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
+              "focused_test_count":9,
+              "real_formats":["pdf","docx","pptx","xlsx"],
+              "real_composition":composition,
+              "render_verification_relation":"INDEPENDENT_EQUIVALENT_LIBREOFFICE_TO_PDF_TO_POPPLER_SHIM__NOT_BYTE_IDENTITY_TO_BRAIN_RENDER_MODULE",
+              "external_general_purpose_model_runtime_dependency_count":0,
+              "benchmark_cases_consumed":0,
+              "incremental_spend_usd":0,
+              "benchmark_score_credit_delta":0,
+              "terminal_credit_delta":0,
+              "hard_nonclaims":[
+                  "NO_HOLISTIC_AESTHETIC_TOP",
+                  "NO_SEMANTIC_RELEVANCE_OR_CORRECTNESS_TOP",
+                  "NO_OWNER_EVALUATOR_CONTAINMENT",
+                  "NO_NORMATIVE_AGGREGATION_CLOSURE",
+                  "NO_GDPVAL_OR_AA_BRIEFCASE_SCORE"
+              ]
+          }
+          pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: professional-artifact-visual-observer-v1-verification
+          path: out/receipt.json
+          if-no-files-found: warn
