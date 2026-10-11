@@ -40,12 +40,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py)" = "10fa8b5c89e4eb1b1add99f0b6d8b912ea77e2e6"
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_axis_title_unit_binding_v1.py)" = "3203cce00c0f116d51043cdc858c50e483e41f69"
           test "$(git hash-object canonical/tests/test_chart_axis_title_unit_binding_v1.py)" = "f79fdd37ec8773d7cd137cac05540b234017b5af"
           test "$(git hash-object canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py)" = "258999b07287287db2037af777973d5bbb39116d"
           test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "45714d7a0160802d986042910da1c4c6462676e5"
           test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "19f3087489ce7f6f935fc7baaebdc8cd672f4b62"
-          test "$(git hash-object verification/independent_chart_axis_title_unit_binding_v1.py)" = "f800ed927b75ef42f71e2e00c4a01bf245a5d5f6"
+          test "$(git hash-object verification/independent_chart_axis_title_unit_binding_v1.py)" = "c26159a04fdd0a1bb4669e7469ea5fdaf5ef19e7"
           echo EXACT_BLOBS_BOUND
 
       - name: Verify pinned Tesseract dependency surface
