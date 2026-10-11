@@ -2,10 +2,11 @@ from __future__ import annotations
 from hashlib import sha1
 import json
 from pathlib import Path
+from canonical.runtime import professional_quality_same_subject_composition_gate_v3 as receipt_gate
 
 SCHEMA="PROJECT_BRAIN_PROFESSIONAL_QUALITY_R12_ROOT_SUBJECT_BINDING_VERIFY_V1"
 BIND="canonical/governance/PROFESSIONAL_QUALITY_R12_ROOT_SUBJECT_BINDING_20261010_V1.json"
-BLOB="6eb32264e98bf0b36d48ad3519f9c7c88757d0d7"
+BLOB="cc7ad5436c9c9815c81a68617101eca08cd16d73"
 SUB="canonical/governance/PROFESSIONAL_QUALITY_P1_V7_DECLARED_SYSTEM_SUBJECT_20261010_V6.json"
 SUB_BLOB="1d598bc8757017ceb34928d0df9f5fce859ef868"
 SID="PROFESSIONAL_QUALITY_P1_V7_PROOF_BOUND_EXECUTION_SYSTEM_20261010_V6"
@@ -16,6 +17,7 @@ REFS={
 "uvck_current_generation":("canonical/verification/UVCK_V2_CURRENT_GENERATION_INDEPENDENT_REPLAY_VERIFY_20261009_V1.json","81f7f070233b6aa1c4b491949a4c3e7aedfafd10"),
 "defeater_order_soundness":("canonical/verification/UVCK_V2_DEFEATER_ORDER_VERIFY_20261009_V1.json","1c3428b10a1205e928a87f41a7c16a8a3d17b7ca"),
 "known_defeater_binding":("canonical/verification/PROFESSIONAL_QUALITY_80_DEFEATER_UVCK_REPLAY_VERIFY_20261009_V1.json","c054e9362ce382889e9cca62bdb69e11cea19644"),
+"assurance_graph":("canonical/governance/PROFESSIONAL_QUALITY_ASSURANCE_GRAPH_20261009_V2.json","03530e29d70206b46b690b33a04c66765ff86ad7"),
 "prior_root_binding_worklist":("canonical/governance/PROFESSIONAL_QUALITY_P1_V7_SAME_SUBJECT_ROOT_BINDING_WORKLIST_20261010_V17.json","ac7750ee9d7cc8e839bf454a2835ad14c9472c0e"),
 "composition_gate":("canonical/governance/PROFESSIONAL_QUALITY_SAME_SUBJECT_COMPOSITION_GATE_20261010_V1.json","f7a4496a6579041c6e2606243732c23b22bcf89c"),
 "closure_normal_form":("canonical/governance/PROFESSIONAL_QUALITY_CLOSURE_NORMAL_FORM_20261009_V1.json","ebcfe5a48efce9df7fbc69a3817ac2f9adb1ff93")
@@ -36,11 +38,6 @@ def fail(r:str,**x):
  return {"schema":SCHEMA,"pass":False,"status":"FAIL_CLOSED","reason":r,
  "root_subject_binding_authority":False,"quality_authority":False,"terminal_authority":False,
  "terminal_credit_delta":0,**x}
-def auth(doc):
- if doc.get("root_subject_binding_authority") is True:return True
- a=doc.get("authority")
- return isinstance(a,dict) and a.get("root_subject_binding_authority") is True
-
 def verify(repo_root=None):
  root=Path(repo_root).resolve() if repo_root else Path(__file__).resolve().parents[2]
  b=read(root,BIND,BLOB);s=read(root,SUB,SUB_BLOB)
@@ -71,10 +68,10 @@ def verify(repo_root=None):
  if (kd.get("replay") or {}).get("tests_run")!=7:return fail("KNOWN_DEFEATER_REPLAY_INVALID")
  if "ALL_80_DECLARED_KNOWN_ATTACK_CLASSES_BIND_TO_EXISTING_12_ROOT_ASSURANCE_ONTOLOGY" not in set(kd.get("proved") or []):return fail("KNOWN_DEFEATER_MAPPING_UNPROVED")
  if "NO_ADVERSARIAL_COMPLETENESS_OF_UNKNOWN_ATTACKS" not in set(kd.get("hard_nonclaims") or []):return fail("KNOWN_DEFEATER_SCOPE_OVERCLAIM")
+ graph=docs["assurance_graph"]
+ roots=graph.get("root_ids") or []
+ if len(roots)!=12 or "R12_META_COMPOSITION_CLOSURE" not in roots:return fail("ASSURANCE_GRAPH_ROOT_SET_INVALID")
  nf=docs["closure_normal_form"]
- roots=nf.get("roots") or []
- root_ids={x.get("id") for x in roots if isinstance(x,dict)}
- if len(root_ids)!=12 or "R12_META_COMPOSITION_CLOSURE" not in root_ids:return fail("NORMAL_FORM_ROOT_SET_INVALID")
  necessary=set((nf.get("closure_rule") or {}).get("necessary") or [])
  if "SAME_EXACT_ARTIFACT_OR_DECLARED_SYSTEM_SATISFIES_ALL_ROOT_CLAIMS" not in necessary:return fail("NORMAL_FORM_SAME_SUBJECT_RULE_MISSING")
  gate=docs["composition_gate"]
@@ -97,8 +94,12 @@ def verify(repo_root=None):
   br=row.get("binding") or {};vr=row.get("verification") or {}
   bd=read(root,br.get("path",""),br.get("git_blob_sha",""));vd=read(root,vr.get("path",""),vr.get("git_blob_sha",""))
   if bd is None or vd is None:return fail("PRIOR_ROOT_BYTES_INVALID:"+str(rid))
-  if (bd.get("subject_id"),bd.get("subject_sha256"))!=(SID,SSH):return fail("PRIOR_ROOT_SUBJECT_DRIFT:"+str(rid))
-  if not auth(vd):return fail("PRIOR_ROOT_AUTHORITY_MISSING:"+str(rid))
+  if (bd.get("subject_kind"),bd.get("subject_id"),bd.get("subject_sha256"))!=("DECLARED_SYSTEM",SID,SSH):return fail("PRIOR_ROOT_SUBJECT_DRIFT:"+str(rid))
+  if bd.get("global_subject_identity_authority") is not False or bd.get("terminal_authority") is not False:return fail("PRIOR_ROOT_BINDING_SELF_AUTHORITY:"+str(rid))
+  receipt_error=receipt_gate._verification_receipt_error(
+   root_id=str(rid),verification=vd,binding_blob=str(br.get("git_blob_sha") or ""),
+   subject_kind="DECLARED_SYSTEM",subject_id=SID,subject_sha=SSH)
+  if receipt_error is not None:return fail("PRIOR_ROOT_VERIFICATION_INVALID:"+str(rid)+":"+receipt_error)
   verified+=1
  if verified!=11:return fail("PRIOR_VERIFIED_ROOT_TOTAL_INVALID")
  limits=set((b.get("binding_scope") or {}).get("limitations") or [])
