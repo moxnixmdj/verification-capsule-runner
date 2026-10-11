@@ -1,0 +1,66 @@
+name: Verify Finance Brain-native LLM V2
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/finance_agent_v2_brain_native_llm_v1.py"
+      - "canonical/runtime/finance_agent_v2_brain_native_llm_v2.py"
+      - "canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py"
+      - "canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py"
+      - ".github/workflows/finance-brain-native-llm-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bind exact Brain blobs
+        run: |
+          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v1.py)" = "9ec61256da933b91edad92620fd3d019ac141eff"
+          test "$(git hash-object canonical/runtime/finance_agent_v2_brain_native_llm_v2.py)" = "89a9c3b6de37d78ece32054ad242c880f11f8293"
+          test "$(git hash-object canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py)" = "6ff9462721b99e82c3a09f680034051dac7a2c34"
+          test "$(git hash-object canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py)" = "5b3b8b0ef2e6cf93b28f9da360f2191e884ab5ad"
+          test "$(git hash-object canonical/runtime/finance_market_price_series_v1.py)" = "02fbcee19c186db6c832af7690b6118040bab567"
+      - name: Compile exact subject
+        run: |
+          python -m py_compile canonical/runtime/finance_agent_v2_brain_native_llm_v1.py
+          python -m py_compile canonical/runtime/finance_agent_v2_brain_native_llm_v2.py
+          python -m py_compile canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py
+          python -m py_compile canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py
+      - name: Install focused test dependency
+        run: python -m pip install --disable-pip-version-check --no-input pytest==8.3.5
+      - name: Run exact V1 and V2 tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m pytest -q             canonical/tests/test_finance_agent_v2_brain_native_llm_v1.py             canonical/tests/test_finance_agent_v2_brain_native_llm_v2.py
+      - name: Prove no runtime model or network client imports
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          forbidden={"openai","anthropic","google","gemini","mistral","xai","transformers","torch","requests","httpx","aiohttp"}
+          for path in [
+              "canonical/runtime/finance_agent_v2_brain_native_llm_v1.py",
+              "canonical/runtime/finance_agent_v2_brain_native_llm_v2.py",
+          ]:
+              tree=ast.parse(Path(path).read_text())
+              imports=set()
+              for n in ast.walk(tree):
+                  if isinstance(n,ast.Import):
+                      imports.update(a.name for a in n.names)
+                  elif isinstance(n,ast.ImportFrom) and n.module:
+                      imports.add(n.module)
+              bad=sorted(x for x in imports if x in forbidden or x.split(".")[0] in forbidden)
+              assert not bad,(path,bad)
+          print("ZERO_RUNTIME_MODEL_PROVIDER_IMPORTS_PASS")
+          PY
