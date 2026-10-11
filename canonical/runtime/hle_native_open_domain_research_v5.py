@@ -20,6 +20,8 @@ import math
 import re
 import unicodedata
 import urllib.parse
+import urllib.error
+import time
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from typing import Any, Callable, Mapping, Sequence
@@ -116,7 +118,24 @@ def _rss_search(query:str,*,limit:int=8,timeout:float=20.0)->list[dict[str,Any]]
     url="https://www.bing.com/search?"+urllib.parse.urlencode({
         "q":query,"format":"rss","count":str(max(10,min(int(limit),20))),
     })
-    resp=tools._default_get(url,timeout=timeout,max_bytes=1_500_000)
+    last=None
+    resp=None
+    for attempt in range(4):
+        try:
+            resp=tools._default_get(url,timeout=timeout,max_bytes=1_500_000)
+            break
+        except urllib.error.HTTPError as exc:
+            last=exc
+            if int(getattr(exc,"code",0) or 0) not in {429,500,502,503,504} or attempt==3:
+                raise
+            time.sleep((0.25,0.75,1.5)[attempt])
+        except Exception as exc:
+            last=exc
+            if attempt==3:
+                raise
+            time.sleep((0.25,0.75,1.5)[attempt])
+    if resp is None:
+        raise RuntimeError("RSS_SEARCH_FAILED:"+type(last).__name__)
     body=resp.get("body") or b""
     raw=body.decode("utf-8","replace") if not isinstance(body,str) else body
     out=[]
