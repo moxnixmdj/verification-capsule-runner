@@ -1,0 +1,37 @@
+name: Chartography runtime dependency lock V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/chartography-runtime-dependency-lock-v1.yml"
+      - "canonical/runtime/apt_metadata_snapshot_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve exact apt records
+        env:
+          PYTHONPATH: .
+        run: |
+          sudo apt-get update
+          python - <<'PY'
+          import json
+          from canonical.runtime.apt_metadata_snapshot_v1 import package_records
+          wanted={"tesseract-ocr","tesseract-ocr-eng","libtesseract5","python3-pil"}
+          rows=[
+            {"Package":r.get("Package"),"Version":r.get("Version"),"SHA256":r.get("SHA256"),"Filename":r.get("Filename")}
+            for r in package_records()
+            if r.get("Package") in wanted
+          ]
+          print(json.dumps(sorted(rows,key=lambda x:(x["Package"],x["Version"])),sort_keys=True))
+          if not all(any(x["Package"]==name for x in rows) for name in wanted):
+              raise SystemExit("DEPENDENCY_RECORD_MISSING")
+          PY
