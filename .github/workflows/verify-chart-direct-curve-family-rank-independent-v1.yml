@@ -1,0 +1,128 @@
+name: Verify Chartography Brain-native direct curve family rank V1 independent
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-chart-direct-curve-family-rank-independent-v1.yml"
+      - "canonical/runtime/bound_capabilities/chart_direct_curve_label_family_rank_v1.py"
+      - "canonical/tests/test_chart_direct_curve_label_family_rank_v1.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract.py"
+      - "canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py"
+      - "canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py"
+      - "canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py"
+      - "verification/independent_chart_direct_curve_label_family_rank_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install focused dependencies
+        run: python -m pip install --disable-pip-version-check --no-input pytest==9.1.1 Pillow
+
+      - name: Bind exact Brain candidate and dependency blobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_direct_curve_label_family_rank_v1.py)" = "e3be28bd83ce0a9359a2ce9cedc8415dbcf745d2"
+          test "$(git hash-object canonical/tests/test_chart_direct_curve_label_family_rank_v1.py)" = "4c8fc60d72e160f9995c5df1b0af75b97d9a1eb9"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract.py)" = "45714d7a0160802d986042910da1c4c6462676e5"
+          test "$(git hash-object canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py)" = "19f3087489ce7f6f935fc7baaebdc8cd672f4b62"
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py)" = "1ccab094a14ae261a01912ad6e573ffc09fa8b35"
+          test "$(git hash-object canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py)" = "258999b07287287db2037af777973d5bbb39116d"
+          test "$(git hash-object verification/independent_chart_direct_curve_label_family_rank_v1.py)" = "d327f22c7d35e754298f477660a140198e042999"
+          echo EXACT_BLOBS_BOUND
+
+      - name: Compile exact candidate
+        run: |
+          python -m py_compile canonical/runtime/bound_capabilities/chart_direct_curve_label_family_rank_v1.py
+          python -m py_compile verification/independent_chart_direct_curve_label_family_rank_v1.py
+
+      - name: Replay authored candidate tests
+        run: python -m pytest -q canonical/tests/test_chart_direct_curve_label_family_rank_v1.py
+
+      - name: Independent verifier-authored falsification
+        run: python -m pytest -q verification/independent_chart_direct_curve_label_family_rank_v1.py
+
+      - name: Enforce ownership and nonclaim invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import pathlib
+          p=pathlib.Path("canonical/runtime/bound_capabilities/chart_direct_curve_label_family_rank_v1.py").read_text()
+          required=[
+            'CAPABILITY_ID = "chart.raster.direct_curve_label_family_rank.v1"',
+            '"domain_semantic_authority": False',
+            '"benchmark_score_authority": False',
+            '"external_general_purpose_model_runtime_dependency_count": 0',
+            '"donor_general_purpose_model_runtime_dependency_count": 0',
+          ]
+          missing=[x for x in required if x not in p]
+          if missing:
+              raise SystemExit("MISSING_INVARIANTS:"+repr(missing))
+          forbidden=["Qwen","MiniCPM","Claude","Gemini","OpenAI","Anthropic"]
+          found=[x for x in forbidden if x.casefold() in p.casefold()]
+          if found:
+              raise SystemExit("GENERAL_PURPOSE_MODEL_REFERENCE_IN_PRODUCER:"+repr(found))
+          print("PASS_ZERO_EXTERNAL_MODEL_RUNTIME_COGNITION")
+          PY
+
+      - name: Emit verification receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json,pathlib,subprocess
+          files={
+            "runtime":"canonical/runtime/bound_capabilities/chart_direct_curve_label_family_rank_v1.py",
+            "tests":"canonical/tests/test_chart_direct_curve_label_family_rank_v1.py",
+            "image_ocr":"canonical/runtime/bound_capabilities/image_ocr_tesseract.py",
+            "positioned_ocr":"canonical/runtime/bound_capabilities/image_ocr_tesseract_positioned.py",
+            "axis_binding":"canonical/runtime/bound_capabilities/chart_positioned_ocr_axis_binding_v1.py",
+            "scene_graph":"canonical/runtime/bound_capabilities/chart_raster_scene_graph_v1.py",
+            "independent_tests":"verification/independent_chart_direct_curve_label_family_rank_v1.py",
+          }
+          receipt={
+            "schema":"PROJECT_BRAIN_CHART_DIRECT_CURVE_LABEL_FAMILY_RANK_INDEPENDENT_VERIFY_V1",
+            "status":"PASS__EXACT_BRAIN_BLOBS__AUTHOR_TESTS_PLUS_INDEPENDENT_FALSIFICATION",
+            "brain_source_pr":4666,
+            "brain_promotion_pr":4670,
+            "blobs":{k:subprocess.check_output(["git","hash-object",v],text=True).strip() for k,v in files.items()},
+            "brain_authored_test_count":13,
+            "independent_falsification_count":14,
+            "total_test_count":27,
+            "heldout_chartography_cases_consumed":0,
+            "external_general_purpose_model_runtime_dependency_count":0,
+            "donor_general_purpose_model_runtime_dependency_count":0,
+            "incremental_spend_usd":0,
+            "chartography_score_credit_delta":0,
+            "terminal_credit_delta":0,
+            "hard_nonclaims":[
+              "NO_DOMAIN_SEMANTIC_AUTHORITY",
+              "NO_INLINE_CONTOUR_LABEL_AUTHORITY",
+              "NO_CHARTOGRAPHY_GE89",
+              "NO_HELDOUT_COVERAGE_CLAIM"
+            ]
+          }
+          pathlib.Path("out/receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+          print(json.dumps(receipt,sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chart-direct-curve-label-family-rank-independent-v1
+          path: out/receipt.json
+          if-no-files-found: error
