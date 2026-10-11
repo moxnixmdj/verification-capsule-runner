@@ -1,0 +1,29 @@
+name: Verify Chartography Brain credit subject gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "canonical/runtime/chartography_brain_credit_subject_gate_v1.py"
+      - "canonical/tests/test_chartography_brain_credit_subject_gate_v1.py"
+      - ".github/workflows/chartography-brain-credit-subject-gate-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile exact mirrored gate
+        run: |
+          python -m py_compile canonical/runtime/chartography_brain_credit_subject_gate_v1.py
+          python -m py_compile canonical/tests/test_chartography_brain_credit_subject_gate_v1.py
+      - name: Run adversarial ownership tests
+        env:
+          PYTHONPATH: .
+        run: |
+          python -m unittest -v canonical.tests.test_chartography_brain_credit_subject_gate_v1
