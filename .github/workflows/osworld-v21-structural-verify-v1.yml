@@ -30,14 +30,16 @@ jobs:
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_host_guest_ops_v1.py")" = "f002bbb5aadc302c9bff644c59c85485fb3bb668"
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_brain_agent_adapter_v1.py")" = "1a203aa33ec89a172dab58804549258495308d52"
           test "$(git hash-object "$C/canonical/runtime/osworld_v21_runner_bridge_v1.py")" = "e876439e8969de01e06c575ac1b60cce9d635838"
+          test "$(git hash-object "$C/canonical/runtime/osworld_v21_runner_binding_v1.py")" = "ec497c17cd33796a4d89dfb459a275359b954eaa"
           test "$(git hash-object "$C/canonical/tests/test_osworld_v21_state_ops_v1.py")" = "9f41191588b57bec23a35f31857fddc3d0b9c9dc"
           test "$(git hash-object "$C/canonical/tests/test_osworld_v21_host_guest_ops_v1.py")" = "b520a110d90689368b117c7d9ea3ddb0b934cfbd"
           test "$(git hash-object "$C/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py")" = "b924779c1e6888c0ff5b629336451580359dbd50"
           test "$(git hash-object "$C/canonical/tests/test_osworld_v21_runner_bridge_v1.py")" = "5eb41c62c14f43235f5ad891279fe1437deeb1ca"
+          test "$(git hash-object "$C/canonical/tests/test_osworld_v21_runner_binding_v1.py")" = "dc5b64af71f7faa62d408f1b387ba840d99660c8"
       - name: Run exact structural tests
         env:
           PYTHONPATH: ${{ github.workspace }}/capsules/osworld_v21_structural_verify_v1
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check --no-input -q pytest
-          python -m pytest -q             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_state_ops_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_host_guest_ops_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_runner_bridge_v1.py
+          python -m pytest -q             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_state_ops_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_host_guest_ops_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_brain_agent_adapter_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_runner_bridge_v1.py             capsules/osworld_v21_structural_verify_v1/canonical/tests/test_osworld_v21_runner_binding_v1.py
