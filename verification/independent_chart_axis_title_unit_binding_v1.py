@@ -21,8 +21,10 @@ def cand(text, conf=95, source="independent"):
 class IndependentChartAxisTitleUnitBindingV1(unittest.TestCase):
     def test_word_substrings_do_not_create_meter_or_gram_units(self):
         for text in ("Program Count", "Amplitude", "Sample Group"):
-            with self.assertRaises(c.AxisTitleUnitBindingError):
-                c.parse_axis_label(text)
+            self.assertEqual(c.extract_explicit_units(text), [], text)
+        amplitude = c.parse_axis_label("Amplitude")
+        self.assertEqual(amplitude["semantic_role"], "AMPLITUDE")
+        self.assertIsNone(amplitude["canonical_unit"])
 
     def test_angular_frequency_is_not_plain_frequency(self):
         out=c.parse_axis_label("Angular Frequency (rad/s)")
