@@ -1,0 +1,36 @@
+{
+  "schema": "PROJECT_BRAIN_PYRCA_HT_DONOR_MINIMIZATION_DIFFERENTIAL_V1",
+  "status": "DONOR_MINIMIZATION_DIFFERENTIAL__ZERO_CAPABILITY_CREDIT",
+  "seed": 202610010901,
+  "fresh_trials": 400,
+  "donor": {
+    "repo": "salesforce/PyRCA",
+    "revision": "411310d589fac5cb8e7bdce67d33eadb091a1083",
+    "algorithm": "HT",
+    "license": "BSD-3-Clause"
+  },
+  "brain_owned_candidate": {
+    "path": "atomic_cause_ranking/brain_owned_ht_ranker.py",
+    "external_runtime_dependencies": [
+      "numpy"
+    ],
+    "pyrca_runtime_required": false,
+    "sklearn_runtime_required": false,
+    "scipy_runtime_required": false,
+    "pandas_runtime_required": false,
+    "networkx_runtime_required": false
+  },
+  "metrics": {
+    "top1_equivalence_fraction": 1.0,
+    "full_candidate_order_equivalence_fraction": 1.0,
+    "max_candidate_score_abs_error": 4.973799150320701e-14
+  },
+  "gate": {
+    "min_top1_equivalence_fraction": 1.0,
+    "min_full_order_equivalence_fraction": 0.995,
+    "max_candidate_score_abs_error": 1e-08,
+    "pass": true
+  },
+  "interpretation_rule": "PASS_SUPPORTS_ONLY_DONOR_INDEPENDENT_EQUIVALENCE_OF_THE_PYRCA_HT_RESIDUAL_SCORING_AND_RANKING_SLICE_ON_FRESH_EXPLICIT_NUMERIC_DAGS__REAL_TRACE_TRANSFER_AND_GENERAL_RCA_REMAIN_UNPROVEN",
+  "capability_credit_delta": 0
+}

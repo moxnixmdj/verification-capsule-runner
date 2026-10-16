@@ -1,0 +1,29 @@
+name: Verify RCAEval Real Transfer Pilot
+on:
+  pull_request:
+    paths:
+      - 'atomic_cause_ranking/brain_owned_ht_ranker.py'
+      - 'atomic_cause_ranking/rcaeval_real_transfer.py'
+      - '.github/workflows/verify_rcaeval_real_transfer.yml'
+permissions:
+  contents: read
+jobs:
+  real-transfer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install real-transfer carrier
+        run: |
+          python -m pip install --disable-pip-version-check "numpy>=2,<3" "pandas>=2,<4" "pyarrow>=18,<25" "huggingface_hub>=0.30,<2" "networkx>=3,<4" "scipy>=1.13,<2" "scikit-learn>=1.5,<2" "causal-learn>=0.1.4,<0.2"
+          python -m pip install --disable-pip-version-check --no-deps "git+https://github.com/phamquiluan/RCAEval.git@259ea4167160256a74ad30004aa3d96a998c846e"
+      - name: Run precommitted four-case real telemetry pilot
+        working-directory: atomic_cause_ranking
+        run: python rcaeval_real_transfer.py
+      - name: Preserve real-transfer result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rcaeval-real-transfer-result
+          path: atomic_cause_ranking/rcaeval_real_transfer_result.json
+          if-no-files-found: warn
